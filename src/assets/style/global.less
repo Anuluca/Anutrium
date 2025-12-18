@@ -1,0 +1,79 @@
+@import url(./font.less);
+
+#app {
+  background-color: #0c0c0c;
+  color: #fff;
+  // position: fixed;
+  cursor: default;
+  overflow: hidden;
+  min-height: 100vh;
+  max-height: 100vh;
+  transition: background-color 1s;
+}
+
+body {
+  background-color: transparent;
+  overflow: hidden;
+}
+
+* {
+  text-decoration: none;
+  font-family: 'SiYuan';
+  user-select: none;
+}
+
+.el-button.is-link.is-disabled {
+  color: #fff !important;
+  cursor: default !important;
+}
+
+.el-button.is-link.el-button--danger:not(.is-disabled) {
+  color: #ff004e !important;
+  text-decoration: underline;
+
+  &:hover {
+    border-radius: 0;
+    text-shadow: 0 0 3px #ff004e;
+    color: #fff !important;
+    text-decoration: none;
+  }
+}
+
+.el-message-box {
+  border-radius: 0;
+  border: 1px solid #002c5a;
+}
+
+.el-message-box__title span,
+.el-message-box__message {
+  font-family: 'SiYuan' !important;
+}
+
+.el-button--primary {
+  border-radius: 0;
+  background-color: #002c5a !important;
+  font-family: 'cusTitle';
+  border: 0;
+
+  &:hover {
+    background-color: #ff004e !important;
+  }
+}
+
+.main-container {
+  display: flex;
+  justify-content: center;
+}
+
+.trans {
+  opacity: 0;
+}
+
+.clickable {
+  transition: text-shadow 0.2s;
+  cursor: url('@/assets/img/dot-click.svg') 15 15, auto;
+
+  &:hover {
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.96);
+  }
+}

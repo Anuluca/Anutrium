@@ -1,0 +1,74 @@
+.body-color {
+  background-attachment: fixed;
+  position: fixed;
+  z-index: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  transition: all 1s;
+}
+//深色主题
+.dawn.body-color {
+  background: radial-gradient(
+    220% 105% at top center,
+    #162649 10%,
+    #65366f 40%,
+    #ae546f 65%,
+    #c5c581
+  );
+}
+
+//浅色主题
+.light.body-color {
+  background: radial-gradient(
+    220% 105% at top center,
+    #bbaec7 10%,
+    #fafff9 30%,
+    #fdfeff 65%,
+    #d8e0d3
+  );
+}
+.night {
+  opacity: 0.01;
+}
+
+@keyframes rotate {
+  0% {
+    transform: perspective(400px) rotateZ(20deg) rotateX(-40deg) rotateY(0);
+  }
+  100% {
+    transform: perspective(400px) rotateZ(20deg) rotateX(-40deg) rotateY(-360deg);
+  }
+}
+.star-back {
+  transform: perspective(500px);
+  transform-style: preserve-3d;
+  position: absolute;
+  bottom: 0;
+  perspective-origin: 50% 100%;
+  left: 50%;
+  animation: rotate 90s infinite linear;
+  z-index: 1;
+  .star {
+    width: 2px;
+    height: 2px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform-origin: 0 0 -300px;
+    transform: translate3d(0, 0, -300px);
+    backface-visibility: hidden;
+  }
+}
+.star-back.dawn {
+  .star {
+    background: #f7f7b6;
+  }
+}
+.star-back.light {
+  .star {
+    background: #4400b9;
+  }
+}

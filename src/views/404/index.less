@@ -1,0 +1,76 @@
+.not-found-page {
+  .inner {
+    // background-color: red;
+    min-width: 1000px;
+    min-height: 350px;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    .porygon {
+      width: 394px;
+      height: 369px;
+      position: absolute;
+      top: 0;
+      right: 0;
+      background-size: cover;
+      background-image: url('@/assets/img/porygon.png');
+      transition: all 1s, opacity 2s;
+    }
+    .show-text {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      font-family: 'cusTitle2';
+      transition: textShadow 0.2s, color 0.5s;
+      p {
+        font-size: 29px;
+        letter-spacing: -2px;
+        line-height: 35px;
+        text-shadow: 0 0 8px #fff;
+      }
+      p:first-child {
+        font-size: 90px;
+        letter-spacing: -6px;
+        line-height: 80px;
+        transform: scale(1, 0.9);
+        -webkit-animation: shineFont 5s linear infinite;
+        animation: shineFont 5s linear infinite;
+      }
+      @keyframes shineFont {
+        0% {
+          text-shadow: 0 0 30px #fff;
+        }
+        // 25% {
+        //   text-shadow: 0 0 10px #ff004e;
+        // }
+        // 65% {
+        //   text-shadow: 0 0 10px #3276fe;
+        // }
+        25% {
+          text-shadow: 0 0 10px #fff;
+        }
+        50% {
+          text-shadow: 0 0 0 transparent;
+        }
+        100% {
+          text-shadow: 0 0 30px #fff;
+        }
+      }
+      .last-show-text {
+        background-color: #ffffffba;
+        color: #000000;
+        overflow: hidden;
+        height: 30px;
+        transition: all 0.3s, width 0.5s;
+        text-shadow: none;
+        cursor: pointer;
+        &:hover {
+          background-color: #9b9b9b42;
+          color: #fff;
+          text-shadow: 0 0 8px #fff;
+        }
+      }
+    }
+  }
+}

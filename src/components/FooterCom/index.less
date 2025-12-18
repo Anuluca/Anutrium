@@ -1,0 +1,221 @@
+.footer-com {
+  width: 100%;
+  height: 26px;
+  background-color: rgba(53, 53, 53, 0.795);
+  box-shadow: 0px -20px 20px 0px rgb(255 255 255 / 3%);
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  z-index: 200;
+  display: flex;
+  justify-content: center;
+  // overflow: hidden;
+  transition: all 0.2s;
+  > div {
+    // border: 1px solid red;
+    box-sizing: border-box;
+    height: 26px;
+  }
+  .left {
+    min-width: 130px;
+    .language {
+      transition: all 0.2s;
+      transform: scale(1, 0.74);
+      span {
+        font-family: 'cusContext';
+        font-size: 19px;
+        line-height: 20px;
+      }
+      button:nth-child(1) {
+        margin-left: 15px;
+      }
+      button:nth-child(2),
+      button:nth-child(3) {
+        margin-left: 0px !important;
+      }
+    }
+  }
+  .center {
+    width: 100%;
+    line-height: 25px;
+    font-size: 12px;
+    letter-spacing: 1.2px;
+    font-family: 'siyuan';
+    display: inline-block;
+    overflow: hidden;
+    .expand {
+      background-color: rgb(215 215 215 / 9%);
+      width: 100%;
+      transition: all 1s;
+      .marquee-wrap {
+        transition: all 0.2s;
+        white-space: nowrap;
+        -webkit-animation: marquee 30s linear infinite;
+        animation: marquee 30s linear infinite;
+        animation-play-state: running;
+        &:hover {
+          animation-play-state: paused;
+        }
+        > span {
+          color: #000000;
+        }
+        > b {
+          font-weight: 400 !important;
+          a {
+            padding: 10px;
+            // text-decoration: underline #ffffff6b;
+            font-weight: 400;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #fff;
+            &:hover {
+              text-shadow: 0 0 3px rgba(255, 255, 255, 0.527);
+              background-color: rgba(0, 0, 0, 0.5);
+              color: #fff;
+            }
+          }
+        }
+      }
+    }
+    @keyframes marquee {
+      0% {
+        opacity: 0;
+        transform: translateX(0);
+      }
+      5% {
+        opacity: 1;
+      }
+      95% {
+        opacity: 1;
+      }
+      100% {
+        transform: translateX(-2000px);
+        opacity: 0;
+      }
+    }
+  }
+  .right {
+    text-align: center;
+    min-width: 595px;
+    .text-links {
+      margin-left: 15px;
+      transition: all 1s;
+      display: inline-block;
+      > span,
+      > .el-button {
+        position: relative;
+        margin: 0 1px;
+        span {
+          transform: scale(1, 0.74);
+          font-family: 'cusContext';
+          font-size: 19px;
+          line-height: 20px;
+        }
+      }
+
+      .is-disabled {
+        margin-left: 15px;
+      }
+    }
+    .el-switch {
+      margin: 0 15px;
+      height: 20px;
+      margin-top: 1px;
+      .el-switch__core {
+        height: 17px;
+        min-width: 32px;
+        box-shadow: 0px 0px 6px 0px #000000a3;
+        .el-switch__action {
+          zoom: 1.2;
+          box-shadow: 0px 0px 6px 0px #0000005c;
+        }
+      }
+    }
+    .el-switch.is-checked {
+      .el-switch__core {
+        border: 2px solid #6e40c9;
+        .el-switch__action {
+          left: calc(100% - 14px);
+          background-color: #6e40c9;
+        }
+      }
+    }
+    .el-switch:not(.is-checked) {
+      .el-switch__core {
+        border: 2px solid #f4ea2a;
+        .el-switch__action {
+          // right: calc(100% - 14px);
+          background-color: #f4ea2a;
+          left: -2px;
+        }
+      }
+    }
+  }
+  .TWITTER_detail,
+  .WEIBO_detail,
+  .BILIBILI_detail,
+  .EMAIL_detail,
+  .GITHUB_detail {
+    position: absolute;
+    display: block;
+    bottom: -140px;
+    z-index: -1;
+    opacity: 0;
+    cursor: pointer;
+    // bottom: 40px;
+    transform: translateX(-50%) !important;
+    left: 50%;
+    width: 250px;
+    height: 100px;
+    transition: all 0.4s;
+    box-shadow: 0 1px 15px #0000003b;
+    img {
+      width: 250px;
+      height: 100px;
+    }
+  }
+  .BILIBILI_detail {
+    width: 280px !important;
+    height: 280px !important;
+    bottom: -300px;
+    img {
+      width: 280px !important;
+      height: 280px !important;
+    }
+  }
+  .GITHUB_detail {
+    width: 148px !important;
+    height: 32px !important;
+    border-radius: 16px;
+    img {
+      width: 148px !important;
+      height: 32px !important;
+      border-radius: 16px;
+    }
+  }
+  .TWITTER_detail {
+    width: 246px !important;
+    height: 62px !important;
+    border-radius: 31px;
+    img {
+      width: 246px !important;
+      height: 62px !important;
+      border-radius: 31px;
+    }
+  }
+  .WEIBO_detail {
+    width: 346px !important;
+    height: 500px !important;
+    background-color: red;
+    bottom: -540px;
+    overflow: hidden;
+    img {
+      width: 346px !important;
+      height: 500px !important;
+    }
+  }
+}
+.full-footer {
+  width: 100vw;
+  left: 0;
+}

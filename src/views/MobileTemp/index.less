@@ -1,0 +1,108 @@
+.mobile-temp {
+  background-attachment: fixed;
+  position: fixed;
+  z-index: 2000;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  transition: all 1s;
+  //深色主题
+  .dawn.mobile-temp {
+    background: radial-gradient(
+      220% 105% at top center,
+      #182644 10%,
+      #53355a 40%,
+      #9c5b6e 65%,
+      #c0c092
+    );
+  }
+
+  //浅色主题
+  .light.mobile-temp {
+    background: radial-gradient(
+      220% 105% at top center,
+      #bbaec7 10%,
+      #fafff9 30%,
+      #fdfeff 65%,
+      #d8e0d3
+    );
+  }
+  .night {
+    opacity: 0.01;
+  }
+
+  @keyframes rotate {
+    0% {
+      transform: perspective(400px) rotateZ(20deg) rotateX(-40deg) rotateY(0);
+    }
+    100% {
+      transform: perspective(400px) rotateZ(20deg) rotateX(-40deg) rotateY(-360deg);
+    }
+  }
+  .star-back-temp {
+    transform: perspective(500px);
+    transform-style: preserve-3d;
+    position: absolute;
+    bottom: 0;
+    perspective-origin: 50% 100%;
+    left: 50%;
+    animation: rotate 90s infinite linear;
+    z-index: 2000;
+    .star-temp {
+      width: 2px;
+      height: 2px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      transform-origin: 0 0 -300px;
+      transform: translate3d(0, 0, -300px);
+      backface-visibility: hidden;
+    }
+  }
+  .star-back-temp.dawn {
+    .star-temp {
+      background: #f7f7b6;
+    }
+  }
+  .star-back-temp.light {
+    .star-temp {
+      background: #4400b9;
+    }
+  }
+  .temp-lluca {
+    width: 150px;
+    height: 150px;
+    position: absolute;
+    top: 30%;
+    right: 5%;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-image: url('@/assets/img/logo_black.png');
+    z-index: 2001;
+    transition: all 1s, opacity 2s;
+  }
+  .temp-text {
+    z-index: 2001;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: scale(1, 0.9) translate(-50%, -50%);
+    font-size: 20px;
+    line-height: 30px;
+    width: 60%;
+    font-weight: bold;
+    transition: all 1s;
+    > p:first-of-type {
+      background-color: #ffffffc3;
+      color: #000;
+      transition: all 1s;
+      overflow: hidden;
+      height: 30px;
+    }
+    > p {
+      transition: all 1s;
+    }
+  }
+}
