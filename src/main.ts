@@ -9,15 +9,44 @@ import 'element-plus/theme-chalk/dark/css-vars.css'
 import 'element-plus/theme-chalk/index.css'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import '@/assets/style/global.less'
+import { loadAllFonts, showPageContent } from './utils/fontLoader'
 
-const app = createApp(App)
+// 等待字体加载完成后再初始化应用
+async function initApp() {
+  try {
+    // 加载所有自定义字体
+    await loadAllFonts();
+    
+    // 字体加载完成后显示页面
+    showPageContent();
+    
+    // 创建 Vue 应用实例
+    const app = createApp(App)
 
-for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
-  app.component(key, component)
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+      app.component(key, component)
+    }
+
+    app.use(i18n)
+    app.use(createPinia())
+    app.use(router)
+
+    app.mount('#app')
+  } catch (error) {
+    console.error('应用初始化失败:', error)
+    // 即使字体加载失败也显示页面，保证基本可用性
+    showPageContent();
+    
+    const app = createApp(App)
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+      app.component(key, component)
+    }
+    app.use(i18n)
+    app.use(createPinia())
+    app.use(router)
+    app.mount('#app')
+  }
 }
 
-app.use(i18n)
-app.use(createPinia())
-app.use(router)
-
-app.mount('#app')
+// 启动应用
+initApp()

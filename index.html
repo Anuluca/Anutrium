@@ -5,8 +5,53 @@
     <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Loading...</title>
+    <style>
+      /* 页面加载前的初始样式 */
+      #app {
+        visibility: hidden;
+      }
+      
+      /* 简单的加载指示器样式 */
+      #loading-indicator {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #0c0c0c;
+        color: white;
+        font-family: sans-serif;
+        z-index: 9999;
+      }
+      
+      .loading-text {
+        font-size: 24px;
+        text-align: center;
+      }
+      
+      .loading-dots::after {
+        content: '.';
+        animation: loadingDots 1.5s infinite;
+      }
+      
+      @keyframes loadingDots {
+        0%, 20% { content: '.'; }
+        40% { content: '..'; }
+        60%, 100% { content: '...'; }
+      }
+    </style>
   </head>
   <body>
+    <!-- 字体加载指示器 -->
+    <div id="loading-indicator">
+      <div class="loading-text">
+        加载字体资源中<span class="loading-dots"></span>
+      </div>
+    </div>
+    
     <div id="app" class="light"></div>
     <script type="module" lang="ts" src="/src/main.ts"></script>
   </body>
