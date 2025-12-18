@@ -12,24 +12,48 @@ const FONT_FAMILIES = [
   'SiYuan'
 ];
 
+// 进度相关元素
+let progressBar: HTMLElement | null = null;
+let progressText: HTMLElement | null = null;
+
+// 初始化进度条元素引用
+function initProgressElements(): void {
+  progressBar = document.getElementById('progress-bar');
+  progressText = document.getElementById('progress-text');
+}
+
+// 更新进度条显示
+function updateProgress(percent: number): void {
+  if (progressBar && progressText) {
+    progressBar.style.width = percent + '%';
+    progressText.textContent = Math.round(percent) + '%';
+  }
+}
+
 /**
  * 检查单个字体是否已加载
  * @param fontFamily 字体名称
+ * @param progressCallback 进度回调函数
  * @returns Promise<boolean>
  */
-function checkFontLoaded(fontFamily: string): Promise<boolean> {
+function checkFontLoaded(fontFamily: string, progressCallback?: (loaded: boolean) => void): Promise<boolean> {
   return new Promise((resolve) => {
     // 使用浏览器原生的字体加载API
     if ('fonts' in document) {
       document.fonts.load(`16px ${fontFamily}`).then(() => {
+        if (progressCallback) progressCallback(true);
         resolve(true);
       }).catch(() => {
         console.warn(`字体 ${fontFamily} 加载失败`);
+        if (progressCallback) progressCallback(false);
         resolve(false);
       });
     } else {
       // 降级处理：对于不支持Font Loading API的浏览器
-      setTimeout(() => resolve(true), 100);
+      setTimeout(() => {
+        if (progressCallback) progressCallback(true);
+        resolve(true);
+      }, 100);
     }
   });
 }
@@ -39,9 +63,27 @@ function checkFontLoaded(fontFamily: string): Promise<boolean> {
  * @returns Promise<void>
  */
 export async function loadAllFonts(): Promise<void> {
-  const fontLoadPromises = FONT_FAMILIES.map(fontFamily => checkFontLoaded(fontFamily));
+  initProgressElements();
+  
+  const totalFonts = FONT_FAMILIES.length;
+  let loadedFonts = 0;
+  
+  const updateProgressUI = () => {
+    const progress = (loadedFonts / totalFonts) * 100;
+    updateProgress(progress);
+  };
+  
+  const fontLoadPromises = FONT_FAMILIES.map((fontFamily, index) => {
+    return checkFontLoaded(fontFamily, (success) => {
+      loadedFonts++;
+      updateProgressUI();
+    });
+  });
+  
   try {
     await Promise.all(fontLoadPromises);
+    // 确保显示100%
+    updateProgress(100);
     console.log('所有字体加载完成');
   } catch (error) {
     console.error('字体加载过程中出现错误:', error);
