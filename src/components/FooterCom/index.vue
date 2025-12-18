@@ -47,7 +47,6 @@ const changeLanguage = (lang) => {
 }
 
 const changeTheme = () => {
-  console.log(currentRouter.value)
 
   if (currentRouter.value === '/') {
     const loadingInstance = ElLoading.service({ fullscreen: true, text: 'Theme Changing' })

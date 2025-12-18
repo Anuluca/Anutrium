@@ -4,7 +4,14 @@
     <div class="right-container">
       <div class="center-text">
         <img :src="showLogo" alt="" />
-        <div style="font-size: 40px; color: #000; margin-bottom: 5px; text-align: center">
+        <div
+          style="
+            font-size: 40px;
+            color: #000;
+            margin-bottom: 5px;
+            text-align: center;
+          "
+        >
           庭院建设中
         </div>
         <div
@@ -29,31 +36,36 @@
         <p>The copyright statement for articles and pictures:</p>
         <p>
           free to reprint, non-commercial, non-derivative, with attribution （
-          <span class="lisence" @click="clickLisence">Creative Commons 3.0 lisence</span> ）.
+          <span class="lisence" @click="clickLisence"
+            >Creative Commons 3.0 lisence</span
+          >
+          ）.
         </p>
-        <div style="text-align: center; color: #8D8D8D">< 预计2026年内开放 ></div>
+        <div style="text-align: center; color: #8d8d8d">
+          &lt; 预计2026年内开放 >
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import './index.less'
-import { computed, onMounted, ref } from 'vue'
-import { visualState } from '@/stores'
-import Logo from '@/assets/img/logo.png'
-import LogoDark from '@/assets/img/logo_black.png'
-import { useRouter } from 'vue-router'
+import "./index.less";
+import { computed, onMounted, ref } from "vue";
+import { visualState } from "@/stores";
+import Logo from "@/assets/img/logo.png";
+import LogoDark from "@/assets/img/logo_black.png";
+import { useRouter } from "vue-router";
 
-const visualStateStore = visualState()
-const router = useRouter()
+const visualStateStore = visualState();
+const router = useRouter();
 
 const showLogo = computed(() => {
-  return visualStateStore.theme === 'dark' ? Logo : LogoDark
-})
+  return visualStateStore.theme === "dark" ? Logo : LogoDark;
+});
 
 const toOld = () => {
-  router.push('/old')
-}
-onMounted(() => {})
+  location.href = "https://anulucas-blog.pages.dev/";
+};
+onMounted(() => {});
 </script>
