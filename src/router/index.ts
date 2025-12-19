@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Home from "@/views/Home/index.vue";
-import MobileTemp from "@/views/MobileTemp/index.vue";
 import NotFound from "@/views/404/index.vue";
 import NProgress from "nprogress";
 import "nprogress/nprogress.css";
@@ -76,19 +75,6 @@ export const routes = [
     meta: {
       titleEn: "ABOUT",
       titleCn: "关于",
-      hasPic: false,
-      ifShow: false,
-    },
-  },
-  // 手机端（temp）
-  {
-    path: "/mobileTemp",
-    name: "MOBILETEMP",
-    component: MobileTemp,
-
-    meta: {
-      titleEn: "Sorry",
-      titleCn: "抱歉",
       hasPic: false,
       ifShow: false,
     },

@@ -8,8 +8,6 @@ const FONT_FAMILIES = [
   'cusTitle',
   'cusTitle2', 
   'cusContext',
-  'cusPixel',
-  'SiYuan'
 ];
 
 // 进度相关元素
@@ -22,13 +20,6 @@ function initProgressElements(): void {
   progressText = document.getElementById('progress-text');
 }
 
-// 更新进度条显示
-function updateProgress(percent: number): void {
-  if (progressBar && progressText) {
-    progressBar.style.width = percent + '%';
-    progressText.textContent = Math.round(percent) + '%';
-  }
-}
 
 /**
  * 检查单个字体是否已加载
@@ -70,7 +61,12 @@ export async function loadAllFonts(): Promise<void> {
   
   const updateProgressUI = () => {
     const progress = (loadedFonts / totalFonts) * 100;
-    updateProgress(progress);
+    if (progressBar) {
+      progressBar.style.width = `${progress}%`;
+    }
+    if (progressText) {
+      progressText.textContent = `${Math.round(progress)}%`;
+    }
   };
   
   const fontLoadPromises = FONT_FAMILIES.map((fontFamily, index) => {
@@ -82,8 +78,6 @@ export async function loadAllFonts(): Promise<void> {
   
   try {
     await Promise.all(fontLoadPromises);
-    // 确保显示100%
-    updateProgress(100);
     console.log('所有字体加载完成');
   } catch (error) {
     console.error('字体加载过程中出现错误:', error);
@@ -94,9 +88,9 @@ export async function loadAllFonts(): Promise<void> {
  * 显示页面内容（字体加载完成后调用）
  */
 export function showPageContent(): void {
-  const appElement = document.getElementById('app');
+  const appElement = document.getElementsByClassName('layout-page')[0];
   if (appElement) {
-    appElement.style.visibility = 'visible';
+    appElement.style.opacity = '1';
   }
   
   // 移除加载指示器（如果有）

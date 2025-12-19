@@ -6,10 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Loading...</title>
     <style>
-      /* 页面加载前的初始样式 */
-      #app {
-        visibility: hidden;
-      }
       
       /* 方形进度条样式 */
       #loading-indicator {
@@ -21,19 +17,12 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        background-color: #0c0c0c;
         font-family: sans-serif;
         z-index: 9999;
       }
       
       .loading-container {
         text-align: center;
-      }
-      
-      .loading-text {
-        font-size: 16px;
-        margin-bottom: 20px;
-        color: #ffffff;
       }
       
       .progress-bar-container {
@@ -53,16 +42,7 @@
         background-color: #ffffff;
         transition: width 0.3s ease;
       }
-      
-      .progress-text {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        color: #0c0c0c;
-        font-size: 12px;
-        font-weight: bold;
-      }
+
     </style>
   </head>
   <body>
@@ -71,7 +51,6 @@
       <div class="loading-container">
         <div class="progress-bar-container">
           <div class="progress-bar" id="progress-bar"></div>
-          <div class="progress-text" id="progress-text">0%</div>
         </div>
       </div>
     </div>
@@ -81,7 +60,6 @@
       // 模拟进度条动画
       let progress = 0;
       const progressBar = document.getElementById('progress-bar');
-      const progressText = document.getElementById('progress-text');
       
       function updateProgress() {
         if (progress < 90) { // 最多显示90%，因为实际加载时间不确定
@@ -89,7 +67,6 @@
           if (progress > 90) progress = 90;
           
           progressBar.style.width = progress + '%';
-          progressText.textContent = progress + '%';
           
           setTimeout(updateProgress, 200);
         }

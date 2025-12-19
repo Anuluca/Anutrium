@@ -14,11 +14,8 @@ import { loadAllFonts, showPageContent } from './utils/fontLoader'
 // 等待字体加载完成后再初始化应用
 async function initApp() {
   try {
-    // 加载所有自定义字体
+    // 等待字体加载完成
     await loadAllFonts();
-    
-    // 字体加载完成后显示页面
-    showPageContent();
     
     // 创建 Vue 应用实例
     const app = createApp(App)
@@ -32,6 +29,9 @@ async function initApp() {
     app.use(router)
 
     app.mount('#app')
+    
+    // 显示页面内容
+    showPageContent();
   } catch (error) {
     console.error('应用初始化失败:', error)
     // 即使字体加载失败也显示页面，保证基本可用性
