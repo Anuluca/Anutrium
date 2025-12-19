@@ -1,5 +1,5 @@
 .layout-page {
-  cursor: url("@/assets/img/dot.svg") 15 15, auto;
+  cursor: url('@/assets/img/dot.svg')  15 15, auto;
   width: 100%;
   position: fixed;
   z-index: 1;
@@ -60,10 +60,11 @@
           color: var(--text-color); // 使用CSS变量
 
           span {
-            font-family: "cusTitle", serif;
+            font-family: 'cusTitle', serif;
             display: inline-block;
             transition: all 0.8s;
             white-space: nowrap;
+
 
             &.name-center {
               opacity: 0;
@@ -85,6 +86,65 @@
         }
       }
     }
+    
+    // 移动端菜单按钮
+    .mobile-menu-icon {
+      display: none;
+      position: absolute;
+      top: 32px;
+      zoom: 0.9;
+      right: 30px;
+      cursor: pointer;
+      padding: 10px;
+      z-index: 1001;
+      
+      .hamburger {
+        width: 30px;
+        height: 20px;
+        position: relative;
+        
+        span {
+          display: block;
+          height: 3px;
+          width: 100%;
+          background: #ffffff;
+          border-radius: 2px;
+          position: absolute;
+          transition: all 0.3s ease;
+          
+          &:nth-child(1) {
+            top: 0;
+          }
+          
+          &:nth-child(2) {
+            top: 50%;
+            transform: translateY(-50%);
+          }
+          
+          &:nth-child(3) {
+            bottom: 0;
+          }
+        }
+        
+        &.active {
+          span {
+            &:nth-child(1) {
+              top: 50%;
+              transform: translateY(-50%) rotate(45deg);
+            }
+            
+            &:nth-child(2) {
+              opacity: 0;
+            }
+            
+            &:nth-child(3) {
+              top: 50%;
+              transform: translateY(-50%) rotate(-45deg);
+            }
+          }
+        }
+      }
+    }
 
     .el-menu {
       border-bottom: 0;
@@ -100,7 +160,7 @@
         text-align: right;
 
         .el-menu-item {
-          font-family: "cusTitle", serif;
+          font-family: 'cusTitle', serif;
           display: inline-flex;
           justify-content: center;
           align-items: center;
@@ -186,6 +246,80 @@
       opacity: 0.7;
     }
   }
+  
+  // 移动端菜单面板
+  .mobile-menu-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    .mobile-menu-content {
+      // background: #0c0c0c;
+      // border: 1px solid #333;
+      border-radius: 4px;
+      width: 80%;
+      max-width: 500px;
+      // padding: 20px;
+      
+      .mobile-menu-items {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        
+        .mobile-menu-item {
+          padding: 20px 20px;
+        width: 100%;
+          color: #fff;
+          font-size: 35px;
+          text-align: center;
+          border-bottom: 1px solid #333;
+          cursor: pointer;
+          transition: all 0.3s;
+          font-family: 'cusTitle', serif;
+          
+          &:last-child {
+            border-bottom: none;
+          }
+          
+          &:hover {
+            background: rgba(255, 255, 255, 0.1);
+          }
+          
+          &.active {
+            color: #3276fe;
+            -webkit-text-stroke: 1px #3276fe;
+          }
+          
+          &.HOME.active {
+            color: #3276fe;
+            -webkit-text-stroke: 1px #3276fe;
+          }
+          
+          &.PERSONAL.active {
+            color: #ffe71c;
+            -webkit-text-stroke: 1px #ffe71c;
+          }
+          
+          &.WORK.active {
+            color: #01dd83;
+            -webkit-text-stroke: 1px #01dd83;
+          }
+          
+          &.TOOLS.active {
+            color: #dc00d0;
+            -webkit-text-stroke: 1px #dc00d0;
+          }
+        }
+      }
+    }
+  }
 }
 
 // 渐显动画关键帧
@@ -201,17 +335,43 @@
 }
 
 // 浅色模式适配
-.light {
-  .right p span {
+.light{
+  .right p span{
     color: #181818;
   }
-  .menu-box {
+  .menu-box{
     .el-menu-item {
       color: #181818 !important;
     }
   }
   .fullscreen {
     border-color: #181818;
+  }
+    .mobile-menu-icon {
+      .hamburger{
+        span{
+          background: #000 !important;
+        }
+      }
+    }
+  
+  .layout-page {
+    .mobile-menu-panel {
+      .mobile-menu-content {
+        // background: #ffffff;
+        // border-color: #ccc;
+        
+        .mobile-menu-items {
+          .mobile-menu-item {
+            // color: #181818;
+            
+            &:hover {
+              // background: rgba(0, 0, 0, 0.1);
+            }
+          }
+        }
+      }
+    }
   }
 }
 
@@ -222,11 +382,7 @@
       height: 80px;
       padding: 0 10px;
       padding-top: 20px;
-      .el-menu {
-        display: none;
-      }
-
-      // 调整logo区域在移动端的显示
+      
       .logo-box {
         min-width: auto;
         width: 100%;
@@ -236,7 +392,18 @@
           color: var(--text-color); // 使用CSS变量
         }
       }
+      
+      // 显示移动端菜单按钮
+      .mobile-menu-icon {
+        display: block;
+      }
+      
+      // 隐藏桌面端菜单
+      .el-menu {
+        display: none;
+      }
     }
+    
     .fullscreen {
       display: none;
     }

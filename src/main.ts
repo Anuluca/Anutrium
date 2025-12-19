@@ -16,8 +16,7 @@ function setRootFontSize() {
   const deviceWidth = document.documentElement.clientWidth;
   let rootFontSize = null;
 
-  if (deviceWidth <= 1050) {
-    // 移动端：基于375px设计稿
+  if (deviceWidth <= 810) {
     rootFontSize = (deviceWidth / 375) * 11;
   } else {
     // 桌面端：固定基准值

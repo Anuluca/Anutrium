@@ -14,7 +14,10 @@
           </p>
         </div>
       </div>
+      
+      <!-- 桌面端菜单 -->
       <el-menu
+        v-if="!isMobile"
         :default-active="currentRouter"
         mode="horizontal"
         router
@@ -34,7 +37,38 @@
           </RouterLink>
         </div>
       </el-menu>
+      
+      <!-- 移动端菜单按钮 -->
+      <div v-else class="mobile-menu-icon" @click="toggleMobileMenu">
+        <div class="hamburger" :class="{ active: isMobileMenuOpen }">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
     </el-header>
+    
+    <!-- 移动端菜单面板 -->
+    <div v-if="isMobile && isMobileMenuOpen" class="mobile-menu-panel" @click="closeMobileMenu">
+      <div class="mobile-menu-content" @click.stop>
+        <div class="mobile-menu-items">
+          <RouterLink
+            v-for="(item, index) in filterRoutes"
+            :key="index"
+            :to="item.path"
+            @click="closeMobileMenu"
+          >
+            <div 
+              class="mobile-menu-item" 
+              :class="{ active: currentRouter === item.path, [item.meta.titleEn]: true }"
+            >
+              {{ item.meta.titleEn }}
+            </div>
+          </RouterLink>
+        </div>
+      </div>
+    </div>
+    
     <!-- body -->
     <RouterView />
     <div class="fullscreen" @click="toggleFullscreen"></div>
@@ -46,7 +80,7 @@ import { routes } from "@/router";
 import { useRouter, useRoute } from "vue-router";
 import Logo from "@/assets/img/logo.png";
 import LogoDark from "@/assets/img/logo_black.png";
-import { computed, onMounted, watch, ref } from "vue";
+import { computed, onMounted, onUnmounted, watch, ref } from "vue";
 import { visualState } from "@/stores";
 import { useI18n } from "vue-i18n";
 
@@ -69,6 +103,10 @@ const currentRouter = computed(() => {
 const filterRoutes = routes.filter((item) => {
   return item?.meta?.ifShow;
 });
+
+// 移动端相关状态
+const isMobile = ref(window.innerWidth <= 1050);
+const isMobileMenuOpen = ref(false);
 
 // 标题动画
 const changeTitle = (close = false) => {
@@ -110,15 +148,40 @@ const toggleFullscreen = () => {
   }
 };
 
+// 移动端菜单控制
+const toggleMobileMenu = () => {
+  isMobileMenuOpen.value = !isMobileMenuOpen.value;
+};
+
+const closeMobileMenu = () => {
+  isMobileMenuOpen.value = false;
+};
+
+// 监听窗口大小变化
+const handleResize = () => {
+  isMobile.value = window.innerWidth <= 1050;
+  if (!isMobile.value) {
+    isMobileMenuOpen.value = false;
+  }
+};
+
 onMounted(() => {
   setTimeout(() => {
     changeTitle(true);
   }, 0);
 
+  // 监听窗口大小变化
+  window.addEventListener('resize', handleResize);
+  
   // 监听全屏变化事件
   document.addEventListener("fullscreenchange", () => {
     isFullscreen.value = !!document.fullscreenElement;
   });
+});
+
+// 清理事件监听器
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize);
 });
 </script>
 <style lang="less" scoped src="./index.less" />

@@ -1,12 +1,14 @@
 .not-found-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   .inner {
     // background-color: red;
-    min-width: 1000px;
-    min-height: 350px;
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
+    width: 1000px;
+    height: 350px;
+    position: relative;
+    margin-top: -140px;
+    margin-left: 100px;
     .porygon {
       width: 394px;
       height: 369px;
@@ -14,14 +16,14 @@
       top: 0;
       right: 0;
       background-size: cover;
-      background-image: url('@/assets/img/porygon.png');
+      background-image: url("@/assets/img/porygon.png");
       transition: all 1s, opacity 2s;
     }
     .show-text {
       position: absolute;
       bottom: 0;
       left: 0;
-      font-family: 'cusTitle2';
+      font-family: "cusTitle2";
       transition: textShadow 0.2s, color 0.5s;
       p {
         font-size: 29px;
@@ -62,6 +64,9 @@
         color: #000000;
         overflow: hidden;
         height: 30px;
+        line-height: 30px;
+        display: flex;
+        align-items: center;
         transition: all 0.3s, width 0.5s;
         text-shadow: none;
         cursor: pointer;
@@ -69,6 +74,49 @@
           background-color: #9b9b9b42;
           color: #fff;
           text-shadow: 0 0 8px #fff;
+        }
+      }
+    }
+  }
+
+  // 移动端适配 - 当屏幕宽度小于等于1050px时隐藏菜单栏
+  @media screen and (max-width: 1050px) {
+    .porygon {
+      right: 40px !important;
+      width: 360px !important;
+      height: 330px !important;
+    }
+    .show-text {
+      width: 500px;
+      p {
+        font-size: 25px !important;
+        line-height: 25px !important;
+      }
+      p:first-child {
+        font-size: 50px !important;
+        line-height: 60px !important;
+        span {
+          font-size: 90px !important;
+          // display: block;
+        }
+      }
+    }
+  }
+}
+
+.light {
+  .not-found-page {
+    .show-text p {
+      color: #181818;
+      &:last-child {
+        background-color: #000000ba;
+        text-shadow: 0 0 8px #dadada;
+        color: #ffffff;
+
+        &:hover {
+          background-color: #49494942;
+          color: #ffffff;
+          text-shadow: 0 0 8px #ffffff;
         }
       }
     }

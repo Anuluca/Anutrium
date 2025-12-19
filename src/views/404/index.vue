@@ -33,12 +33,12 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="not-found-page">
+  <div class="not-found-page main-container">
     <div class="inner">
       <!-- <img class="porygon" :src="Porygon" /> -->
       <div class="porygon" />
       <div class="show-text">
-        <p>404 NOT FOUND</p>
+        <p><span>404</span> NOT FOUND</p>
         <p>{{ $t('notFound.description') }}</p>
         <!-- <p> $t('home.lisence2')</p> -->
         <!-- <p class="last-show-text" @click="router.push('/')">{{ $t('notFound.back') }}</p> -->
