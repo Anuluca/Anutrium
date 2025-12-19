@@ -173,7 +173,7 @@ const handleResize = () => {
 
 // 监听滚动事件
 const handleScroll = () => {
-    isScrolled.value = document.documentElement.scrollTop > 0;
+    isScrolled.value = document.documentElement.scrollTop > 50;
 };
 
 onMounted(() => {

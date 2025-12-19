@@ -20,13 +20,12 @@
     right: 0;
     justify-content: space-between;
     background-color: transparent;
-    transition: all 0.3s ease;
+    transition: all 0.8s ease;
 
     &.scrolled {
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-    background-image: radial-gradient(#fcfcfc62 1px, rgba(255, 255, 255, 0.718) 1px);
-    background-size: 4px 4px;
+      backdrop-filter: blur(3px);
+      -webkit-backdrop-filter: blur(3px);
+      background-color: #ffffffc9;
     }
 
     .logo-box {
@@ -368,6 +367,9 @@
   }
 
   .layout-page {
+    &.scrolled {
+      background-color: #000000c9;
+    }
     .mobile-menu-panel {
       .mobile-menu-content {
         // background: #ffffff;
