@@ -1,20 +1,19 @@
 .home-page {
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
   .center-text {
-    margin-top: calc(50vh - 300px);
     width: 100%;
+    margin-top: -100px;
     img {
       width: 120px;
       text-align: center;
       transition: all 0.5s;
       display: block;
       margin: 0 auto;
-      cursor: grab;
       margin-bottom: 30px;
       transform-origin: center;
-      &:hover {
-        transform: rotateX(-20deg) rotateY(20deg);
-        border-radius: 10px;
-      }
     }
     > p {
       color: #ea3353;
@@ -24,17 +23,16 @@
       text-shadow: 0 0 10px #00000056;
       &:first-of-type {
         font-size: 33px;
-        letter-spacing: 1.5px;
+        letter-spacing: 1px;
       }
       &:last-of-type {
         font-size: 25.8px;
-        letter-spacing: 1px;
         margin-top: 8px;
       }
     }
   }
   .bottom-text {
-    width: 100%;
+    width: calc(100% - 40px);
     position: absolute;
     color: #ea3353;
     font-size: 13px;

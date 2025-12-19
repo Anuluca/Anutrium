@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Home from "@/views/Home/index.vue";
+import Tools from "@/views/Tools/index.vue";
 import NotFound from "@/views/404/index.vue";
 import NProgress from "nprogress";
 import "nprogress/nprogress.css";
@@ -46,7 +47,7 @@ export const routes = [
   {
     path: "/tools",
     name: "TOOLS",
-    component: NotFound,
+    component: Tools,
 
     meta: {
       titleEn: "TOOLS",

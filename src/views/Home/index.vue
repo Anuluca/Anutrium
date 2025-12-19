@@ -47,7 +47,6 @@
 </template>
 
 <script setup lang="ts">
-import "./index.less";
 import { computed, onMounted, ref } from "vue";
 import { visualState } from "@/stores";
 import Logo from "@/assets/img/logo.png";
@@ -66,3 +65,4 @@ const toOld = () => {
 };
 onMounted(() => {});
 </script>
+<style lang="less" scoped src="./index.less" />

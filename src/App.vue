@@ -27,9 +27,9 @@ onMounted(() => {
 </script>
 
 <template>
-  <el-container>
+  <!-- <div style="width: 100%; height: 100%;"> -->
     <BackController />
     <layout v-if="showLayout"></layout>
     <FooterCom />
-  </el-container>
+  <!-- </div>  -->
 </template>

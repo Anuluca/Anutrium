@@ -1,7 +1,8 @@
 <template>
-  <div class="layout-page">
+  <div class="layout-page" ref="layoutPage">
     <!-- 头部 -->
-    <el-header class="el-menu-layout-all">
+    <el-header class="el-menu-layout-all" :class="{ 'scrolled': isScrolled }">
+      
       <div class="logo-box">
         <img :src="showLogo" />
         <div class="right clickable">
@@ -100,6 +101,11 @@ const showLogo = computed(() => {
 const currentRouter = computed(() => {
   return route.path;
 });
+
+// 新增的滚动相关引用和状态
+const layoutPage = ref(null);
+const isScrolled = ref(false);
+
 const filterRoutes = routes.filter((item) => {
   return item?.meta?.ifShow;
 });
@@ -165,6 +171,11 @@ const handleResize = () => {
   }
 };
 
+// 监听滚动事件
+const handleScroll = () => {
+    isScrolled.value = document.documentElement.scrollTop > 0;
+};
+
 onMounted(() => {
   setTimeout(() => {
     changeTitle(true);
@@ -177,11 +188,15 @@ onMounted(() => {
   document.addEventListener("fullscreenchange", () => {
     isFullscreen.value = !!document.fullscreenElement;
   });
+  
+  // 添加滚动事件监听器
+    document.addEventListener('scroll', handleScroll);
 });
 
 // 清理事件监听器
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize);
+    document.removeEventListener('scroll', handleScroll);
 });
 </script>
 <style lang="less" scoped src="./index.less" />
