@@ -17,10 +17,10 @@ function setRootFontSize() {
   let rootFontSize = null;
 
   if (deviceWidth <= 810) {
-    rootFontSize = (deviceWidth / 375) * 11;
+    rootFontSize = (deviceWidth / 375) * 10;
   } else {
     // 桌面端：固定基准值
-    rootFontSize = 22;
+    rootFontSize = (deviceWidth / 375) * 4.5;
   }
   document.documentElement.style.fontSize = rootFontSize + 'px';
 }
