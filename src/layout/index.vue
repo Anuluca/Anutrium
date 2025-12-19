@@ -43,7 +43,7 @@
 
 <script setup>
 import { routes } from "@/router";
-import { useRouter, useRoute } from 'vue-router'
+import { useRouter, useRoute } from "vue-router";
 import Logo from "@/assets/img/logo.png";
 import LogoDark from "@/assets/img/logo_black.png";
 import { computed, onMounted, watch, ref } from "vue";
@@ -111,8 +111,9 @@ const toggleFullscreen = () => {
 };
 
 onMounted(() => {
-  // 移除了原来设置透明度的代码，因为现在由 fontLoader 控制整体页面透明度
-  changeTitle(true);
+  setTimeout(() => {
+    changeTitle(true);
+  }, 0);
 
   // 监听全屏变化事件
   document.addEventListener("fullscreenchange", () => {

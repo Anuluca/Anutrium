@@ -1,7 +1,5 @@
 <template>
   <div class="home-page main-container" @mousewheel="wheelEvent">
-    <!-- <LeftImg /> -->
-    <div class="right-container">
       <div class="center-text">
         <img :src="showLogo" alt="" />
         <div
@@ -45,7 +43,6 @@
           &lt; 预计2026年内开放 >
         </div>
       </div>
-    </div>
   </div>
 </template>
 

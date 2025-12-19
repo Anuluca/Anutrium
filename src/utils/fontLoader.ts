@@ -55,6 +55,7 @@ function checkFontLoaded(fontFamily: string, progressCallback?: (loaded: boolean
  */
 export async function loadAllFonts(): Promise<void> {
   initProgressElements();
+  window.fontLoaded = false;
   
   const totalFonts = FONT_FAMILIES.length;
   let loadedFonts = 0;
@@ -78,6 +79,7 @@ export async function loadAllFonts(): Promise<void> {
   
   try {
     await Promise.all(fontLoadPromises);
+    window.fontLoaded = true;
     console.log('所有字体加载完成');
   } catch (error) {
     console.error('字体加载过程中出现错误:', error);
@@ -88,11 +90,6 @@ export async function loadAllFonts(): Promise<void> {
  * 显示页面内容（字体加载完成后调用）
  */
 export function showPageContent(): void {
-  const appElement = document.getElementsByClassName('layout-page')[0];
-  if (appElement) {
-    appElement.style.opacity = '1';
-  }
-  
   // 移除加载指示器（如果有）
   const loadingIndicator = document.getElementById('loading-indicator');
   if (loadingIndicator) {
