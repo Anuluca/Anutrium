@@ -11,6 +11,24 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import '@/assets/style/global.less'
 import { loadAllFonts, showPageContent } from './utils/fontLoader'
 
+// 设置根字体大小
+function setRootFontSize() {
+  const deviceWidth = document.documentElement.clientWidth;
+  let rootFontSize = null;
+
+  if (deviceWidth <= 1050) {
+    // 移动端：基于375px设计稿
+    rootFontSize = (deviceWidth / 375) * 11;
+  } else {
+    // 桌面端：固定基准值
+    rootFontSize = 22;
+  }
+  document.documentElement.style.fontSize = rootFontSize + 'px';
+}
+
+// 初始化和监听窗口变化
+setRootFontSize();
+window.addEventListener('resize', setRootFontSize);
 // 等待字体加载完成后再初始化应用
 async function initApp() {
   try {
