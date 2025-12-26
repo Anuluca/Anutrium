@@ -16,8 +16,8 @@ const { locale } = useI18n();
 const router = useRouter();
 const route = useRoute();
 const visualStateStore = visualState();
-const hasPic = computed(() => {
-  return router.currentRoute.value.meta.hasPic;
+const fullFooter = computed(() => {
+  return router.currentRoute.value.meta.fullFooter;
 });
 const currentRouter = computed(() => {
   return route.path;
@@ -114,7 +114,7 @@ const mouseLeave = (type: string) => {
 </script>
 
 <template>
-  <div :class="{ 'footer-com': true, 'full-footer': !hasPic }">
+  <div :class="{ 'footer-com': true, 'full-footer': !fullFooter }">
     <!-- 左侧 -->
     <div class="left">
       <div class="language">
@@ -129,9 +129,10 @@ const mouseLeave = (type: string) => {
         <el-button
           link
           type="danger"
+          style="margin-right: 2px;"
           @click="changeLanguage('en')"
           :disabled="locale === 'en'"
-          >English</el-button
+          >En</el-button
         >
       </div>
     </div>
@@ -211,11 +212,6 @@ const mouseLeave = (type: string) => {
           >
         </span>
         <span>
-          <el-button link type="danger" @click="contact('EMAIL')"
-            >E-MAIL</el-button
-          >
-        </span>
-        <span>
           <div class="GITHUB_detail">
             <img :src="githubImg" alt="" />
           </div>
@@ -226,6 +222,11 @@ const mouseLeave = (type: string) => {
             @mouseover="mouseOver('GITHUB')"
             @mouseleave="mouseLeave('GITHUB')"
             >GITHUB</el-button
+          >
+        </span>
+        <span>
+          <el-button link type="danger" @click="contact('EMAIL')"
+            >MAIL</el-button
           >
         </span>
         <el-button link type="danger" disabled>2018-2026 ANULUCA</el-button>
