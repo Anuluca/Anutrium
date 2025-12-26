@@ -1,10 +1,14 @@
 .footer-com {
-  height: 26px;
-  background-color: rgba(53, 53, 53, 0.795);
-  box-shadow: 0px -20px 20px 0px rgb(255 255 255 / 3%);
+  height: 28px;
+  background-color: rgba(0, 0, 0, 0.598);
+  box-shadow: 0px 0 10px rgba(0, 0, 0, 0.509);
   position: fixed;
-  bottom: 0;
-  left: 0;
+  bottom: 4px;
+  left: 7px;
+  right: 7px;
+  // bottom: 0px;
+  // left: 0px;
+  // right: 0px;
   z-index: 200;
   display: flex;
   justify-content: center;
@@ -14,11 +18,14 @@
   >div {
     // border: 1px solid red;
     box-sizing: border-box;
-    height: 26px;
+    height: 28px;
   }
 
   .left {
     min-width: 130px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
     .language {
       transition: all 0.2s;
@@ -30,12 +37,7 @@
         line-height: 20px;
       }
 
-      button:nth-child(1) {
-        margin-left: 15px;
-      }
-
-      button:nth-child(2),
-      button:nth-child(3) {
+      button {
         margin-left: 0px !important;
       }
     }
@@ -43,23 +45,32 @@
 
   .center {
     width: 100%;
-    line-height: 25px;
-    font-size: 12px;
-    letter-spacing: 1.2px;
+    height: 100%;
+    font-size: 13px;
+    letter-spacing: 0.8px;
     display: inline-block;
     overflow: hidden;
 
     .expand {
-      background-color: rgb(215 215 215 / 9%);
+      background-color: rgba(0, 0, 0, 0.36);
       width: 100%;
+      height: 100%;
+      background-image: radial-gradient(#fcfcfc17 1px, #a9a9a917 1px);
+      background-size: 4px 4px;
+      backdrop-filter: saturate(50%) blur(1px);
       transition: all 1s;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
 
       .marquee-wrap {
+        padding-top: 3px;
         transition: all 0.2s;
         white-space: nowrap;
         -webkit-animation: marquee 30s linear infinite;
         animation: marquee 30s linear infinite;
         animation-play-state: running;
+        font-family: 'siyuan';
 
         &:hover {
           animation-play-state: paused;
@@ -78,10 +89,10 @@
             font-weight: 400;
             cursor: pointer;
             transition: all 0.2s;
+            text-shadow: 0 0 0.5px rgba(0, 0, 0, 0.527);
             color: #fff;
 
             &:hover {
-              text-shadow: 0 0 3px rgba(255, 255, 255, 0.527);
               background-color: rgba(0, 0, 0, 0.5);
               color: #fff;
             }
@@ -113,43 +124,49 @@
 
   .right {
     text-align: center;
-    min-width: 595px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
     .text-links {
-      margin-left: 15px;
+      min-width: 505px;
+      margin-left: 10px;
       transition: all 1s;
       display: inline-block;
+
+      .el-button--danger {
+        margin-top: 1px;
+      }
 
       >span,
       >.el-button {
         position: relative;
-        margin: 0 1px;
 
         span {
           transform: scale(1, 0.74);
           font-family: 'cusContext';
           font-size: 19px;
-          line-height: 20px;
         }
       }
 
       .is-disabled {
-        margin-left: 15px;
+        margin-left: 10px;
       }
     }
 
     .el-switch {
       margin: 0 15px;
+      margin-left: 5px;
       height: 20px;
       margin-top: 1px;
 
       .el-switch__core {
         height: 17px;
-        min-width: 32px;
+        min-width: 36px;
         box-shadow: 0px 0px 6px 0px #000000a3;
 
         .el-switch__action {
-          zoom: 1.2;
+          zoom: 1.15;
           box-shadow: 0px 0px 6px 0px #0000005c;
         }
       }
@@ -195,7 +212,7 @@
     left: 50%;
     width: 250px;
     height: 100px;
-    transition: all 0.4s;
+    transition: bottom 0.4s;
     box-shadow: 0 1px 15px #0000003b;
 
     img {
