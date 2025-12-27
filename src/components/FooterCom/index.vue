@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import "./index.less";
 import { useRouter, useRoute } from "vue-router";
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import { visualState } from "@/stores";
 import { ElLoading, ElMessage, ElMessageBox } from "element-plus";
 import "element-plus/theme-chalk/index.css";
@@ -25,7 +25,9 @@ const fullFooter = computed(() => {
 const currentRouter = computed(() => {
   return route.path;
 });
-let nightMode = ref();
+const nightMode = ref();
+const isScrollingDown = ref<boolean>(false);
+let lastScrollTop = 0;
 
 onMounted(() => {
   // 底部新闻条入场动画
@@ -41,6 +43,8 @@ onMounted(() => {
     text_element["style"].opacity = "1";
     nightMode.value = localStorage.getItem("theme") === "dark";
   }, 0);
+  // 添加滚动事件监听器
+  document.addEventListener("scroll", handleScroll, { passive: true });
 });
 
 const changeLanguage = (lang) => {
@@ -58,7 +62,6 @@ const changeTheme = () => {
     console.log(nightMode.value);
     setTimeout(() => {
       const currentMode = nightMode.value ? "dark" : "light";
-      // localStorage.setItem('theme', currentMode)
       visualStateStore.setTheme(currentMode);
     }, 150);
     setTimeout(() => {
@@ -66,7 +69,6 @@ const changeTheme = () => {
     }, 150);
   } else {
     const currentMode = nightMode.value ? "dark" : "light";
-    // localStorage.setItem('theme', currentMode)
     visualStateStore.setTheme(currentMode);
   }
 };
@@ -112,10 +114,33 @@ const mouseLeave = (type: string) => {
   let element = document.getElementsByClassName(`${type}_detail`)[0];
   element.classList.remove("hover");
 };
+
+// 监听滚动事件
+const handleScroll = () => {
+  // 获取当前滚动高度 (兼容性处理)
+  const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+  if (scrollTop > lastScrollTop) {
+    isScrollingDown.value = true;
+  } else {
+    isScrollingDown.value = false;
+  }
+  // 更新最后一次滚动位置，严禁负值 (移动端橡皮筋效果兼容)
+  lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+};
+
+onUnmounted(() => {
+  window.removeEventListener("scroll", handleScroll);
+});
 </script>
 
 <template>
-  <div :class="{ 'footer-com': true, 'full-footer': !fullFooter }">
+  <div
+    :class="{
+      'footer-com': true,
+      'full-footer': fullFooter,
+      'scrolling-down': isScrollingDown,
+    }"
+  >
     <!-- 左侧 -->
     <div class="left">
       <div class="language">
@@ -196,9 +221,13 @@ const mouseLeave = (type: string) => {
               :src="weiboImg"
             ></iframe>
           </div>
-          <el-button link type="danger" @click="contact('WEIBO')"
+          <el-button
+            link
+            type="danger"
+            @click="contact('WEIBO')"
             @mouseover="mouseOver('WEIBO')"
-            @mouseleave="mouseLeave('WEIBO')">
+            @mouseleave="mouseLeave('WEIBO')"
+          >
             WEIBO
           </el-button>
         </span>

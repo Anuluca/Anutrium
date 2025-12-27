@@ -2,38 +2,61 @@
   cursor: url("@/assets/img/dot.svg") 15 15, auto;
   width: 100%;
   height: 100%;
-  padding-top: 100px;
+  padding-top: 120px;
   overflow: auto;
   animation: fadeIn 1s ease-in forwards;
   opacity: 0;
 
   .el-menu-layout-all {
-    width: 100%;
     height: 100px;
-    padding: 20px 30px 0 50px;
+    padding: 40px;
+    padding-top: 70px;
     display: flex;
     align-items: center;
     position: fixed;
-    z-index:200000;
+    z-index: 100;
     top: 0;
     left: 0;
     right: 0;
     justify-content: space-between;
     background-color: transparent;
-    transition: all 0.8s ease;
+    transition: all 0.5s ease;
 
     &.scrolled {
-      backdrop-filter: blur(3px);
-      -webkit-backdrop-filter: blur(3px);
-      background-color: #ffffffc9;
+      height: 70px;
+      top: 10px;
+      left: 100px;
+      padding: 0 20px;
+      border-radius: 1000px;
+      right: 100px;
+      backdrop-filter: blur(4px) brightness(0.5);
+      background-color: #ffffff20;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8),
+        inset 0 -2px 8px rgba(0, 0, 0, 0.7);
+
+      .logo-box {
+        img {
+          height: 45px;
+
+        }
+      }
     }
+
+    // &.scrolling-down{
+    // top: 10px;
+    // left: 100px;
+    // padding: 10px;
+    // border-radius: 1000px;
+    // right: 100px;
+
+    // }
 
     .logo-box {
       padding-left: 30px;
       display: flex;
       align-items: center;
       min-width: 390px;
-      margin-top: -10px;
+      // margin-top: -2px;
 
       &:hover {
         .name-center {
@@ -51,6 +74,7 @@
 
       img {
         height: 55px;
+        transition: all 0.5s ease;
         margin-right: 20px;
         opacity: 1;
       }
@@ -58,7 +82,7 @@
       .right {
         display: inline-block;
         margin-top: 4px;
-        z-index: 999;
+        z-index: 100;
         transition: all 0.2s;
         position: relative;
         white-space: nowrap;
@@ -102,7 +126,7 @@
       padding: 10px;
       padding-right: 20px;
       margin-top: -10px;
-      z-index: 1001;
+      z-index: 200;
 
       .hamburger {
         width: 30px;
@@ -246,7 +270,7 @@
     background-position: center;
     opacity: 0.1;
     transition: opacity 0.3s;
-    z-index: 1000;
+    z-index: 150;
 
     &:hover {
       opacity: 0.7;
@@ -334,6 +358,7 @@
     opacity: 0;
     // transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     // transform: translateY(0);
@@ -345,19 +370,23 @@
   .right p span {
     color: #181818;
   }
+
   .menu-box {
     .el-menu-item {
       color: #181818 !important;
     }
   }
+
   .fullscreen {
     border-color: #181818;
   }
+
   .mobile-menu-icon {
     .hamburger {
       span {
         background: #000 !important;
       }
+
       &.active {
         span {
           background: #fff !important;
@@ -366,10 +395,21 @@
     }
   }
 
-  .layout-page {
+  .el-menu-layout-all {
+
     &.scrolled {
-      background-color: #000000c9;
+      backdrop-filter: blur(3px) brightness(0.9);
+      background-color: #ffffffc9;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2),
+        inset 0 -2px 8px rgba(255, 255, 255, 0.8);
     }
+  }
+
+  .layout-page {
+
+    // &.scrolled {
+    //   background-color: #000000c9;
+    // }
     .mobile-menu-panel {
       .mobile-menu-content {
         // background: #ffffff;

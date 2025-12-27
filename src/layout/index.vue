@@ -1,8 +1,10 @@
 <template>
   <div class="layout-page" ref="layoutPage">
     <!-- 头部 -->
-    <el-header class="el-menu-layout-all" :class="{ 'scrolled': isScrolled }">
-      
+    <el-header
+      class="el-menu-layout-all"
+      :class="{ scrolled: isScrolled, 'scrolling-down': isScrollingDown }"
+    >
       <div class="logo-box">
         <img :src="showLogo" />
         <div class="right clickable">
@@ -15,7 +17,7 @@
           </p>
         </div>
       </div>
-      
+
       <!-- 桌面端菜单 -->
       <el-menu
         v-if="!isMobile"
@@ -38,7 +40,7 @@
           </RouterLink>
         </div>
       </el-menu>
-      
+
       <!-- 移动端菜单按钮 -->
       <div v-else class="mobile-menu-icon" @click="toggleMobileMenu">
         <div class="hamburger" :class="{ active: isMobileMenuOpen }">
@@ -48,9 +50,13 @@
         </div>
       </div>
     </el-header>
-    
+
     <!-- 移动端菜单面板 -->
-    <div v-if="isMobile && isMobileMenuOpen" class="mobile-menu-panel" @click="closeMobileMenu">
+    <div
+      v-if="isMobile && isMobileMenuOpen"
+      class="mobile-menu-panel"
+      @click="closeMobileMenu"
+    >
       <div class="mobile-menu-content" @click.stop>
         <div class="mobile-menu-items">
           <RouterLink
@@ -59,9 +65,12 @@
             :to="item.path"
             @click="closeMobileMenu"
           >
-            <div 
-              class="mobile-menu-item" 
-              :class="{ active: currentRouter === item.path, [item.meta.titleEn]: true }"
+            <div
+              class="mobile-menu-item"
+              :class="{
+                active: currentRouter === item.path,
+                [item.meta.titleEn]: true,
+              }"
             >
               {{ item.meta.titleEn }}
             </div>
@@ -69,14 +78,14 @@
         </div>
       </div>
     </div>
-    
+
     <!-- body -->
     <RouterView />
     <div class="fullscreen" @click="toggleFullscreen"></div>
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { routes } from "@/router";
 import { useRouter, useRoute } from "vue-router";
 import Logo from "@/assets/img/logo.png";
@@ -105,6 +114,8 @@ const currentRouter = computed(() => {
 // 新增的滚动相关引用和状态
 const layoutPage = ref(null);
 const isScrolled = ref(false);
+const isScrollingDown = ref<boolean>(false);
+let lastScrollTop = 0;
 
 const filterRoutes = routes.filter((item) => {
   return item?.meta?.ifShow;
@@ -173,7 +184,16 @@ const handleResize = () => {
 
 // 监听滚动事件
 const handleScroll = () => {
-    isScrolled.value = document.documentElement.scrollTop > 50;
+  isScrolled.value = document.documentElement.scrollTop > 50;
+  // 获取当前滚动高度 (兼容性处理)
+  const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+  if (scrollTop > lastScrollTop) {
+    isScrollingDown.value = true;
+  } else {
+    isScrollingDown.value = false;
+  }
+  // 更新最后一次滚动位置，严禁负值 (移动端橡皮筋效果兼容)
+  lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
 };
 
 onMounted(() => {
@@ -182,21 +202,16 @@ onMounted(() => {
   }, 0);
 
   // 监听窗口大小变化
-  window.addEventListener('resize', handleResize);
-  
-  // 监听全屏变化事件
-  document.addEventListener("fullscreenchange", () => {
-    isFullscreen.value = !!document.fullscreenElement;
-  });
-  
+  window.addEventListener("resize", handleResize);
+
   // 添加滚动事件监听器
-    document.addEventListener('scroll', handleScroll);
+  document.addEventListener("scroll", handleScroll);
 });
 
 // 清理事件监听器
 onUnmounted(() => {
-  window.removeEventListener('resize', handleResize);
-    document.removeEventListener('scroll', handleScroll);
+  window.removeEventListener("resize", handleResize);
+  document.removeEventListener("scroll", handleScroll);
 });
 </script>
 <style lang="less" scoped src="./index.less" />

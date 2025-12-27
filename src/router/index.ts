@@ -16,7 +16,7 @@ export const routes = [
       //路由元信息
       titleEn: "HOME", //拿取当前路由的title
       titleCn: "主页", //拿取当前路由的title
-      fullFooter: true, //是否显示左侧图片
+      fullFooter: false,
       ifShow: true,
       //这里边还可设置其他的状态，比如登录的标志，路由是否缓存的标志
     },
@@ -28,7 +28,7 @@ export const routes = [
     meta: {
       titleEn: "WORK",
       titleCn: "博客",
-      fullFooter: false,
+      fullFooter: true,
       ifShow: true,
     },
   },
@@ -40,7 +40,7 @@ export const routes = [
     meta: {
       titleEn: "PERSONAL",
       titleCn: "游戏",
-      fullFooter: false,
+      fullFooter: true,
       ifShow: true,
     },
   },
@@ -52,7 +52,7 @@ export const routes = [
     meta: {
       titleEn: "TOOLS",
       titleCn: "工具",
-      fullFooter: false,
+      fullFooter: true,
       ifShow: true,
     },
   },
