@@ -18,7 +18,7 @@ function setRootFontSize() {
 
   if (deviceWidth <= 810) {
     // 移动端
-    rootFontSize = (deviceWidth / 375) * 12;
+    rootFontSize = (deviceWidth / 375) * 14;
   } else {
     // 桌面端
     rootFontSize = (deviceWidth / 375) * 4.6;

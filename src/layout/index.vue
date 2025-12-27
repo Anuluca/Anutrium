@@ -86,8 +86,7 @@
 
     <!-- body -->
     <div
-      style="width: 100%; height: 100%;transition: filter 0.3s;"
-      :class="{ blur: isMobile && isMobileMenuOpen }"
+      :class="{ 'router-container':true,blur: isMobile && isMobileMenuOpen }"
     >
       <RouterView />
     </div>

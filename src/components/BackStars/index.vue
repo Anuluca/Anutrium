@@ -49,7 +49,7 @@ onMounted(() => {
         'body-color': true,
         dark: props.theme === 'dark',
         light: props.theme === 'light',
-        isTextMenu: props.isTextMenu,
+        // isTextMenu: props.isTextMenu,
       }"
     ></div>
     <div

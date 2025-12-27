@@ -11,9 +11,9 @@ export default defineStore('visualState', {
       localStorage.setItem("theme", theme);
       console.log('看看',theme)
       if (localStorage.getItem('theme') === 'dark') {
-        document.getElementById("app").classList.remove("light");
+        document.getElementsByTagName('body')[0].classList.remove("light");
       } else {
-        document.getElementById('app').classList.add('light')
+        document.getElementsByTagName("body")[0].classList.add("light");
       }
       this.theme = theme
     }

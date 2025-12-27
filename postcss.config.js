@@ -1,7 +1,7 @@
 module.exports = {
   plugins: {
     'postcss-pxtorem': {
-      rootValue: 21.5, // 设计稿基准值，通常为设计稿宽度/10
+      rootValue: 28, // 设计稿基准值，通常为设计稿宽度/10
       propList: ['*'], // 需要转换的属性，*表示所有
       selectorBlackList: ['.no-rem'], // 忽略转换的类名
       minPixelValue: 2, // 小于2px的不转换

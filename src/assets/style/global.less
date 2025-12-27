@@ -2,26 +2,59 @@
 
 #app {
   width: 100%;
-  height: 100%;
   // position: fixed;
-  overflow: scroll;
   cursor: default;
-  background-color: #fff;
   transition: background-color 1s;
 }
-#app:not(.light){
-  background-color: #0c0c0c;
-  color: #fff;
+
+body {
+  width: calc(100% - 80px);
+  height: 100%;
+  overflow:auto;
+  position: relative;
+  background-color: #fff;
+  padding: 0 40px;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #000;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 0, 78, 0.76);
+    border-radius: 0;
+    margin: 2px;
+    cursor: move;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #ff004e;
+  }
 }
 .light{
   background-color: #fff !important;
   color: #000;
-}
 
-body {
-  width: 100%;
-  height: 100%;
-  background-color: transparent;
+  &::-webkit-scrollbar-track {
+    background: #ffffff;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 0, 78, 0.55);
+    border-radius: 0;
+    cursor: move;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #ff004e;
+  }
+}
+body:not(.light){
+  background-color: #0c0c0c;
+  color: #fff;
 }
 
 * {
@@ -64,12 +97,11 @@ body {
 
 .main-container {
   width: 100%;
-  min-height: calc(100vh - 160px);
+  min-height: calc(100vh - 140px);
+  box-sizing: border-box;
   position: relative;
   margin: 0 auto;
-  padding: 20px;
-  // border: 10px solid red;
-  box-sizing: border-box;
+  padding-bottom: 60px;
 }
 
 .trans {
