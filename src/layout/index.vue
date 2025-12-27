@@ -1,10 +1,7 @@
 <template>
   <div class="layout-page" ref="layoutPage">
     <!-- 头部 -->
-    <el-header
-      class="el-menu-layout-all"
-      :class="{ scrolled: isScrolled }"
-    >
+    <el-header class="el-menu-layout-all" :class="{ scrolled: isScrolled }">
       <div class="logo-box" @click="returnHome">
         <img :src="showLogo" />
         <div class="right clickable">
@@ -40,52 +37,60 @@
           </RouterLink>
         </div>
       </el-menu>
-
     </el-header>
 
-
-      <!-- 移动端菜单按钮 -->
-      <div v-if="isMobile"
-      :class="{ 'mobile-menu-icon':true,scrolled: isScrolled }" @click="toggleMobileMenu">
-        <div class="hamburger" :class="{ active: isMobileMenuOpen }">
-          <span></span>
-          <span></span>
-          <span></span>
-        </div>
+    <!-- 移动端菜单按钮 -->
+    <div
+      v-if="isMobile"
+      :class="{ 'mobile-menu-icon': true, scrolled: isScrolled }"
+      @click="toggleMobileMenu"
+    >
+      <div class="hamburger" :class="{ active: isMobileMenuOpen }">
+        <span></span>
+        <span></span>
+        <span></span>
       </div>
+    </div>
 
     <!-- 移动端菜单面板 -->
     <div
-      :class="{'mobile-menu-panel':true, 'active': isMobile && isMobileMenuOpen }"
+      :class="{
+        'mobile-menu-panel': true,
+        active: isMobile && isMobileMenuOpen,
+      }"
       @click="closeMobileMenu"
     >
-    <div class="mobile-menu-wrapper">
-      <div class="mobile-menu-content" @click.stop>
-        <div class="mobile-menu-items">
-          <RouterLink
-            v-for="(item, index) in filterRoutes"
-            :key="index"
-            :to="item.path"
-            @click="closeMobileMenu"
-          >
-            <div
-              class="mobile-menu-item"
-              :class="{
-                active: currentRouter === item.path,
-                [item.meta.titleEn]: true,
-              }"
+      <div class="mobile-menu-wrapper">
+        <div class="mobile-menu-content" @click.stop>
+          <div class="mobile-menu-items">
+            <RouterLink
+              v-for="(item, index) in filterRoutes"
+              :key="index"
+              :to="item.path"
+              @click="closeMobileMenu"
             >
-              {{ item.meta.titleEn }}
-            </div>
-          </RouterLink>
+              <div
+                class="mobile-menu-item"
+                :class="{
+                  active: currentRouter === item.path,
+                  [item.meta.titleEn]: true,
+                }"
+              >
+                {{ item.meta.titleEn }}
+              </div>
+            </RouterLink>
+          </div>
         </div>
       </div>
-
-    </div>
     </div>
 
     <!-- body -->
-    <RouterView />
+    <div
+      style="width: 100%; height: 100%;transition: filter 0.3s;"
+      :class="{ blur: isMobile && isMobileMenuOpen }"
+    >
+      <RouterView />
+    </div>
     <div class="fullscreen" @click="toggleFullscreen"></div>
   </div>
 </template>
@@ -108,7 +113,7 @@ watch(locale, () => {
 });
 
 const route = useRoute();
-const router = useRouter()
+const router = useRouter();
 const visualStateStore = visualState();
 const showLogo = computed(() => {
   return visualStateStore.theme === "dark" ? Logo : LogoDark;
@@ -192,7 +197,7 @@ const handleScroll = () => {
 };
 
 const returnHome = () => {
-  router.push('/');
+  router.push("/");
 };
 
 onMounted(() => {
