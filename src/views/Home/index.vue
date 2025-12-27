@@ -2,24 +2,11 @@
   <div class="home-page main-container" @mousewheel="wheelEvent">
     <div class="center-text">
       <img :src="showLogo" alt="" />
-      <div
-        style="
-          font-size: 40px;
-          color: #000;
-          margin-bottom: 5px;
-          text-align: center;
-        "
+      <div class="tempTitle"
       >
         庭院建设中
       </div>
-      <div
-        style="
-          margin-bottom: 20px;
-          color: #000;
-          text-align: center;
-          text-decoration: underline;
-          cursor: pointer;
-        "
+      <div class="tempLink"
         @click="toOld"
       >
         前往旧版主页

@@ -3,9 +3,32 @@
   overflow: hidden;
   display: flex;
   align-items: center;
+
+  .tempTitle {
+    font-size: 100px;
+    color: #1f1f1f;
+    margin-bottom: 5px;
+    margin-top: -20px;
+    text-align: center;
+    font-family: 'cusTitle';
+
+  }
+
+  .tempLink {
+    margin-bottom: 20px;
+    color: #1f1f1f;
+    text-align: center;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 30px;
+    font-family: 'cusTitle';
+
+  }
+
   .center-text {
     width: 100%;
     margin-top: -100px;
+
     img {
       width: 120px;
       text-align: center;
@@ -15,22 +38,26 @@
       margin-bottom: 30px;
       transform-origin: center;
     }
-    > p {
+
+    >p {
       color: #ea3353;
       font-family: "cusTitle";
       text-align: center;
       transform: scale(1, 1.15);
       text-shadow: 0 0 10px #00000056;
+
       &:first-of-type {
         font-size: 33px;
         letter-spacing: 1px;
       }
+
       &:last-of-type {
         font-size: 25.8px;
         margin-top: 8px;
       }
     }
   }
+
   .bottom-text {
     width: calc(100% - 40px);
     position: absolute;
@@ -42,10 +69,12 @@
     font-family: "cusTitle";
     letter-spacing: 0.2px;
     bottom: 50px;
+
     .lisence {
       text-decoration: underline;
       cursor: pointer;
       transition: all 0.1s;
+
       &:hover {
         color: #fff;
         background-color: #ea3353;

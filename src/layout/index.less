@@ -42,15 +42,6 @@
       }
     }
 
-    // &.scrolling-down{
-    // top: 10px;
-    // left: 100px;
-    // padding: 10px;
-    // border-radius: 1000px;
-    // right: 100px;
-
-    // }
-
     .logo-box {
       padding-left: 30px;
       display: flex;
@@ -113,63 +104,6 @@
                   width: 150px;
                 }
               }
-            }
-          }
-        }
-      }
-    }
-
-    // 移动端菜单按钮
-    .mobile-menu-icon {
-      display: none;
-      cursor: pointer;
-      padding: 10px;
-      padding-right: 20px;
-      margin-top: -10px;
-      z-index: 200;
-
-      .hamburger {
-        width: 30px;
-        height: 20px;
-        position: relative;
-
-        span {
-          display: block;
-          height: 3px;
-          width: 100%;
-          background: #ffffff;
-          border-radius: 2px;
-          position: absolute;
-          transition: all 0.3s ease;
-
-          &:nth-child(1) {
-            top: 0;
-          }
-
-          &:nth-child(2) {
-            top: 50%;
-            transform: translateY(-50%);
-          }
-
-          &:nth-child(3) {
-            bottom: 0;
-          }
-        }
-
-        &.active {
-          span {
-            &:nth-child(1) {
-              top: 50%;
-              transform: translateY(-50%) rotate(45deg);
-            }
-
-            &:nth-child(2) {
-              opacity: 0;
-            }
-
-            &:nth-child(3) {
-              top: 50%;
-              transform: translateY(-50%) rotate(-45deg);
             }
           }
         }
@@ -256,6 +190,85 @@
     }
   }
 
+
+  // 移动端菜单按钮
+  .mobile-menu-icon {
+    position: fixed;
+    right: 20px;
+    top: 30px;
+    width: 60px;
+    height: 60px;
+    border-radius: 1000px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.5s ease;
+    z-index: 4000;
+
+    &.scrolled {
+      top: 10px;
+      right: 20px;
+      backdrop-filter: blur(4px) brightness(0.5);
+      background-color: #ffffff20;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8),
+        inset 0 -2px 8px rgba(0, 0, 0, 0.7);
+
+      .hamburger {
+        zoom: 0.9;
+      }
+    }
+
+
+
+    .hamburger {
+      width: 30px;
+      height: 20px;
+      position: relative;
+
+      span {
+        display: block;
+        height: 3px;
+        width: 100%;
+        border-radius: 2px;
+        position: absolute;
+        transition: all 0.3s ease;
+        background-color: #fff;
+
+        &:nth-child(1) {
+          top: 0;
+        }
+
+        &:nth-child(2) {
+          top: 50%;
+          transform: translateY(-50%);
+        }
+
+        &:nth-child(3) {
+          bottom: 0;
+        }
+      }
+
+      &.active {
+        span {
+          &:nth-child(1) {
+            top: 50%;
+            transform: translateY(-50%) rotate(45deg);
+          }
+
+          &:nth-child(2) {
+            opacity: 0;
+          }
+
+          &:nth-child(3) {
+            top: 50%;
+            transform: translateY(-50%) rotate(-45deg);
+          }
+        }
+      }
+    }
+  }
+
   // 全屏按钮样式
   .fullscreen {
     position: absolute;
@@ -283,12 +296,20 @@
     top: 0;
     left: 0;
     width: 100%;
-    height: 100%;
+    height: 0;
+    opacity: 0;
+    overflow: hidden;
     background: rgba(0, 0, 0, 0.8);
     z-index: 1000;
     display: flex;
     justify-content: center;
     align-items: center;
+    transition: height 0.4s,opacity 0.2s;
+    &.active{
+      height: 100%;
+      opacity: 1;
+
+    }
 
     .mobile-menu-content {
       // background: #0c0c0c;
@@ -381,20 +402,6 @@
     border-color: #181818;
   }
 
-  .mobile-menu-icon {
-    .hamburger {
-      span {
-        background: #000 !important;
-      }
-
-      &.active {
-        span {
-          background: #fff !important;
-        }
-      }
-    }
-  }
-
   .el-menu-layout-all {
 
     &.scrolled {
@@ -402,6 +409,28 @@
       background-color: #ffffffc9;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2),
         inset 0 -2px 8px rgba(255, 255, 255, 0.8);
+    }
+  }
+
+  .mobile-menu-icon {
+    &.scrolled {
+      backdrop-filter: blur(3px) brightness(0.9);
+      background-color: #ffffffc9;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2),
+        inset 0 -2px 8px rgba(255, 255, 255, 0.8);
+
+    }
+
+    .hamburger {
+      span {
+        background: #000 !important;
+      }
+
+      // &.active {
+      //   span {
+      //     background: #fff !important;
+      //   }
+      // }
     }
   }
 
@@ -440,17 +469,12 @@
       .logo-box {
         min-width: auto;
         width: 100%;
-        padding-left: 70px;
+        margin-left: -10px;
         justify-content: center;
 
         .right p {
           color: var(--text-color); // 使用CSS变量
         }
-      }
-
-      // 显示移动端菜单按钮
-      .mobile-menu-icon {
-        display: block;
       }
 
       // 隐藏桌面端菜单
@@ -461,6 +485,11 @@
 
     .fullscreen {
       display: none;
+    }
+
+    // 显示移动端菜单按钮
+    .mobile-menu-icon {
+      display: flex;
     }
   }
 }

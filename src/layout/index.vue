@@ -3,7 +3,7 @@
     <!-- 头部 -->
     <el-header
       class="el-menu-layout-all"
-      :class="{ scrolled: isScrolled, 'scrolling-down': isScrollingDown }"
+      :class="{ scrolled: isScrolled }"
     >
       <div class="logo-box">
         <img :src="showLogo" />
@@ -41,20 +41,22 @@
         </div>
       </el-menu>
 
+    </el-header>
+
+
       <!-- 移动端菜单按钮 -->
-      <div v-else class="mobile-menu-icon" @click="toggleMobileMenu">
+      <div v-if="isMobile"
+      :class="{ 'mobile-menu-icon':true,scrolled: isScrolled }" @click="toggleMobileMenu">
         <div class="hamburger" :class="{ active: isMobileMenuOpen }">
           <span></span>
           <span></span>
           <span></span>
         </div>
       </div>
-    </el-header>
 
     <!-- 移动端菜单面板 -->
     <div
-      v-if="isMobile && isMobileMenuOpen"
-      class="mobile-menu-panel"
+      :class="{'mobile-menu-panel':true, 'active': isMobile && isMobileMenuOpen }"
       @click="closeMobileMenu"
     >
       <div class="mobile-menu-content" @click.stop>
@@ -114,8 +116,6 @@ const currentRouter = computed(() => {
 // 新增的滚动相关引用和状态
 const layoutPage = ref(null);
 const isScrolled = ref(false);
-const isScrollingDown = ref<boolean>(false);
-let lastScrollTop = 0;
 
 const filterRoutes = routes.filter((item) => {
   return item?.meta?.ifShow;
@@ -185,15 +185,6 @@ const handleResize = () => {
 // 监听滚动事件
 const handleScroll = () => {
   isScrolled.value = document.documentElement.scrollTop > 50;
-  // 获取当前滚动高度 (兼容性处理)
-  const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-  if (scrollTop > lastScrollTop) {
-    isScrollingDown.value = true;
-  } else {
-    isScrollingDown.value = false;
-  }
-  // 更新最后一次滚动位置，严禁负值 (移动端橡皮筋效果兼容)
-  lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
 };
 
 onMounted(() => {
@@ -202,10 +193,10 @@ onMounted(() => {
   }, 0);
 
   // 监听窗口大小变化
-  window.addEventListener("resize", handleResize);
+  window.addEventListener("resize", handleResize, { passive: true });
 
   // 添加滚动事件监听器
-  document.addEventListener("scroll", handleScroll);
+  document.addEventListener("scroll", handleScroll, { passive: true });
 });
 
 // 清理事件监听器
