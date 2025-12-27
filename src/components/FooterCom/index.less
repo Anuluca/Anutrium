@@ -1,51 +1,50 @@
 .footer-com {
-  height: 28px;
+  height: 26px;
   background-color: rgba(0, 0, 0, 0.598);
   box-shadow: 0px 0 10px rgba(0, 0, 0, 0.509);
   position: fixed;
   bottom: 4px;
   left: 7px;
   right: 7px;
-  // bottom: 0px;
-  // left: 0px;
-  // right: 0px;
-  z-index: 200;
+  z-index: 100;
   display: flex;
-  justify-content: center;
-  // overflow: hidden;
+  justify-content: space-evenly;
+  align-items: center;
   transition: all 0.2s;
 
-  >div {
-    // border: 1px solid red;
-    box-sizing: border-box;
-    height: 28px;
+  &.full-footer {
+    left: 0;
+    right: 0;
+    bottom: 0;
   }
 
   .left {
-    min-width: 100px;
+    flex: 0 0 110px;
     display: flex;
     align-items: center;
     justify-content: center;
 
     .language {
       transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
 
-      span {
-        font-family: 'cusTitle';
-        font-size: 15px;
-        line-height: 20px;
-        letter-spacing: 1px;
-      }
-
-      button {
+      .el-button {
         transform: scale(0.8, 1);
         margin-left: 0px !important;
+
+        span {
+          font-family: 'cusTitle';
+          font-size: 15px;
+          letter-spacing: 1px;
+        }
       }
     }
   }
 
   .center {
-    width: 100%;
+    flex: 1;
     height: 100%;
     font-size: 13px;
     letter-spacing: 0.8px;
@@ -124,54 +123,59 @@
   }
 
   .right {
-    text-align: center;
+    flex: 0 0 630px;
+    height: 100%;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-evenly;
     flex-wrap: nowrap;
 
     .text-links {
-      width: 565px;
+      height: 100%;
       margin-left: 10px;
       transition: all 1s;
-      display: inline-block;
       white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: nowrap;
 
-      .el-button--danger {
-        margin-top: -4px;
-        transform: scale(0.95, 1.2);
-      }
-
-      >span,
-      >.el-button {
+      >span {
         position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
 
-        span {
+        .el-button {
+          transform: scale(0.95, 1.2);
           font-family: 'cusTitle';
           font-size: 12px;
           letter-spacing: 0.8px;
-        }
-      }
 
-      .is-disabled {
-        color: #ffffffd9 !important;
-        margin-left: 5px;
+        }
       }
     }
 
+    .mark {
+      transform: scale(0.95, 1.2);
+      color: #ffffffd9 !important;
+      font-family: 'cusTitle';
+      font-size: 12px;
+      letter-spacing: 0.8px;
+
+    }
+
     .el-switch {
-      margin: 0 15px;
-      margin-left: 5px;
+      margin-right: 10px;
       height: 20px;
-      margin-top: 1px;
 
       .el-switch__core {
         height: 17px;
         min-width: 36px;
+        box-sizing: border-box !important;
         box-shadow: 0px 0px 6px 0px #000000a3;
 
         .el-switch__action {
-          zoom: 1.15;
           box-shadow: 0px 0px 6px 0px #0000005c;
         }
       }
@@ -184,6 +188,7 @@
         .el-switch__action {
           left: calc(100% - 14px);
           background-color: #6e40c9;
+          border: 2px solid #6e40c9;
         }
       }
     }
@@ -193,9 +198,9 @@
         border: 2px solid #f4ea2a;
 
         .el-switch__action {
-          // right: calc(100% - 14px);
           background-color: #f4ea2a;
-          left: -2px;
+          border: 2px solid #f4ea2a;
+          left: -4px;
         }
       }
     }
@@ -208,17 +213,19 @@
   .GITHUB_detail {
     position: absolute;
     display: block;
-    bottom: -140px;
     z-index: -1;
     opacity: 0;
     cursor: pointer;
-    // bottom: 40px;
     transform: translateX(-50%) !important;
     left: 50%;
-    width: 250px;
-    height: 100px;
-    transition: bottom 0.4s;
+    transition: bottom 0.3s, opacity 0.5s;
     box-shadow: 0 1px 15px #0000003b;
+    bottom: 10px;
+
+    &.hover {
+      bottom: 30px;
+      opacity: 1;
+    }
 
     img {
       width: 250px;
@@ -226,60 +233,53 @@
     }
   }
 
-  .BILIBILI_detail {
-    width: 280px !important;
-    height: 280px !important;
-    bottom: -300px;
-
-    img {
-      width: 280px !important;
-      height: 280px !important;
-    }
-  }
-
-  .GITHUB_detail {
-    width: 148px !important;
-    height: 32px !important;
-    border-radius: 16px;
-
-    img {
-      width: 148px !important;
-      height: 32px !important;
-      border-radius: 16px;
-    }
-  }
-
   .TWITTER_detail {
-    width: 246px !important;
-    height: 62px !important;
+    width: 246px;
+    height: 62px;
     border-radius: 31px;
 
     img {
-      width: 246px !important;
-      height: 62px !important;
+      width: 246px;
+      height: 62px;
       border-radius: 31px;
     }
   }
 
   .WEIBO_detail {
-    width: 346px !important;
-    height: 500px !important;
-    background-color: red;
-    bottom: -540px;
+    width: 346px;
+    height: 500px;
     overflow: hidden;
 
     img {
-      width: 346px !important;
-      height: 500px !important;
+      width: 346px;
+      height: 500px;
+    }
+  }
+
+  .BILIBILI_detail {
+    width: 280px;
+    height: 280px;
+    // bottom: -300px ;
+
+    img {
+      width: 280px;
+      height: 280px;
+    }
+  }
+
+  .GITHUB_detail {
+    width: 148px;
+    height: 32px;
+    border-radius: 16px;
+
+    img {
+      width: 148px;
+      height: 32px;
+      border-radius: 16px;
     }
   }
 }
 
-.full-footer {
-  left: 0;
-  right: 0;
-  bottom: 0;
-}
 
 @media screen and (max-width: 1050px) {
   .footer-com {

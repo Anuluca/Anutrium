@@ -10,6 +10,9 @@ import twitterImg from "@/assets/img/twitter_profile.png";
 import bilibiliImg from "@/assets/img/bilibili_profile.png";
 import githubImg from "@/assets/img/github_profile.png";
 import bottomLineData from "@/data/bottomLine.js";
+const weiboImg = ref(
+  "https://widget.weibo.com/weiboshow/index.php?language=&width=0&height=520&fansRow=1&ptype=1&speed=0&skin=10&isTitle=1&noborder=1&isWeibo=1&isFans=1&uid=7738638501&verifier=4838f435&dpc=1"
+);
 
 const { locale } = useI18n();
 
@@ -101,15 +104,13 @@ const contact = (type: string) => {
 // 鼠标移入
 const mouseOver = (type: string) => {
   let element = document.getElementsByClassName(`${type}_detail`)[0];
-  element["style"].bottom = "30px";
-  element["style"].opacity = "1";
+  element.classList.add("hover");
 };
 
 // 鼠标移出
 const mouseLeave = (type: string) => {
   let element = document.getElementsByClassName(`${type}_detail`)[0];
-  element["style"].bottom = "-140px";
-  element["style"].opacity = "0";
+  element.classList.remove("hover");
 };
 </script>
 
@@ -129,7 +130,7 @@ const mouseLeave = (type: string) => {
         <el-button
           link
           type="danger"
-          style="margin-right: 2px;"
+          style="margin-right: 2px"
           @click="changeLanguage('en')"
           :disabled="locale === 'en'"
           >En</el-button
@@ -157,11 +158,12 @@ const mouseLeave = (type: string) => {
                 :style="[
                   {
                     color: item.color || '#5F9DDD',
-                    fontWeight:'bold'
+                    fontWeight: 'bold',
                   },
                 ]"
                 >{{ item.title }}\{{ item.sort }}</span
-              >」<span style="color: #ffffff96">{{ item.date }}</span>&nbsp;
+              >」<span style="color: #ffffff96">{{ item.date }}</span
+              >&nbsp;
             </a>
           </b>
         </div>
@@ -191,12 +193,14 @@ const mouseLeave = (type: string) => {
               class="share_self"
               frameborder="0"
               scrolling="no"
-              src="https://widget.weibo.com/weiboshow/index.php?language=&width=0&height=520&fansRow=1&ptype=1&speed=0&skin=10&isTitle=1&noborder=1&isWeibo=1&isFans=1&uid=7738638501&verifier=4838f435&dpc=1"
+              :src="weiboImg"
             ></iframe>
           </div>
           <el-button link type="danger" @click="contact('WEIBO')"
-            >WEIBO</el-button
-          >
+            @mouseover="mouseOver('WEIBO')"
+            @mouseleave="mouseLeave('WEIBO')">
+            WEIBO
+          </el-button>
         </span>
         <span>
           <div class="BILIBILI_detail">
@@ -208,8 +212,9 @@ const mouseLeave = (type: string) => {
             @click="contact('BILIBILI')"
             @mouseover="mouseOver('BILIBILI')"
             @mouseleave="mouseLeave('BILIBILI')"
-            >BILIBILI</el-button
           >
+            BILIBILI
+          </el-button>
         </span>
         <span>
           <div class="GITHUB_detail">
@@ -221,26 +226,25 @@ const mouseLeave = (type: string) => {
             @click="contact('GITHUB')"
             @mouseover="mouseOver('GITHUB')"
             @mouseleave="mouseLeave('GITHUB')"
-            >GITHUB</el-button
           >
+            GITHUB
+          </el-button>
         </span>
         <span>
           <el-button link type="danger" @click="contact('EMAIL')"
             >MAIL</el-button
           >
         </span>
-        <el-button link type="danger" disabled>2018-2026 ANULUCA</el-button>
       </div>
+      <span class="mark"> 2018-2026 ANULUCA </span>
       <el-switch
         v-model="nightMode"
-        class="ml-cus"
-        @Change="changeTheme()"
+        @change="changeTheme()"
         style="
           --el-switch-on-color: #1a1a1aa8;
           --el-switch-off-color: #ffffff1f;
         "
       />
-      <!-- @change="changeTheme" -->
     </div>
   </div>
 </template>
