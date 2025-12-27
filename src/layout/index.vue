@@ -5,7 +5,7 @@
       class="el-menu-layout-all"
       :class="{ scrolled: isScrolled }"
     >
-      <div class="logo-box">
+      <div class="logo-box" @click="returnHome">
         <img :src="showLogo" />
         <div class="right clickable">
           <p>
@@ -59,6 +59,7 @@
       :class="{'mobile-menu-panel':true, 'active': isMobile && isMobileMenuOpen }"
       @click="closeMobileMenu"
     >
+    <div class="mobile-menu-wrapper">
       <div class="mobile-menu-content" @click.stop>
         <div class="mobile-menu-items">
           <RouterLink
@@ -79,6 +80,8 @@
           </RouterLink>
         </div>
       </div>
+
+    </div>
     </div>
 
     <!-- body -->
@@ -105,6 +108,7 @@ watch(locale, () => {
 });
 
 const route = useRoute();
+const router = useRouter()
 const visualStateStore = visualState();
 const showLogo = computed(() => {
   return visualStateStore.theme === "dark" ? Logo : LogoDark;
@@ -185,6 +189,10 @@ const handleResize = () => {
 // 监听滚动事件
 const handleScroll = () => {
   isScrolled.value = document.documentElement.scrollTop > 50;
+};
+
+const returnHome = () => {
+  router.push('/');
 };
 
 onMounted(() => {

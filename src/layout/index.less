@@ -271,7 +271,7 @@
 
   // 全屏按钮样式
   .fullscreen {
-    position: absolute;
+    position: fixed;
     top: 5px;
     right: 5px;
     width: 25px;
@@ -297,79 +297,85 @@
     left: 0;
     width: 100%;
     height: 0;
-    opacity: 0;
     overflow: hidden;
     background: rgba(0, 0, 0, 0.8);
     z-index: 1000;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: height 0.4s,opacity 0.2s;
-    &.active{
-      height: 100%;
-      opacity: 1;
+    transition: height 0.4s;
+
+    &.active {
+      height: 100vh;
 
     }
 
-    .mobile-menu-content {
-      // background: #0c0c0c;
-      // border: 1px solid #333;
-      border-radius: 4px;
-      width: 80%;
-      max-width: 500px;
-      // padding: 20px;
+    .mobile-menu-wrapper {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
 
-      .mobile-menu-items {
-        display: flex;
-        flex-direction: column;
-        width: 100%;
+      .mobile-menu-content {
+        // background: #0c0c0c;
+        // border: 1px solid #333;
+        border-radius: 4px;
+        width: 80%;
+        max-width: 500px;
+        // padding: 20px;
 
-        .mobile-menu-item {
-          padding: 20px 0;
+        .mobile-menu-items {
+          display: flex;
+          flex-direction: column;
           width: 100%;
-          color: #fff;
-          font-size: 40px;
-          text-align: center;
-          border-bottom: 1px solid #333;
-          cursor: pointer;
-          transition: all 0.3s;
-          font-family: "cusTitle", serif;
 
-          &:last-child {
-            border-bottom: none;
-          }
+          .mobile-menu-item {
+            padding: 20px 0;
+            width: 100%;
+            color: #fff;
+            font-size: 40px;
+            text-align: center;
+            border-bottom: 1px solid #333;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: "cusTitle", serif;
 
-          &:hover {
-            background: rgba(255, 255, 255, 0.1);
-          }
+            &:last-child {
+              border-bottom: none;
+            }
 
-          &.active {
-            color: #3276fe;
-            -webkit-text-stroke: 1px #3276fe;
-          }
+            &:hover {
+              background: rgba(255, 255, 255, 0.1);
+            }
 
-          &.HOME.active {
-            color: #3276fe;
-            -webkit-text-stroke: 1px #3276fe;
-          }
+            &.active {
+              color: #3276fe;
+              -webkit-text-stroke: 1px #3276fe;
+            }
 
-          &.PERSONAL.active {
-            color: #ffe71c;
-            -webkit-text-stroke: 1px #ffe71c;
-          }
+            &.HOME.active {
+              color: #3276fe;
+              -webkit-text-stroke: 1px #3276fe;
+            }
 
-          &.WORK.active {
-            color: #01dd83;
-            -webkit-text-stroke: 1px #01dd83;
-          }
+            &.PERSONAL.active {
+              color: #ffe71c;
+              -webkit-text-stroke: 1px #ffe71c;
+            }
 
-          &.TOOLS.active {
-            color: #dc00d0;
-            -webkit-text-stroke: 1px #dc00d0;
+            &.WORK.active {
+              color: #01dd83;
+              -webkit-text-stroke: 1px #01dd83;
+            }
+
+            &.TOOLS.active {
+              color: #dc00d0;
+              -webkit-text-stroke: 1px #dc00d0;
+            }
           }
         }
       }
+
     }
+
   }
 }
 
@@ -425,35 +431,6 @@
       span {
         background: #000 !important;
       }
-
-      // &.active {
-      //   span {
-      //     background: #fff !important;
-      //   }
-      // }
-    }
-  }
-
-  .layout-page {
-
-    // &.scrolled {
-    //   background-color: #000000c9;
-    // }
-    .mobile-menu-panel {
-      .mobile-menu-content {
-        // background: #ffffff;
-        // border-color: #ccc;
-
-        .mobile-menu-items {
-          .mobile-menu-item {
-            // color: #181818;
-
-            &:hover {
-              // background: rgba(0, 0, 0, 0.1);
-            }
-          }
-        }
-      }
     }
   }
 }
@@ -465,6 +442,10 @@
       // height: 80px;
       padding: 0 10px;
       padding-top: 20px;
+
+      &.scrolled {
+        top: 20px;
+      }
 
       .logo-box {
         min-width: auto;
@@ -490,6 +471,10 @@
     // 显示移动端菜单按钮
     .mobile-menu-icon {
       display: flex;
+
+      &.scrolled {
+        top: 20px;
+      }
     }
   }
 }

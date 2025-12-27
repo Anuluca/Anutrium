@@ -6,7 +6,7 @@ import { visualState } from "@/stores";
 
 const route = useRoute();
 const visualStateStore = visualState();
-const ifDarken = computed(() => {
+const isTextMenu = computed(() => {
   if (currentRouter.value === "/") {
     return false;
   } else {
@@ -16,17 +16,10 @@ const ifDarken = computed(() => {
 const currentRouter = computed(() => {
   return route.path;
 });
-const theme = computed(() => {
-  if (visualStateStore.theme === "light") {
-    return "light";
-  } else {
-    return "dawn";
-  }
-});
 </script>
 <template>
   <div class="back-controller">
-    <BackStars :theme="theme" :ifDarken="ifDarken" />
+    <BackStars :theme="visualStateStore.theme" :isTextMenu="isTextMenu" />
   </div>
 </template>
 

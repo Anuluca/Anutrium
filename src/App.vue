@@ -21,6 +21,9 @@ onMounted(() => {
       requestAnimationFrame(checkFontLoaded)
     }
   }
+
+  // 检查当前主题
+  visualStateStore.setTheme(localStorage.getItem('theme') || 'light')
   
   checkFontLoaded()
 })

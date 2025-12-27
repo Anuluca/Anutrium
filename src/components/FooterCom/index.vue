@@ -25,7 +25,7 @@ const fullFooter = computed(() => {
 const currentRouter = computed(() => {
   return route.path;
 });
-const nightMode = ref();
+const theme = ref();
 const isScrollingDown = ref<boolean>(false);
 let lastScrollTop = 0;
 
@@ -41,7 +41,7 @@ onMounted(() => {
     expand_element["style"].width = "100%";
     expand_element["style"].overflow = "hidden";
     text_element["style"].opacity = "1";
-    nightMode.value = localStorage.getItem("theme") === "dark";
+    theme.value = localStorage.getItem("theme") === "dark";
   }, 0);
   // 添加滚动事件监听器
   document.addEventListener("scroll", handleScroll, { passive: true });
@@ -59,16 +59,15 @@ const changeTheme = () => {
       background: "rgba(0, 0, 0, 0.2)",
       spinner: "1",
     });
-    console.log(nightMode.value);
     setTimeout(() => {
-      const currentMode = nightMode.value ? "dark" : "light";
+      const currentMode = theme.value ? "dark" : "light";
       visualStateStore.setTheme(currentMode);
     }, 150);
     setTimeout(() => {
       loadingInstance.close();
     }, 150);
   } else {
-    const currentMode = nightMode.value ? "dark" : "light";
+    const currentMode = theme.value ? "dark" : "light";
     visualStateStore.setTheme(currentMode);
   }
 };
@@ -267,7 +266,7 @@ onUnmounted(() => {
       </div>
       <span class="mark"> 2018-2026 ANULUCA </span>
       <el-switch
-        v-model="nightMode"
+        v-model="theme"
         @change="changeTheme()"
         style="
           --el-switch-on-color: #1a1a1aa8;
