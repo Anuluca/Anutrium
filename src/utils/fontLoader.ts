@@ -5,8 +5,8 @@
 
 // 定义需要预加载的字体列表
 const FONT_FAMILIES = [
-  'cusTitle',
-  'cusTitle',
+  'enTitle',
+  'cnTitle',
 ];
 
 // 进度相关元素

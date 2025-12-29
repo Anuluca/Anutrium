@@ -24,15 +24,19 @@
         :ellipsis="false"
       >
         <!-- @select="handleSelect" -->
-        <div class="flex-grow" />
         <div class="menu-box">
           <RouterLink
             v-for="(item, index) in filterRoutes"
             :key="index"
             :to="item.path"
           >
-            <el-menu-item :index="item.path" :class="item.meta.titleEn">
-              {{ item.meta.titleEn }}
+            <el-menu-item :index="item.path" :class="item.name">
+              <div class="title-box">
+                <div class="main-title">{{ item.meta.titleEn }}</div>
+                <div class="line"></div>
+                <div class="second-title">{{ item.meta.titleCn }}</div>
+
+              </div>
             </el-menu-item>
           </RouterLink>
         </div>

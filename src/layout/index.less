@@ -29,7 +29,7 @@
       left: 100px;
       right: 100px;
       padding: 0 20px;
-      border-radius: 10px;
+      border-radius: 5px;
       backdrop-filter: blur(2px);
       background-color: rgba(0, 0, 0, 0.78);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.91),
@@ -44,11 +44,11 @@
     }
 
     .logo-box {
+      flex-wrap: 0 0 390px;
       padding-left: 30px;
       display: flex;
       align-items: center;
-      min-width: 390px;
-      // margin-top: -2px;
+      cursor: pointer;
 
       &:hover {
         .name-center {
@@ -75,6 +75,7 @@
         display: inline-block;
         margin-top: 4px;
         z-index: 100;
+        cursor: pointer;
         transition: all 0.2s;
         position: relative;
         white-space: nowrap;
@@ -85,7 +86,7 @@
           color: var(--text-color); // 使用CSS变量
 
           span {
-            font-family: "cusTitle", serif;
+            font-family: "enTitle", serif;
             display: inline-block;
             transition: all 0.8s;
             white-space: nowrap;
@@ -113,79 +114,177 @@
 
     .el-menu {
       border-bottom: 0;
-
-      .flex-grow {
-        flex-grow: 1;
-      }
+      // background-color: pink;
+      flex-wrap: 0 0 790px;
 
       .menu-box {
         text-decoration: none;
-        // background-color: pink;
-        width: 560px;
         text-align: right;
 
         .el-menu-item {
-          font-family: "cusTitle", serif;
           display: inline-flex;
           justify-content: center;
           align-items: center;
-          padding: 10px;
-          color: #fff;
-          font-size: 20px;
-          letter-spacing: 1px;
           background-color: transparent;
-          transform: scale(1, 1.2);
-          transition: all 0.4s;
+          padding: 20px;
+
+          .title-box {
+            transition: all 0.4s;
+            // padding: 10px;
+            color: #fff;
+            font-size: 20px;
+            letter-spacing: 1px;
+            font-family: "enTitle", serif;
+
+            .main-title {
+              line-height: 20px;
+              transform: scale(1, 1.2);
+              transition: all 0.4s;
+            }
+
+            .line {
+              transition: all 0.4s;
+            }
+
+            .second-title {
+              line-height: 20px;
+              font-size: 16px;
+              letter-spacing: -0.1px;
+              font-weight: bold;
+              margin-right: 2px;
+              font-family: 'cnTitle';
+              transition: all 0.4s;
+            }
+          }
         }
 
         .el-menu-item.is-active {
           cursor: default;
-          color: transparent !important;
+
+          .title-box {
+            color: transparent !important;
+          }
         }
 
         .el-menu-item.xx:not(.is-active):hover {
-          text-shadow: 0 0 4px #f0a0d0;
-          color: #f0a0d0 !important;
+          .title-box {
+
+            .main-title {
+              text-shadow: 0 0 4px #f0a0d0;
+              color: #f0a0d0 !important;
+
+            }
+          }
+
         }
 
         .xxx.is-active {
-          -webkit-text-stroke: 1px #f0a0d0;
+          .title-box {
+
+            .main-title {
+              -webkit-text-stroke: 1px #f0a0d0;
+            }
+          }
         }
 
-        .el-menu-item.HOME:not(.is-active):hover {
-          text-shadow: 0 0 10px #3276fe;
-          color: #3276fe !important;
+        .el-menu-item.ARCHIVE:not(.is-active):hover {
+          .title-box {
+
+            .main-title {
+              color: #3276fe !important;
+              text-shadow: 0 0 10px #6596f9da;
+            }
+          }
+
         }
 
-        .HOME.is-active {
-          -webkit-text-stroke: 1px #3276fe;
+        .ARCHIVE.is-active {
+          .title-box {
+
+            .main-title {
+              -webkit-text-stroke: 1px #3276fe;
+            }
+          }
         }
 
-        .el-menu-item.PERSONAL:not(.is-active):hover {
-          text-shadow: 0 0 10px #ffe71c;
-          color: #ffe71c !important;
+        .el-menu-item.ISLAND:not(.is-active):hover {
+          .title-box {
+
+            .main-title {
+              text-shadow: 0 0 10px #e141d9c5;
+              color: #dc00d0 !important;
+            }
+          }
+
         }
 
-        .PERSONAL.is-active {
-          -webkit-text-stroke: 1px #ffe71c;
+        .ISLAND.is-active {
+          .title-box {
+
+            .main-title {
+              -webkit-text-stroke: 1px #dc00d0;
+            }
+          }
         }
 
-        .el-menu-item.WORK:not(.is-active):hover {
-          text-shadow: 0 0 10px #01dd83;
-          color: #01dd83 !important;
+        .el-menu-item.POKEYARD:not(.is-active):hover {
+          .title-box {
+
+            .main-title {
+              text-shadow: 0 0 10px #f9ea5cd4;
+              color: #ffe71c !important;
+            }
+          }
+
         }
 
-        .WORK.is-active {
-          -webkit-text-stroke: 1px #01dd83;
+        .POKEYARD.is-active {
+          .title-box {
+
+            .main-title {
+              -webkit-text-stroke: 1px #ffe71c;
+            }
+          }
         }
 
-        .el-menu-item.TOOLS:not(.is-active):hover {
-          text-shadow: 0 0 10px #dc00d0;
-          color: #dc00d0 !important;
+        .el-menu-item.CRAFT:not(.is-active):hover {
+          .title-box {
+
+            .main-title {
+              text-shadow: 0 0 10px #3af7a8de;
+              color: #01dd83 !important;
+            }
+          }
+
         }
 
-        .TOOLS.is-active {
-          -webkit-text-stroke: 1px #dc00d0;
+        .CRAFT.is-active {
+          .title-box {
+
+            .main-title {
+              -webkit-text-stroke: 1px #01dd83;
+            }
+          }
+        }
+
+        .el-menu-item.ABOUT:not(.is-active):hover {
+          .title-box {
+
+            .main-title {
+              text-shadow: 0 0 10px #eb6978c3;
+              color: #D74557 !important;
+            }
+          }
+
+        }
+
+        .ABOUT.is-active {
+          .title-box {
+
+            .main-title {
+              -webkit-text-stroke: 1px #D74557;
+            }
+          }
         }
       }
     }
@@ -199,7 +298,7 @@
     top: 30px;
     width: 60px;
     height: 60px;
-    border-radius: 10px;
+    border-radius: 5px;
     display: none;
     align-items: center;
     justify-content: center;
@@ -338,7 +437,7 @@
             border-bottom: 1px solid #333;
             cursor: pointer;
             transition: all 0.3s;
-            font-family: "cusTitle", serif;
+            font-family: "enTitle", serif;
 
             &:last-child {
               border-bottom: none;
@@ -381,11 +480,12 @@
   }
 
 
-  .router-container{
+  .router-container {
     width: 100%;
     margin-top: 140px;
     transition: filter 0.3s ease;
-    &.blur{
+
+    &.blur {
       filter: blur(4px) brightness(0) contrast(0.2);
     }
   }
@@ -412,7 +512,10 @@
 
   .menu-box {
     .el-menu-item {
-      color: #181818 !important;
+      .title-box {
+        color: #181818 !important;
+
+      }
     }
   }
 
@@ -455,8 +558,8 @@
 
       &.scrolled {
         top: 20px;
-        left:150px;
-        right:150px
+        left: 150px;
+        right: 150px
       }
 
       .logo-box {

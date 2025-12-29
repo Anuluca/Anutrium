@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Home from "@/views/Home/index.vue";
-import Tools from "@/views/Tools/index.vue";
+import Tools from "@/views/Craft/index.vue";
 import NotFound from "@/views/404/index.vue";
 import NProgress from "nprogress";
 import "nprogress/nprogress.css";
@@ -17,65 +17,77 @@ export const routes = [
       titleEn: "HOME", //拿取当前路由的title
       titleCn: "主页", //拿取当前路由的title
       fullFooter: false,
-      ifShow: true,
+      ifShow: false,
       //这里边还可设置其他的状态，比如登录的标志，路由是否缓存的标志
     },
   },
   {
-    path: "/work",
-    name: "WORK",
+    path: "/archieve",
+    name: "ARCHIVE",
     component: NotFound,
     meta: {
-      titleEn: "WORK",
-      titleCn: "博客",
+      titleEn: "ARCHIVE",
+      titleCn: "作品集",
       fullFooter: true,
       ifShow: true,
     },
   },
   {
-    path: "/personal",
-    name: "PERSONAL",
+    path: "/island",
+    name: "ISLAND",
     component: NotFound,
 
     meta: {
-      titleEn: "PERSONAL",
-      titleCn: "游戏",
+      titleEn: "ISLAND",
+      titleCn: "个人海湾",
       fullFooter: true,
       ifShow: true,
     },
   },
   {
-    path: "/tools",
-    name: "TOOLS",
+    path: "/pokeyard",
+    name: "POKEYARD",
     component: Tools,
 
     meta: {
-      titleEn: "TOOLS",
+      titleEn: "POKÉYARD",
+      titleCn: "宝可梦后院",
+      fullFooter: true,
+      ifShow: true,
+    },
+  },
+  {
+    path: "/craft",
+    name: "CRAFT",
+    component: Tools,
+
+    meta: {
+      titleEn: "CRAFT",
       titleCn: "工具",
       fullFooter: true,
       ifShow: true,
     },
   },
-  // {
-  //   path: '/about',
-  //   name: 'ABOUT',
-  //   component: NotFound,
+  {
+    path: '/about',
+    name: 'ABOUT',
+    component: NotFound,
 
-  //   meta: {
-  //     titleEn: 'ABOUT',
-  //     titleCn: '关于',
-  //     fullFooter: false,
-  //     ifShow: true
-  //   }
-  // },
+    meta: {
+      titleEn: 'ABOUT',
+      titleCn: '关于',
+      fullFooter: false,
+      ifShow: true
+    }
+  },
   // 【404】404
   {
     path: "/404",
     name: "404",
     component: NotFound,
     meta: {
-      titleEn: "ABOUT",
-      titleCn: "关于",
+      titleEn: "404",
+      titleCn: "404",
       fullFooter: false,
       ifShow: false,
     },

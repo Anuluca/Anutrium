@@ -136,7 +136,7 @@ onUnmounted(() => {
   <div
     :class="{
       'footer-com': true,
-      'full-footer': fullFooter,
+      // 'full-footer': fullFooter,
       'scrolling-down': isScrollingDown,
     }"
   >

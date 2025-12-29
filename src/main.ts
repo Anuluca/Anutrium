@@ -20,8 +20,8 @@ function setRootFontSize() {
     // 移动端
     rootFontSize = (deviceWidth / 375) * 14;
   } else {
-    // 桌面端
-    rootFontSize = (deviceWidth / 375) * 4.6;
+    // 桌面端 
+    rootFontSize = (deviceWidth / 375) * 4.9;
   }
   document.documentElement.style.fontSize = rootFontSize + 'px';
 }
