@@ -33,9 +33,10 @@
             <el-menu-item :index="item.path" :class="item.name">
               <div class="title-box">
                 <div class="main-title">{{ item.meta.titleEn }}</div>
-                <div class="line"></div>
-                <div class="second-title">{{ item.meta.titleCn }}</div>
-
+                <div class="second-title">
+                  <div class="line"></div>
+                  <span>{{ item.meta.titleCn }}</span>
+                </div>
               </div>
             </el-menu-item>
           </RouterLink>
@@ -90,7 +91,7 @@
 
     <!-- body -->
     <div
-      :class="{ 'router-container':true,blur: isMobile && isMobileMenuOpen }"
+      :class="{ 'router-container': true, blur: isMobile && isMobileMenuOpen }"
     >
       <RouterView />
     </div>
@@ -101,8 +102,8 @@
 <script setup lang="ts">
 import { routes } from "@/router";
 import { useRouter, useRoute } from "vue-router";
-import Logo from "@/assets/img/logo.png";
-import LogoDark from "@/assets/img/logo_black.png";
+import Logo from "@/assets/img/logo/logo.png";
+import LogoDark from "@/assets/img/logo/logo_black.png";
 import { computed, onMounted, onUnmounted, watch, ref } from "vue";
 import { visualState } from "@/stores";
 import { useI18n } from "vue-i18n";

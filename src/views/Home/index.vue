@@ -36,8 +36,8 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 import { visualState } from "@/stores";
-import Logo from "@/assets/img/logo.png";
-import LogoDark from "@/assets/img/logo_black.png";
+import Logo from "@/assets/img/logo/logo.png";
+import LogoDark from "@/assets/img/logo/logo_black.png";
 import { useRouter } from "vue-router";
 
 const visualStateStore = visualState();

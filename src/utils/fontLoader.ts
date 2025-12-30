@@ -1,12 +1,18 @@
 /**
- * 字体加载工具类
- * 确保所有自定义字体加载完成后再显示页面内容
+ * 字体和图片加载工具类
+ * 确保所有自定义字体和 logo 图片加载完成后再显示页面内容
  */
 
 // 定义需要预加载的字体列表
 const FONT_FAMILIES = [
   'enTitle',
   'cnTitle',
+];
+
+// logo 图片路径列表
+const LOGO_IMAGE_PATHS = [
+  '/src/assets/img/logo/logo.png',
+  '/src/assets/img/logo/logo_black.png',
 ];
 
 // 进度相关元素
@@ -18,7 +24,6 @@ function initProgressElements(): void {
   progressBar = document.getElementById('progress-bar');
   progressText = document.getElementById('progress-text');
 }
-
 
 /**
  * 检查单个字体是否已加载
@@ -49,18 +54,45 @@ function checkFontLoaded(fontFamily: string, progressCallback?: (loaded: boolean
 }
 
 /**
- * 等待所有字体加载完成
+ * 加载单个图片
+ * @param imagePath 图片路径
+ * @param progressCallback 进度回调函数
+ * @returns Promise<boolean>
+ */
+function loadImage(imagePath: string, progressCallback?: (loaded: boolean) => void): Promise<boolean> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    
+    img.onload = () => {
+      if (progressCallback) progressCallback(true);
+      resolve(true);
+    };
+    
+    img.onerror = () => {
+      console.warn(`图片 ${imagePath} 加载失败`);
+      if (progressCallback) progressCallback(false);
+      resolve(false);
+    };
+    
+    // 添加时间戳防止缓存问题
+    img.src = imagePath + '?t=' + new Date().getTime();
+  });
+}
+
+/**
+ * 等待所有字体和图片加载完成
  * @returns Promise<void>
  */
 export async function loadAllFonts(): Promise<void> {
   initProgressElements();
   window.fontLoaded = false;
   
-  const totalFonts = FONT_FAMILIES.length;
-  let loadedFonts = 0;
+  // 计算总资源数量（字体 + 图片）
+  const totalResources = FONT_FAMILIES.length + LOGO_IMAGE_PATHS.length;
+  let loadedResources = 0;
   
   const updateProgressUI = () => {
-    const progress = (loadedFonts / totalFonts) * 100;
+    const progress = (loadedResources / totalResources) * 100;
     if (progressBar) {
       progressBar.style.width = `${progress}%`;
     }
@@ -69,24 +101,34 @@ export async function loadAllFonts(): Promise<void> {
     }
   };
   
-  const fontLoadPromises = FONT_FAMILIES.map((fontFamily, index) => {
+  // 创建字体加载 Promise 数组
+  const fontLoadPromises = FONT_FAMILIES.map((fontFamily) => {
     return checkFontLoaded(fontFamily, (success) => {
-      loadedFonts++;
+      loadedResources++;
+      updateProgressUI();
+    });
+  });
+  
+  // 创建图片加载 Promise 数组
+  const imageLoadPromises = LOGO_IMAGE_PATHS.map((imagePath) => {
+    return loadImage(imagePath, (success) => {
+      loadedResources++;
       updateProgressUI();
     });
   });
   
   try {
-    await Promise.all(fontLoadPromises);
+    // 等待字体和图片都加载完成
+    await Promise.all([...fontLoadPromises, ...imageLoadPromises]);
     window.fontLoaded = true;
-    console.log('所有字体加载完成');
+    console.log('所有字体和图片加载完成');
   } catch (error) {
-    console.error('字体加载过程中出现错误:', error);
+    console.error('资源加载过程中出现错误:', error);
   }
 }
 
 /**
- * 显示页面内容（字体加载完成后调用）
+ * 显示页面内容（字体和图片加载完成后调用）
  */
 export function showPageContent(): void {
   // 移除加载指示器（如果有）

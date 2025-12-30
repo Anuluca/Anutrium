@@ -26,8 +26,8 @@
     &.scrolled {
       height: 60px;
       top: 10px;
-      left: 100px;
-      right: 100px;
+      left: 50px;
+      right: 50px;
       padding: 0 20px;
       border-radius: 5px;
       backdrop-filter: blur(2px);
@@ -36,16 +36,21 @@
         inset 0 -2px 8px rgb(0, 0, 0);
 
       .logo-box {
+        margin-top: 0;
         img {
           height: 40px;
 
         }
+      }
+      .el-menu{
+        margin-top: 5px;
       }
     }
 
     .logo-box {
       flex-wrap: 0 0 390px;
       padding-left: 30px;
+      margin-top: -6px;
       display: flex;
       align-items: center;
       cursor: pointer;
@@ -73,7 +78,7 @@
 
       .right {
         display: inline-block;
-        margin-top: 4px;
+        margin-top: 5px;
         z-index: 100;
         cursor: pointer;
         transition: all 0.2s;
@@ -128,9 +133,14 @@
           background-color: transparent;
           padding: 20px;
 
+          &:hover {
+            .line {
+              width: 100% !important;
+            }
+          }
+
           .title-box {
             transition: all 0.4s;
-            // padding: 10px;
             color: #fff;
             font-size: 20px;
             letter-spacing: 1px;
@@ -142,18 +152,33 @@
               transition: all 0.4s;
             }
 
-            .line {
-              transition: all 0.4s;
-            }
-
             .second-title {
-              line-height: 20px;
-              font-size: 16px;
-              letter-spacing: -0.1px;
-              font-weight: bold;
-              margin-right: 2px;
-              font-family: 'cnTitle';
-              transition: all 0.4s;
+              width: 100%;
+              height: 20px;
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+
+              .line {
+                width: 0px;
+                height: 70%;
+                margin-top: 4px;
+                background-color: #000;
+                transition: width 0.5s ;
+                box-sizing: border-box;
+              }
+
+              span {
+                flex: 0 0 1;
+                line-height: 20px;
+                font-size: 16px;
+                letter-spacing: -0.1px;
+                font-weight: bold;
+                margin: 0 2px;
+                font-family: 'cnTitle';
+                transition: all 0.4s;
+
+              }
             }
           }
         }
@@ -162,7 +187,16 @@
           cursor: default;
 
           .title-box {
-            color: transparent !important;
+            .main-title {
+              color: transparent !important;
+            }
+
+            .second-title {
+              .line {
+                width: 100%;
+                background-color: transparent;
+              }
+            }
           }
         }
 
@@ -178,15 +212,36 @@
 
         }
 
+        .el-menu-item.HOME:not(.is-active):hover {
+          .title-box {
+
+            .main-title {
+              text-shadow: 0 0 10px #eb6978c3;
+              color: #D74557 !important;
+            }
+          }
+
+        }
+        .HOME.is-active {
+          .title-box {
+            .line{
+              width: 0 !important;
+            }
+            opacity:0
+          }
+        }
+
         .xxx.is-active {
           .title-box {
 
             .main-title {
               -webkit-text-stroke: 1px #f0a0d0;
             }
+            .line{
+                border-top: 2px solid #f0a0d0;
+            }
           }
         }
-
         .el-menu-item.ARCHIVE:not(.is-active):hover {
           .title-box {
 
@@ -203,6 +258,9 @@
 
             .main-title {
               -webkit-text-stroke: 1px #3276fe;
+            }
+            .line{
+                border-top: 2px solid #3276fe;
             }
           }
         }
@@ -224,6 +282,9 @@
             .main-title {
               -webkit-text-stroke: 1px #dc00d0;
             }
+            .line{
+                border-top: 2px solid #dc00d0;
+            }
           }
         }
 
@@ -232,7 +293,7 @@
 
             .main-title {
               text-shadow: 0 0 10px #f9ea5cd4;
-              color: #ffe71c !important;
+              color: #ffed47 !important;
             }
           }
 
@@ -242,7 +303,10 @@
           .title-box {
 
             .main-title {
-              -webkit-text-stroke: 1px #ffe71c;
+              -webkit-text-stroke: 1px #ffed47;
+            }
+            .line{
+                border-top: 2px solid #ffed47;
             }
           }
         }
@@ -264,6 +328,9 @@
             .main-title {
               -webkit-text-stroke: 1px #01dd83;
             }
+            .line{
+                border-top: 2px solid #01dd83;
+            }
           }
         }
 
@@ -283,6 +350,9 @@
 
             .main-title {
               -webkit-text-stroke: 1px #D74557;
+            }
+            .line{
+                border-top: 2px solid #D74557;
             }
           }
         }
