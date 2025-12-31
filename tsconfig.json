@@ -7,7 +7,6 @@
     "*.ts",
     "*.tsx",
     "src/**/*.md", // md文件
-    "mdResolve.js",
     "src/**/*.ts",
     "src/*.ts"
   ],
