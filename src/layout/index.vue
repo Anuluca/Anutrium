@@ -78,13 +78,43 @@
                 class="mobile-menu-item"
                 :class="{
                   active: currentRouter === item.path,
-                  [item.meta.titleEn]: true,
+                  [item.name]: true,
                 }"
               >
-                {{ item.meta.titleEn }}
+                <div class="big-title">{{ item.meta.titleEn }}</div>
+                <div class="little-title">{{ item.meta.titleCn }}</div>
               </div>
             </RouterLink>
           </div>
+        </div>
+        <div class="mobile-footer">
+          <div class="contact-item">
+            <el-button link type="danger" @click="contact('GITHUB')">
+              GITHUB
+            </el-button>
+            <el-button link type="danger" @click="contact('GITHUB')">
+              WEIBO
+            </el-button>
+            <el-button link type="danger" @click="contact('GITHUB')">
+              TWITTER
+            </el-button>
+            <el-button link type="danger" @click="contact('GITHUB')">
+              BILIBILI
+            </el-button>
+          </div>
+          <div class="contact-item">
+            <span>E-MAIL: </span>
+            <el-button
+              class="mail-link"
+              link
+              type="danger"
+              @click="contact('EMAIL')"
+            >
+              tilucario@outlook.com
+            </el-button>
+          </div>
+          <div class="about-me">© 2018-2025 ANULUCA</div>
+          <div class="mobile-footer-left"></div>
         </div>
       </div>
     </div>
@@ -135,7 +165,7 @@ const filterRoutes = routes.filter((item) => {
 });
 
 // 移动端相关状态
-const isMobile = ref(window.innerWidth <= 1050);
+const isMobile = ref(window.innerWidth <= 620);
 const isMobileMenuOpen = ref(false);
 
 // 标题动画
@@ -189,7 +219,7 @@ const closeMobileMenu = () => {
 
 // 监听窗口大小变化
 const handleResize = () => {
-  isMobile.value = window.innerWidth <= 1050;
+  isMobile.value = window.innerWidth <= 620;
   if (!isMobile.value) {
     isMobileMenuOpen.value = false;
   }

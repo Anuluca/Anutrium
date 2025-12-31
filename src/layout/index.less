@@ -37,13 +37,20 @@
 
       .logo-box {
         margin-top: 0;
+
         img {
           height: 40px;
 
         }
       }
-      .el-menu{
+
+      .el-menu {
         margin-top: 5px;
+
+        .is-active .main-title {
+          // background-color: #1f1f1f;
+        }
+
       }
     }
 
@@ -164,7 +171,7 @@
                 height: 70%;
                 margin-top: 4px;
                 background-color: #000;
-                transition: width 0.5s ;
+                transition: width 0.5s;
                 box-sizing: border-box;
               }
 
@@ -222,11 +229,13 @@
           }
 
         }
+
         .HOME.is-active {
           .title-box {
-            .line{
+            .line {
               width: 0 !important;
             }
+
             opacity:0
           }
         }
@@ -237,11 +246,13 @@
             .main-title {
               -webkit-text-stroke: 1px #f0a0d0;
             }
-            .line{
-                border-top: 2px solid #f0a0d0;
+
+            .line {
+              border-top: 2px solid #f0a0d0;
             }
           }
         }
+
         .el-menu-item.ARCHIVE:not(.is-active):hover {
           .title-box {
 
@@ -259,8 +270,9 @@
             .main-title {
               -webkit-text-stroke: 1px #3276fe;
             }
-            .line{
-                border-top: 2px solid #3276fe;
+
+            .line {
+              border-top: 2px solid #3276fe;
             }
           }
         }
@@ -282,8 +294,9 @@
             .main-title {
               -webkit-text-stroke: 1px #dc00d0;
             }
-            .line{
-                border-top: 2px solid #dc00d0;
+
+            .line {
+              border-top: 2px solid #dc00d0;
             }
           }
         }
@@ -292,7 +305,7 @@
           .title-box {
 
             .main-title {
-              text-shadow: 0 0 10px #f9ea5cd4;
+              text-shadow: 0 0 10px #d6c52ed4;
               color: #ffed47 !important;
             }
           }
@@ -305,8 +318,9 @@
             .main-title {
               -webkit-text-stroke: 1px #ffed47;
             }
-            .line{
-                border-top: 2px solid #ffed47;
+
+            .line {
+              border-top: 2px solid #ffed47;
             }
           }
         }
@@ -315,7 +329,7 @@
           .title-box {
 
             .main-title {
-              text-shadow: 0 0 10px #3af7a8de;
+              text-shadow: 0 0 10px #00653bfb;
               color: #01dd83 !important;
             }
           }
@@ -328,8 +342,9 @@
             .main-title {
               -webkit-text-stroke: 1px #01dd83;
             }
-            .line{
-                border-top: 2px solid #01dd83;
+
+            .line {
+              border-top: 2px solid #01dd83;
             }
           }
         }
@@ -351,8 +366,9 @@
             .main-title {
               -webkit-text-stroke: 1px #D74557;
             }
-            .line{
-                border-top: 2px solid #D74557;
+
+            .line {
+              border-top: 2px solid #D74557;
             }
           }
         }
@@ -467,31 +483,44 @@
     width: 100%;
     height: 0;
     overflow: hidden;
-    background: rgba(0, 0, 0, 0.7);
     z-index: 1000;
-    transition: height 0.4s;
+    transition: all 0.4s ease;
+    background: linear-gradient(to bottom, rgb(0, 0, 0) 40%, transparent);
 
     &.active {
-      height: calc(100vh - 100px);
-      box-shadow: 0 0px 42px rgba(0, 0, 0, 0.8);
-      backdrop-filter: blur(8px);
+      height: calc(100vh - 130px);
+
+      .mobile-menu-wrapper {
+        opacity: 1;
+        zoom: 1;
+        filter: blur(0);
+      }
+
+      .mobile-footer {
+        opacity: 1 !important;
+        bottom: 50px !important;
+        filter: blur(0) !important;
+      }
 
     }
 
     .mobile-menu-wrapper {
+      opacity: 0;
+      font-size: 40px;
+      filter: blur(10px);
+      transition: all 0.6s ease, filter 0.8s;
       width: 100vw;
-      height: calc(100vh - 100px);
+      height: calc(100vh - 80px);
+      overflow: hidden;
+      border-radius: 0 0 100px 100px;
       display: flex;
       justify-content: center;
       align-items: center;
+      position: relative;
 
       .mobile-menu-content {
-        // background: #0c0c0c;
-        // border: 1px solid #333;
         border-radius: 4px;
-        width: 80%;
         max-width: 500px;
-        // padding: 20px;
 
         .mobile-menu-items {
           display: flex;
@@ -501,47 +530,123 @@
           .mobile-menu-item {
             padding: 20px 0;
             width: 100%;
-            color: #fff;
-            font-size: 40px;
+            color: #fffff4;
             text-align: center;
             border-bottom: 1px solid #333;
             cursor: pointer;
             transition: all 0.3s;
             font-family: "enTitle", serif;
+            display: flex;
+            align-items: start;
+            justify-content: center;
+            flex-wrap: wrap;
+
+            >div {
+              width: 100%;
+            }
+
+            .big-title {}
+
+            .little-title {
+              margin-top: 5px;
+              font-size: 24px;
+              font-family: 'cnTitle';
+
+            }
 
             &:last-child {
               border-bottom: none;
             }
 
             &:hover {
-              background: rgba(255, 255, 255, 0.1);
+              background: rgba(120, 120, 120, 0.1);
             }
 
             &.active {
-              color: #3276fe;
-              -webkit-text-stroke: 1px #3276fe;
+              color: #D74557;
             }
 
             &.HOME.active {
+              color: #D74557;
+            }
+
+            &.ARCHIVE.active {
               color: #3276fe;
-              -webkit-text-stroke: 1px #3276fe;
             }
 
-            &.PERSONAL.active {
-              color: #ffe71c;
-              -webkit-text-stroke: 1px #ffe71c;
-            }
-
-            &.WORK.active {
-              color: #01dd83;
-              -webkit-text-stroke: 1px #01dd83;
-            }
-
-            &.TOOLS.active {
+            &.ISLAND.active {
               color: #dc00d0;
-              -webkit-text-stroke: 1px #dc00d0;
+            }
+
+            &.POKEYARD.active {
+              color: #ffed47;
+              text-shadow: 0 0 10px #0000008c;
+            }
+
+            &.CRAFT.active {
+              color: #01dd83;
+            }
+
+            &.ABOUT.active {
+              color: #D74557;
             }
           }
+        }
+
+      }
+
+      .mobile-footer {
+        position: absolute;
+        bottom: -100px;
+        left: 0;
+        right: 0;
+        flex-wrap: wrap;
+        filter: blur(10px);
+        // background-color: red;
+        opacity: 0;
+        transition: all 1s ease;
+        transform: scale(1, 0.8);
+
+        .contact-item {
+          margin: 0 auto;
+          margin-bottom: 5px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          * {
+            font-size: 20px;
+            font-family: 'cnTitle';
+            color: #ea33529a !important;
+          }
+
+
+          .el-button {
+
+            padding: 0 !important;
+            margin-right: -15px;
+          }
+
+          .mail-link {
+            border-bottom: 1px solid #EA3353;
+          }
+        }
+
+        .about-me {
+          margin: 0 auto;
+          margin-top: 10px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 20px;
+          font-family: 'cnTitle';
+          color: #c0c0c0;
+          letter-spacing: -0.3px;
+
+        }
+
+        .mobile-footer-left {
+          width: 100%;
         }
       }
 
@@ -556,7 +661,7 @@
     transition: filter 0.3s ease;
 
     &.blur {
-      filter: blur(4px) brightness(0) contrast(0.2);
+      filter: blur(8px) brightness(0) contrast(0.2);
     }
   }
 }
@@ -616,10 +721,27 @@
       }
     }
   }
+
+  .mobile-menu-panel {
+
+    background: linear-gradient(to bottom, rgb(255, 255, 255) 40%, transparent);
+
+    .mobile-menu-wrapper {
+      .mobile-menu-content .mobile-menu-items .mobile-menu-item {
+        color: #000;
+      }
+
+      .about-me {
+        color: #0000009f !important;
+
+      }
+    }
+
+  }
 }
 
-// 移动端适配 - 当屏幕宽度小于等于1050px时隐藏菜单栏
-@media screen and (max-width: 1050px) {
+// 移动端适配 - 当屏幕宽度小于等于620px时隐藏菜单栏
+@media screen and (max-width: 620px) {
   .layout-page {
     .el-menu-layout-all {
       // height: 80px;

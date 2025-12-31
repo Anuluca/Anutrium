@@ -148,8 +148,9 @@ onUnmounted(() => {
           type="danger"
           @click="changeLanguage('zhCn')"
           :disabled="locale === 'zhCn'"
-          >中文</el-button
         >
+          中文
+        </el-button>
         <el-button link type="danger" disabled>|</el-button>
         <el-button
           link
@@ -157,8 +158,9 @@ onUnmounted(() => {
           style="margin-right: 2px"
           @click="changeLanguage('en')"
           :disabled="locale === 'en'"
-          >En</el-button
         >
+          En
+        </el-button>
       </div>
     </div>
     <!-- 中间 -->
@@ -206,8 +208,9 @@ onUnmounted(() => {
             @click="contact('TWITTER')"
             @mouseover="mouseOver('TWITTER')"
             @mouseleave="mouseLeave('TWITTER')"
-            >TWITTER</el-button
           >
+            TWITTER
+          </el-button>
         </span>
         <span>
           <div class="WEIBO_detail">
@@ -259,9 +262,9 @@ onUnmounted(() => {
           </el-button>
         </span>
         <span>
-          <el-button link type="danger" @click="contact('EMAIL')"
-            >MAIL</el-button
-          >
+          <el-button link type="danger" @click="contact('EMAIL')">
+            MAIL
+          </el-button>
         </span>
       </div>
       <span class="mark"> 2018-2026 ANULUCA </span>

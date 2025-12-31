@@ -51,7 +51,7 @@ export const routes = [
 
     meta: {
       titleEn: "POKÉYARD",
-      titleCn: "宝可梦后院",
+      titleCn: "宝可后院",
       fullFooter: true,
       ifShow: true,
     },

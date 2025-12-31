@@ -1,7 +1,6 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 const path = require('path')
-import { md } from './mdResolve.js'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
@@ -12,7 +11,6 @@ const resolve = (dir: any) => path.resolve(__dirname, dir)
 export default defineConfig({
   plugins: [
     vue(),
-    md(),
     AutoImport({
       resolvers: [ElementPlusResolver()]
     }),

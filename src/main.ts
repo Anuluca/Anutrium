@@ -14,13 +14,16 @@ import { loadAllFonts, showPageContent } from './utils/fontLoader'
 // 设置根字体大小
 function setRootFontSize() {
   const deviceWidth = document.documentElement.clientWidth;
+  const deviceHeight = document.documentElement.clientHeight;
+  const aspectRatio = deviceWidth / deviceHeight;
+  
   let rootFontSize = null;
 
-  if (deviceWidth <= 810) {
-    // 移动端
+  if (aspectRatio <= 2/3) {
+    // 长宽比大于等于3:2，认为是移动端
     rootFontSize = (deviceWidth / 375) * 14;
   } else {
-    // 桌面端 
+    // 长宽比小于3:2，认为是桌面端 
     rootFontSize = (deviceWidth / 375) * 4.9;
   }
   document.documentElement.style.fontSize = rootFontSize + 'px';
