@@ -42,7 +42,7 @@ onMounted(() => {
     expand_element["style"].overflow = "hidden";
     text_element["style"].opacity = "1";
     theme.value = localStorage.getItem("theme") === "dark";
-  }, 0);
+  }, 400);
   // 添加滚动事件监听器
   document.addEventListener("scroll", handleScroll, { passive: true });
 });

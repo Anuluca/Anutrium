@@ -239,7 +239,7 @@ const returnHome = () => {
 onMounted(() => {
   setTimeout(() => {
     changeTitle(true);
-  }, 0);
+  }, 400);
 
   // 监听窗口大小变化
   window.addEventListener("resize", handleResize, { passive: true });

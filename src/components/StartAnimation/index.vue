@@ -24,7 +24,7 @@ onMounted(() => {
     isZooming.value = true;
     setTimeout(() => {
       emit("finished");
-    }, 1000);
+    }, 400);
 
     // 阶段 3：在爆发的中后段启动背景渐隐，确保视觉连贯
     setTimeout(() => {
@@ -33,9 +33,9 @@ onMounted(() => {
       // 阶段 4：彻底销毁组件
       setTimeout(() => {
         isAnimating.value = false;
-      }, 2000);
+      }, 1500);
     }, 650); // 配合 1.4s 的爆炸动画节奏
-  }, 800); // 给左至右擦入留出充足的展示时间
+  }, 1420); // 给左至右擦入留出充足的展示时间
 });
 </script>
 
@@ -58,7 +58,7 @@ onMounted(() => {
 <style lang="less" scoped>
 // 核心曲线：极致的蓄力爆发曲线（开始极慢，结尾极快）
 @zoom-explosive: cubic-bezier(0.85, 0, 0.15, 1);
-@tech-ease-out: cubic-bezier(0.19, 1, 0.22, 1);
+@tech-ease-out: cubic-bezier(0.29, 1, 0.22, 1);
 
 .entry-overlay {
   position: fixed;
@@ -71,7 +71,7 @@ onMounted(() => {
   overflow: hidden;
   pointer-events: none;
   // 背景渐隐过渡
-  transition: opacity 2s ease-out;
+  transition: opacity 1.5s ease-out;
   will-change: opacity;
 
   &.is-component-fade {
@@ -93,8 +93,10 @@ onMounted(() => {
     width: 200px; // 根据实际 Logo 尺寸微调
     height: 200px;
     margin-top: -50px;
+    clip-path: inset(0 100% 0 0);
     // 擦入动画：由左向右
     animation: wipe-in-left-to-right 1.4s @tech-ease-out forwards;
+    animation-delay: 0.6s;
 
     .logo-img {
       width: 100%;
@@ -145,10 +147,13 @@ onMounted(() => {
     transform: scale(1);
     opacity: 1;
   }
-  20% {
+  10% {
     // 【蓄力阶段】轻微缩小，增加反向动力感
     transform: scale(0.92);
     opacity: 1;
+  }
+  90% {
+    opacity: 0;
   }
   100% {
     // 【爆发阶段】

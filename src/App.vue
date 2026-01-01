@@ -25,7 +25,7 @@ const startAnimationFinished = () => {
   }
   checkFontLoaded()
     
-  }, 500);
+  }, 450);
 }
 
 onMounted(() => {
