@@ -6,11 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Loading...</title>
     <style>
-
-      body{
-        background-color: #ffffff !important;
+      body {
+        background-color: #000;
       }
-      
+
       /* 方形进度条样式 */
       #loading-indicator {
         position: fixed;
@@ -24,29 +23,40 @@
         font-family: sans-serif;
         z-index: 9999;
       }
-      
+
       .loading-container {
         text-align: center;
       }
-      
+
       .progress-bar-container {
         width: 200px;
         height: 20px;
-        border: 2px solid #000;
+        border: 2px solid #fff;
         position: relative;
         overflow: hidden;
       }
-      
+
       .progress-bar {
         position: absolute;
         top: 0;
         left: 0;
         height: 100%;
         width: 0%;
-        background-color: #1f1f1f;
+        background-color: #fff;
         transition: width 0.3s ease;
       }
 
+      .light {
+        background-color: #fff;
+      }
+
+      .light .progress-bar-container{
+        border-color: #000;
+      }
+
+      .light .progress-bar{
+        border-color: #1f1f1f;
+      }
     </style>
   </head>
   <body>
@@ -58,24 +68,25 @@
         </div>
       </div>
     </div>
-    
+
     <div id="app"></div>
     <script>
       // 模拟进度条动画
       let progress = 0;
-      const progressBar = document.getElementById('progress-bar');
-      
+      const progressBar = document.getElementById("progress-bar");
+
       function updateProgress() {
-        if (progress < 90) { // 最多显示90%，因为实际加载时间不确定
+        if (progress < 90) {
+          // 最多显示90%，因为实际加载时间不确定
           progress += Math.floor(Math.random() * 10) + 1;
           if (progress > 90) progress = 90;
-          
-          progressBar.style.width = progress + '%';
-          
+
+          progressBar.style.width = progress + "%";
+
           setTimeout(updateProgress, 200);
         }
       }
-      
+
       // 启动进度条动画
       updateProgress();
     </script>
