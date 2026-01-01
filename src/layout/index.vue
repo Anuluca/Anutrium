@@ -123,7 +123,9 @@
     <div
       :class="{ 'router-container': true, blur: isMobile && isMobileMenuOpen }"
     >
-      <RouterView />
+      <transition name="route" mode="out-in">
+        <RouterView />
+      </transition>
     </div>
     <div class="fullscreen" @click="toggleFullscreen"></div>
   </div>
@@ -252,4 +254,24 @@ onUnmounted(() => {
   document.removeEventListener("scroll", handleScroll);
 });
 </script>
-<style lang="less" scoped src="./index.less" />
+
+<style lang="less" scoped>
+@import "./index.less";
+
+// 添加路由切换过渡动画
+.route-enter-active,
+.route-leave-from {
+  transition: opacity 0.2s ease,transform 0.6s ease,filter 0.6s ease,;
+}
+
+.route-enter-from {
+  opacity: 0;
+  transform: scale(0.8);
+  filter:blur(10px)
+}
+
+.route-leave-from {
+  opacity: 0;
+  transform: scale(14) !important;
+}
+</style>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import layout from './layout/index.vue'
 import FooterCom from '@/components/FooterCom/index.vue'
+import StartAnimation from '@/components/StartAnimation/index.vue'
 import BackController from '@/components/BackController/index.vue'
 import { onMounted, ref } from 'vue'
 import { visualState } from './stores'
@@ -12,7 +13,8 @@ const visualStateStore = visualState()
 // 控制布局组件是否渲染
 const showLayout = ref(false)
 
-onMounted(() => {
+const startAnimationFinished = () => {
+  setTimeout(() => {
   // 检查字体是否已加载完成
   const checkFontLoaded = () => {
     if (window.fontLoaded) {
@@ -21,18 +23,22 @@ onMounted(() => {
       requestAnimationFrame(checkFontLoaded)
     }
   }
+  checkFontLoaded()
+    
+  }, 500);
+}
+
+onMounted(() => {
 
   // 检查当前主题
   visualStateStore.setTheme(localStorage.getItem('theme') || 'light')
   
-  checkFontLoaded()
 })
 </script>
 
 <template>
-  <!-- <div style="width: 100%; height: 100%;"> -->
-    <BackController />
-    <layout v-if="showLayout"></layout>
-    <FooterCom />
-  <!-- </div>  -->
+  <StartAnimation @finished="startAnimationFinished"/>
+  <BackController />
+  <layout v-if="showLayout"></layout>
+  <FooterCom  v-if="showLayout"/>
 </template>

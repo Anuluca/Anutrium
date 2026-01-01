@@ -129,6 +129,15 @@ router.afterEach((to, from) => {
       "name[0]"
     )}${i18n.global.t("name[2]")}`;
   }
+  
+  // 重置页面滚动位置到顶部
+  setTimeout(() => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'smooth' // 平滑滚动到顶部
+    });
+  }, 100); // 延迟一下，确保页面已经渲染
 });
 
 export default router;

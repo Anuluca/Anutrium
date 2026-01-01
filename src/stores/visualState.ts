@@ -9,7 +9,6 @@ export default defineStore('visualState', {
   actions: {
     setTheme(theme: string) {
       localStorage.setItem("theme", theme);
-      console.log('看看',theme)
       if (localStorage.getItem('theme') === 'dark') {
         document.getElementsByTagName('body')[0].classList.remove("light");
       } else {
