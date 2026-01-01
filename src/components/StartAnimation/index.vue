@@ -7,46 +7,67 @@ import LogoDark from "@/assets/img/logo/logo_black.png";
 const emit = defineEmits(["finished"]);
 
 const isAnimating = ref(true);
-const isZooming = ref(false);
-const isFadingOut = ref(false);
-const visualStateStore = visualState();
+const logoVisible = ref(true); // 控制 Logo 自身的显示/擦除
+const isLogoWipingOut = ref(false); // 触发 Logo 擦出状态
+const isBarsExiting = ref(false); // 触发背景竖条移出
 
-// 自动切换主题 Logo
+const visualStateStore = visualState();
 const showLogo = computed(() => {
   return visualStateStore.theme === "dark" ? Logo : LogoDark;
 });
 
+// 生成 10 条竖条数据（可以根据需要增加密度）
+const bars = Array.from({ length: 10 }, (_, i) => ({
+  id: i,
+  // 前 5 条向左偏（上移），后 5 条向右偏（下移）
+  direction: i < 5 ? -1 : 1,
+  delay: Math.abs(5 - i) * 0.05 // 从中间向两侧扩散的延迟
+}));
+
 onMounted(() => {
-  // 阶段 1：等待擦入动画与视觉停留
-
-  // 阶段 2：触发巨量缩放爆发
+  // 1. Logo 擦入完成（约 2s）
+  
+  // 2. Logo 擦出阶段：停留 0.8s 后开始擦出
   setTimeout(() => {
-    isZooming.value = true;
+    isLogoWipingOut.value = true;
+    
+    // 3. 背景竖条移出阶段：在 Logo 擦出即将完成时启动
     setTimeout(() => {
+      isBarsExiting.value = true;
+      setTimeout(() => {
       emit("finished");
-    }, 400);
+        
+      }, 300);
 
-    // 阶段 3：在爆发的中后段启动背景渐隐，确保视觉连贯
-    setTimeout(() => {
-      isFadingOut.value = true;
-
-      // 阶段 4：彻底销毁组件
+      // 4. 彻底销毁组件：等待竖条移出动画完成
       setTimeout(() => {
         isAnimating.value = false;
-      }, 1500);
-    }, 650); // 配合 1.4s 的爆炸动画节奏
-  }, 1420); // 给左至右擦入留出充足的展示时间
+      }, 1200);
+    }, 800);
+  }, 1600); 
 });
 </script>
 
 <template>
   <Teleport to="body">
-    <div
-      v-if="isAnimating"
-      class="entry-overlay"
-      :class="{ 'is-component-fade': isFadingOut }"
-    >
-      <div class="logo-wrapper" :class="{ 'is-zoomed': isZooming }">
+    <div v-if="isAnimating" class="entry-overlay-container">
+      <div class="bars-layout">
+        <div
+          v-for="bar in bars"
+          :key="bar.id"
+          class="bg-bar"
+          :class="{ 'is-exit': isBarsExiting }"
+          :style="{
+            '--dir': bar.direction,
+            '--delay': `${bar.delay}s`
+          }"
+        ></div>
+      </div>
+
+      <div 
+        class="logo-wrapper" 
+        :class="{ 'is-wiping-out': isLogoWipingOut }"
+      >
         <div class="blinds-container">
           <img :src="showLogo" alt="Logo" class="logo-img" />
         </div>
@@ -56,114 +77,100 @@ onMounted(() => {
 </template>
 
 <style lang="less" scoped>
-// 核心曲线：极致的蓄力爆发曲线（开始极慢，结尾极快）
-@zoom-explosive: cubic-bezier(0.85, 0, 0.15, 1);
-@tech-ease-out: cubic-bezier(0.29, 1, 0.22, 1);
+@tech-ease: cubic-bezier(0.7, 0, 0.3, 1);
+@wipe-ease: cubic-bezier(0.29, 1, 0.22, 1);
 
-.entry-overlay {
+.entry-overlay-container {
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background-color: #000;
   display: flex;
   justify-content: center;
   align-items: center;
   overflow: hidden;
   pointer-events: none;
-  // 背景渐隐过渡
-  transition: opacity 1.5s ease-out;
-  will-change: opacity;
+}
 
-  &.is-component-fade {
-    opacity: 0;
+// --- 背景竖条布局 ---
+.bars-layout {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  z-index: 1;
+
+  .bg-bar {
+    flex: 1;
+    height: 100%;
+    background-color: #000000c0; // 默认深色
+    backdrop-filter: blur(4px);
+    transition: transform 1s @tech-ease;
+    will-change: transform;
+    
+    // 退出动画：根据 --dir 变量决定向上还是向下位移
+    &.is-exit {
+      // --dir 为 -1 时向上位移 100%，为 1 时向下位移 100%
+      transform: translateY(calc(var(--dir) * 100%));
+      transition-delay: var(--delay);
+    }
   }
 }
 
+// --- Logo 动画逻辑 ---
 .logo-wrapper {
   position: relative;
   z-index: 2;
-  // 居中基准
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  will-change: transform, opacity, filter;
+  transition: opacity 0.4s;
 
   .blinds-container {
-    position: relative;
-    width: 200px; // 根据实际 Logo 尺寸微调
+    width: 200px;
     height: 200px;
     margin-top: -50px;
+    // 初始擦入动画
     clip-path: inset(0 100% 0 0);
-    // 擦入动画：由左向右
-    animation: wipe-in-left-to-right 1.4s @tech-ease-out forwards;
+    animation: logo-wipe-in 1.2s @wipe-ease forwards;
     animation-delay: 0.6s;
 
     .logo-img {
       width: 100%;
       height: 100%;
       object-fit: contain;
-      // 增加初始位移，让擦入更有“滑入”感
-      animation: logo-clarity-v2 1.2s @tech-ease-out forwards;
+      animation: logo-fade-blur 1s @wipe-ease forwards;
+      animation-delay: 0.6s;
     }
   }
 
-  // --- 关键：巨量爆炸动画 ---
-  &.is-zoomed {
-    // 弃用 transition，改用更复杂的关键帧动画来实现“蓄力”
-    animation: logo-explode-smooth 2s ease-out forwards;
+  // Logo 擦出逻辑：改回由右侧向左侧收缩（或你指定的擦出方式）
+  &.is-wiping-out {
+    animation: logo-wipe-out 0.8s @tech-ease forwards !important;
+
+    // .logo-img {
+    //   animation: logo-fade-out 1s @wipe-ease forwards;
+    // }
   }
 }
 
-// 1. 擦入动画逻辑
-@keyframes wipe-in-left-to-right {
-  0% {
-    clip-path: inset(0 100% 0 0);
-  }
-  100% {
-    clip-path: inset(0 0 0 0);
-  }
+@keyframes logo-wipe-in {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
 }
 
-// 2. Logo 状态还原逻辑
-@keyframes logo-clarity-v2 {
-  0% {
-    transform: scale(1.1) translateX(-30px);
-    opacity: 0;
-    filter: blur(10px);
-  }
-  40% {
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1) translateX(0);
-    opacity: 1;
-    filter: blur(0px);
-  }
+@keyframes logo-wipe-out {
+  from { width:200px; opacity: 1; }
+  to {  width:0; opacity: 0; }
 }
 
-// 3. 爆炸动画逻辑：包含预备动作 (Anticipation)
-@keyframes logo-explode-smooth {
-  0% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  10% {
-    // 【蓄力阶段】轻微缩小，增加反向动力感
-    transform: scale(0.92);
-    opacity: 1;
-  }
-  90% {
-    opacity: 0;
-  }
-  100% {
-    // 【爆发阶段】
-    transform: scale(150);
-    opacity: 0;
-  }
+@keyframes logo-fade-blur {
+  0% { opacity: 0; filter: blur(10px); transform: scale(1.1); }
+  100% { opacity: 1; filter: blur(0px); transform: scale(1); }
 }
 
-// 如果 App.vue 的 class 是写在 html 或 body 上，请用以下方式
-.light .entry-overlay {
-  background-color: #ffffff;
+@keyframes logo-fade-out {
+  0% { opacity: 1; filter: blur(0px); transform: scale(1); }
+  100% { opacity: 0; filter: blur(10px); transform: scale(1.1); }
+}
+
+// --- 主题适配 ---
+.light .bg-bar {
+  background-color: #ffffffb8;
 }
 </style>
