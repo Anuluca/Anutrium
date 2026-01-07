@@ -272,10 +272,10 @@ const toggleTheme = () => {
   if (visualStateStore.theme === "dark") {
     visualStateStore.setTheme("light");
     theme.value = "light";
-    // 如果是手机端，切换主题后刷新页面
-    if (isMobile.value) {
-      location.reload();
-    }
+    // // 如果是手机端，切换主题后刷新页面
+    // if (isMobile.value) {
+    //   location.reload();
+    // }
   } else {
     visualStateStore.setTheme("dark");
     theme.value = "dark";
