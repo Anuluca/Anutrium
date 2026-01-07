@@ -88,6 +88,28 @@
           </div>
         </div>
         <div class="mobile-footer">
+          <div class="switches">
+            <div class="mobile-menu-language" @click="toggleLanguage">
+              <span class="first cnArt" v-if="locale === 'zhCn'">中</span>
+              <span class="second" v-if="locale === 'zhCn'">En</span>
+              <span class="first" v-if="locale === 'en'">En</span>
+              <span class="second cnArt" v-if="locale === 'en'">中</span>
+            </div>
+            <div class="mobile-menu-theme" @click="toggleTheme">
+              <span class="first sun" v-if="theme === 'light'">
+                <el-icon><Sunny /></el-icon>
+              </span>
+              <span class="second" v-if="theme === 'light'">
+                <el-icon><Moon /></el-icon>
+              </span>
+              <span class="first" v-if="theme === 'dark'">
+                <el-icon><Moon /></el-icon>
+              </span>
+              <span class="second" v-if="theme === 'dark'">
+                <el-icon><Sunny /></el-icon>
+              </span>
+            </div>
+          </div>
           <div class="contact-item">
             <el-button link type="danger" @click="contact('GITHUB')">
               GITHUB
@@ -138,6 +160,7 @@ import Logo from "@/assets/img/logo/logo.png";
 import LogoDark from "@/assets/img/logo/logo_black.png";
 import { computed, onMounted, onUnmounted, watch, ref } from "vue";
 import { visualState } from "@/stores";
+import { Sunny, Moon } from "@element-plus/icons-vue";
 import { useI18n } from "vue-i18n";
 
 const { locale } = useI18n();
@@ -161,6 +184,7 @@ const currentRouter = computed(() => {
 // 新增的滚动相关引用和状态
 const layoutPage = ref(null);
 const isScrolled = ref(false);
+const theme = ref(null);
 
 const filterRoutes = routes.filter((item) => {
   return item?.meta?.ifShow;
@@ -236,9 +260,32 @@ const returnHome = () => {
   router.push("/");
 };
 
+const toggleLanguage = () => {
+  if (locale.value === "zhCn") {
+    locale.value = "en";
+  } else {
+    locale.value = "zhCn";
+  }
+};
+
+const toggleTheme = () => {
+  if (visualStateStore.theme === "dark") {
+    visualStateStore.setTheme("light");
+    theme.value = "light";
+    // 如果是手机端，切换主题后刷新页面
+    if (isMobile.value) {
+      location.reload();
+    }
+  } else {
+    visualStateStore.setTheme("dark");
+    theme.value = "dark";
+  }
+};
+
 onMounted(() => {
   setTimeout(() => {
     changeTitle(true);
+    theme.value = localStorage.getItem("theme");
   }, 400);
 
   // 监听窗口大小变化
@@ -261,13 +308,13 @@ onUnmounted(() => {
 // 添加路由切换过渡动画
 .route-enter-active,
 .route-leave-from {
-  transition: opacity 0.2s ease,transform 0.6s ease,filter 0.6s ease,;
+  transition: opacity 0.2s ease, transform 0.6s ease, filter 0.6s ease;
 }
 
 .route-enter-from {
   opacity: 0;
   transform: scale(0.8);
-  filter:blur(10px)
+  filter: blur(10px);
 }
 
 .route-leave-from {

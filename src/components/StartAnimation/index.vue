@@ -16,16 +16,22 @@ const showLogo = computed(() => {
   return visualStateStore.theme === "dark" ? Logo : LogoDark;
 });
 
-// 生成 10 条竖条数据（可以根据需要增加密度）
-const bars = Array.from({ length: 10 }, (_, i) => ({
-  id: i,
-  // 前 5 条向左偏（上移），后 5 条向右偏（下移）
-  direction: i < 5 ? -1 : 1,
-  delay: Math.abs(5 - i) * 0.05 // 从中间向两侧扩散的延迟
-}));
+// 根据屏幕尺寸生成不同数量的竖条
+const bars = computed(() => {
+  // 检测是否为移动端
+  const isMobile = window.innerWidth < 768; // 可根据实际断点调整
+  const barCount = isMobile ? 10 : 20;
+  const middleIndex = barCount / 2;
+  
+  return Array.from({ length: barCount }, (_, i) => ({
+    id: i,
+    direction: i < middleIndex ? -1 : 1,
+    delay: Math.abs(middleIndex - i) * 0.05 // 从中间向两侧扩散的延迟
+  }));
+});
 
 onMounted(() => {
-  // 1. Logo 擦入完成（约 2s）
+  // 1. Logo 擦入完成（约 2s ）
   
   // 2. Logo 擦出阶段：停留 0.8s 后开始擦出
   setTimeout(() => {

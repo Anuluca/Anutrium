@@ -5,9 +5,16 @@
   top: 0;
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom:0;
+  box-sizing: border-box;
   overflow: hidden;
   transition: all 1s;
+}
+
+@media screen and (max-width: 620px) {
+  .body-color {
+    border-radius: 40px;
+  }
 }
 //深色主题
 .dark.body-color {
@@ -16,7 +23,7 @@
     #000000 10%,
     //#251d28 40%,
     #310917 65%,
-    #1f1f1f
+    #000
   );
 }
 

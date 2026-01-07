@@ -7,6 +7,7 @@
 const FONT_FAMILIES = [
   'enTitle',
   'cnTitle',
+  'cnArtTitle',
 ];
 
 // logo 图片路径列表

@@ -182,7 +182,7 @@
                 letter-spacing: -0.1px;
                 font-weight: bold;
                 margin: 0 2px;
-                font-family: 'cnTitle';
+                font-family: 'cnArtTitle';
                 transition: all 0.4s;
 
               }
@@ -504,6 +504,7 @@
 
     }
 
+
     .mobile-menu-wrapper {
       opacity: 0;
       font-size: 40px;
@@ -550,7 +551,7 @@
             .little-title {
               margin-top: 5px;
               font-size: 24px;
-              font-family: 'cnTitle';
+              font-family: 'cnArtTitle';
 
             }
 
@@ -600,23 +601,83 @@
         bottom: -100px;
         left: 0;
         right: 0;
-        flex-wrap: wrap;
-        filter: blur(10px);
         // background-color: red;
         opacity: 0;
-        transition: all 0.4s ease;
-        transform: scale(1, 0.8);
+
+        .switches {
+          display: flex;
+          justify-content: center;
+
+          .mobile-menu-language,
+          .mobile-menu-theme {
+            width: 60px;
+            height: 60px;
+            overflow: hidden;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            // background-color: rgba(255, 0, 0, 0.465);
+
+            .first,
+            .second {
+              font-family: 'cnTitle';
+              position: absolute;
+              font-size: 20px;
+
+              &.first {
+                font-size: 24px;
+                margin-right: 15px;
+                margin-bottom: 10px;
+                z-index: 1;
+              }
+
+              &.second {
+                margin-left: 15px;
+                margin-top: 10px;
+                color: #ffffff77;
+              }
+            }
+
+            .cnArt {
+              font-family: 'cnArtTitle';
+              font-size: 28px;
+            }
+
+            &.mobile-menu-theme {
+              margin-left: 10px;
+              .first {
+                margin-right: 10px;
+                margin-bottom: 10px;
+                z-index: 1;
+              }
+              .sun{
+                font-size: 30px;
+              }
+
+              .second {
+                font-size: 25px;
+                margin-left: 10px;
+                margin-top: 10px;
+              }
+            }
+          }
+        }
 
         .contact-item {
+
+          transition: all 0.4s ease;
+          // transform: scale(1, 0.8);
           margin: 0 auto;
-          margin-bottom: 5px;
           display: flex;
           align-items: center;
           justify-content: center;
 
           * {
-            font-size: 20px;
-            font-family: 'cnTitle';
+            font-size: 18px;
+            font-family: 'enTitle';
             color: #ea33529a !important;
           }
 
@@ -633,15 +694,16 @@
         }
 
         .about-me {
+          transition: all 0.4s ease;
+          // transform: scale(1, 0.8);
           margin: 0 auto;
-          margin-top: 10px;
+          margin-top: 12px;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 20px;
-          font-family: 'cnTitle';
+          font-size: 18px;
+          font-family: 'enTitle';
           color: #c0c0c0;
-          letter-spacing: -0.3px;
 
         }
 
@@ -651,20 +713,21 @@
       }
 
     }
-
   }
 
+}
 
-  .router-container {
-    width: 100%;
-    margin-top: 140px;
-    transition: filter 0.3s ease;
 
-    &.blur {
-      filter: blur(8px) brightness(0) contrast(0.2);
-    }
+.router-container {
+  width: 100%;
+  margin-top: 140px;
+  transition: filter 0.3s ease;
+
+  &.blur {
+    filter: blur(8px) brightness(0) contrast(0.2);
   }
 }
+
 
 // 渐显动画关键帧
 @keyframes fadeIn {
@@ -722,6 +785,14 @@
     }
   }
 
+  .mobile-menu-language,
+  .mobile-menu-theme {
+    .second {
+      color: rgba(0, 0, 0, 0.225) !important;
+
+    }
+  }
+
   .mobile-menu-panel {
 
     background: linear-gradient(to bottom, rgb(255, 255, 255) 40%, transparent);
@@ -750,8 +821,9 @@
 
       &.scrolled {
         top: 20px;
-        left: 150px;
-        right: 150px
+        left: 100px;
+        right: 100px;
+        border-radius: 40px;
       }
 
       .logo-box {
@@ -761,6 +833,7 @@
         justify-content: center;
 
         .right p {
+          margin-bottom: 2px;
           color: var(--text-color); // 使用CSS变量
         }
       }
@@ -780,6 +853,7 @@
       display: flex;
 
       &.scrolled {
+        border-radius: 40px;
         top: 20px;
       }
     }
