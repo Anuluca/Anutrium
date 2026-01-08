@@ -1,16 +1,16 @@
 <template>
-  <div class="layout-page" ref="layoutPage">
+  <div ref="layoutPage" class="layout-page">
     <!-- 头部 -->
     <el-header class="el-menu-layout-all" :class="{ scrolled: isScrolled }">
       <div class="logo-box" @click="returnHome">
         <img :src="showLogo" />
         <div class="right clickable">
           <p>
-            <span>{{ $t("name[0]") }}</span>
+            <span>{{ $t('name[0]') }}</span>
             <span :class="'name-center active ' + locale">{{
-              $t("name[1]")
+              $t('name[1]')
             }}</span>
-            <span>{{ $t("name[2]") }}</span>
+            <span>{{ $t('name[2]') }}</span>
           </p>
         </div>
       </div>
@@ -34,7 +34,7 @@
               <div class="title-box">
                 <div class="main-title">{{ item.meta.titleEn }}</div>
                 <div class="second-title">
-                  <div class="line"></div>
+                  <div class="line" />
                   <span>{{ item.meta.titleCn }}</span>
                 </div>
               </div>
@@ -51,9 +51,9 @@
       @click="toggleMobileMenu"
     >
       <div class="hamburger" :class="{ active: isMobileMenuOpen }">
-        <span></span>
-        <span></span>
-        <span></span>
+        <span />
+        <span />
+        <span />
       </div>
     </div>
 
@@ -90,22 +90,22 @@
         <div class="mobile-footer">
           <div class="switches">
             <div class="mobile-menu-language" @click="toggleLanguage">
-              <span class="first cnArt" v-if="locale === 'zhCn'">中</span>
-              <span class="second" v-if="locale === 'zhCn'">En</span>
-              <span class="first" v-if="locale === 'en'">En</span>
-              <span class="second cnArt" v-if="locale === 'en'">中</span>
+              <span v-if="locale === 'zhCn'" class="first cnArt">中</span>
+              <span v-if="locale === 'zhCn'" class="second">En</span>
+              <span v-if="locale === 'en'" class="first">En</span>
+              <span v-if="locale === 'en'" class="second cnArt">中</span>
             </div>
             <div class="mobile-menu-theme" @click="toggleTheme">
-              <span class="first sun" v-if="theme === 'light'">
+              <span v-if="theme === 'light'" class="first sun">
                 <el-icon><Sunny /></el-icon>
               </span>
-              <span class="second" v-if="theme === 'light'">
+              <span v-if="theme === 'light'" class="second">
                 <el-icon><Moon /></el-icon>
               </span>
-              <span class="first" v-if="theme === 'dark'">
+              <span v-if="theme === 'dark'" class="first">
                 <el-icon><Moon /></el-icon>
               </span>
-              <span class="second" v-if="theme === 'dark'">
+              <span v-if="theme === 'dark'" class="second">
                 <el-icon><Sunny /></el-icon>
               </span>
             </div>
@@ -136,7 +136,7 @@
             </el-button>
           </div>
           <div class="about-me">© 2018-2025 ANULUCA</div>
-          <div class="mobile-footer-left"></div>
+          <div class="mobile-footer-left" />
         </div>
       </div>
     </div>
@@ -149,65 +149,66 @@
         <RouterView />
       </transition>
     </div>
-    <div class="fullscreen" @click="toggleFullscreen"></div>
+    <div class="fullscreen" @click="toggleFullscreen" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { routes } from "@/router";
-import { useRouter, useRoute } from "vue-router";
-import Logo from "@/assets/img/logo/logo.png";
-import LogoDark from "@/assets/img/logo/logo_black.png";
-import { computed, onMounted, onUnmounted, watch, ref } from "vue";
-import { visualState } from "@/stores";
-import { Sunny, Moon } from "@element-plus/icons-vue";
-import { useI18n } from "vue-i18n";
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
+import { Moon, Sunny } from '@element-plus/icons-vue'
 
-const { locale } = useI18n();
+import Logo from '@/assets/img/logo/logo.png'
+import LogoDark from '@/assets/img/logo/logo_black.png'
+import { routes } from '@/router'
+import { visualState } from '@/stores'
+
+const { locale } = useI18n()
 
 watch(locale, () => {
   setTimeout(() => {
-    changeTitle(true);
-  }, 0);
-});
+    changeTitle(true)
+  }, 0)
+})
 
-const route = useRoute();
-const router = useRouter();
-const visualStateStore = visualState();
+const route = useRoute()
+const router = useRouter()
+const visualStateStore = visualState()
 const showLogo = computed(() => {
-  return visualStateStore.theme === "dark" ? Logo : LogoDark;
-});
+  return visualStateStore.theme === 'dark' ? Logo : LogoDark
+})
 const currentRouter = computed(() => {
-  return route.path;
-});
+  return route.path
+})
 
 // 新增的滚动相关引用和状态
-const layoutPage = ref(null);
-const isScrolled = ref(false);
-const theme = ref(null);
+const layoutPage = ref(null)
+const isScrolled = ref(false)
+const theme = ref(null)
 
 const filterRoutes = routes.filter((item) => {
-  return item?.meta?.ifShow;
-});
+  return item?.meta?.ifShow
+})
 
 // 移动端相关状态
-const isMobile = ref(window.innerWidth <= 620);
-const isMobileMenuOpen = ref(false);
+const isMobile = ref(window.innerWidth <= 620)
+const isMobileMenuOpen = ref(false)
 
 // 标题动画
 const changeTitle = (close = false) => {
-  const name_center_element = document.getElementsByClassName("name-center")[0];
+  const name_center_element = document.getElementsByClassName('name-center')[0]
   if (name_center_element) {
     if (close) {
-      name_center_element.classList.remove("active");
+      name_center_element.classList.remove('active')
     } else {
-      name_center_element.classList.add("active");
+      name_center_element.classList.add('active')
     }
   }
-};
+}
 
 // 全屏状态
-const isFullscreen = ref(false);
+const isFullscreen = ref(false)
 
 // 切换全屏
 const toggleFullscreen = () => {
@@ -215,95 +216,95 @@ const toggleFullscreen = () => {
     document.documentElement
       .requestFullscreen()
       .then(() => {
-        isFullscreen.value = true;
+        isFullscreen.value = true
       })
       .catch((err) => {
-        console.error(`Error attempting to enable fullscreen: ${err}`);
-      });
+        console.error(`Error attempting to enable fullscreen: ${err}`)
+      })
   } else {
     if (document.exitFullscreen) {
       document
         .exitFullscreen()
         .then(() => {
-          isFullscreen.value = false;
+          isFullscreen.value = false
         })
         .catch((err) => {
-          console.error(`Error attempting to exit fullscreen: ${err}`);
-        });
+          console.error(`Error attempting to exit fullscreen: ${err}`)
+        })
     }
   }
-};
+}
 
 // 移动端菜单控制
 const toggleMobileMenu = () => {
-  isMobileMenuOpen.value = !isMobileMenuOpen.value;
-};
+  isMobileMenuOpen.value = !isMobileMenuOpen.value
+}
 
 const closeMobileMenu = () => {
-  isMobileMenuOpen.value = false;
-};
+  isMobileMenuOpen.value = false
+}
 
 // 监听窗口大小变化
 const handleResize = () => {
-  isMobile.value = window.innerWidth <= 620;
+  isMobile.value = window.innerWidth <= 620
   if (!isMobile.value) {
-    isMobileMenuOpen.value = false;
+    isMobileMenuOpen.value = false
   }
-};
+}
 
 // 监听滚动事件
 const handleScroll = () => {
-  isScrolled.value = document.documentElement.scrollTop > 50;
-};
+  isScrolled.value = document.documentElement.scrollTop > 50
+}
 
 const returnHome = () => {
-  router.push("/");
-};
+  router.push('/')
+}
 
 const toggleLanguage = () => {
-  if (locale.value === "zhCn") {
-    locale.value = "en";
+  if (locale.value === 'zhCn') {
+    locale.value = 'en'
   } else {
-    locale.value = "zhCn";
+    locale.value = 'zhCn'
   }
-};
+}
 
 const toggleTheme = () => {
-  if (visualStateStore.theme === "dark") {
-    visualStateStore.setTheme("light");
-    theme.value = "light";
+  if (visualStateStore.theme === 'dark') {
+    visualStateStore.setTheme('light')
+    theme.value = 'light'
     // // 如果是手机端，切换主题后刷新页面
     // if (isMobile.value) {
     //   location.reload();
     // }
   } else {
-    visualStateStore.setTheme("dark");
-    theme.value = "dark";
+    visualStateStore.setTheme('dark')
+    theme.value = 'dark'
   }
-};
+}
 
 onMounted(() => {
   setTimeout(() => {
-    changeTitle(true);
-    theme.value = localStorage.getItem("theme");
-  }, 400);
+    changeTitle(true)
+    theme.value = localStorage.getItem('theme')
+  }, 400)
 
   // 监听窗口大小变化
-  window.addEventListener("resize", handleResize, { passive: true });
+  window.addEventListener('resize', handleResize, { passive: true })
 
   // 添加滚动事件监听器
-  document.addEventListener("scroll", handleScroll, { passive: true });
-});
+  document.addEventListener('scroll', handleScroll, { passive: true })
+})
 
 // 清理事件监听器
 onUnmounted(() => {
-  window.removeEventListener("resize", handleResize);
-  document.removeEventListener("scroll", handleScroll);
-});
+  window.removeEventListener('resize', handleResize)
+  document.removeEventListener('scroll', handleScroll)
+})
 </script>
 
 <style lang="less" scoped>
-@import "./index.less";
+@import './index.less';
 
 // 添加路由切换过渡动画
 .route-enter-active,

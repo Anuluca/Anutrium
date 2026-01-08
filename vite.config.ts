@@ -1,27 +1,27 @@
-import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-const path = require('path')
 import AutoImport from 'unplugin-auto-import/vite'
-import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
-const resolve = (dir: any) => path.resolve(__dirname, dir)
+import Components from 'unplugin-vue-components/vite'
+import { defineConfig } from 'vite'
+
+const path = require('path')
 
 export default defineConfig({
   plugins: [
     vue(),
     AutoImport({
-      resolvers: [ElementPlusResolver()]
+      resolvers: [ElementPlusResolver()],
     }),
     Components({
-      resolvers: [ElementPlusResolver()]
-    })
+      resolvers: [ElementPlusResolver()],
+    }),
   ],
   resolve: {
     // 配置路径别名
     alias: {
-      '@': path.resolve(__dirname, './src')
+      '@': path.resolve(__dirname, './src'),
     },
-    extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json']
+    extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json'],
   },
   css: {
     // less预处理器
@@ -29,9 +29,9 @@ export default defineConfig({
       less: {
         charset: false,
         // 每个 Less 文件都会自动导入此全局样式文件
-        additionalData: '@import "./src/assets/style/global.less";'
-      }
-    }
+        additionalData: '@import "./src/assets/style/global.less";',
+      },
+    },
   },
   build: {
     //打包环境移除console.log，debugger
@@ -39,9 +39,9 @@ export default defineConfig({
     terserOptions: {
       compress: {
         drop_console: true,
-        drop_debugger: true
-      }
-    }
+        drop_debugger: true,
+      },
+    },
   },
-  base: './'
+  base: './',
 })

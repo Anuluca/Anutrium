@@ -1,6 +1,7 @@
 import { createI18n } from 'vue-i18n'
-import zhCn from './zhCn'
+
 import en from './en'
+import zhCn from './zhCn'
 
 // 设置当前的语言
 const getCurrentLanguage = () => {
@@ -21,8 +22,8 @@ const i18n = createI18n({
   locale: getCurrentLanguage() || 'en', // 设置语言
   messages: {
     zhCn,
-    en
-  } // 数据源
+    en,
+  }, // 数据源
 })
 
 export default i18n

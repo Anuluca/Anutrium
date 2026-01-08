@@ -1,142 +1,145 @@
 <script setup lang="ts">
-import "./index.less";
-import { useRouter, useRoute } from "vue-router";
-import { ref, computed, onMounted, onUnmounted } from "vue";
-import { visualState } from "@/stores";
-import { ElLoading, ElMessage, ElMessageBox } from "element-plus";
-import "element-plus/theme-chalk/index.css";
-import { useI18n } from "vue-i18n";
-import twitterImg from "@/assets/img/twitter_profile.png";
-import bilibiliImg from "@/assets/img/bilibili_profile.png";
-import githubImg from "@/assets/img/github_profile.png";
-import bottomLineData from "@/data/bottomLine.js";
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
+import { ElLoading } from 'element-plus'
+
+import bilibiliImg from '@/assets/img/bilibili_profile.png'
+import githubImg from '@/assets/img/github_profile.png'
+import twitterImg from '@/assets/img/twitter_profile.png'
+import bottomLineData from '@/data/bottomLine.js'
+import { visualState } from '@/stores'
+
+import 'element-plus/theme-chalk/index.css'
+import './index.less'
+
 const weiboImg = ref(
-  "https://widget.weibo.com/weiboshow/index.php?language=&width=0&height=520&fansRow=1&ptype=1&speed=0&skin=10&isTitle=1&noborder=1&isWeibo=1&isFans=1&uid=7738638501&verifier=4838f435&dpc=1"
-);
+  'https://widget.weibo.com/weiboshow/index.php?language=&width=0&height=520&fansRow=1&ptype=1&speed=0&skin=10&isTitle=1&noborder=1&isWeibo=1&isFans=1&uid=7738638501&verifier=4838f435&dpc=1'
+)
 
-const { locale } = useI18n();
+const { locale } = useI18n()
 
-const router = useRouter();
-const route = useRoute();
-const visualStateStore = visualState();
+const router = useRouter()
+const route = useRoute()
+const visualStateStore = visualState()
 const fullFooter = computed(() => {
-  return router.currentRoute.value.meta.fullFooter;
-});
+  return router.currentRoute.value.meta.fullFooter
+})
 const currentRouter = computed(() => {
-  return route.path;
-});
-const theme = ref();
-const isScrollingDown = ref<boolean>(false);
-let lastScrollTop = 0;
+  return route.path
+})
+const theme = ref()
+const isScrollingDown = ref<boolean>(false)
+let lastScrollTop = 0
 
 onMounted(() => {
   // 底部新闻条入场动画
-  const expand_element = document.getElementsByClassName("expand")[0];
-  const text_element = document.getElementsByClassName("text-links")[0];
-  expand_element["style"].width = "0px";
-  expand_element["style"].overflow = "hidden";
-  text_element["style"].opacity = "0";
-  document.getElementsByClassName(`WEIBO_detail`)[0]["style"].opacity = "0";
+  const expand_element = document.getElementsByClassName('expand')[0]
+  const text_element = document.getElementsByClassName('text-links')[0]
+  expand_element['style'].width = '0px'
+  expand_element['style'].overflow = 'hidden'
+  text_element['style'].opacity = '0'
+  document.getElementsByClassName('WEIBO_detail')[0]['style'].opacity = '0'
   setTimeout(() => {
-    expand_element["style"].width = "100%";
-    expand_element["style"].overflow = "hidden";
-    text_element["style"].opacity = "1";
-    theme.value = localStorage.getItem("theme") === "dark";
-  }, 400);
+    expand_element['style'].width = '100%'
+    expand_element['style'].overflow = 'hidden'
+    text_element['style'].opacity = '1'
+    theme.value = localStorage.getItem('theme') === 'dark'
+  }, 400)
   // 添加滚动事件监听器
-  document.addEventListener("scroll", handleScroll, { passive: true });
-});
+  document.addEventListener('scroll', handleScroll, { passive: true })
+})
 
 const changeLanguage = (lang) => {
-  localStorage.setItem("lang", lang);
-  locale.value = lang;
-};
+  localStorage.setItem('lang', lang)
+  locale.value = lang
+}
 
 const changeTheme = () => {
-  if (currentRouter.value === "/") {
+  if (currentRouter.value === '/') {
     const loadingInstance = ElLoading.service({
       fullscreen: true,
-      background: "rgba(0, 0, 0, 0.2)",
-      spinner: "1",
-    });
+      background: 'rgba(0, 0, 0, 0.2)',
+      spinner: '1',
+    })
     setTimeout(() => {
-      const currentMode = theme.value ? "dark" : "light";
-      visualStateStore.setTheme(currentMode);
-    }, 150);
+      const currentMode = theme.value ? 'dark' : 'light'
+      visualStateStore.setTheme(currentMode)
+    }, 150)
     setTimeout(() => {
-      loadingInstance.close();
-    }, 150);
+      loadingInstance.close()
+    }, 150)
   } else {
-    const currentMode = theme.value ? "dark" : "light";
-    visualStateStore.setTheme(currentMode);
+    const currentMode = theme.value ? 'dark' : 'light'
+    visualStateStore.setTheme(currentMode)
   }
-};
+}
 
 // 点击事件
 const contact = (type: string) => {
-  let url = "";
-  if (type !== "EMAIL" && type !== "WEIBO") {
-    if (type === "TWITTER") {
-      url = "https://twitter.com/TILucario";
-    } else if (type === "BILIBILI") {
-      url = "https://space.bilibili.com/128735968";
-    } else if (type === "GITHUB") {
-      url = "https://github.com/Anuluca";
+  let url = ''
+  if (type !== 'EMAIL' && type !== 'WEIBO') {
+    if (type === 'TWITTER') {
+      url = 'https://twitter.com/TILucario'
+    } else if (type === 'BILIBILI') {
+      url = 'https://space.bilibili.com/128735968'
+    } else if (type === 'GITHUB') {
+      url = 'https://github.com/Anuluca'
     }
-    window.open(url);
-  } else if (type === "EMAIL") {
-    const linkNode = document.createElement("a");
-    linkNode.href = "mailto:tilucario@outlook.com";
-    document.body.appendChild(linkNode);
-    linkNode.click();
+    window.open(url)
+  } else if (type === 'EMAIL') {
+    const linkNode = document.createElement('a')
+    linkNode.href = 'mailto:tilucario@outlook.com'
+    document.body.appendChild(linkNode)
+    linkNode.click()
   } else {
     // url = 'https://weibo.com/ryugamine'
-    let element = document.getElementsByClassName(`WEIBO_detail`)[0];
-    if (element["style"].opacity == "0") {
-      element["style"].bottom = "30px";
-      element["style"].opacity = "1";
+    let element = document.getElementsByClassName('WEIBO_detail')[0]
+    if (element['style'].opacity == '0') {
+      element['style'].bottom = '30px'
+      element['style'].opacity = '1'
     } else {
-      element["style"].bottom = "-540px";
-      element["style"].opacity = "0";
+      element['style'].bottom = '-540px'
+      element['style'].opacity = '0'
     }
   }
-};
+}
 
 // 鼠标移入
 const mouseOver = (type: string) => {
-  let element = document.getElementsByClassName(`${type}_detail`)[0];
-  element.classList.add("hover");
-};
+  let element = document.getElementsByClassName(`${type}_detail`)[0]
+  element.classList.add('hover')
+}
 
 // 鼠标移出
 const mouseLeave = (type: string) => {
-  let element = document.getElementsByClassName(`${type}_detail`)[0];
-  element.classList.remove("hover");
-};
+  let element = document.getElementsByClassName(`${type}_detail`)[0]
+  element.classList.remove('hover')
+}
 
 // 监听滚动事件
 const handleScroll = () => {
   // 获取当前滚动高度 (兼容性处理)
-  const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+  const scrollTop = window.pageYOffset || document.documentElement.scrollTop
   if (scrollTop > lastScrollTop) {
-    isScrollingDown.value = true;
+    isScrollingDown.value = true
   } else {
-    isScrollingDown.value = false;
+    isScrollingDown.value = false
   }
   // 更新最后一次滚动位置，严禁负值 (移动端橡皮筋效果兼容)
-  lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
-};
+  lastScrollTop = scrollTop <= 0 ? 0 : scrollTop
+}
 
 onUnmounted(() => {
-  window.removeEventListener("scroll", handleScroll);
-});
+  window.removeEventListener('scroll', handleScroll)
+})
 </script>
 
 <template>
   <div
     :class="{
       'footer-com': true,
-      // 'full-footer': fullFooter,
+      'full-footer': fullFooter,
       'scrolling-down': isScrollingDown,
     }"
   >
@@ -146,8 +149,8 @@ onUnmounted(() => {
         <el-button
           link
           type="danger"
-          @click="changeLanguage('zhCn')"
           :disabled="locale === 'zhCn'"
+          @click="changeLanguage('zhCn')"
         >
           中文
         </el-button>
@@ -156,8 +159,8 @@ onUnmounted(() => {
           link
           type="danger"
           style="margin-right: 2px"
-          @click="changeLanguage('en')"
           :disabled="locale === 'en'"
+          @click="changeLanguage('en')"
         >
           En
         </el-button>
@@ -221,7 +224,7 @@ onUnmounted(() => {
               frameborder="0"
               scrolling="no"
               :src="weiboImg"
-            ></iframe>
+            />
           </div>
           <el-button
             link
@@ -270,11 +273,11 @@ onUnmounted(() => {
       <span class="mark"> 2018-2026 ANULUCA </span>
       <el-switch
         v-model="theme"
-        @change="changeTheme()"
         style="
           --el-switch-on-color: #1a1a1aa8;
           --el-switch-off-color: #ffffff1f;
         "
+        @change="changeTheme()"
       />
     </div>
   </div>

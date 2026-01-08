@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import './index.less'
-import Porygon from '@/assets/img/porygon.png'
-import { useRouter } from 'vue-router'
 import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+
+import './index.less'
 
 const router = useRouter()
 
@@ -42,7 +42,9 @@ onMounted(() => {
         <p>{{ $t('notFound.description') }}</p>
         <!-- <p> $t('home.lisence2')</p> -->
         <!-- <p class="last-show-text" @click="router.push('/')">{{ $t('notFound.back') }}</p> -->
-        <p class="last-show-text" @click="router.push('/')">-> RETURN TO HOMEPAGE</p>
+        <p class="last-show-text" @click="router.push('/')">
+          -> RETURN TO HOMEPAGE
+        </p>
       </div>
     </div>
   </div>

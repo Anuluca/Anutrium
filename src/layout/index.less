@@ -1,5 +1,5 @@
 .layout-page {
-  cursor: url("@/assets/img/dot.svg") 15 15, auto;
+  cursor: url('@/assets/img/dot.svg') 15 15, auto;
   width: 100%;
   box-sizing: border-box;
   animation: fadeIn 0.4s ease-in forwards;
@@ -32,15 +32,13 @@
       border-radius: 5px;
       backdrop-filter: blur(2px);
       background-color: rgba(0, 0, 0, 0.78);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.91),
-        inset 0 -2px 8px rgb(0, 0, 0);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.91), inset 0 -2px 8px rgb(0, 0, 0);
 
       .logo-box {
         margin-top: 0;
 
         img {
           height: 40px;
-
         }
       }
 
@@ -50,7 +48,6 @@
         .is-active .main-title {
           // background-color: #1f1f1f;
         }
-
       }
     }
 
@@ -98,7 +95,7 @@
           color: var(--text-color); // 使用CSS变量
 
           span {
-            font-family: "enTitle", serif;
+            font-family: 'enTitle', serif;
             display: inline-block;
             transition: all 0.8s;
             white-space: nowrap;
@@ -151,7 +148,7 @@
             color: #fff;
             font-size: 20px;
             letter-spacing: 1px;
-            font-family: "enTitle", serif;
+            font-family: 'enTitle', serif;
 
             .main-title {
               line-height: 20px;
@@ -184,7 +181,6 @@
                 margin: 0 2px;
                 font-family: 'cnArtTitle';
                 transition: all 0.4s;
-
               }
             }
           }
@@ -209,25 +205,20 @@
 
         .el-menu-item.xx:not(.is-active):hover {
           .title-box {
-
             .main-title {
               text-shadow: 0 0 4px #f0a0d0;
               color: #f0a0d0 !important;
-
             }
           }
-
         }
 
         .el-menu-item.HOME:not(.is-active):hover {
           .title-box {
-
             .main-title {
               text-shadow: 0 0 10px #eb6978c3;
-              color: #D74557 !important;
+              color: #d74557 !important;
             }
           }
-
         }
 
         .HOME.is-active {
@@ -236,13 +227,12 @@
               width: 0 !important;
             }
 
-            opacity:0
+            opacity: 0;
           }
         }
 
         .xxx.is-active {
           .title-box {
-
             .main-title {
               -webkit-text-stroke: 1px #f0a0d0;
             }
@@ -255,18 +245,15 @@
 
         .el-menu-item.ARCHIVE:not(.is-active):hover {
           .title-box {
-
             .main-title {
               color: #3276fe !important;
               text-shadow: 0 0 10px #6596f9da;
             }
           }
-
         }
 
         .ARCHIVE.is-active {
           .title-box {
-
             .main-title {
               -webkit-text-stroke: 1px #3276fe;
             }
@@ -279,18 +266,15 @@
 
         .el-menu-item.ISLAND:not(.is-active):hover {
           .title-box {
-
             .main-title {
               text-shadow: 0 0 10px #e141d9c5;
               color: #dc00d0 !important;
             }
           }
-
         }
 
         .ISLAND.is-active {
           .title-box {
-
             .main-title {
               -webkit-text-stroke: 1px #dc00d0;
             }
@@ -303,18 +287,15 @@
 
         .el-menu-item.POKEYARD:not(.is-active):hover {
           .title-box {
-
             .main-title {
               text-shadow: 0 0 10px #d6c52ed4;
               color: #ffed47 !important;
             }
           }
-
         }
 
         .POKEYARD.is-active {
           .title-box {
-
             .main-title {
               -webkit-text-stroke: 1px #ffed47;
             }
@@ -327,18 +308,15 @@
 
         .el-menu-item.CRAFT:not(.is-active):hover {
           .title-box {
-
             .main-title {
               text-shadow: 0 0 10px #00653bfb;
               color: #01dd83 !important;
             }
           }
-
         }
 
         .CRAFT.is-active {
           .title-box {
-
             .main-title {
               -webkit-text-stroke: 1px #01dd83;
             }
@@ -351,31 +329,27 @@
 
         .el-menu-item.ABOUT:not(.is-active):hover {
           .title-box {
-
             .main-title {
               text-shadow: 0 0 10px #eb6978c3;
-              color: #D74557 !important;
+              color: #d74557 !important;
             }
           }
-
         }
 
         .ABOUT.is-active {
           .title-box {
-
             .main-title {
-              -webkit-text-stroke: 1px #D74557;
+              -webkit-text-stroke: 1px #d74557;
             }
 
             .line {
-              border-top: 2px solid #D74557;
+              border-top: 2px solid #d74557;
             }
           }
         }
       }
     }
   }
-
 
   // 移动端菜单按钮
   .mobile-menu-icon {
@@ -403,8 +377,6 @@
         zoom: 0.9;
       }
     }
-
-
 
     .hamburger {
       width: 30px;
@@ -501,9 +473,7 @@
         bottom: 50px !important;
         filter: blur(0) !important;
       }
-
     }
-
 
     .mobile-menu-wrapper {
       opacity: 0;
@@ -536,23 +506,23 @@
             border-bottom: 1px solid #333;
             cursor: pointer;
             transition: all 0.3s;
-            font-family: "enTitle", serif;
+            font-family: 'enTitle', serif;
             display: flex;
             align-items: start;
             justify-content: center;
             flex-wrap: wrap;
 
-            >div {
+            > div {
               width: 100%;
             }
 
-            .big-title {}
+            .big-title {
+            }
 
             .little-title {
               margin-top: 5px;
               font-size: 24px;
               font-family: 'cnArtTitle';
-
             }
 
             &:last-child {
@@ -564,11 +534,11 @@
             }
 
             &.active {
-              color: #D74557;
+              color: #d74557;
             }
 
             &.HOME.active {
-              color: #D74557;
+              color: #d74557;
             }
 
             &.ARCHIVE.active {
@@ -589,11 +559,10 @@
             }
 
             &.ABOUT.active {
-              color: #D74557;
+              color: #d74557;
             }
           }
         }
-
       }
 
       .mobile-footer {
@@ -653,7 +622,7 @@
                 margin-bottom: 10px;
                 z-index: 1;
               }
-              .sun{
+              .sun {
                 font-size: 30px;
               }
 
@@ -667,7 +636,6 @@
         }
 
         .contact-item {
-
           transition: all 0.4s ease;
           // transform: scale(1, 0.8);
           margin: 0 auto;
@@ -681,15 +649,13 @@
             color: #ea33529a !important;
           }
 
-
           .el-button {
-
             padding: 0 !important;
             margin-right: -15px;
           }
 
           .mail-link {
-            border-bottom: 1px solid #EA3353;
+            border-bottom: 1px solid #ea3353;
           }
         }
 
@@ -704,19 +670,15 @@
           font-size: 18px;
           font-family: 'enTitle';
           color: #c0c0c0;
-
         }
 
         .mobile-footer-left {
           width: 100%;
         }
       }
-
     }
   }
-
 }
-
 
 .router-container {
   width: 100%;
@@ -727,7 +689,6 @@
     filter: blur(8px) brightness(0) contrast(0.2);
   }
 }
-
 
 // 渐显动画关键帧
 @keyframes fadeIn {
@@ -752,7 +713,6 @@
     .el-menu-item {
       .title-box {
         color: #181818 !important;
-
       }
     }
   }
@@ -762,7 +722,6 @@
   }
 
   .el-menu-layout-all {
-
     &.scrolled {
       background-color: rgba(255, 255, 255, 0.93);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2),
@@ -775,7 +734,6 @@
       background-color: rgba(255, 255, 255, 0.93);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2),
         inset 0 -2px 8px rgba(255, 255, 255, 0.8);
-
     }
 
     .hamburger {
@@ -789,12 +747,10 @@
   .mobile-menu-theme {
     .second {
       color: rgba(0, 0, 0, 0.225) !important;
-
     }
   }
 
   .mobile-menu-panel {
-
     background: linear-gradient(to bottom, rgb(255, 255, 255) 40%, transparent);
 
     .mobile-menu-wrapper {
@@ -804,10 +760,8 @@
 
       .about-me {
         color: #0000009f !important;
-
       }
     }
-
   }
 }
 

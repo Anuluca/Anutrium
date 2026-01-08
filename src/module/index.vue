@@ -3,5 +3,5 @@ import './index.less'
 </script>
 
 <template>
-  <div class="MODULENAME"></div>
+  <div class="MODULENAME" />
 </template>

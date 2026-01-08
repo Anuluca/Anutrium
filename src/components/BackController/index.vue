@@ -1,30 +1,31 @@
 <script lang="ts" setup>
-import { useRoute } from "vue-router";
-import BackStars from "@/components/BackStars/index.vue";
-import { computed } from "vue";
-import { visualState } from "@/stores";
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 
-const route = useRoute();
-const visualStateStore = visualState();
+import BackStars from '@/components/BackStars/index.vue'
+import { visualState } from '@/stores'
+
+const route = useRoute()
+const visualStateStore = visualState()
 const isTextMenu = computed(() => {
-  if (currentRouter.value === "/") {
-    return false;
+  if (currentRouter.value === '/') {
+    return false
   } else {
-    return true;
+    return true
   }
-});
+})
 const currentRouter = computed(() => {
-  return route.path;
-});
+  return route.path
+})
 </script>
 <template>
   <div class="back-controller">
-    <BackStars :theme="visualStateStore.theme" :isTextMenu="isTextMenu" />
+    <BackStars :theme="visualStateStore.theme" :is-text-menu="isTextMenu" />
   </div>
 </template>
 
 <style>
-.back-controller{
+.back-controller {
   width: 100%;
   height: 100%;
   /* overflow: hidden; */

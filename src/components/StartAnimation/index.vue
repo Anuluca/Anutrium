@@ -1,57 +1,56 @@
 <script setup lang="ts">
-import { ref, onMounted, defineEmits, computed } from "vue";
-import { visualState } from "@/stores";
-import Logo from "@/assets/img/logo/logo.png";
-import LogoDark from "@/assets/img/logo/logo_black.png";
+import { computed, defineEmits, onMounted, ref } from 'vue'
 
-const emit = defineEmits(["finished"]);
+import Logo from '@/assets/img/logo/logo.png'
+import LogoDark from '@/assets/img/logo/logo_black.png'
+import { visualState } from '@/stores'
 
-const isAnimating = ref(true);
-const logoVisible = ref(true); // 控制 Logo 自身的显示/擦除
-const isLogoWipingOut = ref(false); // 触发 Logo 擦出状态
-const isBarsExiting = ref(false); // 触发背景竖条移出
+const emit = defineEmits(['finished'])
 
-const visualStateStore = visualState();
+const isAnimating = ref(true)
+const isLogoWipingOut = ref(false) // 触发 Logo 擦出状态
+const isBarsExiting = ref(false) // 触发背景竖条移出
+
+const visualStateStore = visualState()
 const showLogo = computed(() => {
-  return visualStateStore.theme === "dark" ? Logo : LogoDark;
-});
+  return visualStateStore.theme === 'dark' ? Logo : LogoDark
+})
 
 // 根据屏幕尺寸生成不同数量的竖条
 const bars = computed(() => {
   // 检测是否为移动端
-  const isMobile = window.innerWidth < 768; // 可根据实际断点调整
-  const barCount = isMobile ? 10 : 20;
-  const middleIndex = barCount / 2;
-  
+  const isMobile = window.innerWidth < 768 // 可根据实际断点调整
+  const barCount = isMobile ? 10 : 20
+  const middleIndex = barCount / 2
+
   return Array.from({ length: barCount }, (_, i) => ({
     id: i,
     direction: i < middleIndex ? -1 : 1,
-    delay: Math.abs(middleIndex - i) * 0.05 // 从中间向两侧扩散的延迟
-  }));
-});
+    delay: Math.abs(middleIndex - i) * 0.05, // 从中间向两侧扩散的延迟
+  }))
+})
 
 onMounted(() => {
   // 1. Logo 擦入完成（约 2s ）
-  
+
   // 2. Logo 擦出阶段：停留 0.8s 后开始擦出
   setTimeout(() => {
-    isLogoWipingOut.value = true;
-    
+    isLogoWipingOut.value = true
+
     // 3. 背景竖条移出阶段：在 Logo 擦出即将完成时启动
     setTimeout(() => {
-      isBarsExiting.value = true;
+      isBarsExiting.value = true
       setTimeout(() => {
-      emit("finished");
-        
-      }, 300);
+        emit('finished')
+      }, 300)
 
       // 4. 彻底销毁组件：等待竖条移出动画完成
       setTimeout(() => {
-        isAnimating.value = false;
-      }, 1200);
-    }, 800);
-  }, 1600); 
-});
+        isAnimating.value = false
+      }, 1200)
+    }, 800)
+  }, 1600)
+})
 </script>
 
 <template>
@@ -65,15 +64,12 @@ onMounted(() => {
           :class="{ 'is-exit': isBarsExiting }"
           :style="{
             '--dir': bar.direction,
-            '--delay': `${bar.delay}s`
+            '--delay': `${bar.delay}s`,
           }"
-        ></div>
+        />
       </div>
 
-      <div 
-        class="logo-wrapper" 
-        :class="{ 'is-wiping-out': isLogoWipingOut }"
-      >
+      <div class="logo-wrapper" :class="{ 'is-wiping-out': isLogoWipingOut }">
         <div class="blinds-container">
           <img :src="showLogo" alt="Logo" class="logo-img" />
         </div>
@@ -111,7 +107,7 @@ onMounted(() => {
     backdrop-filter: blur(4px);
     transition: transform 1s @tech-ease;
     will-change: transform;
-    
+
     // 退出动画：根据 --dir 变量决定向上还是向下位移
     &.is-exit {
       // --dir 为 -1 时向上位移 100%，为 1 时向下位移 100%
@@ -156,23 +152,49 @@ onMounted(() => {
 }
 
 @keyframes logo-wipe-in {
-  from { clip-path: inset(0 100% 0 0); }
-  to { clip-path: inset(0 0 0 0); }
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
 }
 
 @keyframes logo-wipe-out {
-  from { width:200px; opacity: 1; }
-  to {  width:0; opacity: 0; }
+  from {
+    width: 200px;
+    opacity: 1;
+  }
+  to {
+    width: 0;
+    opacity: 0;
+  }
 }
 
 @keyframes logo-fade-blur {
-  0% { opacity: 0; filter: blur(10px); transform: scale(1.1); }
-  100% { opacity: 1; filter: blur(0px); transform: scale(1); }
+  0% {
+    opacity: 0;
+    filter: blur(10px);
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0px);
+    transform: scale(1);
+  }
 }
 
 @keyframes logo-fade-out {
-  0% { opacity: 1; filter: blur(0px); transform: scale(1); }
-  100% { opacity: 0; filter: blur(10px); transform: scale(1.1); }
+  0% {
+    opacity: 1;
+    filter: blur(0px);
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    filter: blur(10px);
+    transform: scale(1.1);
+  }
 }
 
 // --- 主题适配 ---
