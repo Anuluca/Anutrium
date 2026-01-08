@@ -1,18 +1,11 @@
-# MegaAnuluca
-基于 Vue3+Typescript 开发的个人网站
+# Anutrium
 
-### 使用的node版本
+A personal website based on Vue3 + Typescript.
 
-### 推到git-pages
-cd ./dist
-git pull
-git rm -r --cached .
-git add .
-git commit -m 'a'
-git push -u 
+## Project Dependencies
 
-注意：不要修改CNAME文件
-CNAME文件为第一次给github pages配置Custom domain时自动生成的文件，如果删除会导致Custom domain设置清空
+node version：v18.20.5
+yarn version：1.22.22
 
 ## Project Setup
 

@@ -15,11 +15,12 @@
     "paths": {
       "@/*": ["src/*"]
     },
+    "verbatimModuleSyntax": true,
     "target": "esnext",
-    "module": "esnext",
+    "module": "node16",
     "strict": false,
     "jsx": "preserve",
-    "moduleResolution": "node",
+    "moduleResolution": "node16",
     "types": ["node"]
   },
 

@@ -21,6 +21,7 @@ declare module '@vue/runtime-core' {
     LeftImg: typeof import('./src/components/LeftImg/index.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SeoMeta: typeof import('./src/components/SeoMeta.vue')['default']
     StartAnimation: typeof import('./src/components/StartAnimation/index.vue')['default']
   }
 }
