@@ -11,7 +11,6 @@ const visualStateStore = visualState()
 
 // 控制布局组件是否渲染
 const showLayout = ref(false)
-
 const startAnimationFinished = () => {
   setTimeout(() => {
     // 检查字体是否已加载完成

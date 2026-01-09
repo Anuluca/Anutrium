@@ -5,13 +5,23 @@
     <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Loading...</title>
-    <meta name="description" content="Anutrium;Anuluca'sAtrium;路卡庭院;路卡的自由庭院;个人作品集网站，展示前端开发技能与项目经验">
-    <meta name="keywords" content="前端开发,Vue,React,JavaScript,个人作品集,技术博客,宝可梦">
-    <meta name="author" content="Anuluca">
-    <meta property="og:title" content="Anutrium|路卡庭院">
-    <meta property="og:description" content="展示前端开发技能与项目经验">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://anuluca.com">
+    <meta
+      name="description"
+      content="Anutrium;Anuluca'sAtrium;路卡庭院;路卡的自由庭院;个人作品集网站，展示前端开发技能与项目经验"
+    />
+    <meta
+      name="keywords"
+      content="前端开发,Vue,React,JavaScript,个人作品集,技术博客,宝可梦"
+    />
+    <meta name="author" content="Anuluca" />
+    <meta property="og:title" content="Anutrium|路卡庭院" />
+    <meta property="og:description" content="展示前端开发技能与项目经验" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://anuluca.com" />
+    <link
+      href="https://fonts.geekzu.org/css2?family=Dela+Gothic+One&display=swap"
+      rel="stylesheet"
+    />
     <style>
       body {
         background-color: #000;
@@ -57,11 +67,11 @@
         background-color: #fff !important;
       }
 
-      .light .progress-bar-container{
+      .light .progress-bar-container {
         border-color: #000 !important;
       }
 
-      .light .progress-bar{
+      .light .progress-bar {
         background-color: #1f1f1f !important;
       }
     </style>
@@ -79,23 +89,21 @@
     <div id="app"></div>
     <script>
       // 模拟进度条动画
-      let progress = 0;
-      const progressBar = document.getElementById("progress-bar");
+      let progress = 0
+      const progressBar = document.getElementById('progress-bar')
 
       function updateProgress() {
         if (progress < 90) {
           // 最多显示90%，因为实际加载时间不确定
-          progress += Math.floor(Math.random() * 10) + 1;
-          if (progress > 90) progress = 90;
-
-          progressBar.style.width = progress + "%";
-
-          setTimeout(updateProgress, 200);
+          progress += Math.floor(Math.random() * 10) + 1
+          if (progress > 90) progress = 90
+          progressBar.style.width = progress + '%'
+          setTimeout(updateProgress, 200)
         }
       }
 
       // 启动进度条动画
-      updateProgress();
+      updateProgress()
     </script>
     <script type="module" lang="ts" src="/src/main.ts"></script>
   </body>

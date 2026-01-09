@@ -4,7 +4,7 @@
     <el-header class="el-menu-layout-all" :class="{ scrolled: isScrolled }">
       <div class="logo-box" @click="returnHome">
         <img :src="showLogo" />
-        <div class="right clickable">
+        <div class="right">
           <p>
             <span>{{ $t('name[0]') }}</span>
             <span :class="'name-center active ' + locale">{{

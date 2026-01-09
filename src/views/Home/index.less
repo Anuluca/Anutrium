@@ -5,21 +5,20 @@
 
   .tempTitle {
     font-size: 100px;
-    color: #fff;
     margin-bottom: 5px;
+    color: var(--text-color);
     margin-top: -20px;
     text-align: center;
-    font-family: 'enTitle';
+    font-family: 'Dela Gothic One';
   }
 
   .tempLink {
     margin-bottom: 20px;
-    color: #fff;
     text-align: center;
     text-decoration: underline;
     cursor: pointer;
     font-size: 30px;
-    font-family: 'enTitle';
+    font-family: 'Dela Gothic One';
   }
 
   .center-text {
@@ -37,9 +36,9 @@
       transform-origin: center;
     }
 
-    > p {
-      color: #ea3353;
-      font-family: 'enTitle';
+    >p {
+      color: @primary-color;
+      font-family: 'Dela Gothic One';
       text-align: center;
       transform: scale(1, 1.15);
       text-shadow: 0 0 10px #00000056;
@@ -59,12 +58,12 @@
   .bottom-text {
     width: calc(100% - 40px);
     position: absolute;
-    color: #ea3353;
+    color: @primary-color;
     font-size: 13px;
     line-height: 18px;
     transform: scale(1, 1.1);
     text-align: center;
-    font-family: 'enTitle';
+    font-family: 'Dela Gothic One';
     letter-spacing: 0.2px;
     bottom: 100px;
 
@@ -75,18 +74,8 @@
 
       &:hover {
         color: #fff;
-        background-color: #ea3353;
+        background-color: @primary-color;
       }
     }
-  }
-}
-
-.light .home-page {
-  .tempTitle {
-    color: #1f1f1f;
-  }
-
-  .tempLink {
-    color: #1f1f1f;
   }
 }

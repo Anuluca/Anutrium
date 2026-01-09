@@ -1,139 +1,56 @@
 @import url(./font.less);
-
-#app {
-  width: 100%;
-  // position: fixed;
-  cursor: default;
-  transition: background-color 1s;
-}
+@import url(./variables.less);
 
 body {
   width: calc(100% - 80px);
   height: 100%;
   overflow: auto;
   position: relative;
-  background-color: #fff;
+  background-color: var(--bg-color);
+  color: var(--text-color);
   padding: 0 40px;
 
+  // 滚动条样式
   &::-webkit-scrollbar {
     width: 8px;
   }
 
   &::-webkit-scrollbar-track {
-    background: #000;
+    background: var(--bg-color);
   }
 
   &::-webkit-scrollbar-thumb {
-    background: rgba(255, 0, 78, 0.76);
+    background: @primary-color;
     border-radius: 0;
     margin: 2px;
     cursor: move;
   }
 
   &::-webkit-scrollbar-thumb:hover {
-    background: #ff004e;
+    background: @primary-color;
+  }
+
+  .main-container {
+    width: 100%;
+    min-height: calc(100vh - 140px);
+    height: 100%;
+    box-sizing: border-box;
+    position: relative;
+    margin: 0 auto;
+    user-select: text;
+    padding-bottom: 60px;
+  }
+
+  #app {
+    width: 100%;
+    cursor: default;
+    transition: background-color 1s;
+
   }
 }
 
-.light {
-  background-color: #fff !important;
-  color: #000;
-
-  &::-webkit-scrollbar-track {
-    background: #ffffff;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: rgba(255, 0, 78, 0.55);
-    border-radius: 0;
-    cursor: move;
-  }
-
-  &::-webkit-scrollbar-thumb:hover {
-    background: #ff004e;
-  }
-}
-
-body:not(.light) {
-  background-color: #0c0c0c;
-  color: #fff;
-}
-
+// 全局字体样式
 * {
   text-decoration: none;
   user-select: none;
-}
-
-.el-button.is-link.is-disabled {
-  color: #fff !important;
-  cursor: default !important;
-}
-
-.el-button.is-link.el-button--danger:not(.is-disabled) {
-  color: #ff004e !important;
-  text-decoration: none;
-
-  &:hover {
-    border-radius: 0;
-    text-shadow: 0 0 3px #ff004e;
-    color: #fff !important;
-    text-decoration: none;
-  }
-}
-
-.el-message-box {
-  border-radius: 0;
-  border: 1px solid #002c5a;
-}
-
-.el-button--primary {
-  border-radius: 0;
-  background-color: #002c5a !important;
-  font-family: 'enTitle';
-  border: 0;
-
-  &:hover {
-    background-color: #ff004e !important;
-  }
-}
-
-.main-container {
-  width: 100%;
-  min-height: calc(100vh - 140px);
-  height: 100%;
-  box-sizing: border-box;
-  position: relative;
-  margin: 0 auto;
-  user-select: text;
-  padding-bottom: 60px;
-}
-
-.trans {
-  opacity: 0;
-}
-
-.clickable {
-  transition: text-shadow 0.2s;
-  cursor: url('@/assets/img/dot-click.svg') 15 15, auto;
-
-  &:hover {
-    text-shadow: 0 0 10px;
-  }
-}
-
-.light {
-  background-color: #ffffff !important;
-
-  .clickable {
-    transition: text-shadow 0.2s, color 0.2s;
-    cursor: url('@/assets/img/dot-click.svg') 15 15, auto;
-
-    &:hover {
-      * {
-        color: #181818 !important;
-      }
-
-      text-shadow: 0 0 8px rgba(0, 0, 0, 0.29);
-    }
-  }
 }
