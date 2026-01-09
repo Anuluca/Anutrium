@@ -33,23 +33,26 @@ const bars = computed(() => {
 onMounted(() => {
   // 1. Logo 擦入完成（约 2s ）
 
-  // 2. Logo 擦出阶段：停留 0.8s 后开始擦出
-  setTimeout(() => {
-    isLogoWipingOut.value = true
-
-    // 3. 背景竖条移出阶段：在 Logo 擦出即将完成时启动
+  // 2. Logo 擦出阶段：停留 0.8s 后开始擦出// 等待所有字体资源加载完毕
+  document.fonts.ready.then(() => {
     setTimeout(() => {
-      isBarsExiting.value = true
-      setTimeout(() => {
-        emit('finished')
-      }, 300)
+      isLogoWipingOut.value = true
 
-      // 4. 彻底销毁组件：等待竖条移出动画完成
+      // 3. 背景竖条移出阶段：在 Logo 擦出即将完成时启动
       setTimeout(() => {
-        isAnimating.value = false
-      }, 1200)
-    }, 800)
-  }, 1600)
+        isBarsExiting.value = true
+        setTimeout(() => {
+          emit('finished')
+        }, 300)
+
+        // 4. 彻底销毁组件：等待竖条移出动画完成
+        setTimeout(() => {
+          isAnimating.value = false
+        }, 1200)
+      }, 800)
+    }, 1600)
+    // 这里可以触发你之前的“竖条移出”动画
+  })
 })
 </script>
 
