@@ -4,7 +4,7 @@
  */
 
 // 定义需要预加载的字体列表
-const FONT_FAMILIES = []
+const FONT_FAMILIES = ['enTitle', 'cnTitle', 'cnArtTitle']
 
 // logo 图片路径列表
 const LOGO_IMAGE_PATHS = [
