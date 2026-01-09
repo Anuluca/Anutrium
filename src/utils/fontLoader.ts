@@ -4,7 +4,7 @@
  */
 
 // 定义需要预加载的字体列表
-const FONT_FAMILIES = ['Dela Gothic One', 'cnTitle', 'cnArtTitle']
+const FONT_FAMILIES = []
 
 // logo 图片路径列表
 const LOGO_IMAGE_PATHS = [
