@@ -13,6 +13,19 @@ const props = defineProps({
   isTextMenu: Boolean,
 })
 
+// 更精确的Safari浏览器检测函数
+const isSafari = () => {
+  // 检查是否为Safari浏览器 (Safari没有"chrome"关键字，但有"Safari"关键字)
+  const isSafariUA =
+    /Safari/.test(navigator.userAgent) &&
+    /Apple Computer/.test(navigator.vendor)
+  // 排除Chrome、Edge等基于Chromium的浏览器
+  const isNotChromeBased = !/Chrome|Chromium|Edg|OPR|Opera/.test(
+    navigator.userAgent
+  )
+  return isSafariUA && isNotChromeBased
+}
+
 onMounted(() => {
   $(document).ready(function () {
     var stars = 800 /*星星的密集程度，数字越大越多*/
@@ -42,6 +55,11 @@ onMounted(() => {
           ')',
       })
     })
+
+    // 检测是否为Safari浏览器并添加类名
+    if (isSafari()) {
+      $('.body-color').addClass('safari')
+    }
   })
 })
 </script>

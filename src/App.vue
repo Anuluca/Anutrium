@@ -27,7 +27,7 @@ const startAnimationFinished = () => {
 
 onMounted(() => {
   // 检查当前主题
-  visualStateStore.setTheme(localStorage.getItem('theme') || 'light')
+  visualStateStore.setTheme(localStorage.getItem('theme') || 'dark')
 })
 </script>
 

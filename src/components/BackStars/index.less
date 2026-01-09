@@ -12,10 +12,20 @@
 }
 
 @media screen and (max-width: 620px) {
-  .body-color {
+  
+  /* Safari-specific styles for mobile */
+  _::-webkit-full-page-media, _:future, :root .body-color.safari {
     border-radius: 40px;
   }
+  
+  /* Alternative approach using @supports for Safari detection */
+  @supports (-webkit-appearance: none) and (not (appearance: none)) {
+    .body-color.safari {
+      border-radius: 40px;
+    }
+  }
 }
+
 //深色主题
 .dark.body-color {
   background: radial-gradient(
