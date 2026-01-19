@@ -90,10 +90,10 @@
         <div class="mobile-footer">
           <div class="switches">
             <div class="mobile-menu-language" @click="toggleLanguage">
-              <span v-if="locale === 'zhCn'" class="first cnArt">中</span>
+              <span v-if="locale === 'zhCn'" class="first cnArt">汉</span>
               <span v-if="locale === 'zhCn'" class="second">En</span>
               <span v-if="locale === 'en'" class="first">En</span>
-              <span v-if="locale === 'en'" class="second cnArt">中</span>
+              <span v-if="locale === 'en'" class="second cnArt">汉</span>
             </div>
             <div class="mobile-menu-theme" @click="toggleTheme">
               <span v-if="theme === 'light'" class="first sun">
