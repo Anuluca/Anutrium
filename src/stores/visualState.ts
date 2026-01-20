@@ -47,7 +47,7 @@ export default defineStore('visualState', {
       const newTheme: Theme = this.theme === 'light' ? 'dark' : 'light'
       this.setTheme(newTheme)
     },
-    
+
     /**
      * 设置设备类型
      * @param deviceType - 要设置的设备类型 ('mobile' | 'tablet' | 'desktop')

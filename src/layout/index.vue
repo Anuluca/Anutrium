@@ -112,16 +112,16 @@
           </div>
           <div class="contact-item">
             <el-button link type="danger" @click="contact('GITHUB')">
-              GITHUB
+              &lt; GITHUB &gt;
             </el-button>
             <el-button link type="danger" @click="contact('WEIBO')">
-              WEIBO
+              &lt; WEIBO &gt;
             </el-button>
             <el-button link type="danger" @click="contact('TWITTER')">
-              TWITTER
+              &lt; TWITTER &gt;
             </el-button>
             <el-button link type="danger" @click="contact('BILIBILI')">
-              BILIBILI
+              &lt; BILIBILI &gt;
             </el-button>
           </div>
           <div class="contact-item">

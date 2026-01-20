@@ -8,22 +8,37 @@
   inset: 0;
   z-index: 0;
   overflow: hidden;
-  transition: background 1s ease,filter 1s;
+  transition: background 1s ease, filter 0.5s;
   box-sizing: border-box;
   background-color: var(--bg-color);
 
   &.dark {
-    background: radial-gradient(220% 105% at top center, #000 10%, #310917 65%, #000);
-    .star { background: @star-color-dark; }
+    background: radial-gradient(
+      220% 105% at top center,
+      #000 10%,
+      #310917 55%,
+      #310917 65%,
+      #000
+    );
+    .star {
+      background: @star-color-dark;
+    }
   }
 
   &.light {
-    background: radial-gradient(220% 105% at top center, #bbaec7 10%, #fafff9 30%, #fff);
-    .star { background: @star-color-light; }
+    background: radial-gradient(
+      220% 105% at top center,
+      #d1c6db 10%,
+      #fafff9 30%,
+      #fff
+    );
+    .star {
+      background: @star-color-light;
+    }
   }
 
   &.menu-hidden {
-    filter: saturate(0);
+    filter: contrast(110%) brightness(110%) hue-rotate(-10deg) blur(1px);
   }
 }
 
@@ -31,7 +46,7 @@
   position: absolute;
   bottom: 0;
   left: 56%;
-  top:25%;
+  top: 25%;
   width: 0;
   height: 0;
   zoom: 2;
@@ -54,6 +69,11 @@
 }
 
 @keyframes rotate-sky {
-  from { transform: perspective(400px) rotateZ(20deg) rotateX(-40deg) rotateY(0); }
-  to   { transform: perspective(400px) rotateZ(20deg) rotateX(-40deg) rotateY(-360deg); }
+  from {
+    transform: perspective(400px) rotateZ(20deg) rotateX(-40deg) rotateY(0);
+  }
+  to {
+    transform: perspective(400px) rotateZ(20deg) rotateX(-40deg)
+      rotateY(-360deg);
+  }
 }
