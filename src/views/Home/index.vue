@@ -23,7 +23,7 @@ const clickLisence = () => {
   <div class="home-page main-container" @mousewheel="wheelEvent">
     <div class="center-text">
       <img :src="showLogo" alt="" />
-      <div class="tempTitle">热情驱动</div>
+      <div class="tempTitle">庭院建设中</div>
       <div class="tempLink" @click="toOld">前往旧版主页</div>
       <p>DESIGNED & DEVELOPED BY ANULUCA</p>
       <p>
@@ -40,7 +40,7 @@ const clickLisence = () => {
         </span>
         ）.
       </p>
-      <div style="text-align: center; color: #8d8d8d;font-family: 'cnArtTitle';">
+      <div style="text-align: center; color: #8d8d8d; font-family: 'cnTitle'">
         &lt; 预计2026年内开放 >
       </div>
     </div>

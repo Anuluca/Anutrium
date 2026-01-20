@@ -9,19 +9,39 @@ import i18n from '../locales' // 导入 i18n 实例
 
 import 'nprogress/nprogress.css'
 
-export const routes = [
+// 路由配置常量
+const ROUTE_CONFIG = {
+  DEFAULT_PATH: '/',
+  NOT_FOUND_PATH: '/404',
+  TITLE_TEMPLATE: '[%s/%s%s]',
+} as const
+
+// 定义路由类型
+interface RouteMeta {
+  titleEn: string
+  titleCn: string
+  fullFooter: boolean
+  ifShow: boolean
+}
+
+// 定义路由配置接口
+interface RouteConfig {
+  path: string
+  name: string
+  component: any
+  meta: RouteMeta
+}
+
+export const routes: RouteConfig[] = [
   {
-    path: '/',
+    path: ROUTE_CONFIG.DEFAULT_PATH,
     name: 'HOME',
     component: Home,
-
     meta: {
-      //路由元信息
-      titleEn: 'HOME', //拿取当前路由的title
-      titleCn: '主页', //拿取当前路由的title
+      titleEn: 'HOME',
+      titleCn: '主页',
       fullFooter: false,
       ifShow: true,
-      //这里边还可设置其他的状态，比如登录的标志，路由是否缓存的标志
     },
   },
   {
@@ -39,7 +59,6 @@ export const routes = [
     path: '/island',
     name: 'ISLAND',
     component: NotFound,
-
     meta: {
       titleEn: 'ISLAND',
       titleCn: '个人海湾',
@@ -51,7 +70,6 @@ export const routes = [
     path: '/pokeyard',
     name: 'POKEYARD',
     component: Tools,
-
     meta: {
       titleEn: 'POKÉYARD',
       titleCn: '宝可后院',
@@ -63,7 +81,6 @@ export const routes = [
     path: '/craft',
     name: 'CRAFT',
     component: Tools,
-
     meta: {
       titleEn: 'CRAFT',
       titleCn: '工具',
@@ -75,7 +92,6 @@ export const routes = [
     path: '/about',
     name: 'ABOUT',
     component: NotFound,
-
     meta: {
       titleEn: 'ABOUT',
       titleCn: '关于',
@@ -97,6 +113,7 @@ export const routes = [
   },
 ]
 
+// 配置 NProgress
 NProgress.configure({
   easing: 'ease', // 动画方式
   speed: 500, // 递增进度条的速度
@@ -110,27 +127,32 @@ const router = createRouter({
   routes,
 })
 
-//路由守卫
-router.beforeEach((guard) => {
-  NProgress.start() // 进度条开始
-  console.log('guard', ['/'].indexOf(guard.fullPath))
+// 路由守卫
+router.beforeEach((to) => {
+  NProgress.start() // 开始进度条
 
-  //检查路由是否存在
-  if (!router.hasRoute(guard.name)) {
-    //三层不同404路由
-
-    router.push('/404')
-    return
+  // 检查路由是否存在
+  if (!router.hasRoute(to.name)) {
+    // 如果不是404页面，则跳转到404页面
+    if (to.path !== ROUTE_CONFIG.NOT_FOUND_PATH) {
+      return { path: ROUTE_CONFIG.NOT_FOUND_PATH }
+    }
   }
+
+  return true
 })
 
 router.afterEach((to) => {
-  NProgress.done() // 进度条结束
-  console.log('En router', to.meta.titleEn)
+  NProgress.done() // 结束进度条
+
+  // 设置页面标题
   if (to.meta.titleEn) {
-    document.title = `[${to.meta.titleEn}/${i18n.global.t(
-      'name[0]'
-    )}${i18n.global.t('name[2]')}]`
+    const siteNamePrefix = i18n.global.t('name[0]')
+    const siteNameSuffix = i18n.global.t('name[2]')
+
+    document.title = ROUTE_CONFIG.TITLE_TEMPLATE.replace('%s', to.meta.titleEn)
+      .replace('%s', siteNamePrefix)
+      .replace('%s', siteNameSuffix)
   }
 
   // 重置页面滚动位置到顶部
@@ -140,7 +162,7 @@ router.afterEach((to) => {
       left: 0,
       behavior: 'smooth', // 平滑滚动到顶部
     })
-  }, 100) // 延迟一下，确保页面已经渲染
+  }, 100) // 延迟执行，确保页面已经渲染
 })
 
 export default router

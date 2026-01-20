@@ -1,3 +1,9 @@
+// 定义主题相关的颜色变量
+@primary-blue: #3276fe;
+@primary-pink: #dc00d0;
+@primary-yellow: #ffed47;
+@primary-green: #01dd83;
+
 .layout-page {
   cursor: url('@/assets/img/dot.svg') 15 15, auto;
   width: 100%;
@@ -44,10 +50,6 @@
 
       .el-menu {
         margin-top: 5px;
-
-        .is-active .main-title {
-          // background-color: #1f1f1f;
-        }
       }
     }
 
@@ -123,7 +125,6 @@
 
     .el-menu {
       border-bottom: 0;
-      // background-color: pink;
       flex-wrap: 0 0 790px;
 
       .menu-box {
@@ -145,7 +146,7 @@
 
           .title-box {
             transition: all 0.4s;
-            color: #fff;
+            color: var(--text-color);
             font-size: 20px;
             letter-spacing: 1px;
             font-family: 'enTitle', serif;
@@ -165,9 +166,9 @@
 
               .line {
                 width: 0px;
-                height: 67%;
+                height: 65%;
                 margin-top: 4px;
-                background-color: #fff;
+                background-color: var(--text-color);
                 transition: width 0.5s;
                 box-sizing: border-box;
               }
@@ -175,11 +176,11 @@
               span {
                 flex: 0 0 1;
                 line-height: 20px;
-                font-size: 16px;
+                font-size: 18px;
                 letter-spacing: -0.1px;
                 font-weight: bold;
                 margin: 0 2px;
-                margin-top: 6px;
+                margin-top: 4px;
                 font-family: 'cnTitle';
                 transition: all 0.4s;
               }
@@ -213,14 +214,36 @@
           }
         }
 
-        .el-menu-item.HOME:not(.is-active):hover {
-          .title-box {
-            .main-title {
-              text-shadow: 0 0 10px #eb6978c3;
-              color: #d74557 !important;
+        // 使用mixin定义不同菜单项的样式
+        .define-menu-style(@class, @color, @shadow) {
+          .el-menu-item.@{class}:not(.is-active):hover {
+            .title-box {
+              .main-title {
+                text-shadow: 0 0 10px @shadow;
+                color: @color !important;
+              }
+            }
+          }
+
+          .@{class}.is-active {
+            .title-box {
+              .main-title {
+                -webkit-text-stroke: 1px @color;
+              }
+
+              .line {
+                border-top: 2px solid @color;
+              }
             }
           }
         }
+
+        .define-menu-style(HOME, @primary-color, #eb6978c3);
+        .define-menu-style(ARCHIVE, @primary-blue, #6596f9da);
+        .define-menu-style(ISLAND, @primary-pink, #e141d9c5);
+        .define-menu-style(POKEYARD, @primary-yellow, #d6c52ed4);
+        .define-menu-style(CRAFT, #01dd83, #00653bfb);
+        .define-menu-style(ABOUT, @primary-color, #eb6978c3);
 
         .HOME.is-active {
           .title-box {
@@ -240,111 +263,6 @@
 
             .line {
               border-top: 2px solid #f0a0d0;
-            }
-          }
-        }
-
-        .el-menu-item.ARCHIVE:not(.is-active):hover {
-          .title-box {
-            .main-title {
-              color: #3276fe !important;
-              text-shadow: 0 0 10px #6596f9da;
-            }
-          }
-        }
-
-        .ARCHIVE.is-active {
-          .title-box {
-            .main-title {
-              -webkit-text-stroke: 1px #3276fe;
-            }
-
-            .line {
-              border-top: 2px solid #3276fe;
-            }
-          }
-        }
-
-        .el-menu-item.ISLAND:not(.is-active):hover {
-          .title-box {
-            .main-title {
-              text-shadow: 0 0 10px #e141d9c5;
-              color: #dc00d0 !important;
-            }
-          }
-        }
-
-        .ISLAND.is-active {
-          .title-box {
-            .main-title {
-              -webkit-text-stroke: 1px #dc00d0;
-            }
-
-            .line {
-              border-top: 2px solid #dc00d0;
-            }
-          }
-        }
-
-        .el-menu-item.POKEYARD:not(.is-active):hover {
-          .title-box {
-            .main-title {
-              text-shadow: 0 0 10px #d6c52ed4;
-              color: #ffed47 !important;
-            }
-          }
-        }
-
-        .POKEYARD.is-active {
-          .title-box {
-            .main-title {
-              -webkit-text-stroke: 1px #ffed47;
-            }
-
-            .line {
-              border-top: 2px solid #ffed47;
-            }
-          }
-        }
-
-        .el-menu-item.CRAFT:not(.is-active):hover {
-          .title-box {
-            .main-title {
-              text-shadow: 0 0 10px #00653bfb;
-              color: #01dd83 !important;
-            }
-          }
-        }
-
-        .CRAFT.is-active {
-          .title-box {
-            .main-title {
-              -webkit-text-stroke: 1px #01dd83;
-            }
-
-            .line {
-              border-top: 2px solid #01dd83;
-            }
-          }
-        }
-
-        .el-menu-item.ABOUT:not(.is-active):hover {
-          .title-box {
-            .main-title {
-              text-shadow: 0 0 10px #eb6978c3;
-              color: #d74557 !important;
-            }
-          }
-        }
-
-        .ABOUT.is-active {
-          .title-box {
-            .main-title {
-              -webkit-text-stroke: 1px #d74557;
-            }
-
-            .line {
-              border-top: 2px solid #d74557;
             }
           }
         }
@@ -391,7 +309,7 @@
         border-radius: 2px;
         position: absolute;
         transition: all 0.3s ease;
-        background-color: #fff;
+        background-color: var(--text-color);
 
         &:nth-child(1) {
           top: 0;
@@ -435,8 +353,8 @@
     width: 25px;
     height: 25px;
     background-size: contain;
-    border-top: 5px solid #fff;
-    border-right: 5px solid #fff;
+    border-top: 5px solid var(--text-color);
+    border-right: 5px solid var(--text-color);
     background-repeat: no-repeat;
     background-position: center;
     opacity: 0.1;
@@ -458,7 +376,7 @@
     overflow: hidden;
     z-index: 1000;
     transition: all 0.4s ease;
-    background: linear-gradient(to bottom, rgb(0, 0, 0) 40%, transparent);
+    background: linear-gradient(to bottom, var(--bg-color) 40%, transparent);
 
     &.active {
       height: calc(100vh - 130px);
@@ -503,9 +421,8 @@
           .mobile-menu-item {
             padding: 20px 0;
             width: 100%;
-            color: #fffff4;
+            color: var(--text-color);
             text-align: center;
-            border-bottom: 1px solid #333;
             cursor: pointer;
             transition: all 0.3s;
             font-family: 'enTitle', serif;
@@ -518,13 +435,10 @@
               width: 100%;
             }
 
-            .big-title {
-            }
-
             .little-title {
-              margin-top: 5px;
-              font-size: 24px;
-              // letter-spacing: -1px;
+              margin-top: 2px;
+              font-size: 28px;
+              letter-spacing: -1px;
               font-family: 'cnTitle';
             }
 
@@ -537,32 +451,32 @@
             }
 
             &.active {
-              color: #d74557;
+              color: @primary-color;
             }
 
             &.HOME.active {
-              color: #d74557;
+              color: @primary-color;
             }
 
             &.ARCHIVE.active {
-              color: #3276fe;
+              color: @primary-blue;
             }
 
             &.ISLAND.active {
-              color: #dc00d0;
+              color: @primary-pink;
             }
 
             &.POKEYARD.active {
-              color: #ffed47;
+              color: @primary-yellow;
               text-shadow: 0 0 10px #0000008c;
             }
 
             &.CRAFT.active {
-              color: #01dd83;
+              color: @primary-green;
             }
 
             &.ABOUT.active {
-              color: #d74557;
+              color: @primary-color;
             }
           }
         }
@@ -573,7 +487,6 @@
         bottom: -100px;
         left: 0;
         right: 0;
-        // background-color: red;
         opacity: 0;
 
         .switches {
@@ -591,7 +504,6 @@
             justify-content: center;
             cursor: pointer;
             transition: all 0.4s ease;
-            // background-color: rgba(255, 0, 0, 0.465);
 
             .first,
             .second {
@@ -600,7 +512,7 @@
               font-size: 20px;
 
               &.first {
-                font-size: 24px;
+                font-size: 28px;
                 margin-right: 15px;
                 margin-bottom: 10px;
                 z-index: 1;
@@ -614,8 +526,8 @@
             }
 
             .cnArt {
-              font-family: 'cnArtTitle';
-              font-size: 28px;
+              font-family: 'cnTitle';
+              font-size: 24px;
             }
 
             &.mobile-menu-theme {
@@ -640,7 +552,6 @@
 
         .contact-item {
           transition: all 0.4s ease;
-          // transform: scale(1, 0.8);
           margin: 0 auto;
           display: flex;
           align-items: center;
@@ -664,7 +575,6 @@
 
         .about-me {
           transition: all 0.4s ease;
-          // transform: scale(1, 0.8);
           margin: 0 auto;
           margin-top: 12px;
           display: flex;
@@ -692,60 +602,21 @@
     filter: blur(8px) brightness(0) contrast(0.2);
   }
 }
-
-// 渐显动画关键帧
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    // transform: translateY(-10px);
-  }
-
-  to {
-    opacity: 1;
-    // transform: translateY(0);
-  }
-}
-
-// 浅色模式适配
-.light {
-  .right p span {
-    color: #181818;
-  }
-
-  .menu-box {
-    .el-menu-item {
-      .title-box {
-        color: #181818 !important;
-        .line {
-          background-color: #000;
-        }
-      }
-    }
-  }
-
-  .fullscreen {
-    border-color: #181818;
-  }
-
-  .el-menu-layout-all {
-    &.scrolled {
-      background-color: rgba(255, 255, 255, 0.93);
+.light{
+  .layout-page{
+    .el-menu-layout-all{
+      &.scrolled {
+      background-color: rgba(255, 255, 255, 0.703);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2),
         inset 0 -2px 8px rgba(255, 255, 255, 0.8);
+      }
     }
-  }
 
   .mobile-menu-icon {
     &.scrolled {
       background-color: rgba(255, 255, 255, 0.93);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2),
         inset 0 -2px 8px rgba(255, 255, 255, 0.8);
-    }
-
-    .hamburger {
-      span {
-        background: #000 !important;
-      }
     }
   }
 
@@ -755,27 +626,23 @@
       color: rgba(0, 0, 0, 0.225) !important;
     }
   }
-
-  .mobile-menu-panel {
-    background: linear-gradient(to bottom, rgb(255, 255, 255) 40%, transparent);
-
-    .mobile-menu-wrapper {
-      .mobile-menu-content .mobile-menu-items .mobile-menu-item {
-        color: #000;
-      }
-
-      .about-me {
-        color: #0000009f !important;
-      }
-    }
   }
 }
 
-// 移动端适配 - 当屏幕宽度小于等于620px时隐藏菜单栏
-@media screen and (max-width: 620px) {
+// 渐显动画关键帧
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media screen and (max-aspect-ratio: @ratio-threshold) {
   .layout-page {
     .el-menu-layout-all {
-      // height: 80px;
       padding: 0 10px;
       padding-top: 20px;
 

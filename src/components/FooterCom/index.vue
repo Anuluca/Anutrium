@@ -13,125 +13,128 @@ import { visualState } from '@/stores'
 import 'element-plus/theme-chalk/index.css'
 import './index.less'
 
+const SOCIAL_LINKS = {
+  TWITTER: 'https://twitter.com/TILucario',
+  BILIBILI: 'https://space.bilibili.com/128735968',
+  GITHUB: 'https://github.com/Anuluca',
+}
+
+const SOCIAL_TYPES = ['TWITTER', 'WEIBO', 'BILIBILI', 'GITHUB', 'EMAIL']
+
 const weiboImg = ref(
   'https://widget.weibo.com/weiboshow/index.php?language=&width=0&height=520&fansRow=1&ptype=1&speed=0&skin=10&isTitle=1&noborder=1&isWeibo=1&isFans=1&uid=7738638501&verifier=4838f435&dpc=1'
 )
 
 const { locale } = useI18n()
-
 const router = useRouter()
 const route = useRoute()
 const visualStateStore = visualState()
-const fullFooter = computed(() => {
-  return router.currentRoute.value.meta.fullFooter
-})
-const currentRouter = computed(() => {
-  return route.path
-})
-const theme = ref()
+
+const fullFooter = computed(() => router.currentRoute.value.meta.fullFooter)
+const currentRouter = computed(() => route.path)
+const theme = ref(false)
 const isScrollingDown = ref<boolean>(false)
 let lastScrollTop = 0
 
 onMounted(() => {
-  // 底部新闻条入场动画
-  const expand_element = document.getElementsByClassName('expand')[0]
-  const text_element = document.getElementsByClassName('text-links')[0]
-  expand_element['style'].width = '0px'
-  expand_element['style'].overflow = 'hidden'
-  text_element['style'].opacity = '0'
-  document.getElementsByClassName('WEIBO_detail')[0]['style'].opacity = '0'
-  setTimeout(() => {
-    expand_element['style'].width = '100%'
-    expand_element['style'].overflow = 'hidden'
-    text_element['style'].opacity = '1'
-    theme.value = localStorage.getItem('theme') === 'dark'
-  }, 400)
-  // 添加滚动事件监听器
+  initFooterAnimation()
   document.addEventListener('scroll', handleScroll, { passive: true })
 })
 
-const changeLanguage = (lang) => {
+const initFooterAnimation = () => {
+  const expandElement = document.querySelector('.expand') as HTMLElement
+  const textElement = document.querySelector('.text-links') as HTMLElement
+  const weiboElement = document.querySelector('.WEIBO_detail') as HTMLElement
+
+  if (!expandElement || !textElement || !weiboElement) return
+
+  expandElement.style.width = '0px'
+  expandElement.style.overflow = 'hidden'
+  textElement.style.opacity = '0'
+  weiboElement.style.opacity = '0'
+
+  setTimeout(() => {
+    expandElement.style.width = '100%'
+    expandElement.style.overflow = 'visible'
+    textElement.style.opacity = '1'
+    theme.value = localStorage.getItem('theme') === 'dark'
+  }, 400)
+}
+
+const changeLanguage = (lang: string) => {
   localStorage.setItem('lang', lang)
   locale.value = lang
 }
 
 const changeTheme = () => {
+  const newTheme = theme.value ? 'dark' : 'light'
+
   if (currentRouter.value === '/') {
     const loadingInstance = ElLoading.service({
       fullscreen: true,
       background: 'rgba(0, 0, 0, 0.2)',
       spinner: '1',
     })
+
     setTimeout(() => {
-      const currentMode = theme.value ? 'dark' : 'light'
-      visualStateStore.setTheme(currentMode)
+      visualStateStore.setTheme(newTheme)
     }, 150)
+
     setTimeout(() => {
       loadingInstance.close()
     }, 150)
   } else {
-    const currentMode = theme.value ? 'dark' : 'light'
-    visualStateStore.setTheme(currentMode)
+    visualStateStore.setTheme(newTheme)
   }
 }
 
-// 点击事件
 const contact = (type: string) => {
-  let url = ''
-  if (type !== 'EMAIL' && type !== 'WEIBO') {
-    if (type === 'TWITTER') {
-      url = 'https://twitter.com/TILucario'
-    } else if (type === 'BILIBILI') {
-      url = 'https://space.bilibili.com/128735968'
-    } else if (type === 'GITHUB') {
-      url = 'https://github.com/Anuluca'
-    }
-    window.open(url)
-  } else if (type === 'EMAIL') {
-    const linkNode = document.createElement('a')
-    linkNode.href = 'mailto:tilucario@outlook.com'
-    document.body.appendChild(linkNode)
-    linkNode.click()
-  } else {
-    // url = 'https://weibo.com/ryugamine'
-    let element = document.getElementsByClassName('WEIBO_detail')[0]
-    if (element['style'].opacity == '0') {
-      element['style'].bottom = '30px'
-      element['style'].opacity = '1'
-    } else {
-      element['style'].bottom = '-540px'
-      element['style'].opacity = '0'
-    }
+  if (!SOCIAL_TYPES.includes(type)) return
+
+  if (type === 'EMAIL') {
+    window.location.href = 'mailto:tilucario@outlook.com'
+    return
+  }
+
+  if (type === 'WEIBO') {
+    toggleWeiboVisibility()
+    return
+  }
+
+  const url = SOCIAL_LINKS[type as keyof typeof SOCIAL_LINKS]
+  if (url) {
+    window.open(url, '_blank')
   }
 }
 
-// 鼠标移入
-const mouseOver = (type: string) => {
-  let element = document.getElementsByClassName(`${type}_detail`)[0]
-  element.classList.add('hover')
+const toggleWeiboVisibility = () => {
+  const element = document.querySelector('.WEIBO_detail') as HTMLElement
+  if (!element) return
+
+  const isVisible = element.style.opacity === '1'
+  element.style.bottom = isVisible ? '-540px' : '30px'
+  element.style.opacity = isVisible ? '0' : '1'
 }
 
-// 鼠标移出
-const mouseLeave = (type: string) => {
-  let element = document.getElementsByClassName(`${type}_detail`)[0]
-  element.classList.remove('hover')
+const handleSocialHover = (type: string, isHover: boolean) => {
+  const element = document.querySelector(`.${type}_detail`) as HTMLElement
+  if (!element) return
+
+  if (isHover) {
+    element.classList.add('hover')
+  } else {
+    element.classList.remove('hover')
+  }
 }
 
-// 监听滚动事件
 const handleScroll = () => {
-  // 获取当前滚动高度 (兼容性处理)
   const scrollTop = window.pageYOffset || document.documentElement.scrollTop
-  if (scrollTop > lastScrollTop) {
-    isScrollingDown.value = true
-  } else {
-    isScrollingDown.value = false
-  }
-  // 更新最后一次滚动位置，严禁负值 (移动端橡皮筋效果兼容)
-  lastScrollTop = scrollTop <= 0 ? 0 : scrollTop
+  isScrollingDown.value = scrollTop > lastScrollTop
+  lastScrollTop = Math.max(0, scrollTop)
 }
 
 onUnmounted(() => {
-  window.removeEventListener('scroll', handleScroll)
+  document.removeEventListener('scroll', handleScroll)
 })
 </script>
 
@@ -170,20 +173,16 @@ onUnmounted(() => {
     <div class="center">
       <div class="expand">
         <div class="marquee-wrap">
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
-          <span style="color: #ffc61b">{{ bottomLineData.intro }}</span
-          >&nbsp;&nbsp;|&nbsp;&nbsp;
-          <b
-            >RECOMMEND:
+          <span class="left-space" />
+          <span class="recommend">
             <a
               v-for="(item, key) in bottomLineData.recommand"
               :key="key"
               style="color: white"
               :href="item.href"
             >
-              「<span
+              「
+              <span
                 :style="[
                   {
                     color: item.color || '#5F9DDD',
@@ -191,10 +190,13 @@ onUnmounted(() => {
                   },
                 ]"
                 >{{ item.title }}\{{ item.sort }}</span
-              >」<span style="color: #ffffff96">{{ item.date }}</span
-              >&nbsp;
+              >
+              」
+              <span style="color: #ffffff96">{{ item.date }}</span>
+              &nbsp;
             </a>
-          </b>
+          </span>
+          <b>{{ bottomLineData.intro }}</b>
         </div>
       </div>
     </div>
@@ -203,14 +205,14 @@ onUnmounted(() => {
       <div class="text-links">
         <span>
           <div class="TWITTER_detail">
-            <img :src="twitterImg" alt="" />
+            <img :src="twitterImg" alt="Twitter profile" />
           </div>
           <el-button
             link
             type="danger"
             @click="contact('TWITTER')"
-            @mouseover="mouseOver('TWITTER')"
-            @mouseleave="mouseLeave('TWITTER')"
+            @mouseover="handleSocialHover('TWITTER', true)"
+            @mouseleave="handleSocialHover('TWITTER', false)"
           >
             TWITTER
           </el-button>
@@ -230,36 +232,41 @@ onUnmounted(() => {
             link
             type="danger"
             @click="contact('WEIBO')"
-            @mouseover="mouseOver('WEIBO')"
-            @mouseleave="mouseLeave('WEIBO')"
+            @mouseover="handleSocialHover('WEIBO', true)"
+            @mouseleave="handleSocialHover('WEIBO', false)"
           >
             WEIBO
           </el-button>
         </span>
         <span>
           <div class="BILIBILI_detail">
-            <img :src="bilibiliImg" width="220px" height="220px" alt="" />
+            <img
+              :src="bilibiliImg"
+              width="220px"
+              height="220px"
+              alt="Bilibili profile"
+            />
           </div>
           <el-button
             link
             type="danger"
             @click="contact('BILIBILI')"
-            @mouseover="mouseOver('BILIBILI')"
-            @mouseleave="mouseLeave('BILIBILI')"
+            @mouseover="handleSocialHover('BILIBILI', true)"
+            @mouseleave="handleSocialHover('BILIBILI', false)"
           >
             BILIBILI
           </el-button>
         </span>
         <span>
           <div class="GITHUB_detail">
-            <img :src="githubImg" alt="" />
+            <img :src="githubImg" alt="GitHub profile" />
           </div>
           <el-button
             link
             type="danger"
             @click="contact('GITHUB')"
-            @mouseover="mouseOver('GITHUB')"
-            @mouseleave="mouseLeave('GITHUB')"
+            @mouseover="handleSocialHover('GITHUB', true)"
+            @mouseleave="handleSocialHover('GITHUB', false)"
           >
             GITHUB
           </el-button>

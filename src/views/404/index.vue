@@ -1,33 +1,36 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import './index.less'
 
 const router = useRouter()
 
+// 定义响应式数据控制动画状态
+const showTextClass = ref('')
+const lastShowTextWidth = ref('0')
+const porygonStyle = ref({
+  opacity: '0',
+  width: '512px',
+  height: '478px',
+})
+
 onMounted(() => {
-  const showText = document.getElementsByClassName('show-text')[0]
-  const lastShowText = document.getElementsByClassName('last-show-text')[0]
-  const porygon_element = document.getElementsByClassName('porygon')[0]
-  showText['style'].textShadow = '0 0 0 15px white'
-  showText['style'].color = 'transparent'
-  lastShowText['style'].width = '0'
-  porygon_element['style'].opacity = '0'
-  porygon_element['style'].width = '512px'
-  porygon_element['style'].height = '478px'
+  setTimeout(() => {
+    showTextClass.value = 'active-shadow'
+    porygonStyle.value = {
+      opacity: '1',
+      width: '394px',
+      height: '369px',
+    }
+  }, 0)
 
   setTimeout(() => {
-    showText['style'].textShadow = '0 0 0 8px white'
-    porygon_element['style'].opacity = '1'
-    porygon_element['style'].width = '394px'
-    porygon_element['style'].height = '369px'
-  }, 0)
-  setTimeout(() => {
-    showText['style'].color = '#fff'
+    showTextClass.value += ' active-color'
   }, 200)
+
   setTimeout(() => {
-    lastShowText['style'].width = '100%'
+    lastShowTextWidth.value = '100%'
   }, 400)
 })
 </script>
@@ -35,14 +38,15 @@ onMounted(() => {
 <template>
   <div class="not-found-page main-container">
     <div class="inner">
-      <!-- <img class="porygon" :src="Porygon" /> -->
-      <div class="porygon" />
-      <div class="show-text">
+      <div class="porygon" :style="porygonStyle" />
+      <div class="show-text" :class="showTextClass">
         <p><span>404</span> NOT FOUND</p>
         <p>{{ $t('notFound.description') }}</p>
-        <!-- <p> $t('home.lisence2')</p> -->
-        <!-- <p class="last-show-text" @click="router.push('/')">{{ $t('notFound.back') }}</p> -->
-        <p class="last-show-text" @click="router.push('/')">
+        <p
+          class="last-show-text"
+          :style="{ width: lastShowTextWidth }"
+          @click="router.push('/')"
+        >
           -> RETURN TO HOMEPAGE
         </p>
       </div>

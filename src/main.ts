@@ -22,10 +22,13 @@ function setRootFontSize() {
   let rootFontSize = null
 
   if (aspectRatio <= 2 / 3) {
-    // 长宽比大于等于3:2，认为是移动端
+    // 长宽比<=2:3，认为是移动端
     rootFontSize = (deviceWidth / 375) * 14
+  } else if (aspectRatio <= 1 && aspectRatio > 2 / 3) {
+    // 1:1>长宽比>2:3，认为是平板端
+    rootFontSize = (deviceWidth / 375) * 8
   } else {
-    // 长宽比小于3:2，认为是桌面端
+    // 长宽比>1，认为是桌面端
     rootFontSize = (deviceWidth / 375) * 4.9
   }
   document.documentElement.style.fontSize = rootFontSize + 'px'

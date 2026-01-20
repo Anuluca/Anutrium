@@ -7,7 +7,7 @@
         <div class="right">
           <p>
             <span>{{ $t('name[0]') }}</span>
-            <span :class="'name-center active ' + locale">{{
+            <span :class="['name-center', { active: logoActive }, locale]">{{
               $t('name[1]')
             }}</span>
             <span>{{ $t('name[2]') }}</span>
@@ -114,13 +114,13 @@
             <el-button link type="danger" @click="contact('GITHUB')">
               GITHUB
             </el-button>
-            <el-button link type="danger" @click="contact('GITHUB')">
+            <el-button link type="danger" @click="contact('WEIBO')">
               WEIBO
             </el-button>
-            <el-button link type="danger" @click="contact('GITHUB')">
+            <el-button link type="danger" @click="contact('TWITTER')">
               TWITTER
             </el-button>
-            <el-button link type="danger" @click="contact('GITHUB')">
+            <el-button link type="danger" @click="contact('BILIBILI')">
               BILIBILI
             </el-button>
           </div>
@@ -135,7 +135,7 @@
               tilucario@outlook.com
             </el-button>
           </div>
-          <div class="about-me">© 2018-2025 ANULUCA</div>
+          <div class="about-me">© 2018-2026 ANULUCA</div>
           <div class="mobile-footer-left" />
         </div>
       </div>
@@ -154,7 +154,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { Moon, Sunny } from '@element-plus/icons-vue'
@@ -166,10 +166,13 @@ import { visualState } from '@/stores'
 
 const { locale } = useI18n()
 
-watch(locale, () => {
-  setTimeout(() => {
-    changeTitle(true)
-  }, 0)
+// 使用响应式变量替代直接DOM操作
+const logoActive = ref(true)
+
+watch(locale, async () => {
+  logoActive.value = false
+  await nextTick()
+  logoActive.value = true
 })
 
 const route = useRoute()
@@ -183,9 +186,9 @@ const currentRouter = computed(() => {
 })
 
 // 新增的滚动相关引用和状态
-const layoutPage = ref(null)
+const layoutPage = ref<HTMLElement | null>(null)
 const isScrolled = ref(false)
-const theme = ref(null)
+const theme = computed(() => visualStateStore.theme)
 
 const filterRoutes = routes.filter((item) => {
   return item?.meta?.ifShow
@@ -194,18 +197,6 @@ const filterRoutes = routes.filter((item) => {
 // 移动端相关状态
 const isMobile = ref(window.innerWidth <= 620)
 const isMobileMenuOpen = ref(false)
-
-// 标题动画
-const changeTitle = (close = false) => {
-  const name_center_element = document.getElementsByClassName('name-center')[0]
-  if (name_center_element) {
-    if (close) {
-      name_center_element.classList.remove('active')
-    } else {
-      name_center_element.classList.add('active')
-    }
-  }
-}
 
 // 全屏状态
 const isFullscreen = ref(false)
@@ -270,23 +261,18 @@ const toggleLanguage = () => {
 }
 
 const toggleTheme = () => {
-  if (visualStateStore.theme === 'dark') {
-    visualStateStore.setTheme('light')
-    theme.value = 'light'
-    // // 如果是手机端，切换主题后刷新页面
-    // if (isMobile.value) {
-    //   location.reload();
-    // }
-  } else {
-    visualStateStore.setTheme('dark')
-    theme.value = 'dark'
-  }
+  visualStateStore.toggleTheme()
+}
+
+// 模拟 contact 方法，因为原始代码中没有定义
+const contact = (type: string) => {
+  console.log(`${type} clicked`)
 }
 
 onMounted(() => {
   setTimeout(() => {
-    changeTitle(true)
-    theme.value = localStorage.getItem('theme')
+    logoActive.value = false
+    theme.value = localStorage.getItem('theme') || 'light'
   }, 400)
 
   // 监听窗口大小变化

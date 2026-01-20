@@ -7,17 +7,12 @@ import { visualState } from '@/stores'
 
 const route = useRoute()
 const visualStateStore = visualState()
-const isTextMenu = computed(() => {
-  if (currentRouter.value === '/') {
-    return false
-  } else {
-    return true
-  }
-})
-const currentRouter = computed(() => {
-  return route.path
-})
+
+const currentRouter = computed(() => route.path)
+
+const isTextMenu = computed(() => currentRouter.value !== '/')
 </script>
+
 <template>
   <div class="back-controller">
     <BackStars :theme="visualStateStore.theme" :is-text-menu="isTextMenu" />
@@ -28,6 +23,5 @@ const currentRouter = computed(() => {
 .back-controller {
   width: 100%;
   height: 100%;
-  /* overflow: hidden; */
 }
 </style>

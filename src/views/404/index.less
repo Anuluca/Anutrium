@@ -3,13 +3,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  
   .inner {
-    // background-color: red;
     width: 1000px;
     height: 350px;
     position: relative;
     margin-top: -140px;
     margin-left: 60px;
+
     .porygon {
       width: 394px;
       height: 369px;
@@ -18,117 +19,99 @@
       right: 0;
       background-size: cover;
       background-image: url('@/assets/img/porygon.png');
-      transition: all 1s, opacity 2s;
+      transition: all 1s ease, opacity 2s ease;
+      transform-origin: center;
     }
+
     .show-text {
       position: absolute;
       bottom: 0;
       left: 0;
       font-family: 'enTitle';
-      transition: textShadow 0.2s, color 0.5s;
+      transition: text-shadow 0.2s ease, color 0.5s ease;
+      
       p {
         font-size: 29px;
-        // letter-spacing: -2px;
         line-height: 35px;
-        text-shadow: 0 0 8px #fff;
-      }
-      p:first-child {
-        font-size: 60px;
-        // letter-spacing: -6px;
-        line-height: 60px;
-        span {
-          font-size: 110px;
+        text-shadow: 0 0 8px var(--opacity-color);
+        
+        &:first-child {
+          font-size: 60px;
+          line-height: 60px;
+          
+          span {
+            font-size: 110px;
+          }
+          
+          animation: shineFont 5s linear infinite;
         }
-        // transform: scale(0.9, 1);
-        -webkit-animation: shineFont 5s linear infinite;
-        animation: shineFont 5s linear infinite;
-      }
-      @keyframes shineFont {
-        0% {
-          text-shadow: 0 0 30px #fff;
-        }
-        // 25% {
-        //   text-shadow: 0 0 10px #ff004e;
-        // }
-        // 65% {
-        //   text-shadow: 0 0 10px #3276fe;
-        // }
-        25% {
-          text-shadow: 0 0 10px #fff;
-        }
-        50% {
-          text-shadow: 0 0 0 transparent;
-        }
-        100% {
-          text-shadow: 0 0 30px #fff;
-        }
-      }
-      .last-show-text {
-        white-space: nowrap;
-        background-color: #ffffffba;
-        color: #000000;
-        overflow: hidden;
-        height: 30px;
-        line-height: 30px;
-        display: flex;
-        align-items: center;
-        transition: all 0.3s, width 0.5s;
-        text-shadow: none;
-        cursor: pointer;
-        &:hover {
-          background-color: #9b9b9b42;
-          color: #fff;
-          text-shadow: 0 0 8px #fff;
+        
+        &:last-child {
+          white-space: nowrap;
+          background-color: var(--opacity-color);
+          color: var(--bg-color);
+          overflow: hidden;
+          height: 30px;
+          line-height: 30px;
+          display: flex;
+          align-items: center;
+          transition: all 0.3s ease, width 0.5s ease;
+          text-shadow: none;
+          cursor: pointer;
+          
+          &:hover {
+            background-color: #9b9b9b42;
+            color: var(--text-color);
+            text-shadow: 0 0 8px var(--opacity-color);
+          }
         }
       }
     }
   }
 
-  // 移动端适配 - 当屏幕宽度小于等于620px时隐藏菜单栏
-  @media screen and (max-width: 620px) {
+@media screen and (max-aspect-ratio: 2/3) {
     .porygon {
       right: 40px !important;
       width: 360px !important;
       height: 330px !important;
     }
+    
     .show-text {
       width: 500px;
+      
       p {
         font-size: 25px !important;
         line-height: 25px !important;
-      }
-      p:first-child {
-        font-size: 50px !important;
-        line-height: 60px !important;
-        span {
-          font-size: 90px !important;
-          display: block;
+        
+        &:first-child {
+          font-size: 50px !important;
+          line-height: 60px !important;
+          
+          span {
+            font-size: 90px !important;
+            display: block;
+          }
         }
-      }
-      p:nth-child(2) {
-        font-size: 14px !important;
-        line-height: 14px !important;
-        margin-top: -10px;
+        
+        &:nth-child(2) {
+          font-size: 15px !important;
+          line-height: 14px !important;
+          margin-top: -10px;
+        }
       }
     }
   }
 }
 
-.light {
-  .not-found-page {
-    .show-text p {
-      color: #181818;
-      &:last-child {
-        background-color: #000000ba;
-        text-shadow: 0 0 8px #dadada;
-        color: #ffffff;
-
-        &:hover {
-          background-color: #49494942;
-          color: #ffffff;
-          text-shadow: 0 0 8px #ffffff;
-        }
-      }
-    }
+// 动画定义
+@keyframes shineFont {
+  0%, 100% {
+    text-shadow: 0 0 30px #ffffffba;
+  }
+  25% {
+    text-shadow: 0 0 10px #ffffffba;
+  }
+  50% {
+    text-shadow: 0 0 0 transparent;
   }
 }

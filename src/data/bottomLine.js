@@ -1,5 +1,5 @@
 export default {
-  intro: '優しい人にならなくちゃ, 心が悴む前に。',
+  intro: 'DRIVEN BY PASSION.',
   recommand: [
     {
       title: '标题1',
