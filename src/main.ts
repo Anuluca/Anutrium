@@ -7,11 +7,14 @@ import { loadAllFonts, showPageContent } from './utils/fontLoader'
 import App from './App.vue'
 import i18n from './locales'
 import router from './router'
+import visualState from './stores/visualState'
 
 import 'reset-css'
 import 'element-plus/theme-chalk/dark/css-vars.css'
 import 'element-plus/theme-chalk/index.css'
 import '@/assets/style/global.less'
+
+let visualStateStore: ReturnType<typeof visualState>
 
 // 设置根字体大小
 function setRootFontSize() {
@@ -20,17 +23,29 @@ function setRootFontSize() {
   const aspectRatio = deviceWidth / deviceHeight
 
   let rootFontSize = null
+  let deviceType = ''
 
   if (aspectRatio <= 2 / 3) {
     // 长宽比<=2:3，认为是移动端
     rootFontSize = (deviceWidth / 375) * 14
+    deviceType = 'mobile'
   } else if (aspectRatio <= 1 && aspectRatio > 2 / 3) {
     // 1:1>长宽比>2:3，认为是平板端
     rootFontSize = (deviceWidth / 375) * 8
+    deviceType = 'tablet'
   } else {
     // 长宽比>1，认为是桌面端
     rootFontSize = (deviceWidth / 375) * 4.9
+    deviceType = 'desktop'
   }
+
+  // 更新 store 中的设备类型
+  if (visualStateStore) {
+    visualStateStore.setDeviceType(
+      deviceType as 'mobile' | 'tablet' | 'desktop'
+    )
+  }
+
   document.documentElement.style.fontSize = rootFontSize + 'px'
 }
 

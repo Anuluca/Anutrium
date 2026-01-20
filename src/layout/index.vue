@@ -196,8 +196,8 @@ const filterRoutes = routes.filter((item) => {
   return item?.meta?.ifShow
 })
 
-// 移动端相关状态
-const isMobile = ref(window.innerWidth <= 620)
+// 移动端相关状态 - 从store中获取设备类型
+const isMobile = computed(() => visualStateStore.deviceType !== 'desktop')
 const isMobileMenuOpen = ref(false)
 
 // 全屏状态
@@ -237,14 +237,6 @@ const closeMobileMenu = () => {
   isMobileMenuOpen.value = false
 }
 
-// 监听窗口大小变化
-const handleResize = () => {
-  isMobile.value = window.innerWidth <= 620
-  if (!isMobile.value) {
-    isMobileMenuOpen.value = false
-  }
-}
-
 // 监听滚动事件
 const handleScroll = () => {
   isScrolled.value = document.documentElement.scrollTop > 50
@@ -277,16 +269,12 @@ onMounted(() => {
     theme.value = localStorage.getItem('theme') || 'light'
   }, 400)
 
-  // 监听窗口大小变化
-  window.addEventListener('resize', handleResize, { passive: true })
-
   // 添加滚动事件监听器
   document.addEventListener('scroll', handleScroll, { passive: true })
 })
 
 // 清理事件监听器
 onUnmounted(() => {
-  window.removeEventListener('resize', handleResize)
   document.removeEventListener('scroll', handleScroll)
 })
 </script>

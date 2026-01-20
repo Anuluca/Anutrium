@@ -41,12 +41,12 @@ onMounted(() => {
 
         setTimeout(() => {
           emit('finished')
-        }, 300)
+        }, 500)
 
         // 等待竖条移出动画完成后隐藏容器
         setTimeout(() => {
           isAnimating.value = false
-        }, 1200)
+        }, 1600)
       }, 800)
     }, 1600)
   })

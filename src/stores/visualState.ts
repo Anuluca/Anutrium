@@ -2,10 +2,13 @@ import { defineStore } from 'pinia'
 
 // 定义主题类型
 export type Theme = 'light' | 'dark'
+// 定义设备类型
+export type DeviceType = 'mobile' | 'tablet' | 'desktop'
 
 export default defineStore('visualState', {
-  state: (): { theme: Theme } => ({
+  state: (): { theme: Theme; deviceType: DeviceType } => ({
     theme: 'light',
+    deviceType: 'desktop', // 默认为 desktop
   }),
 
   actions: {
@@ -43,6 +46,26 @@ export default defineStore('visualState', {
     toggleTheme(): void {
       const newTheme: Theme = this.theme === 'light' ? 'dark' : 'light'
       this.setTheme(newTheme)
+    },
+    
+    /**
+     * 设置设备类型
+     * @param deviceType - 要设置的设备类型 ('mobile' | 'tablet' | 'desktop')
+     */
+    setDeviceType(deviceType: DeviceType): void {
+      // 验证输入的设备类型值是否有效
+      if (!['mobile', 'tablet', 'desktop'].includes(deviceType)) {
+        console.warn(
+          `Invalid deviceType value: ${deviceType}. Using 'desktop' as fallback.`
+        )
+        deviceType = 'desktop'
+      }
+
+      // 保存设备类型到本地存储（为了兼容之前的逻辑，也可以移除）
+      localStorage.setItem('deviceType', deviceType)
+
+      // 更新状态
+      this.deviceType = deviceType
     },
   },
 })
