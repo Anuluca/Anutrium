@@ -145,9 +145,11 @@
     <div
       :class="{ 'router-container': true, blur: isMobile && isMobileMenuOpen }"
     >
-      <transition name="route" mode="out-in">
-        <RouterView />
-      </transition>
+      <router-view v-slot="{ Component }">
+        <transition name="route" mode="out-in">
+          <component :is="Component" />
+        </transition>
+      </router-view>
     </div>
     <div class="fullscreen" @click="toggleFullscreen" />
   </div>
