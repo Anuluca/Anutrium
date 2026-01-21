@@ -65,7 +65,7 @@ onMounted(() => {
 
 <template>
   <StartAnimation @finished="startAnimationFinished" />
-  <BackController />
   <layout v-if="showLayout" />
   <FooterCom v-if="showLayout" />
+  <BackController />
 </template>

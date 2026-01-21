@@ -8,8 +8,13 @@
   cursor: url('@/assets/img/dot.svg') 15 15, auto;
   width: 100%;
   box-sizing: border-box;
-  animation: fadeIn 0.4s ease-in forwards;
+  transition: opacity 0.4s;
+  position: relative;
+  z-index: 2;
   opacity: 0;
+  &.layout-show {
+    opacity: 1;
+  }
 
   .el-menu-layout-all {
     height: 100px;
@@ -28,16 +33,19 @@
     backface-visibility: hidden !important;
     -webkit-backface-visibility: hidden !important;
     transform: translateZ(0) !important;
+    border: 0px solid #00000000;
 
     &.scrolled {
-      height: 60px;
-      top: 10px;
+      height: 70px;
+      top: 20px;
       left: 50px;
       right: 50px;
       padding: 0 20px;
-      border-radius: 3px;
-      background-color: rgb(37 37 37 / 95%);
-      box-shadow: 0 0.14286rem 0.42857rem rgba(0, 0, 0, 0.91);
+      border-radius: 6px;
+      background-color: rgba(27, 27, 27, 0.308);
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(66, 66, 66, 0.542);
+      box-shadow: 0 10px 30px rgb(0, 0, 0);
 
       .logo-box {
         margin-top: 0;
@@ -46,12 +54,12 @@
           height: 40px;
         }
         .right {
-          margin-top: 2px;
+          margin-top: 0px;
         }
       }
 
       .el-menu {
-        margin-top: 8px;
+        margin-top: 4px;
       }
     }
 
@@ -276,21 +284,24 @@
     position: fixed;
     right: 20px;
     top: 30px;
-    width: 60px;
-    height: 60px;
+    width: 70px;
+    height: 70px;
     border-radius: 5px;
     display: none;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     transition: all 0.5s ease;
+    border: 0px solid #00000000;
     z-index: 4000;
 
     &.scrolled {
       top: 10px;
       right: 20px;
-      background-color: rgb(37 37 37 / 95%);
-      box-shadow: 0 0.14286rem 0.42857rem rgba(0, 0, 0, 0.91);
+      background-color: rgba(27, 27, 27, 0.308);
+      backdrop-filter: blur(2px);
+      border: 1px solid rgba(66, 66, 66, 0.542);
+      box-shadow: 0 10px 30px rgb(0, 0, 0);
 
       .hamburger {
         zoom: 0.9;
@@ -602,15 +613,17 @@
   .layout-page {
     .el-menu-layout-all {
       &.scrolled {
-        background-color: rgb(255 255 255 / 95%);
-        box-shadow: 0 0.14286rem 0.42857rem rgba(0, 0, 0, 0.2);
+        background-color: #ededed60;
+        border: 0px solid rgba(66, 66, 66, 0.542);
+        box-shadow: 0 2px 20px rgba(0, 0, 0, 0.258);
       }
     }
 
     .mobile-menu-icon {
       &.scrolled {
-        background-color: rgb(255 255 255 / 95%);
-        box-shadow: 0 0.14286rem 0.42857rem rgba(0, 0, 0, 0.2);
+        background-color: #ededed60;
+        border: 0px solid rgba(66, 66, 66, 0.542);
+        box-shadow: 0 2px 20px rgba(0, 0, 0, 0.258);
       }
     }
 
@@ -647,8 +660,8 @@
 
       &.scrolled {
         top: 20px;
-        left: 100px;
-        right: 100px;
+        left: 50px;
+        right: 130px;
         border-radius: 40px;
       }
 
@@ -659,7 +672,7 @@
         justify-content: center;
 
         .right p {
-          margin-bottom: 2px;
+          margin-bottom: -4px;
           color: var(--text-color); // 使用CSS变量
         }
       }

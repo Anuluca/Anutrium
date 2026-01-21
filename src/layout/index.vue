@@ -1,5 +1,5 @@
 <template>
-  <div ref="layoutPage" class="layout-page">
+  <div ref="layoutPage" :class="{'layout-page':true,'layout-show':layoutShow}">
     <!-- 头部 -->
     <el-header class="el-menu-layout-all" :class="{ scrolled: isScrolled }">
       <div class="logo-box" @click="returnHome">
@@ -190,6 +190,7 @@ const currentRouter = computed(() => {
 // 新增的滚动相关引用和状态
 const layoutPage = ref<HTMLElement | null>(null)
 const isScrolled = ref(false)
+const layoutShow = ref(false)
 const theme = computed(() => visualStateStore.theme)
 
 const filterRoutes = routes.filter((item) => {
@@ -268,6 +269,9 @@ onMounted(() => {
     logoActive.value = false
     theme.value = localStorage.getItem('theme') || 'light'
   }, 400)
+  setTimeout(() => {
+    layoutShow.value = true
+  }, 100)
 
   // 添加滚动事件监听器
   document.addEventListener('scroll', handleScroll, { passive: true })

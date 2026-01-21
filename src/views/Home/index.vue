@@ -27,8 +27,9 @@ const clickLisence = () => {
       <div class="tempLink" @click="toOld">前往旧版主页</div>
       <p>DESIGNED & DEVELOPED BY ANULUCA</p>
       <p>
-        Based on： &nbsp;<span style="color: #75fb7c">VUE3.2 &nbsp;</span> |
-        <span style="color: #2834ff"> &nbsp;ELEMENT+</span>
+        POWERED BY： &nbsp;
+        <span style="color: #75fb7c">VUE3.2 &nbsp;</span> |
+        <span style="color: #2834ff"> &nbsp;NETLIFY</span>
       </p>
     </div>
     <div class="bottom-text">
