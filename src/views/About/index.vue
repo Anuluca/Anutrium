@@ -10,8 +10,9 @@ const toggleLog = (index: number) => {
 }
 
 const changelogs = ref([
+  // 下一个版本号：Crystal
   {
-    version: 'v0.5-alpha',
+    version: 'v0.5-alpha(Mirage)',
     date: '2026-01-21',
     title: '代码结构优化',
     details: [

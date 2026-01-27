@@ -49,10 +49,11 @@
 
       .logo-box {
         margin-top: 0;
+        padding-left: 15px !important;
 
-        img {
-          height: 40px;
-        }
+        // img {
+        //   height: 75px;
+        // }
         .right {
           margin-top: 0px;
         }
@@ -70,31 +71,32 @@
       display: flex;
       align-items: center;
       cursor: pointer;
+        transition: all 0.5s ease;
 
       &:hover {
         .name-center {
           opacity: 1 !important;
 
           &.zhCn {
-            width: 95px;
+            width: 118px;
           }
 
           &.en {
-            width: 150px;
+            width: 180px;
           }
         }
       }
 
       img {
-        height: 55px;
+        height: 105px;
         transition: all 0.5s ease;
-        margin-right: 20px;
+        margin-right: 10px;
         opacity: 1;
       }
 
       .right {
         display: inline-block;
-        margin-top: 5px;
+        margin-top: 0px;
         z-index: 100;
         cursor: pointer;
         transition: all 0.2s !important;
@@ -102,7 +104,7 @@
         white-space: nowrap;
 
         p {
-          font-size: 30px;
+          font-size: 38px;
           letter-spacing: 1px;
           color: var(--text-color); // 使用CSS变量
 
@@ -656,7 +658,7 @@
   .layout-page {
     .el-menu-layout-all {
       padding: 0 10px;
-      padding-top: 20px;
+      padding-top: 10px;
 
       &.scrolled {
         top: 20px;
@@ -672,9 +674,24 @@
         justify-content: center;
 
         .right p {
-          margin-bottom: -4px;
+          margin-bottom: 0px;
           color: var(--text-color); // 使用CSS变量
         }
+
+
+      &:hover {
+        .name-center {
+          opacity: 0 !important;
+
+                &.zhCn {
+                  width: 0 !important;
+                }
+
+                &.en {
+                  width: 0 !important;
+                }
+        }
+      }
       }
 
       // 隐藏桌面端菜单
@@ -690,6 +707,7 @@
     // 显示移动端菜单按钮
     .mobile-menu-icon {
       display: flex;
+        top: 20px;
 
       &.scrolled {
         border-radius: 40px;

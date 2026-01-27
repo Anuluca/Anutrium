@@ -43,5 +43,8 @@ export default defineConfig({
       },
     },
   },
+  server: {
+    port: 3000, // 更改端口号为3000
+  },
   base: './',
 })

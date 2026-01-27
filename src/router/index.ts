@@ -2,9 +2,9 @@ import { createRouter, createWebHistory } from 'vue-router'
 import NProgress from 'nprogress'
 
 import NotFound from '@/views/404/index.vue'
+import About from '@/views/About/index.vue'
 import Tools from '@/views/Craft/index.vue'
 import Home from '@/views/Home/index.vue'
-import About from '@/views/About/index.vue'
 
 import i18n from '../locales' // 导入 i18n 实例
 

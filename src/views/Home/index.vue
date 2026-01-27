@@ -42,7 +42,7 @@ const clickLisence = () => {
         ）.
       </p>
       <div style="text-align: center; color: #8d8d8d; font-family: 'cnTitle'">
-        &lt; 预计2026年内开放 >
+        &lt; 预计2026年内开放 &gt;
       </div>
     </div>
   </div>

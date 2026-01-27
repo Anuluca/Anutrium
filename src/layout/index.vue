@@ -1,5 +1,8 @@
 <template>
-  <div ref="layoutPage" :class="{'layout-page':true,'layout-show':layoutShow}">
+  <div
+    ref="layoutPage"
+    :class="{ 'layout-page': true, 'layout-show': layoutShow }"
+  >
     <!-- 头部 -->
     <el-header class="el-menu-layout-all" :class="{ scrolled: isScrolled }">
       <div class="logo-box" @click="returnHome">
@@ -161,8 +164,8 @@ import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { Moon, Sunny } from '@element-plus/icons-vue'
 
-import Logo from '@/assets/img/logo/logo.png'
-import LogoDark from '@/assets/img/logo/logo_black.png'
+import Logo from '@/assets/img/logo/logo_horizon.png'
+import LogoDark from '@/assets/img/logo/logo_horizon_black.png'
 import { routes } from '@/router'
 import { visualState } from '@/stores'
 
