@@ -175,9 +175,9 @@ const { locale } = useI18n()
 const logoActive = ref(true)
 
 watch(locale, async () => {
-  logoActive.value = false
-  await nextTick()
-  logoActive.value = true
+  // logoActive.value = false
+  // await nextTick()
+  // logoActive.value = true
 })
 
 const route = useRoute()
