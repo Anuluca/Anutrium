@@ -8,10 +8,10 @@ const FONT_FAMILIES = ['enTitle', 'cnTitle']
 
 // logo 图片路径列表
 const LOGO_IMAGE_PATHS = [
-  '/src/assets/img/logo/logo.png',
-  '/src/assets/img/logo/logo_horizon.png',
-  '/src/assets/img/logo/logo_horizon_black.png',
-  '/src/assets/img/logo/logo_black.png',
+  '/assets/logo.png',
+  '/assets/logo_horizon.png',
+  '/assets/logo_horizon_black.png',
+  '/assets/logo_black.png',
 ]
 
 // 进度相关元素
