@@ -42,6 +42,15 @@ export default defineConfig({
         drop_debugger: true,
       },
     },
+    rollupOptions: {
+      output: {
+        // 去掉静态资源（图片、字体等）的 hash
+        assetFileNames: 'assets/[name][extname]',
+        // 如果你也想去掉 JS 和 CSS 的 hash（慎用！）
+        // chunkFileNames: 'assets/[name].js',
+        // entryFileNames: 'assets/[name].js',
+      },
+    },
   },
   server: {
     port: 3000, // 更改端口号为3000
