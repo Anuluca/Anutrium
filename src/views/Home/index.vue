@@ -1,15 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-
-import Logo from '@/assets/img/logo/logo.png'
-import LogoDark from '@/assets/img/logo/logo_black.png'
-import { visualState } from '@/stores'
-
-const visualStateStore = visualState()
-
-const showLogo = computed(() => {
-  return visualStateStore.theme === 'dark' ? Logo : LogoDark
-})
+import Logo from '@/components/Logo/index.vue'
 
 const toOld = () => {
   location.href = 'https://anulucas-blog.pages.dev/'
@@ -22,7 +12,9 @@ const clickLisence = () => {
 <template>
   <div class="home-page main-container" @mousewheel="wheelEvent">
     <div class="center-text">
-      <img :src="showLogo" alt="" />
+      <!-- <img :src="showLogo" alt="" /> -->
+      <Logo class="logo" :active="false" />
+
       <div class="tempTitle">庭院建设中</div>
       <div class="tempLink" @click="toOld">前往旧版主页</div>
       <p>DESIGNED & DEVELOPED BY ANULUCA</p>

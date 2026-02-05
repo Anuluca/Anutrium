@@ -46,14 +46,14 @@ const showLayout = ref(false)
 const startAnimationFinished = () => {
   setTimeout(() => {
     // 检查字体是否已加载完成
-    const checkFontLoaded = () => {
-      if (window.fontLoaded) {
-        showLayout.value = true
-      } else {
-        requestAnimationFrame(checkFontLoaded)
-      }
-    }
-    checkFontLoaded()
+    // const checkFontLoaded = () => {
+    //   if (window.fontLoaded) {
+    showLayout.value = true
+    //   } else {
+    //     requestAnimationFrame(checkFontLoaded)
+    //   }
+    // }
+    // checkFontLoaded()
   }, 450)
 }
 

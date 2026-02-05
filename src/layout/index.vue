@@ -6,7 +6,7 @@
     <!-- 头部 -->
     <el-header class="el-menu-layout-all" :class="{ scrolled: isScrolled }">
       <div class="logo-box" @click="returnHome">
-        <img :src="showLogo" />
+        <Logo id="0" class="logo" :active="false" />
         <div class="right">
           <p>
             <span>{{ $t('name[0]') }}</span>
@@ -164,8 +164,7 @@ import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { Moon, Sunny } from '@element-plus/icons-vue'
 
-import Logo from '@/assets/img/logo/logo_horizon.png'
-import LogoDark from '@/assets/img/logo/logo_horizon_black.png'
+import Logo from '@/components/Logo/index.vue'
 import { routes } from '@/router'
 import { visualState } from '@/stores'
 
@@ -183,9 +182,6 @@ watch(locale, async () => {
 const route = useRoute()
 const router = useRouter()
 const visualStateStore = visualState()
-const showLogo = computed(() => {
-  return visualStateStore.theme === 'dark' ? Logo : LogoDark
-})
 const currentRouter = computed(() => {
   return route.path
 })

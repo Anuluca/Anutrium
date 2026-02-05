@@ -5,8 +5,8 @@
     <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Loading...</title>
-    <meta name="description" content="Anutrium;Anuluca'sAtrium;路卡庭院;路卡的自由庭院;个人作品集网站，展示前端开发技能与项目经验">
-    <meta name="keywords" content="前端开发,Vue,React,JavaScript,个人作品集,技术博客,宝可梦">
+    <meta name="description" content="Anutrium|路卡的自由庭院  &#10;Craft by Passion.">
+    <meta name="keywords" content="Anuluca'sAtrium;Anutrium;前端开发,Vue,React,JavaScript,个人作品集,技术博客,宝可梦">
     <meta name="author" content="Anuluca">
     <meta property="og:title" content="Anutrium|路卡庭院">
     <meta property="og:description" content="Anuluca的个人网站">
@@ -17,83 +17,15 @@
         background-color: #000;
       }
 
-      /* 方形进度条样式 */
-      #loading-indicator {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-family: sans-serif;
-        z-index: 9999;
-      }
-
-      .loading-container {
-        text-align: center;
-      }
-
-      .progress-bar-container {
-        width: 200px;
-        height: 20px;
-        border: 2px solid #fff;
-        position: relative;
-        overflow: hidden;
-      }
-
-      .progress-bar {
-        position: absolute;
-        top: 0;
-        left: 0;
-        height: 100%;
-        width: 0%;
-        background-color: #fff;
-        transition: width 0.3s ease;
-      }
-
       .light {
         background-color: #fff !important;
-      }
-
-      .light .progress-bar-container{
-        border-color: #000 !important;
-      }
-
-      .light .progress-bar{
-        background-color: #1f1f1f !important;
       }
     </style>
   </head>
   <body>
-    <!-- 字体加载指示器 -->
-    <div id="loading-indicator">
-      <div class="loading-container">
-        <div class="progress-bar-container">
-          <div class="progress-bar" id="progress-bar"></div>
-        </div>
-      </div>
-    </div>
 
     <div id="app"></div>
     <script>
-      // 模拟进度条动画
-      let progress = 0;
-      const progressBar = document.getElementById("progress-bar");
-
-      function updateProgress() {
-        if (progress < 90) {
-          // 最多显示90%，因为实际加载时间不确定
-          progress += Math.floor(Math.random() * 10) + 1;
-          if (progress > 90) progress = 90;
-          progressBar.style.width = progress + "%";
-          setTimeout(updateProgress, 200);
-        }
-      }
-
-      // 启动进度条动画
-      updateProgress();
     </script>
     <script type="module" lang="ts" src="/src/main.ts"></script>
   </body>

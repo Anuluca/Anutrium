@@ -14,16 +14,6 @@ const LOGO_IMAGE_PATHS = [
   '/assets/logo_black.png',
 ]
 
-// 进度相关元素
-let progressBar: HTMLElement | null = null
-let progressText: HTMLElement | null = null
-
-// 初始化进度条元素引用
-function initProgressElements(): void {
-  progressBar = document.getElementById('progress-bar')
-  progressText = document.getElementById('progress-text')
-}
-
 /**
  * 检查单个字体是否已加载
  * @param fontFamily 字体名称
@@ -92,7 +82,6 @@ function loadImage(
  * @returns Promise<void>
  */
 export async function loadAllFonts(): Promise<void> {
-  initProgressElements()
   window.fontLoaded = false
 
   // 计算总资源数量（字体 + 图片）
@@ -101,12 +90,6 @@ export async function loadAllFonts(): Promise<void> {
 
   const updateProgressUI = () => {
     const progress = (loadedResources / totalResources) * 100
-    if (progressBar) {
-      progressBar.style.width = `${progress}%`
-    }
-    if (progressText) {
-      progressText.textContent = `${Math.round(progress)}%`
-    }
   }
 
   // 创建字体加载 Promise 数组

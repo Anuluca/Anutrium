@@ -18,6 +18,8 @@ declare module '@vue/runtime-core' {
     ElMenuItem: typeof import('element-plus/es')['ElMenuItem']
     ElSwitch: typeof import('element-plus/es')['ElSwitch']
     FooterCom: typeof import('./src/components/FooterCom/index.vue')['default']
+    Logo: typeof import('./src/components/Logo/index.vue')['default']
+    Logo_rotating3D: typeof import('./src/components/Logo_rotating3D/index.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     StartAnimation: typeof import('./src/components/StartAnimation/index.vue')['default']
