@@ -1,7 +1,7 @@
 module.exports = {
   plugins: {
     'postcss-pxtorem': {
-      rootValue: 28,
+      rootValue: 30,
       propList: ['*'], // 需要转换的属性，*表示所有
       selectorBlackList: ['.no-rem', '.logo-wrapper2', '.loading-text'], // 忽略转换的类名
       minPixelValue: 2, // 小于2px的不转换

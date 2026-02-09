@@ -307,7 +307,6 @@ defineExpose({
   // letter-spacing: 2px;
   font-weight: 800;
   font-size: 30px;
-  font-family: 'Avenir', 'Segoe UI Semibold',
-    'Microsoft YaHei UI', sans-serif;
+  font-family: 'Avenir', 'Segoe UI Semibold', 'Microsoft YaHei UI', sans-serif;
 }
 </style>
