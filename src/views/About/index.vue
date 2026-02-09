@@ -87,7 +87,8 @@ const neighbors = ref([
     name: 'Poke Amice - 宝可梦友会',
     url: 'http://pokeamice.com',
     logo: PokeAmice,
-    description: '超极巨怪力正在施工中！',
+    description:
+      '此处是由一位业余宝可梦爱好者Asimov创建的宝可梦全栈资料整理站点&个人研究据点。',
   },
   // {
   //   name: 'Vue.js',
@@ -317,7 +318,7 @@ const neighbors = ref([
 
   .neighbors-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(580px, 1fr));
     gap: 20px;
     margin-top: 30px;
 

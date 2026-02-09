@@ -27,7 +27,7 @@
       <polyline
         points="68,78 68,55 100,3 133,55 133,78"
         fill="none"
-        :class="['main-color', { 'draw-animation': active },'delay-1']"
+        :class="['main-color', { 'draw-animation': active }, 'delay-1']"
         stroke-width="14"
         stroke-linejoin="miter"
       />
@@ -50,7 +50,7 @@
       <polyline
         points="133,174 133,198 100,248 68,198 68,174"
         fill="none"
-        :class="['main-color', { 'draw-animation': active },'delay-1']"
+        :class="['main-color', { 'draw-animation': active }, 'delay-1']"
         stroke-width="14"
         stroke-linejoin="miter"
       />

@@ -51,9 +51,9 @@
         margin-top: 0;
         padding-left: 15px !important;
 
-        // img {
-        //   height: 75px;
-        // }
+        .logo {
+          height: 50px;
+        }
         .right {
           margin-top: 0px;
         }
@@ -71,19 +71,17 @@
       display: flex;
       align-items: center;
       cursor: pointer;
-        transition: all 0.5s ease;
+      transition: all 0.5s ease;
 
       &:hover {
-        .name-center {
+        .zhCn .name-center {
           opacity: 1 !important;
+          width: 115px;
+        }
 
-          &.zhCn {
-            width: 118px;
-          }
-
-          &.en {
-            width: 180px;
-          }
+        .en .name-center {
+          opacity: 1 !important;
+          width: 155px;
         }
       }
 
@@ -92,7 +90,7 @@
         height: 55px;
         transition: all 0.5s ease;
         margin-right: 5px;
-        color:var(--text-color);
+        color: var(--text-color);
         opacity: 1;
       }
 
@@ -106,12 +104,10 @@
         white-space: nowrap;
 
         p {
-          font-size: 38px;
           letter-spacing: 1px;
           color: var(--text-color); // 使用CSS变量
 
           span {
-            font-family: 'enTitle', serif;
             display: inline-block;
             transition: all 0.8s;
             white-space: nowrap;
@@ -122,16 +118,24 @@
 
               &.active {
                 opacity: 1;
-
-                &.zhCn {
-                  width: 95px;
-                }
-
-                &.en {
-                  width: 150px;
-                }
               }
             }
+          }
+        }
+
+        &.zhCn {
+
+          font-size: 40px;
+          font-family: 'cnTitle';
+          .name-center.active  {
+            width: 95px;
+          }
+        }
+        &.en {
+          font-size: 32px;
+          font-family: 'enTitle', serif;
+          .name-center.active  {
+            width: 150px;
           }
         }
       }
@@ -680,20 +684,19 @@
           color: var(--text-color); // 使用CSS变量
         }
 
+        &:hover {
+          .name-center {
+            opacity: 0 !important;
 
-      &:hover {
-        .name-center {
-          opacity: 0 !important;
+            &.zhCn {
+              width: 0 !important;
+            }
 
-                &.zhCn {
-                  width: 0 !important;
-                }
-
-                &.en {
-                  width: 0 !important;
-                }
+            &.en {
+              width: 0 !important;
+            }
+          }
         }
-      }
       }
 
       // 隐藏桌面端菜单
@@ -709,7 +712,7 @@
     // 显示移动端菜单按钮
     .mobile-menu-icon {
       display: flex;
-        top: 20px;
+      top: 20px;
 
       &.scrolled {
         border-radius: 40px;

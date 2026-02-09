@@ -7,10 +7,10 @@
     <el-header class="el-menu-layout-all" :class="{ scrolled: isScrolled }">
       <div class="logo-box" @click="returnHome">
         <Logo id="0" class="logo" :active="false" />
-        <div class="right">
+        <div :class="['right', locale]">
           <p>
             <span>{{ $t('name[0]') }}</span>
-            <span :class="['name-center', { active: logoActive }, locale]">{{
+            <span :class="['name-center', { active: logoActive }]">{{
               $t('name[1]')
             }}</span>
             <span>{{ $t('name[2]') }}</span>

@@ -17,7 +17,7 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 const emit = defineEmits(['finished'])
 
 const container = ref(null)
-const currentText = ref('< CRAFTING />')
+const currentText = ref('LOADING')
 let isStopping = false // 新增：是否正在执行停止逻辑
 let renderer, scene, camera, composer, controls, animationId
 
@@ -42,7 +42,7 @@ const initThree = () => {
     powerPreference: 'high-performance',
   })
   renderer.setSize(window.innerWidth, window.innerHeight)
-  renderer.setPixelRatio(window.devicePixelRatio)
+  // renderer.setPixelRatio(window.devicePixelRatio)
   renderer.shadowMap.enabled = true
   renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
@@ -220,16 +220,18 @@ const initThree = () => {
       if (crystal.rotation.y % (Math.PI / 4) <= 0.02) {
         cancelAnimationFrame(animationId)
         animationId = null
-        emit('finished')
+        setTimeout(() => {
+          emit('finished')
+        }, 200)
       } else {
         // 还没对齐，继续缓慢旋转
-        crystal.rotation.y += 0.02
-        cage.rotation.y -= 0.02
+        crystal.rotation.y += 0.01
+        cage.rotation.y -= 0.01
       }
     } else {
       // 正常旋转状态
-      crystal.rotation.y += 0.02
-      cage.rotation.y -= 0.02
+      crystal.rotation.y += 0.01
+      cage.rotation.y -= 0.01
     }
 
     controls.update()
@@ -301,8 +303,11 @@ defineExpose({
   position: absolute;
   margin: 0 auto;
   top: calc(50% + 200px);
-  color: var(--text-color);
-  letter-spacing: 10px;
-  font-family: Futura, 'Century Gothic', AppleGothic, sans-serif;
+  color: #fff;
+  // letter-spacing: 2px;
+  font-weight: 800;
+  font-size: 30px;
+  font-family: 'Avenir', 'Segoe UI Semibold',
+    'Microsoft YaHei UI', sans-serif;
 }
 </style>

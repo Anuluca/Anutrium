@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, defineEmits, onMounted, ref } from 'vue'
 
-import LogoRotating3D from '@/components/Logo_rotating3D/index.vue'
 import Logo from '@/components/Logo/index.vue'
+import LogoRotating3D from '@/components/Logo_rotating3D/index.vue'
 import { loadAllFonts, showPageContent } from '@/utils/fontLoader'
 
 const emit = defineEmits(['finished'])
@@ -34,15 +34,14 @@ const rotateFinished = () => {
   }, 400)
   setTimeout(() => {
     isBarsExiting.value = true
-    
-  }, 850);
+  }, 850)
   // logo动画时间260ms
   setTimeout(() => {
     logo2DHide.value = true
     // 显示页面内容
     showPageContent()
     // setTimeout(() => {
-      emit('finished')
+    emit('finished')
     // }, 100)
     // 等待竖条移出动画完成后隐藏容器
     setTimeout(() => {
@@ -85,7 +84,7 @@ onMounted(() => {
         </div>
       </div>
       <div :class="{ 'logo-wrapper2': true, show: logo2DShow && !logo2DHide }">
-        <Logo v-if="logo2DShow" class="logo" ref="logoRef" />
+        <Logo v-if="logo2DShow" ref="logoRef" class="logo" />
       </div>
     </div>
   </Teleport>
