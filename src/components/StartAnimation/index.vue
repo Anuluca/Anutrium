@@ -55,7 +55,7 @@ onMounted(() => {
     // Logo 擦入完成后开始擦出
     setTimeout(async () => {
       // 等待字体加载完成
-      await loadAllFonts()
+      // await loadAllFonts()
       logoRotating3DRef.value.stop()
     }, 1600)
   })

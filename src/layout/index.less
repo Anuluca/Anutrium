@@ -60,7 +60,7 @@
       }
 
       .el-menu {
-        margin-top: 4px;
+        margin-top: -1px;
       }
     }
 
@@ -76,7 +76,7 @@
       &:hover {
         .zhCn .name-center {
           opacity: 1 !important;
-          width: 115px;
+          width: 123px;
         }
 
         .en .name-center {
@@ -126,14 +126,19 @@
         &.zhCn {
 
           font-size: 40px;
-          font-family: 'cnTitle';
+          *{
+            font-weight: 900;
+          }
           .name-center.active  {
             width: 95px;
           }
         }
         &.en {
           font-size: 32px;
-          font-family: 'enTitle', serif;
+          *{
+
+          font-family: 'dela-gothic-one', serif !important;
+          }
           .name-center.active  {
             width: 150px;
           }
@@ -167,12 +172,12 @@
             color: var(--text-color);
             font-size: 20px;
             letter-spacing: 1px;
-            font-family: 'enTitle', serif;
 
             .main-title {
               line-height: 20px;
               transform: scale(1, 1.2);
               transition: all 0.4s;
+              font-family: 'dela-gothic-one';
             }
 
             .second-title {
@@ -181,6 +186,7 @@
               display: flex;
               align-items: center;
               justify-content: space-between;
+              font-weight: 900;
 
               .line {
                 width: 0px;
@@ -198,7 +204,6 @@
                 letter-spacing: -0.1px;
                 font-weight: bold;
                 margin: 0 2px;
-                font-family: 'cnTitle';
                 transition: all 0.4s;
               }
             }
@@ -444,7 +449,6 @@
             text-align: center;
             cursor: pointer;
             transition: all 0.3s;
-            font-family: 'enTitle', serif;
             display: flex;
             align-items: start;
             justify-content: center;
@@ -453,12 +457,16 @@
             > div {
               width: 100%;
             }
+            .big-title{
+            font-family: 'dela-gothic-one', serif !important;
+
+            }
 
             .little-title {
               margin-top: 2px;
               font-size: 28px;
               letter-spacing: -1px;
-              font-family: 'cnTitle';
+              font-weight: 900;
             }
 
             &:last-child {
@@ -526,7 +534,6 @@
 
             .first,
             .second {
-              font-family: 'cnTitle';
               position: absolute;
               font-size: 20px;
 
@@ -534,18 +541,19 @@
                 font-size: 28px;
                 margin-right: 15px;
                 margin-bottom: 10px;
+                font-weight: 900;
                 z-index: 1;
               }
 
               &.second {
                 margin-left: 15px;
                 margin-top: 10px;
+                font-weight: 900;
                 color: #ffffff77;
               }
             }
 
             .cnArt {
-              font-family: 'cnTitle';
               font-size: 24px;
             }
 
@@ -578,7 +586,7 @@
 
           * {
             font-size: 16px;
-            font-family: 'enTitle';
+            font-family: 'dela-gothic-one';
             color: @primary-color !important;
           }
 
@@ -596,7 +604,7 @@
           align-items: center;
           justify-content: center;
           font-size: 12px;
-          font-family: 'enTitle';
+          font-family: 'dela-gothic-one';
           color: #c0c0c0;
         }
 

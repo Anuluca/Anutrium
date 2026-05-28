@@ -152,6 +152,7 @@ onUnmounted(() => {
         <el-button
           link
           type="danger"
+          class="chinese"
           :disabled="locale === 'zhCn'"
           @click="changeLanguage('zhCn')"
         >

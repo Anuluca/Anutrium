@@ -178,7 +178,7 @@ const neighbors = ref([
     .section-title {
       font-size: 50px;
       margin-bottom: 60px;
-      font-family: 'enTitle';
+      font-family: 'dela-gothic-one';
       span {
         opacity: 0.5;
         margin-left: 15px;
@@ -402,7 +402,7 @@ const neighbors = ref([
     margin-top: 150px;
     margin-bottom: 500px;
     span {
-      font-family: 'enTitle';
+      font-family: 'dela-gothic-one';
       font-size: 24px;
       color: @primary-color;
       text-decoration: underline;

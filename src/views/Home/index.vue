@@ -15,7 +15,7 @@ const clickLisence = () => {
       <!-- <img :src="showLogo" alt="" /> -->
       <Logo class="logo" :active="false" />
 
-      <div class="tempTitle">庭院建设中</div>
+      <div class="tempTitle">汉语</div>
       <div class="tempLink" @click="toOld">前往旧版主页</div>
       <p>DESIGNED & DEVELOPED BY ANULUCA</p>
       <p>
