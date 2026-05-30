@@ -29,7 +29,7 @@ module.exports = {
     'no-console': process.env.NODE_ENV === 'production' ? 'error' : 'off',
     'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
     'no-duplicate-imports': 'error',
-    quotes: ['error', 'single'],
+    quotes: 'off',
     semi: ['error', 'never'],
     // 配合多行导入的排序（防止 Prettier 冲突）
     'import/first': 'error',

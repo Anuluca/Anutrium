@@ -1,14 +1,16 @@
 @import url(./font.less);
 @import url(./variables.less);
+@import url("https://fontsapi.zeoseven.com/18/main/result.css");
 
 body {
-  width: calc(100% - 80px);
+  width: calc(100% - 120px);
   height: 100%;
   overflow: auto;
   position: relative;
   background-color: var(--bg-color);
   color: var(--text-color);
   padding: 0 40px;
+  padding-left: 60px;
 
   // 滚动条样式
   &::-webkit-scrollbar {
@@ -45,6 +47,7 @@ body {
     z-index: 2;
     margin: 0 auto;
     user-select: text;
+    overflow-x: hidden;
     padding-bottom: 60px;
   }
   .el-menu {
@@ -57,4 +60,13 @@ body {
   text-decoration: none;
   user-select: none;
   font-family: 'source-han-sans-simplified-c', sans-serif;
+}
+
+.cn-font {
+  font-family: 'source-han-sans-simplified-c', sans-serif !important;
+  font-weight: 900 !important;
+  * {
+    font-family: 'source-han-sans-simplified-c', sans-serif !important;
+    font-weight: 900 !important;
+  }
 }

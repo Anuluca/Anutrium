@@ -160,7 +160,7 @@ const neighbors = ref([
     </section>
 
     <footer class="about-footer">
-      <span>&lt; Drived &nbsp;by&nbsp; Passion. &gt;</span>
+      <span>&lt; Driven by Passion. &gt;</span>
     </footer>
   </div>
 </template>
@@ -178,7 +178,7 @@ const neighbors = ref([
     .section-title {
       font-size: 50px;
       margin-bottom: 60px;
-      font-family: 'dela-gothic-one';
+      font-family: 'Unbounded Sans';
       span {
         opacity: 0.5;
         margin-left: 15px;
@@ -222,8 +222,8 @@ const neighbors = ref([
 
         .log-content {
           background-color: rgba(255, 255, 255, 0.03);
-          backdrop-filter: blur(10px) brightness(1.5) contrast(0.9);
-          border-radius: 8px;
+          // backdrop-filter: blur(10px) brightness(1.5) contrast(0.9);
+          // border-radius: 8px;
           transition: all 0.2s;
           border: 1px solid rgba(255, 255, 255, 0.05);
           overflow: hidden;
@@ -402,7 +402,7 @@ const neighbors = ref([
     margin-top: 150px;
     margin-bottom: 500px;
     span {
-      font-family: 'dela-gothic-one';
+      font-family: 'anton';
       font-size: 24px;
       color: @primary-color;
       text-decoration: underline;

@@ -6,6 +6,7 @@ import StartAnimation from '@/components/StartAnimation/index.vue'
 import BackController from '@/components/BackController/index.vue'
 import { onMounted, ref } from 'vue'
 import { visualState } from './stores'
+import CursorMove from '@/components/CursorMove/index.vue'
 
 const visualStateStore = visualState()
 
@@ -64,6 +65,7 @@ onMounted(() => {
 </script>
 
 <template>
+  <CursorMove />
   <StartAnimation @finished="startAnimationFinished" />
   <layout v-if="showLayout" />
   <FooterCom v-if="showLayout" />

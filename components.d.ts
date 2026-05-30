@@ -11,6 +11,7 @@ declare module '@vue/runtime-core' {
   export interface GlobalComponents {
     BackController: typeof import('./src/components/BackController/index.vue')['default']
     BackStars: typeof import('./src/components/BackStars/index.vue')['default']
+    CursorMove: typeof import('./src/components/CursorMove/index.vue')['default']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElHeader: typeof import('element-plus/es')['ElHeader']
     ElIcon: typeof import('element-plus/es')['ElIcon']
@@ -20,8 +21,11 @@ declare module '@vue/runtime-core' {
     FooterCom: typeof import('./src/components/FooterCom/index.vue')['default']
     Logo: typeof import('./src/components/Logo/index.vue')['default']
     Logo_rotating3D: typeof import('./src/components/Logo_rotating3D/index.vue')['default']
+    LogoOnly3D: typeof import('./src/components/LogoOnly3D/index.vue')['default']
+    MarqueeShowcase: typeof import('./src/components/MarqueeShowcase/index.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     StartAnimation: typeof import('./src/components/StartAnimation/index.vue')['default']
+    Temp: typeof import('./src/components/Temp/index.vue')['default']
   }
 }
