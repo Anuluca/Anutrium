@@ -103,7 +103,7 @@
     </section>
 
     <section class="manifesto-section">
-      <h2 class="section-title">01 / {{ $t('home.title01') }}</h2>
+      <h2 class="section-title" data-section="01">{{ $t('home.title01') }}</h2>
       <div v-if="locale === 'en'" class="manifesto-content">
         <div class="background-squares">
           <div
@@ -120,7 +120,7 @@
             }"
           >
             <img
-              :src="'https://assets.anuluca.com/Logo/' + (index + 1) + '.JPG'"
+              :src="'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/Logo/' + (index + 1) + '.JPG'"
               alt=""
             />
           </div>
@@ -150,7 +150,7 @@
             }"
           >
             <img
-              :src="'https://assets.anuluca.com/Logo/' + (index + 1) + '.JPG'"
+              :src="'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/Logo/' + (index + 1) + '.JPG'"
               alt=""
             />
           </div>
@@ -165,7 +165,7 @@
     </section>
 
     <section class="works-section">
-      <h2 class="section-title">02 / {{ $t('home.title02') }}</h2>
+      <h2 class="section-title" data-section="02">{{ $t('home.title02') }}</h2>
       <div class="works-grid">
         <div
           v-for="(work, index) in works"
@@ -204,7 +204,10 @@
               <h3 :class="'work-name ' + (locale === 'zhCn' && 'cn-font')">
                 {{ work.title }}
               </h3>
-              <p class="project-ref-id">{{ work.id }}</p>
+              <div class="project-ref-id">
+                <div>ID. {{ work.id }}</div>
+                <div class="time">{{ work.time }}</div>
+              </div>
             </div>
           </div>
 
@@ -217,7 +220,25 @@
       </div>
     </section>
 
-    <footer class="bottom-text">
+
+    <footer
+      class="bottom-text"
+      @mousemove="handleLogoMouseMove"
+      @mouseleave="handleLogoMouseLeave"
+    >
+    <div
+      class="footer-logo-container"
+    >
+      <Logo
+        id="footer-logo"
+        :active="true"
+        class="footer-logo"
+        :class="{ 'logo-hovered': isLogoHovered }"
+        :style="logoStyle"
+        @mouseenter="isLogoHovered = true"
+        @mouseleave="isLogoHovered = false"
+      />
+    </div>
       <p>
         The copyright statement for articles and pictures: free to reprint,
         non-commercial, non-derivative, with attribution (
@@ -235,6 +256,7 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
+import Logo from '@/components/Logo/index.vue'
 import LogoOnly3D from '@/components/LogoOnly3D/index.vue'
 import MarqueeShowcase from '@/components/MarqueeShowcase/index.vue'
 
@@ -251,7 +273,7 @@ interface NewsItem {
 }
 
 const newsItems = computed<NewsItem[]>(() => {
-  return tm('dynamic.recommend') as NewsItem[]
+  return tm('home.dynamic.recommend') as NewsItem[]
 })
 
 const activeIndex = ref(0)
@@ -323,12 +345,42 @@ interface WorkItem {
 }
 
 const works = computed<WorkItem[]>(() => {
-  return tm('dynamic.homeWork') as WorkItem[]
+  return tm('home.dynamic.SelectedArchieves') as WorkItem[]
 })
 
 const clickLisence = () =>
   window.open('https://creativecommons.org/licenses/by-nc-nd/3.0/cn/')
 const wheelEvent = (_e: WheelEvent) => {}
+
+// ── Logo 3D 旋转交互 ──────────────────────
+const isLogoHovered = ref(false)
+const logoRotationX = ref(0)
+const logoRotationY = ref(0)
+
+const logoStyle = computed(() => ({
+  transform: `perspective(1000px) rotateX(${logoRotationX.value}deg) rotateY(${logoRotationY.value}deg)`,
+  transition: 'transform 0.15s ease-out, color 0.3s ease, filter 0.3s ease',
+}))
+
+const handleLogoMouseMove = (e: MouseEvent) => {
+  const container = e.currentTarget as HTMLElement
+  const rect = container.getBoundingClientRect()
+  const centerX = rect.left + rect.width / 2
+  const centerY = rect.top + rect.height / 2
+
+  const mouseX = e.clientX - centerX
+  const mouseY = e.clientY - centerY
+
+  // 增大旋转角度到 ±25 度，使效果更明显
+  logoRotationY.value = (mouseX / (rect.width / 2)) * 50
+  logoRotationX.value = -(mouseY / (rect.height / 2)) * 50
+}
+
+const handleLogoMouseLeave = () => {
+  isLogoHovered.value = false
+  logoRotationX.value = 0
+  logoRotationY.value = 0
+}
 </script>
 
 <style lang="less" scoped>
@@ -353,13 +405,13 @@ const wheelEvent = (_e: WheelEvent) => {}
   display: flex;
   align-items: end;
   justify-content: center;
-  gap: 2rem;
+  gap: 1rem;
 }
 
 /* ─── RECOMMEND ─────────────────────────────── */
 .recommend {
-  width: 28rem;
-  height: 16.5rem;
+  width: 26rem;
+  height: 15rem;
   flex-shrink: 0;
   position: relative;
   overflow: visible;
@@ -575,7 +627,7 @@ const wheelEvent = (_e: WheelEvent) => {}
 
 .carousel-counter {
   position: absolute;
-  top: -22px;
+  top: -40px;
   right: 0;
   display: flex;
   align-items: baseline;
@@ -584,13 +636,13 @@ const wheelEvent = (_e: WheelEvent) => {}
 
   .counter-cur {
     font-family: 'anton', monospace;
-    font-size: 0.85rem;
+    font-size: 1.2rem;
     color: #e23456;
     letter-spacing: 1px;
   }
   .counter-sep {
     font-family: 'anton', monospace;
-    font-size: 0.7rem;
+    font-size: 0.9rem;
     color: var(--opacity-color);
   }
   .counter-total {
@@ -740,8 +792,23 @@ const wheelEvent = (_e: WheelEvent) => {}
   font-weight: 900;
   color: #e23456;
   border-bottom: 1px solid var(--opacity-color2);
-  padding-bottom: 20px;
+  padding-bottom: 10px;
   margin-bottom: 20px;
+
+  &::before {
+    content: attr(data-section);
+    display: inline-block;
+    position: relative;
+    background: #e23456;
+    color: #000;
+    padding: 2px 20px;
+    padding-bottom: 4px;
+    padding-top: 0;
+    margin-right: 12px;
+    font-size: 1.1rem;
+    line-height: 1.2;
+    clip-path: polygon(0% 50%, 20% 0%, 80% 0%, 100% 50%, 80% 100%, 20% 100%);
+  }
 }
 
 /* ─── MANIFESTO ────────────────────────────── */
@@ -827,7 +894,6 @@ const wheelEvent = (_e: WheelEvent) => {}
   overflow: hidden;
   cursor: pointer;
   background: rgba(13, 9, 18, 0.8);
-  backdrop-filter: blur(5px);
   transition: transform 0.4s ease, border-color 0.4s ease;
 
   .work-base {
@@ -979,18 +1045,21 @@ const wheelEvent = (_e: WheelEvent) => {}
 
   .work-name {
     font-family: 'anton', sans-serif;
-    font-size: 2.1rem;
+    font-size: 2rem;
     line-height: 1.1;
     color: var(--text-color);
     width: 80%;
     margin-right: 15px;
   }
-
-  .project-ref-id {
-    font-family: 'Unbounded Sans', monospace;
+  .project-ref-id div {
+    font-family: 'Anton', monospace;
     font-size: 0.6rem;
     color: rgba(255, 255, 255, 0.3);
     text-align: right;
+    &.time{
+      background-color: rgba(255, 255, 255, 0.3);
+      color: rgb(40, 40, 40);
+    }
   }
 
   /* 投影/HUD 风格的四个直角装饰 */
@@ -1084,14 +1153,39 @@ const wheelEvent = (_e: WheelEvent) => {}
   }
 }
 
+/* ─── FOOTER LOGO ────────────────────────────── */
+.footer-logo-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  perspective: 1000px;
+}
+
+.footer-logo {
+  width: 80px;
+  height: 100px;
+  color: var(--text-color);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  padding: 40px 100px;
+
+  &.logo-hovered {
+    color: #000;
+    filter: drop-shadow(0 0 20px #e23456) drop-shadow(0 0 40px #e23456)
+      drop-shadow(0 0 60px rgba(226, 52, 86, 0.5));
+  }
+}
+
 /* ─── FOOTER ───────────────────────────────── */
 .bottom-text {
   padding: 60px 0;
+  padding-bottom: 100px;
   color: #e23456;
   font-size: 13px;
   line-height: 24px;
   text-align: center;
   letter-spacing: 0.2px;
+  margin-top: 80px;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
 
   * {
