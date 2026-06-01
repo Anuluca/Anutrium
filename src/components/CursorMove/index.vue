@@ -1,5 +1,5 @@
 <template>
-  <div class="cursor-position" :style="followerStyle">
+  <div v-if="!isMobile" class="cursor-position" :style="followerStyle">
     <div class="cursor-scale" :class="{ 'is-clicked': isClicked }">
       <div class="cursor-shape" :class="{ 'is-active': isHovering }" />
     </div>
@@ -8,22 +8,52 @@
 <script setup>
 import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 
+import { visualState } from '@/stores'
+
+const visualStateStore = visualState()
+
+// 判断是否为移动端
+const isMobile = computed(() => visualStateStore.deviceType !== 'desktop')
+
+// 类名白名单 - 这些类名的元素移入时不显示指针
+const HIDDEN_CURSOR_CLASSNAMES = ['no-cursor', 'hide-cursor', 'cursor-none']
+
 const mouse = reactive({ x: 0, y: 0 })
 const follower = reactive({ x: 0, y: 0 })
 
 const isHovering = ref(false)
 const isClicked = ref(false)
+const shouldHideCursor = ref(false)
 
 const followerStyle = computed(() => ({
   transform: `translate3d(${follower.x}px, ${follower.y}px, 0)`,
+  opacity: shouldHideCursor.value ? 0 : 1,
 }))
 
 const ease = 0.1
 let animationFrameId
 
+// 检查是否应该隐藏指针
+const checkShouldHideCursor = (target) => {
+  if (!target || !target.classList) return false
+
+  for (const className of HIDDEN_CURSOR_CLASSNAMES) {
+    if (
+      target.classList.contains(className) ||
+      target.closest(`.${className}`)
+    ) {
+      return true
+    }
+  }
+  return false
+}
+
 const onMouseMove = (e) => {
   mouse.x = e.clientX
   mouse.y = e.clientY
+
+  // 实时检测是否需要隐藏指针
+  shouldHideCursor.value = checkShouldHideCursor(e.target)
 }
 
 const onMouseDown = () => (isClicked.value = true)
@@ -31,6 +61,11 @@ const onMouseUp = () => (isClicked.value = false)
 
 // ✨ 新增：使用事件委托处理 Hover 状态
 const onMouseOver = (e) => {
+  // 如果是指针隐藏区域，不触发 hover 效果
+  if (checkShouldHideCursor(e.target)) {
+    return
+  }
+
   // closest() 可以确保就算鼠标悬停在 button 内部的 span 上，也能正确识别
   if (e.target.closest('a, button, [data-magnetic]')) {
     isHovering.value = true
@@ -95,10 +130,11 @@ onUnmounted(() => {
   z-index: 9999;
   // 把差值混合放在最外层，确保所有变形都能完美反色
   mix-blend-mode: difference;
+  transition: opacity 0.2s ease;
 }
 
 .cursor-scale {
-  // 点击时的缩放动画，使用 cubic-bezier 增加一点“Q弹”的物理回弹感
+  // 点击时的缩放动画，使用 cubic-bezier 增加一点"Q弹"的物理回弹感
   transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 
   &.is-clicked {

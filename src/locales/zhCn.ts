@@ -76,6 +76,26 @@ export default {
           tags: ['Vue3', 'Three.js', 'UI/UX', 'TYPESCRIPT'],
           img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/mega5.jpg',
           logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/Logo/anutrium_favicon.jpg',
+          images: [
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/mega5.jpg',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/mega5.jpg',
+          ],
+          description: '个人网站第三次迭代，使用 Vue 3 和 Three.js 从零重构。',
+          details: [
+            '采用 Vue 3 Composition API + TypeScript 构建，实现完整的类型安全开发体验',
+            '集成 Three.js 实现 3D Logo 旋转动画和星空背景效果',
+            '使用 Pinia 进行全局状态管理，配合 vue-i18n 实现中英文双语切换',
+            '通过 Vite 构建工具优化打包体积，首屏加载时间控制在 1.5s 以内',
+            '响应式设计适配移动端、平板和桌面端多种设备',
+          ],
+          links: [
+            { label: '官方网站', url: 'https://anutrium.com', icon: '🌐' },
+            {
+              label: '演示视频',
+              url: 'https://www.bilibili.com/video/example',
+              icon: '▶️',
+            },
+          ],
         },
         {
           id: 'P002',

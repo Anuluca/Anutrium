@@ -79,6 +79,31 @@ export default {
           tags: ['Vue3', 'Three.js', 'UI/UX', 'TYPESCRIPT'],
           img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/mega5.jpg',
           logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/Logo/anutrium_favicon.jpg',
+          images: [
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/mega5.jpg',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/mega5.jpg',
+          ],
+          description:
+            'Third iteration of personal website, rebuilt from scratch with Vue 3 and Three.js.',
+          details: [
+            'Built with Vue 3 Composition API + TypeScript for complete type-safe development experience',
+            'Integrated Three.js for 3D Logo rotation animation and starry sky background effects',
+            'Used Pinia for global state management with vue-i18n for Chinese-English bilingual support',
+            'Optimized bundle size through Vite build tool, keeping first screen load time under 1.5s',
+            'Responsive design adapts to mobile, tablet and desktop devices',
+          ],
+          links: [
+            {
+              label: 'Official Website',
+              url: 'https://anutrium.com',
+              icon: '🌐',
+            },
+            {
+              label: 'Demo Video',
+              url: 'https://www.bilibili.com/video/example',
+              icon: '▶️',
+            },
+          ],
         },
         {
           id: 'P002',

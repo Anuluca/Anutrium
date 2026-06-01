@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
+import PageHeader from '@/components/PageHeader/index.vue'
 import PokeAmice from '@/assets/img/about/pokeAmice.png'
 
 const activeIndex = ref<number | null>(0)
@@ -94,6 +95,14 @@ const neighbors = ref([
 
 <template>
   <div class="about-page main-container">
+    <PageHeader
+      header-label="[HUAHUA_THE_CAT]"
+      title-en="ABOUT"
+      title-cn="关于"
+      meta-item="LEARN MORE ABOUT THIS PROJECT"
+      primary-color="#5D3ABA"
+    />
+
     <!-- ── CHANGELOG ──────────────────────────── -->
     <section class="block">
       <!-- 区块标题 -->
@@ -199,9 +208,7 @@ const neighbors = ref([
 
 /* ── 页面容器 ─────────────────────────────────── */
 .about-page {
-  max-width: 1400px;
   margin: 0 auto;
-  padding: 100px 40px 0;
   color: #fff;
 }
 
@@ -644,10 +651,6 @@ const neighbors = ref([
 
 /* ── 响应式 ───────────────────────────────────── */
 @media (max-width: 768px) {
-  .about-page {
-    padding: 60px 20px 0;
-  }
-
   .section-title {
     font-size: 1.8rem;
   }

@@ -120,7 +120,11 @@
             }"
           >
             <img
-              :src="'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/Logo/' + (index + 1) + '.JPG'"
+              :src="
+                'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/Logo/' +
+                (index + 1) +
+                '.JPG'
+              "
               alt=""
             />
           </div>
@@ -150,7 +154,11 @@
             }"
           >
             <img
-              :src="'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/Logo/' + (index + 1) + '.JPG'"
+              :src="
+                'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/Logo/' +
+                (index + 1) +
+                '.JPG'
+              "
               alt=""
             />
           </div>
@@ -215,30 +223,27 @@
           <div class="corner corner-tr" />
           <div class="corner corner-bl" />
           <div class="corner corner-br" />
-          <div class="tactical-text">[Mentor_XT]</div>
+          <div class="tactical-text">[MENTOR_NV42]</div>
         </div>
       </div>
     </section>
-
 
     <footer
       class="bottom-text"
       @mousemove="handleLogoMouseMove"
       @mouseleave="handleLogoMouseLeave"
     >
-    <div
-      class="footer-logo-container"
-    >
-      <Logo
-        id="footer-logo"
-        :active="true"
-        class="footer-logo"
-        :class="{ 'logo-hovered': isLogoHovered }"
-        :style="logoStyle"
-        @mouseenter="isLogoHovered = true"
-        @mouseleave="isLogoHovered = false"
-      />
-    </div>
+      <div class="footer-logo-container">
+        <Logo
+          id="footer-logo"
+          :active="true"
+          class="footer-logo"
+          :class="{ 'logo-hovered': isLogoHovered }"
+          :style="logoStyle"
+          @mouseenter="isLogoHovered = true"
+          @mouseleave="isLogoHovered = false"
+        />
+      </div>
       <p>
         The copyright statement for articles and pictures: free to reprint,
         non-commercial, non-derivative, with attribution (
@@ -386,8 +391,6 @@ const handleLogoMouseLeave = () => {
 <style lang="less" scoped>
 .home-page {
   width: 100%;
-  padding-left: 8vw;
-  padding-right: 8vw;
 }
 
 /* ─── HERO ──────────────────────────────────── */
@@ -1056,7 +1059,7 @@ const handleLogoMouseLeave = () => {
     font-size: 0.6rem;
     color: rgba(255, 255, 255, 0.3);
     text-align: right;
-    &.time{
+    &.time {
       background-color: rgba(255, 255, 255, 0.3);
       color: rgb(40, 40, 40);
     }
@@ -1251,9 +1254,6 @@ const handleLogoMouseLeave = () => {
 <style lang="less">
 @media screen and (max-aspect-ratio: @ratio-threshold) {
   &.home-page {
-    padding-left: 4vw !important;
-    padding-right: 4vw !important;
-
     .hero-section {
       .hero-content {
         display: flex !important;

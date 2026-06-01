@@ -1,8 +1,10 @@
 // 定义主题相关的颜色变量
+@primary-orange: #e7492d;
 @primary-blue: #3276fe;
-@primary-pink: #dc00d0;
+@primary-pink: #E23456;
 @primary-yellow: #ffed47;
 @primary-green: #01dd83;
+@primary-purple: #5D3ABA;
 
 .layout-page {
   cursor: url('@/assets/img/dot.svg') 15 15, auto;
@@ -264,10 +266,11 @@
 
         .define-menu-style(HOME, @primary-color, #eb6978c3);
         .define-menu-style(ARCHIVE, @primary-blue, #6596f9da);
-        .define-menu-style(ISLAND, @primary-pink, #e141d9c5);
+        .define-menu-style(FLANERIE, @primary-orange, #e7492dda);
+        .define-menu-style(ISLAND, @primary-pink, #E23456c5);
         .define-menu-style(POKEYARD, @primary-yellow, #d6c52ed4);
         .define-menu-style(CRAFT, #01dd83, #00653bfb);
-        .define-menu-style(ABOUT, @primary-color, #eb6978c3);
+        .define-menu-style(ABOUT, @primary-purple, #5D3ABAc3);
 
         .HOME.is-active {
           .title-box {
@@ -491,6 +494,10 @@
               color: @primary-blue;
             }
 
+            &.FLANERIE.active {
+              color: @primary-orange;
+            }
+
             &.ISLAND.active {
               color: @primary-pink;
             }
@@ -505,7 +512,7 @@
             }
 
             &.ABOUT.active {
-              color: @primary-color;
+              color: @primary-purple;
             }
           }
         }

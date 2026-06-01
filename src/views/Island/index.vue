@@ -1,11 +1,11 @@
 <template>
-  <div class="craft-page main-container">
+  <div class="island-page main-container">
     <PageHeader
-      header-label="[MENTOR_NV42]"
-      title-en="CRAFT"
-      title-cn="工具"
-      meta-item="TOOLS & UTILITIES"
-      primary-color="#3B69F4"
+      header-label="[THE_FOOL]"
+      title-en="ISLAND"
+      title-cn="个人海湾"
+      meta-item="勿忘人皆有死"
+      primary-color="#E23456"
     />
   </div>
 </template>
@@ -15,7 +15,7 @@ import PageHeader from '@/components/PageHeader/index.vue'
 </script>
 
 <style lang="less" scoped>
-.craft-page {
+.island-page {
   width: 100%;
   color: #fff;
 }

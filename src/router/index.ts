@@ -1,11 +1,14 @@
+/* eslint-disable simple-import-sort/imports */
 import { createRouter, createWebHistory } from 'vue-router'
 import NProgress from 'nprogress'
 
 import NotFound from '@/views/404/index.vue'
 import About from '@/views/About/index.vue'
 import Tools from '@/views/Craft/index.vue'
+import Island from '@/views/Island/index.vue'
 import Home from '@/views/Home/index.vue'
 import Archieve from '@/views/Archieve/index.vue'
+import Flânerie from '@/views/Flânerie/index.vue'
 
 import i18n from '../locales' // 导入 i18n 实例
 
@@ -58,23 +61,34 @@ export const routes: RouteConfig[] = [
     },
   },
   {
-    path: '/island',
-    name: 'ISLAND',
-    component: NotFound,
+    path: '/flanerie',
+    name: 'FLANERIE',
+    component: Flânerie,
     meta: {
-      titleEn: 'ISLAND',
-      titleCn: '个人海湾',
+      titleEn: 'FLÂNERIE',
+      titleCn: '旅程',
       fullFooter: true,
       ifShow: true,
     },
   },
+  // {
+  //   path: '/pokeyard',
+  //   name: 'POKEYARD',
+  //   component: NotFound,
+  //   meta: {
+  //     titleEn: 'POKÉYARD',
+  //     titleCn: '宝可后院',
+  //     fullFooter: true,
+  //     ifShow: true,
+  //   },
+  // },
   {
-    path: '/pokeyard',
-    name: 'POKEYARD',
-    component: Tools,
+    path: '/island',
+    name: 'ISLAND',
+    component: Island,
     meta: {
-      titleEn: 'POKÉYARD',
-      titleCn: '宝可后院',
+      titleEn: 'ISLAND',
+      titleCn: '个人海湾',
       fullFooter: true,
       ifShow: true,
     },

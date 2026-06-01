@@ -48,6 +48,7 @@ body {
     margin: 0 auto;
     user-select: text;
     overflow-x: hidden;
+    padding: 0 8vw;
     padding-bottom: 60px;
   }
   .el-menu {
@@ -68,5 +69,13 @@ body {
   * {
     font-family: 'source-han-sans-simplified-c', sans-serif !important;
     font-weight: 900 !important;
+  }
+}
+
+
+@media screen and (max-aspect-ratio: @ratio-threshold) {
+  .main-container {
+    padding: 0 4vw !important;
+    padding-bottom: 60px !important;
   }
 }
