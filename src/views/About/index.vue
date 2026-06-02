@@ -1,7 +1,8 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
-import PageHeader from '@/components/PageHeader/index.vue'
+
 import PokeAmice from '@/assets/img/about/pokeAmice.png'
+import PageHeader from '@/components/PageHeader/index.vue'
 
 const activeIndex = ref<number | null>(0)
 

@@ -1,7 +1,11 @@
 <template>
   <div
     ref="layoutPage"
-    :class="{ 'layout-page': true, 'layout-show': layoutShow }"
+    :class="{
+      'layout-page': true,
+      'layout-show': layoutShow,
+      'no-menu': ifNoMenu,
+    }"
   >
     <!-- 头部 -->
     <el-header class="el-menu-layout-all" :class="{ scrolled: isScrolled }">
@@ -193,8 +197,11 @@ const layoutShow = ref(false)
 const theme = computed(() => visualStateStore.theme)
 
 const filterRoutes = routes.filter((item) => {
+  console.log('kk', item)
   return item?.meta?.ifShow
 })
+// 直接通过当前活跃的 route 对象读取 meta.noMenu
+const ifNoMenu = computed(() => !!route.meta?.noMenu)
 
 // 移动端相关状态 - 从store中获取设备类型
 const isMobile = computed(() => visualStateStore.deviceType !== 'desktop')

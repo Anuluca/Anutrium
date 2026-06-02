@@ -17,7 +17,6 @@ declare module '@vue/runtime-core' {
     ElButton: typeof import('element-plus/es')['ElButton']
     ElHeader: typeof import('element-plus/es')['ElHeader']
     ElIcon: typeof import('element-plus/es')['ElIcon']
-    ElImageViewer: typeof import('element-plus/es')['ElImageViewer']
     ElMenu: typeof import('element-plus/es')['ElMenu']
     ElMenuItem: typeof import('element-plus/es')['ElMenuItem']
     ElSwitch: typeof import('element-plus/es')['ElSwitch']
@@ -27,10 +26,10 @@ declare module '@vue/runtime-core' {
     LogoOnly3D: typeof import('./src/components/LogoOnly3D/index.vue')['default']
     MarqueeShowcase: typeof import('./src/components/MarqueeShowcase/index.vue')['default']
     ModalWrapper: typeof import('./src/components/ModalWrapper/index.vue')['default']
+    PageFooter: typeof import('./src/components/PageFooter/index.vue')['default']
     PageHeader: typeof import('./src/components/PageHeader/index.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     StartAnimation: typeof import('./src/components/StartAnimation/index.vue')['default']
-    Temp: typeof import('./src/components/Temp/index.vue')['default']
   }
 }

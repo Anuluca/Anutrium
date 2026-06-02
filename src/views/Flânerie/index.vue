@@ -589,5 +589,4 @@ onUnmounted(() => {
   padding: 4px 10px;
   white-space: nowrap;
 }
-
 </style>

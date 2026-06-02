@@ -167,7 +167,7 @@
         <p class="highlight">{{ $t('home.highlight') }}</p>
         <p class="desc">
           在这里，我呈现我的作品、观察与生活碎片。<br />
-          我想要打造一个有灵魂与创意的数字空间。
+          I'm trying to build a digital space with soul and creativity.
         </p>
       </div>
     </section>
@@ -228,32 +228,7 @@
       </div>
     </section>
 
-    <footer
-      class="bottom-text"
-      @mousemove="handleLogoMouseMove"
-      @mouseleave="handleLogoMouseLeave"
-    >
-      <div class="footer-logo-container">
-        <Logo
-          id="footer-logo"
-          :active="true"
-          class="footer-logo"
-          :class="{ 'logo-hovered': isLogoHovered }"
-          :style="logoStyle"
-          @mouseenter="isLogoHovered = true"
-          @mouseleave="isLogoHovered = false"
-        />
-      </div>
-      <p>
-        The copyright statement for articles and pictures: free to reprint,
-        non-commercial, non-derivative, with attribution (
-        <span class="lisence" data-magnetic @click="clickLisence">
-          Creative Commons 3.0 lisence
-        </span>
-        ).
-      </p>
-      <p>Designed & Engineered by Anuluca. © 2026 All rights reserved.</p>
-    </footer>
+    <PageFooter />
   </div>
 </template>
 
@@ -261,11 +236,11 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import Logo from '@/components/Logo/index.vue'
 import LogoOnly3D from '@/components/LogoOnly3D/index.vue'
 import MarqueeShowcase from '@/components/MarqueeShowcase/index.vue'
+import PageFooter from '@/components/PageFooter/index.vue' // 引入新组件
 
-const { locale, t, tm } = useI18n()
+const { locale, tm } = useI18n()
 
 // ── 轮播数据 ──────────────────────────────
 interface NewsItem {
@@ -347,45 +322,14 @@ interface WorkItem {
   img: string
   company: string
   logo: string
+  time: string
 }
 
 const works = computed<WorkItem[]>(() => {
   return tm('home.dynamic.SelectedArchieves') as WorkItem[]
 })
 
-const clickLisence = () =>
-  window.open('https://creativecommons.org/licenses/by-nc-nd/3.0/cn/')
 const wheelEvent = (_e: WheelEvent) => {}
-
-// ── Logo 3D 旋转交互 ──────────────────────
-const isLogoHovered = ref(false)
-const logoRotationX = ref(0)
-const logoRotationY = ref(0)
-
-const logoStyle = computed(() => ({
-  transform: `perspective(1000px) rotateX(${logoRotationX.value}deg) rotateY(${logoRotationY.value}deg)`,
-  transition: 'transform 0.15s ease-out, color 0.3s ease, filter 0.3s ease',
-}))
-
-const handleLogoMouseMove = (e: MouseEvent) => {
-  const container = e.currentTarget as HTMLElement
-  const rect = container.getBoundingClientRect()
-  const centerX = rect.left + rect.width / 2
-  const centerY = rect.top + rect.height / 2
-
-  const mouseX = e.clientX - centerX
-  const mouseY = e.clientY - centerY
-
-  // 增大旋转角度到 ±25 度，使效果更明显
-  logoRotationY.value = (mouseX / (rect.width / 2)) * 50
-  logoRotationX.value = -(mouseY / (rect.height / 2)) * 50
-}
-
-const handleLogoMouseLeave = () => {
-  isLogoHovered.value = false
-  logoRotationX.value = 0
-  logoRotationY.value = 0
-}
 </script>
 
 <style lang="less" scoped>
@@ -877,7 +821,7 @@ const handleLogoMouseLeave = () => {
   }
 }
 
-/* ─── ✨ Heavy Re-design Works ✨ ──────────────────── */
+/* ─── WORKS ────────────────────────────────── */
 .works-section {
   padding: 60px 0;
 }
@@ -939,7 +883,6 @@ const handleLogoMouseLeave = () => {
     }
   }
 
-  /* 红色切入背景板（保留原始 scaleY 动画） */
   .work-red-plate {
     position: absolute;
     bottom: 0;
@@ -1065,7 +1008,6 @@ const handleLogoMouseLeave = () => {
     }
   }
 
-  /* 投影/HUD 风格的四个直角装饰 */
   .corner {
     position: absolute;
     width: 10px;
@@ -1124,7 +1066,6 @@ const handleLogoMouseLeave = () => {
     .work-red-plate {
       transform: scaleY(1);
     }
-
     .work-content * {
       color: white;
     }
@@ -1149,60 +1090,8 @@ const handleLogoMouseLeave = () => {
     .project-ref-id {
       color: rgba(255, 255, 255, 0.6);
     }
-
     .tactical-text {
       color: rgba(255, 255, 255, 0.4);
-    }
-  }
-}
-
-/* ─── FOOTER LOGO ────────────────────────────── */
-.footer-logo-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  perspective: 1000px;
-}
-
-.footer-logo {
-  width: 80px;
-  height: 100px;
-  color: var(--text-color);
-  transition: all 0.3s ease;
-  cursor: pointer;
-  padding: 40px 100px;
-
-  &.logo-hovered {
-    color: #000;
-    filter: drop-shadow(0 0 20px #e23456) drop-shadow(0 0 40px #e23456)
-      drop-shadow(0 0 60px rgba(226, 52, 86, 0.5));
-  }
-}
-
-/* ─── FOOTER ───────────────────────────────── */
-.bottom-text {
-  padding: 60px 0;
-  padding-bottom: 100px;
-  color: #e23456;
-  font-size: 13px;
-  line-height: 24px;
-  text-align: center;
-  letter-spacing: 0.2px;
-  margin-top: 80px;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-
-  * {
-    font-family: 'anton', sans-serif;
-  }
-
-  .lisence {
-    text-decoration: underline;
-    cursor: pointer;
-    transition: all 0.1s;
-
-    &:hover {
-      color: var(--text-color);
-      background-color: #e23456;
     }
   }
 }
@@ -1277,7 +1166,6 @@ const handleLogoMouseLeave = () => {
     .square-image {
       zoom: 0.3;
     }
-
     .works-grid {
       grid-template-columns: 1fr !important;
       gap: 15px;
@@ -1285,15 +1173,12 @@ const handleLogoMouseLeave = () => {
 
     .work-card {
       min-height: 280px;
-
       .work-name {
         font-size: 1.8rem;
       }
-
       .work-tags {
         justify-content: flex-start;
       }
-
       .company-row .company-logo {
         width: 32px;
         height: 32px;

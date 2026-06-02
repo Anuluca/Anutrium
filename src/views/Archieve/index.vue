@@ -5,7 +5,7 @@
       title-en="ARCHIEVE"
       title-cn="作品集"
       :meta-item="'TOTAL — ' + (works.length + miscWorks.length) + ' PROJECTS'"
-      primary-color="#3B69F4"
+      primary-color="#5AD480"
     />
 
     <!-- ══════════════════════════════════════
@@ -618,7 +618,6 @@ const openDetail = (work: WorkItem | MiscWork) => {
 
 /* ── 响应式 ───────────────────────────────────── */
 @media (max-width: 768px) {
-
   .page-title {
     flex-direction: column;
     gap: 4px;

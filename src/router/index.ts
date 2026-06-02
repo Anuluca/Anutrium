@@ -10,6 +10,13 @@ import Home from '@/views/Home/index.vue'
 import Archieve from '@/views/Archieve/index.vue'
 import Flânerie from '@/views/Flânerie/index.vue'
 
+import ColorPalette from '@/views/Craft/ColorPalette/index.vue'
+import EaseStudio from '@/views/Craft/EaseStudio/index.vue'
+import Base64Codec from '@/views/Craft/Base64Codec/index.vue'
+import HtmlEntities from '@/views/Craft/HtmlEntities/index.vue'
+import ImageBase64 from '@/views/Craft/ImageBase64/index.vue'
+import Metronome from '@/views/Craft/Metronome/index.vue'
+
 import i18n from '../locales' // 导入 i18n 实例
 
 import 'nprogress/nprogress.css'
@@ -125,6 +132,78 @@ export const routes: RouteConfig[] = [
       titleCn: '404',
       fullFooter: false,
       ifShow: false,
+    },
+  },
+  {
+    path: '/colorPalette',
+    name: 'COLORPALETTE',
+    component: ColorPalette,
+    meta: {
+      titleEn: 'COLOR PALETTE',
+      titleCn: '调色盘',
+      fullFooter: true,
+      ifShow: false,
+      noMenu: true,
+    },
+  },
+  {
+    path: '/easeStudio',
+    name: 'EASESTUDIO',
+    component: EaseStudio,
+    meta: {
+      titleEn: 'EASE STUDIO',
+      titleCn: '缓动工作室',
+      fullFooter: true,
+      ifShow: false,
+      noMenu: true,
+    },
+  },
+  {
+    path: '/metronome',
+    name: 'METRONOME',
+    component: Metronome,
+    meta: {
+      titleEn: 'METRONOME',
+      titleCn: '节拍器',
+      fullFooter: true,
+      ifShow: false,
+      noMenu: true,
+    },
+  },
+  {
+    path: '/htmlEntities',
+    name: 'HTMLENTITIES',
+    component: HtmlEntities,
+    meta: {
+      titleEn: 'HTML ENTITIES',
+      titleCn: 'HTML常用转义字符',
+      fullFooter: true,
+      ifShow: false,
+      noMenu: true,
+    },
+  },
+  {
+    path: '/base64Codec',
+    name: 'BASE64CODEC',
+    component: Base64Codec,
+    meta: {
+      titleEn: 'BASE64 CODEC',
+      titleCn: 'Base64加解密',
+      fullFooter: true,
+      ifShow: false,
+      noMenu: true,
+    },
+  },
+  {
+    path: '/imageBase64',
+    name: 'IMAGEBASE64',
+    component: ImageBase64,
+    meta: {
+      titleEn: 'IMAGE BASE64',
+      titleCn: '图片转Base64',
+      fullFooter: true,
+      ifShow: false,
+      noMenu: true,
     },
   },
 ]

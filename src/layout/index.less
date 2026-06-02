@@ -1,10 +1,10 @@
 // 定义主题相关的颜色变量
 @primary-orange: #e7492d;
 @primary-blue: #3276fe;
-@primary-pink: #E23456;
+@primary-pink: #e23456;
 @primary-yellow: #ffed47;
 @primary-green: #01dd83;
-@primary-purple: #5D3ABA;
+@primary-purple: #5d3aba;
 
 .layout-page {
   cursor: url('@/assets/img/dot.svg') 15 15, auto;
@@ -16,6 +16,15 @@
   opacity: 0;
   &.layout-show {
     opacity: 1;
+  }
+  &.no-menu {
+    .el-menu-layout-all {
+      display: none;
+    }
+
+    .router-container {
+      margin-top: 60px;
+    }
   }
 
   .el-menu-layout-all {
@@ -48,9 +57,9 @@
       backdrop-filter: blur(4px);
       border: 1px solid rgba(66, 66, 66, 0.542);
       box-shadow: 0 10px 30px rgb(0, 0, 0);
-      &:hover{
+      &:hover {
         border-color: #f9446862;
-    background:rgba(226, 52, 87, 0.141);
+        background: rgba(226, 52, 87, 0.141);
       }
 
       .logo-box {
@@ -129,21 +138,19 @@
           }
         }
 
-          *{
-
+        * {
           font-family: 'Unbounded Sans', serif !important;
-          }
+        }
 
         &.zhCn {
-
           font-size: 40px;
-          .name-center.active  {
+          .name-center.active {
             width: 95px;
           }
         }
         &.en {
           font-size: 32px;
-          .name-center.active  {
+          .name-center.active {
             width: 150px;
           }
         }
@@ -265,12 +272,12 @@
         }
 
         .define-menu-style(HOME, @primary-color, #eb6978c3);
-        .define-menu-style(ARCHIVE, @primary-blue, #6596f9da);
+        .define-menu-style(ARCHIVE, #01dd83, #00653bfb);
         .define-menu-style(FLANERIE, @primary-orange, #e7492dda);
         .define-menu-style(ISLAND, @primary-pink, #E23456c5);
         .define-menu-style(POKEYARD, @primary-yellow, #d6c52ed4);
-        .define-menu-style(CRAFT, #01dd83, #00653bfb);
-        .define-menu-style(ABOUT, @primary-purple, #5D3ABAc3);
+        .define-menu-style(CRAFT, @primary-blue, #6596f9da);
+        .define-menu-style(ABOUT, @primary-purple, #5d3abac3);
 
         .HOME.is-active {
           .title-box {
@@ -462,9 +469,8 @@
             > div {
               width: 100%;
             }
-            .big-title{
-            font-family: 'Unbounded Sans', serif !important;
-
+            .big-title {
+              font-family: 'Unbounded Sans', serif !important;
             }
 
             .little-title {
@@ -491,7 +497,7 @@
             }
 
             &.ARCHIVE.active {
-              color: @primary-blue;
+              color: @primary-green;
             }
 
             &.FLANERIE.active {
@@ -508,7 +514,7 @@
             }
 
             &.CRAFT.active {
-              color: @primary-green;
+              color: @primary-blue;
             }
 
             &.ABOUT.active {

@@ -68,6 +68,7 @@ defineProps({
 .page-header {
   position: relative;
   padding: 40px 0 30px;
+  margin-left: -20px;
   overflow: hidden;
   border-bottom: 1px solid @border;
   padding-left: 30px;
@@ -82,7 +83,7 @@ defineProps({
     font-size: 8vw;
     line-height: 1;
     color: var(--primary-color);
-    opacity: 0.06;
+    opacity: 0.1;
     pointer-events: none;
     letter-spacing: -4px;
     white-space: nowrap;
@@ -106,7 +107,7 @@ defineProps({
     letter-spacing: -1px;
     margin-top: -10px;
     display: flex;
-    align-items: baseline;
+    align-items: end;
     gap: 0;
     position: relative;
     z-index: 1;
@@ -124,14 +125,12 @@ defineProps({
       font-size: 0.3em;
       color: #fff;
       letter-spacing: 1px;
-      position: absolute;
-      bottom: -0.41rem;
       right: var(--title-cn-right);
       z-index: 3;
       background: var(--primary-color);
       padding: 5px 20px;
       padding-bottom: 8px;
-      clip-path: polygon(0% 50%, 12% 0%, 88% 0%, 100% 50%, 88% 100%, 12% 100%);
+      margin-left: 10px;
     }
   }
 
@@ -148,9 +147,9 @@ defineProps({
     padding-bottom: 6px;
 
     .meta-item {
-      font-family: 'Unbounded Sans', monospace;
+      font-family: 'source-han-sans-simplified-c', monospace;
+      font-weight: 700;
       font-size: 0.4rem;
-      letter-spacing: 1px;
       color: @text-dim;
     }
   }
@@ -208,7 +207,6 @@ defineProps({
   }
 
   .page-title {
-    flex-direction: column;
     gap: 4px;
     font-size: 1.8rem;
 
@@ -223,7 +221,6 @@ defineProps({
       padding: 3px 16px;
       background: var(--primary-color);
       display: inline-block;
-      margin-top: 4px;
       width: fit-content;
     }
   }
