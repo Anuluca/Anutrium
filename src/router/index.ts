@@ -2,21 +2,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import NProgress from 'nprogress'
 
-import NotFound from '@/views/404/index.vue'
-import About from '@/views/About/index.vue'
-import Tools from '@/views/Craft/index.vue'
-import Island from '@/views/Island/index.vue'
-import Home from '@/views/Home/index.vue'
-import Archieve from '@/views/Archieve/index.vue'
-import Flânerie from '@/views/Flânerie/index.vue'
-
-import ColorPalette from '@/views/Craft/ColorPalette/index.vue'
-import EaseStudio from '@/views/Craft/EaseStudio/index.vue'
-import Base64Codec from '@/views/Craft/Base64Codec/index.vue'
-import HtmlEntities from '@/views/Craft/HtmlEntities/index.vue'
-import ImageBase64 from '@/views/Craft/ImageBase64/index.vue'
-import Metronome from '@/views/Craft/Metronome/index.vue'
-
 import i18n from '../locales' // 导入 i18n 实例
 
 import 'nprogress/nprogress.css'
@@ -48,7 +33,7 @@ export const routes: RouteConfig[] = [
   {
     path: ROUTE_CONFIG.DEFAULT_PATH,
     name: 'HOME',
-    component: Home,
+    component: () => import('@/views/Home/index.vue'),
     meta: {
       titleEn: 'HOME',
       titleCn: '主页',
@@ -59,7 +44,7 @@ export const routes: RouteConfig[] = [
   {
     path: '/archieve',
     name: 'ARCHIVE',
-    component: Archieve,
+    component: () => import('@/views/Archieve/index.vue'),
     meta: {
       titleEn: 'ARCHIVE',
       titleCn: '作品集',
@@ -70,7 +55,7 @@ export const routes: RouteConfig[] = [
   {
     path: '/flanerie',
     name: 'FLANERIE',
-    component: Flânerie,
+    component: () => import('@/views/Flânerie/index.vue'),
     meta: {
       titleEn: 'FLÂNERIE',
       titleCn: '旅程',
@@ -92,7 +77,7 @@ export const routes: RouteConfig[] = [
   {
     path: '/island',
     name: 'ISLAND',
-    component: Island,
+    component: () => import('@/views/Island/index.vue'),
     meta: {
       titleEn: 'ISLAND',
       titleCn: '个人海湾',
@@ -103,7 +88,7 @@ export const routes: RouteConfig[] = [
   {
     path: '/craft',
     name: 'CRAFT',
-    component: Tools,
+    component: () => import('@/views/Craft/index.vue'),
     meta: {
       titleEn: 'CRAFT',
       titleCn: '工具',
@@ -114,7 +99,7 @@ export const routes: RouteConfig[] = [
   {
     path: '/about',
     name: 'ABOUT',
-    component: About,
+    component: () => import('@/views/About/index.vue'),
     meta: {
       titleEn: 'ABOUT',
       titleCn: '关于',
@@ -126,7 +111,7 @@ export const routes: RouteConfig[] = [
   {
     path: '/404',
     name: '404',
-    component: NotFound,
+    component: () => import('@/views/404/index.vue'),
     meta: {
       titleEn: '404',
       titleCn: '404',
@@ -137,7 +122,7 @@ export const routes: RouteConfig[] = [
   {
     path: '/colorPalette',
     name: 'COLORPALETTE',
-    component: ColorPalette,
+    component: () => import('@/views/Craft/ColorPalette/index.vue'),
     meta: {
       titleEn: 'COLOR PALETTE',
       titleCn: '调色盘',
@@ -149,7 +134,7 @@ export const routes: RouteConfig[] = [
   {
     path: '/easeStudio',
     name: 'EASESTUDIO',
-    component: EaseStudio,
+    component: () => import('@/views/Craft/EaseStudio/index.vue'),
     meta: {
       titleEn: 'EASE STUDIO',
       titleCn: '缓动工作室',
@@ -161,7 +146,7 @@ export const routes: RouteConfig[] = [
   {
     path: '/metronome',
     name: 'METRONOME',
-    component: Metronome,
+    component: () => import('@/views/Craft/Metronome/index.vue'),
     meta: {
       titleEn: 'METRONOME',
       titleCn: '节拍器',
@@ -173,7 +158,7 @@ export const routes: RouteConfig[] = [
   {
     path: '/htmlEntities',
     name: 'HTMLENTITIES',
-    component: HtmlEntities,
+    component: () => import('@/views/Craft/HtmlEntities/index.vue'),
     meta: {
       titleEn: 'HTML ENTITIES',
       titleCn: 'HTML常用转义字符',
@@ -185,7 +170,7 @@ export const routes: RouteConfig[] = [
   {
     path: '/base64Codec',
     name: 'BASE64CODEC',
-    component: Base64Codec,
+    component: () => import('@/views/Craft/Base64Codec/index.vue'),
     meta: {
       titleEn: 'BASE64 CODEC',
       titleCn: 'Base64加解密',
@@ -197,7 +182,7 @@ export const routes: RouteConfig[] = [
   {
     path: '/imageBase64',
     name: 'IMAGEBASE64',
-    component: ImageBase64,
+    component: () => import('@/views/Craft/ImageBase64/index.vue'),
     meta: {
       titleEn: 'IMAGE BASE64',
       titleCn: '图片转Base64',

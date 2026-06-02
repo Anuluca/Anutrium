@@ -258,6 +258,7 @@ const newsItems = computed<NewsItem[]>(() => {
 
 const activeIndex = ref(0)
 let autoTimer: ReturnType<typeof setInterval> | null = null
+let rotationTimer: ReturnType<typeof setInterval> | null = null
 
 const prevSlide = () => {
   activeIndex.value =
@@ -270,10 +271,13 @@ const goTo = (i: number) => {
   activeIndex.value = i
 }
 const startAuto = () => {
+  pauseAuto()
   autoTimer = setInterval(nextSlide, 4000)
 }
 const pauseAuto = () => {
-  if (autoTimer) clearInterval(autoTimer)
+  if (!autoTimer) return
+  clearInterval(autoTimer)
+  autoTimer = null
 }
 const resumeAuto = () => startAuto()
 
@@ -297,7 +301,8 @@ const generateBackgroundImages = () => {
   }))
 }
 const startRandomRotation = () => {
-  setInterval(() => {
+  if (rotationTimer) clearInterval(rotationTimer)
+  rotationTimer = setInterval(() => {
     rotatingImageIndex.value = Math.floor(
       Math.random() * backgroundImages.value.length
     )
@@ -312,7 +317,13 @@ onMounted(() => {
   startRandomRotation()
   startAuto()
 })
-onUnmounted(() => pauseAuto())
+onUnmounted(() => {
+  pauseAuto()
+  if (rotationTimer) {
+    clearInterval(rotationTimer)
+    rotationTimer = null
+  }
+})
 
 // ── 作品集数据 ──────────────────────────────
 interface WorkItem {

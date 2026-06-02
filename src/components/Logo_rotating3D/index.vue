@@ -20,6 +20,7 @@ const container = ref(null)
 const currentText = ref('LOADING')
 let isStopping = false // 新增：是否正在执行停止逻辑
 let renderer, scene, camera, composer, controls, animationId
+let environmentMap = null
 
 // 初始化 3D 场景
 const initThree = () => {
@@ -51,10 +52,9 @@ const initThree = () => {
 
   // --- 2. 高级光照系统 ---
   const pmremGenerator = new THREE.PMREMGenerator(renderer)
-  scene.environment = pmremGenerator.fromScene(
-    new RoomEnvironment(),
-    0.04
-  ).texture
+  environmentMap = pmremGenerator.fromScene(new RoomEnvironment(), 0.04)
+  scene.environment = environmentMap.texture
+  pmremGenerator.dispose()
 
   const ambientLight = new THREE.AmbientLight(0xffffff, 0.1)
   scene.add(ambientLight)
@@ -255,6 +255,33 @@ const stop = () => {
   isStopping = true
 }
 
+const disposeMaterial = (material) => {
+  Object.values(material).forEach((value) => {
+    if (value && typeof value.dispose === 'function') {
+      value.dispose()
+    }
+  })
+  material.dispose()
+}
+
+const disposeScene = () => {
+  if (!scene) return
+
+  scene.traverse((object) => {
+    if (object.geometry) object.geometry.dispose()
+
+    if (object.material) {
+      if (Array.isArray(object.material)) {
+        object.material.forEach(disposeMaterial)
+      } else {
+        disposeMaterial(object.material)
+      }
+    }
+  })
+
+  scene.clear()
+}
+
 onMounted(() => {
   initThree()
   window.addEventListener('resize', handleResize)
@@ -262,12 +289,25 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
-  cancelAnimationFrame(animationId)
-  // 清理内存
+  if (animationId) cancelAnimationFrame(animationId)
+
+  if (controls) controls.dispose()
+  if (composer) composer.dispose()
+  disposeScene()
+  if (environmentMap) environmentMap.dispose()
+
   if (renderer) {
+    renderer.domElement?.parentNode?.removeChild(renderer.domElement)
     renderer.dispose()
     renderer.forceContextLoss()
   }
+
+  renderer = null
+  scene = null
+  camera = null
+  composer = null
+  controls = null
+  environmentMap = null
 })
 
 // 暴露方法给父组件

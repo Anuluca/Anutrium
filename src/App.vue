@@ -4,7 +4,7 @@ import layout from './layout/index.vue'
 import FooterCom from '@/components/FooterCom/index.vue'
 import StartAnimation from '@/components/StartAnimation/index.vue'
 import BackController from '@/components/BackController/index.vue'
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { visualState } from './stores'
 import CursorMove from '@/components/CursorMove/index.vue'
 
@@ -61,6 +61,10 @@ const startAnimationFinished = () => {
 onMounted(() => {
   // 检查当前主题
   visualStateStore.setTheme(localStorage.getItem('theme') || 'dark')
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', setRootFontSize)
 })
 </script>
 
