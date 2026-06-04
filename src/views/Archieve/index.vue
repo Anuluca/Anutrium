@@ -73,20 +73,18 @@
         {{ $t('archieve.title02') }}
       </h2>
       <div class="misc-grid">
-        <div
-          v-for="(item, index) in miscWorks"
-          :key="index"
-          class="misc-card"
-          :style="{ backgroundImage: item.logo ? `url(${item.logo})` : 'none' }"
-        >
+        <div v-for="(item, index) in miscWorks" :key="index" class="misc-card">
           <div class="misc-card-content">
-            <div>
+            <div class="misc-card-head">
               <div class="misc-card-index">
                 {{ String(index + 1).padStart(2, '0') }}
               </div>
-              <h4 class="misc-card-title">{{ item.title }}</h4>
+              <div v-if="item.logo" class="misc-card-logo" aria-hidden="true">
+                <img :src="item.logo" :alt="item.company" />
+              </div>
             </div>
-            <div>
+            <h4 class="misc-card-title">{{ item.title }}</h4>
+            <div class="misc-card-footer">
               <div class="misc-card-company">{{ item.company }}</div>
               <div class="misc-card-id">{{ item.id }}</div>
             </div>
@@ -149,13 +147,10 @@ const works = computed<WorkItem[]>(
   () => tm('archieve.dynamic.WebArchieves') as WorkItem[]
 )
 
-// ── 其他项目（示例数据，替换成你的真实数据） ──
-const miscWorks = ref<MiscWork[]>([
-  { id: 'M001', title: '内部管理系统 v2', company: '国家电网' },
-  { id: 'M002', title: '数据可视化大屏', company: '国家电网' },
-  { id: 'M003', title: '移动端巡检 App', company: '国家电网' },
-  { id: 'M004', title: 'Chrome 插件工具集', company: 'Personal' },
-])
+// ── 其他项目（来自 i18n） ──────────────────────
+const miscWorks = computed<MiscWork[]>(
+  () => tm('archieve.dynamic.MiscWorks') as MiscWork[]
+)
 
 // ── 弹窗状态 ───────────────────────────────────
 const selectedWork = ref<WorkItem | MiscWork | null>(null)
@@ -487,14 +482,12 @@ const openDetail = (work: WorkItem | MiscWork) => {
 
 .misc-card {
   position: relative;
-  min-height: 100px;
   border: 1px solid @border;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
+  background: linear-gradient(135deg, rgba(226, 52, 86, 0.08), transparent 42%),
+    rgba(13, 9, 18, 0.78);
   transition: transform 0.4s ease, border-color 0.4s ease,
     background-color 0.4s ease;
 
@@ -502,8 +495,50 @@ const openDetail = (work: WorkItem | MiscWork) => {
     content: '';
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.85);
+    transition: all 0.2s;
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.035) 1px,
+        transparent 1px
+      ),
+      linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+    background-size: 22px 22px;
+    opacity: 0.35;
     z-index: 0;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 44%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(226, 52, 86, 0.08));
+    clip-path: polygon(28% 0, 100% 0, 100% 100%, 0 100%);
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .misc-card-logo {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    border: 2px solid rgba(184, 184, 184, 0.28);
+    background: rgba(0, 0, 0, 0.22);
+    opacity: 0.62;
+    filter: contrast(1.05);
+    transition: opacity 0.3s ease, filter 0.3s ease, border-color 0.3s ease,
+      background 0.3s ease;
+
+    img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      display: block;
+    }
   }
 
   .misc-card-content {
@@ -511,10 +546,18 @@ const openDetail = (work: WorkItem | MiscWork) => {
     height: calc(100% - 36px);
     position: relative;
     display: flex;
-    align-items: end;
+    flex-direction: column;
+    align-items: stretch;
     justify-content: space-between;
     padding: 18px;
     z-index: 2;
+  }
+
+  .misc-card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
   }
 
   .misc-card-index {
@@ -523,21 +566,29 @@ const openDetail = (work: WorkItem | MiscWork) => {
     color: rgba(255, 255, 255, 0.3);
     letter-spacing: 1.5px;
     transition: color 0.3s ease;
-    margin-bottom: 4px;
   }
 
   .misc-card-title {
     font-family: 'anton', 'source-han-sans-simplified-c';
     font-size: 0.75rem;
+    font-weight: 900;
     line-height: 1.2;
     color: rgba(255, 255, 255, 0.95);
     letter-spacing: 0.3px;
-    margin-bottom: 3px;
+    margin: 12px 0;
+    margin-top: -18px;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+  }
+
+  .misc-card-footer {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
   }
 
   .misc-card-company {
@@ -596,7 +647,7 @@ const openDetail = (work: WorkItem | MiscWork) => {
     transform: translateY(-2px);
 
     &::before {
-      background: rgba(0, 0, 0, 0.7);
+      opacity: 0.55;
     }
 
     .misc-card-index {
@@ -605,6 +656,13 @@ const openDetail = (work: WorkItem | MiscWork) => {
 
     .misc-card-title {
       color: white;
+    }
+
+    .misc-card-logo {
+      opacity: 1;
+      filter: grayscale(0) contrast(1);
+      border-color: rgba(135, 135, 135, 0.75);
+      background: rgba(226, 52, 86, 0.1);
     }
 
     .corner {

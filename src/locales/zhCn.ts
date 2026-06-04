@@ -44,7 +44,7 @@ export default {
         },
         {
           id: 'W002',
-          title: '国家电网KPI考核项目',
+          title: '国家电网RPA考核项目',
           time: '2025_12 to 2025_12',
           company: '国家电网',
           tags: ['Vue2', 'ELEMENTUI', 'SASS', 'ECHARTS'],
@@ -66,6 +66,7 @@ export default {
   // 作品集
   archieve: {
     title01: '网页项目',
+    title02: '其他项目',
     dynamic: {
       WebArchieves: [
         {
@@ -117,7 +118,7 @@ export default {
         },
         {
           id: 'W002',
-          title: '国家电网KPI考核系统',
+          title: '国家电网RPA考核系统',
           time: '2025_12 to 2025_12',
           company: '国家电网',
           tags: ['Vue2', 'ELEMENTUI', 'SASS', 'ECHARTS'],
@@ -152,6 +153,26 @@ export default {
           logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/u=3946042415,1178956773&fm=253&fmt=auto&app=138&f=JPEG.webp',
         },
       ],
+      MiscWorks: [
+        {
+          id: 'M001',
+          title: '江西电网KPI考核系统',
+          company: '国家电网',
+          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.png',
+        },
+        {
+          id: 'M002',
+          title: '江西电网巡检APP',
+          company: '国家电网',
+          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.png',
+        },
+        {
+          id: 'M004',
+          title: '江西中烟零售订单系统',
+          company: '江西中烟',
+          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/u=3946042415,1178956773&fm=253&fmt=auto&app=138&f=JPEG.webp',
+        },
+      ],
     },
   },
   // 工具
@@ -178,6 +199,16 @@ export default {
           icon: '〜',
           statusLabel: '可用',
           link: '/easeStudio',
+        },
+        {
+          id: 'bounce-dynamics',
+          title: '弹跳动力学实验室',
+          sub: '调节软硬弹性与小球重量，生成自然落体和横向弹跳实时动画。',
+          category: 'work',
+          tags: ['DEV', 'MOTION'],
+          icon: '●',
+          statusLabel: '可用',
+          link: '/bounceDynamics',
         },
         {
           id: 'metronome',

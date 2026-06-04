@@ -138,10 +138,7 @@
     </div>
 
     <div class="footer-wrap">
-      <PageFooter
-        :third-party="true"
-        :recommended-tools="recommendedTools"
-      />
+      <PageFooter :third-party="true" :recommended-tools="recommendedTools" />
     </div>
   </div>
 </template>

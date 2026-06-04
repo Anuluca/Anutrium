@@ -279,10 +279,8 @@ watch(
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   padding: 2px;
-  background:
-    linear-gradient(90deg, rgba(60, 93, 232, 0.16), transparent 42%),
-    linear-gradient(270deg, rgba(232, 52, 86, 0.12), transparent 46%),
-    #090406;
+  background: linear-gradient(90deg, rgba(60, 93, 232, 0.16), transparent 42%),
+    linear-gradient(270deg, rgba(232, 52, 86, 0.12), transparent 46%), #090406;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.035),
     0 20px 60px rgba(0, 0, 0, 0.45);
 
@@ -438,8 +436,7 @@ watch(
     }
     .tl-card__body {
       border-color: rgba(255, 255, 255, 0.15);
-      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6),
-        0 0 0 1px var(--card-accent);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--card-accent);
       color: var(--card-accent);
       border-color: var(--card-accent-dim);
     }

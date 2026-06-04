@@ -47,7 +47,7 @@ export default {
         },
         {
           id: 'W002',
-          title: 'STATE GRID KPI SYSTEM',
+          title: 'STATE GRID RPA SYSTEM',
           time: '2023_02 to 2023_11',
           company: 'State_Grid_Corporation_of_China',
           tags: ['Vue2', 'ELEMENTUI', 'SASS', 'ECHARTS'],
@@ -69,6 +69,7 @@ export default {
   // 作品集
   archieve: {
     title01: 'WEB ARCHIEVES',
+    title02: 'OTHER PROJECTS',
     dynamic: {
       WebArchieves: [
         {
@@ -125,7 +126,7 @@ export default {
         },
         {
           id: 'W002',
-          title: 'STATE GRID KPI SYSTEM',
+          title: 'STATE GRID RPA SYSTEM',
           time: '2025_12 to 2025_12',
           company: 'State_Grid_Corporation_of_China',
           tags: ['Vue2', 'ELEMENTUI', 'SASS', 'ECHARTS'],
@@ -160,6 +161,26 @@ export default {
           logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/u=3946042415,1178956773&fm=253&fmt=auto&app=138&f=JPEG.webp',
         },
       ],
+      MiscWorks: [
+        {
+          id: 'M001',
+          title: 'State Grid KPI System',
+          company: 'State Grid',
+          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.png',
+        },
+        {
+          id: 'M002',
+          title: 'State Grid Inspection App',
+          company: 'State Grid',
+          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.png',
+        },
+        {
+          id: 'M004',
+          title: 'Jiangxi Tobacco Retail Order System',
+          company: 'Jiangxi Tobacco',
+          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/u=3946042415,1178956773&fm=253&fmt=auto&app=138&f=JPEG.webp',
+        },
+      ],
     },
   },
   // 工具
@@ -186,6 +207,16 @@ export default {
           icon: '〜',
           statusLabel: 'LIVE',
           link: '/easeStudio',
+        },
+        {
+          id: 'bounce-dynamics',
+          title: 'BOUNCE DYNAMICS LAB',
+          sub: 'Tune elasticity and ball weight to generate a natural falling and horizontal bounce animation.',
+          category: 'work',
+          tags: ['DEV', 'MOTION'],
+          icon: '●',
+          statusLabel: 'LIVE',
+          link: '/bounceDynamics',
         },
         {
           id: 'metronome',
