@@ -73,7 +73,20 @@
         {{ $t('archieve.title02') }}
       </h2>
       <div class="misc-grid">
-        <div v-for="(item, index) in miscWorks" :key="index" class="misc-card">
+        <div
+          v-for="(item, index) in miscWorks"
+          :key="item.id"
+          class="misc-card"
+          :class="{
+            'has-detail': hasMiscDetail(item),
+            'is-error': flashingMiscId === item.id,
+          }"
+          role="button"
+          tabindex="0"
+          @click="openMiscDetail(item)"
+          @keydown.enter.prevent="openMiscDetail(item)"
+          @keydown.space.prevent="openMiscDetail(item)"
+        >
           <div class="misc-card-content">
             <div class="misc-card-head">
               <div class="misc-card-index">
@@ -110,9 +123,9 @@
 
 <script setup lang="ts">
 /* eslint-disable simple-import-sort/imports */
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import WorkDetailModal from './WorkDetailModal.vue'
+import WorkDetailModal from '@/components/WorkDetailModal/index.vue'
 import PageHeader from '@/components/PageHeader/index.vue'
 
 const { locale, tm } = useI18n()
@@ -129,6 +142,7 @@ interface WorkItem {
   description?: string
   images?: string[]
   link?: string
+  links?: Array<{ label: string; url: string; icon?: string }>
 }
 
 interface MiscWork {
@@ -154,9 +168,51 @@ const miscWorks = computed<MiscWork[]>(
 
 // ── 弹窗状态 ───────────────────────────────────
 const selectedWork = ref<WorkItem | MiscWork | null>(null)
+const flashingMiscId = ref('')
+let miscErrorTimer: ReturnType<typeof setTimeout> | null = null
+
 const openDetail = (work: WorkItem | MiscWork) => {
   selectedWork.value = work
 }
+
+const hasMiscDetail = (work: MiscWork) => {
+  return (
+    typeof work.description === 'string' && work.description.trim().length > 0
+  )
+}
+
+const triggerMiscError = (id: string) => {
+  if (miscErrorTimer) {
+    clearTimeout(miscErrorTimer)
+  }
+
+  flashingMiscId.value = ''
+  requestAnimationFrame(() => {
+    flashingMiscId.value = id
+  })
+
+  miscErrorTimer = setTimeout(() => {
+    if (flashingMiscId.value === id) {
+      flashingMiscId.value = ''
+    }
+    miscErrorTimer = null
+  }, 720)
+}
+
+const openMiscDetail = (work: MiscWork) => {
+  if (hasMiscDetail(work)) {
+    openDetail(work)
+    return
+  }
+
+  triggerMiscError(work.id)
+}
+
+onBeforeUnmount(() => {
+  if (miscErrorTimer) {
+    clearTimeout(miscErrorTimer)
+  }
+})
 </script>
 
 <style lang="less" scoped>
@@ -486,6 +542,8 @@ const openDetail = (work: WorkItem | MiscWork) => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  cursor: pointer;
+  outline: none;
   background: linear-gradient(135deg, rgba(226, 52, 86, 0.08), transparent 42%),
     rgba(13, 9, 18, 0.78);
   transition: transform 0.4s ease, border-color 0.4s ease,
@@ -518,6 +576,27 @@ const openDetail = (work: WorkItem | MiscWork) => {
     clip-path: polygon(28% 0, 100% 0, 100% 100%, 0 100%);
     z-index: 1;
     pointer-events: none;
+  }
+
+  &:focus-visible {
+    border-color: rgba(226, 52, 86, 0.65);
+    box-shadow: 0 0 0 2px rgba(226, 52, 86, 0.22);
+  }
+
+  &.is-error {
+    animation: miscDetailError 0.72s ease both;
+
+    &::before {
+      animation: miscDetailErrorGrid 0.72s ease both;
+    }
+
+    &::after {
+      animation: miscDetailErrorWash 0.72s ease both;
+    }
+
+    .corner {
+      border-color: @red;
+    }
   }
 
   .misc-card-logo {
@@ -671,6 +750,65 @@ const openDetail = (work: WorkItem | MiscWork) => {
       width: 10px;
       height: 10px;
     }
+  }
+}
+
+@keyframes miscDetailError {
+  0%,
+  100% {
+    border-color: @border;
+    box-shadow: none;
+  }
+
+  12%,
+  42% {
+    border-color: @red;
+    box-shadow: 0 0 0 1px rgba(226, 52, 86, 0.4),
+      0 0 22px rgba(226, 52, 86, 0.28);
+  }
+
+  24%,
+  54% {
+    border-color: rgba(255, 255, 255, 0.18);
+    box-shadow: none;
+  }
+}
+
+@keyframes miscDetailErrorGrid {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+
+  12%,
+  42% {
+    opacity: 0.85;
+  }
+
+  24%,
+  54% {
+    opacity: 0.45;
+  }
+}
+
+@keyframes miscDetailErrorWash {
+  0%,
+  100% {
+    background: linear-gradient(90deg, transparent, rgba(226, 52, 86, 0.08));
+  }
+
+  12%,
+  42% {
+    background: linear-gradient(
+      90deg,
+      rgba(226, 52, 86, 0.12),
+      rgba(226, 52, 86, 0.42)
+    );
+  }
+
+  24%,
+  54% {
+    background: linear-gradient(90deg, transparent, rgba(226, 52, 86, 0.14));
   }
 }
 

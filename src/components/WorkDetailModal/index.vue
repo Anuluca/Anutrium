@@ -35,6 +35,12 @@
           <span class="field-val">{{ work.time }}</span>
         </div>
 
+        <!-- Participation -->
+        <div v-if="participationText" class="aside-field">
+          <span class="field-label">{{ t('workDetailModal.participation') }}</span>
+          <span class="field-val">{{ participationText }}</span>
+        </div>
+
         <!-- 技术标签 -->
         <div v-if="work.tags?.length" class="aside-field aside-tags">
           <span class="field-label">STACK</span>
@@ -63,7 +69,9 @@
               rel="noopener noreferrer"
               class="link-item"
             >
-              <span class="link-icon">{{ link.icon }}</span>
+              <ElIcon class="link-icon" aria-hidden="true">
+                <component :is="getLinkIcon(link.icon)" />
+              </ElIcon>
               <span class="link-text">{{ link.label }}</span>
               <span class="link-arrow">→</span>
             </a>
@@ -201,8 +209,15 @@
 
 <script setup lang="ts">
 /* eslint-disable simple-import-sort/imports */
-import { ref, watch } from 'vue'
-import { ElImageViewer } from 'element-plus'
+import { computed, ref, watch, type Component } from 'vue'
+import { ElIcon, ElImageViewer } from 'element-plus'
+import { useI18n } from 'vue-i18n'
+import {
+  Link as LinkIcon,
+  Monitor,
+  Promotion,
+  VideoPlay,
+} from '@element-plus/icons-vue'
 import ModalWrapper from '@/components/ModalWrapper/index.vue'
 import CrystalLogo from '@/components/CrystalLogo/index.vue'
 
@@ -220,6 +235,7 @@ interface WorkItem {
   imageDescriptions?: string[]
   link?: string
   links?: Array<{ label: string; url: string; icon?: string }>
+  participation?: number
 }
 
 const props = defineProps<{
@@ -227,6 +243,7 @@ const props = defineProps<{
   visible: boolean
 }>()
 const emit = defineEmits<{ close: [] }>()
+const { t } = useI18n()
 
 // 内部对话框显示状态
 const dialogVisible = ref(false)
@@ -234,6 +251,23 @@ const dialogVisible = ref(false)
 const imgIndex = ref(0)
 const showImageViewer = ref(false)
 const currentImageIndex = ref(0)
+
+const participationText = computed(() => {
+  const value = props.work?.participation
+  return typeof value === 'number' ? `${value}%` : ''
+})
+
+const linkIconMap: Record<string, Component> = {
+  Link: LinkIcon,
+  Monitor,
+  Promotion,
+  VideoPlay,
+}
+
+const getLinkIcon = (icon?: string) => {
+  if (!icon) return LinkIcon
+  return linkIconMap[icon] || LinkIcon
+}
 
 // 监听外部 visible 变化，同步到内部状态
 watch(
@@ -318,9 +352,13 @@ const closeImageViewer = () => {
   padding: 40px 24px;
   border-right: 1px solid @border;
   overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  > *:last-child {
+    margin-bottom: 50px;
+  }
 
   &::-webkit-scrollbar {
     width: 2px;
@@ -374,6 +412,7 @@ const closeImageViewer = () => {
 .aside-title {
   font-family: 'anton', 'source-han-sans-simplified-c';
   font-size: 1.4rem;
+  font-weight: 900;
   line-height: 1.2;
   color: #fff;
   letter-spacing: 0.5px;
@@ -424,6 +463,7 @@ const closeImageViewer = () => {
   p {
     font-family: 'source-han-sans-simplified-c', monospace;
     font-size: 0.75rem;
+    font-weight: 700;
     color: rgba(255, 255, 255, 0.5);
     line-height: 1.7;
   }
@@ -463,7 +503,8 @@ const closeImageViewer = () => {
   }
 
   .link-text {
-    font-family: 'Unbounded Sans', monospace;
+    font-family: 'source-han-sans-simplified-c';
+    font-weight: 800 !important;
     font-size: 0.6rem;
     color: rgba(255, 255, 255, 0.65);
     letter-spacing: 1px;
@@ -561,8 +602,9 @@ const closeImageViewer = () => {
     bottom: 20px;
     left: 20px;
     right: 60px;
-    font-family: 'Unbounded Sans', monospace;
-    font-size: 0.75rem;
+    font-family:  'STSong';
+    font-weight: 700;
+    font-size: 0.5rem;
     color: rgba(255, 255, 255, 0.85);
     letter-spacing: 0.5px;
     line-height: 1.5;
@@ -736,6 +778,7 @@ const closeImageViewer = () => {
 .detail-text {
   font-family: 'source-han-sans-simplified-c', monospace;
   font-size: 0.75rem;
+  font-weight: 700;
   color: rgba(255, 255, 255, 0.55);
   line-height: 1.7;
   flex: 1;

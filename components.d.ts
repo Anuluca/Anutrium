@@ -31,5 +31,6 @@ declare module '@vue/runtime-core' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     StartAnimation: typeof import('./src/components/StartAnimation/index.vue')['default']
+    WorkDetailModal: typeof import('./src/components/WorkDetailModal/index.vue')['default']
   }
 }

@@ -18,8 +18,7 @@ let reducedMotionQuery: MediaQueryList | null = null
 
 const updateMotionPreference = () => {
   isMotionPaused.value =
-    document.visibilityState === 'hidden' ||
-    !!reducedMotionQuery?.matches
+    document.visibilityState === 'hidden' || !!reducedMotionQuery?.matches
 }
 
 // 预计算星星坐标

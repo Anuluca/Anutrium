@@ -15,7 +15,13 @@
             </svg>
           </button>
 
-          <div class="cards-viewport">
+          <div
+            class="cards-viewport"
+            @touchstart.passive="handleCarouselTouchStart"
+            @touchmove.passive="handleCarouselTouchMove"
+            @touchend="handleCarouselTouchEnd"
+            @touchcancel="handleCarouselTouchCancel"
+          >
             <transition-group name="slide" tag="div" class="cards-inner">
               <div
                 v-for="(item, i) in newsItems"
@@ -167,19 +173,35 @@
         <p class="highlight">{{ $t('home.highlight') }}</p>
         <p class="desc">
           在这里，我呈现我的作品、观察与生活碎片。<br />
-          I'm trying to build a digital space with soul and creativity.
+          我想要打造一个有灵魂与创意的数字空间。
         </p>
       </div>
     </section>
 
     <section class="works-section">
-      <h2 class="section-title" data-section="02">{{ $t('home.title02') }}</h2>
+      <div class="section-title-row">
+        <h2 class="section-title" data-section="02">
+          {{ $t('home.title02') }}
+        </h2>
+        <RouterLink class="archive-entry" to="/archieve">
+          <span class="archive-entry__code">ARCHIEVE_INDEX</span>
+          <span class="archive-entry__text">
+            {{ locale === 'en' ? 'VIEW ALL' : '全部项目' }}
+          </span>
+          <span class="archive-entry__arrow">→</span>
+        </RouterLink>
+      </div>
       <div class="works-grid">
         <div
           v-for="(work, index) in works"
           :key="index"
           class="work-card"
           data-magnetic
+          role="button"
+          tabindex="0"
+          @click="openWorkDetail(work)"
+          @keydown.enter.prevent="openWorkDetail(work)"
+          @keydown.space.prevent="openWorkDetail(work)"
         >
           <div class="work-base">
             <img :src="work.img" :alt="work.title" />
@@ -229,6 +251,11 @@
     </section>
 
     <PageFooter />
+    <WorkDetailModal
+      :work="selectedWork"
+      :visible="!!selectedWork"
+      @close="selectedWork = null"
+    />
   </div>
 </template>
 
@@ -239,6 +266,7 @@ import { useI18n } from 'vue-i18n'
 import LogoOnly3D from '@/components/LogoOnly3D/index.vue'
 import MarqueeShowcase from '@/components/MarqueeShowcase/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue' // 引入新组件
+import WorkDetailModal from '@/components/WorkDetailModal/index.vue'
 
 const { locale, tm } = useI18n()
 
@@ -270,6 +298,59 @@ const nextSlide = () => {
 const goTo = (i: number) => {
   activeIndex.value = i
 }
+
+let touchStartX = 0
+let touchStartY = 0
+let touchDeltaX = 0
+let touchDeltaY = 0
+
+const resetCarouselTouch = () => {
+  touchStartX = 0
+  touchStartY = 0
+  touchDeltaX = 0
+  touchDeltaY = 0
+}
+
+const handleCarouselTouchStart = (event: TouchEvent) => {
+  const touch = event.touches[0]
+  if (!touch) return
+
+  pauseAuto()
+  touchStartX = touch.clientX
+  touchStartY = touch.clientY
+  touchDeltaX = 0
+  touchDeltaY = 0
+}
+
+const handleCarouselTouchMove = (event: TouchEvent) => {
+  const touch = event.touches[0]
+  if (!touch || !touchStartX) return
+
+  touchDeltaX = touch.clientX - touchStartX
+  touchDeltaY = touch.clientY - touchStartY
+}
+
+const handleCarouselTouchEnd = () => {
+  const absX = Math.abs(touchDeltaX)
+  const absY = Math.abs(touchDeltaY)
+
+  if (absX > 48 && absX > absY * 1.25) {
+    if (touchDeltaX < 0) {
+      nextSlide()
+    } else {
+      prevSlide()
+    }
+  }
+
+  resetCarouselTouch()
+  resumeAuto()
+}
+
+const handleCarouselTouchCancel = () => {
+  resetCarouselTouch()
+  resumeAuto()
+}
+
 const startAuto = () => {
   if (document.visibilityState === 'hidden') return
   pauseAuto()
@@ -353,11 +434,28 @@ interface WorkItem {
   company: string
   logo: string
   time: string
+  description?: string
+  details?: string[]
+  images?: string[]
+  imageDescriptions?: string[]
+  links?: Array<{ label: string; url: string; icon?: string }>
+  participation?: number
 }
 
+const selectedWorkIds = ['W001', 'W003', 'W005', 'P001']
+
 const works = computed<WorkItem[]>(() => {
-  return tm('home.dynamic.SelectedArchieves') as WorkItem[]
+  const webArchieves = tm('archieve.dynamic.WebArchieves') as WorkItem[]
+  return selectedWorkIds
+    .map((id) => webArchieves.find((work) => work.id === id))
+    .filter((work): work is WorkItem => Boolean(work))
 })
+
+const selectedWork = ref<WorkItem | null>(null)
+
+const openWorkDetail = (work: WorkItem) => {
+  selectedWork.value = work
+}
 
 const wheelEvent = (_e: WheelEvent) => {}
 </script>
@@ -664,14 +762,18 @@ const wheelEvent = (_e: WheelEvent) => {}
 
   .moto {
     &.moto-cn {
+      padding-right: 130px;
       * {
-        font-weight: 900;
+        font-family: 'Unbounded Sans';
+      }
+      > p {
+        line-height: 1.6rem;
       }
       > div {
-        font-family: 'source-han-sans-simplified-c';
-        font-size: 1.1rem;
+        font-family: 'Unbounded Sans';
+        font-size: 1.2rem;
         height: 0.1rem;
-        margin-top: 20px;
+        margin-top: 35px;
       }
     }
 
@@ -682,6 +784,9 @@ const wheelEvent = (_e: WheelEvent) => {}
       transform: translateY(30px);
       animation: motoFadeIn 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
       line-height: 1.1;
+    }
+    > p {
+      line-height: 3.7rem;
     }
 
     > div {
@@ -706,7 +811,7 @@ const wheelEvent = (_e: WheelEvent) => {}
 
     .passion-line {
       font-size: 6.5rem;
-      margin-top: -0.5rem;
+      margin-top: -1rem;
       margin-left: -5px;
 
       .passion {
@@ -785,6 +890,109 @@ const wheelEvent = (_e: WheelEvent) => {}
     font-size: 1.1rem;
     line-height: 1.2;
     clip-path: polygon(0% 50%, 20% 0%, 80% 0%, 100% 50%, 80% 100%, 20% 100%);
+  }
+}
+
+.section-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid var(--opacity-color2);
+  margin-bottom: 20px;
+
+  .section-title {
+    flex: 1;
+    border-bottom: 0;
+    margin-bottom: 0;
+  }
+}
+
+.archive-entry {
+  position: relative;
+  min-width: 178px;
+  height: 34px;
+  display: inline-grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border-bottom: 1px solid rgba(226, 52, 86, 0.42);
+  color: rgba(255, 255, 255, 0.72);
+  background: linear-gradient(90deg, rgba(226, 52, 86, 0.16), transparent 65%);
+  text-decoration: none;
+  overflow: hidden;
+  transition: border-color 0.25s ease, color 0.25s ease,
+    transform 0.25s ease;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      110deg,
+      transparent 0%,
+      transparent 42%,
+      rgba(255, 255, 255, 0.18) 50%,
+      transparent 58%,
+      transparent 100%
+    );
+    transform: translateX(-100%);
+    transition: transform 0.35s ease;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 46%;
+    height: 2px;
+    background: #e23456;
+  }
+
+  &:hover {
+    color: #fff;
+    border-color: #e23456;
+    transform: translateX(4px);
+
+    &::before {
+      transform: translateX(100%);
+    }
+
+    .archive-entry__arrow {
+      transform: translateX(3px);
+    }
+  }
+
+  &__code,
+  &__text,
+  &__arrow {
+    position: relative;
+    z-index: 1;
+    font-family: 'Unbounded Sans', monospace;
+    white-space: nowrap;
+  }
+
+  &__code {
+    min-width: 0;
+    overflow: hidden;
+    color: rgba(255, 255, 255, 0.28);
+    font-size: 0.45rem;
+    letter-spacing: 1px;
+    text-overflow: ellipsis;
+  }
+
+  &__text {
+    color: #e23456;
+    font-size: 0.56rem;
+    letter-spacing: 1px;
+  }
+
+  &__arrow {
+    color: #e23456;
+    font-size: 0.8rem;
+    transition: transform 0.25s ease;
   }
 }
 
@@ -1172,7 +1380,7 @@ const wheelEvent = (_e: WheelEvent) => {}
 
 <style lang="less">
 @media screen and (max-aspect-ratio: @ratio-threshold) {
-  &.home-page {
+  .home-page {
     .hero-section {
       .hero-content {
         display: flex !important;
@@ -1187,9 +1395,130 @@ const wheelEvent = (_e: WheelEvent) => {}
         }
 
         .recommend {
-          zoom: 0.7 !important;
+          zoom: 1 !important;
+          width: min(100%, 26rem);
+          max-width: calc(100vw - 32px);
+          height: clamp(13.5rem, 58vw, 16rem);
           margin-top: 0;
+          margin-right: auto;
+          margin-left: auto;
+          overflow: visible;
+          touch-action: pan-y;
         }
+      }
+    }
+
+    .cards-viewport,
+    .cards-inner,
+    .news-card {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
+    }
+
+    .cards-viewport {
+      touch-action: pan-y;
+    }
+
+    .news-card {
+      left: 0;
+      right: 0;
+    }
+
+    .card-content {
+      left: 0;
+      right: 0;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
+      padding: 12px 14px 34px;
+    }
+
+    .card-top {
+      min-width: 0;
+      gap: 10px;
+    }
+
+    .card-cat {
+      flex-shrink: 0;
+      white-space: nowrap;
+      letter-spacing: 2px;
+    }
+
+    .card-date {
+      min-width: 0;
+      flex: 1;
+      overflow: hidden;
+      text-align: right;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .card-title,
+    .card-subtitle {
+      width: 100%;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      overflow-wrap: anywhere;
+    }
+
+    .card-title {
+      font-size: clamp(0.9rem, 4.3vw, 1.08rem);
+      -webkit-line-clamp: 1;
+    }
+
+    .card-subtitle {
+      font-size: clamp(0.58rem, 3.3vw, 0.68rem);
+      -webkit-line-clamp: 2;
+    }
+
+    .nav-btn {
+      width: 32px;
+      height: 32px;
+      background: rgba(0, 0, 0, 0.22);
+
+      &--prev {
+        left: 6px;
+      }
+
+      &--next {
+        right: 6px;
+      }
+    }
+
+    .carousel-counter {
+      top: 8px;
+      right: 10px;
+    }
+
+    .card-watermark {
+      display: none;
+    }
+
+    .section-title-row {
+      gap: 10px;
+    }
+
+    .section-title-row .section-title {
+      min-width: 0;
+      font-size: 1rem;
+    }
+
+    .archive-entry {
+      min-width: 112px;
+      height: 30px;
+      grid-template-columns: auto auto;
+      padding: 0 10px;
+
+      &__code {
+        display: none;
+      }
+
+      &__text {
+        font-size: 0.5rem;
       }
     }
 

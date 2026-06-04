@@ -160,8 +160,8 @@ export const routes: RouteConfig[] = [
     name: 'BOUNCEDYNAMICS',
     component: () => import('@/views/Craft/BounceDynamics/index.vue'),
     meta: {
-      titleEn: 'BOUNCE DYNAMICS',
-      titleCn: '弹跳动力学实验室',
+      titleEn: 'BOUNCING BALL',
+      titleCn: '弹力球',
       fullFooter: true,
       ifShow: false,
       noMenu: true,

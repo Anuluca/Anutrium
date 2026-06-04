@@ -53,8 +53,7 @@ const initMotionPreference = () => {
 
 const updateMotionPreference = () => {
   isMotionPaused.value =
-    document.visibilityState === 'hidden' ||
-    !!reducedMotionQuery?.matches
+    document.visibilityState === 'hidden' || !!reducedMotionQuery?.matches
 }
 
 const initFooterAnimation = () => {

@@ -2,10 +2,10 @@
   <div class="bounce-tool main-container">
     <div class="pt-header">
       <div class="pt-header__tag" @click="handleTagClick">CRAFT</div>
-      <h1 class="pt-header__title">弹跳动力学实验室</h1>
+      <h1 class="pt-header__title">弹力球</h1>
       <p class="pt-header__sub">
         调节弹性与重量，生成一颗弹力球自然落体、撞击地面并向右弹跳的实时物理动画。
-        <span class="pt-header__motto">// BOUNCE_DYNAMICS_LAB</span>
+        <span class="pt-header__motto">// BOUNCING_BALL</span>
       </p>
     </div>
 
@@ -134,6 +134,11 @@ interface BallState {
   y: number
 }
 
+interface TrajectoryPoint {
+  x: number
+  y: number
+}
+
 const router = useRouter()
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 const trackRef = ref<HTMLElement | null>(null)
@@ -147,7 +152,7 @@ const compressionPercent = ref(0)
 const recommendedTools = [
   { label: 'CSS调色盘', path: '/colorPalette' },
   { label: '缓动工作室', path: '/easeStudio' },
-  { label: '弹跳动力学实验室', path: '/bounceDynamics' },
+  { label: '弹力球', path: '/bounceDynamics' },
 ]
 
 const elasticityPresets = [
@@ -173,7 +178,14 @@ let lastTime = 0
 let width = 0
 let height = 0
 let floorY = 0
+let canvasDpr = 1
 let shouldResumeAfterVisible = false
+let resizeObserver: ResizeObserver | null = null
+let resizeRafId: number | null = null
+let initResizeTimer: number | null = null
+const trajectoryPoints: TrajectoryPoint[] = []
+const maxTrajectoryPoints = 220
+const trajectoryMinDistance = 7
 
 const ball: BallState = {
   contactTime: 0,
@@ -192,6 +204,24 @@ const clamp = (value: number, min: number, max: number) => {
 
 const getRadius = () => 31 + weight.value * 2.3
 
+const clearTrajectory = () => {
+  trajectoryPoints.length = 0
+}
+
+const recordTrajectoryPoint = () => {
+  const lastPoint = trajectoryPoints[trajectoryPoints.length - 1]
+  const dx = lastPoint ? ball.x - lastPoint.x : Infinity
+  const dy = lastPoint ? ball.y - lastPoint.y : Infinity
+
+  if (!lastPoint || Math.hypot(dx, dy) >= trajectoryMinDistance) {
+    trajectoryPoints.push({ x: ball.x, y: ball.y })
+  }
+
+  if (trajectoryPoints.length > maxTrajectoryPoints) {
+    trajectoryPoints.splice(0, trajectoryPoints.length - maxTrajectoryPoints)
+  }
+}
+
 const resetBall = () => {
   ball.r = getRadius()
   ball.x = Math.max(58, ball.r + 24)
@@ -204,6 +234,8 @@ const resetBall = () => {
   bounceCount.value = 0
   impactSpeed.value = 0
   compressionPercent.value = 0
+  clearTrajectory()
+  recordTrajectoryPoint()
   drawFrame()
 }
 
@@ -213,20 +245,42 @@ const resizeCanvas = () => {
   if (!canvas || !track) return
 
   const rect = track.getBoundingClientRect()
+  const nextWidth = Math.max(1, rect.width)
+  const nextHeight = Math.max(1, rect.height)
   const dpr = Math.min(window.devicePixelRatio || 1, 2)
-  width = rect.width
-  height = rect.height
+  const hasSizeChanged =
+    Math.abs(nextWidth - width) > 1 ||
+    Math.abs(nextHeight - height) > 1 ||
+    dpr !== canvasDpr ||
+    !ctx
+
+  if (!hasSizeChanged) {
+    drawFrame()
+    return
+  }
+
+  width = nextWidth
+  height = nextHeight
+  canvasDpr = dpr
   floorY = height - 82
 
   canvas.width = Math.round(width * dpr)
   canvas.height = Math.round(height * dpr)
-  canvas.style.width = `${width}px`
-  canvas.style.height = `${height}px`
+  canvas.style.width = '100%'
+  canvas.style.height = '100%'
 
   ctx = canvas.getContext('2d')
   if (!ctx) return
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
   resetBall()
+}
+
+const scheduleResizeCanvas = () => {
+  if (resizeRafId !== null) cancelAnimationFrame(resizeRafId)
+  resizeRafId = requestAnimationFrame(() => {
+    resizeRafId = null
+    resizeCanvas()
+  })
 }
 
 const updatePhysics = (dt: number) => {
@@ -252,15 +306,18 @@ const updatePhysics = (dt: number) => {
         0.58
       )
       ball.squash = Math.max(ball.squash, compression)
+      ball.contactTime = 0.18
       compressionPercent.value = Math.round(compression * 100)
     }
 
     ball.vy = -impact * restitution.value
     ball.vx *= floorDamping.value
-    ball.contactTime = 0.18
 
     if (Math.abs(ball.vy) < 96) {
       ball.vy = 0
+      ball.contactTime = 0
+      ball.squash = 0
+      compressionPercent.value = 0
       ball.settleTime += dt
     }
   } else {
@@ -269,6 +326,7 @@ const updatePhysics = (dt: number) => {
 
   ball.contactTime = Math.max(0, ball.contactTime - dt)
   ball.squash += (0 - ball.squash) * Math.min(1, dt * 6)
+  recordTrajectoryPoint()
 
   if (ball.x > width + ball.r * 2 || ball.settleTime > 0.9) {
     resetBall()
@@ -276,6 +334,9 @@ const updatePhysics = (dt: number) => {
 }
 
 const drawBackground = (context: CanvasRenderingContext2D) => {
+  const driftX = (performance.now() * 0.006) % 40
+  const driftY = (performance.now() * 0.004) % 40
+
   context.clearRect(0, 0, width, height)
   context.save()
   context.globalAlpha = 0.9
@@ -284,13 +345,13 @@ const drawBackground = (context: CanvasRenderingContext2D) => {
 
   context.strokeStyle = 'rgba(255,255,255,0.045)'
   context.lineWidth = 1
-  for (let x = 0; x <= width; x += 40) {
+  for (let x = -40 + driftX; x <= width + 40; x += 40) {
     context.beginPath()
     context.moveTo(x, 0)
     context.lineTo(x, height)
     context.stroke()
   }
-  for (let y = 0; y <= height; y += 40) {
+  for (let y = -40 + driftY; y <= height + 40; y += 40) {
     context.beginPath()
     context.moveTo(0, y)
     context.lineTo(width, y)
@@ -335,12 +396,54 @@ const drawShadow = (context: CanvasRenderingContext2D) => {
   context.restore()
 }
 
+const drawTrajectory = (context: CanvasRenderingContext2D) => {
+  if (trajectoryPoints.length < 2) return
+
+  context.save()
+  context.lineCap = 'round'
+  context.lineJoin = 'round'
+
+  for (let i = 1; i < trajectoryPoints.length; i += 1) {
+    const prev = trajectoryPoints[i - 1]
+    const current = trajectoryPoints[i]
+    const progress = i / (trajectoryPoints.length - 1)
+
+    context.strokeStyle = `rgba(232, 40, 74, ${0.08 + progress * 0.34})`
+    context.lineWidth = 1 + progress * 2.2
+    context.beginPath()
+    context.moveTo(prev.x, prev.y)
+    context.lineTo(current.x, current.y)
+    context.stroke()
+  }
+
+  context.fillStyle = 'rgba(232, 40, 74, 0.7)'
+  for (let i = 0; i < trajectoryPoints.length; i += 18) {
+    const point = trajectoryPoints[i]
+    context.beginPath()
+    context.arc(point.x, point.y, 2, 0, Math.PI * 2)
+    context.fill()
+  }
+
+  context.restore()
+}
+
 const drawBall = (context: CanvasRenderingContext2D) => {
   const contactRatio = clamp(ball.contactTime / 0.18, 0, 1)
-  const contactSquash = ball.contactTime > 0 ? ball.squash * (0.7 + contactRatio * 0.3) : 0
-  const fallStretch = contactSquash > 0 ? 0 : clamp(Math.abs(ball.vy) / 1700, 0, 0.24)
-  const scaleX = clamp(1 + contactSquash * 1.18 - fallStretch * 0.18, 0.82, 1.72)
-  const scaleY = clamp(1 - contactSquash * 0.92 + fallStretch * 0.68, 0.46, 1.28)
+  const contactSquash =
+    ball.contactTime > 0 && ball.squash > 0.01
+      ? ball.squash * (0.7 + contactRatio * 0.3)
+      : 0
+  const isRolling = ball.y + ball.r >= floorY - 1 && Math.abs(ball.vy) < 120
+  const fallStretch =
+    contactSquash > 0 || isRolling
+      ? 0
+      : clamp(Math.abs(ball.vy) / 1700, 0, 0.24)
+  const scaleX = isRolling
+    ? 1
+    : clamp(1 + contactSquash * 1.18 - fallStretch * 0.18, 0.82, 1.72)
+  const scaleY = isRolling
+    ? 1
+    : clamp(1 - contactSquash * 0.92 + fallStretch * 0.68, 0.46, 1.28)
   const yOffset = contactSquash > 0 ? ball.r * (1 - scaleY) : 0
 
   context.save()
@@ -355,27 +458,14 @@ const drawBall = (context: CanvasRenderingContext2D) => {
     0,
     ball.r
   )
-  gradient.addColorStop(0, '#ffffff')
-  gradient.addColorStop(0.16, '#ffbdc7')
-  gradient.addColorStop(0.58, '#e8284a')
+  gradient.addColorStop(0, '#ff6f85')
+  gradient.addColorStop(0.45, '#e8284a')
+  gradient.addColorStop(0.78, '#9f142a')
   gradient.addColorStop(1, '#4c0612')
 
   context.fillStyle = gradient
   context.beginPath()
   context.arc(0, 0, ball.r, 0, Math.PI * 2)
-  context.fill()
-  context.globalAlpha = 0.55
-  context.fillStyle = 'rgba(255,255,255,0.72)'
-  context.beginPath()
-  context.ellipse(
-    -ball.r * 0.28,
-    -ball.r * 0.36,
-    ball.r * 0.16,
-    ball.r * 0.08,
-    -0.5,
-    0,
-    Math.PI * 2
-  )
   context.fill()
   context.restore()
 }
@@ -383,6 +473,7 @@ const drawBall = (context: CanvasRenderingContext2D) => {
 const drawFrame = () => {
   if (!ctx || !width || !height) return
   drawBackground(ctx)
+  drawTrajectory(ctx)
   drawFloor(ctx)
   drawShadow(ctx)
   drawBall(ctx)
@@ -455,15 +546,26 @@ watch([elasticity, weight], () => {
 
 onMounted(async () => {
   await nextTick()
-  resizeCanvas()
-  window.addEventListener('resize', resizeCanvas)
+  scheduleResizeCanvas()
+  requestAnimationFrame(scheduleResizeCanvas)
+  initResizeTimer = window.setTimeout(scheduleResizeCanvas, 160)
+
+  if (trackRef.value && 'ResizeObserver' in window) {
+    resizeObserver = new ResizeObserver(scheduleResizeCanvas)
+    resizeObserver.observe(trackRef.value)
+  }
+
+  window.addEventListener('resize', scheduleResizeCanvas)
   document.addEventListener('visibilitychange', handleVisibilityChange)
   startSimulation()
 })
 
 onBeforeUnmount(() => {
   pauseSimulation()
-  window.removeEventListener('resize', resizeCanvas)
+  if (resizeRafId !== null) cancelAnimationFrame(resizeRafId)
+  if (initResizeTimer !== null) clearTimeout(initResizeTimer)
+  resizeObserver?.disconnect()
+  window.removeEventListener('resize', scheduleResizeCanvas)
   document.removeEventListener('visibilitychange', handleVisibilityChange)
 })
 </script>
@@ -690,8 +792,19 @@ onBeforeUnmount(() => {
     transparent 1px
   );
   background-size: 100% 4px;
+  animation: trackScanDrift 9s linear infinite;
   box-shadow: inset 0 0 0 1px rgba(232, 40, 74, 0.08),
     inset 0 -80px 90px rgba(232, 40, 74, 0.07);
+}
+
+@keyframes trackScanDrift {
+  from {
+    background-position: 0 0;
+  }
+
+  to {
+    background-position: 0 24px;
+  }
 }
 
 .motion-marks {

@@ -117,10 +117,7 @@ const render = () => {
   follower.x += (mouse.x - follower.x) * ease
   follower.y += (mouse.y - follower.y) * ease
 
-  if (
-    Math.abs(dx) < settleThreshold &&
-    Math.abs(dy) < settleThreshold
-  ) {
+  if (Math.abs(dx) < settleThreshold && Math.abs(dy) < settleThreshold) {
     follower.x = mouse.x
     follower.y = mouse.y
     stopRender()
