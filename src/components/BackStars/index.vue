@@ -42,7 +42,7 @@ const containerClass = computed(() => [
   props.theme,
   {
     'menu-hidden': props.isTextMenu,
-    'is-paused': props.isTextMenu || isMotionPaused.value,
+    'is-paused': isMotionPaused.value,
   },
 ])
 
