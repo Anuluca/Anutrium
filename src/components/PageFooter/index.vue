@@ -1,7 +1,8 @@
 <template>
   <footer
+    ref="footerRef"
     class="bottom-text"
-    :class="{ 'third-party': thirdParty }"
+    :class="{ 'third-party': thirdParty, 'motion-paused': isMotionPaused }"
     @mousemove="handleLogoMouseMove"
     @mouseleave="handleLogoMouseLeave"
   >
@@ -49,7 +50,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import Logo from '@/components/Logo/index.vue'
@@ -85,6 +86,9 @@ const defaultRecommendedTools: RecommendedTool[] = [
 const displayedRecommendedTools = computed(() => {
   return recommendedTools?.length ? recommendedTools : defaultRecommendedTools
 })
+const footerRef = ref<HTMLElement | null>(null)
+const isMotionPaused = ref(true)
+const isFooterVisible = ref(false)
 
 // 视觉物理缓动状态
 const currentX = ref(0)
@@ -94,6 +98,20 @@ const targetY = ref(0)
 
 let rafId: number | null = null
 let cachedRect: DOMRect | null = null
+let observer: IntersectionObserver | null = null
+let reducedMotionQuery: MediaQueryList | null = null
+
+const updateMotionState = () => {
+  isMotionPaused.value =
+    !isFooterVisible.value ||
+    document.visibilityState === 'hidden' ||
+    !!reducedMotionQuery?.matches
+
+  if (isMotionPaused.value && rafId) {
+    cancelAnimationFrame(rafId)
+    rafId = null
+  }
+}
 
 const logoStyle = computed(() => ({
   transform: `perspective(1000px) rotateX(${currentX.value}deg) rotateY(${currentY.value}deg)`,
@@ -102,6 +120,11 @@ const logoStyle = computed(() => ({
 
 // 缓动核心算法
 const updateRotation = () => {
+  if (isMotionPaused.value) {
+    rafId = null
+    return
+  }
+
   // 0.15 的内插值赋予极其丝滑的跟手阻尼感
   currentX.value += (targetX.value - currentX.value) * 0.15
   currentY.value += (targetY.value - currentY.value) * 0.15
@@ -120,6 +143,8 @@ const updateRotation = () => {
 }
 
 const handleLogoMouseMove = (e: MouseEvent) => {
+  if (isMotionPaused.value) return
+
   const container = e.currentTarget as HTMLElement
 
   // 缓存边界数据，避免高频触发 Reflow
@@ -148,6 +173,8 @@ const handleLogoMouseLeave = () => {
   targetX.value = 0
   targetY.value = 0
 
+  if (isMotionPaused.value) return
+
   if (!rafId) {
     rafId = requestAnimationFrame(updateRotation)
   }
@@ -161,20 +188,41 @@ const toPage = (page: string) => {
   router.push(page.startsWith('/') ? page : `/${page}`)
 }
 
+onMounted(() => {
+  reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+  reducedMotionQuery.addEventListener('change', updateMotionState)
+  document.addEventListener('visibilitychange', updateMotionState)
+
+  if ('IntersectionObserver' in window && footerRef.value) {
+    observer = new IntersectionObserver(
+      ([entry]) => {
+        isFooterVisible.value = entry.isIntersecting
+        updateMotionState()
+      },
+      { rootMargin: '220px 0px' }
+    )
+    observer.observe(footerRef.value)
+  } else {
+    isFooterVisible.value = true
+    updateMotionState()
+  }
+})
+
 onUnmounted(() => {
   if (rafId) cancelAnimationFrame(rafId)
+  observer?.disconnect()
+  document.removeEventListener('visibilitychange', updateMotionState)
+  reducedMotionQuery?.removeEventListener('change', updateMotionState)
 })
 </script>
 
 <style lang="less" scoped>
 @keyframes marquee {
   from {
-    transform: translateX(0); /* 从最左侧满字状态开始 */
+    transform: translate3d(0, 0, 0); /* 从最左侧满字状态开始 */
   }
   to {
-    transform: translateX(
-      -16.6666%
-    ); /* 🌟 100% / 6个块 = 精准向左滚动移动一格，随即无缝复位 */
+    transform: translate3d(-16.6666%, 0, 0); /* 100% / 6个块，复位无缝 */
   }
 }
 
@@ -222,7 +270,8 @@ onUnmounted(() => {
     &__inner {
       display: flex;
       white-space: nowrap;
-      animation: marquee 18s linear infinite reverse;
+      animation: marquee 32s linear infinite reverse;
+      will-change: transform;
       font-size: 10px;
       line-height: 12px;
       padding-bottom: 2px;
@@ -230,6 +279,12 @@ onUnmounted(() => {
       * {
         font-family: 'Unbounded Sans', monospace;
       }
+    }
+  }
+
+  &.motion-paused {
+    .tl-marquee__inner {
+      animation-play-state: paused;
     }
   }
   &.third-party {

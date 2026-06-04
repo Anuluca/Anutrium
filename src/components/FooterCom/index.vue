@@ -19,11 +19,10 @@ const SOCIAL_LINKS = {
   GITHUB: 'https://github.com/Anuluca',
 }
 
-const SOCIAL_TYPES = ['TWITTER', 'WEIBO', 'BILIBILI', 'GITHUB', 'EMAIL']
-
-const weiboImg = ref(
+const WEIBO_WIDGET_URL =
   'https://widget.weibo.com/weiboshow/index.php?language=&width=0&height=520&fansRow=1&ptype=1&speed=0&skin=10&isTitle=1&noborder=1&isWeibo=1&isFans=1&uid=7738638501&verifier=4838f435&dpc=1'
-)
+
+const SOCIAL_TYPES = ['TWITTER', 'WEIBO', 'BILIBILI', 'GITHUB', 'EMAIL']
 
 const { locale } = useI18n()
 const router = useRouter()
@@ -34,12 +33,29 @@ const fullFooter = computed(() => router.currentRoute.value.meta.fullFooter)
 const currentRouter = computed(() => route.path)
 const theme = ref(false)
 const isScrollingDown = ref<boolean>(false)
+const isMotionPaused = ref(false)
+const weiboSrc = ref('')
 let lastScrollTop = 0
+let reducedMotionQuery: MediaQueryList | null = null
 
 onMounted(() => {
   initFooterAnimation()
+  initMotionPreference()
   document.addEventListener('scroll', handleScroll, { passive: true })
 })
+
+const initMotionPreference = () => {
+  reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+  updateMotionPreference()
+  document.addEventListener('visibilitychange', updateMotionPreference)
+  reducedMotionQuery.addEventListener('change', updateMotionPreference)
+}
+
+const updateMotionPreference = () => {
+  isMotionPaused.value =
+    document.visibilityState === 'hidden' ||
+    !!reducedMotionQuery?.matches
+}
 
 const initFooterAnimation = () => {
   const expandElement = document.querySelector('.expand') as HTMLElement
@@ -112,6 +128,10 @@ const toggleWeiboVisibility = () => {
   if (!element) return
 
   const isVisible = element.style.opacity === '1'
+  if (!isVisible && !weiboSrc.value) {
+    weiboSrc.value = WEIBO_WIDGET_URL
+  }
+
   element.style.bottom = isVisible ? '-540px' : '30px'
   element.style.opacity = isVisible ? '0' : '1'
 }
@@ -135,6 +155,8 @@ const handleScroll = () => {
 
 onUnmounted(() => {
   document.removeEventListener('scroll', handleScroll)
+  document.removeEventListener('visibilitychange', updateMotionPreference)
+  reducedMotionQuery?.removeEventListener('change', updateMotionPreference)
 })
 </script>
 
@@ -144,6 +166,7 @@ onUnmounted(() => {
       'footer-com': true,
       'full-footer': fullFooter,
       'scrolling-down': isScrollingDown,
+      'motion-paused': isMotionPaused,
     }"
   >
     <!-- 左侧 -->
@@ -221,12 +244,13 @@ onUnmounted(() => {
         <span>
           <div class="WEIBO_detail">
             <iframe
+              v-if="weiboSrc"
               width="100%"
               height="520"
               class="share_self"
               frameborder="0"
               scrolling="no"
-              :src="weiboImg"
+              :src="weiboSrc"
             />
           </div>
           <el-button

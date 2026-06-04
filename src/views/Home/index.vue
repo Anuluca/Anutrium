@@ -271,6 +271,7 @@ const goTo = (i: number) => {
   activeIndex.value = i
 }
 const startAuto = () => {
+  if (document.visibilityState === 'hidden') return
   pauseAuto()
   autoTimer = setInterval(nextSlide, 4000)
 }
@@ -301,6 +302,7 @@ const generateBackgroundImages = () => {
   }))
 }
 const startRandomRotation = () => {
+  if (document.visibilityState === 'hidden') return
   if (rotationTimer) clearInterval(rotationTimer)
   rotationTimer = setInterval(() => {
     rotatingImageIndex.value = Math.floor(
@@ -312,17 +314,34 @@ const startRandomRotation = () => {
   }, 3000)
 }
 
+const stopRandomRotation = () => {
+  if (!rotationTimer) return
+  clearInterval(rotationTimer)
+  rotationTimer = null
+  rotatingImageIndex.value = -1
+}
+
+const handleVisibilityChange = () => {
+  if (document.visibilityState === 'hidden') {
+    pauseAuto()
+    stopRandomRotation()
+    return
+  }
+
+  startRandomRotation()
+  startAuto()
+}
+
 onMounted(() => {
   generateBackgroundImages()
   startRandomRotation()
   startAuto()
+  document.addEventListener('visibilitychange', handleVisibilityChange)
 })
 onUnmounted(() => {
   pauseAuto()
-  if (rotationTimer) {
-    clearInterval(rotationTimer)
-    rotationTimer = null
-  }
+  stopRandomRotation()
+  document.removeEventListener('visibilitychange', handleVisibilityChange)
 })
 
 // ── 作品集数据 ──────────────────────────────

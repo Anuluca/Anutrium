@@ -173,6 +173,7 @@ let lastTime = 0
 let width = 0
 let height = 0
 let floorY = 0
+let shouldResumeAfterVisible = false
 
 const ball: BallState = {
   contactTime: 0,
@@ -435,6 +436,19 @@ const handleTagClick = () => {
   router.push('/craft?type=work')
 }
 
+const handleVisibilityChange = () => {
+  if (document.visibilityState === 'hidden') {
+    shouldResumeAfterVisible = isRunning.value
+    pauseSimulation()
+    return
+  }
+
+  if (shouldResumeAfterVisible) {
+    shouldResumeAfterVisible = false
+    startSimulation()
+  }
+}
+
 watch([elasticity, weight], () => {
   restartSimulation()
 })
@@ -443,12 +457,14 @@ onMounted(async () => {
   await nextTick()
   resizeCanvas()
   window.addEventListener('resize', resizeCanvas)
+  document.addEventListener('visibilitychange', handleVisibilityChange)
   startSimulation()
 })
 
 onBeforeUnmount(() => {
   pauseSimulation()
   window.removeEventListener('resize', resizeCanvas)
+  document.removeEventListener('visibilitychange', handleVisibilityChange)
 })
 </script>
 

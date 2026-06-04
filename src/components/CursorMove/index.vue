@@ -6,7 +6,7 @@
   </div>
 </template>
 <script setup>
-import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 
 import { visualState } from '@/stores'
 
@@ -24,6 +24,7 @@ const follower = reactive({ x: 0, y: 0 })
 const isHovering = ref(false)
 const isClicked = ref(false)
 const shouldHideCursor = ref(false)
+const isPageVisible = ref(true)
 
 const followerStyle = computed(() => ({
   transform: `translate3d(${follower.x}px, ${follower.y}px, 0)`,
@@ -31,7 +32,13 @@ const followerStyle = computed(() => ({
 }))
 
 const ease = 0.1
-let animationFrameId
+const settleThreshold = 0.35
+let animationFrameId = null
+let hasPointerPosition = false
+
+const shouldAnimateCursor = computed(() => {
+  return !isMobile.value && isPageVisible.value
+})
 
 // 检查是否应该隐藏指针
 const checkShouldHideCursor = (target) => {
@@ -49,11 +56,15 @@ const checkShouldHideCursor = (target) => {
 }
 
 const onMouseMove = (e) => {
+  if (!shouldAnimateCursor.value) return
+
   mouse.x = e.clientX
   mouse.y = e.clientY
+  hasPointerPosition = true
 
   // 实时检测是否需要隐藏指针
   shouldHideCursor.value = checkShouldHideCursor(e.target)
+  startRender()
 }
 
 const onMouseDown = () => (isClicked.value = true)
@@ -61,6 +72,8 @@ const onMouseUp = () => (isClicked.value = false)
 
 // ✨ 新增：使用事件委托处理 Hover 状态
 const onMouseOver = (e) => {
+  if (!shouldAnimateCursor.value) return
+
   // 如果是指针隐藏区域，不触发 hover 效果
   if (checkShouldHideCursor(e.target)) {
     return
@@ -73,47 +86,90 @@ const onMouseOver = (e) => {
 }
 
 const onMouseOut = (e) => {
+  if (!shouldAnimateCursor.value) return
+
   // 当鼠标离开目标元素时
   if (e.target.closest('a, button, [data-magnetic]')) {
     isHovering.value = false
   }
 }
 
-const render = () => {
-  follower.x += (mouse.x - follower.x) * ease
-  follower.y += (mouse.y - follower.y) * ease
+const startRender = () => {
+  if (!shouldAnimateCursor.value || animationFrameId) return
   animationFrameId = requestAnimationFrame(render)
 }
 
+const stopRender = () => {
+  if (!animationFrameId) return
+  cancelAnimationFrame(animationFrameId)
+  animationFrameId = null
+}
+
+const render = () => {
+  if (!shouldAnimateCursor.value || !hasPointerPosition) {
+    stopRender()
+    return
+  }
+
+  const dx = mouse.x - follower.x
+  const dy = mouse.y - follower.y
+
+  follower.x += (mouse.x - follower.x) * ease
+  follower.y += (mouse.y - follower.y) * ease
+
+  if (
+    Math.abs(dx) < settleThreshold &&
+    Math.abs(dy) < settleThreshold
+  ) {
+    follower.x = mouse.x
+    follower.y = mouse.y
+    stopRender()
+    return
+  }
+
+  animationFrameId = requestAnimationFrame(render)
+}
+
+const handleVisibilityChange = () => {
+  isPageVisible.value = document.visibilityState !== 'hidden'
+}
+
 onMounted(() => {
+  handleVisibilityChange()
   window.addEventListener('mousemove', onMouseMove)
   window.addEventListener('mousedown', onMouseDown)
   window.addEventListener('mouseup', onMouseUp)
+  document.addEventListener('visibilitychange', handleVisibilityChange)
 
   // 绑定全局委托事件，抛弃 setTimeout 和 querySelectorAll
   window.addEventListener('mouseover', onMouseOver)
   window.addEventListener('mouseout', onMouseOut)
-
-  render()
 })
 
 onUnmounted(() => {
   window.removeEventListener('mousemove', onMouseMove)
   window.removeEventListener('mousedown', onMouseDown)
   window.removeEventListener('mouseup', onMouseUp)
+  document.removeEventListener('visibilitychange', handleVisibilityChange)
 
   // 清理事件
   window.removeEventListener('mouseover', onMouseOver)
   window.removeEventListener('mouseout', onMouseOut)
 
-  cancelAnimationFrame(animationFrameId)
+  stopRender()
+})
+
+watch(shouldAnimateCursor, (canAnimate) => {
+  if (!canAnimate) stopRender()
 })
 </script>
 
 <style>
 /* 全局强制隐藏系统指针 */
-* {
-  cursor: none !important;
+@media (hover: hover) and (pointer: fine) {
+  * {
+    cursor: none !important;
+  }
 }
 </style>
 

@@ -66,8 +66,8 @@ import Logo from '@/components/Logo/index.vue'
     // 对应原代码中的 logo 元素尺寸比例，此处用父级尺寸按比例缩放
     width: 200px;
     height: auto;
-    // 优化性能，提示浏览器将这些属性单独合成层
-    will-change: transform, opacity, filter;
+    // 避免持续动画 filter，主要让 transform/opacity 走合成层
+    will-change: transform, opacity;
     mix-blend-mode: screen; // 屏幕混合，保留黑色，让彩色色散层完美融合
   }
 
@@ -75,15 +75,16 @@ import Logo from '@/components/Logo/index.vue'
   .layer-1 {
     z-index: 2;
     opacity: 0.7;
-    filter: blur(1px); // 增加一点点模糊，使其作为大背景更柔和
-    animation: baseFloat 12s infinite ease-in-out;
+    filter: blur(1.2px) drop-shadow(0 28px 32px rgba(0, 0, 0, 0.12));
+    animation: baseFloat 18s infinite ease-in-out;
   }
 
   // 第二层：混沌青色色散层 (快速偏移与斜切)
   .layer-2 {
     z-index: 1;
     opacity: 0.3;
-    animation: artifactCyan 6s infinite alternate-reverse
+    filter: drop-shadow(0 0 14px rgba(0, 255, 255, 0.34));
+    animation: artifactCyan 12s infinite alternate-reverse
       cubic-bezier(0.68, -0.55, 0.27, 1.55);
   }
 
@@ -91,7 +92,8 @@ import Logo from '@/components/Logo/index.vue'
   .layer-3 {
     z-index: 1;
     opacity: 0.3;
-    animation: artifactMagenta 6s infinite alternate
+    filter: drop-shadow(0 0 14px #e2345680);
+    animation: artifactMagenta 12s infinite alternate
       cubic-bezier(0.68, -0.55, 0.27, 1.55);
   }
 }
@@ -103,14 +105,11 @@ import Logo from '@/components/Logo/index.vue'
   0%,
   100% {
     transform: translateY(0px) rotate(0deg) scale(1);
-    filter: blur(1px) drop-shadow(0 0 15px rgba(0, 0, 0, 0.05));
     opacity: 0.7;
   }
   50% {
     // 缓慢上浮、轻微旋转和放大
     transform: translateY(-20px) rotate(3deg) scale(1.05);
-    // 增强阴影，使大背景下更具存在感
-    filter: blur(1.5px) drop-shadow(0 40px 40px rgba(0, 0, 0, 0.15));
     opacity: 0.9;
   }
 }
@@ -120,7 +119,6 @@ import Logo from '@/components/Logo/index.vue'
   0% {
     transform: translate(0, 0) skew(0deg);
     opacity: 0.3;
-    filter: drop-shadow(0 0 5px rgba(0, 255, 255, 0.2));
   }
   15% {
     transform: translate(-10px, 3px) skew(-2deg);
@@ -128,7 +126,6 @@ import Logo from '@/components/Logo/index.vue'
   20% {
     transform: translate(-30px, -5px) skew(2deg);
     opacity: 0.5;
-    filter: drop-shadow(0 0 25px rgba(0, 255, 255, 0.8));
   }
   25% {
     transform: translate(0, 0) skew(0deg);
@@ -147,7 +144,6 @@ import Logo from '@/components/Logo/index.vue'
   0% {
     transform: translate(0, 0) skew(0deg);
     opacity: 0.3;
-    filter: drop-shadow(0 0 5px #e2345633);
   }
   18% {
     transform: translate(10px, -3px) skew(2deg);
@@ -155,7 +151,6 @@ import Logo from '@/components/Logo/index.vue'
   22% {
     transform: translate(50px, 5px) skew(-2deg);
     opacity: 0.8;
-    filter: drop-shadow(0 0 25px #e23457ef);
   }
   28% {
     transform: translate(0, 0) skew(0deg);

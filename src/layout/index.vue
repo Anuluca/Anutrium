@@ -163,7 +163,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { Moon, Sunny } from '@element-plus/icons-vue'
@@ -174,14 +174,7 @@ import { visualState } from '@/stores'
 
 const { locale } = useI18n()
 
-// 使用响应式变量替代直接DOM操作
 const logoActive = ref(true)
-
-watch(locale, async () => {
-  // logoActive.value = false
-  // await nextTick()
-  // logoActive.value = true
-})
 
 const route = useRoute()
 const router = useRouter()
@@ -197,7 +190,6 @@ const layoutShow = ref(false)
 const theme = computed(() => visualStateStore.theme)
 
 const filterRoutes = routes.filter((item) => {
-  console.log('kk', item)
   return item?.meta?.ifShow
 })
 // 直接通过当前活跃的 route 对象读取 meta.noMenu

@@ -1,11 +1,12 @@
 // 变量提取
-@rotate-duration: 80s;
+@rotate-duration: 140s;
 
 .star-container {
   position: fixed;
   inset: 0;
   z-index: 0;
   overflow: hidden;
+  contain: layout paint style;
   transition: background 1s ease, filter 0.5s;
   box-sizing: border-box;
   background-color: var(--bg-color);
@@ -35,6 +36,12 @@
       perspective: 600px;
     }
   }
+
+  &.is-paused {
+    .star-field {
+      animation-play-state: paused;
+    }
+  }
 }
 
 .star-field {
@@ -49,6 +56,7 @@
   perspective: 1200px;
   perspective-origin: -200% -200%;
   transform-style: preserve-3d;
+  will-change: transform;
   animation: rotate-sky @rotate-duration infinite linear;
   z-index: 1;
 }
