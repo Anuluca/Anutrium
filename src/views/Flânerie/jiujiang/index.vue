@@ -463,11 +463,10 @@ watch(
     }
 
     .vi-title {
-      font-family: @mono;
+      font-family: 'source-han-sans-simplified-c';
       font-size: 0.66rem;
       color: rgba(255, 255, 255, 0.5);
       font-weight: 700;
-      letter-spacing: 0.12em;
       text-transform: uppercase;
     }
   }

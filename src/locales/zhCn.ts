@@ -541,19 +541,19 @@ export default {
           },
           videos: [
             {
-              title: 'VLOG 01',
+              title: 'VLOG',
               bvid: 'BV1VaoQBkEtk',
               url: 'https://www.bilibili.com/video/BV1VaoQBkEtk',
               orientation: 'landscape',
             },
             {
-              title: 'VLOG 02',
+              title: '滨海湾花园灯光秀',
               bvid: 'BV1qCoDBLE7Z',
               url: 'https://www.bilibili.com/video/BV1qCoDBLE7Z',
               orientation: 'landscape',
             },
             {
-              title: 'VLOG 03',
+              title: 'S.E.A. 水下舞龙',
               bvid: 'BV13eo7BVE5L',
               url: 'https://www.bilibili.com/video/BV13eo7BVE5L',
               orientation: 'landscape',

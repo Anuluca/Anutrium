@@ -4,7 +4,7 @@
     :class="{ 'is-en': locale === 'en' }"
   >
     <PageHeader
-      header-label="[241001_ACCIDENT]"
+      header-label="[241001_ACCIDENT___CYJ_Simon]"
       title-en="FLÂNERIE"
       title-cn="旅程"
       :meta-item="t('flanerie.metaItem')"
