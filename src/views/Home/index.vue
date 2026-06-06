@@ -495,7 +495,7 @@ interface JourneyVlog {
   img2?: string
 }
 
-const journeyVlogIds = ['jiujiang', 'nanjing', 'pingtandao']
+const journeyVlogIds = ['jiujiang', 'nanjing', 'singapore']
 
 const journeyVlogs = computed<JourneyVlog[]>(() => {
   const vlogs = tm('flanerie.dynamic.vlogs') as JourneyVlog[]
