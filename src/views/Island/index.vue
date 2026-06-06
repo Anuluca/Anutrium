@@ -1,7 +1,7 @@
 <template>
   <div class="island-page main-container">
     <PageHeader
-      header-label="[THE_FOOL]"
+      header-label="[CYJ]"
       title-en="ISLAND"
       title-cn="个人海湾"
       meta-item="勿忘人皆有死"

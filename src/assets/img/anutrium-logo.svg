@@ -1,0 +1,105 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="200"
+  height="250"
+  viewBox="0 0 200 250"
+  fill="none"
+>
+  <title>Anutrium</title>
+  <style>
+    .logo-stroke {
+      stroke-dasharray: 600;
+      stroke-dashoffset: 600;
+      animation: draw 3s ease-out forwards;
+    }
+
+    .logo-stroke--top,
+    .logo-stroke--bottom {
+      animation-delay: 0.6s;
+    }
+
+    .logo-stroke--bar {
+      animation-delay: 1s;
+    }
+
+    .logo-body {
+      opacity: 0;
+      animation: reveal 0.6s ease-out forwards;
+    }
+
+    @keyframes draw {
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    @keyframes reveal {
+      to {
+        opacity: 1;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .logo-stroke {
+        stroke-dashoffset: 0;
+        animation: none;
+      }
+
+      .logo-body {
+        opacity: 1;
+        animation: none;
+      }
+    }
+  </style>
+  <defs>
+    <mask id="anutrium-logo-mask">
+      <rect width="200" height="250" fill="#fff" />
+      <polyline
+        points="53,158 53,94"
+        fill="none"
+        stroke="#000"
+        stroke-width="26"
+      />
+      <path d="M65 93.8 136 132 135.5 158 65 120Z" fill="#000" />
+      <polyline
+        points="148,158 148,94"
+        fill="none"
+        stroke="#000"
+        stroke-width="26"
+      />
+    </mask>
+  </defs>
+
+  <polyline
+    class="logo-stroke logo-stroke--top"
+    points="68,78 68,55 100,3 133,55 133,78"
+    fill="none"
+    stroke="#000"
+    stroke-width="14"
+    stroke-linejoin="miter"
+  />
+  <polyline
+    class="logo-stroke logo-stroke--bar"
+    points="68,60 133,60"
+    fill="none"
+    stroke="#000"
+    stroke-width="14"
+  />
+  <rect
+    class="logo-body"
+    x="28"
+    y="86"
+    width="145"
+    height="79"
+    fill="#000"
+    mask="url(#anutrium-logo-mask)"
+  />
+  <polyline
+    class="logo-stroke logo-stroke--bottom"
+    points="133,174 133,198 100,248 68,198 68,174"
+    fill="none"
+    stroke="#000"
+    stroke-width="14"
+    stroke-linejoin="miter"
+  />
+</svg>

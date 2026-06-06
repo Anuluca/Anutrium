@@ -364,6 +364,9 @@ export default {
           company: '文因互联',
           logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/130958568.png',
           tags: ['VUE2', 'ELEMENTUI', 'ECHARTS', 'PDF_VIEWER'],
+          images: [
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_22.59.17.png',
+          ],
           description:
             '面向金融文档质控的智能核查系统，支持单文档核查、多文档交叉复核与版本比对。',
           links: [
@@ -430,12 +433,37 @@ export default {
     metaItem: '通过自己的双眼捕捉世界。',
     videoLabel: '视频记录',
     photoLabel: '图片记录',
+    deviceLabel: '摄影设备',
     countLabel: '数量',
     previousPage: '上一页',
     nextPage: '下一页',
     pageLabel: '页',
     dynamic: {
       vlogs: [
+        {
+          id: 'jiujiang',
+          title: '江西｜九江',
+          mapLabel: '九江',
+          date: '2026.06',
+          tagline: '一城江湖水，半城庐山云。',
+          device: ['Sony RX100M6', 'iPhone 17'],
+          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/porygon.png',
+          location: {
+            id: 'jiangxi',
+            name: '江西',
+            lat: 29.71,
+            lng: 116,
+          },
+          videos: [
+            {
+              title: 'VLOG',
+              bvid: 'BV1xHL86eEP9',
+              url: 'https://www.bilibili.com/video/BV1xHL86eEP9',
+              orientation: 'landscape',
+            },
+          ],
+          photos: [],
+        },
         {
           id: 'nanjing',
           title: '江苏｜南京',
@@ -517,9 +545,9 @@ export default {
         {
           id: 'pingtandao',
           title: '福建｜平潭岛',
-          mapLabel: '精神阿罗拉人的梦中情岛。',
+          mapLabel: '平潭岛',
           date: '2024.06',
-          tagline: '海风穿过岛屿，留下蓝色与岩石的切片。',
+          tagline: '精神阿罗拉人的梦中情岛。',
           device: ['Sony RX100M6', 'iPhone 17'],
           img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/porygon.png',
           location: {
@@ -608,6 +636,126 @@ export default {
           icon: '▨',
           statusLabel: '可用',
           link: '/imageBase64',
+        },
+      ],
+    },
+  },
+
+  about: {
+    brandColorKicker: '品牌色彩',
+    brandColorTitleLead: '热情是视觉原点，',
+    brandColorTitleTail: '以炽热而克制的姿态贯穿网站。',
+    brandColorName: '热情红',
+    changelogLabel: '更新日志',
+    majorReleaseLabel: '主版本',
+    entriesLabel: '条记录',
+    expandReleaseLabel: '展开全部',
+    dynamic: {
+      changelogs: [
+        {
+          version: 'v1.0',
+          codename: 'GOLIATH',
+          date: '2026-06-06',
+          title: '内容更新：旅程、工具',
+          details: [
+            '新增工具：弹力球',
+            '新增旅程：南京、南京红山动物园、九江',
+            '新增旅程地图',
+            '关于页新增#E23456品牌色彩介绍'
+          ],
+        },
+        {
+          version: 'v0.9-alpha',
+          codename: '',
+          date: '2026-05-18',
+          title: '旅程页',
+          details: [
+            '完成旅程页面开发',
+            '完成福州、平潭岛子页面资源整理',
+            '完善各子页面样式统一度',
+          ],
+        },
+        {
+          version: 'v0.8-alpha',
+          codename: 'AGENT',
+          date: '2026-04-12',
+          title: '工具页',
+          details: [
+            '完成工具页面开发',
+            '完成 CSS 调色盘、缓动工作室、HTML 常用转义字符、Base64 加解密、图片转 Base64、节拍器工具开发',
+          ],
+        },
+        {
+          version: 'v0.8-alpha',
+          codename: '',
+          date: '2026-04-02',
+          title: '作品集页面',
+          details: ['完成作品集页面开发'],
+        },
+        {
+          version: 'v0.7-alpha',
+          codename: '',
+          date: '2026-03-01',
+          title: '品牌设计',
+          details: ['对网站进行品牌设计，改进网站 UI 表现力，统一各处设计风格'],
+        },
+        {
+          version: 'v0.6-alpha',
+          codename: '',
+          date: '2026-02-10',
+          title: '主页',
+          details: ['完成主页初步开发'],
+        },
+        {
+          version: 'v0.5-alpha',
+          codename: '',
+          date: '2026-01-27',
+          title: '引入静态资源库',
+          details: [
+            '使用 Supabase 作为网站静态资源库',
+            '完成网站主页、作品集、旅程、个人海湾、工具、关于页设计',
+          ],
+        },
+        {
+          version: 'v0.4-alpha',
+          codename: 'MIRAGE',
+          date: '2026-01-21',
+          title: '代码结构优化',
+          details: [
+            '引入 Pinia store 进行静态数据管理',
+            '引入星空背景',
+            '新增语言与主题切换功能',
+            '优化项目资源结构与代码复用性',
+          ],
+        },
+        {
+          version: 'v0.3-alpha',
+          codename: null,
+          date: '2026-01-12',
+          title: '视觉重构',
+          details: [
+            '为页面各元素设计动态效果及入场动画',
+            '优化页面颜色搭配',
+            '引入自定义字体',
+          ],
+        },
+        {
+          version: 'v0.2-alpha',
+          codename: null,
+          date: '2026-01-07',
+          title: '移动端兼容',
+          details: ['移动端适配上线'],
+        },
+        {
+          version: 'v0.1-alpha',
+          codename: null,
+          date: '2025-12-18',
+          title: '项目初始化',
+          details: [
+            '项目初始化，从 MegaAnuluca 继承项目，删减无用内容以便二次开发',
+            '确立以「投影」为核心的品牌风格，强调整体呼吸感，采用空洞与黑洞两种主题风格',
+            '添加路由，完成项目 Netlify 自动化部署，并使用 Cloudflare 提供域名管理',
+          ],
         },
       ],
     },

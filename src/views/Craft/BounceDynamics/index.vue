@@ -643,10 +643,8 @@ onBeforeUnmount(() => {
   animation: tacticalIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) 0.25s both;
 }
 
-.footer-wrap,
 .pt-header {
   margin-bottom: 20px;
-  border-bottom: 1px solid @border;
   padding-bottom: 20px;
 }
 

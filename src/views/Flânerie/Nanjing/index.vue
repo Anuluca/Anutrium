@@ -11,6 +11,14 @@
           <span class="flr-sub-date">{{ vlog.date }}</span>
         </h1>
         <p class="flr-tagline">{{ vlog.tagline }}</p>
+        <div v-if="vlog.device.length" class="flr-devices">
+          <span class="flr-device-label">
+            {{ t('flanerie.deviceLabel') }}
+          </span>
+          <span v-for="device in vlog.device" :key="device" class="flr-device">
+            {{ device }}
+          </span>
+        </div>
       </div>
     </section>
 
@@ -64,7 +72,7 @@
       </div>
     </section>
 
-    <section ref="galleryRef" class="flr-gallery">
+    <section v-if="photos.length" ref="galleryRef" class="flr-gallery">
       <div class="section-head">
         <div class="head-left">
           <span class="head-slash">02 </span>
@@ -177,6 +185,7 @@ interface VlogItem {
   title: string
   date: string
   tagline: string
+  device: string[]
   videos: Omit<VideoItem, 'embedUrl'>[]
   photos: PhotoItem[]
 }
@@ -314,6 +323,34 @@ watch(
   font-size: 0.76rem;
   color: rgba(255, 255, 255, 0.4);
   letter-spacing: 0.04em;
+}
+
+.flr-devices {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 12px;
+}
+
+.flr-device-label,
+.flr-device {
+  font-family: @mono;
+  font-size: 0.52rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.flr-device-label {
+  margin-right: 2px;
+  color: rgba(226, 52, 86, 0.72);
+}
+
+.flr-device {
+  padding: 4px 8px;
+  border: 1px solid rgba(226, 52, 86, 0.22);
+  color: rgba(255, 255, 255, 0.58);
+  background: rgba(226, 52, 86, 0.06);
 }
 
 .flr-video-panel,

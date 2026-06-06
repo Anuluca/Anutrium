@@ -1,15 +1,29 @@
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import PokeAmice from '@/assets/img/about/pokeAmice.png'
-import PageHeader from '@/components/PageHeader/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
+import PageHeader from '@/components/PageHeader/index.vue'
 
-const activeIndex = ref<number | null>(0)
-
-const toggleLog = (index: number) => {
-  activeIndex.value = activeIndex.value === index ? null : index
+interface ChangelogItem {
+  version: string
+  codename: string | null
+  date: string
+  title: string
+  details: string[]
 }
+
+interface ChangelogGroup {
+  key: string
+  label: string
+  logs: ChangelogItem[]
+}
+
+const { locale, t, tm } = useI18n()
+const activeGroupKey = ref<string | null>(null)
+const fullGroupKey = ref<string | null>(null)
+const activeLogKey = ref<string | null>(null)
 
 const getNeighborHost = (url: string) => {
   try {
@@ -19,78 +33,61 @@ const getNeighborHost = (url: string) => {
   }
 }
 
-const changelogs = ref([
-  {
-    version: 'v0.5-alpha',
-    codename: 'MIRAGE',
-    date: '2026-01-21',
-    title: '代码结构优化',
-    details: [
-      '将移动端检测逻辑从组件内部迁移到 Pinia store 中统一管理',
-      '将设备检测逻辑从 main.ts 迁移到 App.vue 组件中',
-      '修改星空背景实现逻辑，优化性能与展示效果',
-      '实现字体和图片加载工具类，确保页面内容在所有资源加载完成后再显示',
-      '优化项目资源结构',
-      '重构启动动画组件并优化视觉效果',
-      '添加移动端语言和主题切换功能',
-      '移除不必要的 type-check 步骤',
-      '重构星空背景组件提升性能 — 将 jQuery 实现改为 Vue Composition API，预计算星星坐标避免运行时 DOM 操作',
-      '移除 Safari 浏览器特殊检测逻辑',
-      '添加响应式比例阈值变量',
-      '合并计算属性，提高代码可读性',
-      '使用 v-slot 优化路由视图过渡动画',
-      '移除组件中的 window resize 事件监听器，提高性能',
-    ],
-  },
-  {
-    version: 'v0.4-alpha',
-    codename: null,
-    date: '2026-01-12',
-    title: '视觉重构',
-    details: [
-      '全面优化视觉效果：星空背景优化、404 页面动效优化',
-      '新增菜单栏动效、菜单切换时的背景、页面过渡效果',
-      '新增页面资源加载动画',
-      '优化昼夜主题切换的效果',
-      '重构移动端菜单结构，添加中英文标题显示',
-      '新增移动端底部联系信息区域，包含社交链接和版权信息',
-      '优化移动端菜单动画效果和样式细节',
-      '调整多个组件的动画时长和触发时机，提升用户体验的流畅性',
-      '添加新的 cnArtTitle 字体文件并更新 font.less 样式',
-      '优化页面颜色搭配',
-      '调整导航栏圆角、背景色和阴影效果、修改滚动状态下侧边栏的样式',
-    ],
-  },
-  {
-    version: 'v0.3-alpha',
-    codename: null,
-    date: '2026-01-07',
-    title: '移动端兼容',
-    details: ['开发移动端 UI 界面，实现移动端/平板端判断，提供更好的小屏体验'],
-  },
-  {
-    version: 'v0.2-alpha',
-    codename: null,
-    date: '2025-12-26',
-    title: '功能重构',
-    details: [
-      '底部轮播栏重写',
-      '全面引入 i18n，实现主题切换功能，备战国际化开发',
-      '新增「关于」页',
-    ],
-  },
-  {
-    version: 'v0.1-alpha',
-    codename: null,
-    date: '2025-12-18',
-    title: '项目初始化',
-    details: [
-      '项目初始化，从 MegaAnuluca 继承项目，删减无用内容以便二次开发',
-      '确立以「投影」为核心的品牌风格，强调整体呼吸感，空洞/黑洞两种主题风格',
-      '添加路由、完成项目 Netlify 自动化部署、Cloudflare 提供域名管理',
-    ],
-  },
-])
+const changelogs = computed<ChangelogItem[]>(() => {
+  return tm('about.dynamic.changelogs') as ChangelogItem[]
+})
+
+const changelogGroups = computed<ChangelogGroup[]>(() => {
+  const groups = new Map<number, ChangelogItem[]>()
+
+  changelogs.value.forEach((log) => {
+    const versionMatch = log.version.match(/^v(\d+)(?:\.(\d+))?/)
+    const major = Number(versionMatch?.[1] || 0)
+    const minor = Number(versionMatch?.[2] || 0)
+    const releaseMajor = minor === 0 ? major : major + 1
+    const currentGroup = groups.get(releaseMajor) || []
+
+    currentGroup.push(log)
+    groups.set(releaseMajor, currentGroup)
+  })
+
+  return Array.from(groups.entries()).map(([major, logs]) => ({
+    key: `v${major}.0`,
+    label: `v${major}.0`,
+    logs,
+  }))
+})
+
+const expandedGroupKey = computed(() => {
+  return activeGroupKey.value ?? changelogGroups.value[0]?.key ?? null
+})
+
+const expandedLogKey = computed(() => {
+  if (activeLogKey.value !== null) return activeLogKey.value
+
+  const latestGroup = changelogGroups.value[0]
+  return latestGroup ? `${latestGroup.key}-0` : null
+})
+
+const toggleGroup = (groupKey: string) => {
+  if (fullGroupKey.value === groupKey) {
+    fullGroupKey.value = ''
+    activeGroupKey.value = null
+    return
+  }
+
+  if (expandedGroupKey.value !== groupKey) {
+    activeGroupKey.value = groupKey
+    fullGroupKey.value = groupKey
+    return
+  }
+
+  fullGroupKey.value = groupKey
+}
+
+const toggleLog = (logKey: string) => {
+  activeLogKey.value = expandedLogKey.value === logKey ? '' : logKey
+}
 
 const neighbors = ref([
   {
@@ -113,54 +110,140 @@ const neighbors = ref([
       primary-color="#5D3ABA"
     />
 
+    <section class="passion-section" aria-labelledby="passion-title">
+      <div class="passion-color-field">
+        <div class="passion-field-meta">
+          <span>ANUTRIUM COLOR</span>
+          <span>RGB / 226 · 52 · 86</span>
+        </div>
+
+        <div class="passion-copy">
+          <p class="passion-kicker">{{ t('about.brandColorKicker') }}</p>
+          <h2
+            id="passion-title"
+            class="passion-title"
+            :class="{ 'is-en': locale === 'en' }"
+          >
+            <span>{{ t('about.brandColorTitleLead') }}</span>
+            <span>{{ t('about.brandColorTitleTail') }}</span>
+          </h2>
+        </div>
+
+        <div class="passion-field-content">
+          <div class="passion-field-name">
+            <span>{{ t('about.brandColorName') }}</span>
+            <strong v-if="locale !== 'en'">PASSION RED</strong>
+          </div>
+          <div class="passion-color-code"><span>#</span>E23456</div>
+        </div>
+
+        <div class="passion-orbit" aria-hidden="true">
+          <i />
+        </div>
+      </div>
+    </section>
+
     <section class="block">
       <div class="section-header">
         <h3 class="section-title">
-          &lt; CHANGELOG &gt;<span class="cn">更新日志</span>
+          <span class="changelog">&lt; CHANGELOG &gt;</span>
+          <span class="cn">{{ t('about.changelogLabel') }}</span>
         </h3>
         <div class="section-line" />
       </div>
 
-      <div class="timeline">
-        <div
-          v-for="(log, index) in changelogs"
-          :key="index"
-          class="timeline-item"
-          :class="{ 'is-active': activeIndex === index }"
+      <div class="version-groups">
+        <section
+          v-for="group in changelogGroups"
+          :key="group.key"
+          class="version-group"
+          :class="{
+            'is-expanded': expandedGroupKey === group.key,
+            'is-full': fullGroupKey === group.key,
+          }"
         >
-          <div class="axis">
-            <div class="axis-diamond" />
-            <div class="axis-line" />
-          </div>
+          <button
+            class="version-group-head"
+            type="button"
+            :aria-expanded="fullGroupKey === group.key"
+            @click="toggleGroup(group.key)"
+          >
+            <span class="version-group-mark" aria-hidden="true" />
+            <span class="version-group-label">
+              {{ t('about.majorReleaseLabel') }}
+            </span>
+            <strong>{{ group.label }}</strong>
+            <span class="version-group-range">
+              {{ group.logs[group.logs.length - 1].version }} →
+              {{ group.logs[0].version }}
+            </span>
+            <span class="version-group-count">
+              {{ group.logs.length }} {{ t('about.entriesLabel') }}
+            </span>
+            <span class="version-group-arrow" aria-hidden="true" />
+          </button>
 
-          <div class="log-card">
-            <div class="log-head" @click="toggleLog(index)">
-              <div class="log-meta">
-                <span class="log-version">{{ log.version }}</span>
-                <span v-if="log.codename" class="log-codename">{{
-                  log.codename
-                }}</span>
-              </div>
-              <div class="log-center">
-                <span class="log-title">{{ log.title }}</span>
-              </div>
-              <div class="log-right">
-                <span class="log-date">{{ log.date }}</span>
-                <span class="log-arrow" />
-              </div>
-            </div>
+          <div class="version-group-expand">
+            <div class="version-group-expand-inner">
+              <div class="timeline">
+                <div
+                  v-for="(log, index) in group.logs"
+                  :key="`${group.key}-${index}`"
+                  class="timeline-item"
+                  :class="{
+                    'is-active': expandedLogKey === `${group.key}-${index}`,
+                  }"
+                >
+                  <div class="axis">
+                    <div class="axis-diamond" />
+                    <div class="axis-line" />
+                  </div>
 
-            <div class="log-expand">
-              <div class="log-expand-inner">
-                <ul>
-                  <li v-for="(item, i) in log.details" :key="i">
-                    <span class="li-bullet">▸</span>{{ item }}
-                  </li>
-                </ul>
+                  <div class="log-card">
+                    <div
+                      class="log-head"
+                      @click="toggleLog(`${group.key}-${index}`)"
+                    >
+                      <div class="log-meta">
+                        <span class="log-version">{{ log.version }}</span>
+                        <span v-if="log.codename" class="log-codename">{{
+                          log.codename
+                        }}</span>
+                      </div>
+                      <div class="log-center">
+                        <span class="log-title">{{ log.title }}</span>
+                      </div>
+                      <div class="log-right">
+                        <span class="log-date">{{ log.date }}</span>
+                        <span class="log-arrow" />
+                      </div>
+                    </div>
+
+                    <div class="log-expand">
+                      <div class="log-expand-inner">
+                        <ul>
+                          <li v-for="(item, i) in log.details" :key="i">
+                            <span class="li-bullet">▸</span>{{ item }}
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
+              <button
+                v-if="
+                  expandedGroupKey === group.key && fullGroupKey !== group.key
+                "
+                class="version-group-more"
+                type="button"
+                @click="toggleGroup(group.key)"
+              >
+                {{ t('about.expandReleaseLabel') }}
+              </button>
             </div>
           </div>
-        </div>
+        </section>
       </div>
     </section>
 
@@ -239,7 +322,195 @@ const neighbors = ref([
 }
 
 .block {
-  margin-bottom: 100px;
+  margin-bottom: 50px;
+}
+
+.passion-section {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  margin: 54px 0 68px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: @red;
+}
+
+.passion-copy {
+  position: relative;
+  z-index: 3;
+  margin: 0 auto;
+  padding: clamp(42px, 4vw, 68px) 30px 28px;
+  text-align: center;
+}
+
+.passion-kicker {
+  margin: 0 0 18px;
+  color: rgba(0, 0, 0, 0.66);
+  font-family: 'source-han-sans-simplified-c', sans-serif;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+
+.passion-title {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  color: #070708;
+  font-family: 'source-han-sans-simplified-c', sans-serif;
+  font-size: clamp(42px, 4.6vw, 82px);
+  font-weight: 900;
+  letter-spacing: -0.055em;
+  line-height: 1.02;
+
+  span {
+    font-family: inherit;
+    white-space: nowrap;
+  }
+
+  &.is-en {
+    font-size: clamp(38px, 3.9vw, 68px);
+    letter-spacing: -0.04em;
+  }
+}
+
+.passion-description {
+  max-width: 780px;
+  margin: 24px auto 0;
+  color: rgba(0, 0, 0, 0.6);
+  font-family: 'source-han-sans-simplified-c', sans-serif;
+  font-size: clamp(14px, 1.05vw, 18px);
+  font-weight: 700;
+  letter-spacing: 0.025em;
+  line-height: 1.65;
+}
+
+.passion-color-field {
+  position: relative;
+  display: flex;
+  min-height: clamp(500px, 43vw, 660px);
+  overflow: hidden;
+  background: @red;
+  color: #070708;
+  flex-direction: column;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(rgba(0, 0, 0, 0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 0, 0, 0.08) 1px, transparent 1px);
+    background-size: 54px 54px;
+    mask-image: linear-gradient(to right, rgba(0, 0, 0, 0.75), transparent 72%);
+  }
+}
+
+.passion-field-meta {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.18);
+
+  span {
+    font-family: 'Unbounded Sans', 'anton', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+  }
+}
+
+.passion-field-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+  min-height: 0;
+  margin-top: auto;
+  padding: 20px clamp(26px, 4vw, 68px) 28px;
+}
+
+.passion-field-name {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: -0.055em;
+
+  span,
+  strong {
+    font-family: 'source-han-sans-simplified-c', sans-serif;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+  }
+
+  span {
+    font-size: clamp(16px, 1.5vw, 24px);
+    font-family: 'Unbounded Sans';
+    font-weight: 100;
+  }
+
+  strong {
+    font-family: 'Unbounded Sans', 'anton', sans-serif;
+    font-size: clamp(10px, 0.85vw, 13px);
+  }
+}
+
+.passion-color-code {
+  font-family: 'anton', 'Unbounded Sans', sans-serif;
+  font-size: clamp(76px, 10vw, 180px);
+  font-weight: 900;
+  letter-spacing: -0.055em;
+  line-height: 0.95;
+  white-space: nowrap;
+
+  span {
+    margin-right: 0.025em;
+    font-family: inherit;
+    font-size: 0.42em;
+    vertical-align: top;
+  }
+}
+
+.passion-orbit {
+  position: absolute;
+  right: clamp(-160px, -8vw, -70px);
+  bottom: clamp(-240px, -13vw, -110px);
+  z-index: 1;
+  width: clamp(360px, 37vw, 680px);
+  aspect-ratio: 1;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  border-radius: 50%;
+  background: #070708;
+  box-shadow: 0 0 0 34px rgba(7, 7, 8, 0.12),
+    0 0 0 35px rgba(255, 255, 255, 0.14);
+
+  &::before,
+  &::after,
+  i {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+  }
+
+  &::before {
+    inset: 15%;
+    border: 1px solid rgba(226, 52, 86, 0.42);
+  }
+
+  &::after {
+    inset: 32%;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: @red;
+  }
+
+  i {
+    inset: 45%;
+    z-index: 1;
+    background: #070708;
+    box-shadow: 0 0 30px rgba(226, 52, 86, 0.55);
+  }
 }
 
 .section-header {
@@ -260,6 +531,10 @@ const neighbors = ref([
   letter-spacing: 2px;
   line-height: 1;
   white-space: nowrap;
+  .changelog {
+    font-family: 'anton', 'source-han-sans-simplified-c';
+    margin-top: -10px;
+  }
 
   .cn {
     font-family: 'source-han-sans-simplified-c';
@@ -278,11 +553,176 @@ const neighbors = ref([
   align-self: center;
 }
 
+.version-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 30px;
+}
+
+.version-group {
+  border: 1px solid @border;
+  background: rgba(255, 255, 255, 0.018);
+  overflow: hidden;
+
+  &.is-expanded {
+    border-color: rgba(226, 52, 86, 0.24);
+
+    .version-group-head {
+      background: rgba(226, 52, 86, 0.06);
+    }
+
+    .version-group-mark {
+      background: @red;
+      box-shadow: 0 0 12px rgba(226, 52, 86, 0.7);
+    }
+
+    .version-group-expand {
+      grid-template-rows: 1fr;
+      border-top-width: 1px;
+    }
+
+    .version-group-expand-inner {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  &.is-full {
+    .version-group-arrow {
+      border-color: @red;
+      transform: rotate(-135deg);
+    }
+
+    .version-group-expand-inner {
+      max-height: 5000px;
+    }
+  }
+}
+
+.version-group-head {
+  display: grid;
+  grid-template-columns: auto auto auto 1fr auto auto;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 20px;
+  padding-top: 10px;
+  border: 0;
+  color: #fff;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.25s;
+  > * {
+    display: block;
+  }
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  strong {
+    font-family: 'anton', monospace;
+    font-size: 1.05rem;
+    margin-top: -5px;
+    letter-spacing: 1.5px;
+  }
+}
+
+.version-group-mark {
+  width: 7px;
+  height: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.12);
+  margin-top: 6px;
+  transform: rotate(45deg);
+  transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+
+.version-group-label,
+.version-group-range,
+.version-group-count {
+  font-family: 'anton', 'source-han-sans-simplified-c', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 1.2px;
+  color: @text-dim;
+}
+
+.version-group-label {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.version-group-range {
+  justify-self: start;
+}
+
+.version-group-count {
+  justify-self: end;
+}
+
+.version-group-arrow {
+  width: 8px;
+  height: 8px;
+  margin-bottom: 4px;
+  border-right: 1.5px solid rgba(255, 255, 255, 0.35);
+  border-bottom: 1.5px solid rgba(255, 255, 255, 0.35);
+  transform: rotate(45deg);
+  transition: transform 0.35s, border-color 0.2s;
+}
+
+.version-group-expand {
+  display: grid;
+  grid-template-rows: 0fr;
+  border-top: 0 solid @border;
+  transition: grid-template-rows 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.version-group-expand-inner {
+  position: relative;
+  min-height: 0;
+  max-height: 460px;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: max-height 0.7s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s 0.05s,
+    transform 0.3s 0.05s;
+}
+
+.version-group-more {
+  position: absolute;
+  z-index: 3;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 82px;
+  padding-top: 34px;
+  padding-bottom: 10px;
+  border: 0;
+  color: rgba(255, 255, 255, 0.72);
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(5, 2, 6, 0.94) 58%,
+    #050206
+  );
+  cursor: pointer;
+  font-family: 'anton', 'source-han-sans-simplified-c', monospace;
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  transition: color 0.2s;
+
+  &:hover {
+    color: @red;
+  }
+}
+
 .timeline {
   display: flex;
   flex-direction: column;
   gap: 0;
-  margin-top: 30px;
+  padding: 18px 20px 6px;
 }
 
 .timeline-item {
@@ -404,14 +844,15 @@ const neighbors = ref([
 .log-meta {
   display: flex;
   align-items: center;
+  justify-content: start;
   gap: 8px;
+  width: 7rem;
 }
 
 .log-version {
   font-family: 'anton', monospace;
   font-size: 0.72rem;
   display: inline-block;
-  width: 100px;
   letter-spacing: 1px;
   color: #fff;
   opacity: 0.9;
@@ -425,6 +866,7 @@ const neighbors = ref([
   background: @red;
   padding: 0px 6px;
   padding-bottom: 3px;
+  margin-top: 6px;
   line-height: 1.6;
 }
 
@@ -801,8 +1243,107 @@ const neighbors = ref([
 }
 
 @media (max-width: 768px) {
+  .passion-section {
+    margin: 32px 0 48px;
+  }
+
+  .passion-copy {
+    padding: 36px 16px 18px;
+  }
+
+  .passion-kicker {
+    margin-bottom: 12px;
+    font-size: 10px;
+  }
+
+  .passion-title {
+    font-size: clamp(32px, 9.5vw, 52px);
+    letter-spacing: -0.045em;
+    line-height: 1.06;
+
+    span {
+      white-space: normal;
+    }
+
+    &.is-en {
+      font-size: clamp(27px, 7.3vw, 40px);
+
+      span {
+        white-space: nowrap;
+      }
+    }
+  }
+
+  .passion-description {
+    margin-top: 16px;
+    font-size: 12px;
+    line-height: 1.55;
+  }
+
+  .passion-color-field {
+    min-height: 470px;
+  }
+
+  .passion-field-meta {
+    gap: 10px;
+    padding: 14px 16px;
+
+    span {
+      font-size: 7px;
+      line-height: 1.5;
+    }
+
+    span:last-child {
+      text-align: right;
+    }
+  }
+
+  .passion-field-content {
+    min-height: 0;
+    padding: 18px 16px 20px;
+  }
+
+  .passion-field-name {
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 7px;
+  }
+
+  .passion-color-code {
+    font-size: clamp(62px, 19vw, 104px);
+  }
+
+  .passion-orbit {
+    right: -140px;
+    bottom: -145px;
+    width: 330px;
+  }
+
   .section-title {
     font-size: 1.8rem;
+  }
+
+  .version-group-head {
+    grid-template-columns: auto 1fr auto auto;
+    gap: 10px;
+    padding: 13px 14px;
+  }
+
+  .version-group-label,
+  .version-group-range {
+    display: none;
+  }
+
+  .version-group-count {
+    font-size: 0.55rem;
+  }
+
+  .timeline {
+    padding: 14px 10px 2px;
+  }
+
+  .timeline-item {
+    gap: 10px;
   }
 
   .log-head {
