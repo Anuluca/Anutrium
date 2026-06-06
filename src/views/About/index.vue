@@ -10,6 +10,14 @@ const toggleLog = (index: number) => {
   activeIndex.value = activeIndex.value === index ? null : index
 }
 
+const getNeighborHost = (url: string) => {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '')
+  } catch {
+    return url.replace(/^https?:\/\//, '')
+  }
+}
+
 const changelogs = ref([
   {
     version: 'v0.5-alpha',
@@ -85,7 +93,7 @@ const changelogs = ref([
 
 const neighbors = ref([
   {
-    name: 'Poke Amice - 宝可梦友会',
+    name: 'Poke Amice 宝可梦友会',
     url: 'http://pokeamice.com',
     logo: PokeAmice,
     description:
@@ -166,29 +174,55 @@ const neighbors = ref([
     <section class="block">
       <div class="section-header">
         <h3 class="section-title">
-          &lt; NEIGHBORS &gt;<span class="cn">友情链接</span>
+          <span class="c-gear" aria-hidden="true">
+            <span class="gear-diamonds">
+              <i />
+              <i />
+              <i />
+              <i class="is-hollow" />
+            </span>
+            <span class="gear-letters">
+              <b><span>G</span></b>
+              <b><span>E</span></b>
+              <b><span>A</span></b>
+              <b><span>R</span></b>
+            </span>
+          </span>
+          <span class="cn">友情链接</span>
         </h3>
         <div class="section-line" />
       </div>
 
       <div class="neighbors-grid">
-        <a
-          v-for="(nb, index) in neighbors"
-          :key="index"
-          :href="nb.url"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="neighbor-card"
-        >
-          <div class="nb-logo">
-            <img :src="nb.logo" :alt="nb.name" />
-          </div>
-          <div class="nb-info">
-            <h4 class="nb-name">{{ nb.name }}</h4>
-            <p class="nb-desc">{{ nb.description }}</p>
-          </div>
-          <span class="nb-arrow">→</span>
-        </a>
+        <div v-for="nb in neighbors" :key="nb.url" class="neighbor-item">
+          <a
+            :href="nb.url"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="neighbor-card"
+          >
+            <span class="nb-node" aria-hidden="true" />
+
+            <div class="nb-logo">
+              <img
+                :src="nb.logo"
+                :alt="nb.name"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+
+            <div class="nb-info">
+              <div class="nb-title-row">
+                <h4 class="nb-name">{{ nb.name }}</h4>
+                <span class="nb-host">{{ getNeighborHost(nb.url) }}</span>
+              </div>
+              <p class="nb-desc">{{ nb.description }}</p>
+            </div>
+
+            <span class="nb-arrow">↗</span>
+          </a>
+        </div>
       </div>
     </section>
 
@@ -223,12 +257,16 @@ const neighbors = ref([
   display: flex;
   align-items: baseline;
   gap: 16px;
-  margin-bottom: 40px;
+  margin-bottom: 10px;
+  margin-top: 20px;
 }
 
 .section-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
   font-family: 'anton', 'source-han-sans-simplified-c';
-  font-size: 2.6rem;
+  font-size: 1.5rem;
   font-weight: 900;
   letter-spacing: 2px;
   line-height: 1;
@@ -239,7 +277,6 @@ const neighbors = ref([
     font-size: 1rem;
     font-weight: 800;
     opacity: 0.35;
-    margin-left: 14px;
     letter-spacing: 1px;
   }
 }
@@ -257,6 +294,7 @@ const neighbors = ref([
   display: flex;
   flex-direction: column;
   gap: 0;
+  margin-top: 30px;
 }
 
 .timeline-item {
@@ -489,139 +527,255 @@ const neighbors = ref([
 
 /* ── 友情链接 ─────────────────────────────────── */
 .neighbors-grid {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-}
+  gap: 22px;
+  padding-left: 38px;
 
-.neighbor-card {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding: 5px 20px;
-  border: 1px solid rgba(226, 52, 86, 0.25);
-  background: rgba(226, 52, 86, 0.05);
-  text-decoration: none;
-  color: #fff;
-  position: relative;
-  transition: border-color 0.3s, background 0.3s, transform 0.3s;
-
-  // 左侧红色竖条（默认常驻）
   &::before {
     content: '';
     position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background: @red;
+    left: 9px;
+    top: 10px;
+    bottom: 10px;
+    width: 1px;
+    background: linear-gradient(
+      180deg,
+      transparent,
+      rgba(226, 52, 86, 0.55),
+      transparent
+    );
+  }
+}
+
+.neighbor-item {
+  position: relative;
+}
+
+.c-gear {
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  vertical-align: middle;
+}
+
+.gear-diamonds {
+  width: 34px;
+  height: 30px;
+  position: relative;
+  flex-shrink: 0;
+  transform: scaleY(0.78);
+  transform-origin: center;
+
+  i {
+    position: absolute;
+    width: 9px;
+    height: 9px;
+    box-sizing: border-box;
+    background: #fff;
+    transform: rotate(45deg);
+    box-shadow: 0 0 7px rgba(255, 255, 255, 0.7);
+    animation: gearDiamondBlink 1.45s ease-in-out infinite;
   }
 
-  // 右上角斜切装饰
+  i:nth-child(1) {
+    left: 12px;
+    top: 1px;
+  }
+
+  i:nth-child(2) {
+    left: 2px;
+    top: 10px;
+    animation-delay: 0.18s;
+  }
+
+  i:nth-child(3) {
+    left: 12px;
+    top: 19px;
+    animation-delay: 0.36s;
+  }
+
+  .is-hollow {
+    left: 22px;
+    top: 10px;
+    background: transparent;
+    border: 1.5px solid #d91a8e;
+    box-shadow: 0 0 8px rgba(217, 26, 142, 0.8);
+    animation: none;
+  }
+}
+
+.gear-letters {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  b {
+    width: 20px;
+    height: 18px;
+    box-sizing: border-box;
+    position: relative;
+    display: block;
+    clip-path: polygon(20% 0, 80% 0, 100% 50%, 80% 100%, 20% 100%, 0 50%);
+    background: #fff;
+    color: #111;
+    font-family: Terminal, Monaco, 'Courier New', monospace;
+    font-size: 0.58rem;
+    font-weight: 900;
+    line-height: 18px;
+    box-shadow: 0 0 7px rgba(255, 255, 255, 0.62);
+
+    span {
+      position: absolute;
+      left: 53%;
+      top: 50%;
+      display: block;
+      line-height: 1;
+      transform: translate(-50%, -50%) scaleY(0.78);
+      transform-origin: center;
+    }
+  }
+}
+
+.neighbor-card {
+  min-height: 72px;
+  display: grid;
+  grid-template-columns: 50px minmax(0, 1fr) 38px;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 0 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  text-decoration: none;
+  color: #fff;
+  position: relative;
+  transition: border-color 0.25s, transform 0.25s;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: -28px;
+    top: 50%;
+    width: 28px;
+    height: 1px;
+    background: rgba(226, 52, 86, 0.52);
+    transform: translateY(-50%);
+  }
+
   &::after {
     content: '';
     position: absolute;
-    top: 0;
+    left: 16px;
     right: 0;
-    width: 0;
-    height: 0;
-    border-style: solid;
-    border-width: 0 14px 14px 0;
-    border-color: transparent @red transparent transparent;
-    opacity: 0.6;
-    transition: opacity 0.3s;
+    bottom: -1px;
+    height: 1px;
+    background: linear-gradient(90deg, @red, transparent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
   }
 
   &:hover {
     border-color: rgba(226, 52, 86, 0.55);
-    background: rgba(226, 52, 86, 0.1);
-    transform: translateX(4px);
+    transform: translateX(6px);
 
     &::after {
-      opacity: 1;
+      transform: scaleX(1);
+    }
+
+    .nb-logo {
+      transform: scale(1.2);
+
+      img {
+        filter: brightness(1.06) saturate(1.16);
+      }
+    }
+
+    .nb-node {
+      background: @red;
+      box-shadow: 0 0 0 6px rgba(226, 52, 86, 0.12),
+        0 0 18px rgba(226, 52, 86, 0.65);
     }
 
     .nb-arrow {
       color: @red;
-      transform: translateX(5px);
+      transform: translate(4px, -4px);
     }
   }
 }
 
-.nb-logo {
-  width: 92px;
-  height: 92px;
-  flex-shrink: 0;
+.nb-node {
   position: absolute;
-  left: 5px;
-  bottom: 15px;
-  overflow: visible;
-  border: 1px solid rgba(226, 52, 86, 0.3);
+  left: -34px;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  border: 1px solid @red;
+  background: #050505;
+  transform: translateY(-50%) rotate(45deg);
+  transition: background 0.25s, box-shadow 0.25s;
+}
+
+.nb-logo {
+  width: 50px;
+  height: 50px;
   position: relative;
-  z-index: 2;
-  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  transform: translateY(-2px) scale(1.05);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  clip-path: polygon(22% 0, 78% 0, 100% 50%, 78% 100%, 22% 100%, 0 50%);
+  background: rgba(255, 255, 255, 0.035);
+  transition: border-color 0.25s, transform 0.25s;
 
   img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    filter: brightness(0.8) saturate(0.8);
-    transition: filter 0.3s, transform 0.4s ease;
-  }
-
-  // 添加底部阴影增强立体感
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: -4px;
-    left: 10%;
-    right: 10%;
-    height: 8px;
-    background: radial-gradient(
-      ellipse at center,
-      rgba(226, 52, 86, 0.3) 0%,
-      transparent 70%
-    );
-    opacity: 0;
-    transition: opacity 0.4s ease;
-    z-index: -1;
-  }
-}
-
-.neighbor-card:hover {
-  .nb-logo {
-    transform: translateY(-6px) scale(1.12) rotate(-3deg);
-
-    img {
-      filter: brightness(1.1) saturate(1.2);
-    }
-
-    &::after {
-      opacity: 1;
-    }
+    filter: brightness(0.86) saturate(0.86);
+    transition: filter 0.25s;
   }
 }
 
 .nb-info {
-  flex: 1;
   min-width: 0;
 }
 
+.nb-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+  margin-bottom: 5px;
+}
+
+.nb-host {
+  font-family: 'anton', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 1.4px;
+  color: rgba(226, 52, 86, 0.72);
+  white-space: nowrap;
+}
+
 .nb-name {
-  font-family: 'anton', 'source-han-sans-simplified-c';
-  font-size: 1rem;
+  font-family: 'source-han-sans-simplified-c';
+  font-size: 0.98rem;
   font-weight: 900;
   letter-spacing: 1px;
   color: #fff;
-  margin-bottom: 4px;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nb-host {
+  color: rgba(255, 255, 255, 0.28);
 }
 
 .nb-desc {
   font-family: 'source-han-sans-simplified-c', monospace;
-  font-size: 0.75rem;
+  font-size: 0.74rem;
   color: @text-dim;
-  line-height: 1.5;
+  line-height: 1.45;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -629,10 +783,28 @@ const neighbors = ref([
 
 .nb-arrow {
   font-family: 'anton', monospace;
-  font-size: 1rem;
-  color: rgba(226, 52, 86, 0.5);
-  flex-shrink: 0;
+  justify-self: center;
+  font-size: 1.1rem;
+  color: rgba(226, 52, 86, 0.45);
   transition: color 0.25s, transform 0.25s;
+}
+
+@keyframes gearDiamondBlink {
+  0%,
+  100% {
+    opacity: 0.45;
+    filter: brightness(0.75);
+  }
+
+  42% {
+    opacity: 1;
+    filter: brightness(1.35);
+  }
+
+  68% {
+    opacity: 0.68;
+    filter: brightness(0.95);
+  }
 }
 
 /* ── 页脚 ─────────────────────────────────────── */
@@ -662,6 +834,81 @@ const neighbors = ref([
     .log-center {
       display: none;
     }
+  }
+
+  .neighbors-grid {
+    gap: 18px;
+    padding-left: 28px;
+
+    &::before {
+      left: 7px;
+    }
+  }
+
+  .c-gear {
+    height: 34px;
+    gap: 4px;
+  }
+
+  .gear-diamonds {
+    width: 34px;
+    height: 30px;
+    transform: scale(0.86, 0.67);
+    transform-origin: left center;
+  }
+
+  .gear-letters {
+    gap: 3px;
+
+    b {
+      width: 18px;
+      height: 16px;
+      font-size: 0.52rem;
+    }
+  }
+
+  .neighbor-card {
+    min-height: auto;
+    grid-template-columns: 42px minmax(0, 1fr) 28px;
+    gap: 12px;
+    padding-left: 12px;
+  }
+
+  .neighbor-card::before {
+    left: -21px;
+    width: 21px;
+  }
+
+  .nb-node {
+    left: -27px;
+    width: 8px;
+    height: 8px;
+  }
+
+  .nb-logo {
+    width: 38px;
+    height: 38px;
+  }
+
+  .nb-name {
+    font-size: 0.9rem;
+  }
+
+  .nb-desc {
+    font-size: 0.72rem;
+  }
+
+  .nb-title-row {
+    flex-wrap: wrap;
+    gap: 5px 8px;
+  }
+
+  .nb-host {
+    width: 100%;
+  }
+
+  .nb-arrow {
+    font-size: 0.95rem;
   }
 }
 </style>

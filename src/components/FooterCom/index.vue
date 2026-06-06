@@ -4,7 +4,6 @@ import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { ElLoading } from 'element-plus'
 
-import bilibiliImg from '@/assets/img/bilibili_profile.png'
 import githubImg from '@/assets/img/github_profile.png'
 import twitterImg from '@/assets/img/twitter_profile.png'
 import bottomLineData from '@/data/bottomLine.js'
@@ -40,8 +39,8 @@ let reducedMotionQuery: MediaQueryList | null = null
 
 onMounted(() => {
   initFooterAnimation()
-  initMotionPreference()
-  document.addEventListener('scroll', handleScroll, { passive: true })
+  // initMotionPreference()
+  // document.addEventListener('scroll', handleScroll, { passive: true })
 })
 
 const initMotionPreference = () => {
@@ -146,14 +145,14 @@ const handleSocialHover = (type: string, isHover: boolean) => {
   }
 }
 
-const handleScroll = () => {
-  const scrollTop = window.pageYOffset || document.documentElement.scrollTop
-  isScrollingDown.value = scrollTop > lastScrollTop
-  lastScrollTop = Math.max(0, scrollTop)
-}
+// const handleScroll = () => {
+//   const scrollTop = window.pageYOffset || document.documentElement.scrollTop
+//   isScrollingDown.value = scrollTop > lastScrollTop
+//   lastScrollTop = Math.max(0, scrollTop)
+// }
 
 onUnmounted(() => {
-  document.removeEventListener('scroll', handleScroll)
+  // document.removeEventListener('scroll', handleScroll)
   document.removeEventListener('visibilitychange', updateMotionPreference)
   reducedMotionQuery?.removeEventListener('change', updateMotionPreference)
 })
@@ -228,7 +227,12 @@ onUnmounted(() => {
       <div class="text-links">
         <span>
           <div class="TWITTER_detail">
-            <img :src="twitterImg" alt="Twitter profile" />
+            <img
+              :src="twitterImg"
+              alt="Twitter profile"
+              loading="lazy"
+              decoding="async"
+            />
           </div>
           <el-button
             link
@@ -265,10 +269,12 @@ onUnmounted(() => {
         <span>
           <div class="BILIBILI_detail">
             <img
-              :src="bilibiliImg"
+              src="https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bilibili_profile.png"
               width="220px"
               height="220px"
               alt="Bilibili profile"
+              loading="lazy"
+              decoding="async"
             />
           </div>
           <el-button
@@ -283,7 +289,12 @@ onUnmounted(() => {
         </span>
         <span>
           <div class="GITHUB_detail">
-            <img :src="githubImg" alt="GitHub profile" />
+            <img
+              :src="githubImg"
+              alt="GitHub profile"
+              loading="lazy"
+              decoding="async"
+            />
           </div>
           <el-button
             link

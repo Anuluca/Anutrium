@@ -16,7 +16,12 @@
         <!-- 公司 Logo + 信息 -->
         <div class="aside-company">
           <div v-if="work.logo" class="aside-logo">
-            <img :src="work.logo" :alt="work.company" />
+            <img
+              :src="work.logo"
+              :alt="work.company"
+              loading="lazy"
+              decoding="async"
+            />
           </div>
           <div class="aside-company-info">
             <p class="aside-company-name">{{ work.company }}</p>
@@ -37,7 +42,9 @@
 
         <!-- Participation -->
         <div v-if="participationText" class="aside-field">
-          <span class="field-label">{{ t('workDetailModal.participation') }}</span>
+          <span class="field-label">{{
+            t('workDetailModal.participation')
+          }}</span>
           <span class="field-val">{{ participationText }}</span>
         </div>
 
@@ -99,7 +106,12 @@
                 class="gallery-slide"
                 @click="openImageViewer(i)"
               >
-                <img :src="img" :alt="`${work.title} ${i + 1}`" />
+                <img
+                  :src="img"
+                  :alt="`${work.title} ${i + 1}`"
+                  :loading="i === 0 ? 'eager' : 'lazy'"
+                  decoding="async"
+                />
                 <!-- 黑色渐变遮罩 -->
                 <div class="slide-gradient-overlay" />
                 <!-- 图片文本介绍 -->
@@ -602,7 +614,7 @@ const closeImageViewer = () => {
     bottom: 20px;
     left: 20px;
     right: 60px;
-    font-family:  'STSong';
+    font-family: 'STSong';
     font-weight: 700;
     font-size: 0.5rem;
     color: rgba(255, 255, 255, 0.85);

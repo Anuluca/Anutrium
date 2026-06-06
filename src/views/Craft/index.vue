@@ -51,72 +51,15 @@
 
     <div class="tool-list">
       <div class="tl-grid">
-        <div
+        <ToolCard
           v-for="(tool, i) in filteredTools"
           :key="tool.id"
-          class="tl-card"
-          :class="`tl-card--${tool.category}`"
-          @mouseenter="hovered = tool.id"
-          @mouseleave="hovered = null"
-          @click="() => $router.push(tool.link)"
-        >
-          <!-- 序号角标 -->
-          <div class="tl-card__index">
-            <span class="tl-card__index-num">{{
-              String(i + 1).padStart(2, '0')
-            }}</span>
-            <span class="tl-card__index-slash">/</span>
-            <span class="tl-card__index-total">{{
-              String(filteredTools.length).padStart(2, '0')
-            }}</span>
-          </div>
-
-          <!-- 图片区域 -->
-          <div class="tl-card__img-wrap">
-            <div class="tl-card__img-bg" />
-            <img
-              v-if="tool.img"
-              :src="tool.img"
-              :alt="tool.title"
-              class="tl-card__img"
-            />
-            <div v-else class="tl-card__img-placeholder">
-              <span class="tl-card__placeholder-icon">{{ tool.icon }}</span>
-            </div>
-            <!-- 扫描线动效 -->
-            <div class="tl-card__scan" />
-          </div>
-
-          <!-- 信息区域 -->
-          <div class="tl-card__body">
-            <div class="tl-card__tags">
-              <button
-                v-for="tag in tool.tags"
-                :key="tag"
-                class="tl-card__tag"
-                type="button"
-                @click.stop="activeTag = tag"
-              >
-                {{ tag }}
-              </button>
-            </div>
-            <h3 class="tl-card__title" :class="locale === 'zhCn' && 'cn-font'">
-              {{ tool.title }}
-            </h3>
-            <p class="tl-card__sub">{{ tool.sub }}</p>
-            <div class="tl-card__footer">
-              <span class="tl-card__status" :class="`tl-card__status--live`">
-                <span class="tl-card__status-dot" />
-                {{ tool.statusLabel }}
-              </span>
-              <a class="tl-card__cta">USE →</a>
-            </div>
-
-            <!-- 装饰性角线 -->
-            <div class="tl-card__corner tl-card__corner--tl" />
-            <div class="tl-card__corner tl-card__corner--br" />
-          </div>
-        </div>
+          :tool="tool"
+          :index="i"
+          :total="filteredTools.length"
+          @select="router.push(tool.link)"
+          @tag-select="activeTag = $event"
+        />
       </div>
       <div v-if="filteredTools.length === 0" class="tl-empty">
         NO MATCHED TOOLS
@@ -134,11 +77,11 @@ import { useRoute, useRouter } from 'vue-router'
 
 import PageFooter from '@/components/PageFooter/index.vue'
 import PageHeader from '@/components/PageHeader/index.vue'
+import ToolCard from '@/components/ToolCard/index.vue'
 
 const { locale, t, tm } = useI18n()
 const route = useRoute()
 const router = useRouter()
-const hovered = ref<string | null>(null)
 const activeCategory = ref<ToolCategory>('work')
 const activeTag = ref<string | null>(null)
 

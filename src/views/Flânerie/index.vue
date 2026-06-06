@@ -1,10 +1,13 @@
 <template>
-  <div class="flanerie-page main-container">
+  <div
+    class="flanerie-page main-container"
+    :class="{ 'is-en': locale === 'en' }"
+  >
     <PageHeader
       header-label="[241001_ACCIDENT]"
       title-en="FLÂNERIE"
       title-cn="旅程"
-      meta-item="通过自己的双眼捕捉世界。"
+      :meta-item="t('flanerie.metaItem')"
       primary-color="#e7492d"
     />
 
@@ -26,34 +29,15 @@
 
       <!-- Vlog 卡片网格 -->
       <div class="vlog-grid">
-        <div
-          v-for="(vlog, index) in vlogs"
-          :key="index"
-          class="vlog-card"
-          @click="goTo404"
-        >
-          <div class="vlog-img-wrap">
-            <img :src="vlog.img" :alt="vlog.title" />
-            <div class="vlog-overlay" />
-            <div class="scanlines" />
-          </div>
-          <div class="vlog-info">
-            <h4
-              class="vlog-title"
-              :data-index="String(index + 1).padStart(2, '0')"
-            >
-              {{ vlog.title }}
-            </h4>
-            <div class="vlog-meta">
-              <span class="vlog-date">{{ vlog.date }}</span>
-              <span class="vlog-device">{{ vlog.device }}</span>
-            </div>
-          </div>
-          <div class="corner corner-tl" />
-          <div class="corner corner-tr" />
-          <div class="corner corner-bl" />
-          <div class="corner corner-br" />
-        </div>
+        <VlogCard
+          v-for="vlog in vlogs"
+          :id="`vlog-${vlog.id}`"
+          :key="vlog.id"
+          :vlog="vlog"
+          :active="activeVlogId === vlog.id"
+          :interactive="hasVlogPage(vlog.id)"
+          @select="openVlog(vlog)"
+        />
       </div>
     </section>
   </div>
@@ -61,48 +45,50 @@
 
 <script setup lang="ts">
 /* eslint-disable simple-import-sort/imports */
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { computed, ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 import PageHeader from '@/components/PageHeader/index.vue'
+import VlogCard from '@/components/VlogCard/index.vue'
 
 // ── 类型定义 ───────────────────────────────────
-interface VlogItem {
-  title: string
-  date: string
-  device: string
-  img: string
+interface VlogLocation {
+  id: string
+  name: string
+  lat: number
+  lng: number
 }
 
-// ── Vlog 数据（示例数据，替换成你的真实数据） ─
-const vlogs = ref<VlogItem[]>([
-  {
-    title: '南京｜初春漫步',
-    date: '2025.03',
-    device: 'Sony ZV-E10',
-    img: 'https://picsum.photos/seed/nj1/600/400',
-  },
-  {
-    title: '南京红山动物园',
-    date: '2025.03',
-    device: 'Sony ZV-E10',
-    img: 'https://picsum.photos/seed/nj2/600/400',
-  },
-  {
-    title: '福州｜三坊七巷',
-    date: '2024.11',
-    device: 'iPhone 15 Pro',
-    img: 'https://picsum.photos/seed/fz1/600/400',
-  },
-  {
-    title: '平潭岛｜蓝眼泪',
-    date: '2024.06',
-    device: 'iPhone 15 Pro',
-    img: 'https://picsum.photos/seed/pt1/600/400',
-  },
-])
+interface VlogItem {
+  id: string
+  title: string
+  mapLabel: string
+  date: string
+  tagline: string
+  device: string[]
+  img: string
+  img2?: string
+  location: VlogLocation
+}
 
-// ── 404 跳转 ───────────────────────────────────
-const goTo404 = () => {
-  /* router.push('/404') */
+const router = useRouter()
+const { locale, t, tm } = useI18n()
+
+const vlogs = computed<VlogItem[]>(() => {
+  return tm('flanerie.dynamic.vlogs') as VlogItem[]
+})
+
+// ── 主题页跳转 ─────────────────────────────────
+const hasVlogPage = (vlogId: string) => {
+  return router
+    .resolve(`/flanerie/${vlogId}`)
+    .matched.some((route) => route.meta.vlogId === vlogId)
+}
+
+const openVlog = (vlog: VlogItem) => {
+  if (!hasVlogPage(vlog.id)) return
+
+  router.push(`/flanerie/${vlog.id}`)
 }
 
 // ══════════════════════════════════════════════
@@ -110,13 +96,79 @@ const goTo404 = () => {
 // ══════════════════════════════════════════════
 const mapRef = ref<HTMLElement | null>(null)
 const mapContainerRef = ref<HTMLElement | null>(null)
+const activeVlogId = ref<string | null>(null)
 let mapInstance: any = null
+let activeVlogTimer: number | undefined
 
-// 去过的地点
-const visitedPlaces = [
-  { name: '南京', lat: 32.06, lng: 118.79 },
-  { name: 'Singapore', lat: 1.35, lng: 103.82 },
-]
+interface MapPlaceGroup extends VlogLocation {
+  targets: Array<{
+    label: string
+    vlogId: string
+  }>
+}
+
+const mapPlaces = computed<MapPlaceGroup[]>(() => {
+  const places = new Map<string, MapPlaceGroup>()
+
+  vlogs.value.forEach((vlog) => {
+    const currentPlace = places.get(vlog.location.id)
+    const target = {
+      label: vlog.mapLabel || vlog.title,
+      vlogId: vlog.id,
+    }
+
+    if (currentPlace) {
+      currentPlace.targets.push(target)
+      return
+    }
+
+    places.set(vlog.location.id, {
+      ...vlog.location,
+      targets: [target],
+    })
+  })
+
+  return Array.from(places.values())
+})
+
+const clearActiveVlogTimer = () => {
+  if (!activeVlogTimer) return
+
+  window.clearTimeout(activeVlogTimer)
+  activeVlogTimer = undefined
+}
+
+const scrollToVlog = (vlogId: string) => {
+  const target = document.getElementById(`vlog-${vlogId}`)
+  if (!target) return
+
+  clearActiveVlogTimer()
+  activeVlogId.value = vlogId
+
+  target.scrollIntoView({
+    behavior: 'smooth',
+    block: 'center',
+  })
+
+  activeVlogTimer = window.setTimeout(() => {
+    activeVlogId.value = null
+    activeVlogTimer = undefined
+  }, 1000)
+}
+
+const buildPlacePopup = (place: MapPlaceGroup) => {
+  const items = place.targets
+    .map(
+      (target) =>
+        `<button class="map-place-option" type="button" data-vlog-id="${target.vlogId}">${target.label}</button>`
+    )
+    .join('')
+
+  return `<div class="map-place-menu">
+    <div class="map-place-title">${place.name}</div>
+    <div class="map-place-list">${items}</div>
+  </div>`
+}
 
 const initMap = async () => {
   if (!mapRef.value) return
@@ -126,8 +178,8 @@ const initMap = async () => {
   if (!L) return
 
   mapInstance = L.map(mapRef.value, {
-    center: [20, 50],
-    zoom: 2,
+    center: [25, 105],
+    zoom: 3,
     minZoom: 2,
     maxZoom: 8,
     zoomControl: false,
@@ -144,8 +196,8 @@ const initMap = async () => {
   // 自定义缩放控件位置
   L.control.zoom({ position: 'bottomright' }).addTo(mapInstance)
 
-  // 添加地点标记
-  visitedPlaces.forEach((place) => {
+  // 添加地点组标记
+  mapPlaces.value.forEach((place) => {
     const icon = L.divIcon({
       className: '',
       html: `<div class="map-marker">
@@ -157,18 +209,52 @@ const initMap = async () => {
     })
 
     const marker = L.marker([place.lat, place.lng], { icon }).addTo(mapInstance)
+    let closeTimer: number | undefined
 
-    marker.on('click', () => {
-      // 点击跳转 404
-      window.location.href = '/404'
+    const scheduleClose = () => {
+      window.clearTimeout(closeTimer)
+      closeTimer = window.setTimeout(() => {
+        marker.closePopup()
+      }, 260)
+    }
+
+    const cancelClose = () => {
+      window.clearTimeout(closeTimer)
+    }
+
+    marker.bindPopup(buildPlacePopup(place), {
+      closeButton: false,
+      autoClose: true,
+      closeOnClick: false,
+      className: 'map-place-popup-wrap',
+      offset: [0, -8],
     })
 
-    // Tooltip
-    marker.bindTooltip(`<div class="map-tooltip">${place.name}</div>`, {
-      permanent: false,
-      direction: 'top',
-      offset: [0, -12],
-      className: 'map-tooltip-wrap',
+    marker.on('mouseover', () => {
+      cancelClose()
+      mapInstance.closePopup()
+      marker.openPopup()
+    })
+
+    marker.on('mouseout', scheduleClose)
+
+    marker.on('popupopen', (event: any) => {
+      const popupEl = event.popup.getElement()
+      if (!popupEl) return
+
+      L.DomEvent.disableClickPropagation(popupEl)
+      popupEl.addEventListener('mouseenter', cancelClose)
+      popupEl.addEventListener('mouseleave', scheduleClose)
+      popupEl.onclick = (clickEvent: MouseEvent) => {
+        const button = (
+          clickEvent.target as HTMLElement
+        ).closest<HTMLButtonElement>('.map-place-option')
+        const vlogId = button?.dataset.vlogId
+        if (!vlogId) return
+
+        scrollToVlog(vlogId)
+        marker.closePopup()
+      }
     })
   })
 }
@@ -195,7 +281,19 @@ onMounted(async () => {
   initMap()
 })
 
+watch(locale, async () => {
+  if (mapInstance) {
+    mapInstance.remove()
+    mapInstance = null
+  }
+
+  await nextTick()
+  initMap()
+})
+
 onUnmounted(() => {
+  clearActiveVlogTimer()
+
   if (mapInstance) {
     mapInstance.remove()
     mapInstance = null
@@ -215,6 +313,8 @@ onUnmounted(() => {
 .flanerie-page {
   width: 100%;
   color: #fff;
+  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* ══════════════════════════════════════
@@ -222,6 +322,8 @@ onUnmounted(() => {
 ══════════════════════════════════════ */
 .vlog-section {
   padding: 40px 0 80px;
+  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* 世界地图 */
@@ -304,182 +406,284 @@ onUnmounted(() => {
 /* Vlog 卡片 */
 .vlog-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
+  grid-template-columns: repeat(3, minmax(0, 580px));
+  justify-content: space-between;
+  gap: 10px 10px;
 }
 
 .vlog-card {
   position: relative;
-  overflow: hidden;
-  cursor: pointer;
-  border: 1px solid @border;
-  transition: transform 0.3s ease, border-color 0.3s ease;
-  background: @card-bg;
+  cursor: default;
+  width: 580px;
+  min-height: 300px;
   display: flex;
   flex-direction: column;
+  justify-content: flex-end;
+  padding: 8px 0 0;
+  isolation: isolate;
+
+  &.has-detail {
+    cursor: pointer;
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 14%;
+    right: 14%;
+    bottom: 54px;
+    height: 34px;
+    background: radial-gradient(
+      ellipse at center,
+      rgba(226, 52, 86, 0.32),
+      rgba(54, 209, 255, 0.12) 42%,
+      transparent 72%
+    );
+    filter: blur(6px);
+    opacity: 0.72;
+    z-index: -1;
+    transition: opacity 0.35s ease, filter 0.35s ease;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 14%;
+    right: 14%;
+    bottom: 44px;
+    height: 52px;
+    background: repeating-linear-gradient(
+        90deg,
+        transparent 0 7px,
+        rgba(54, 209, 255, 0.24) 7px 8px,
+        rgba(226, 52, 86, 0.18) 8px 9px
+      ),
+      radial-gradient(
+        circle at 50% 50%,
+        rgba(226, 52, 86, 0.2),
+        transparent 58%
+      );
+    mix-blend-mode: screen;
+    opacity: 0;
+    transform: skew(-14deg);
+    pointer-events: none;
+    z-index: -1;
+    transition: opacity 0.35s ease;
+  }
 
   .vlog-img-wrap {
     position: relative;
     width: 100%;
-    aspect-ratio: 16/9;
-    overflow: hidden;
+    height: 345px;
+    display: grid;
+    place-items: end center;
+    padding: 0;
+    box-sizing: border-box;
 
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      filter: brightness(0.7) saturate(0.6);
-      transition: all 0.5s ease;
+    .vlog-img {
+      width: auto;
+      max-width: 100%;
+      height: auto;
+      max-height: 345px;
+      object-fit: contain;
+      display: block;
+      filter: drop-shadow(10px 12px 0 rgba(0, 0, 0, 0.46))
+        drop-shadow(0 0 18px rgba(226, 52, 86, 0.18));
+      transition: opacity 0.62s ease, filter 0.62s ease;
+      position: relative;
+      z-index: 1;
+    }
+
+    .vlog-img--hover {
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      opacity: 0;
+      transform: translateX(-50%);
+      z-index: 2;
+    }
+
+    .vlog-blueprint-lines {
+      position: absolute;
+      inset: 8% 6% 0;
+      background-image: linear-gradient(
+          90deg,
+          transparent 0 18%,
+          rgba(226, 52, 86, 0.48) 18%,
+          rgba(226, 52, 86, 0.48) calc(18% + 1px),
+          transparent calc(18% + 1px) 46%,
+          transparent calc(46% + 1px) 74%,
+          rgba(226, 52, 86, 0.48) calc(74% + 1px),
+          transparent calc(74% + 1px)
+        ),
+        linear-gradient(
+          0deg,
+          transparent 0 22%,
+          rgba(226, 52, 86, 0.48) 22%,
+          transparent calc(22% + 1px) 51%,
+          transparent calc(51% + 1px) 79%,
+          rgba(226, 52, 86, 0.44) calc(79% + 1px),
+          transparent calc(79% + 1px)
+        );
+      mask-image: radial-gradient(ellipse at center, #000 44%, transparent 76%);
+      opacity: 0;
+      mix-blend-mode: screen;
+      pointer-events: none;
+      z-index: 2;
+      transform: scaleX(0.92);
+      transition: opacity 0.28s ease, transform 0.42s ease;
+
+      &::before {
+        left: 0;
+        top: 36%;
+        width: 100%;
+        height: 1px;
+      }
     }
 
     .vlog-overlay {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(
-        to bottom,
-        transparent 30%,
-        rgba(10, 5, 10, 0.95) 100%
-      );
+      display: none;
     }
 
     .scanlines {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(
-        to bottom,
-        rgba(255, 255, 255, 0.04) 1px,
-        transparent 1px
-      );
-      background-size: 100% 4px;
-      opacity: 0.5;
+      display: none;
     }
   }
 
   .vlog-info {
-    padding: 24px 20px;
-    background: rgba(10, 5, 10, 0.95);
-    flex: 1;
+    width: 100%;
+    min-height: 0;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    align-items: center;
+    margin: -30px 0 0;
+    padding: 0 10px;
+    box-sizing: border-box;
     position: relative;
     z-index: 2;
 
     &::before {
       content: '';
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 1px;
-      background: linear-gradient(to right, @red, transparent);
-      opacity: 0.5;
+      left: 50%;
+      bottom: 34px;
+      width: min(90%, 280px);
+      height: 16px;
+      background: rgba(226, 52, 86, 0.4);
+      transform: translateX(-50%) skew(-12deg);
+      z-index: -1;
+      transition: background 0.35s ease, box-shadow 0.35s ease;
     }
   }
 
   .vlog-title {
-    font-family: 'anton', 'source-han-sans-simplified-c';
-    font-size: 1.3rem;
-    font-weight: 900;
+    max-width: 110%;
+    font-family: 'Unbounded Sans', 'source-han-sans-simplified-c', sans-serif;
+    font-size: 1.8rem;
     color: #fff;
-    margin-bottom: 12px;
-    letter-spacing: 0.5px;
-    line-height: 1.2;
+    margin: 0 0 9px;
+    letter-spacing: 0;
+    line-height: 1.35;
     position: relative;
-    display: inline-block;
-
-    &::before {
-      content: attr(data-index);
-      display: inline-block;
-      background: @red;
-      color: #000;
-      padding: 2px 10px;
-      margin-right: 8px;
-      font-size: 0.9rem;
-      font-weight: 900;
-      line-height: 1;
-      clip-path: polygon(0% 50%, 10% 0%, 90% 0%, 100% 50%, 90% 100%, 10% 100%);
-      font-family: 'anton', monospace;
-    }
-  }
-
-  .vlog-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 12px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-shadow: 3px 3px 0 rgba(226, 52, 86, 0.42),
+      -2px 0 0 rgba(54, 209, 255, 0.12), 0 0 18px rgba(0, 0, 0, 0.45);
+    transition: text-shadow 0.35s ease, letter-spacing 0.35s ease;
   }
 
   .vlog-date {
-    font-family: 'anton', sans-serif;
-    font-size: 0.75rem;
-    color: @red;
-    letter-spacing: 1px;
-    font-weight: 700;
-  }
-
-  .vlog-device {
     font-family: 'Unbounded Sans', monospace;
-    font-size: 0.5rem;
-    color: rgba(255, 255, 255, 0.35);
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
+    font-size: 0.66rem;
+    color: rgba(226, 52, 86, 0.9);
+    letter-spacing: 1.2px;
+    font-weight: 800;
+    margin-top: -25px;
+    margin-bottom: 25px;
   }
 
-  .corner {
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    z-index: 3;
-    pointer-events: none;
-    transition: all 0.3s ease;
-
-    &-tl {
-      top: 15px;
-      left: 15px;
-      border-right: 0;
-      border-bottom: 0;
-    }
-    &-tr {
-      top: 15px;
-      right: 15px;
-      border-left: 0;
-      border-bottom: 0;
-    }
-    &-bl {
-      bottom: 15px;
-      left: 15px;
-      border-right: 0;
-      border-top: 0;
-    }
-    &-br {
-      bottom: 15px;
-      right: 15px;
-      border-left: 0;
-      border-top: 0;
-    }
-  }
-
-  &:hover {
-    transform: translateY(-6px);
-    border-color: @red;
-
-    .vlog-img-wrap img {
-      transform: scale(1.06);
-      filter: brightness(0.85) saturate(0.85);
+  &:hover,
+  &.is-map-target {
+    &::before {
+      opacity: 0.95;
+      filter: blur(12px) hue-rotate(28deg);
     }
 
-    .corner {
-      border-color: @red;
-      width: 14px;
-      height: 14px;
+    &::after {
+      opacity: 1;
+      animation: vlogSpectralDrift 0.9s steps(3, end) infinite;
+    }
+
+    .vlog-img--base {
+      opacity: 0;
+    }
+
+    .vlog-img--hover {
+      opacity: 1;
+      filter: drop-shadow(10px 12px 0 rgba(0, 0, 0, 0.46))
+        drop-shadow(0 0 22px rgba(226, 52, 86, 0.24));
+    }
+
+    .vlog-blueprint-lines {
+      opacity: 0.82;
+      transform: scaleX(1);
+
+      &::before,
+      &::after {
+        opacity: 1;
+        animation: vlogBlueprintSweep 1.4s ease-in-out infinite;
+      }
+
+      &::after {
+        animation-delay: 0.18s;
+      }
+    }
+
+    .vlog-info::before {
+      background: rgba(54, 209, 255, 0.26);
+      box-shadow: -8px 0 0 rgba(226, 52, 86, 0.36),
+        8px 0 0 rgba(255, 255, 255, 0.12);
     }
 
     .vlog-title {
-      color: #fff;
+      letter-spacing: 0.04em;
+      text-shadow: 7px 0 0 rgba(226, 52, 86, 0.72),
+        -7px 0 0 rgba(54, 209, 255, 0.58), 0 3px 0 rgba(255, 255, 255, 0.16),
+        0 0 24px rgba(255, 255, 255, 0.22);
     }
+  }
+}
+
+.flanerie-page.is-en {
+  .vlog-title {
+    font-size: 1.3rem;
+    font-family: 'Anton';
+  }
+  .vlog-date {
+    margin-top: -10px;
+  }
+}
+
+@keyframes vlogSpectralDrift {
+  0%,
+  100% {
+    transform: translateX(-6px) skew(-14deg);
+  }
+
+  50% {
+    transform: translateX(8px) skew(-14deg);
+  }
+}
+
+@keyframes vlogBlueprintSweep {
+  0%,
+  100% {
+    filter: brightness(0.82);
+  }
+
+  45% {
+    filter: brightness(1.45);
   }
 }
 
@@ -496,16 +700,55 @@ onUnmounted(() => {
   }
 
   .vlog-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, min(84vw, 560px));
+    justify-content: center;
+    gap: 42px;
   }
 
   .map-container {
-    height: 280px;
+    height: 380px;
   }
 
   .vlog-card {
+    width: min(84vw, 560px);
+    min-height: 384px;
+
+    .vlog-img-wrap {
+      height: 326px;
+
+      .vlog-img {
+        max-height: 326px;
+      }
+    }
+
     .vlog-title {
-      font-size: 1.1rem;
+      font-size: 1.05rem;
+      white-space: normal;
+    }
+  }
+
+  .flanerie-page.is-en {
+    .vlog-title {
+      font-size: 0.86rem;
+    }
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1180px) {
+  .vlog-grid {
+    grid-template-columns: repeat(2, minmax(0, 540px));
+    justify-content: space-between;
+  }
+
+  .vlog-card {
+    width: 540px;
+
+    .vlog-img-wrap {
+      height: 320px;
+
+      .vlog-img {
+        max-height: 320px;
+      }
     }
   }
 }
@@ -569,24 +812,65 @@ onUnmounted(() => {
   }
 }
 
-/* 地图 Tooltip */
-.map-tooltip-wrap {
-  background: rgba(13, 9, 18, 0.95) !important;
-  border: 1px solid rgba(226, 52, 86, 0.4) !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-  padding: 0 !important;
+/* 地图地点菜单 */
+.map-place-popup-wrap {
+  .leaflet-popup-content-wrapper {
+    padding: 0;
+    border-radius: 0;
+    background: rgba(7, 3, 10, 0.96);
+    border: 1px solid rgba(226, 52, 86, 0.45);
+    box-shadow: 10px 10px 0 rgba(0, 0, 0, 0.36);
+  }
 
-  &::before {
-    display: none !important;
+  .leaflet-popup-content {
+    margin: 0;
+  }
+
+  .leaflet-popup-tip {
+    background: rgba(7, 3, 10, 0.96);
+    border: 1px solid rgba(226, 52, 86, 0.45);
+    box-shadow: none;
   }
 }
-.map-tooltip {
-  font-family: 'Unbounded Sans', monospace;
-  font-size: 0.6rem;
-  letter-spacing: 2px;
+
+.map-place-menu {
+  min-width: 156px;
+  padding: 10px;
+}
+
+.map-place-title {
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(226, 52, 86, 0.28);
+  font-family: 'source-han-sans-simplified-c', monospace;
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 1.6px;
   color: #e23456;
-  padding: 4px 10px;
-  white-space: nowrap;
+}
+
+.map-place-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.map-place-option {
+  width: 100%;
+  padding: 7px 9px;
+  border: 0;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.82);
+  cursor: pointer;
+  text-align: left;
+  font-family: 'source-han-sans-simplified-c', sans-serif;
+  font-size: 0.74rem;
+  font-weight: 900;
+  transition: background 0.2s, color 0.2s, transform 0.2s;
+
+  &:hover {
+    background: rgba(226, 52, 86, 0.18);
+    color: #fff;
+  }
 }
 </style>

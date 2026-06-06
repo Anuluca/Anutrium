@@ -30,7 +30,13 @@
                 class="news-card"
               >
                 <div class="card-img">
-                  <img :src="item.img" :alt="item.title" />
+                  <img
+                    :src="item.img"
+                    :alt="item.title"
+                    :loading="i === activeIndex ? 'eager' : 'lazy'"
+                    :fetchpriority="i === activeIndex ? 'high' : 'low'"
+                    decoding="async"
+                  />
                   <div class="card-img-overlay" />
                 </div>
 
@@ -132,6 +138,8 @@
                 '.JPG'
               "
               alt=""
+              loading="lazy"
+              decoding="async"
             />
           </div>
         </div>
@@ -166,6 +174,8 @@
                 '.JPG'
               "
               alt=""
+              loading="lazy"
+              decoding="async"
             />
           </div>
         </div>
@@ -191,62 +201,80 @@
           <span class="archive-entry__arrow">→</span>
         </RouterLink>
       </div>
-      <div class="works-grid">
-        <div
-          v-for="(work, index) in works"
-          :key="index"
-          class="work-card"
-          data-magnetic
-          role="button"
-          tabindex="0"
-          @click="openWorkDetail(work)"
-          @keydown.enter.prevent="openWorkDetail(work)"
-          @keydown.space.prevent="openWorkDetail(work)"
-        >
-          <div class="work-base">
-            <img :src="work.img" :alt="work.title" />
-            <div class="work-hud-overlay" />
-            <div class="scanlines" />
-          </div>
-
-          <div class="work-red-plate" />
-
-          <div class="work-content">
-            <div class="work-top-info">
-              <div class="company-row">
-                <div class="company-logo">
-                  <img :src="work.logo" :alt="work.company" />
-                </div>
-                <div class="company-details">
-                  <p class="work-subtitle">{{ work.company }}</p>
-                  <p class="ref-num">REF. 0{{ index + 1 }}A</p>
-                </div>
-              </div>
-
-              <div class="work-tags">
-                <span v-for="tag in work.tags" :key="tag" class="tech-label">{{
-                  tag
-                }}</span>
-              </div>
-            </div>
-
-            <div class="work-title-row">
-              <h3 :class="'work-name ' + (locale === 'zhCn' && 'cn-font')">
-                {{ work.title }}
-              </h3>
-              <div class="project-ref-id">
-                <div>ID. {{ work.id }}</div>
-                <div class="time">{{ work.time }}</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="corner corner-tl" />
-          <div class="corner corner-tr" />
-          <div class="corner corner-bl" />
-          <div class="corner corner-br" />
-          <div class="tactical-text">[MENTOR_NV42]</div>
+      <div class="home-module-grid">
+        <div class="works-grid">
+          <WorkCard
+            v-for="(work, index) in works"
+            :key="work.id"
+            :work="work"
+            :index="index"
+            @select="openWorkDetail(work)"
+          />
         </div>
+        <RouterLink class="and-more-entry" to="/archieve">
+          AND MORE...
+        </RouterLink>
+      </div>
+    </section>
+
+    <section class="journey-section">
+      <div class="section-title-row">
+        <h2 class="section-title" data-section="03">
+          {{ $t('home.title03') }}
+        </h2>
+        <RouterLink class="archive-entry" to="/flanerie">
+          <span class="archive-entry__code">FLANERIE_INDEX</span>
+          <span class="archive-entry__text">
+            {{ $t('home.journeyViewAll') }}
+          </span>
+          <span class="archive-entry__arrow">→</span>
+        </RouterLink>
+      </div>
+
+      <div class="home-module-grid">
+        <div class="journey-grid">
+          <VlogCard
+            v-for="vlog in journeyVlogs"
+            :key="vlog.id"
+            :vlog="vlog"
+            :interactive="hasVlogPage(vlog.id)"
+            @select="openVlog(vlog.id)"
+          />
+        </div>
+        <RouterLink class="and-more-entry" to="/flanerie">
+          AND MORE...
+        </RouterLink>
+      </div>
+    </section>
+
+    <section class="craft-section">
+      <div class="section-title-row">
+        <h2 class="section-title" data-section="04">
+          {{ $t('home.title04') }}
+        </h2>
+        <RouterLink class="archive-entry" to="/craft">
+          <span class="archive-entry__code">CRAFT_INDEX</span>
+          <span class="archive-entry__text">
+            {{ $t('home.craftViewAll') }}
+          </span>
+          <span class="archive-entry__arrow">→</span>
+        </RouterLink>
+      </div>
+
+      <div class="home-module-grid">
+        <div class="home-craft-grid">
+          <ToolCard
+            v-for="(tool, index) in homeTools"
+            :key="tool.id"
+            :tool="tool"
+            :index="index"
+            :total="homeTools.length"
+            @select="router.push(tool.link)"
+          />
+        </div>
+        <RouterLink class="and-more-entry" to="/craft">
+          AND MORE...
+        </RouterLink>
       </div>
     </section>
 
@@ -262,13 +290,18 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 
 import LogoOnly3D from '@/components/LogoOnly3D/index.vue'
 import MarqueeShowcase from '@/components/MarqueeShowcase/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue' // 引入新组件
+import ToolCard from '@/components/ToolCard/index.vue'
+import VlogCard from '@/components/VlogCard/index.vue'
+import WorkCard from '@/components/WorkCard/index.vue'
 import WorkDetailModal from '@/components/WorkDetailModal/index.vue'
 
 const { locale, tm } = useI18n()
+const router = useRouter()
 
 // ── 轮播数据 ──────────────────────────────
 interface NewsItem {
@@ -456,6 +489,56 @@ const selectedWork = ref<WorkItem | null>(null)
 const openWorkDetail = (work: WorkItem) => {
   selectedWork.value = work
 }
+
+interface JourneyVlog {
+  id: string
+  title: string
+  date: string
+  img: string
+  img2?: string
+}
+
+const journeyVlogIds = ['nanjing', 'nanjinghongshan', 'pingtandao']
+
+const journeyVlogs = computed<JourneyVlog[]>(() => {
+  const vlogs = tm('flanerie.dynamic.vlogs') as JourneyVlog[]
+  return journeyVlogIds
+    .map((id) => vlogs.find((vlog) => vlog.id === id))
+    .filter((vlog): vlog is JourneyVlog => Boolean(vlog))
+})
+
+const hasVlogPage = (vlogId: string) => {
+  return router
+    .resolve(`/flanerie/${vlogId}`)
+    .matched.some((route) => route.meta.vlogId === vlogId)
+}
+
+const openVlog = (vlogId: string) => {
+  if (!hasVlogPage(vlogId)) return
+
+  router.push(`/flanerie/${vlogId}`)
+}
+
+interface HomeTool {
+  id: string
+  title: string
+  sub: string
+  tags: string[]
+  category: 'work' | 'general'
+  icon: string
+  img?: string
+  statusLabel: string
+  link: string
+}
+
+const homeToolIds = ['bounce-dynamics', 'metronome']
+
+const homeTools = computed<HomeTool[]>(() => {
+  const tools = tm('craft.dynamic.tools') as HomeTool[]
+  return homeToolIds
+    .map((id) => tools.find((tool) => tool.id === id))
+    .filter((tool): tool is HomeTool => Boolean(tool))
+})
 
 const wheelEvent = (_e: WheelEvent) => {}
 </script>
@@ -922,8 +1005,7 @@ const wheelEvent = (_e: WheelEvent) => {}
   background: linear-gradient(90deg, rgba(226, 52, 86, 0.16), transparent 65%);
   text-decoration: none;
   overflow: hidden;
-  transition: border-color 0.25s ease, color 0.25s ease,
-    transform 0.25s ease;
+  transition: border-color 0.25s ease, color 0.25s ease, transform 0.25s ease;
 
   &::before {
     content: '';
@@ -1064,274 +1146,342 @@ const wheelEvent = (_e: WheelEvent) => {}
   padding: 60px 0;
 }
 
+.journey-section {
+  padding: 60px 0;
+}
+
+.craft-section {
+  padding: 60px 0;
+}
+
+.home-module-grid {
+  position: relative;
+}
+
+.and-more-entry {
+  position: absolute;
+  right: 0;
+  bottom: -20px;
+  color: #e23456;
+  font-family: 'Unbounded Sans', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  opacity: 0.2;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+
+  &:hover,
+  &:focus-visible {
+    opacity: 1;
+    transform: translateX(-3px);
+  }
+
+  &:focus-visible {
+    outline: 1px solid rgba(226, 52, 86, 0.55);
+    outline-offset: 5px;
+  }
+}
+
+.home-craft-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.home-craft-card {
+  position: relative;
+  min-height: 250px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 22px;
+  overflow: hidden;
+  border: 1px solid rgba(59, 105, 244, 0.25);
+  color: var(--text-color);
+  background: linear-gradient(135deg, rgba(59, 105, 244, 0.12), transparent 42%),
+    rgba(13, 9, 18, 0.72);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.3s ease, transform 0.3s ease, background 0.3s ease;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      110deg,
+      transparent 0%,
+      transparent 42%,
+      rgba(255, 255, 255, 0.1) 50%,
+      transparent 58%,
+      transparent 100%
+    );
+    transform: translateX(-100%);
+    transition: transform 0.45s ease;
+  }
+
+  &:hover {
+    border-color: #3b69f4;
+    background: linear-gradient(
+        135deg,
+        rgba(59, 105, 244, 0.2),
+        transparent 52%
+      ),
+      rgba(13, 9, 18, 0.82);
+    transform: translateY(-4px);
+
+    &::before {
+      transform: translateX(100%);
+    }
+
+    .home-craft-card__icon {
+      color: #fff;
+      transform: scale(1.08) rotate(-4deg);
+      text-shadow: 6px 6px 0 rgba(59, 105, 244, 0.38);
+    }
+
+    .home-craft-card__cta {
+      transform: translateX(4px);
+    }
+  }
+
+  &__head,
+  &__content,
+  &__footer {
+    position: relative;
+    z-index: 1;
+  }
+
+  &__head,
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__index,
+  &__status,
+  &__cta,
+  &__tags span {
+    font-family: 'Unbounded Sans', monospace;
+  }
+
+  &__index {
+    color: rgba(255, 255, 255, 0.22);
+    font-size: 0.54rem;
+    letter-spacing: 2px;
+  }
+
+  &__status {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: rgba(255, 255, 255, 0.42);
+    font-size: 0.5rem;
+
+    i {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #5ad480;
+      box-shadow: 0 0 8px rgba(90, 212, 128, 0.72);
+    }
+  }
+
+  &__content {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin: 28px 0;
+  }
+
+  &__icon {
+    min-width: 76px;
+    color: #3b69f4;
+    font-family: 'Unbounded Sans', monospace;
+    font-size: 3.4rem;
+    line-height: 1;
+    text-align: center;
+    text-shadow: 4px 4px 0 rgba(59, 105, 244, 0.2);
+    transition: color 0.3s ease, text-shadow 0.3s ease, transform 0.3s ease;
+  }
+
+  &__copy {
+    min-width: 0;
+
+    h3 {
+      margin-bottom: 9px;
+      overflow: hidden;
+      font-family: 'source-han-sans-simplified-c', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 900;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    p {
+      display: -webkit-box;
+      overflow: hidden;
+      color: var(--opacity-color);
+      font-size: 0.62rem;
+      line-height: 1.7;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+    }
+  }
+
+  &__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+
+    span {
+      padding: 4px 7px;
+      border: 1px solid rgba(59, 105, 244, 0.25);
+      color: rgba(255, 255, 255, 0.42);
+      font-size: 0.46rem;
+    }
+  }
+
+  &__cta {
+    color: #3b69f4;
+    font-size: 0.58rem;
+    transition: transform 0.25s ease;
+  }
+
+  &__corner {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-color: rgba(59, 105, 244, 0.55);
+    border-style: solid;
+    pointer-events: none;
+
+    &--tl {
+      top: 8px;
+      left: 8px;
+      border-width: 1px 0 0 1px;
+    }
+
+    &--br {
+      right: 8px;
+      bottom: 8px;
+      border-width: 0 1px 1px 0;
+    }
+  }
+}
+
+.journey-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 580px));
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.journey-card {
+  position: relative;
+  min-width: 0;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  color: var(--text-color);
+  background: rgba(13, 9, 18, 0.72);
+  text-align: left;
+  transition: border-color 0.3s ease, transform 0.3s ease;
+
+  &:disabled {
+    cursor: default;
+  }
+
+  &.has-detail {
+    cursor: pointer;
+
+    &:hover {
+      border-color: #e23456;
+      transform: translateY(-4px);
+
+      img {
+        transform: scale(1.04);
+        filter: brightness(0.9) saturate(1);
+      }
+    }
+  }
+
+  &__visual {
+    height: 190px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: radial-gradient(
+      circle at center,
+      rgba(226, 52, 86, 0.14),
+      rgba(0, 0, 0, 0.42) 66%
+    );
+
+    img {
+      width: auto;
+      height: auto;
+      max-width: 88%;
+      max-height: 90%;
+      object-fit: contain;
+      filter: brightness(0.72) saturate(0.72);
+      transition: filter 0.35s ease, transform 0.35s ease;
+    }
+  }
+
+  &__info {
+    padding: 16px 16px 22px;
+
+    h3 {
+      margin: 6px 0 8px;
+      overflow: hidden;
+      font-family: 'source-han-sans-simplified-c', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 900;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    p {
+      display: -webkit-box;
+      overflow: hidden;
+      color: var(--opacity-color);
+      font-size: 0.58rem;
+      line-height: 1.6;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+    }
+  }
+
+  &__date,
+  &__id {
+    font-family: 'Unbounded Sans', monospace;
+    font-size: 0.5rem;
+    letter-spacing: 1px;
+  }
+
+  &__date {
+    color: #e23456;
+  }
+
+  &__id {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    color: rgba(255, 255, 255, 0.22);
+    text-transform: uppercase;
+  }
+}
+
 .works-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 20px;
   width: 100%;
-}
-
-.work-card {
-  position: relative;
-  min-height: 350px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  display: flex;
-  overflow: hidden;
-  cursor: pointer;
-  background: rgba(13, 9, 18, 0.8);
-  transition: transform 0.4s ease, border-color 0.4s ease;
-
-  .work-base {
-    position: absolute;
-    inset: 0;
-    overflow: hidden;
-    z-index: 0;
-
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-      filter: brightness(0.6) saturate(0.7);
-      transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    }
-
-    .work-hud-overlay {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(
-        to right,
-        rgba(10, 5, 10, 0.5),
-        rgba(10, 5, 10, 0.9)
-      );
-      z-index: 1;
-    }
-
-    .scanlines {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(
-        to bottom,
-        rgba(255, 255, 255, 0.04) 1px,
-        transparent 1px
-      );
-      background-size: 100% 4px;
-      z-index: 2;
-      opacity: 0.6;
-    }
-  }
-
-  .work-red-plate {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      to bottom,
-      transparent 0%,
-      rgba(226, 52, 86, 0.7) 100%
-    );
-    transform: scaleY(0);
-    transform-origin: bottom;
-    transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    z-index: 1;
-  }
-
-  .work-content {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    width: calc(100% - 60px);
-    height: calc(100% - 60px);
-    padding: 30px;
-    z-index: 2;
-  }
-
-  .work-top-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 20px;
-  }
-
-  .company-row {
-    display: flex;
-    gap: 15px;
-    align-items: center;
-
-    .company-logo {
-      width: 50px;
-      height: 50px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(0, 0, 0, 0.3);
-
-      img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        filter: brightness(0.8);
-      }
-    }
-
-    .company-details {
-      .work-subtitle {
-        font-family: 'Unbounded Sans', monospace;
-        font-size: 0.65rem;
-        color: var(--opacity-color);
-        letter-spacing: 0.5px;
-        line-height: 1.4;
-      }
-      .ref-num {
-        font-family: 'Unbounded Sans', monospace;
-        font-size: 0.55rem;
-        color: rgba(255, 255, 255, 0.4);
-        margin-top: 2px;
-      }
-    }
-  }
-
-  .work-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    justify-content: flex-end;
-
-    .tech-label {
-      font-family: 'Unbounded Sans', monospace;
-      font-size: 0.55rem;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      padding: 4px 10px;
-      text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.6);
-      transition: all 0.3s ease;
-
-      &:hover {
-        background: #e23456;
-        color: white;
-        border-color: #e23456;
-      }
-    }
-  }
-
-  .work-title-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    margin-top: auto;
-    width: 100%;
-  }
-
-  .work-name {
-    font-family: 'anton', sans-serif;
-    font-size: 2rem;
-    line-height: 1.1;
-    color: var(--text-color);
-    width: 80%;
-    margin-right: 15px;
-  }
-  .project-ref-id div {
-    font-family: 'Anton', monospace;
-    font-size: 0.6rem;
-    color: rgba(255, 255, 255, 0.3);
-    text-align: right;
-    &.time {
-      background-color: rgba(255, 255, 255, 0.3);
-      color: rgb(40, 40, 40);
-    }
-  }
-
-  .corner {
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    z-index: 3;
-    pointer-events: none;
-    transition: all 0.4s ease;
-
-    &-tl {
-      top: 15px;
-      left: 15px;
-      border-right: 0;
-      border-bottom: 0;
-    }
-    &-tr {
-      top: 15px;
-      right: 15px;
-      border-left: 0;
-      border-bottom: 0;
-    }
-    &-bl {
-      bottom: 15px;
-      left: 15px;
-      border-right: 0;
-      border-top: 0;
-    }
-    &-br {
-      bottom: 15px;
-      right: 15px;
-      border-left: 0;
-      border-top: 0;
-    }
-  }
-
-  .tactical-text {
-    position: absolute;
-    top: 5px;
-    right: 30px;
-    font-family: 'Unbounded Sans', monospace;
-    font-size: 0.5rem;
-    color: rgba(255, 255, 255, 0.1);
-    z-index: 3;
-    pointer-events: none;
-  }
-
-  &:hover {
-    border-color: #e23456;
-    transform: translateY(-5px);
-
-    .work-base img {
-      transform: scale(1.05);
-      filter: brightness(0.7) saturate(0.9);
-    }
-
-    .work-red-plate {
-      transform: scaleY(1);
-    }
-    .work-content * {
-      color: white;
-    }
-
-    .tech-label {
-      border-color: rgba(255, 255, 255, 0.4);
-      color: rgba(255, 255, 255, 0.8);
-    }
-
-    .company-logo {
-      border-color: rgba(255, 255, 255, 0.4);
-    }
-
-    .corner {
-      border-color: #e23456;
-      border-width: 2px;
-      width: 15px;
-      height: 15px;
-    }
-
-    .ref-num,
-    .project-ref-id {
-      color: rgba(255, 255, 255, 0.6);
-    }
-    .tactical-text {
-      color: rgba(255, 255, 255, 0.4);
-    }
-  }
 }
 
 /* ─── KEYFRAMES ─────────────────────────────── */
@@ -1530,17 +1680,48 @@ const wheelEvent = (_e: WheelEvent) => {}
       gap: 15px;
     }
 
-    .work-card {
-      min-height: 280px;
-      .work-name {
-        font-size: 1.8rem;
+    .journey-grid {
+      grid-template-columns: minmax(0, min(84vw, 560px));
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .home-craft-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .home-craft-card {
+      min-height: 210px;
+      padding: 18px;
+
+      &__content {
+        gap: 16px;
+        margin: 20px 0;
       }
-      .work-tags {
-        justify-content: flex-start;
+
+      &__icon {
+        min-width: 54px;
+        font-size: 2.6rem;
       }
-      .company-row .company-logo {
-        width: 32px;
-        height: 32px;
+
+      &__copy h3 {
+        font-size: 0.86rem;
+      }
+    }
+
+    .journey-card {
+      min-height: 230px;
+
+      &__visual {
+        height: 128px;
+      }
+
+      &__info {
+        padding: 12px;
+
+        h3 {
+          font-size: 0.72rem;
+        }
       }
     }
   }

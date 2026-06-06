@@ -19,6 +19,8 @@ interface RouteMeta {
   titleCn: string
   fullFooter: boolean
   ifShow: boolean
+  noMenu?: boolean
+  vlogId?: string
 }
 
 // 定义路由配置接口
@@ -28,6 +30,31 @@ interface RouteConfig {
   component: any
   meta: RouteMeta
 }
+
+const flaneriePageModules = import.meta.glob(
+  '../views/Flânerie/*/index.vue'
+) as Record<string, () => Promise<unknown>>
+
+const flanerieRoutes: RouteConfig[] = Object.entries(flaneriePageModules)
+  .map(([filePath, component]) => {
+    const vlogId = filePath.match(/Flânerie\/([^/]+)\/index\.vue$/)?.[1]
+    if (!vlogId) return null
+
+    return {
+      path: `/flanerie/${vlogId}`,
+      name: `FLANERIE_${vlogId.toUpperCase()}`,
+      component,
+      meta: {
+        titleEn: vlogId.toUpperCase(),
+        titleCn: vlogId,
+        fullFooter: true,
+        ifShow: false,
+        noMenu: false,
+        vlogId,
+      },
+    }
+  })
+  .filter((route): route is RouteConfig => Boolean(route))
 
 export const routes: RouteConfig[] = [
   {
@@ -63,6 +90,7 @@ export const routes: RouteConfig[] = [
       ifShow: true,
     },
   },
+  ...flanerieRoutes,
   // {
   //   path: '/pokeyard',
   //   name: 'POKEYARD',
@@ -239,10 +267,21 @@ router.afterEach((to) => {
 
   // 设置页面标题
   if (to.meta.titleEn) {
+    const vlogId = to.meta.vlogId as string | undefined
+    const vlogs = i18n.global.tm('flanerie.dynamic.vlogs') as Array<{
+      id: string
+      title: string
+    }>
+    const vlogTitle = vlogId
+      ? vlogs.find((vlog) => vlog.id === vlogId)?.title
+      : undefined
     const siteNamePrefix = i18n.global.t('name[0]')
     const siteNameSuffix = i18n.global.t('name[2]')
 
-    document.title = ROUTE_CONFIG.TITLE_TEMPLATE.replace('%s', to.meta.titleEn)
+    document.title = ROUTE_CONFIG.TITLE_TEMPLATE.replace(
+      '%s',
+      vlogTitle || (to.meta.titleEn as string)
+    )
       .replace('%s', siteNamePrefix)
       .replace('%s', siteNameSuffix)
   }

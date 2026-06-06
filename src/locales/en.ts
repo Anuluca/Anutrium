@@ -17,6 +17,10 @@ export default {
     highlight: "I'm CURATING & RECORDING.",
     title01: 'ABOUT ME',
     title02: 'SELECTED ARCHIEVES',
+    title03: 'JOURNEY LOG',
+    title04: 'UTILITY CRAFTS',
+    journeyViewAll: 'VIEW ALL',
+    craftViewAll: 'VIEW ALL',
     dynamic: {
       recommend: [
         {
@@ -27,44 +31,6 @@ export default {
           category: 'RELEASE',
           date: '2026.06.10',
           img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/YfLHgA_composite.jpg',
-        },
-      ],
-      SelectedArchieves: [
-        {
-          id: 'P001',
-          title: 'ANUTRIUM',
-          time: '2025_12 to Now',
-          company: 'Anuluca',
-          tags: ['Vue3', 'Three.js', 'UI/UX', 'TYPESCRIPT'],
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/mega5.jpg',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/Logo/anutrium_favicon.jpg',
-        },
-        {
-          id: 'W001',
-          title: 'STATE GRID UAV SYSTEM',
-          time: '2023_12 to 2025_12',
-          company: 'State_Grid_Corporation_of_China',
-          tags: ['VUE3', 'ELEMENTPLUS', 'ECHARTS', 'WEBGL'],
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/G.webp',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.png',
-        },
-        {
-          id: 'W002',
-          title: 'STATE GRID RPA SYSTEM',
-          time: '2023_02 to 2023_11',
-          company: 'State_Grid_Corporation_of_China',
-          tags: ['Vue2', 'ELEMENTUI', 'SASS', 'ECHARTS'],
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/37fdd6dc419b49d785b9cb5d68aa6ef5.webp',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.png',
-        },
-        {
-          id: 'W003',
-          title: 'FINSENSE®',
-          time: '2022_01 to 2022_07',
-          company: 'Memect_Technology_Co., Ltd.',
-          tags: ['REACT', 'Antd', 'D3', 'PDF_VIEWER'],
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/8320d930cbcf10286068ff0c86e76fda398.png',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/130958568.png',
         },
       ],
     },
@@ -294,7 +260,10 @@ export default {
             'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/mega5.jpg',
             'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/mega6.jpg',
           ],
-          imageDescriptions: ['Early concept design 1', 'Early concept design 2'],
+          imageDescriptions: [
+            'Early concept design 1',
+            'Early concept design 2',
+          ],
           description:
             'The third iteration of my personal website, rebuilt from scratch with Vue 3 and Vite.',
           details: [
@@ -305,7 +274,11 @@ export default {
             'Implemented responsive design for mobile, tablet, and desktop devices.',
           ],
           links: [
-            { label: 'Official Website', url: 'https://anutrium.com', icon: 'Link' },
+            {
+              label: 'Official Website',
+              url: 'https://anutrium.com',
+              icon: 'Link',
+            },
           ],
         },
         {
@@ -462,6 +435,123 @@ export default {
             'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/first4.jpg',
             'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/first5.jpg',
           ],
+        },
+      ],
+    },
+  },
+  // Flânerie
+  flanerie: {
+    metaItem: 'Capture the world through my own eyes.',
+    videoLabel: 'VIDEO LOG',
+    photoLabel: 'PHOTO LOG',
+    countLabel: 'COUNT',
+    previousPage: 'PREV',
+    nextPage: 'NEXT',
+    pageLabel: 'PAGE',
+    dynamic: {
+      vlogs: [
+        {
+          id: 'nanjing',
+          title: 'JIANGSU | NANJING',
+          mapLabel: 'Nanjing',
+          date: '2026.03',
+          tagline: 'The texture of the city appears gradually while walking.',
+          device: ['Sony RX100M6', 'iPhone 17'],
+          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/porygon.png',
+          location: {
+            id: 'jiangsu',
+            name: 'Jiangsu',
+            lat: 32.06,
+            lng: 118.79,
+          },
+          videos: [],
+          photos: [],
+        },
+        {
+          id: 'nanjinghongshan',
+          title: 'JIANGSU | NANJING HONGSHAN ZOO',
+          mapLabel: 'Nanjing Hongshan Zoo',
+          date: '2026.03',
+          tagline:
+            'Recording brief encounters among animals, plants, and people.',
+          device: ['Sony RX100M6', 'iPhone 17'],
+          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/porygon.png',
+          location: {
+            id: 'jiangsu',
+            name: 'Jiangsu',
+            lat: 32.06,
+            lng: 118.79,
+          },
+          videos: [
+            {
+              title: 'VLOG',
+              bvid: 'BV1zmLs6GEhS',
+              url: 'https://www.bilibili.com',
+              orientation: 'portrait',
+            },
+          ],
+          photos: [
+            {
+              title: 'CITY SIGNAL',
+              src: 'https://picsum.photos/seed/nanjing-city-signal/1400/900',
+            },
+            {
+              title: 'RIVER TRACE',
+              src: 'https://picsum.photos/seed/nanjing-river-trace/1400/900',
+            },
+            {
+              title: 'NIGHT GRID',
+              src: 'https://picsum.photos/seed/nanjing-night-grid/900/1400',
+            },
+            {
+              title: 'STATION ECHO',
+              src: 'https://picsum.photos/seed/nanjing-station-echo/1400/900',
+            },
+            {
+              title: '',
+              src: 'https://picsum.photos/seed/nanjing-road-memory/1400/900',
+            },
+            {
+              title: 'PARK NODE',
+              src: 'https://picsum.photos/seed/nanjing-park-node/900/1400',
+            },
+          ],
+        },
+        {
+          id: 'fuzhou',
+          title: 'FUJIAN | FUZHOU',
+          mapLabel: 'Fuzhou',
+          date: '2024.11',
+          tagline:
+            'Following banyan trees and alleys through humid southern memories.',
+          device: ['Sony RX100M6', 'iPhone 17'],
+          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/porygon.png',
+          location: {
+            id: 'fujian',
+            name: 'Fujian',
+            lat: 26.08,
+            lng: 119.3,
+          },
+          videos: [],
+          photos: [],
+        },
+        {
+          id: 'pingtandao',
+          title: 'FUJIAN | PINGTAN ISLAND',
+          mapLabel: 'Pingtan Island',
+          date: '2024.06',
+          tagline:
+            'Sea wind crosses the island, leaving fragments of blue and stone.',
+          device: ['Sony RX100M6', 'iPhone 17'],
+          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/porygon.png',
+          location: {
+            id: 'fujian',
+            name: 'Fujian',
+            lat: 26.08,
+            lng: 119.3,
+          },
+          videos: [],
+          photos: [],
         },
       ],
     },
