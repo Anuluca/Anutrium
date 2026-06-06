@@ -17,24 +17,20 @@ export default defineConfig({
     }),
   ],
   resolve: {
-    // 配置路径别名
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
     extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json'],
   },
   css: {
-    // less预处理器
     preprocessorOptions: {
       less: {
         charset: false,
-        // 每个 Less 文件都会自动导入此全局样式文件
         additionalData: '@import "./src/assets/style/global.less";',
       },
     },
   },
   build: {
-    //打包环境移除console.log，debugger
     minify: 'terser',
     terserOptions: {
       compress: {
@@ -44,13 +40,12 @@ export default defineConfig({
     },
     rollupOptions: {
       output: {
-        // 去掉静态资源（图片、字体等）的 hash
         assetFileNames: 'assets/[name][extname]',
       },
     },
   },
   server: {
-    port: 3000, // 更改端口号为3000
+    port: 3000,
   },
   base: './',
 })

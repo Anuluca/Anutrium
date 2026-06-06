@@ -1,9 +1,8 @@
-// 英文国际化
 export default {
   // eslint-disable-next-line quotes
   name: ['Anu', "luca's A", 'trium'],
   scroll: 'SCROLL TO EXPLORE',
-  // 404页
+
   notFound: {
     description: 'THIS PAGE MAY STILL BE UNDER DEVELOPMENT',
     back: 'CLICK HERE TO RETURN TO HOMEPAGE',
@@ -11,13 +10,13 @@ export default {
   workDetailModal: {
     participation: 'PARTICIPATION',
   },
-  // 首页
+
   home: {
     // eslint-disable-next-line quotes
     highlight: "I'm CURATING & RECORDING.",
     title01: 'ABOUT ME',
-    title02: 'SELECTED ARCHIEVES',
-    title03: 'JOURNEY LOG',
+    title02: 'SELECTED ARCHIVES',
+    title03: 'FLÂNERIE LOG',
     title04: 'UTILITY CRAFTS',
     journeyViewAll: 'VIEW ALL',
     craftViewAll: 'VIEW ALL',
@@ -35,12 +34,12 @@ export default {
       ],
     },
   },
-  // 作品集
-  archieve: {
-    title01: 'WEB ARCHIEVES',
+
+  archive: {
+    title01: 'WEB ARCHIVES',
     title02: 'OTHER PROJECTS',
     dynamic: {
-      WebArchieves: [
+      WebArchives: [
         {
           id: 'W001',
           title: 'STATE GRID UAV SYSTEM',
@@ -439,7 +438,7 @@ export default {
       ],
     },
   },
-  // Flânerie
+
   flanerie: {
     metaItem: 'Capture the world through my own eyes.',
     videoLabel: 'VIDEO LOG',
@@ -455,7 +454,8 @@ export default {
           title: 'JIANGSU | NANJING',
           mapLabel: 'Nanjing',
           date: '2026.03',
-          tagline: 'The texture of the city appears gradually while walking.',
+          tagline:
+            'Half Jinling in mist and rain, half Stone City in its bones.',
           device: ['Sony RX100M6', 'iPhone 17'],
           img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/porygon.png',
           location: {
@@ -472,8 +472,7 @@ export default {
           title: 'JIANGSU | NANJING HONGSHAN ZOO',
           mapLabel: 'Nanjing Hongshan Zoo',
           date: '2026.03',
-          tagline:
-            'Recording brief encounters among animals, plants, and people.',
+          tagline: "A visit to mainland China's most highly regarded zoo.",
           device: ['Sony RX100M6', 'iPhone 17'],
           img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/porygon.png',
           location: {
@@ -522,8 +521,7 @@ export default {
           title: 'FUJIAN | FUZHOU',
           mapLabel: 'Fuzhou',
           date: '2024.11',
-          tagline:
-            'Following banyan trees and alleys through humid southern memories.',
+          tagline: 'Banyan trees, alleyways, and boats.',
           device: ['Sony RX100M6', 'iPhone 17'],
           img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/porygon.png',
           location: {
@@ -538,10 +536,10 @@ export default {
         {
           id: 'pingtandao',
           title: 'FUJIAN | PINGTAN ISLAND',
-          mapLabel: 'Pingtan Island',
+          mapLabel: 'A dream island for Alolans at heart.',
           date: '2024.06',
           tagline:
-            'Sea wind crosses the island, leaving fragments of blue and stone.',
+            'Sea winds cross the island, leaving behind slices of blue and stone.',
           device: ['Sony RX100M6', 'iPhone 17'],
           img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/porygon.png',
           location: {
@@ -556,7 +554,7 @@ export default {
       ],
     },
   },
-  // 工具
+
   craft: {
     metaItem: 'Once an idea appears, I find a way to build it.',
     dynamic: {

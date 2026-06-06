@@ -3,7 +3,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  
+
   .inner {
     width: 1000px;
     height: 350px;
@@ -29,23 +29,23 @@
       left: 0;
       font-family: 'Unbounded Sans';
       transition: text-shadow 0.2s ease, color 0.5s ease;
-      
+
       p {
         font-size: 29px;
         line-height: 35px;
         text-shadow: 0 0 8px var(--opacity-color);
-        
+
         &:first-child {
           font-size: 60px;
           line-height: 60px;
-          
+
           span {
             font-size: 110px;
           }
-          
+
           animation: shineFont 5s linear infinite;
         }
-        
+
         &:last-child {
           white-space: nowrap;
           background-color: var(--opacity-color);
@@ -58,7 +58,7 @@
           transition: all 0.3s ease, width 0.5s ease;
           text-shadow: none;
           cursor: pointer;
-          
+
           &:hover {
             background-color: #9b9b9b42;
             color: var(--text-color);
@@ -75,24 +75,24 @@
       width: 360px !important;
       height: 330px !important;
     }
-    
+
     .show-text {
       width: 500px;
-      
+
       p {
         font-size: 25px !important;
         line-height: 25px !important;
-        
+
         &:first-child {
           font-size: 50px !important;
           line-height: 60px !important;
-          
+
           span {
             font-size: 90px !important;
             display: block;
           }
         }
-        
+
         &:nth-child(2) {
           font-size: 15px !important;
           line-height: 14px !important;
@@ -103,7 +103,6 @@
   }
 }
 
-// 动画定义
 @keyframes shineFont {
   0%, 100% {
     text-shadow: 0 0 30px #ffffffba;

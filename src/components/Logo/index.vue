@@ -66,7 +66,7 @@ const props = defineProps({
     type: String,
     default: 'n-mask',
   },
-  // 新增控制开关
+
   active: {
     type: Boolean,
     default: true,
@@ -77,7 +77,6 @@ const maskId = computed(() => `mask-${props.id}`)
 </script>
 
 <style scoped>
-/* 样式部分完全保持原样 */
 .svg-container {
   display: inline-block;
   line-height: 0;

@@ -12,10 +12,8 @@ import { visualState } from '@/stores'
 
 const visualStateStore = visualState()
 
-// 判断是否为移动端
 const isMobile = computed(() => visualStateStore.deviceType !== 'desktop')
 
-// 类名白名单 - 这些类名的元素移入时不显示指针
 const HIDDEN_CURSOR_CLASSNAMES = ['no-cursor', 'hide-cursor', 'cursor-none']
 
 const mouse = reactive({ x: 0, y: 0 })
@@ -40,7 +38,6 @@ const shouldAnimateCursor = computed(() => {
   return !isMobile.value && isPageVisible.value
 })
 
-// 检查是否应该隐藏指针
 const checkShouldHideCursor = (target) => {
   if (!target || !target.classList) return false
 
@@ -62,7 +59,6 @@ const onMouseMove = (e) => {
   mouse.y = e.clientY
   hasPointerPosition = true
 
-  // 实时检测是否需要隐藏指针
   shouldHideCursor.value = checkShouldHideCursor(e.target)
   startRender()
 }
@@ -70,16 +66,13 @@ const onMouseMove = (e) => {
 const onMouseDown = () => (isClicked.value = true)
 const onMouseUp = () => (isClicked.value = false)
 
-// ✨ 新增：使用事件委托处理 Hover 状态
 const onMouseOver = (e) => {
   if (!shouldAnimateCursor.value) return
 
-  // 如果是指针隐藏区域，不触发 hover 效果
   if (checkShouldHideCursor(e.target)) {
     return
   }
 
-  // closest() 可以确保就算鼠标悬停在 button 内部的 span 上，也能正确识别
   if (e.target.closest('a, button, [data-magnetic]')) {
     isHovering.value = true
   }
@@ -88,7 +81,6 @@ const onMouseOver = (e) => {
 const onMouseOut = (e) => {
   if (!shouldAnimateCursor.value) return
 
-  // 当鼠标离开目标元素时
   if (e.target.closest('a, button, [data-magnetic]')) {
     isHovering.value = false
   }
@@ -138,7 +130,6 @@ onMounted(() => {
   window.addEventListener('mouseup', onMouseUp)
   document.addEventListener('visibilitychange', handleVisibilityChange)
 
-  // 绑定全局委托事件，抛弃 setTimeout 和 querySelectorAll
   window.addEventListener('mouseover', onMouseOver)
   window.addEventListener('mouseout', onMouseOut)
 })
@@ -149,7 +140,6 @@ onUnmounted(() => {
   window.removeEventListener('mouseup', onMouseUp)
   document.removeEventListener('visibilitychange', handleVisibilityChange)
 
-  // 清理事件
   window.removeEventListener('mouseover', onMouseOver)
   window.removeEventListener('mouseout', onMouseOut)
 
@@ -162,7 +152,6 @@ watch(shouldAnimateCursor, (canAnimate) => {
 </script>
 
 <style>
-/* 全局强制隐藏系统指针 */
 @media (hover: hover) and (pointer: fine) {
   * {
     cursor: none !important;
@@ -172,7 +161,7 @@ watch(shouldAnimateCursor, (canAnimate) => {
 
 <style lang="less" scoped>
 @follower-size: 24px;
-// 三角形在视觉上会显得比同样宽度的圆小，所以做大一点保持视觉平衡
+
 @triangle-size: 36px;
 
 .cursor-position {
@@ -181,17 +170,15 @@ watch(shouldAnimateCursor, (canAnimate) => {
   left: 0;
   pointer-events: none;
   z-index: 9999;
-  // 把差值混合放在最外层，确保所有变形都能完美反色
+
   mix-blend-mode: difference;
   transition: opacity 0.2s ease;
 }
 
 .cursor-scale {
-  // 点击时的缩放动画，使用 cubic-bezier 增加一点"Q弹"的物理回弹感
   transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 
   &.is-clicked {
-    // 点击时整体放大 1.5 倍
     transform: scale(1.5);
   }
 }
@@ -205,7 +192,6 @@ watch(shouldAnimateCursor, (canAnimate) => {
   border-radius: 50%;
   box-shadow: 0 0 20px #ffffff61;
 
-  // 形态切换时的丝滑过渡
   transition: all 1s cubic-bezier(0.25, 1, 0.5, 1);
 
   &.is-active {
@@ -213,17 +199,14 @@ watch(shouldAnimateCursor, (canAnimate) => {
     height: @triangle-size;
     margin-top: -(@triangle-size / 2);
     margin-left: -(@triangle-size / 2);
-    border-radius: 0; // 取消圆角
+    border-radius: 0;
 
-    // 使用 CSS 遮罩绘制正三角形
     clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
 
-    // 增加旋转动画
     animation: spin 2s linear infinite;
   }
 }
 
-// 旋转动画关键帧
 @keyframes spin {
   0% {
     transform: rotate(0deg);

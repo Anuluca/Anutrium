@@ -108,8 +108,6 @@ import { useRouter } from 'vue-router'
 import CrystalLogo from '@/components/CrystalLogo/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
 
-const locale = ref('en')
-
 const previewUrl = ref<string>('')
 const extractedColors = ref<string[]>([])
 const isExtracting = ref(false)
@@ -122,7 +120,6 @@ const recommendedTools = [
   { label: '缓动工作室', path: '/easeStudio' },
 ]
 
-// 生成对应的 CSS 文本
 const cssVariablesText = computed(() => {
   if (extractedColors.value.length === 0) return ''
   let text = ':root {\n'
@@ -134,7 +131,6 @@ const cssVariablesText = computed(() => {
   return text
 })
 
-// 处理文件选择
 const handleFileChange = (e: Event) => {
   const target = e.target as HTMLInputElement
   if (target.files && target.files[0]) {
@@ -142,14 +138,12 @@ const handleFileChange = (e: Event) => {
   }
 }
 
-// 处理拖拽
 const handleDrop = (e: DragEvent) => {
   if (e.dataTransfer && e.dataTransfer.files[0]) {
     processImage(e.dataTransfer.files[0])
   }
 }
 
-// 核心处理：读取图片并进行色彩分析
 const processImage = (file: File) => {
   isExtracting.value = true
   const reader = new FileReader()
@@ -161,7 +155,6 @@ const processImage = (file: File) => {
   reader.readAsDataURL(file)
 }
 
-// 算法：轻量级 Canvas 像素降维聚合抽取
 const analyzeColors = (src: string) => {
   const img = new Image()
   img.src = src
@@ -246,7 +239,6 @@ const handleTagClick = () => {
 @muted: rgba(255, 255, 255, 0.45);
 @mono: 'source-han-sans-simplified-c', monospace;
 
-// ─── 核心字体无损横向压缩 Mixin ───
 .font-squish(@origin: center) {
   font-family: 'STSong', serif;
   display: inline-block;
@@ -254,7 +246,6 @@ const handleTagClick = () => {
   transform-origin: @origin;
 }
 
-// ─── 统一短促入场动画定义 ───
 @keyframes tacticalIn {
   0% {
     opacity: 0;
@@ -271,7 +262,6 @@ const handleTagClick = () => {
   font-family: 'Unbounded Sans', system-ui, sans-serif;
 }
 
-// ─── 动画节奏控制 ───
 .pt-header {
   animation: tacticalIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
@@ -279,13 +269,12 @@ const handleTagClick = () => {
   animation: tacticalIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) 0.1s both;
 }
 .pt-result-area {
-  animation: tacticalIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s both; // 与左侧产生 0.05s 的轻微错落感
+  animation: tacticalIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s both;
 }
 .footer-wrap {
   animation: tacticalIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) 0.25s both;
 }
 
-// ─── Header ───
 .pt-header {
   margin-bottom: 20px;
   border-bottom: 1px solid @border;
@@ -356,11 +345,10 @@ const handleTagClick = () => {
   }
   100% {
     opacity: 1;
-    transform: scaleX(0.9); // 保持横向压缩状态
+    transform: scaleX(0.9);
   }
 }
 
-// ─── Grid Layout ───
 .pt-grid {
   display: grid;
   grid-template-columns: 5fr 2fr;
@@ -368,7 +356,6 @@ const handleTagClick = () => {
   align-items: stretch;
 }
 
-// ─── Panel Base ───
 .pt-panel {
   position: relative;
   background: #25252587;
@@ -445,7 +432,6 @@ const handleTagClick = () => {
   }
 }
 
-// ─── Upload Area ───
 .pt-upload-input {
   display: none;
 }
@@ -548,7 +534,6 @@ const handleTagClick = () => {
   pointer-events: none;
 }
 
-// ─── Result Area ───
 .pt-panel-title {
   display: flex;
   justify-content: space-between;
@@ -617,7 +602,6 @@ const handleTagClick = () => {
   }
 }
 
-// ─── Code Area ───
 .pt-code-wrap {
   flex: 1;
   display: flex;
@@ -686,7 +670,6 @@ const handleTagClick = () => {
   z-index: 1;
 }
 
-// ─── Responsive ───
 @media (max-width: 900px) {
   .pt-grid {
     grid-template-columns: 1fr;

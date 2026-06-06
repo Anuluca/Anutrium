@@ -6,7 +6,6 @@ import './index.less'
 
 const router = useRouter()
 
-// 定义响应式数据控制动画状态
 const showTextClass = ref('')
 const lastShowTextWidth = ref('0')
 const porygonStyle = ref({

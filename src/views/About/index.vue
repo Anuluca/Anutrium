@@ -3,6 +3,7 @@ import { ref } from 'vue'
 
 import PokeAmice from '@/assets/img/about/pokeAmice.png'
 import PageHeader from '@/components/PageHeader/index.vue'
+import PageFooter from '@/components/PageFooter/index.vue'
 
 const activeIndex = ref<number | null>(0)
 
@@ -112,9 +113,7 @@ const neighbors = ref([
       primary-color="#5D3ABA"
     />
 
-    <!-- ── CHANGELOG ──────────────────────────── -->
     <section class="block">
-      <!-- 区块标题 -->
       <div class="section-header">
         <h3 class="section-title">
           &lt; CHANGELOG &gt;<span class="cn">更新日志</span>
@@ -122,7 +121,6 @@ const neighbors = ref([
         <div class="section-line" />
       </div>
 
-      <!-- 时间轴 -->
       <div class="timeline">
         <div
           v-for="(log, index) in changelogs"
@@ -130,15 +128,12 @@ const neighbors = ref([
           class="timeline-item"
           :class="{ 'is-active': activeIndex === index }"
         >
-          <!-- 左侧轴标 -->
           <div class="axis">
             <div class="axis-diamond" />
             <div class="axis-line" />
           </div>
 
-          <!-- 右侧内容 -->
           <div class="log-card">
-            <!-- 卡片头 -->
             <div class="log-head" @click="toggleLog(index)">
               <div class="log-meta">
                 <span class="log-version">{{ log.version }}</span>
@@ -155,7 +150,6 @@ const neighbors = ref([
               </div>
             </div>
 
-            <!-- 展开内容 -->
             <div class="log-expand">
               <div class="log-expand-inner">
                 <ul>
@@ -170,7 +164,6 @@ const neighbors = ref([
       </div>
     </section>
 
-    <!-- ── NEIGHBORS ──────────────────────────── -->
     <section class="block">
       <div class="section-header">
         <h3 class="section-title">
@@ -226,33 +219,29 @@ const neighbors = ref([
       </div>
     </section>
 
-    <!-- ── FOOTER ─────────────────────────────── -->
-    <footer class="about-footer">
+    <!-- <footer class="about-footer">
       <span class="footer-text">&lt; DRIVEN BY PASSION. &gt;</span>
-    </footer>
+    </footer> -->
+    <PageFooter cn-title="关于" en-title="ABOUT" />
   </div>
 </template>
 
 <style lang="less" scoped>
-/* ── 全局变量 ─────────────────────────────────── */
 @red: #e23456;
 @red-dim: rgba(226, 52, 86, 0.15);
 @border: rgba(255, 255, 255, 0.07);
 @text-dim: rgba(255, 255, 255, 0.4);
 @card-bg: rgba(255, 255, 255, 0.025);
 
-/* ── 页面容器 ─────────────────────────────────── */
 .about-page {
   margin: 0 auto;
   color: #fff;
 }
 
-/* ── 区块间距 ─────────────────────────────────── */
 .block {
   margin-bottom: 100px;
 }
 
-/* ── 区块标题组 ───────────────────────────────── */
 .section-header {
   display: flex;
   align-items: baseline;
@@ -289,7 +278,6 @@ const neighbors = ref([
   align-self: center;
 }
 
-/* ── 时间轴 ───────────────────────────────────── */
 .timeline {
   display: flex;
   flex-direction: column;
@@ -303,7 +291,6 @@ const neighbors = ref([
   position: relative;
 
   &.is-active {
-    // 激活时菱形变红
     .axis-diamond {
       border-color: @red;
       background: @red;
@@ -335,7 +322,6 @@ const neighbors = ref([
   }
 }
 
-/* ── 左侧轴 ── */
 .axis {
   display: flex;
   flex-direction: column;
@@ -345,7 +331,6 @@ const neighbors = ref([
   padding-top: 19px;
 }
 
-/* 机能风菱形节点 */
 .axis-diamond {
   width: 8px;
   height: 8px;
@@ -356,7 +341,6 @@ const neighbors = ref([
   transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
   position: relative;
 
-  // 外圈菱形轮廓
   &::before {
     content: '';
     position: absolute;
@@ -365,7 +349,6 @@ const neighbors = ref([
     transition: border-color 0.3s;
   }
 
-  // 扫描线装饰：菱形内的十字
   &::after {
     content: '';
     position: absolute;
@@ -391,7 +374,6 @@ const neighbors = ref([
   margin-top: 8px;
 }
 
-/* ── 卡片 ── */
 .log-card {
   flex: 1;
   border: 1px solid @border;
@@ -401,7 +383,6 @@ const neighbors = ref([
   overflow: hidden;
 }
 
-/* 卡片头 */
 .log-head {
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -479,7 +460,6 @@ const neighbors = ref([
   margin-bottom: 3px;
 }
 
-/* 展开区域 */
 .log-expand {
   display: grid;
   grid-template-rows: 0fr;
@@ -525,7 +505,6 @@ const neighbors = ref([
   font-size: 15px;
 }
 
-/* ── 友情链接 ─────────────────────────────────── */
 .neighbors-grid {
   position: relative;
   display: flex;
@@ -807,9 +786,7 @@ const neighbors = ref([
   }
 }
 
-/* ── 页脚 ─────────────────────────────────────── */
 .about-footer {
-  padding: 80px 0 120px;
   text-align: center;
   border-top: 1px solid @border;
 }
@@ -818,11 +795,11 @@ const neighbors = ref([
   font-family: 'anton', monospace;
   font-size: 1.2rem;
   letter-spacing: 4px;
+  line-height: 2rem;
   color: @red;
   filter: drop-shadow(0 0 10px @red);
 }
 
-/* ── 响应式 ───────────────────────────────────── */
 @media (max-width: 768px) {
   .section-title {
     font-size: 1.8rem;

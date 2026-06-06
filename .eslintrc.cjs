@@ -31,7 +31,6 @@ module.exports = {
     'no-duplicate-imports': 'error',
     quotes: 'off',
     semi: ['error', 'never'],
-    // 配合多行导入的排序（防止 Prettier 冲突）
     'import/first': 'error',
     'import/newline-after-import': 'error',
     'import/no-duplicates': 'error',
@@ -39,11 +38,8 @@ module.exports = {
       'error',
       {
         groups: [
-          // 1. Vue 相关、第三方库
           ['^vue', '^@?\\w'],
-          // 2. 内部别名路径 (如 @/components)
           ['^@/'],
-          // 3. 父级目录和同级目录导入
           [
             '^\\.\\.(?!/?$)',
             '^\\.\\./?$',
@@ -51,9 +47,7 @@ module.exports = {
             '^\\./?$',
             '^\\.(?!/?$)',
           ],
-          // 4. 类型导入 (配合你之前的 verbatimModuleSyntax)
           ['^@/types', '^type'],
-          // 5. 样式文件
           ['^.+\\.s?css$', '^.+\\.less$'],
         ],
       },

@@ -193,8 +193,8 @@
         <h2 class="section-title" data-section="02">
           {{ $t('home.title02') }}
         </h2>
-        <RouterLink class="archive-entry" to="/archieve">
-          <span class="archive-entry__code">ARCHIEVE_INDEX</span>
+        <RouterLink class="archive-entry" to="/archive">
+          <span class="archive-entry__code">ARCHIVE_INDEX</span>
           <span class="archive-entry__text">
             {{ locale === 'en' ? 'VIEW ALL' : '全部项目' }}
           </span>
@@ -211,7 +211,7 @@
             @select="openWorkDetail(work)"
           />
         </div>
-        <RouterLink class="and-more-entry" to="/archieve">
+        <RouterLink class="and-more-entry" to="/archive">
           AND MORE...
         </RouterLink>
       </div>
@@ -294,7 +294,7 @@ import { useRouter } from 'vue-router'
 
 import LogoOnly3D from '@/components/LogoOnly3D/index.vue'
 import MarqueeShowcase from '@/components/MarqueeShowcase/index.vue'
-import PageFooter from '@/components/PageFooter/index.vue' // 引入新组件
+import PageFooter from '@/components/PageFooter/index.vue'
 import ToolCard from '@/components/ToolCard/index.vue'
 import VlogCard from '@/components/VlogCard/index.vue'
 import WorkCard from '@/components/WorkCard/index.vue'
@@ -303,7 +303,6 @@ import WorkDetailModal from '@/components/WorkDetailModal/index.vue'
 const { locale, tm } = useI18n()
 const router = useRouter()
 
-// ── 轮播数据 ──────────────────────────────
 interface NewsItem {
   id: number
   title: string
@@ -396,7 +395,6 @@ const pauseAuto = () => {
 }
 const resumeAuto = () => startAuto()
 
-// ── 背景图片 ─────────────────────────────────
 interface BackgroundImage {
   id: string
   left: number
@@ -458,7 +456,6 @@ onUnmounted(() => {
   document.removeEventListener('visibilitychange', handleVisibilityChange)
 })
 
-// ── 作品集数据 ──────────────────────────────
 interface WorkItem {
   id: string
   title: string
@@ -478,9 +475,9 @@ interface WorkItem {
 const selectedWorkIds = ['W001', 'W003', 'W005', 'P001']
 
 const works = computed<WorkItem[]>(() => {
-  const webArchieves = tm('archieve.dynamic.WebArchieves') as WorkItem[]
+  const webArchives = tm('archive.dynamic.WebArchives') as WorkItem[]
   return selectedWorkIds
-    .map((id) => webArchieves.find((work) => work.id === id))
+    .map((id) => webArchives.find((work) => work.id === id))
     .filter((work): work is WorkItem => Boolean(work))
 })
 
@@ -531,7 +528,7 @@ interface HomeTool {
   link: string
 }
 
-const homeToolIds = ['bounce-dynamics', 'metronome']
+const homeToolIds = ['bounce-dynamics', 'metronome', 'palette', 'image-base64']
 
 const homeTools = computed<HomeTool[]>(() => {
   const tools = tm('craft.dynamic.tools') as HomeTool[]
@@ -548,7 +545,6 @@ const wheelEvent = (_e: WheelEvent) => {}
   width: 100%;
 }
 
-/* ─── HERO ──────────────────────────────────── */
 .hero-section {
   position: relative;
   min-height: calc(100vh - 220px);
@@ -566,7 +562,6 @@ const wheelEvent = (_e: WheelEvent) => {}
   gap: 1rem;
 }
 
-/* ─── RECOMMEND ─────────────────────────────── */
 .recommend {
   width: 26rem;
   height: 15rem;
@@ -825,7 +820,6 @@ const wheelEvent = (_e: WheelEvent) => {}
   transform: translateX(-30px);
 }
 
-/* ─── MAIN SLOGAN ────────────────────────── */
 .main-slogan {
   position: relative;
   overflow: visible;
@@ -1078,7 +1072,6 @@ const wheelEvent = (_e: WheelEvent) => {}
   }
 }
 
-/* ─── MANIFESTO ────────────────────────────── */
 .manifesto-section {
   padding: 60px 0;
 
@@ -1141,17 +1134,16 @@ const wheelEvent = (_e: WheelEvent) => {}
   }
 }
 
-/* ─── WORKS ────────────────────────────────── */
 .works-section {
-  padding: 60px 0;
+  padding: 30px 0;
 }
 
 .journey-section {
-  padding: 60px 0;
+  padding: 30px 0;
 }
 
 .craft-section {
-  padding: 60px 0;
+  padding: 30px 0;
 }
 
 .home-module-grid {
@@ -1484,7 +1476,6 @@ const wheelEvent = (_e: WheelEvent) => {}
   width: 100%;
 }
 
-/* ─── KEYFRAMES ─────────────────────────────── */
 @keyframes motoFadeIn {
   to {
     opacity: 1;

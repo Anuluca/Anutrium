@@ -7,7 +7,6 @@
       'no-menu': ifNoMenu,
     }"
   >
-    <!-- 头部 -->
     <el-header class="el-menu-layout-all" :class="{ scrolled: isScrolled }">
       <div class="logo-box" @click="returnHome">
         <Logo id="0" class="logo" :active="false" />
@@ -22,7 +21,6 @@
         </div>
       </div>
 
-      <!-- 桌面端菜单 -->
       <el-menu
         v-if="!isMobile"
         :default-active="currentRouter"
@@ -30,7 +28,6 @@
         router
         :ellipsis="false"
       >
-        <!-- @select="handleSelect" -->
         <div class="menu-box">
           <RouterLink
             v-for="(item, index) in filterRoutes"
@@ -51,7 +48,6 @@
       </el-menu>
     </el-header>
 
-    <!-- 移动端菜单按钮 -->
     <div
       v-if="isMobile"
       :class="{ 'mobile-menu-icon': true, scrolled: isScrolled }"
@@ -64,7 +60,6 @@
       </div>
     </div>
 
-    <!-- 移动端菜单面板 -->
     <div
       :class="{
         'mobile-menu-panel': true,
@@ -148,7 +143,6 @@
       </div>
     </div>
 
-    <!-- body -->
     <div
       :class="{ 'router-container': true, blur: isMobile && isMobileMenuOpen }"
     >
@@ -183,7 +177,6 @@ const currentRouter = computed(() => {
   return route.path
 })
 
-// 新增的滚动相关引用和状态
 const layoutPage = ref<HTMLElement | null>(null)
 const isScrolled = ref(false)
 const layoutShow = ref(false)
@@ -192,17 +185,14 @@ const theme = computed(() => visualStateStore.theme)
 const filterRoutes = routes.filter((item) => {
   return item?.meta?.ifShow
 })
-// 直接通过当前活跃的 route 对象读取 meta.noMenu
+
 const ifNoMenu = computed(() => !!route.meta?.noMenu)
 
-// 移动端相关状态 - 从store中获取设备类型
 const isMobile = computed(() => visualStateStore.deviceType !== 'desktop')
 const isMobileMenuOpen = ref(false)
 
-// 全屏状态
 const isFullscreen = ref(false)
 
-// 切换全屏
 const toggleFullscreen = () => {
   if (!document.fullscreenElement) {
     document.documentElement
@@ -227,7 +217,6 @@ const toggleFullscreen = () => {
   }
 }
 
-// 移动端菜单控制
 const toggleMobileMenu = () => {
   isMobileMenuOpen.value = !isMobileMenuOpen.value
 }
@@ -236,7 +225,6 @@ const closeMobileMenu = () => {
   isMobileMenuOpen.value = false
 }
 
-// 监听滚动事件
 const handleScroll = () => {
   isScrolled.value = document.documentElement.scrollTop > 50
 }
@@ -257,7 +245,6 @@ const toggleTheme = () => {
   visualStateStore.toggleTheme()
 }
 
-// 模拟 contact 方法，因为原始代码中没有定义
 const contact = (type: string) => {
   console.log(`${type} clicked`)
 }
@@ -271,11 +258,9 @@ onMounted(() => {
     layoutShow.value = true
   }, 100)
 
-  // 添加滚动事件监听器
   document.addEventListener('scroll', handleScroll, { passive: true })
 })
 
-// 清理事件监听器
 onUnmounted(() => {
   document.removeEventListener('scroll', handleScroll)
 })
@@ -284,7 +269,6 @@ onUnmounted(() => {
 <style lang="less" scoped>
 @import './index.less';
 
-// 添加路由切换过渡动画
 .route-enter-active,
 .route-leave-from {
   transition: opacity 0.2s ease, transform 0.6s ease, filter 0.6s ease;

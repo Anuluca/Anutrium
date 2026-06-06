@@ -11,15 +11,11 @@
       primary-color="#e7492d"
     />
 
-    <!-- ══════════════════════════════════════
-         Vlog 旅行记录
-    ══════════════════════════════════════ -->
     <section class="vlog-section">
-      <!-- 世界地图 -->
       <div ref="mapContainerRef" class="map-container">
         <div class="map-hud-label">// TRAVEL_MAP</div>
         <div id="travel-map" ref="mapRef" class="travel-map" />
-        <!-- 地图 HUD 装饰 -->
+
         <div class="corner corner-tl" />
         <div class="corner corner-tr" />
         <div class="corner corner-bl" />
@@ -27,7 +23,6 @@
         <div class="map-scanlines" />
       </div>
 
-      <!-- Vlog 卡片网格 -->
       <div class="vlog-grid">
         <VlogCard
           v-for="vlog in vlogs"
@@ -40,6 +35,7 @@
         />
       </div>
     </section>
+    <PageFooter cn-title="旅程" en-title="FLÂNERIE" />
   </div>
 </template>
 
@@ -50,8 +46,8 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import PageHeader from '@/components/PageHeader/index.vue'
 import VlogCard from '@/components/VlogCard/index.vue'
+import PageFooter from '@/components/PageFooter/index.vue'
 
-// ── 类型定义 ───────────────────────────────────
 interface VlogLocation {
   id: string
   name: string
@@ -78,7 +74,6 @@ const vlogs = computed<VlogItem[]>(() => {
   return tm('flanerie.dynamic.vlogs') as VlogItem[]
 })
 
-// ── 主题页跳转 ─────────────────────────────────
 const hasVlogPage = (vlogId: string) => {
   return router
     .resolve(`/flanerie/${vlogId}`)
@@ -91,9 +86,6 @@ const openVlog = (vlog: VlogItem) => {
   router.push(`/flanerie/${vlog.id}`)
 }
 
-// ══════════════════════════════════════════════
-// Leaflet 世界地图（禁用滚轮缩放）
-// ══════════════════════════════════════════════
 const mapRef = ref<HTMLElement | null>(null)
 const mapContainerRef = ref<HTMLElement | null>(null)
 const activeVlogId = ref<string | null>(null)
@@ -173,7 +165,6 @@ const buildPlacePopup = (place: MapPlaceGroup) => {
 const initMap = async () => {
   if (!mapRef.value) return
 
-  // 动态加载 Leaflet（避免 SSR 问题）
   const L = (window as any).L
   if (!L) return
 
@@ -184,19 +175,16 @@ const initMap = async () => {
     maxZoom: 8,
     zoomControl: false,
     attributionControl: false,
-    scrollWheelZoom: false, // 禁用滚轮缩放
+    scrollWheelZoom: false,
   })
 
-  // 使用 CartoDB 暗色底图，风格契合网站
   L.tileLayer(
     'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',
     { subdomains: 'abcd', maxZoom: 8 }
   ).addTo(mapInstance)
 
-  // 自定义缩放控件位置
   L.control.zoom({ position: 'bottomright' }).addTo(mapInstance)
 
-  // 添加地点组标记
   mapPlaces.value.forEach((place) => {
     const icon = L.divIcon({
       className: '',
@@ -260,7 +248,6 @@ const initMap = async () => {
 }
 
 onMounted(async () => {
-  // 确保 Leaflet CSS 已加载
   if (!document.getElementById('leaflet-css')) {
     const link = document.createElement('link')
     link.id = 'leaflet-css'
@@ -268,7 +255,7 @@ onMounted(async () => {
     link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
     document.head.appendChild(link)
   }
-  // 确保 Leaflet JS 已加载
+
   if (!(window as any).L) {
     await new Promise<void>((resolve) => {
       const script = document.createElement('script')
@@ -302,14 +289,12 @@ onUnmounted(() => {
 </script>
 
 <style lang="less" scoped>
-/* ── 变量 ─────────────────────────────────────── */
 @red: #e23456;
 @red-dim: rgba(226, 52, 86, 0.15);
 @border: rgba(255, 255, 255, 0.08);
 @text-dim: rgba(255, 255, 255, 0.4);
 @card-bg: rgba(13, 9, 18, 0.8);
 
-/* ── 页面容器 ─────────────────────────────────── */
 .flanerie-page {
   width: 100%;
   color: #fff;
@@ -317,16 +302,12 @@ onUnmounted(() => {
   overflow-x: clip;
 }
 
-/* ══════════════════════════════════════
-   Vlog 旅行记录
-══════════════════════════════════════ */
 .vlog-section {
-  padding: 40px 0 80px;
+  padding: 30px;
   overflow-x: hidden;
   overflow-x: clip;
 }
 
-/* 世界地图 */
 .map-container {
   position: relative;
   width: 100%;
@@ -403,7 +384,6 @@ onUnmounted(() => {
   }
 }
 
-/* Vlog 卡片 */
 .vlog-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 580px));
@@ -687,7 +667,6 @@ onUnmounted(() => {
   }
 }
 
-/* ── 响应式 ───────────────────────────────────── */
 @media (max-width: 768px) {
   .flanerie-page {
     padding: 0 4vw;
@@ -754,9 +733,7 @@ onUnmounted(() => {
 }
 </style>
 
-<!-- 全局样式：Leaflet 主题覆写 + 地图标记 -->
 <style lang="less">
-/* Leaflet 容器深色主题 */
 .leaflet-container {
   background: #0a050f !important;
 }
@@ -774,7 +751,6 @@ onUnmounted(() => {
   }
 }
 
-/* 自定义地图标记 */
 .map-marker {
   position: relative;
   width: 20px;
@@ -812,7 +788,6 @@ onUnmounted(() => {
   }
 }
 
-/* 地图地点菜单 */
 .map-place-popup-wrap {
   .leaflet-popup-content-wrapper {
     padding: 0;

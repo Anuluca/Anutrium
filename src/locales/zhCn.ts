@@ -1,4 +1,3 @@
-// 中文国际化
 export default {
   name: ['路卡', '的自由', '庭院'],
   scroll: '继续探索',
@@ -9,14 +8,14 @@ export default {
   workDetailModal: {
     participation: '参与度',
   },
-  // 首页
+
   home: {
     // eslint-disable-next-line quotes
     highlight: '将热情作为底层数据写入内存。',
     title01: '关于我',
-    title02: '代表工作项目',
+    title02: '代表WEB项目',
     title03: '旅程记录',
-    title04: '实用工具',
+    title04: '精选工具',
     journeyViewAll: '全部旅程',
     craftViewAll: '全部工具',
     dynamic: {
@@ -32,12 +31,12 @@ export default {
       ],
     },
   },
-  // 作品集
-  archieve: {
+
+  archive: {
     title01: '主要项目',
     title02: '其他项目',
     dynamic: {
-      WebArchieves: [
+      WebArchives: [
         {
           id: 'W001',
           title: '国家电网无人机巡检系统',
@@ -269,11 +268,6 @@ export default {
           ],
           links: [
             { label: '官方网站', url: 'https://anutrium.com', icon: 'Link' },
-            // {
-            //   label: '演示视频',
-            //   url: 'https://www.bilibili.com/video/example',
-            //   icon: 'VideoPlay',
-            // },
           ],
         },
         {
@@ -431,7 +425,7 @@ export default {
       ],
     },
   },
-  // 旅程
+
   flanerie: {
     metaItem: '通过自己的双眼捕捉世界。',
     videoLabel: '视频记录',
@@ -447,7 +441,7 @@ export default {
           title: '江苏｜南京',
           mapLabel: '南京',
           date: '2026.03',
-          tagline: '城市的纹理在行走中逐渐显现。',
+          tagline: '一半金陵烟雨，一半石头城骨。',
           device: ['Sony RX100M6', 'iPhone 17'],
           img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/porygon.png',
           location: {
@@ -464,7 +458,7 @@ export default {
           title: '江苏｜南京红山动物园',
           mapLabel: '南京红山动物园',
           date: '2026.03',
-          tagline: '在动物、植物与人群之间记录短暂相遇。',
+          tagline: '探访中国大陆风评最好的动物园。',
           device: ['Sony RX100M6', 'iPhone 17'],
           img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/porygon.png',
           location: {
@@ -483,27 +477,22 @@ export default {
           ],
           photos: [
             {
-              title: '城市信号',
+              title: '街道',
               src: 'https://picsum.photos/seed/nanjing-city-signal/1400/900',
             },
             {
-              title: '河流轨迹',
               src: 'https://picsum.photos/seed/nanjing-river-trace/1400/900',
             },
             {
-              title: '夜间网格',
               src: 'https://picsum.photos/seed/nanjing-night-grid/900/1400',
             },
             {
-              title: '站台回声',
               src: 'https://picsum.photos/seed/nanjing-station-echo/1400/900',
             },
             {
-              title: '',
               src: 'https://picsum.photos/seed/nanjing-road-memory/1400/900',
             },
             {
-              title: '公园节点',
               src: 'https://picsum.photos/seed/nanjing-park-node/900/1400',
             },
           ],
@@ -513,7 +502,7 @@ export default {
           title: '福建｜福州',
           mapLabel: '福州',
           date: '2024.11',
-          tagline: '沿着榕树与街巷寻找潮湿的南方记忆。',
+          tagline: '榕树、街巷、船只。',
           device: ['Sony RX100M6', 'iPhone 17'],
           img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/porygon.png',
           location: {
@@ -528,7 +517,7 @@ export default {
         {
           id: 'pingtandao',
           title: '福建｜平潭岛',
-          mapLabel: '平潭岛',
+          mapLabel: '精神阿罗拉人的梦中情岛。',
           date: '2024.06',
           tagline: '海风穿过岛屿，留下蓝色与岩石的切片。',
           device: ['Sony RX100M6', 'iPhone 17'],
@@ -545,7 +534,7 @@ export default {
       ],
     },
   },
-  // 工具
+
   craft: {
     metaItem: '有想法后，就想办法做出来。',
     dynamic: {

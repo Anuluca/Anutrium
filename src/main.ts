@@ -11,10 +11,8 @@ import 'element-plus/theme-chalk/dark/css-vars.css'
 import 'element-plus/theme-chalk/index.css'
 import '@/assets/style/global.less'
 
-// 等待字体加载完成后再初始化应用
 async function initApp() {
   try {
-    // 创建 Vue 应用实例
     const app = createApp(App)
 
     app.use(i18n)
@@ -33,5 +31,4 @@ async function initApp() {
   }
 }
 
-// 启动应用
 initApp()

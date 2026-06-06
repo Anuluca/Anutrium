@@ -3,7 +3,7 @@ import { computed, defineEmits, onMounted, ref } from 'vue'
 
 import Logo from '@/components/Logo/index.vue'
 import LogoRotating3D from '@/components/Logo_rotating3D/index.vue'
-import { loadAllFonts, showPageContent } from '@/utils/fontLoader'
+import { showPageContent } from '@/utils/fontLoader'
 
 const emit = defineEmits(['finished'])
 
@@ -15,7 +15,6 @@ const isBarsExiting = ref(false)
 const logoRotating3DRef = ref()
 
 const bars = computed(() => {
-  // 检测是否为移动端
   const isMobile = window.innerWidth < 768
   const barCount = isMobile ? 10 : 20
   const middleIndex = Math.floor(barCount / 2)
@@ -35,15 +34,14 @@ const rotateFinished = () => {
   setTimeout(() => {
     isBarsExiting.value = true
   }, 850)
-  // logo动画时间260ms
+
   setTimeout(() => {
     logo2DHide.value = true
-    // 显示页面内容
+
     showPageContent()
-    // setTimeout(() => {
+
     emit('finished')
-    // }, 100)
-    // 等待竖条移出动画完成后隐藏容器
+
     setTimeout(() => {
       isAnimating.value = false
     }, 1200)
@@ -52,10 +50,7 @@ const rotateFinished = () => {
 
 onMounted(() => {
   document.fonts.ready.then(async () => {
-    // Logo 擦入完成后开始擦出
     setTimeout(async () => {
-      // 等待字体加载完成
-      // await loadAllFonts()
       logoRotating3DRef.value.stop()
     }, 1600)
   })

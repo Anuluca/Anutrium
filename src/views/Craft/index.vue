@@ -178,7 +178,6 @@ watch(
 </script>
 
 <style lang="less" scoped>
-// ─── 变量 ────────────────────────────────────────────────────────────────────
 @red: #e8284a;
 @red-dim: rgba(232, 40, 74, 0.15);
 @red-glow: rgba(232, 40, 74, 0.06);
@@ -194,7 +193,6 @@ watch(
 @faint: rgb(88, 88, 88);
 @mono: 'Anton', monospace;
 
-// ─── 外层容器 ─────────────────────────────────────────────────────────────────
 .craft-page {
   width: 100%;
   color: #fff;
@@ -351,7 +349,6 @@ watch(
   margin-top: 20px;
 }
 
-// ─── 网格 ─────────────────────────────────────────────────────────────────────
 .tl-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -359,7 +356,6 @@ watch(
   position: relative;
 }
 
-// ─── 卡片 ─────────────────────────────────────────────────────────────────────
 .tl-card {
   --card-accent: @red;
   --card-accent-dim: @red-dim;
@@ -413,7 +409,6 @@ watch(
   }
 }
 
-// 入场动画
 @keyframes cardIn {
   from {
     opacity: 0;
@@ -425,7 +420,6 @@ watch(
   }
 }
 
-// ─── 序号角标 ─────────────────────────────────────────────────────────────────
 .tl-card__index {
   position: absolute;
   top: -18px;
@@ -456,7 +450,6 @@ watch(
   }
 }
 
-// ─── 图片 ─────────────────────────────────────────────────────────────────────
 .tl-card__img-wrap {
   position: relative;
   width: 95%;
@@ -508,7 +501,6 @@ watch(
   }
 }
 
-// 扫描线
 .tl-card__scan {
   position: absolute;
   top: -100%;
@@ -534,7 +526,6 @@ watch(
   }
 }
 
-// ─── 信息体 ──────────────────────────────────────────────────────────────────
 .tl-card__body {
   padding: 18px 20px 20px;
   display: flex;
@@ -592,7 +583,6 @@ watch(
   margin: 0;
 }
 
-// ─── 底部行 ──────────────────────────────────────────────────────────────────
 .tl-card__footer {
   display: flex;
   align-items: center;
@@ -651,7 +641,6 @@ watch(
   }
 }
 
-// ─── 角线装饰 ─────────────────────────────────────────────────────────────────
 .tl-card__corner {
   position: absolute;
   z-index: 2;
@@ -688,7 +677,6 @@ watch(
   text-align: center;
 }
 
-// ─── 响应式 ──────────────────────────────────────────────────────────────────
 @media (max-width: 900px) {
   .craft-filter {
     grid-template-columns: 1fr;

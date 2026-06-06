@@ -2,18 +2,15 @@
   <div class="archives-page main-container">
     <PageHeader
       header-label="[MENTOR_NV42]"
-      title-en="ARCHIEVE"
+      title-en="ARCHIVE"
       title-cn="作品集"
       :meta-item="'TOTAL — ' + (works.length + miscWorks.length) + ' PROJECTS'"
       primary-color="#5AD480"
     />
 
-    <!-- ══════════════════════════════════════
-         01 代表作品
-    ══════════════════════════════════════ -->
     <section class="works-section">
       <h2 class="section-title" data-section="01">
-        {{ $t('archieve.title01') }}
+        {{ $t('archive.title01') }}
       </h2>
       <div class="works-grid">
         <WorkCard
@@ -26,12 +23,9 @@
       </div>
     </section>
 
-    <!-- ══════════════════════════════════════
-         02 其他项目
-    ══════════════════════════════════════ -->
     <section class="misc-section">
       <h2 class="section-title" data-section="02">
-        {{ $t('archieve.title02') }}
+        {{ $t('archive.title02') }}
       </h2>
       <div class="misc-grid">
         <div
@@ -75,10 +69,8 @@
         </div>
       </div>
     </section>
+    <PageFooter cn-title="作品集" en-title="ARCHIVE" />
 
-    <!-- ══════════════════════════════════════
-         项目详情弹窗
-    ══════════════════════════════════════ -->
     <WorkDetailModal
       :work="selectedWork"
       :visible="!!selectedWork"
@@ -94,10 +86,10 @@ import { useI18n } from 'vue-i18n'
 import WorkCard from '@/components/WorkCard/index.vue'
 import WorkDetailModal from '@/components/WorkDetailModal/index.vue'
 import PageHeader from '@/components/PageHeader/index.vue'
+import PageFooter from '@/components/PageFooter/index.vue'
 
 const { tm } = useI18n()
 
-// ── 类型定义 ───────────────────────────────────
 interface WorkItem {
   id: string
   title: string
@@ -123,17 +115,14 @@ interface MiscWork {
   tags?: string[]
 }
 
-// ── 代表作品（来自 i18n） ──────────────────────
 const works = computed<WorkItem[]>(
-  () => tm('archieve.dynamic.WebArchieves') as WorkItem[]
+  () => tm('archive.dynamic.WebArchives') as WorkItem[]
 )
 
-// ── 其他项目（来自 i18n） ──────────────────────
 const miscWorks = computed<MiscWork[]>(
-  () => tm('archieve.dynamic.MiscWorks') as MiscWork[]
+  () => tm('archive.dynamic.MiscWorks') as MiscWork[]
 )
 
-// ── 弹窗状态 ───────────────────────────────────
 const selectedWork = ref<WorkItem | MiscWork | null>(null)
 const flashingMiscId = ref('')
 let miscErrorTimer: ReturnType<typeof setTimeout> | null = null
@@ -183,20 +172,17 @@ onBeforeUnmount(() => {
 </script>
 
 <style lang="less" scoped>
-/* ── 变量 ─────────────────────────────────────── */
 @red: #e23456;
 @red-dim: rgba(226, 52, 86, 0.15);
 @border: rgba(255, 255, 255, 0.08);
 @text-dim: rgba(255, 255, 255, 0.4);
 @card-bg: rgba(13, 9, 18, 0.8);
 
-/* ── 页面容器 ─────────────────────────────────── */
 .archives-page {
   width: 100%;
   color: #fff;
 }
 
-/* ── 通用区块标题 ─────────────────────────────── */
 .section-title {
   font-family: 'anton', 'source-han-sans-simplified-c';
   font-size: 1.2rem;
@@ -226,7 +212,6 @@ onBeforeUnmount(() => {
   }
 }
 
-/* ── 四角装饰（通用） ─────────────────────────── */
 .corner {
   position: absolute;
   width: 10px;
@@ -262,12 +247,8 @@ onBeforeUnmount(() => {
   }
 }
 
-/* ══════════════════════════════════════
-   01 代表作品 Grid
-══════════════════════════════════════ */
 .works-section {
-  padding: 60px 0 40px;
-  padding-top: 30px;
+  padding: 30px 0;
 }
 
 .works-grid {
@@ -276,11 +257,8 @@ onBeforeUnmount(() => {
   gap: 20px;
 }
 
-/* ══════════════════════════════════════
-   02 其他项目 Grid
-══════════════════════════════════════ */
 .misc-section {
-  padding: 40px 0;
+  padding: 30px 0;
 }
 
 .misc-grid {
@@ -565,7 +543,6 @@ onBeforeUnmount(() => {
   }
 }
 
-/* ── 响应式 ───────────────────────────────────── */
 @media (max-width: 768px) {
   .page-title {
     flex-direction: column;

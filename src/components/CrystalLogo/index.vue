@@ -6,9 +6,7 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import { ref } from 'vue'
-</script>
+<script setup lang="ts"></script>
 
 <style scoped lang="less">
 .crystal-logo {
@@ -25,7 +23,6 @@ import { ref } from 'vue'
     clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
     transition: all 0.3s ease;
 
-    // 金属光泽扫描特效 - 常态
     .shine-effect {
       position: absolute;
       top: -100%;
@@ -45,7 +42,6 @@ import { ref } from 'vue'
     }
   }
 
-  // Hover 状态：黑色背景 + 红色光晕
   &:hover {
     filter: drop-shadow(0 0 10px #e23456) drop-shadow(0 0 20px #e23456)
       drop-shadow(0 0 30px rgba(226, 52, 86, 0.5));
@@ -59,7 +55,6 @@ import { ref } from 'vue'
   }
 }
 
-// 金属光泽从上到下斜向扫描动画
 @keyframes shineScan {
   0% {
     transform: translate(-50%, -50%) rotate(45deg);

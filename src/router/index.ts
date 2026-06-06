@@ -2,18 +2,16 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import NProgress from 'nprogress'
 
-import i18n from '../locales' // 导入 i18n 实例
+import i18n from '../locales'
 
 import 'nprogress/nprogress.css'
 
-// 路由配置常量
 const ROUTE_CONFIG = {
   DEFAULT_PATH: '/',
   NOT_FOUND_PATH: '/404',
   TITLE_TEMPLATE: '[%s/%s%s]',
 } as const
 
-// 定义路由类型
 interface RouteMeta {
   titleEn: string
   titleCn: string
@@ -23,7 +21,6 @@ interface RouteMeta {
   vlogId?: string
 }
 
-// 定义路由配置接口
 interface RouteConfig {
   path: string
   name: string
@@ -69,9 +66,9 @@ export const routes: RouteConfig[] = [
     },
   },
   {
-    path: '/archieve',
+    path: '/archive',
     name: 'ARCHIVE',
-    component: () => import('@/views/Archieve/index.vue'),
+    component: () => import('@/views/Archive/index.vue'),
     meta: {
       titleEn: 'ARCHIVE',
       titleCn: '作品集',
@@ -91,21 +88,12 @@ export const routes: RouteConfig[] = [
     },
   },
   ...flanerieRoutes,
-  // {
-  //   path: '/pokeyard',
-  //   name: 'POKEYARD',
-  //   component: NotFound,
-  //   meta: {
-  //     titleEn: 'POKÉYARD',
-  //     titleCn: '宝可后院',
-  //     fullFooter: true,
-  //     ifShow: true,
-  //   },
-  // },
+
   {
     path: '/island',
     name: 'ISLAND',
-    component: () => import('@/views/Island/index.vue'),
+    component: () => import('@/views/404/index.vue'),
+    // component: () => import('@/views/Island/index.vue'),
     meta: {
       titleEn: 'ISLAND',
       titleCn: '个人海湾',
@@ -135,7 +123,7 @@ export const routes: RouteConfig[] = [
       ifShow: true,
     },
   },
-  // 【404】404
+
   {
     path: '/404',
     name: '404',
@@ -231,15 +219,25 @@ export const routes: RouteConfig[] = [
       noMenu: true,
     },
   },
+  {
+    path: '/test',
+    name: 'TEST',
+    component: () => import('@/views/Island/index.vue'),
+    meta: {
+      titleEn: 'TEST',
+      titleCn: '测试',
+      fullFooter: true,
+      ifShow: false,
+    },
+  },
 ]
 
-// 配置 NProgress
 NProgress.configure({
-  easing: 'ease', // 动画方式
-  speed: 500, // 递增进度条的速度
-  showSpinner: false, // 是否显示加载 icon
-  trickleSpeed: 200, // 自动递增间隔
-  minimum: 0.3, // 初始化时的最小百分比
+  easing: 'ease',
+  speed: 500,
+  showSpinner: false,
+  trickleSpeed: 200,
+  minimum: 0.3,
 })
 
 const router = createRouter({
@@ -247,13 +245,10 @@ const router = createRouter({
   routes,
 })
 
-// 路由守卫
 router.beforeEach((to) => {
-  NProgress.start() // 开始进度条
+  NProgress.start()
 
-  // 检查路由是否存在
   if (!router.hasRoute(to.name)) {
-    // 如果不是404页面，则跳转到404页面
     if (to.path !== ROUTE_CONFIG.NOT_FOUND_PATH) {
       return { path: ROUTE_CONFIG.NOT_FOUND_PATH }
     }
@@ -263,9 +258,8 @@ router.beforeEach((to) => {
 })
 
 router.afterEach((to) => {
-  NProgress.done() // 结束进度条
+  NProgress.done()
 
-  // 设置页面标题
   if (to.meta.titleEn) {
     const vlogId = to.meta.vlogId as string | undefined
     const vlogs = i18n.global.tm('flanerie.dynamic.vlogs') as Array<{
@@ -286,14 +280,13 @@ router.afterEach((to) => {
       .replace('%s', siteNameSuffix)
   }
 
-  // 重置页面滚动位置到顶部
   setTimeout(() => {
     window.scrollTo({
       top: 0,
       left: 0,
-      behavior: 'smooth', // 平滑滚动到顶部
+      behavior: 'smooth',
     })
-  }, 100) // 延迟执行，确保页面已经渲染
+  }, 100)
 })
 
 export default router

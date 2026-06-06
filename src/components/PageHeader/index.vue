@@ -20,7 +20,7 @@
         <div class="header-scan-line" />
       </div>
     </div>
-    <!-- HUD 装饰 -->
+
     <div class="corner corner-tl" />
     <div class="corner corner-tr" />
     <div class="corner corner-bl" />
@@ -58,13 +58,9 @@ defineProps({
 </script>
 
 <style lang="less" scoped>
-/* ── 变量 ─────────────────────────────────────── */
 @border: rgba(255, 255, 255, 0.08);
 @text-dim: rgba(255, 255, 255, 0.4);
 
-/* ══════════════════════════════════════
-   页面大标题
-══════════════════════════════════════ */
 .page-header {
   position: relative;
   padding: 40px 0 30px;
@@ -73,7 +69,6 @@ defineProps({
   border-bottom: 1px solid @border;
   padding-left: 30px;
 
-  // 背景大字水印
   .header-bg-text {
     position: absolute;
     top: 50%;
@@ -164,7 +159,6 @@ defineProps({
   }
 }
 
-/* ── 四角装饰 ─────────────────────────── */
 .corner {
   position: absolute;
   width: 10px;
@@ -200,7 +194,6 @@ defineProps({
   }
 }
 
-/* ── 响应式 ───────────────────────────────── */
 @media (max-width: 768px) {
   .page-header {
     padding: 20px 40px;

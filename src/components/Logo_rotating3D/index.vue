@@ -18,13 +18,11 @@ const emit = defineEmits(['finished'])
 
 const container = ref(null)
 const currentText = ref('LOADING')
-let isStopping = false // 新增：是否正在执行停止逻辑
+let isStopping = false
 let renderer, scene, camera, composer, controls, animationId
 let environmentMap = null
 
-// 初始化 3D 场景
 const initThree = () => {
-  // --- 1. 场景与基础设置 ---
   scene = new THREE.Scene()
   scene.background = new THREE.Color('#050505')
   scene.fog = new THREE.FogExp2(0x050505, 0.02)
@@ -43,14 +41,12 @@ const initThree = () => {
     powerPreference: 'high-performance',
   })
   renderer.setSize(window.innerWidth, window.innerHeight)
-  // renderer.setPixelRatio(window.devicePixelRatio)
+
   renderer.shadowMap.enabled = true
   renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
-  // 挂载到 ref
   container.value.appendChild(renderer.domElement)
 
-  // --- 2. 高级光照系统 ---
   const pmremGenerator = new THREE.PMREMGenerator(renderer)
   environmentMap = pmremGenerator.fromScene(new RoomEnvironment(), 0.04)
   scene.environment = environmentMap.texture
@@ -67,7 +63,6 @@ const initThree = () => {
   spotLight.shadow.bias = -0.0001
   scene.add(spotLight)
 
-  // --- 3. 后期处理 (Bloom 辉光) ---
   const renderScene = new RenderPass(scene, camera)
   const bloomPass = new UnrealBloomPass(
     new THREE.Vector2(window.innerWidth, window.innerHeight),
@@ -87,7 +82,6 @@ const initThree = () => {
   controls.enableDamping = true
   controls.dampingFactor = 0.05
 
-  // --- 4. 材质与物体 ---
   const cageMaterial = new THREE.MeshStandardMaterial({
     color: 'black',
     metalness: 0.5,
@@ -110,7 +104,6 @@ const initThree = () => {
   const group = new THREE.Group()
   scene.add(group)
 
-  // 构建晶体
   const createCrystal = () => {
     const crystalGroup = new THREE.Group()
     const radius = 1.5
@@ -138,7 +131,6 @@ const initThree = () => {
     return crystalGroup
   }
 
-  // 构建外骨架
   const createNCage = () => {
     const cageGroup = new THREE.Group()
     const size = 1.4
@@ -209,14 +201,12 @@ const initThree = () => {
   crystal.rotation.y = Math.PI / 4
   group.scale.set(0.5, 0.5, 0.5)
 
-  // 动画循环
   const animate = () => {
     animationId = requestAnimationFrame(animate)
 
     if (isStopping) {
       currentText.value = 'COMPLETE.'
 
-      // 2. 只有当正弦值接近 0，且余弦值接近 1（代表正面）时触发
       if (crystal.rotation.y % (Math.PI / 4) <= 0.02) {
         cancelAnimationFrame(animationId)
         animationId = null
@@ -224,12 +214,10 @@ const initThree = () => {
           emit('finished')
         }, 200)
       } else {
-        // 还没对齐，继续缓慢旋转
         crystal.rotation.y += 0.01
         cage.rotation.y -= 0.01
       }
     } else {
-      // 正常旋转状态
       crystal.rotation.y += 0.01
       cage.rotation.y -= 0.01
     }
@@ -241,7 +229,6 @@ const initThree = () => {
   animate()
 }
 
-// 窗口大小适配
 const handleResize = () => {
   if (!camera || !renderer) return
   camera.aspect = window.innerWidth / window.innerHeight
@@ -251,7 +238,6 @@ const handleResize = () => {
 }
 
 const stop = () => {
-  // 不再立即改文字，而是标记“准备停止”
   isStopping = true
 }
 
@@ -310,7 +296,6 @@ onUnmounted(() => {
   environmentMap = null
 })
 
-// 暴露方法给父组件
 defineExpose({
   stop,
 })
@@ -330,9 +315,6 @@ defineExpose({
 }
 
 .canvas-container {
-  /* width: 100px;
-  height: 100px; */
-  /* zoom: 0.6; */
   background-color: #050505;
   :deep(canvas) {
     background-color: #050505;
@@ -344,7 +326,7 @@ defineExpose({
   margin: 0 auto;
   top: calc(50% + 200px);
   color: #fff;
-  // letter-spacing: 2px;
+
   font-weight: 800;
   font-size: 30px;
   font-family: 'Avenir', 'Segoe UI Semibold', 'Microsoft YaHei UI', sans-serif;

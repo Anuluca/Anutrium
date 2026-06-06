@@ -3,10 +3,8 @@
  * 确保所有自定义字体和 logo 图片加载完成后再显示页面内容
  */
 
-// 定义需要预加载的字体列表
 const FONT_FAMILIES = ['enTitle', 'cnTitle']
 
-// logo 图片路径列表
 const LOGO_IMAGE_PATHS = [
   '/assets/logo.png',
   '/assets/logo_horizon.png',
@@ -25,7 +23,6 @@ function checkFontLoaded(
   progressCallback?: (loaded: boolean) => void
 ): Promise<boolean> {
   return new Promise((resolve) => {
-    // 使用浏览器原生的字体加载API
     if ('fonts' in document) {
       document.fonts
         .load(`16px ${fontFamily}`)
@@ -39,7 +36,6 @@ function checkFontLoaded(
           resolve(false)
         })
     } else {
-      // 降级处理：对于不支持Font Loading API的浏览器
       setTimeout(() => {
         if (progressCallback) progressCallback(true)
         resolve(true)
@@ -72,7 +68,6 @@ function loadImage(
       resolve(false)
     }
 
-    // 添加时间戳防止缓存问题
     img.src = imagePath + '?t=' + new Date().getTime()
   })
 }
@@ -84,32 +79,15 @@ function loadImage(
 export async function loadAllFonts(): Promise<void> {
   window.fontLoaded = false
 
-  // 计算总资源数量（字体 + 图片）
-  const totalResources = FONT_FAMILIES.length + LOGO_IMAGE_PATHS.length
-  let loadedResources = 0
-
-  const updateProgressUI = () => {
-    const progress = (loadedResources / totalResources) * 100
-  }
-
-  // 创建字体加载 Promise 数组
   const fontLoadPromises = FONT_FAMILIES.map((fontFamily) => {
-    return checkFontLoaded(fontFamily, (_) => {
-      loadedResources++
-      updateProgressUI()
-    })
+    return checkFontLoaded(fontFamily)
   })
 
-  // 创建图片加载 Promise 数组
   const imageLoadPromises = LOGO_IMAGE_PATHS.map((imagePath) => {
-    return loadImage(imagePath, (_) => {
-      loadedResources++
-      updateProgressUI()
-    })
+    return loadImage(imagePath)
   })
 
   try {
-    // 等待字体和图片都加载完成
     await Promise.all([...fontLoadPromises, ...imageLoadPromises])
     window.fontLoaded = true
     console.log('所有字体和图片加载完成')
@@ -122,7 +100,6 @@ export async function loadAllFonts(): Promise<void> {
  * 显示页面内容（字体和图片加载完成后调用）
  */
 export function showPageContent(): void {
-  // 移除加载指示器（如果有）
   const loadingIndicator = document.getElementById('loading-indicator')
   if (loadingIndicator) {
     loadingIndicator.style.display = 'none'

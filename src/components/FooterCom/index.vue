@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { ElLoading } from 'element-plus'
@@ -34,26 +34,10 @@ const theme = ref(false)
 const isScrollingDown = ref<boolean>(false)
 const isMotionPaused = ref(false)
 const weiboSrc = ref('')
-let lastScrollTop = 0
-let reducedMotionQuery: MediaQueryList | null = null
 
 onMounted(() => {
   initFooterAnimation()
-  // initMotionPreference()
-  // document.addEventListener('scroll', handleScroll, { passive: true })
 })
-
-const initMotionPreference = () => {
-  reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-  updateMotionPreference()
-  document.addEventListener('visibilitychange', updateMotionPreference)
-  reducedMotionQuery.addEventListener('change', updateMotionPreference)
-}
-
-const updateMotionPreference = () => {
-  isMotionPaused.value =
-    document.visibilityState === 'hidden' || !!reducedMotionQuery?.matches
-}
 
 const initFooterAnimation = () => {
   const expandElement = document.querySelector('.expand') as HTMLElement
@@ -144,18 +128,6 @@ const handleSocialHover = (type: string, isHover: boolean) => {
     element.classList.remove('hover')
   }
 }
-
-// const handleScroll = () => {
-//   const scrollTop = window.pageYOffset || document.documentElement.scrollTop
-//   isScrollingDown.value = scrollTop > lastScrollTop
-//   lastScrollTop = Math.max(0, scrollTop)
-// }
-
-onUnmounted(() => {
-  // document.removeEventListener('scroll', handleScroll)
-  document.removeEventListener('visibilitychange', updateMotionPreference)
-  reducedMotionQuery?.removeEventListener('change', updateMotionPreference)
-})
 </script>
 
 <template>
@@ -167,7 +139,6 @@ onUnmounted(() => {
       'motion-paused': isMotionPaused,
     }"
   >
-    <!-- 左侧 -->
     <div class="left">
       <div class="language">
         <el-button
@@ -191,7 +162,7 @@ onUnmounted(() => {
         </el-button>
       </div>
     </div>
-    <!-- 中间 -->
+
     <div class="center">
       <div class="expand">
         <div class="marquee-wrap">
@@ -222,7 +193,7 @@ onUnmounted(() => {
         </div>
       </div>
     </div>
-    <!-- 右侧 -->
+
     <div class="right">
       <div class="text-links">
         <span>

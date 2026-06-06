@@ -6,7 +6,6 @@
     @mousemove="handleLogoMouseMove"
     @mouseleave="handleLogoMouseLeave"
   >
-    <!-- 底部装饰跑马灯 -->
     <div class="tl-marquee" aria-hidden="true">
       <div class="tl-marquee__inner">
         <span v-for="n in 36" :key="n">
@@ -15,6 +14,12 @@
       </div>
     </div>
     <div class="footer-logo-container">
+      <footer class="about-footer">
+        <span class="footer-text"
+          >&lt; DRIVEN &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;BY PASSION.
+          &gt;</span
+        >
+      </footer>
       <Logo
         id="footer-logo"
         :active="true"
@@ -56,7 +61,7 @@ import { useRouter } from 'vue-router'
 import Logo from '@/components/Logo/index.vue'
 
 const router = useRouter()
-// 1. 显式定义 Props 的 TypeScript 接口
+
 interface RecommendedTool {
   label: string
   path: string
@@ -69,7 +74,6 @@ interface Props {
   recommendedTools?: RecommendedTool[]
 }
 
-// 🌟 2. 直接解构并赋默认值（Vue 3.5+ 自动保持响应式，且默认值绝对生效）
 const {
   thirdParty = false,
   cnTitle = '路卡庭院',
@@ -90,7 +94,6 @@ const footerRef = ref<HTMLElement | null>(null)
 const isMotionPaused = ref(true)
 const isFooterVisible = ref(false)
 
-// 视觉物理缓动状态
 const currentX = ref(0)
 const currentY = ref(0)
 const targetX = ref(0)
@@ -115,17 +118,15 @@ const updateMotionState = () => {
 
 const logoStyle = computed(() => ({
   transform: `perspective(1000px) rotateX(${currentX.value}deg) rotateY(${currentY.value}deg)`,
-  transition: 'color 0.3s ease, filter 0.3s ease', // 移除了 transform 的 css transition 避免与 rAf 冲突
+  transition: 'color 0.3s ease, filter 0.3s ease',
 }))
 
-// 缓动核心算法
 const updateRotation = () => {
   if (isMotionPaused.value) {
     rafId = null
     return
   }
 
-  // 0.15 的内插值赋予极其丝滑的跟手阻尼感
   currentX.value += (targetX.value - currentX.value) * 0.15
   currentY.value += (targetY.value - currentY.value) * 0.15
 
@@ -147,7 +148,6 @@ const handleLogoMouseMove = (e: MouseEvent) => {
 
   const container = e.currentTarget as HTMLElement
 
-  // 缓存边界数据，避免高频触发 Reflow
   if (!cachedRect) {
     cachedRect = container.getBoundingClientRect()
   }
@@ -158,7 +158,6 @@ const handleLogoMouseMove = (e: MouseEvent) => {
   const mouseX = e.clientX - centerX
   const mouseY = e.clientY - centerY
 
-  // 计算目标倾斜角度
   targetY.value = (mouseX / (cachedRect.width / 2)) * 50
   targetX.value = -(mouseY / (cachedRect.height / 2)) * 50
 
@@ -169,7 +168,7 @@ const handleLogoMouseMove = (e: MouseEvent) => {
 
 const handleLogoMouseLeave = () => {
   isLogoHovered.value = false
-  cachedRect = null // 离开时清空缓存
+  cachedRect = null
   targetX.value = 0
   targetY.value = 0
 
@@ -219,10 +218,10 @@ onUnmounted(() => {
 <style lang="less" scoped>
 @keyframes marquee {
   from {
-    transform: translate3d(0, 0, 0); /* 从最左侧满字状态开始 */
+    transform: translate3d(0, 0, 0);
   }
   to {
-    transform: translate3d(-16.6666%, 0, 0); /* 100% / 6个块，复位无缝 */
+    transform: translate3d(-16.6666%, 0, 0);
   }
 }
 
@@ -231,15 +230,32 @@ onUnmounted(() => {
   justify-content: center;
   align-items: center;
   perspective: 1000px;
+
+  .about-footer {
+    text-align: center;
+    position: absolute;
+    margin-top: 4px;
+  }
+
+  .footer-text {
+    font-family: 'anton', monospace;
+    font-size: 1.23rem;
+    letter-spacing: 4px;
+    line-height: 2rem;
+    color: #e23456;
+    filter: drop-shadow(0 0 10px #e23456);
+  }
 }
 
 .footer-logo {
   width: 80px;
   height: 100px;
+  margin-left: -95px;
   color: var(--text-color);
   transition: color 0.3s ease, filter 0.3s ease;
   cursor: pointer;
   padding: 40px 100px;
+  margin-bottom: -10px;
 
   &.logo-hovered {
     color: #000;
@@ -250,15 +266,13 @@ onUnmounted(() => {
 
 .bottom-text {
   padding: 10px 0;
-  padding-bottom: 50px;
+  padding-bottom: 40px;
   color: #e23456;
   font-size: 13px;
-  line-height: 24px;
+  line-height: 20px;
   text-align: center;
   letter-spacing: 0.2px;
-  margin-top: 40px;
 
-  // ─── 跑马灯 ──────────────────────────────────────────────────────────────────
   .tl-marquee {
     margin-top: 20px;
     overflow: hidden;
@@ -290,9 +304,6 @@ onUnmounted(() => {
   &.third-party {
     zoom: 0.8;
     padding-bottom: 0;
-    .footer-logo {
-      zoom: 0.8;
-    }
   }
   .third-party-recommend {
     font-family: 'source-han-sans-simplified-c' !important;

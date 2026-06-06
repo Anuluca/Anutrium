@@ -1,4 +1,4 @@
-// 定义主题相关的颜色变量
+
 @primary-orange: #e7492d;
 @primary-blue: #3276fe;
 @primary-pink: #e23456;
@@ -52,7 +52,7 @@
       left: 50px;
       right: 50px;
       padding: 0 20px;
-      // border-radius: 6px;
+
       background-color: rgba(27, 27, 27, 0.308);
       backdrop-filter: blur(4px);
       border: 1px solid rgba(66, 66, 66, 0.542);
@@ -120,7 +120,7 @@
 
         p {
           letter-spacing: 1px;
-          color: var(--text-color); // 使用CSS变量
+          color: var(--text-color);
 
           span {
             display: inline-block;
@@ -202,7 +202,7 @@
               .line {
                 width: 0px;
                 height: 56%;
-                // margin-top: 4px;
+
                 background-color: var(--text-color);
                 transition: width 0.5s;
                 box-sizing: border-box;
@@ -247,7 +247,6 @@
           }
         }
 
-        // 使用mixin定义不同菜单项的样式
         .define-menu-style(@class, @color, @shadow) {
           .el-menu-item.@{class}:not(.is-active):hover {
             .title-box {
@@ -304,7 +303,6 @@
     }
   }
 
-  // 移动端菜单按钮
   .mobile-menu-icon {
     position: fixed;
     right: 20px;
@@ -381,7 +379,6 @@
     }
   }
 
-  // 全屏按钮样式
   .fullscreen {
     position: fixed;
     top: 5px;
@@ -402,7 +399,6 @@
     }
   }
 
-  // 移动端菜单面板
   .mobile-menu-panel {
     position: fixed;
     top: 0;
@@ -672,7 +668,6 @@
   }
 }
 
-// 渐显动画关键帧
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -704,7 +699,7 @@
 
         .right p {
           margin-bottom: 0px;
-          color: var(--text-color); // 使用CSS变量
+          color: var(--text-color);
         }
 
         &:hover {
@@ -722,7 +717,6 @@
         }
       }
 
-      // 隐藏桌面端菜单
       .el-menu {
         display: none;
       }
@@ -732,7 +726,6 @@
       display: none;
     }
 
-    // 显示移动端菜单按钮
     .mobile-menu-icon {
       display: flex;
       top: 20px;

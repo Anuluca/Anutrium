@@ -159,7 +159,6 @@ const handleClosed = () => {
   border: 1px solid rgba(226, 52, 86, 0.35) !important;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.85), 0 0 30px rgba(226, 52, 86, 0.05) !important;
 
-  /* 🌟 核心优化：斩断写死的上边距，改为纯净的 Flex 轴自适应居中 */
   margin: 0 !important;
   width: var(--modal-width, 1280px) !important;
   max-height: 90vh !important;
@@ -169,7 +168,6 @@ const handleClosed = () => {
   padding: 0 !important;
   border-radius: 0 !important;
 
-  /* 锁定几何中心点，确保 CRT 粒子向最中心坍缩 */
   transform-origin: center center !important;
 
   .el-dialog__header {
@@ -182,7 +180,6 @@ const handleClosed = () => {
   }
 }
 
-/* 🌟 全局遮罩层调谐（配合居中） */
 .el-overlay {
   background: rgba(4, 2, 6, 0.85) !important;
   position: fixed !important;
@@ -191,18 +188,13 @@ const handleClosed = () => {
   right: 0 !important;
   bottom: 0 !important;
   display: flex;
-  align-items: center; /* 垂直居中核心轴 */
-  justify-content: center; /* 水平居中核心轴 */
+  align-items: center;
+  justify-content: center;
 }
 .el-overlay-dialog {
   position: relative !important;
 }
 
-/* ══════════════════════════════════════
-   📺 CRT 电视机复古光栅特殊动效引擎
-   ══════════════════════════════════════ */
-
-/* 1. 让外层黑色背景只做纯粹的淡入淡出 */
 .crt-effect-enter-active,
 .crt-effect-leave-active {
   transition: opacity 0.35s ease;
@@ -212,7 +204,6 @@ const handleClosed = () => {
   opacity: 0;
 }
 
-/* 2. 精准定位：只让内部的对话框舱体执行 CRT 缩放与闪烁特效 */
 .crt-effect-enter-active .modal-wrapper-dialog {
   animation: crtOn 0.48s cubic-bezier(0.19, 1, 0.22, 1) forwards;
 }

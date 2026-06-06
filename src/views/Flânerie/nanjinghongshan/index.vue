@@ -1,6 +1,5 @@
 <template>
   <div v-if="vlog" class="flr-page main-container">
-    <!-- ░░ HERO ░░ -->
     <section class="flr-hero">
       <button class="flr-back" type="button" @click="router.push('/flanerie')">
         <span>FLANERIE</span>
@@ -15,7 +14,6 @@
       </div>
     </section>
 
-    <!-- ░░ VIDEO PANEL ░░ -->
     <section v-if="videos.length" class="flr-video-panel">
       <div class="section-head">
         <div class="head-left">
@@ -66,7 +64,6 @@
       </div>
     </section>
 
-    <!-- ░░ GALLERY ░░ -->
     <section ref="galleryRef" class="flr-gallery">
       <div class="section-head">
         <div class="head-left">
@@ -137,6 +134,7 @@
         </button>
       </nav>
     </section>
+    <PageFooter cn-title="旅程" en-title="FLÂNERIE" />
 
     <ElImageViewer
       v-if="showViewer"
@@ -155,6 +153,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElImageViewer } from 'element-plus'
 
 import CrystalLogo from '@/components/CrystalLogo/index.vue'
+import PageFooter from '@/components/PageFooter/index.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -246,7 +245,6 @@ watch(
 </script>
 
 <style lang="less" scoped>
-// ── Design tokens ─────────────────────────────────────────────────────────────
 @red: #e23456;
 @purple: #9a76ff;
 @panel: rgba(18, 5, 12, 0.72);
@@ -255,13 +253,11 @@ watch(
 @mono: 'Unbounded Sans', 'Courier New', monospace;
 @cjk: 'source-han-sans-simplified-c', sans-serif;
 
-// ── Page shell ────────────────────────────────────────────────────────────────
 .flr-page {
   color: #fff;
   overflow: hidden;
 }
 
-// ── Back button ───────────────────────────────────────────────────────────────
 .flr-back {
   display: inline-flex;
   align-items: center;
@@ -286,7 +282,6 @@ watch(
   }
 }
 
-// ── Hero / Title block ────────────────────────────────────────────────────────
 .flr-hero {
   margin-bottom: 0;
 }
@@ -321,7 +316,6 @@ watch(
   letter-spacing: 0.04em;
 }
 
-// ── Section head ──────────────────────────────────────────────────────────────
 .flr-video-panel,
 .flr-gallery {
   margin-top: 30px;
@@ -366,7 +360,6 @@ watch(
   }
 }
 
-// ── Corner decorations ────────────────────────────────────────────────────────
 .corner {
   position: absolute;
   width: 10px;
@@ -398,7 +391,6 @@ watch(
   }
 }
 
-// ── Video list ────────────────────────────────────────────────────────────────
 .video-list {
   display: flex;
   flex-direction: column;
@@ -412,12 +404,10 @@ watch(
   align-items: center;
   gap: 8px;
 
-  // 横屏：较宽
   &--landscape {
     width: min(920px, 100%);
   }
 
-  // 竖屏：较窄
   &--portrait {
     width: min(580px, 100%);
   }
@@ -458,12 +448,10 @@ watch(
     @bg;
   box-shadow: 8px 10px 0 rgba(0, 0, 0, 0.5), 0 0 24px rgba(226, 52, 86, 0.08);
 
-  // 横屏比例
   .video-item--landscape & {
     aspect-ratio: 16 / 9;
   }
 
-  // 竖屏比例
   .video-item--portrait & {
     aspect-ratio: 16 / 16;
   }
@@ -533,7 +521,6 @@ watch(
   width: 100%;
   height: clamp(220px, 25vw, 360px);
 
-  // 边框叠层
   &::before {
     content: '';
     position: absolute;
@@ -546,7 +533,7 @@ watch(
 
 .photo-image-stage {
   position: absolute;
-  inset: 12px 12px 54px;
+  inset: 12px 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -570,7 +557,6 @@ watch(
   transform: scale(1.015);
 }
 
-// 渐变遮罩（仅在有标题时生效更自然）
 .photo-overlay {
   position: absolute;
   inset: 0;
@@ -579,38 +565,42 @@ watch(
   z-index: 3;
 }
 
-// 图片底栏：晶体标识靠左，标题靠右
 .photo-footer {
   position: absolute;
-  left: 12px;
-  right: 12px;
-  bottom: 7px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  left: 20px;
+  right: 20px;
+  bottom: 15px;
   min-height: 40px;
   z-index: 6;
   pointer-events: none;
 }
 
 .photo-crystal {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  z-index: 8;
   display: flex;
-  flex: 0 0 auto;
   align-items: center;
   justify-content: center;
+  pointer-events: auto;
 }
 
 .pm-title {
+  position: absolute;
+  right: -5px;
+  bottom: 10px;
+  z-index: 7;
+  max-width: calc(100% - 44px);
   min-width: 0;
   overflow: hidden;
   color: rgba(255, 255, 255, 0.68);
-  font-family: @cjk;
-  font-size: 0.68rem;
+  font-family: 'STSong';
+  font-size: 0.4rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
   text-align: right;
   text-overflow: ellipsis;
+  transform: translateY(50%);
   white-space: nowrap;
 }
 
@@ -647,7 +637,6 @@ watch(
   }
 }
 
-// ── Responsive ────────────────────────────────────────────────────────────────
 @media (max-width: 900px) {
   .flr-page {
     padding-top: 88px;

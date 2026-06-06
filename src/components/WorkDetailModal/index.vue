@@ -1,19 +1,11 @@
 <template>
-  <ModalWrapper
-    v-model="dialogVisible"
-    width="1480px"
-    @close="handleClose"
-    @closed="handleClosed"
-  >
-    <!-- ── 左下角晶体标志 ────────────────── -->
+  <ModalWrapper v-model="dialogVisible" width="1480px" @close="handleClose">
     <div class="modal-crystal-logo">
       <CrystalLogo />
     </div>
 
     <div class="modal-body">
-      <!-- ── 左栏：基本信息 ──────────────── -->
       <aside v-if="work" class="modal-aside">
-        <!-- 公司 Logo + 信息 -->
         <div class="aside-company">
           <div v-if="work.logo" class="aside-logo">
             <img
@@ -31,16 +23,13 @@
 
         <div class="aside-divider" />
 
-        <!-- 项目标题 -->
         <h2 class="aside-title">{{ work.title }}</h2>
 
-        <!-- 时间 -->
         <div v-if="work.time" class="aside-field">
           <span class="field-label">TIME</span>
           <span class="field-val">{{ work.time }}</span>
         </div>
 
-        <!-- Participation -->
         <div v-if="participationText" class="aside-field">
           <span class="field-label">{{
             t('workDetailModal.participation')
@@ -48,7 +37,6 @@
           <span class="field-val">{{ participationText }}</span>
         </div>
 
-        <!-- 技术标签 -->
         <div v-if="work.tags?.length" class="aside-field aside-tags">
           <span class="field-label">STACK</span>
           <div class="tags-wrap">
@@ -58,13 +46,11 @@
           </div>
         </div>
 
-        <!-- 简介 -->
         <div v-if="work.description" class="aside-desc">
           <span class="field-label">ABOUT</span>
           <p>{{ work.description }}</p>
         </div>
 
-        <!-- 项目链接 -->
         <div v-if="work.links?.length" class="aside-links">
           <span class="field-label">LINKS</span>
           <div class="links-list">
@@ -86,7 +72,6 @@
         </div>
       </aside>
 
-      <!-- ── 右栏：图片轮播 + 细节介绍 ──────── -->
       <div v-if="work" class="modal-gallery">
         <div
           v-if="work.images && work.images.length"
@@ -94,7 +79,6 @@
           @touchstart="onTouchStart"
           @touchend="onTouchEnd"
         >
-          <!-- 图片区域 -->
           <div class="gallery-track-wrap">
             <div
               class="gallery-track"
@@ -112,9 +96,9 @@
                   :loading="i === 0 ? 'eager' : 'lazy'"
                   decoding="async"
                 />
-                <!-- 黑色渐变遮罩 -->
+
                 <div class="slide-gradient-overlay" />
-                <!-- 图片文本介绍 -->
+
                 <div
                   v-if="work.imageDescriptions && work.imageDescriptions[i]"
                   class="slide-description"
@@ -126,7 +110,6 @@
             </div>
           </div>
 
-          <!-- 左右按钮 -->
           <button
             v-if="work.images.length > 1"
             class="gallery-btn gallery-btn--prev"
@@ -158,7 +141,6 @@
             </svg>
           </button>
 
-          <!-- 进度条 -->
           <div v-if="work.images.length > 1" class="gallery-progress">
             <div
               v-for="(_, i) in work.images"
@@ -169,7 +151,6 @@
             />
           </div>
 
-          <!-- 计数 -->
           <div class="gallery-counter">
             <span class="counter-cur">{{
               String(imgIndex + 1).padStart(2, '0')
@@ -181,12 +162,10 @@
           </div>
         </div>
 
-        <!-- 无图片时占位 -->
         <div v-else class="gallery-empty">
           <span>NO MEDIA AVAILABLE</span>
         </div>
 
-        <!-- Element Plus 图片查看器 -->
         <ElImageViewer
           v-if="showImageViewer && work.images"
           :url-list="work.images"
@@ -195,7 +174,6 @@
           @close="closeImageViewer"
         />
 
-        <!-- 项目细节介绍 -->
         <div v-if="work.details && work.details.length" class="details-section">
           <div class="details-header">
             <span class="details-label">DETAILS</span>
@@ -257,7 +235,6 @@ const props = defineProps<{
 const emit = defineEmits<{ close: [] }>()
 const { t } = useI18n()
 
-// 内部对话框显示状态
 const dialogVisible = ref(false)
 
 const imgIndex = ref(0)
@@ -281,37 +258,27 @@ const getLinkIcon = (icon?: string) => {
   return linkIconMap[icon] || LinkIcon
 }
 
-// 监听外部 visible 变化，同步到内部状态
 watch(
   () => props.visible,
   (newVal) => {
     dialogVisible.value = newVal
     if (newVal) {
-      // 打开时重置图片索引
       imgIndex.value = 0
     }
   },
   { immediate: true }
 )
 
-// 监听内部状态变化，关闭时通知父组件
 watch(dialogVisible, (newVal) => {
   if (!newVal) {
     emit('close')
   }
 })
 
-// 处理关闭
 const handleClose = () => {
   dialogVisible.value = false
 }
 
-// 对话框完全关闭后的回调
-const handleClosed = () => {
-  // 可以在这里做一些清理工作
-}
-
-// 触屏滑动
 let touchX = 0
 const onTouchStart = (e: TouchEvent) => {
   touchX = e.touches[0].clientX
@@ -324,13 +291,11 @@ const onTouchEnd = (e: TouchEvent) => {
   if (dx > 40 && imgIndex.value > 0) imgIndex.value--
 }
 
-// 打开图片查看器
 const openImageViewer = (index: number) => {
   currentImageIndex.value = index
   showImageViewer.value = true
 }
 
-// 关闭图片查看器
 const closeImageViewer = () => {
   showImageViewer.value = false
 }
@@ -340,7 +305,6 @@ const closeImageViewer = () => {
 @red: #e23456;
 @border: rgba(255, 255, 255, 0.08);
 
-/* ── 晶体标志 ── */
 .modal-crystal-logo {
   position: absolute;
   bottom: 20px;
@@ -349,7 +313,6 @@ const closeImageViewer = () => {
   z-index: 5;
 }
 
-/* ── 内容区 ── */
 .modal-body {
   display: grid;
   grid-template-columns: 320px 1fr;
@@ -359,7 +322,6 @@ const closeImageViewer = () => {
   z-index: 1;
 }
 
-/* ── 左侧信息栏 ─────────────────────────────── */
 .modal-aside {
   padding: 40px 24px;
   border-right: 1px solid @border;
@@ -537,7 +499,6 @@ const closeImageViewer = () => {
   }
 }
 
-/* ── 右侧图片轮播 ────────────────────────────── */
 .modal-gallery {
   position: relative;
   overflow-y: auto;
@@ -595,7 +556,6 @@ const closeImageViewer = () => {
     transition: filter 0.3s ease;
   }
 
-  /* 黑色渐变遮罩 */
   .slide-gradient-overlay {
     position: absolute;
     inset: 0;
@@ -608,7 +568,6 @@ const closeImageViewer = () => {
     pointer-events: none;
   }
 
-  /* 图片文本介绍 */
   .slide-description {
     position: absolute;
     bottom: 20px;
@@ -638,7 +597,6 @@ const closeImageViewer = () => {
   }
 }
 
-/* 左右切换按钮 */
 .gallery-btn {
   position: absolute;
   top: 50%;
@@ -674,7 +632,6 @@ const closeImageViewer = () => {
   }
 }
 
-/* 进度条 */
 .gallery-progress {
   position: absolute;
   bottom: 0;
@@ -701,7 +658,6 @@ const closeImageViewer = () => {
   }
 }
 
-/* 计数 */
 .gallery-counter {
   position: absolute;
   top: 14px;
@@ -725,7 +681,6 @@ const closeImageViewer = () => {
   }
 }
 
-/* 无图片占位 */
 .gallery-empty {
   font-family: 'Unbounded Sans', monospace;
   font-size: 0.6rem;
@@ -737,7 +692,6 @@ const closeImageViewer = () => {
   justify-content: center;
 }
 
-/* ── 细节介绍区域 ─────────────────────────────── */
 .details-section {
   padding: 30px 40px;
   border-top: 1px solid @border;
@@ -796,7 +750,6 @@ const closeImageViewer = () => {
   flex: 1;
 }
 
-/* ── 响应式 ─────────────────────────────────── */
 @media (max-width: 768px) {
   .modal-body {
     grid-template-columns: 1fr;
