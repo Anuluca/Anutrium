@@ -44,15 +44,15 @@ export default {
           time: '2023_12 to 2024_08',
           company: '国家电网',
           tags: ['VUE3', 'ELEMENTPLUS', 'ECHARTS', 'WEBGL', 'SGMAP'],
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/G.webp',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.png',
+          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/G.jpg',
+          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.jpg',
           description:
             '以无人机覆盖飞行、AI 分析、缺陷研判、实时传图、实时预警告警、工单推送提升江西电网供电巡检效率。',
           images: [
             'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/7c83cb8a-d86a-42a8-9310-e136acbea961.jpg',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.51.24.png',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.51.08.png',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/yujinggaojinggongdan.png',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.51.24.jpg',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.51.08.jpg',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/yujinggaojinggongdan.jpg',
           ],
           imageDescriptions: [
             '新闻报道',
@@ -89,15 +89,15 @@ export default {
           time: '2024_08 to 2025_03',
           company: '国家电网',
           tags: ['VUE3', 'ELEMENTPLUS', 'ECHARTS', 'WEBGL', 'SGMAP'],
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.49.55.png',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.png',
+          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.49.55.jpg',
+          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.jpg',
           description:
             '面向电力设备运维与物联感知场景，集中展示设备规模、运行状态、告警事件、检修计划与地图分布，帮助管理人员快速掌握生产运营全貌。',
           images: [
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.49.55.png',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.50.18.png',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.52.50.png',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.53.12.png',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.49.55.jpg',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.50.18.jpg',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.52.50.jpg',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.53.12.jpg',
           ],
           imageDescriptions: [
             '原型1 - 大屏首页排版',
@@ -121,15 +121,15 @@ export default {
           time: '2025_03 to 2026_01',
           company: '国家电网',
           tags: ['VUE3', 'ELEMENTPLUS', 'ECHARTS', 'SGMAP'],
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.48.12.png',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.png',
+          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.48.12.jpg',
+          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.jpg',
           description:
             '面向纪检监察与主动监督场景，整合案件档案、领导人员行为监督、用车核查与数据异常监测能力，借助AI大模型帮助监督人员发现线索、核查风险并形成闭环处置。',
           images: [
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.47.14.png',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.48.22.png',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.47.39.png',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.48.12.png',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.47.14.jpg',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.48.22.jpg',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.47.39.jpg',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.48.12.jpg',
           ],
           imageDescriptions: [
             '原型1 - 首页统计',
@@ -150,8 +150,8 @@ export default {
           time: '2025_12 to 2025_12',
           company: '国家电网',
           tags: ['Vue2', 'ELEMENTUI', 'SASS', 'ECHARTS', 'TAILWINDCSS'],
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/37fdd6dc419b49d785b9cb5d68aa6ef5.webp',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.png',
+          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/37fdd6dc419b49d785b9cb5d68aa6ef5.jpg',
+          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.jpg',
           description: '从流程编排、监控大屏、主题适配、后台管理等开发。',
           details: [
             '基于 Vue2 和 ElementUI 开发的流程编排面板，支持通过拖拽指令快速搭建 RPA 自动化任务。',
@@ -168,10 +168,10 @@ export default {
           time: '2022_01 to 2022_07',
           company: '文因互联',
           tags: ['REACT', 'Antd', 'D3', 'PDF_VIEWER'],
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/8320d930cbcf10286068ff0c86e76fda398.png',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/130958568.png',
+          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/8320d930cbcf10286068ff0c86e76fda398.jpg',
+          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/130958568.jpg',
           images: [
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_22.58.57.png',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_22.58.57.jpg',
           ],
           description:
             '面向金融文档场景的智能认知平台，将复杂文档转化为可审核、可分析的结构化数据。',
@@ -213,7 +213,7 @@ export default {
           company: '文因互联',
           tags: ['VUE2', 'ELEMENTUI', 'ECHARTS', 'PDF_VIEWER'],
           img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/171280126412338930EA.jpg',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/130958568.png',
+          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/130958568.jpg',
           description:
             '基于 Vue2 + ElementUI 搭建后台管理，集成 PDF_VIEWER 实现研报/合同在线预览与批注，并通过 ECharts 展示文档统计与热点趋势，服务于投研及合规团队的知识复用。',
           details: [
@@ -231,10 +231,10 @@ export default {
           time: '2019_09 to 2020_09',
           company: '江西中烟',
           tags: ['REACT', 'Antd', 'DB2'],
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/0ff41bd5ad6eddc41ffc116415177bf253663375.webp',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/u=3946042415,1178956773&fm=253&fmt=auto&app=138&f=JPEG.webp',
+          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/0ff41bd5ad6eddc41ffc116415177bf253663375.jpg',
+          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/u=3946042415,1178956773&fm=253&fmt=auto&app=138&f=JPEG.jpg',
           images: [
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_21.38.58.png',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_21.38.58.jpg',
           ],
           description:
             '基于 React、Antd 组件库及 DB2 数据库，主导开发了支撑企业内部管理流程的一体化综合平台。',
@@ -280,11 +280,11 @@ export default {
           img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/Snipaste_2021-09-01_13-44-53.jpg',
           logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/Logo/anutrium_favicon.jpg',
           images: [
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_20.59.04.png',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_20.56.07.png',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_20.55.32.png',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_21.02.13.png',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_21.02.36.png',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_20.59.04.jpg',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_20.56.07.jpg',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_20.55.32.jpg',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_21.02.13.jpg',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_21.02.36.jpg',
           ],
           imageDescriptions: [
             '主页',
@@ -316,11 +316,11 @@ export default {
           title: '江西电网KPI考核系统',
           participation: 100,
           company: '国家电网',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.png',
+          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.jpg',
           description:
             '本系统包括绩效设计器、模板配置、月度考核启动与评价等全流程，并攻克了类似低代码开发平台的组件自定义核心难点。',
           images: [
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.44.04.png',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.44.04.jpg',
           ],
           imageDescriptions: ['原型图1'],
           details: [
@@ -334,8 +334,8 @@ export default {
           participation: 100,
           company: '国家电网',
           tags: ['Vue2', 'ELEMENTUI', 'TAILWINDCSS', 'Vant2'],
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.png',
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/8320d930cbcf10286068ff0c86e76fda398.png',
+          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.jpg',
+          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/8320d930cbcf10286068ff0c86e76fda398.jpg',
           description:
             '我主导设计并开发了江西电网巡检APP，支撑一线班组完成设备巡检、缺陷上报与任务调度，实现电网巡检业务的移动化转型。',
           details: [
@@ -350,10 +350,10 @@ export default {
           title: '四级日管控系统',
           participation: 30,
           company: '国家电网',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.png',
+          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.jpg',
           description: '主要负责UI设计、主体框架搭建，以及页面的搭建与交互',
           images: [
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_21.31.42.png',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_21.31.42.jpg',
           ],
           imageDescriptions: ['系统截图1'],
         },
@@ -362,10 +362,10 @@ export default {
           title: '快察®智能核查系统',
           participation: 33.33,
           company: '文因互联',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/130958568.png',
+          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/130958568.jpg',
           tags: ['VUE2', 'ELEMENTUI', 'ECHARTS', 'PDF_VIEWER'],
           images: [
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_22.59.17.png',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_22.59.17.jpg',
           ],
           description:
             '面向金融文档质控的智能核查系统，支持单文档核查、多文档交叉复核与版本比对。',
@@ -391,7 +391,7 @@ export default {
           tags: ['HTML5', 'CSS'],
           description: '个人网站第一版，大学时期纯HTML手搓。',
           images: [
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/YHpcGj.png',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/YHpcGj.jpg',
             'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/YHp2zn.jpg',
           ],
           imageDescriptions: ['开发早期', '最终截图'],

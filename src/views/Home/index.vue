@@ -135,7 +135,7 @@
               :src="
                 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/Logo/' +
                 (index + 1) +
-                '.JPG'
+                '.jpg'
               "
               alt=""
               loading="lazy"
@@ -171,7 +171,7 @@
               :src="
                 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/Logo/' +
                 (index + 1) +
-                '.JPG'
+                '.jpg'
               "
               alt=""
               loading="lazy"

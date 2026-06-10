@@ -47,15 +47,15 @@ export default {
           time: '2023_12 to 2024_08',
           company: 'State_Grid_Corporation_of_China',
           tags: ['VUE3', 'ELEMENTPLUS', 'ECHARTS', 'WEBGL', 'SGMAP'],
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/G.webp',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.png',
+          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/G.jpg',
+          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.jpg',
           description:
             'Improves Jiangxi power-grid inspection efficiency through UAV coverage flights, AI analysis, defect assessment, real-time image transfer, live alerts, and work-order dispatch.',
           images: [
             'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/7c83cb8a-d86a-42a8-9310-e136acbea961.jpg',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.51.24.png',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.51.08.png',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/yujinggaojinggongdan.png',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.51.24.jpg',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.51.08.jpg',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/yujinggaojinggongdan.jpg',
           ],
           imageDescriptions: [
             'News report',
@@ -91,15 +91,15 @@ export default {
           time: '2024_08 to 2025_03',
           company: 'State_Grid_Corporation_of_China',
           tags: ['VUE3', 'ELEMENTPLUS', 'ECHARTS', 'WEBGL', 'SGMAP'],
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.49.55.png',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.png',
+          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.49.55.jpg',
+          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.jpg',
           description:
             'A cockpit for power-device operation and IoT sensing scenarios, centralizing device scale, runtime status, alerts, maintenance plans, and map distribution for fast production oversight.',
           images: [
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.49.55.png',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.50.18.png',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.52.50.png',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.53.12.png',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.49.55.jpg',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.50.18.jpg',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.52.50.jpg',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.53.12.jpg',
           ],
           imageDescriptions: [
             'Prototype 1 - Dashboard home layout',
@@ -122,15 +122,15 @@ export default {
           time: '2025_03 to 2026_01',
           company: 'State_Grid_Corporation_of_China',
           tags: ['VUE3', 'ELEMENTPLUS', 'ECHARTS', 'SGMAP'],
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.48.12.png',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.png',
+          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.48.12.jpg',
+          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.jpg',
           description:
             'A supervision platform for discipline inspection and active oversight, integrating case archives, leadership behavior supervision, vehicle-use checks, and anomaly monitoring with AI-model assistance.',
           images: [
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.47.14.png',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.48.22.png',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.47.39.png',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.48.12.png',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.47.14.jpg',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.48.22.jpg',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.47.39.jpg',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.48.12.jpg',
           ],
           imageDescriptions: [
             'Prototype 1 - Home statistics',
@@ -151,8 +151,8 @@ export default {
           time: '2025_12 to 2025_12',
           company: 'State_Grid_Corporation_of_China',
           tags: ['Vue2', 'ELEMENTUI', 'SASS', 'ECHARTS', 'TAILWINDCSS'],
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/37fdd6dc419b49d785b9cb5d68aa6ef5.webp',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.png',
+          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/37fdd6dc419b49d785b9cb5d68aa6ef5.jpg',
+          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.jpg',
           description:
             'Worked on process orchestration, monitoring dashboards, theme adaptation, and backend management modules.',
           details: [
@@ -170,10 +170,10 @@ export default {
           time: '2022_01 to 2022_07',
           company: 'Memect_Technology_Co.',
           tags: ['REACT', 'Antd', 'D3', 'PDF_VIEWER'],
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/8320d930cbcf10286068ff0c86e76fda398.png',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/130958568.png',
+          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/8320d930cbcf10286068ff0c86e76fda398.jpg',
+          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/130958568.jpg',
           images: [
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_22.58.57.png',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_22.58.57.jpg',
           ],
           description:
             'An intelligent document cognition platform for financial-document scenarios, turning complex documents into reviewable and analyzable structured data.',
@@ -215,7 +215,7 @@ export default {
           company: 'Memect_Technology_Co.',
           tags: ['VUE2', 'ELEMENTUI', 'ECHARTS', 'PDF_VIEWER'],
           img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/171280126412338930EA.jpg',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/130958568.png',
+          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/130958568.jpg',
           description:
             'A Vue 2 + ElementUI backend system with PDF_VIEWER based research-report and contract preview/annotation plus ECharts document statistics and trend visualization for investment research and compliance teams.',
           details: [
@@ -233,10 +233,10 @@ export default {
           time: '2019_09 to 2020_09',
           company: 'JIANGXI TOBACCO',
           tags: ['REACT', 'Antd', 'DB2'],
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/0ff41bd5ad6eddc41ffc116415177bf253663375.webp',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/u=3946042415,1178956773&fm=253&fmt=auto&app=138&f=JPEG.webp',
+          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/0ff41bd5ad6eddc41ffc116415177bf253663375.jpg',
+          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/u=3946042415,1178956773&fm=253&fmt=auto&app=138&f=JPEG.jpg',
           images: [
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_21.38.58.png',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_21.38.58.jpg',
           ],
           description:
             'An integrated internal management platform built with React, Ant Design, and DB2 to support enterprise business-management workflows.',
@@ -290,11 +290,11 @@ export default {
           img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/Snipaste_2021-09-01_13-44-53.jpg',
           logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/Logo/anutrium_favicon.jpg',
           images: [
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_20.59.04.png',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_20.56.07.png',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_20.55.32.png',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_21.02.13.png',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_21.02.36.png',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_20.59.04.jpg',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_20.56.07.jpg',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_20.55.32.jpg',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_21.02.13.jpg',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_21.02.36.jpg',
           ],
           imageDescriptions: [
             'Home page',
@@ -327,11 +327,11 @@ export default {
           title: 'State Grid KPI System',
           participation: 100,
           company: 'State Grid',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.png',
+          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.jpg',
           description:
             'A full-process KPI assessment system covering performance designer, template configuration, monthly assessment startup, and evaluation, with low-code-like component customization as a core challenge.',
           images: [
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.44.04.png',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.44.04.jpg',
           ],
           imageDescriptions: ['Prototype 1'],
           details: [
@@ -345,8 +345,8 @@ export default {
           participation: 100,
           company: 'State Grid',
           tags: ['Vue2', 'ELEMENTUI', 'TAILWINDCSS', 'Vant2'],
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.png',
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/8320d930cbcf10286068ff0c86e76fda398.png',
+          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.jpg',
+          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/8320d930cbcf10286068ff0c86e76fda398.jpg',
           description:
             'I led the design and development of the Jiangxi Power Grid inspection app, helping field teams handle equipment inspection, defect reporting, and task dispatch through a mobile workflow.',
           details: [
@@ -361,11 +361,11 @@ export default {
           title: 'Level 4 Daily Control System',
           participation: 30,
           company: 'State Grid',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.png',
+          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.jpg',
           description:
             'Mainly responsible for UI design, main framework setup, page construction, and interaction implementation.',
           images: [
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_21.31.42.png',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_21.31.42.jpg',
           ],
           imageDescriptions: ['System screenshot 1'],
         },
@@ -374,7 +374,7 @@ export default {
           title: 'KuaiCha',
           participation: 33.33,
           company: 'Memect_Technology_Co.',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/130958568.png',
+          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/130958568.jpg',
           tags: ['VUE2', 'ELEMENTUI', 'ECHARTS', 'PDF_VIEWER'],
           description:
             'An intelligent financial-document quality-control system supporting single-document checking, multi-document cross-review, and version comparison.',
@@ -401,7 +401,7 @@ export default {
           description:
             'The first version of my personal website, hand-built with pure HTML during university.',
           images: [
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/YHpcGj.png',
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/YHpcGj.jpg',
             'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/YHp2zn.jpg',
           ],
           imageDescriptions: ['Early development', 'Final screenshot'],

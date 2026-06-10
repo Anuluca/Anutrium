@@ -4,9 +4,9 @@ import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { ElLoading } from 'element-plus'
 
-import githubImg from '@/assets/img/github_profile.png'
+import githubImg from '@/assets/img/github_profile.jpg'
 import mailImg from '@/assets/img/mail_profile.svg'
-import twitterImg from '@/assets/img/twitter_profile.png'
+import twitterImg from '@/assets/img/twitter_profile.jpg'
 import bottomLineData from '@/data/bottomLine.js'
 import { visualState } from '@/stores'
 
@@ -21,7 +21,7 @@ interface SocialItem {
 }
 
 const BILIBILI_IMG =
-  'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bilibili_profile.png'
+  'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bilibili_profile.jpg'
 
 const SOCIAL_ITEMS: SocialItem[] = [
   {

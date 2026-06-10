@@ -6,10 +6,10 @@
 const FONT_FAMILIES = ['enTitle', 'cnTitle']
 
 const LOGO_IMAGE_PATHS = [
-  '/assets/logo.png',
-  '/assets/logo_horizon.png',
-  '/assets/logo_horizon_black.png',
-  '/assets/logo_black.png',
+  '/assets/logo.jpg',
+  '/assets/logo_horizon.jpg',
+  '/assets/logo_horizon_black.jpg',
+  '/assets/logo_black.jpg',
 ]
 
 /**

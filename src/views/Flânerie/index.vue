@@ -171,7 +171,7 @@ const initMap = async () => {
   })
 
   L.tileLayer(
-    'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',
+    'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.jpg',
     { subdomains: 'abcd', maxZoom: 8 }
   ).addTo(mapInstance)
 
