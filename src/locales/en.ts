@@ -678,8 +678,7 @@ export default {
 
   about: {
     brandColorKicker: 'BRAND COLOR',
-    brandColorTitleLead: 'BUILT FROM PASSION.',
-    brandColorTitleTail: 'SETTING VIVID, INTENSE, AND DELIBERATE.',
+    brandColorTitleLead: 'VIVID AND DELIBERATE. ',
     brandColorName: 'PASSION RED',
     changelogLabel: 'RELEASE HISTORY',
     majorReleaseLabel: 'MAJOR RELEASE',

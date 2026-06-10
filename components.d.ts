@@ -11,6 +11,7 @@ declare module '@vue/runtime-core' {
   export interface GlobalComponents {
     BackController: typeof import('./src/components/BackController/index.vue')['default']
     BackStars: typeof import('./src/components/BackStars/index.vue')['default']
+    BackToTop: typeof import('./src/components/BackToTop/index.vue')['default']
     CrystalLogo: typeof import('./src/components/CrystalLogo/index.vue')['default']
     CursorMove: typeof import('./src/components/CursorMove/index.vue')['default']
     DiamondCloseBtn: typeof import('./src/components/DiamondCloseBtn/index.vue')['default']

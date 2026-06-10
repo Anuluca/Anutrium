@@ -125,7 +125,6 @@ const neighbors = ref([
             :class="{ 'is-en': locale === 'en' }"
           >
             <span>{{ t('about.brandColorTitleLead') }}</span>
-            <span>{{ t('about.brandColorTitleTail') }}</span>
           </h2>
         </div>
 
@@ -329,7 +328,7 @@ const neighbors = ref([
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  margin: 54px 0 68px;
+  margin: 30px 0 68px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: @red;
 }
@@ -365,6 +364,7 @@ const neighbors = ref([
   span {
     font-family: inherit;
     white-space: nowrap;
+    margin-left: 60px;
   }
 
   &.is-en {
@@ -387,7 +387,7 @@ const neighbors = ref([
 .passion-color-field {
   position: relative;
   display: flex;
-  min-height: clamp(500px, 43vw, 660px);
+  min-height: clamp(500px, 43vw, 560px);
   overflow: hidden;
   background: @red;
   color: #070708;
@@ -429,7 +429,8 @@ const neighbors = ref([
   justify-content: flex-end;
   min-height: 0;
   margin-top: auto;
-  padding: 20px clamp(26px, 4vw, 68px) 28px;
+  padding: 20px clamp(26px, 1vw, 68px) 28px;
+  zoom: 1.4;
 }
 
 .passion-field-name {

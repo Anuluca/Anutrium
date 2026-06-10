@@ -1,5 +1,5 @@
 <template>
-  <div class="home-page main-container" @mousewheel="wheelEvent">
+  <div class="home-page main-container">
     <section class="hero-section">
       <div class="hero-content">
         <div class="recommend" @mouseenter="pauseAuto" @mouseleave="resumeAuto">
@@ -237,7 +237,7 @@
             v-for="vlog in journeyVlogs"
             :key="vlog.id"
             :vlog="vlog"
-            :interactive="hasVlogPage(vlog.id)"
+            :interactive="true"
             @select="openVlog(vlog.id)"
           />
         </div>
@@ -504,15 +504,7 @@ const journeyVlogs = computed<JourneyVlog[]>(() => {
     .filter((vlog): vlog is JourneyVlog => Boolean(vlog))
 })
 
-const hasVlogPage = (vlogId: string) => {
-  return router
-    .resolve(`/flanerie/${vlogId}`)
-    .matched.some((route) => route.meta.vlogId === vlogId)
-}
-
 const openVlog = (vlogId: string) => {
-  if (!hasVlogPage(vlogId)) return
-
   router.push(`/flanerie/${vlogId}`)
 }
 
@@ -536,8 +528,6 @@ const homeTools = computed<HomeTool[]>(() => {
     .map((id) => tools.find((tool) => tool.id === id))
     .filter((tool): tool is HomeTool => Boolean(tool))
 })
-
-const wheelEvent = (_e: WheelEvent) => {}
 </script>
 
 <style lang="less" scoped>

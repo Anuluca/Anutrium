@@ -30,7 +30,7 @@
           :key="vlog.id"
           :vlog="vlog"
           :active="activeVlogId === vlog.id"
-          :interactive="hasVlogPage(vlog.id)"
+          :interactive="true"
           @select="openVlog(vlog)"
         />
       </div>
@@ -74,15 +74,7 @@ const vlogs = computed<VlogItem[]>(() => {
   return tm('flanerie.dynamic.vlogs') as VlogItem[]
 })
 
-const hasVlogPage = (vlogId: string) => {
-  return router
-    .resolve(`/flanerie/${vlogId}`)
-    .matched.some((route) => route.meta.vlogId === vlogId)
-}
-
 const openVlog = (vlog: VlogItem) => {
-  if (!hasVlogPage(vlog.id)) return
-
   router.push(`/flanerie/${vlog.id}`)
 }
 

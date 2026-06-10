@@ -12,8 +12,8 @@
 </template>
 
 <script setup lang="ts">
-import PageHeader from '@/components/PageHeader/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
+import PageHeader from '@/components/PageHeader/index.vue'
 </script>
 
 <style lang="less" scoped>

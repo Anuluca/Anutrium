@@ -25,12 +25,12 @@
     left: calc(50vw - 1000px);
     backdrop-filter: blur(2px);
     bottom: 6px;
-
   }
 
   &.motion-paused {
     .marquee-wrap {
       animation-play-state: paused !important;
+      will-change: auto !important;
     }
   }
 
@@ -47,7 +47,6 @@
       justify-content: center;
 
       .el-button {
-
         margin-left: 0px !important;
         color: @primary-color;
         margin-bottom: 1px;
@@ -62,10 +61,10 @@
         }
       }
 
-        .chinese *{
-          font-family: 'source-han-sans-simplified-c' !important;
-          font-weight: 900 !important;
-        }
+      .chinese * {
+        font-family: 'source-han-sans-simplified-c' !important;
+        font-weight: 900 !important;
+      }
     }
   }
 
@@ -100,6 +99,11 @@
         -webkit-animation: marquee 48s linear infinite;
         animation: marquee 48s linear infinite;
         animation-play-state: running;
+
+        span {
+          font-family: 'source-han-sans-simplified-c', sans-serif;
+          font-weight: 600;
+        }
 
         &:hover {
           animation-play-state: paused;
@@ -186,29 +190,59 @@
       justify-content: center;
       flex-wrap: nowrap;
 
-      > span {
+      > .social-link {
         position: relative;
         display: inline-flex;
         align-items: center;
         justify-content: center;
 
-        .el-button {
+        .social-trigger {
+          display: inline-flex;
+          align-items: center;
+          height: 26px;
+          padding: 0 5px;
           transform: scale(0.95, 1.2);
-          font-family: 'Unbounded Sans';
-          font-size: 12px;
           color: @primary-color;
+          font-family: 'Unbounded Sans', sans-serif;
+          font-size: 12px;
           letter-spacing: 0.8px;
+          line-height: 1;
+          text-decoration: none;
+          transition: color 0.2s;
+        }
+
+        &:hover,
+        &:focus-within {
+          .social-preview {
+            visibility: visible;
+            opacity: 1;
+            transform: translate(-50%, 0);
+            pointer-events: auto;
+          }
+
+          .social-trigger {
+            color: #fff;
+          }
         }
       }
     }
 
     .mark {
+      padding: 0;
+      border: 0;
+      background: transparent;
       transform: scale(0.95, 1.2);
       color: #ffffffd9 !important;
       font-family: 'Unbounded Sans';
       font-size: 12px;
       letter-spacing: 0.8px;
       white-space: nowrap;
+      cursor: pointer;
+
+      &:hover,
+      &:focus-visible {
+        color: @primary-color !important;
+      }
     }
 
     .el-switch {
@@ -256,59 +290,61 @@
     }
   }
 
-  .social-detail {
+  .social-preview {
     position: absolute;
-    z-index: -1;
+    left: 50%;
+    bottom: 100%;
+    z-index: 4;
+    display: block;
+    overflow: hidden;
+    visibility: hidden;
     opacity: 0;
     cursor: pointer;
-    transform: translateX(-50%) !important;
-    left: 5000%;
-    transition: bottom 0.3s, opacity 0.5s;
-    box-shadow: 0 1px 15px #0000003b;
-    bottom: 10px;
-
-    &.hover {
-      left: 50%;
-      bottom: 30px;
-      opacity: 1;
-    }
+    transform: translate(-50%, 8px);
+    transform-origin: bottom center;
+    pointer-events: none;
+    border: 1px solid rgba(226, 52, 86, 0.35);
+    background: #080808;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.62);
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
 
     img {
+      display: block;
       width: 100%;
-      height: 100%;
-      border-radius: inherit;
+      height: auto;
+      max-height: 520px;
+      object-fit: contain;
     }
   }
 
-  .TWITTER_detail {
-    .social-detail();
+  .social-link--twitter .social-preview {
     width: 246px;
-    height: 62px;
     border-radius: 31px;
   }
 
-  .WEIBO_detail {
-    .social-detail();
+  .social-preview--weibo {
     width: 346px;
     height: 500px;
-    overflow: hidden;
+
+    iframe {
+      display: block;
+      width: 100%;
+      height: 520px;
+    }
   }
 
-  .BILIBILI_detail {
-    .social-detail();
+  .social-link--bilibili .social-preview {
     width: 280px;
-    height: 280px;
   }
 
-  .GITHUB_detail {
-    .social-detail();
+  .social-link--github .social-preview {
     width: 148px;
-    height: 32px;
     border-radius: 16px;
   }
 
-  .EMAIL_detail {
-    .social-detail();
+  .social-link--mail .social-preview {
+    width: 360px;
+    border-radius: 8px;
   }
 }
 

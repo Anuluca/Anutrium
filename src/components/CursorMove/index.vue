@@ -1,12 +1,17 @@
 <template>
-  <div v-if="!isMobile" class="cursor-position" :style="followerStyle">
+  <div
+    v-if="!isMobile"
+    ref="cursorElement"
+    class="cursor-position"
+    :class="{ 'is-hidden': shouldHideCursor }"
+  >
     <div class="cursor-scale" :class="{ 'is-clicked': isClicked }">
       <div class="cursor-shape" :class="{ 'is-active': isHovering }" />
     </div>
   </div>
 </template>
 <script setup>
-import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { visualState } from '@/stores'
 
@@ -16,18 +21,14 @@ const isMobile = computed(() => visualStateStore.deviceType !== 'desktop')
 
 const HIDDEN_CURSOR_CLASSNAMES = ['no-cursor', 'hide-cursor', 'cursor-none']
 
-const mouse = reactive({ x: 0, y: 0 })
-const follower = reactive({ x: 0, y: 0 })
+const cursorElement = ref(null)
+const mouse = { x: 0, y: 0 }
+const follower = { x: 0, y: 0 }
 
 const isHovering = ref(false)
 const isClicked = ref(false)
 const shouldHideCursor = ref(false)
 const isPageVisible = ref(true)
-
-const followerStyle = computed(() => ({
-  transform: `translate3d(${follower.x}px, ${follower.y}px, 0)`,
-  opacity: shouldHideCursor.value ? 0 : 1,
-}))
 
 const ease = 0.1
 const settleThreshold = 0.35
@@ -108,10 +109,16 @@ const render = () => {
 
   follower.x += (mouse.x - follower.x) * ease
   follower.y += (mouse.y - follower.y) * ease
+  if (cursorElement.value) {
+    cursorElement.value.style.transform = `translate3d(${follower.x}px, ${follower.y}px, 0)`
+  }
 
   if (Math.abs(dx) < settleThreshold && Math.abs(dy) < settleThreshold) {
     follower.x = mouse.x
     follower.y = mouse.y
+    if (cursorElement.value) {
+      cursorElement.value.style.transform = `translate3d(${follower.x}px, ${follower.y}px, 0)`
+    }
     stopRender()
     return
   }
@@ -173,6 +180,11 @@ watch(shouldAnimateCursor, (canAnimate) => {
 
   mix-blend-mode: difference;
   transition: opacity 0.2s ease;
+  will-change: transform;
+
+  &.is-hidden {
+    opacity: 0;
+  }
 }
 
 .cursor-scale {

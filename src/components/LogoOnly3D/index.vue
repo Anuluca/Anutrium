@@ -1,5 +1,9 @@
 <template>
-  <div class="scene">
+  <div
+    ref="sceneElement"
+    class="scene"
+    :class="{ 'motion-paused': isMotionPaused }"
+  >
     <div class="logo-artifact-stage">
       <div v-for="i in 3" :key="i" :class="['logo-layer', `layer-${i}`]">
         <Logo id="0" class="logo-element" :active="false" />
@@ -9,7 +13,47 @@
 </template>
 
 <script setup>
+import { onMounted, onUnmounted, ref } from 'vue'
+
 import Logo from '@/components/Logo/index.vue'
+
+const sceneElement = ref(null)
+const isMotionPaused = ref(false)
+let isSceneVisible = true
+let sceneObserver = null
+let reducedMotionQuery = null
+
+const updateMotionState = () => {
+  isMotionPaused.value =
+    !isSceneVisible ||
+    document.visibilityState === 'hidden' ||
+    !!reducedMotionQuery?.matches
+}
+
+onMounted(() => {
+  reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+  sceneObserver = new IntersectionObserver(
+    ([entry]) => {
+      isSceneVisible = entry.isIntersecting
+      updateMotionState()
+    },
+    { threshold: 0.01 }
+  )
+
+  if (sceneElement.value) {
+    sceneObserver.observe(sceneElement.value)
+  }
+
+  updateMotionState()
+  document.addEventListener('visibilitychange', updateMotionState)
+  reducedMotionQuery.addEventListener('change', updateMotionState)
+})
+
+onUnmounted(() => {
+  sceneObserver?.disconnect()
+  document.removeEventListener('visibilitychange', updateMotionState)
+  reducedMotionQuery?.removeEventListener('change', updateMotionState)
+})
 </script>
 
 <style lang="less" scoped>
@@ -40,6 +84,13 @@ import Logo from '@/components/Logo/index.vue'
   align-items: center;
 
   background: transparent;
+
+  &.motion-paused {
+    .logo-layer {
+      animation-play-state: paused;
+      will-change: auto;
+    }
+  }
 }
 
 .logo-artifact-stage {

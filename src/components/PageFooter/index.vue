@@ -20,15 +20,22 @@
           &gt;</span
         >
       </footer>
-      <Logo
-        id="footer-logo"
-        :active="true"
-        class="footer-logo"
-        :class="{ 'logo-hovered': isLogoHovered }"
-        :style="logoStyle"
-        @mouseenter="isLogoHovered = true"
-        @mouseleave="isLogoHovered = false"
-      />
+      <button
+        class="footer-logo-link"
+        type="button"
+        aria-label="返回首页"
+        @click="toPage('/')"
+      >
+        <Logo
+          id="footer-logo"
+          :active="true"
+          class="footer-logo"
+          :class="{ 'logo-hovered': isLogoHovered }"
+          :style="logoStyle"
+          @mouseenter="isLogoHovered = true"
+          @mouseleave="isLogoHovered = false"
+        />
+      </button>
     </div>
     <div v-if="thirdParty" class="third-party-recommend">
       <a target="_blank" @click="toPage('craft')"> 工具集 </a> |
@@ -261,6 +268,22 @@ onUnmounted(() => {
     color: #000;
     filter: drop-shadow(0 0 20px #e23456) drop-shadow(0 0 40px #e23456)
       drop-shadow(0 0 60px rgba(226, 52, 86, 0.5));
+  }
+}
+
+.footer-logo-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 1px solid #e23456;
+    outline-offset: -36px;
   }
 }
 

@@ -662,8 +662,7 @@ export default {
 
   about: {
     brandColorKicker: '品牌色彩',
-    brandColorTitleLead: '热情是视觉原点，',
-    brandColorTitleTail: '以炽热而克制的姿态贯穿网站。',
+    brandColorTitleLead: '炽热克制。',
     brandColorName: '热情红',
     changelogLabel: '更新日志',
     majorReleaseLabel: '主版本',
@@ -675,10 +674,10 @@ export default {
           version: 'v1.0',
           codename: 'GOLIATH',
           date: '2026-06-06',
-          title: '内容更新：旅程、工具、新加坡',
+          title: '内容更新：旅程、工具',
           details: [
             '新增工具：弹力球',
-            '新增旅程：南京、南京红山动物园、九江',
+            '新增旅程：南京、南京红山动物园、九江、新加坡',
             '新增旅程地图',
             '关于页新增#E23456品牌色彩介绍',
           ],

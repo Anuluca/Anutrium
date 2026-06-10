@@ -18,7 +18,6 @@ interface RouteMeta {
   fullFooter: boolean
   ifShow: boolean
   noMenu?: boolean
-  vlogId?: string
 }
 
 interface RouteConfig {
@@ -27,31 +26,6 @@ interface RouteConfig {
   component: any
   meta: RouteMeta
 }
-
-const flaneriePageModules = import.meta.glob(
-  '../views/Flânerie/*/index.vue'
-) as Record<string, () => Promise<unknown>>
-
-const flanerieRoutes: RouteConfig[] = Object.entries(flaneriePageModules)
-  .map(([filePath, component]) => {
-    const vlogId = filePath.match(/Flânerie\/([^/]+)\/index\.vue$/)?.[1]
-    if (!vlogId) return null
-
-    return {
-      path: `/flanerie/${vlogId}`,
-      name: `FLANERIE_${vlogId.toUpperCase()}`,
-      component,
-      meta: {
-        titleEn: vlogId.toUpperCase(),
-        titleCn: vlogId,
-        fullFooter: true,
-        ifShow: false,
-        noMenu: false,
-        vlogId,
-      },
-    }
-  })
-  .filter((route): route is RouteConfig => Boolean(route))
 
 export const routes: RouteConfig[] = [
   {
@@ -87,7 +61,18 @@ export const routes: RouteConfig[] = [
       ifShow: true,
     },
   },
-  ...flanerieRoutes,
+  {
+    path: '/flanerie/:vlogId',
+    name: 'FLANERIE_DETAIL',
+    component: () => import('@/views/Flânerie/Detail/index.vue'),
+    meta: {
+      titleEn: 'FLÂNERIE',
+      titleCn: '旅程',
+      fullFooter: true,
+      ifShow: false,
+      noMenu: false,
+    },
+  },
 
   {
     path: '/island',
@@ -261,7 +246,8 @@ router.afterEach((to) => {
   NProgress.done()
 
   if (to.meta.titleEn) {
-    const vlogId = to.meta.vlogId as string | undefined
+    const vlogId =
+      typeof to.params.vlogId === 'string' ? to.params.vlogId : undefined
     const vlogs = i18n.global.tm('flanerie.dynamic.vlogs') as Array<{
       id: string
       title: string

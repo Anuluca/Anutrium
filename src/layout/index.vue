@@ -152,6 +152,7 @@
         </transition>
       </router-view>
     </div>
+    <BackToTop />
     <div class="fullscreen" @click="toggleFullscreen" />
   </div>
 </template>
@@ -162,6 +163,7 @@ import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { Moon, Sunny } from '@element-plus/icons-vue'
 
+import BackToTop from '@/components/BackToTop/index.vue'
 import Logo from '@/components/Logo/index.vue'
 import { routes } from '@/router'
 import { visualState } from '@/stores'
@@ -192,6 +194,9 @@ const isMobile = computed(() => visualStateStore.deviceType !== 'desktop')
 const isMobileMenuOpen = ref(false)
 
 const isFullscreen = ref(false)
+let scrollRafId: number | null = null
+let logoTimer: number | null = null
+let layoutTimer: number | null = null
 
 const toggleFullscreen = () => {
   if (!document.fullscreenElement) {
@@ -226,7 +231,16 @@ const closeMobileMenu = () => {
 }
 
 const handleScroll = () => {
-  isScrolled.value = document.documentElement.scrollTop > 50
+  if (scrollRafId !== null) return
+
+  scrollRafId = window.requestAnimationFrame(() => {
+    const nextValue =
+      window.scrollY > 50 || document.documentElement.scrollTop > 50
+    if (isScrolled.value !== nextValue) {
+      isScrolled.value = nextValue
+    }
+    scrollRafId = null
+  })
 }
 
 const returnHome = () => {
@@ -250,28 +264,36 @@ const contact = (type: string) => {
 }
 
 onMounted(() => {
-  setTimeout(() => {
+  logoTimer = window.setTimeout(() => {
     logoActive.value = false
-    theme.value = localStorage.getItem('theme') || 'light'
   }, 400)
-  setTimeout(() => {
+  layoutTimer = window.setTimeout(() => {
     layoutShow.value = true
   }, 100)
 
+  handleScroll()
   document.addEventListener('scroll', handleScroll, { passive: true })
 })
 
 onUnmounted(() => {
   document.removeEventListener('scroll', handleScroll)
+  if (scrollRafId !== null) window.cancelAnimationFrame(scrollRafId)
+  if (logoTimer !== null) window.clearTimeout(logoTimer)
+  if (layoutTimer !== null) window.clearTimeout(layoutTimer)
 })
 </script>
 
 <style lang="less" scoped>
 @import './index.less';
 
-.route-enter-active,
-.route-leave-from {
+.route-enter-active {
   transition: opacity 0.2s ease, transform 0.6s ease, filter 0.6s ease;
+}
+
+.route-leave-active {
+  transform-origin: center center;
+  transition: opacity 0.6s ease, transform 0.6s ease, filter 0.6s ease;
+  will-change: opacity, transform, filter;
 }
 
 .route-enter-from {
@@ -280,8 +302,7 @@ onUnmounted(() => {
   filter: blur(10px);
 }
 
-.route-leave-from {
+.route-leave-to {
   opacity: 0;
-  transform: scale(14) !important;
 }
 </style>

@@ -11,7 +11,11 @@ const props = withDefaults(defineProps<Props>(), {
   isTextMenu: false,
 })
 
-const STAR_COUNT = 140
+const STAR_COUNT =
+  typeof window !== 'undefined' &&
+  window.matchMedia('(max-width: 768px)').matches
+    ? 42
+    : 84
 const RADIUS = 200
 const isMotionPaused = ref(false)
 let reducedMotionQuery: MediaQueryList | null = null

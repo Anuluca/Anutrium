@@ -196,7 +196,7 @@ const currentPage = ref(1)
 const showViewer = ref(false)
 const currentPhotoIndex = ref(0)
 
-const vlogId = computed(() => route.meta.vlogId as string)
+const vlogId = computed(() => route.params.vlogId as string)
 const vlog = computed<VlogItem | undefined>(() => {
   const vlogs = tm('flanerie.dynamic.vlogs') as VlogItem[]
   return vlogs.find((item) => item.id === vlogId.value)

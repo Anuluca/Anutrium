@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { ElLoading } from 'element-plus'
 
 import githubImg from '@/assets/img/github_profile.png'
+import mailImg from '@/assets/img/mail_profile.svg'
 import twitterImg from '@/assets/img/twitter_profile.png'
 import bottomLineData from '@/data/bottomLine.js'
 import { visualState } from '@/stores'
@@ -12,16 +13,46 @@ import { visualState } from '@/stores'
 import 'element-plus/theme-chalk/index.css'
 import './index.less'
 
-const SOCIAL_LINKS = {
-  TWITTER: 'https://twitter.com/TILucario',
-  BILIBILI: 'https://space.bilibili.com/128735968',
-  GITHUB: 'https://github.com/Anuluca',
+interface SocialItem {
+  type: 'TWITTER' | 'BILIBILI' | 'GITHUB' | 'MAIL'
+  label: string
+  href: string
+  image: string
 }
+
+const BILIBILI_IMG =
+  'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bilibili_profile.png'
+
+const SOCIAL_ITEMS: SocialItem[] = [
+  {
+    type: 'TWITTER',
+    label: 'TWITTER',
+    href: 'https://twitter.com/TILucario',
+    image: twitterImg,
+  },
+  {
+    type: 'BILIBILI',
+    label: 'BILIBILI',
+    href: 'https://space.bilibili.com/128735968',
+    image: BILIBILI_IMG,
+  },
+  {
+    type: 'GITHUB',
+    label: 'GITHUB',
+    href: 'https://github.com/Anuluca',
+    image: githubImg,
+  },
+  {
+    type: 'MAIL',
+    label: 'MAIL',
+    href: 'mailto:tilucario@outlook.com',
+    image: mailImg,
+  },
+]
 
 const WEIBO_WIDGET_URL =
   'https://widget.weibo.com/weiboshow/index.php?language=&width=0&height=520&fansRow=1&ptype=1&speed=0&skin=10&isTitle=1&noborder=1&isWeibo=1&isFans=1&uid=7738638501&verifier=4838f435&dpc=1'
-
-const SOCIAL_TYPES = ['TWITTER', 'WEIBO', 'BILIBILI', 'GITHUB', 'EMAIL']
+const WEIBO_PROFILE_URL = 'https://weibo.com/u/7738638501'
 
 const { locale } = useI18n()
 const router = useRouter()
@@ -34,24 +65,41 @@ const theme = ref(false)
 const isScrollingDown = ref<boolean>(false)
 const isMotionPaused = ref(false)
 const weiboSrc = ref('')
+let footerAnimationTimer: number | null = null
+let reducedMotionQuery: MediaQueryList | null = null
 
 onMounted(() => {
   initFooterAnimation()
+  reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+  updateMotionState()
+  document.addEventListener('visibilitychange', updateMotionState)
+  reducedMotionQuery.addEventListener('change', updateMotionState)
 })
+
+onUnmounted(() => {
+  if (footerAnimationTimer !== null) {
+    window.clearTimeout(footerAnimationTimer)
+  }
+  document.removeEventListener('visibilitychange', updateMotionState)
+  reducedMotionQuery?.removeEventListener('change', updateMotionState)
+})
+
+const updateMotionState = () => {
+  isMotionPaused.value =
+    document.visibilityState === 'hidden' || !!reducedMotionQuery?.matches
+}
 
 const initFooterAnimation = () => {
   const expandElement = document.querySelector('.expand') as HTMLElement
   const textElement = document.querySelector('.text-links') as HTMLElement
-  const weiboElement = document.querySelector('.WEIBO_detail') as HTMLElement
 
-  if (!expandElement || !textElement || !weiboElement) return
+  if (!expandElement || !textElement) return
 
   expandElement.style.width = '0px'
   expandElement.style.overflow = 'hidden'
   textElement.style.opacity = '0'
-  weiboElement.style.opacity = '0'
 
-  setTimeout(() => {
+  footerAnimationTimer = window.setTimeout(() => {
     expandElement.style.width = '100%'
     expandElement.style.overflow = 'visible'
     textElement.style.opacity = '1'
@@ -86,46 +134,9 @@ const changeTheme = () => {
   }
 }
 
-const contact = (type: string) => {
-  if (!SOCIAL_TYPES.includes(type)) return
-
-  if (type === 'EMAIL') {
-    window.location.href = 'mailto:tilucario@outlook.com'
-    return
-  }
-
-  if (type === 'WEIBO') {
-    toggleWeiboVisibility()
-    return
-  }
-
-  const url = SOCIAL_LINKS[type as keyof typeof SOCIAL_LINKS]
-  if (url) {
-    window.open(url, '_blank')
-  }
-}
-
-const toggleWeiboVisibility = () => {
-  const element = document.querySelector('.WEIBO_detail') as HTMLElement
-  if (!element) return
-
-  const isVisible = element.style.opacity === '1'
-  if (!isVisible && !weiboSrc.value) {
+const loadWeiboWidget = () => {
+  if (!weiboSrc.value) {
     weiboSrc.value = WEIBO_WIDGET_URL
-  }
-
-  element.style.bottom = isVisible ? '-540px' : '30px'
-  element.style.opacity = isVisible ? '0' : '1'
-}
-
-const handleSocialHover = (type: string, isHover: boolean) => {
-  const element = document.querySelector(`.${type}_detail`) as HTMLElement
-  if (!element) return
-
-  if (isHover) {
-    element.classList.add('hover')
-  } else {
-    element.classList.remove('hover')
   }
 }
 </script>
@@ -179,7 +190,7 @@ const handleSocialHover = (type: string, isHover: boolean) => {
                 :style="[
                   {
                     color: item.color || '#5F9DDD',
-                    fontWeight: 'bold',
+                    fontWeight: 600,
                   },
                 ]"
                 >{{ item.title }}\{{ item.sort }}</span
@@ -196,94 +207,82 @@ const handleSocialHover = (type: string, isHover: boolean) => {
 
     <div class="right">
       <div class="text-links">
-        <span>
-          <div class="TWITTER_detail">
-            <img
-              :src="twitterImg"
-              alt="Twitter profile"
-              loading="lazy"
-              decoding="async"
-            />
-          </div>
-          <el-button
-            link
-            type="danger"
-            @click="contact('TWITTER')"
-            @mouseover="handleSocialHover('TWITTER', true)"
-            @mouseleave="handleSocialHover('TWITTER', false)"
+        <span
+          v-for="social in SOCIAL_ITEMS.slice(0, 1)"
+          :key="social.type"
+          class="social-link"
+          :class="`social-link--${social.type.toLowerCase()}`"
+        >
+          <a
+            class="social-preview"
+            :href="social.href"
+            :target="social.type === 'MAIL' ? undefined : '_blank'"
+            :rel="social.type === 'MAIL' ? undefined : 'noopener noreferrer'"
+            :aria-label="`${social.label} profile`"
           >
-            TWITTER
-          </el-button>
+            <img :src="social.image" :alt="`${social.label} profile`" />
+          </a>
+          <a
+            class="social-trigger"
+            :href="social.href"
+            :target="social.type === 'MAIL' ? undefined : '_blank'"
+            :rel="social.type === 'MAIL' ? undefined : 'noopener noreferrer'"
+          >
+            {{ social.label }}
+          </a>
         </span>
-        <span>
-          <div class="WEIBO_detail">
+        <span
+          class="social-link social-link--weibo"
+          @mouseenter="loadWeiboWidget"
+          @focusin="loadWeiboWidget"
+        >
+          <div class="social-preview social-preview--weibo">
             <iframe
               v-if="weiboSrc"
-              width="100%"
-              height="520"
+              title="Anuluca Weibo"
               class="share_self"
               frameborder="0"
               scrolling="no"
               :src="weiboSrc"
             />
           </div>
-          <el-button
-            link
-            type="danger"
-            @click="contact('WEIBO')"
-            @mouseover="handleSocialHover('WEIBO', true)"
-            @mouseleave="handleSocialHover('WEIBO', false)"
+          <a
+            class="social-trigger"
+            :href="WEIBO_PROFILE_URL"
+            target="_blank"
+            rel="noopener noreferrer"
           >
             WEIBO
-          </el-button>
+          </a>
         </span>
-        <span>
-          <div class="BILIBILI_detail">
-            <img
-              src="https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bilibili_profile.png"
-              width="220px"
-              height="220px"
-              alt="Bilibili profile"
-              loading="lazy"
-              decoding="async"
-            />
-          </div>
-          <el-button
-            link
-            type="danger"
-            @click="contact('BILIBILI')"
-            @mouseover="handleSocialHover('BILIBILI', true)"
-            @mouseleave="handleSocialHover('BILIBILI', false)"
+        <span
+          v-for="social in SOCIAL_ITEMS.slice(1)"
+          :key="social.type"
+          class="social-link"
+          :class="`social-link--${social.type.toLowerCase()}`"
+        >
+          <a
+            class="social-preview"
+            :href="social.href"
+            :target="social.type === 'MAIL' ? undefined : '_blank'"
+            :rel="social.type === 'MAIL' ? undefined : 'noopener noreferrer'"
+            :aria-label="`${social.label} profile`"
           >
-            BILIBILI
-          </el-button>
-        </span>
-        <span>
-          <div class="GITHUB_detail">
-            <img
-              :src="githubImg"
-              alt="GitHub profile"
-              loading="lazy"
-              decoding="async"
-            />
-          </div>
-          <el-button
-            link
-            type="danger"
-            @click="contact('GITHUB')"
-            @mouseover="handleSocialHover('GITHUB', true)"
-            @mouseleave="handleSocialHover('GITHUB', false)"
+            <img :src="social.image" :alt="`${social.label} profile`" />
+          </a>
+          <a
+            class="social-trigger"
+            :href="social.href"
+            :target="social.type === 'MAIL' ? undefined : '_blank'"
+            :rel="social.type === 'MAIL' ? undefined : 'noopener noreferrer'"
           >
-            GITHUB
-          </el-button>
-        </span>
-        <span>
-          <el-button link type="danger" @click="contact('EMAIL')">
-            MAIL
-          </el-button>
+            {{ social.label }}
+          </a>
         </span>
       </div>
-      <span class="mark"> 2018-2026 ANULUCA </span>
+      <button class="mark" type="button" @click="router.push('/')">
+        2018-2026 ANULUCA
+      </button>
       <el-switch
         v-model="theme"
         style="
