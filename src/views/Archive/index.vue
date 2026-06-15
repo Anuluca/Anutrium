@@ -4,7 +4,11 @@
       header-label="[MENTOR_NV42]"
       title-en="ARCHIVE"
       title-cn="作品集"
-      :meta-item="'TOTAL — ' + (works.length + miscWorks.length) + ' PROJECTS'"
+      :meta-item="
+        'TOTAL — ' +
+        (mainWorks.length + personalWorks.length + miscWorks.length) +
+        ' PROJECTS'
+      "
       primary-color="#5AD480"
     />
 
@@ -14,7 +18,22 @@
       </h2>
       <div class="works-grid">
         <WorkCard
-          v-for="(work, index) in works"
+          v-for="(work, index) in mainWorks"
+          :key="work.id"
+          :work="work"
+          :index="index"
+          @select="openDetail(work)"
+        />
+      </div>
+    </section>
+
+    <section class="works-section personal-works-section">
+      <h2 class="section-title" data-section="02">
+        {{ $t('archive.title02') }}
+      </h2>
+      <div class="works-grid">
+        <WorkCard
+          v-for="(work, index) in personalWorks"
           :key="work.id"
           :work="work"
           :index="index"
@@ -24,8 +43,8 @@
     </section>
 
     <section class="misc-section">
-      <h2 class="section-title" data-section="02">
-        {{ $t('archive.title02') }}
+      <h2 class="section-title" data-section="03">
+        {{ $t('archive.title03') }}
       </h2>
       <div class="misc-grid">
         <div
@@ -115,8 +134,12 @@ interface MiscWork {
   tags?: string[]
 }
 
-const works = computed<WorkItem[]>(
+const mainWorks = computed<WorkItem[]>(
   () => tm('archive.dynamic.WebArchives') as WorkItem[]
+)
+
+const personalWorks = computed<WorkItem[]>(
+  () => tm('archive.dynamic.PersonalArchives') as WorkItem[]
 )
 
 const miscWorks = computed<MiscWork[]>(
@@ -138,9 +161,7 @@ const hasMiscDetail = (work: MiscWork) => {
 }
 
 const triggerMiscError = (id: string) => {
-  if (miscErrorTimer) {
-    clearTimeout(miscErrorTimer)
-  }
+  if (miscErrorTimer) clearTimeout(miscErrorTimer)
 
   flashingMiscId.value = ''
   requestAnimationFrame(() => {
@@ -148,9 +169,7 @@ const triggerMiscError = (id: string) => {
   })
 
   miscErrorTimer = setTimeout(() => {
-    if (flashingMiscId.value === id) {
-      flashingMiscId.value = ''
-    }
+    if (flashingMiscId.value === id) flashingMiscId.value = ''
     miscErrorTimer = null
   }, 720)
 }
@@ -165,9 +184,7 @@ const openMiscDetail = (work: MiscWork) => {
 }
 
 onBeforeUnmount(() => {
-  if (miscErrorTimer) {
-    clearTimeout(miscErrorTimer)
-  }
+  if (miscErrorTimer) clearTimeout(miscErrorTimer)
 })
 </script>
 
@@ -253,30 +270,35 @@ onBeforeUnmount(() => {
 
 .works-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 20px;
 }
 
+.personal-works-section {
+  padding-top: 60px;
+}
+
 .misc-section {
-  padding: 30px 0;
+  padding: 60px 0 30px;
 }
 
 .misc-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
 }
 
 .misc-card {
   position: relative;
-  border: 1px solid @border;
+  min-height: 150px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  cursor: pointer;
+  border: 1px solid @border;
   outline: none;
   background: linear-gradient(135deg, rgba(226, 52, 86, 0.08), transparent 42%),
     rgba(13, 9, 18, 0.78);
+  cursor: pointer;
   transition: transform 0.4s ease, border-color 0.4s ease,
     background-color 0.4s ease;
 
@@ -284,7 +306,8 @@ onBeforeUnmount(() => {
     content: '';
     position: absolute;
     inset: 0;
-    transition: all 0.2s;
+    z-index: 0;
+    opacity: 0.35;
     background: linear-gradient(
         90deg,
         rgba(255, 255, 255, 0.035) 1px,
@@ -292,8 +315,7 @@ onBeforeUnmount(() => {
       ),
       linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px);
     background-size: 22px 22px;
-    opacity: 0.35;
-    z-index: 0;
+    transition: opacity 0.2s;
   }
 
   &::after {
@@ -301,11 +323,11 @@ onBeforeUnmount(() => {
     position: absolute;
     top: 0;
     right: 0;
+    z-index: 1;
     width: 44%;
     height: 100%;
     background: linear-gradient(90deg, transparent, rgba(226, 52, 86, 0.08));
     clip-path: polygon(28% 0, 100% 0, 100% 100%, 0 100%);
-    z-index: 1;
     pointer-events: none;
   }
 
@@ -330,6 +352,65 @@ onBeforeUnmount(() => {
     }
   }
 
+  &:hover {
+    border-color: @red;
+    transform: translateY(-2px);
+
+    &::before {
+      opacity: 0.55;
+    }
+
+    .misc-card-index {
+      color: @red;
+    }
+
+    .misc-card-title {
+      color: #fff;
+    }
+
+    .misc-card-logo {
+      opacity: 1;
+      filter: grayscale(0) contrast(1);
+      border-color: rgba(135, 135, 135, 0.75);
+      background: rgba(226, 52, 86, 0.1);
+    }
+
+    .corner {
+      width: 10px;
+      height: 10px;
+      border-color: @red;
+      border-width: 1.2px;
+    }
+  }
+
+  .misc-card-content {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: space-between;
+    padding: 18px;
+  }
+
+  .misc-card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .misc-card-index {
+    color: rgba(255, 255, 255, 0.3);
+    font-family: 'Unbounded Sans', monospace;
+    font-size: 0.5rem;
+    letter-spacing: 1.5px;
+    transition: color 0.3s ease;
+  }
+
   .misc-card-logo {
     width: 42px;
     height: 42px;
@@ -346,52 +427,24 @@ onBeforeUnmount(() => {
     img {
       max-width: 100%;
       max-height: 100%;
-      object-fit: contain;
       display: block;
+      object-fit: contain;
     }
   }
 
-  .misc-card-content {
-    width: calc(100% - 36px);
-    height: calc(100% - 36px);
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    justify-content: space-between;
-    padding: 18px;
-    z-index: 2;
-  }
-
-  .misc-card-head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
-  }
-
-  .misc-card-index {
-    font-family: 'Unbounded Sans', monospace;
-    font-size: 0.5rem;
-    color: rgba(255, 255, 255, 0.3);
-    letter-spacing: 1.5px;
-    transition: color 0.3s ease;
-  }
-
   .misc-card-title {
+    display: -webkit-box;
+    margin: -18px 0 12px;
+    overflow: hidden;
+    color: rgba(255, 255, 255, 0.95);
     font-family: 'anton', 'source-han-sans-simplified-c';
     font-size: 0.75rem;
     font-weight: 900;
     line-height: 1.2;
-    color: rgba(255, 255, 255, 0.95);
     letter-spacing: 0.3px;
-    margin: 12px 0;
-    margin-top: -18px;
-    display: -webkit-box;
+    -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
   }
 
   .misc-card-footer {
@@ -402,84 +455,43 @@ onBeforeUnmount(() => {
   }
 
   .misc-card-company {
+    margin-bottom: 2px;
+    color: @text-dim;
     font-family: 'Unbounded Sans', monospace;
     font-size: 0.48rem;
-    color: @text-dim;
     letter-spacing: 0.3px;
-    margin-bottom: 2px;
     text-transform: uppercase;
   }
 
   .misc-card-id {
+    color: rgba(255, 255, 255, 0.15);
     font-family: 'Unbounded Sans', monospace;
     font-size: 0.43rem;
-    color: rgba(255, 255, 255, 0.15);
     letter-spacing: 0.8px;
   }
 
   .corner {
-    position: absolute;
     width: 8px;
     height: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    z-index: 3;
-    pointer-events: none;
-    transition: all 0.4s ease;
 
     &-tl {
       top: 8px;
       left: 8px;
-      border-right: 0;
-      border-bottom: 0;
     }
+
     &-tr {
       top: 8px;
       right: 8px;
-      border-left: 0;
-      border-bottom: 0;
     }
+
     &-bl {
       bottom: 8px;
       left: 8px;
-      border-right: 0;
-      border-top: 0;
     }
+
     &-br {
-      bottom: 8px;
       right: 8px;
-      border-left: 0;
-      border-top: 0;
-    }
-  }
-
-  &:hover {
-    border-color: @red;
-    transform: translateY(-2px);
-
-    &::before {
-      opacity: 0.55;
-    }
-
-    .misc-card-index {
-      color: @red;
-    }
-
-    .misc-card-title {
-      color: white;
-    }
-
-    .misc-card-logo {
-      opacity: 1;
-      filter: grayscale(0) contrast(1);
-      border-color: rgba(135, 135, 135, 0.75);
-      background: rgba(226, 52, 86, 0.1);
-    }
-
-    .corner {
-      border-color: @red;
-      border-width: 1.2px;
-      width: 10px;
-      height: 10px;
+      bottom: 8px;
     }
   }
 }
@@ -543,6 +555,16 @@ onBeforeUnmount(() => {
   }
 }
 
+@media (max-width: 1199px) and (min-width: 769px) {
+  .works-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .misc-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 768px) {
   .page-title {
     flex-direction: column;
@@ -569,7 +591,7 @@ onBeforeUnmount(() => {
   }
 
   .misc-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
   }
 

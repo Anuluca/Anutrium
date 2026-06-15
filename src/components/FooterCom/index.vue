@@ -4,9 +4,9 @@ import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { ElLoading } from 'element-plus'
 
-import githubImg from '@/assets/img/github_profile.jpg'
+import githubImg from '@/assets/img/github_profile.png'
 import mailImg from '@/assets/img/mail_profile.svg'
-import twitterImg from '@/assets/img/twitter_profile.jpg'
+import twitterImg from '@/assets/img/twitter_profile.png'
 import bottomLineData from '@/data/bottomLine.js'
 import { visualState } from '@/stores'
 

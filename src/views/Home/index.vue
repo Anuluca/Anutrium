@@ -94,11 +94,15 @@
           <div v-if="locale === 'en'" class="moto">
             <p>DRIVEN</p>
             <p>BY</p>
-            <p class="passion-line"><span class="passion">PASSION</span>.</p>
+            <p class="passion-line">
+              <span class="passion" data-text="PASSION">PASSION</span>.
+            </p>
             <div>WELCOME TO Anuluca'S SECRET BASE.</div>
           </div>
           <div v-else class="moto moto-cn">
-            <p class="passion-line"><span class="passion">热情</span></p>
+            <p class="passion-line">
+              <span class="passion" data-text="热情">热情</span>
+            </p>
             <p>驱动。</p>
             <div>欢迎来到路卡的秘密基地。</div>
           </div>
@@ -472,12 +476,15 @@ interface WorkItem {
   participation?: number
 }
 
-const selectedWorkIds = ['W001', 'W003', 'W005', 'P001']
+const selectedWorkIds = ['W001', 'W003', 'W005', 'P003']
 
 const works = computed<WorkItem[]>(() => {
   const webArchives = tm('archive.dynamic.WebArchives') as WorkItem[]
+  const personalArchives = tm('archive.dynamic.PersonalArchives') as WorkItem[]
+  const archives = [...webArchives, ...personalArchives]
+
   return selectedWorkIds
-    .map((id) => webArchives.find((work) => work.id === id))
+    .map((id) => archives.find((work) => work.id === id))
     .filter((work): work is WorkItem => Boolean(work))
 })
 
@@ -882,6 +889,8 @@ const homeTools = computed<HomeTool[]>(() => {
       margin-left: -5px;
 
       .passion {
+        position: relative;
+        isolation: isolate;
         font-size: 6.5rem;
         color: #e23456;
         display: inline-block;
@@ -889,6 +898,49 @@ const homeTools = computed<HomeTool[]>(() => {
         transform: translateY(30px);
         animation: motoFadeIn 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
         animation-delay: 0.8s;
+        transition: color 0.25s ease, filter 0.25s ease,
+          letter-spacing 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+          text-shadow 0.25s ease;
+
+        &::before,
+        &::after {
+          content: attr(data-text);
+          position: absolute;
+          inset: 0;
+          z-index: -1;
+          opacity: 0;
+          pointer-events: none;
+        }
+
+        &::before {
+          color: #01ddc0;
+          transform: translateX(-5px);
+          clip-path: inset(8% 0 57% 0);
+        }
+
+        &::after {
+          color: #ffed47;
+          transform: translateX(5px);
+          clip-path: inset(58% 0 8% 0);
+        }
+
+        &:hover {
+          color: #fff;
+          letter-spacing: 0.04em;
+          filter: saturate(1.3);
+          text-shadow: -3px 0 0 rgba(1, 221, 192, 0.8),
+            3px 0 0 rgba(226, 52, 86, 0.85), 0 0 28px rgba(226, 52, 86, 0.72);
+
+          &::before {
+            opacity: 0.9;
+            animation: passionGlitchTop 0.6s steps(2, end) infinite;
+          }
+
+          &::after {
+            opacity: 0.8;
+            animation: passionGlitchBottom 0.72s steps(2, end) infinite reverse;
+          }
+        }
       }
     }
   }
@@ -1461,9 +1513,15 @@ const homeTools = computed<HomeTool[]>(() => {
 
 .works-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 20px;
   width: 100%;
+}
+
+@media (max-width: 1199px) and (min-width: 769px) {
+  .works-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @keyframes motoFadeIn {
@@ -1505,6 +1563,38 @@ const homeTools = computed<HomeTool[]>(() => {
   }
   100% {
     transform: rotateY(360deg) rotateX(360deg);
+  }
+}
+
+@keyframes passionGlitchTop {
+  0%,
+  100% {
+    transform: translate(-5px, 0);
+    clip-path: inset(8% 0 57% 0);
+  }
+  35% {
+    transform: translate(8px, -2px);
+    clip-path: inset(22% 0 48% 0);
+  }
+  70% {
+    transform: translate(-2px, 3px);
+    clip-path: inset(4% 0 68% 0);
+  }
+}
+
+@keyframes passionGlitchBottom {
+  0%,
+  100% {
+    transform: translate(5px, 0);
+    clip-path: inset(58% 0 8% 0);
+  }
+  40% {
+    transform: translate(-7px, 2px);
+    clip-path: inset(68% 0 3% 0);
+  }
+  75% {
+    transform: translate(3px, -3px);
+    clip-path: inset(48% 0 24% 0);
   }
 }
 </style>

@@ -165,7 +165,7 @@ import { Moon, Sunny } from '@element-plus/icons-vue'
 
 import BackToTop from '@/components/BackToTop/index.vue'
 import Logo from '@/components/Logo/index.vue'
-import { routes } from '@/router'
+import { routes, syncSeoMeta } from '@/router'
 import { visualState } from '@/stores'
 
 const { locale } = useI18n()
@@ -253,6 +253,7 @@ const toggleLanguage = () => {
   } else {
     locale.value = 'zhCn'
   }
+  syncSeoMeta(route)
 }
 
 const toggleTheme = () => {
@@ -291,9 +292,8 @@ onUnmounted(() => {
 }
 
 .route-leave-active {
-  transform-origin: center center;
-  transition: opacity 0.6s ease, transform 0.6s ease, filter 0.6s ease;
-  will-change: opacity, transform, filter;
+  transition: opacity 0.2s ease;
+  will-change: opacity;
 }
 
 .route-enter-from {

@@ -41,7 +41,7 @@ const showLayout = ref(false)
 const startAnimationFinished = () => {
   setTimeout(() => {
     showLayout.value = true
-  }, 450)
+  }, 250)
 }
 
 onMounted(() => {

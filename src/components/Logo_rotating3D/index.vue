@@ -21,6 +21,8 @@ const currentText = ref('LOADING')
 let isStopping = false
 let renderer, scene, camera, composer, controls, animationId
 let environmentMap = null
+const ROTATION_SPEED = 0.6
+const STOP_DURATION = 700
 
 const initThree = () => {
   scene = new THREE.Scene()
@@ -201,25 +203,66 @@ const initThree = () => {
   crystal.rotation.y = Math.PI / 4
   group.scale.set(0.5, 0.5, 0.5)
 
-  const animate = () => {
+  let lastFrameTime = null
+  let stopStartTime = null
+  let stopStartRotation = null
+  let stopTargetRotation = null
+
+  const animate = (frameTime) => {
     animationId = requestAnimationFrame(animate)
+    const deltaSeconds = lastFrameTime
+      ? Math.min((frameTime - lastFrameTime) / 1000, 0.05)
+      : 0
+    lastFrameTime = frameTime
 
     if (isStopping) {
       currentText.value = 'COMPLETE.'
 
-      if (crystal.rotation.y % (Math.PI / 4) <= 0.02) {
+      if (stopStartTime === null) {
+        const frontRotationOffset = Math.PI / 4
+        const frontRotationInterval = Math.PI / 2
+        const completedFrontRotations = Math.floor(
+          (crystal.rotation.y - frontRotationOffset) / frontRotationInterval
+        )
+
+        stopStartTime = frameTime
+        stopStartRotation = crystal.rotation.y
+        stopTargetRotation =
+          frontRotationOffset +
+          (completedFrontRotations + 1) * frontRotationInterval
+
+        const inheritedVelocity = ROTATION_SPEED * (STOP_DURATION / 1000)
+        const minimumStopDistance = inheritedVelocity / 3
+        if (stopTargetRotation - stopStartRotation < minimumStopDistance) {
+          stopTargetRotation += frontRotationInterval
+        }
+      }
+
+      const progress = Math.min((frameTime - stopStartTime) / STOP_DURATION, 1)
+      const inheritedVelocity = ROTATION_SPEED * (STOP_DURATION / 1000)
+      const progressSquared = progress * progress
+      const progressCubed = progressSquared * progress
+      const startBasis = 2 * progressCubed - 3 * progressSquared + 1
+      const startVelocityBasis = progressCubed - 2 * progressSquared + progress
+      const endBasis = -2 * progressCubed + 3 * progressSquared
+
+      crystal.rotation.y =
+        startBasis * stopStartRotation +
+        startVelocityBasis * inheritedVelocity +
+        endBasis * stopTargetRotation
+      cage.rotation.y = -(crystal.rotation.y - Math.PI / 4)
+
+      if (progress >= 1) {
+        crystal.rotation.y = stopTargetRotation
+        cage.rotation.y = -(stopTargetRotation - Math.PI / 4)
         cancelAnimationFrame(animationId)
         animationId = null
-        setTimeout(() => {
-          emit('finished')
-        }, 200)
-      } else {
-        crystal.rotation.y += 0.01
-        cage.rotation.y -= 0.01
+        emit('finished')
       }
     } else {
-      crystal.rotation.y += 0.01
-      cage.rotation.y -= 0.01
+      const rotationDelta = ROTATION_SPEED * deltaSeconds
+      crystal.rotation.y += rotationDelta
+      cage.rotation.y -= rotationDelta
     }
 
     controls.update()

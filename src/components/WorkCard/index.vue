@@ -92,7 +92,8 @@ const referenceNumber = computed(
 <style lang="less" scoped>
 .shared-work-card {
   position: relative;
-  min-height: 350px;
+  min-width: 0;
+  aspect-ratio: 16 / 9;
   display: flex;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -204,31 +205,39 @@ const referenceNumber = computed(
 
 .work-content {
   position: relative;
-  width: calc(100% - 60px);
-  height: calc(100% - 60px);
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 30px;
+  padding: clamp(18px, 1.55vw, 30px);
   z-index: 2;
 }
 
 .work-top-info {
+  min-width: 0;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 20px;
+  gap: clamp(10px, 1vw, 20px);
 }
 
 .company-row {
+  min-width: 0;
+  flex: 1 1 auto;
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: clamp(8px, 0.8vw, 15px);
+}
+
+.company-details {
+  min-width: 0;
 }
 
 .company-logo {
-  width: 50px;
-  height: 50px;
+  width: clamp(34px, 2.6vw, 50px);
+  height: clamp(34px, 2.6vw, 50px);
   flex: 0 0 auto;
   display: flex;
   align-items: center;
@@ -251,10 +260,13 @@ const referenceNumber = computed(
 }
 
 .work-subtitle {
+  overflow: hidden;
   color: var(--opacity-color);
-  font-size: 0.65rem;
+  font-size: clamp(0.52rem, 0.55vw, 0.65rem);
   letter-spacing: 0.5px;
   line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ref-num {
@@ -264,23 +276,27 @@ const referenceNumber = computed(
 }
 
 .work-tags {
+  min-width: 0;
+  max-width: 48%;
+  flex: 0 1 auto;
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 8px;
+  gap: clamp(4px, 0.4vw, 8px);
 }
 
 .tech-label {
-  padding: 4px 10px;
+  padding: 3px clamp(6px, 0.5vw, 10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 0.6);
   font-family: 'Unbounded Sans', monospace;
-  font-size: 0.55rem;
+  font-size: clamp(0.45rem, 0.46vw, 0.55rem);
   text-transform: uppercase;
   transition: all 0.3s ease;
 }
 
 .work-title-row {
+  min-width: 0;
   width: 100%;
   display: flex;
   align-items: flex-end;
@@ -289,12 +305,14 @@ const referenceNumber = computed(
 }
 
 .work-name {
-  width: 80%;
+  min-width: 0;
+  flex: 1 1 auto;
   margin-right: 15px;
   color: var(--text-color);
   font-family: 'anton', sans-serif;
-  font-size: 2rem;
+  font-size: clamp(1.1rem, 1.1vw, 2rem);
   line-height: 1.1;
+  overflow-wrap: anywhere;
 }
 
 .project-ref-id {
@@ -364,6 +382,7 @@ const referenceNumber = computed(
 
 @media (max-width: 768px) {
   .shared-work-card {
+    aspect-ratio: auto;
     min-height: 280px;
   }
 

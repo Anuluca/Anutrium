@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import PokeAmice from '@/assets/img/about/pokeAmice.jpg'
+import PokeAmice from '@/assets/img/about/pokeAmice.png'
 import PageFooter from '@/components/PageFooter/index.vue'
 import PageHeader from '@/components/PageHeader/index.vue'
 

@@ -1,5 +1,9 @@
 /* eslint-disable simple-import-sort/imports */
-import { createRouter, createWebHistory } from 'vue-router'
+import {
+  createRouter,
+  createWebHistory,
+  type RouteLocationNormalizedLoaded,
+} from 'vue-router'
 import NProgress from 'nprogress'
 
 import i18n from '../locales'
@@ -9,8 +13,35 @@ import 'nprogress/nprogress.css'
 const ROUTE_CONFIG = {
   DEFAULT_PATH: '/',
   NOT_FOUND_PATH: '/404',
-  TITLE_TEMPLATE: '[%s/%s%s]',
+  SITE_URL: 'https://anutrium.com',
 } as const
+
+const PAGE_DESCRIPTIONS: Record<string, { zhCn: string; en: string }> = {
+  HOME: {
+    zhCn: 'Anutrium 是前端工程师与 UI/UX 设计师 Anuluca 的个人作品集，记录技术项目、创意工具、旅行影像与设计实践。',
+    en: 'Anutrium is the portfolio of frontend engineer and UI/UX designer Anuluca, featuring web projects, creative tools, travel logs, and design experiments.',
+  },
+  ARCHIVE: {
+    zhCn: '浏览 Anuluca 的主要项目与个人项目，包括 Vue、React、TypeScript、Three.js、WebGL 与数据可视化实践。',
+    en: 'Explore Anuluca’s main and personal projects across Vue, React, TypeScript, Three.js, WebGL, and data visualization.',
+  },
+  FLANERIE: {
+    zhCn: 'Anuluca 的旅行影像、摄影与城市漫游记录。',
+    en: 'Travel films, photography, and city wandering logs by Anuluca.',
+  },
+  CRAFT: {
+    zhCn: '由 Anuluca 设计与开发的前端创意工具和交互实验。',
+    en: 'Frontend utilities and interactive experiments designed and built by Anuluca.',
+  },
+  ABOUT: {
+    zhCn: '了解前端工程师与 UI/UX 设计师 Anuluca 的经历、技能与设计理念。',
+    en: 'About Anuluca, a frontend engineer and UI/UX designer: experience, skills, and design approach.',
+  },
+  ISLAND: {
+    zhCn: 'Anuluca 的个人内容与兴趣空间。',
+    en: 'A personal space for Anuluca’s interests and collected fragments.',
+  },
+}
 
 interface RouteMeta {
   titleEn: string
@@ -230,6 +261,51 @@ const router = createRouter({
   routes,
 })
 
+const setMetaContent = (
+  selector: string,
+  content: string,
+  attribute = 'content'
+) => {
+  const element = document.head.querySelector(selector)
+  if (element) element.setAttribute(attribute, content)
+}
+
+export const syncSeoMeta = (to: RouteLocationNormalizedLoaded) => {
+  const locale = i18n.global.locale.value === 'en' ? 'en' : 'zhCn'
+  const routeName = String(to.name || 'HOME')
+  const vlogId =
+    typeof to.params.vlogId === 'string' ? to.params.vlogId : undefined
+  const vlogs = i18n.global.tm('flanerie.dynamic.vlogs') as Array<{
+    id: string
+    title: string
+  }>
+  const vlogTitle = vlogId
+    ? vlogs.find((vlog) => vlog.id === vlogId)?.title
+    : undefined
+  const pageTitle = vlogTitle || String(to.meta.titleEn || 'HOME')
+  const siteTitle =
+    locale === 'en' ? 'Anutrium by Anuluca' : 'Anutrium · 路卡的自由庭院'
+  const description =
+    PAGE_DESCRIPTIONS[routeName]?.[locale] || PAGE_DESCRIPTIONS.HOME[locale]
+  const canonicalUrl = `${ROUTE_CONFIG.SITE_URL}${
+    to.path === '/' ? '/' : to.path.replace(/\/$/, '')
+  }`
+
+  document.title = `${pageTitle} | ${siteTitle}`
+  document.documentElement.lang = locale === 'en' ? 'en' : 'zh-CN'
+  setMetaContent('meta[name="description"]', description)
+  setMetaContent('meta[property="og:title"]', document.title)
+  setMetaContent('meta[property="og:description"]', description)
+  setMetaContent('meta[property="og:url"]', canonicalUrl)
+  setMetaContent(
+    'meta[property="og:locale"]',
+    locale === 'en' ? 'en_US' : 'zh_CN'
+  )
+  setMetaContent('meta[name="twitter:title"]', document.title)
+  setMetaContent('meta[name="twitter:description"]', description)
+  setMetaContent('link[rel="canonical"]', canonicalUrl, 'href')
+}
+
 router.beforeEach((to) => {
   NProgress.start()
 
@@ -244,27 +320,7 @@ router.beforeEach((to) => {
 
 router.afterEach((to) => {
   NProgress.done()
-
-  if (to.meta.titleEn) {
-    const vlogId =
-      typeof to.params.vlogId === 'string' ? to.params.vlogId : undefined
-    const vlogs = i18n.global.tm('flanerie.dynamic.vlogs') as Array<{
-      id: string
-      title: string
-    }>
-    const vlogTitle = vlogId
-      ? vlogs.find((vlog) => vlog.id === vlogId)?.title
-      : undefined
-    const siteNamePrefix = i18n.global.t('name[0]')
-    const siteNameSuffix = i18n.global.t('name[2]')
-
-    document.title = ROUTE_CONFIG.TITLE_TEMPLATE.replace(
-      '%s',
-      vlogTitle || (to.meta.titleEn as string)
-    )
-      .replace('%s', siteNamePrefix)
-      .replace('%s', siteNameSuffix)
-  }
+  syncSeoMeta(to)
 
   setTimeout(() => {
     window.scrollTo({

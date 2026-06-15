@@ -36,8 +36,9 @@ export default {
   },
 
   archive: {
-    title01: 'WEB ARCHIVES',
-    title02: 'OTHER PROJECTS',
+    title01: 'MAIN PROJECTS',
+    title02: 'PERSONAL PROJECTS',
+    title03: 'OTHER PROJECTS',
     dynamic: {
       WebArchives: [
         {
@@ -246,6 +247,29 @@ export default {
             'Handled DB2 database maintenance and optimization alongside frontend development, including slow-query analysis, index tuning, and stored-procedure management to keep data responses stable under high concurrency.',
           ],
         },
+      ],
+      PersonalArchives: [
+        {
+          id: 'P003',
+          title: 'DRRR INTELLIGENCE ROOM',
+          participation: 100,
+          time: 'DETAILS_PENDING',
+          company: 'Anuluca',
+          tags: ['REACT19', 'Typescript', 'Vite', 'AntV G6', 'i18next'],
+          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-14_22.52.38.jpg',
+          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/Logo/drrrfavicon.svg',
+          images: ['/drrr-placeholder.svg'],
+          imageDescriptions: [''],
+          description:
+            'The only Chinese encyclopedia dedicated to Durarara!! and the only site presenting a structured relationship map for its ensemble cast.',
+          details: [
+            'A Durarara!! resource site built with React 19, TypeScript, and Vite.',
+            'Uses AntV G6 to visualize 46 characters and 85 relationships with search, filtering, and pairwise lookup.',
+            'Collects character, faction, work, and official resource information in one archive.',
+            'Independently designed, developed, researched, and continuously maintained.',
+            'Supports Chinese and Japanese through i18next with responsive desktop and mobile layouts.',
+          ],
+        },
         {
           id: 'P001',
           title: 'ANUTRIUM',
@@ -287,7 +311,7 @@ export default {
           time: '2019_09 to 2025_12',
           company: 'Anuluca',
           tags: ['HEXO', 'HTML', 'MARKDOWN'],
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/Snipaste_2021-09-01_13-44-53.jpg',
+          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_20.59.04.jpg',
           logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/Logo/anutrium_favicon.jpg',
           images: [
             'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_20.59.04.jpg',

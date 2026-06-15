@@ -6,6 +6,7 @@
     :close-on-click-modal="true"
     :append-to-body="appendToBody"
     :align-center="true"
+    :lock-scroll="false"
     transition="crt-effect"
     class="modal-wrapper-dialog"
     :style="{
@@ -31,7 +32,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { onUnmounted, ref, watch } from 'vue'
 import { ElDialog } from 'element-plus'
 
 import DiamondCloseBtn from '@/components/DiamondCloseBtn/index.vue'
@@ -63,6 +64,82 @@ const emit = defineEmits<{
 }>()
 
 const dialogVisible = ref(false)
+let lockedScrollX = 0
+let lockedScrollY = 0
+let isScrollLocked = false
+
+const isInsideModal = (target: EventTarget | null) =>
+  target instanceof Element &&
+  Boolean(target.closest('.modal-wrapper-dialog, .el-image-viewer__wrapper'))
+
+const preventBackgroundScroll = (event: Event) => {
+  if (!isInsideModal(event.target)) event.preventDefault()
+}
+
+const preventBackgroundScrollKeys = (event: KeyboardEvent) => {
+  if (
+    ![
+      'ArrowUp',
+      'ArrowDown',
+      'PageUp',
+      'PageDown',
+      'Home',
+      'End',
+      ' ',
+    ].includes(event.key)
+  ) {
+    return
+  }
+
+  const target = event.target
+  if (
+    target instanceof HTMLElement &&
+    (target.matches('input, textarea, select') || target.isContentEditable)
+  ) {
+    return
+  }
+
+  event.preventDefault()
+}
+
+const restoreLockedScroll = () => {
+  if (
+    !isScrollLocked ||
+    (window.scrollX === lockedScrollX && window.scrollY === lockedScrollY)
+  ) {
+    return
+  }
+
+  window.scrollTo(lockedScrollX, lockedScrollY)
+}
+
+const lockBackgroundScroll = () => {
+  if (isScrollLocked) return
+
+  lockedScrollX = window.scrollX
+  lockedScrollY = window.scrollY
+  isScrollLocked = true
+  document.addEventListener('wheel', preventBackgroundScroll, {
+    capture: true,
+    passive: false,
+  })
+  document.addEventListener('touchmove', preventBackgroundScroll, {
+    capture: true,
+    passive: false,
+  })
+  document.addEventListener('keydown', preventBackgroundScrollKeys, true)
+  window.addEventListener('scroll', restoreLockedScroll, { passive: true })
+}
+
+const unlockBackgroundScroll = () => {
+  if (!isScrollLocked) return
+
+  isScrollLocked = false
+  document.removeEventListener('wheel', preventBackgroundScroll, true)
+  document.removeEventListener('touchmove', preventBackgroundScroll, true)
+  document.removeEventListener('keydown', preventBackgroundScrollKeys, true)
+  window.removeEventListener('scroll', restoreLockedScroll)
+}
 
 watch(
   () => props.modelValue,
@@ -72,9 +149,18 @@ watch(
   { immediate: true }
 )
 
-watch(dialogVisible, (newVal) => {
-  emit('update:modelValue', newVal)
-})
+watch(
+  dialogVisible,
+  (newVal) => {
+    emit('update:modelValue', newVal)
+    if (newVal) {
+      lockBackgroundScroll()
+    } else {
+      unlockBackgroundScroll()
+    }
+  },
+  { immediate: true }
+)
 
 const handleClose = () => {
   dialogVisible.value = false
@@ -84,6 +170,8 @@ const handleClose = () => {
 const handleClosed = () => {
   emit('closed')
 }
+
+onUnmounted(unlockBackgroundScroll)
 </script>
 
 <style lang="less" scoped>
@@ -178,6 +266,11 @@ const handleClosed = () => {
     flex: 1;
     overflow: hidden;
   }
+}
+
+.modal-wrapper-dialog .modal-aside,
+.modal-wrapper-dialog .modal-gallery {
+  overscroll-behavior: contain;
 }
 
 .el-overlay {

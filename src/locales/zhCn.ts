@@ -34,7 +34,8 @@ export default {
 
   archive: {
     title01: '主要项目',
-    title02: '其他项目',
+    title02: '个人项目',
+    title03: '其他项目',
     dynamic: {
       WebArchives: [
         {
@@ -244,6 +245,29 @@ export default {
             '在负责前端开发的同时，承担 DB2 数据库的日常维护与优化，包括慢查询分析、索引调优及存储过程管理，保障系统在高并发下的数据响应稳定性。',
           ],
         },
+      ],
+      PersonalArchives: [
+        {
+          id: 'P003',
+          title: 'DRRR情报屋',
+          participation: 100,
+          time: 'DETAILS_PENDING',
+          company: 'Anuluca',
+          tags: ['REACT19', 'Typescript', 'Vite', 'AntV G6', 'i18next'],
+          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-14_22.52.38.jpg',
+          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/Logo/drrrfavicon.svg',
+          images: ['/drrr-placeholder.svg'],
+          imageDescriptions: [''],
+          description:
+            '目前全网唯一关于IP《无头骑士异闻录》的中文百科网站，与全网唯一梳理该群像作品人物关系的网站。',
+          details: [
+            '基于 React 19、TypeScript 与 Vite 构建的《无头骑士异闻录》主题资源站。',
+            '使用 AntV G6 呈现 46 位角色与 85 条关系，支持筛选、检索和双人关系查询。',
+            '收录角色、阵营、作品与正版资源入口，提供完整的池袋资料索引。',
+            '由个人独立完成设计、开发、资料整理，并持续更新维护。',
+            '通过 i18next 支持中日双语，并适配桌面端与移动端访问。',
+          ],
+        },
         {
           id: 'P001',
           title: '路卡庭院',
@@ -277,7 +301,7 @@ export default {
           time: '2019_09 to 2025_12',
           company: 'Anuluca',
           tags: ['HEXO', 'HTML', 'MARKDOWN'],
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/Snipaste_2021-09-01_13-44-53.jpg',
+          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_20.59.04.jpg',
           logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/Logo/anutrium_favicon.jpg',
           images: [
             'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_20.59.04.jpg',
