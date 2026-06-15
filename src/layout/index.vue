@@ -8,7 +8,12 @@
     }"
   >
     <el-header class="el-menu-layout-all" :class="{ scrolled: isScrolled }">
-      <div class="logo-box" @click="returnHome">
+      <button
+        class="logo-box"
+        type="button"
+        :aria-label="locale === 'en' ? 'Return home' : '返回首页'"
+        @click="returnHome"
+      >
         <Logo id="0" class="logo" :active="false" />
         <div :class="['right', locale]">
           <p>
@@ -19,7 +24,7 @@
             <span>{{ $t('name[2]') }}</span>
           </p>
         </div>
-      </div>
+      </button>
 
       <el-menu
         v-if="!isMobile"
@@ -48,9 +53,12 @@
       </el-menu>
     </el-header>
 
-    <div
+    <button
       v-if="isMobile"
       :class="{ 'mobile-menu-icon': true, scrolled: isScrolled }"
+      type="button"
+      :aria-label="locale === 'en' ? 'Toggle navigation' : '切换导航菜单'"
+      :aria-expanded="isMobileMenuOpen"
       @click="toggleMobileMenu"
     >
       <div class="hamburger" :class="{ active: isMobileMenuOpen }">
@@ -58,7 +66,7 @@
         <span />
         <span />
       </div>
-    </div>
+    </button>
 
     <div
       :class="{
@@ -91,13 +99,27 @@
         </div>
         <div class="mobile-footer">
           <div class="switches">
-            <div class="mobile-menu-language" @click="toggleLanguage">
+            <button
+              class="mobile-menu-language"
+              type="button"
+              :aria-label="
+                locale === 'zhCn' ? 'Switch to English' : '切换为中文'
+              "
+              @click="toggleLanguage"
+            >
               <span v-if="locale === 'zhCn'" class="first cnArt">汉</span>
               <span v-if="locale === 'zhCn'" class="second">En</span>
               <span v-if="locale === 'en'" class="first">En</span>
               <span v-if="locale === 'en'" class="second cnArt">汉</span>
-            </div>
-            <div class="mobile-menu-theme" @click="toggleTheme">
+            </button>
+            <button
+              class="mobile-menu-theme"
+              type="button"
+              :aria-label="
+                theme === 'light' ? 'Switch to dark theme' : '切换为浅色主题'
+              "
+              @click="toggleTheme"
+            >
               <span v-if="theme === 'light'" class="first sun">
                 <el-icon><Sunny /></el-icon>
               </span>
@@ -110,32 +132,25 @@
               <span v-if="theme === 'dark'" class="second">
                 <el-icon><Sunny /></el-icon>
               </span>
-            </div>
+            </button>
           </div>
           <div class="contact-item">
-            <el-button link type="danger" @click="contact('GITHUB')">
-              &lt; GITHUB &gt;
-            </el-button>
-            <el-button link type="danger" @click="contact('WEIBO')">
-              &lt; WEIBO &gt;
-            </el-button>
-            <el-button link type="danger" @click="contact('TWITTER')">
-              &lt; TWITTER &gt;
-            </el-button>
-            <el-button link type="danger" @click="contact('BILIBILI')">
-              &lt; BILIBILI &gt;
-            </el-button>
+            <a
+              v-for="contact in socialContacts"
+              :key="contact.type"
+              class="mobile-contact-link"
+              :href="contact.href"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              &lt; {{ contact.label }} &gt;
+            </a>
           </div>
           <div class="contact-item">
             <span>E-MAIL: </span>
-            <el-button
-              class="mail-link"
-              link
-              type="danger"
-              @click="contact('EMAIL')"
-            >
+            <a class="mail-link" :href="mailContact.href">
               tilucario@outlook.com
-            </el-button>
+            </a>
           </div>
           <div class="about-me">© 2018-2026 ANULUCA</div>
           <div class="mobile-footer-left" />
@@ -153,7 +168,12 @@
       </router-view>
     </div>
     <BackToTop />
-    <div class="fullscreen" @click="toggleFullscreen" />
+    <button
+      class="fullscreen"
+      type="button"
+      :aria-label="locale === 'en' ? 'Toggle fullscreen' : '切换全屏'"
+      @click="toggleFullscreen"
+    />
   </div>
 </template>
 
@@ -165,8 +185,10 @@ import { Moon, Sunny } from '@element-plus/icons-vue'
 
 import BackToTop from '@/components/BackToTop/index.vue'
 import Logo from '@/components/Logo/index.vue'
+import { CONTACT_LINKS, getContactLink } from '@/data/contactLinks'
 import { routes, syncSeoMeta } from '@/router'
 import { visualState } from '@/stores'
+import { persistLocale, type SiteLocale } from '@/utils/locale'
 
 const { locale } = useI18n()
 
@@ -183,6 +205,8 @@ const layoutPage = ref<HTMLElement | null>(null)
 const isScrolled = ref(false)
 const layoutShow = ref(false)
 const theme = computed(() => visualStateStore.theme)
+const socialContacts = CONTACT_LINKS.filter((item) => item.type !== 'MAIL')
+const mailContact = getContactLink('MAIL')!
 
 const filterRoutes = routes.filter((item) => {
   return item?.meta?.ifShow
@@ -248,20 +272,14 @@ const returnHome = () => {
 }
 
 const toggleLanguage = () => {
-  if (locale.value === 'zhCn') {
-    locale.value = 'en'
-  } else {
-    locale.value = 'zhCn'
-  }
+  const nextLocale: SiteLocale = locale.value === 'zhCn' ? 'en' : 'zhCn'
+  locale.value = nextLocale
+  persistLocale(nextLocale)
   syncSeoMeta(route)
 }
 
 const toggleTheme = () => {
   visualStateStore.toggleTheme()
-}
-
-const contact = (type: string) => {
-  console.log(`${type} clicked`)
 }
 
 onMounted(() => {
@@ -271,7 +289,6 @@ onMounted(() => {
   layoutTimer = window.setTimeout(() => {
     layoutShow.value = true
   }, 100)
-
   handleScroll()
   document.addEventListener('scroll', handleScroll, { passive: true })
 })
