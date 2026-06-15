@@ -1,9 +1,5 @@
 /* eslint-disable simple-import-sort/imports */
-import {
-  createRouter,
-  createWebHistory,
-  type RouteLocationNormalizedLoaded,
-} from 'vue-router'
+import { type RouteLocationNormalizedLoaded, type Router } from 'vue-router'
 import NProgress from 'nprogress'
 
 import i18n from '../locales'
@@ -42,6 +38,18 @@ const PAGE_DESCRIPTIONS: Record<string, { zhCn: string; en: string }> = {
     en: 'A personal space for Anuluca’s interests and collected fragments.',
   },
 }
+
+const DESCRIPTION_ROUTE_GROUPS: Record<string, keyof typeof PAGE_DESCRIPTIONS> =
+  {
+    FLANERIE_DETAIL: 'FLANERIE',
+    COLORPALETTE: 'CRAFT',
+    EASESTUDIO: 'CRAFT',
+    METRONOME: 'CRAFT',
+    BOUNCEDYNAMICS: 'CRAFT',
+    HTMLENTITIES: 'CRAFT',
+    BASE64CODEC: 'CRAFT',
+    IMAGEBASE64: 'CRAFT',
+  }
 
 interface RouteMeta {
   titleEn: string
@@ -256,11 +264,6 @@ NProgress.configure({
   minimum: 0.3,
 })
 
-const router = createRouter({
-  history: createWebHistory(),
-  routes,
-})
-
 const setMetaContent = (
   selector: string,
   content: string,
@@ -270,65 +273,80 @@ const setMetaContent = (
   if (element) element.setAttribute(attribute, content)
 }
 
-export const syncSeoMeta = (to: RouteLocationNormalizedLoaded) => {
-  const locale = i18n.global.locale.value === 'en' ? 'en' : 'zhCn'
+export type SeoLocale = 'zhCn' | 'en'
+
+interface VlogSeoItem {
+  id: string
+  title: string
+}
+
+export const getSeoMeta = (
+  to: RouteLocationNormalizedLoaded,
+  locale: SeoLocale,
+  vlogs: VlogSeoItem[]
+) => {
   const routeName = String(to.name || 'HOME')
   const vlogId =
     typeof to.params.vlogId === 'string' ? to.params.vlogId : undefined
-  const vlogs = i18n.global.tm('flanerie.dynamic.vlogs') as Array<{
-    id: string
-    title: string
-  }>
   const vlogTitle = vlogId
     ? vlogs.find((vlog) => vlog.id === vlogId)?.title
     : undefined
   const pageTitle = vlogTitle || String(to.meta.titleEn || 'HOME')
   const siteTitle =
     locale === 'en' ? 'Anutrium by Anuluca' : 'Anutrium · 路卡的自由庭院'
+  const descriptionRouteName = DESCRIPTION_ROUTE_GROUPS[routeName] || routeName
   const description =
-    PAGE_DESCRIPTIONS[routeName]?.[locale] || PAGE_DESCRIPTIONS.HOME[locale]
+    PAGE_DESCRIPTIONS[descriptionRouteName]?.[locale] ||
+    PAGE_DESCRIPTIONS.HOME[locale]
   const canonicalUrl = `${ROUTE_CONFIG.SITE_URL}${
     to.path === '/' ? '/' : to.path.replace(/\/$/, '')
   }`
 
-  document.title = `${pageTitle} | ${siteTitle}`
-  document.documentElement.lang = locale === 'en' ? 'en' : 'zh-CN'
-  setMetaContent('meta[name="description"]', description)
-  setMetaContent('meta[property="og:title"]', document.title)
-  setMetaContent('meta[property="og:description"]', description)
-  setMetaContent('meta[property="og:url"]', canonicalUrl)
-  setMetaContent(
-    'meta[property="og:locale"]',
-    locale === 'en' ? 'en_US' : 'zh_CN'
-  )
-  setMetaContent('meta[name="twitter:title"]', document.title)
-  setMetaContent('meta[name="twitter:description"]', description)
-  setMetaContent('link[rel="canonical"]', canonicalUrl, 'href')
+  return {
+    title: `${pageTitle} | ${siteTitle}`,
+    description,
+    canonicalUrl,
+    lang: locale === 'en' ? 'en' : 'zh-CN',
+    openGraphLocale: locale === 'en' ? 'en_US' : 'zh_CN',
+  }
 }
 
-router.beforeEach((to) => {
-  NProgress.start()
+export const syncSeoMeta = (to: RouteLocationNormalizedLoaded) => {
+  if (typeof document === 'undefined') return
 
-  if (!router.hasRoute(to.name)) {
-    if (to.path !== ROUTE_CONFIG.NOT_FOUND_PATH) {
-      return { path: ROUTE_CONFIG.NOT_FOUND_PATH }
+  const locale = i18n.global.locale.value === 'en' ? 'en' : 'zhCn'
+  const vlogs = i18n.global.tm('flanerie.dynamic.vlogs') as VlogSeoItem[]
+  const seoMeta = getSeoMeta(to, locale, vlogs)
+
+  document.title = seoMeta.title
+  document.documentElement.lang = seoMeta.lang
+  setMetaContent('meta[name="description"]', seoMeta.description)
+  setMetaContent('meta[property="og:title"]', seoMeta.title)
+  setMetaContent('meta[property="og:description"]', seoMeta.description)
+  setMetaContent('meta[property="og:url"]', seoMeta.canonicalUrl)
+  setMetaContent('meta[property="og:locale"]', seoMeta.openGraphLocale)
+  setMetaContent('meta[name="twitter:title"]', seoMeta.title)
+  setMetaContent('meta[name="twitter:description"]', seoMeta.description)
+  setMetaContent('link[rel="canonical"]', seoMeta.canonicalUrl, 'href')
+}
+
+export const installRouterGuards = (router: Router) => {
+  router.beforeEach((to) => {
+    if (typeof document !== 'undefined') NProgress.start()
+
+    if (!router.hasRoute(to.name)) {
+      if (to.path !== ROUTE_CONFIG.NOT_FOUND_PATH) {
+        return { path: ROUTE_CONFIG.NOT_FOUND_PATH }
+      }
     }
-  }
 
-  return true
-})
+    return true
+  })
 
-router.afterEach((to) => {
-  NProgress.done()
-  syncSeoMeta(to)
+  router.afterEach((to) => {
+    if (typeof window === 'undefined') return
 
-  setTimeout(() => {
-    window.scrollTo({
-      top: 0,
-      left: 0,
-      behavior: 'smooth',
-    })
-  }, 100)
-})
-
-export default router
+    NProgress.done()
+    syncSeoMeta(to)
+  })
+}
