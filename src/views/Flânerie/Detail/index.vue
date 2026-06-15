@@ -163,6 +163,8 @@ import { ElImageViewer } from 'element-plus'
 import CrystalLogo from '@/components/CrystalLogo/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
 
+import 'element-plus/es/components/image-viewer/style/css'
+
 const router = useRouter()
 const route = useRoute()
 const { t, tm } = useI18n()

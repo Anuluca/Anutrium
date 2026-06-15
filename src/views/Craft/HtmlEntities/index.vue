@@ -97,6 +97,8 @@ import { ElMessage } from 'element-plus'
 import CrystalLogo from '@/components/CrystalLogo/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
 
+import 'element-plus/es/components/message/style/css'
+
 interface HtmlEntity {
   char: string
   desc: string

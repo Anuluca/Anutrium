@@ -12,6 +12,39 @@
       primary-color="#5AD480"
     />
 
+    <section class="availability-panel" aria-labelledby="availability-title">
+      <div class="availability-copy">
+        <div class="availability-kicker">
+          <span class="availability-signal" aria-hidden="true" />
+          {{ $t('archive.statusKicker') }}
+        </div>
+        <h2 id="availability-title">{{ $t('archive.statusTitle') }}</h2>
+        <p>{{ $t('archive.statusDescription') }}</p>
+      </div>
+
+      <div class="availability-grid">
+        <div
+          v-for="item in availabilityItems"
+          :key="item.label"
+          class="availability-item"
+        >
+          <span>{{ item.label }}</span>
+          <strong>{{ item.value }}</strong>
+        </div>
+      </div>
+
+      <a
+        class="availability-cta"
+        href="mailto:tilucario@outlook.com?subject=Anutrium%20Collaboration"
+      >
+        <span>{{ $t('archive.statusCta') }}</span>
+        <span aria-hidden="true">↗</span>
+      </a>
+
+      <div class="availability-corner availability-corner--tl" />
+      <div class="availability-corner availability-corner--br" />
+    </section>
+
     <section class="works-section">
       <h2 class="section-title" data-section="01">
         {{ $t('archive.title01') }}
@@ -107,7 +140,7 @@ import WorkDetailModal from '@/components/WorkDetailModal/index.vue'
 import PageHeader from '@/components/PageHeader/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
 
-const { tm } = useI18n()
+const { t, tm } = useI18n()
 
 interface WorkItem {
   id: string
@@ -121,6 +154,7 @@ interface WorkItem {
   images?: string[]
   link?: string
   links?: Array<{ label: string; url: string; icon?: string }>
+  confidential?: boolean
 }
 
 interface MiscWork {
@@ -145,6 +179,21 @@ const personalWorks = computed<WorkItem[]>(
 const miscWorks = computed<MiscWork[]>(
   () => tm('archive.dynamic.MiscWorks') as MiscWork[]
 )
+
+const availabilityItems = computed(() => [
+  {
+    label: t('archive.statusWorkLabel'),
+    value: t('archive.statusWorkValue'),
+  },
+  {
+    label: t('archive.statusFreelanceLabel'),
+    value: t('archive.statusFreelanceValue'),
+  },
+  {
+    label: t('archive.statusLocationLabel'),
+    value: t('archive.statusLocationValue'),
+  },
+])
 
 const selectedWork = ref<WorkItem | MiscWork | null>(null)
 const flashingMiscId = ref('')
@@ -198,6 +247,166 @@ onBeforeUnmount(() => {
 .archives-page {
   width: 100%;
   color: #fff;
+}
+
+.availability-panel {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(420px, 1fr) auto;
+  align-items: stretch;
+  gap: 18px;
+  margin: 24px 0;
+  padding: 16px 18px;
+  overflow: hidden;
+  border: 1px solid rgba(90, 212, 128, 0.28);
+  background: linear-gradient(120deg, rgba(90, 212, 128, 0.1), transparent 42%),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.025) 0 1px,
+      transparent 1px 32px
+    ),
+    rgba(10, 10, 13, 0.82);
+
+  &::after {
+    content: 'STATUS_CHANNEL_07';
+    position: absolute;
+    right: 18px;
+    bottom: 8px;
+    color: rgba(90, 212, 128, 0.12);
+    font-family: 'Unbounded Sans', monospace;
+    font-size: 0.45rem;
+    letter-spacing: 0.18em;
+    pointer-events: none;
+  }
+}
+
+.availability-copy {
+  min-width: 0;
+
+  h2 {
+    margin: 7px 0 5px;
+    color: #fff;
+    font-family: 'anton', 'source-han-sans-simplified-c';
+    font-size: 0.92rem;
+    line-height: 1.2;
+  }
+
+  p {
+    max-width: 720px;
+    color: rgba(255, 255, 255, 0.52);
+    font-family: 'source-han-sans-simplified-c', sans-serif;
+    font-size: 0.46rem;
+    line-height: 1.55;
+  }
+}
+
+.availability-kicker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #5ad480;
+  font-family: 'Unbounded Sans', monospace;
+  font-size: 0.42rem;
+  letter-spacing: 0.12em;
+}
+
+.availability-signal {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #5ad480;
+  box-shadow: 0 0 12px rgba(90, 212, 128, 0.85);
+  animation: availabilityPulse 1.8s ease-in-out infinite;
+}
+
+.availability-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.availability-item {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  padding: 9px 12px;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+
+  span {
+    color: rgba(255, 255, 255, 0.32);
+    font-family: 'Unbounded Sans', monospace;
+    font-size: 0.34rem;
+    letter-spacing: 0.1em;
+  }
+
+  strong {
+    overflow: hidden;
+    color: rgba(255, 255, 255, 0.84);
+    font-family: 'source-han-sans-simplified-c', sans-serif;
+    font-size: 0.43rem;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.availability-cta {
+  position: relative;
+  min-width: 138px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  align-self: stretch;
+  padding: 0 15px;
+  border: 1px solid rgba(90, 212, 128, 0.46);
+  color: #5ad480;
+  background: rgba(90, 212, 128, 0.06);
+  font-family: 'Unbounded Sans', 'source-han-sans-simplified-c';
+  font-size: 0.4rem;
+  line-height: 1.5;
+  text-decoration: none;
+  transition: color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+
+  &:hover,
+  &:focus-visible {
+    color: #071009;
+    background: #5ad480;
+    box-shadow: 0 0 24px rgba(90, 212, 128, 0.24);
+    outline: none;
+  }
+}
+
+.availability-corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+
+  &--tl {
+    top: 7px;
+    left: 7px;
+    border-top: 1px solid #5ad480;
+    border-left: 1px solid #5ad480;
+  }
+
+  &--br {
+    right: 7px;
+    bottom: 7px;
+    border-right: 1px solid #5ad480;
+    border-bottom: 1px solid #5ad480;
+  }
+}
+
+@keyframes availabilityPulse {
+  50% {
+    opacity: 0.35;
+    box-shadow: 0 0 3px rgba(90, 212, 128, 0.4);
+  }
 }
 
 .section-title {
@@ -556,6 +765,15 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 1199px) and (min-width: 769px) {
+  .availability-panel {
+    grid-template-columns: 1fr minmax(420px, 1fr);
+  }
+
+  .availability-cta {
+    min-height: 48px;
+    grid-column: 1 / -1;
+  }
+
   .works-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -566,6 +784,43 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 768px) {
+  .availability-panel {
+    grid-template-columns: 1fr;
+    gap: 13px;
+    padding: 16px;
+  }
+
+  .availability-copy {
+    h2 {
+      font-size: 0.95rem;
+    }
+
+    p {
+      font-size: 0.62rem;
+    }
+  }
+
+  .availability-kicker {
+    font-size: 0.52rem;
+  }
+
+  .availability-item {
+    padding: 9px 6px;
+
+    span {
+      font-size: 0.45rem;
+    }
+
+    strong {
+      font-size: 0.55rem;
+    }
+  }
+
+  .availability-cta {
+    min-height: 48px;
+    font-size: 0.54rem;
+  }
+
   .page-title {
     flex-direction: column;
     gap: 4px;

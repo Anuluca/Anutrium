@@ -9,6 +9,10 @@ export default {
   },
   workDetailModal: {
     participation: 'PARTICIPATION',
+    confidentialKicker: 'DISCLOSURE_LEVEL / RESTRICTED',
+    confidential: 'DETAILS LIMITED BY CONFIDENTIALITY AGREEMENT',
+    confidentialDescription:
+      'Only approved project context and responsibilities are shown. Full workflows, data structures, and interface coverage are intentionally withheld.',
   },
 
   home: {
@@ -39,10 +43,22 @@ export default {
     title01: 'MAIN PROJECTS',
     title02: 'PERSONAL PROJECTS',
     title03: 'OTHER PROJECTS',
+    statusKicker: 'CURRENT_STATUS / AVAILABLE',
+    statusTitle: 'OPEN TO NEW WORK',
+    statusDescription:
+      'Available to discuss frontend engineering and creative development roles, with freelance work assessed against schedule.',
+    statusWorkLabel: 'OPENINGS',
+    statusWorkValue: 'AVAILABLE',
+    statusFreelanceLabel: 'FREELANCE',
+    statusFreelanceValue: 'SCHEDULE BASED',
+    statusLocationLabel: 'WORK MODE',
+    statusLocationValue: 'CHINA / ON-SITE',
+    statusCta: 'SEND WORK BRIEF',
     dynamic: {
       WebArchives: [
         {
           id: 'W001',
+          confidential: true,
           title: 'STATE GRID UAV SYSTEM',
           participation: 50,
           time: '2023_12 to 2024_08',
@@ -87,6 +103,7 @@ export default {
         },
         {
           id: 'W002',
+          confidential: true,
           title: 'SUBSTATION DIGITAL COCKPIT (IOT DASHBOARD)',
           participation: 100,
           time: '2024_08 to 2025_03',
@@ -118,6 +135,7 @@ export default {
         },
         {
           id: 'W003',
+          confidential: true,
           title: 'DIGITAL SYNERGY SUPERVISION PLATFORM',
           participation: 50,
           time: '2025_03 to 2026_01',
@@ -147,6 +165,7 @@ export default {
         },
         {
           id: 'W004',
+          confidential: true,
           title: 'STATE GRID RPA SYSTEM',
           participation: 50,
           time: '2025_12 to 2025_12',
@@ -229,6 +248,7 @@ export default {
         },
         {
           id: 'W007',
+          confidential: true,
           title: 'JIANGXI TOBACCO MANAGEMENT SYSTEM',
           participation: 100,
           time: '2019_09 to 2020_09',
@@ -253,13 +273,14 @@ export default {
           id: 'P003',
           title: 'DRRR INTELLIGENCE ROOM',
           participation: 100,
-          time: 'DETAILS_PENDING',
           company: 'Anuluca',
           tags: ['REACT19', 'Typescript', 'Vite', 'AntV G6', 'i18next'],
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-14_22.52.38.jpg',
+          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/27b03fd3-077d-44ae-8965-f0fd0317621e.jpg',
           logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/Logo/drrrfavicon.svg',
-          images: ['/drrr-placeholder.svg'],
-          imageDescriptions: [''],
+          images: [
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/27b03fd3-077d-44ae-8965-f0fd0317621e.jpg',
+          ],
+          imageDescriptions: ['Project homepage'],
           description:
             'The only Chinese encyclopedia dedicated to Durarara!! and the only site presenting a structured relationship map for its ensemble cast.',
           details: [

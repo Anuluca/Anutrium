@@ -7,11 +7,15 @@ export default {
   },
   workDetailModal: {
     participation: '参与度',
+    confidentialKicker: 'DISCLOSURE_LEVEL / RESTRICTED',
+    confidential: '详情受保密协议限制',
+    confidentialDescription:
+      '页面仅展示已获准公开的项目背景与职责范围，实际业务流程、数据结构及完整界面未全部披露。',
   },
 
   home: {
     // eslint-disable-next-line quotes
-    highlight: '将热情作为底层数据写入内存。',
+    highlight: '我用热情驱动我的创造。',
     title01: '关于我',
     title02: '代表WEB项目',
     title03: '旅程记录',
@@ -33,13 +37,25 @@ export default {
   },
 
   archive: {
-    title01: '主要项目',
+    title01: '工作项目',
     title02: '个人项目',
-    title03: '其他项目',
+    title03: '其他工作项目',
+    statusKicker: 'CURRENT_STATUS / AVAILABLE',
+    statusTitle: '开放新的工作机会',
+    statusDescription:
+      '目前可以沟通前端工程与创意开发相关工作机会，并根据周期接受自由职业委托。',
+    statusWorkLabel: '开放机会',
+    statusWorkValue: '空闲',
+    statusFreelanceLabel: '自由职业',
+    statusFreelanceValue: '视周期安排',
+    statusLocationLabel: '工作方式',
+    statusLocationValue: '中国 / 入职',
+    statusCta: '发送工作信息',
     dynamic: {
       WebArchives: [
         {
           id: 'W001',
+          confidential: true,
           title: '国家电网无人机巡检系统',
           participation: 50,
           time: '2023_12 to 2024_08',
@@ -85,6 +101,7 @@ export default {
 
         {
           id: 'W002',
+          confidential: true,
           title: '变电驾驶舱（物联大屏）',
           participation: 100,
           time: '2024_08 to 2025_03',
@@ -117,6 +134,7 @@ export default {
 
         {
           id: 'W003',
+          confidential: true,
           title: '数字化协同监督平台',
           participation: 50,
           time: '2025_03 to 2026_01',
@@ -146,6 +164,7 @@ export default {
         },
         {
           id: 'W004',
+          confidential: true,
           title: '国家电网RPA系统',
           participation: 50,
           time: '2025_12 to 2025_12',
@@ -227,6 +246,7 @@ export default {
         },
         {
           id: 'W007',
+          confidential: true,
           title: '江西中烟综合管理系统',
           participation: 100,
           time: '2019_09 to 2020_09',
@@ -251,15 +271,16 @@ export default {
           id: 'P003',
           title: 'DRRR情报屋',
           participation: 100,
-          time: 'DETAILS_PENDING',
           company: 'Anuluca',
           tags: ['REACT19', 'Typescript', 'Vite', 'AntV G6', 'i18next'],
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-14_22.52.38.jpg',
+          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/27b03fd3-077d-44ae-8965-f0fd0317621e.jpg',
           logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/Logo/drrrfavicon.svg',
-          images: ['/drrr-placeholder.svg'],
-          imageDescriptions: [''],
+          images: [
+            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/27b03fd3-077d-44ae-8965-f0fd0317621e.jpg',
+          ],
+          imageDescriptions: ['项目首页'],
           description:
-            '目前全网唯一关于IP《无头骑士异闻录》的中文百科网站，与全网唯一梳理该群像作品人物关系的网站。',
+            '一个由个人维护的《无头骑士异闻录》中文资料站，也是目前唯一的系统梳理该作品人物关系的网站。',
           details: [
             '基于 React 19、TypeScript 与 Vite 构建的《无头骑士异闻录》主题资源站。',
             '使用 AntV G6 呈现 46 位角色与 85 条关系，支持筛选、检索和双人关系查询。',

@@ -108,6 +108,8 @@ import { ElMessage } from 'element-plus'
 import CrystalLogo from '@/components/CrystalLogo/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
 
+import 'element-plus/es/components/message/style/css'
+
 const router = useRouter()
 const dataUrl = ref('')
 const copied = ref(false)
