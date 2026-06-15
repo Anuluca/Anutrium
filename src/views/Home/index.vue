@@ -474,9 +474,10 @@ interface WorkItem {
   imageDescriptions?: string[]
   links?: Array<{ label: string; url: string; icon?: string }>
   participation?: number
+  confidential?: boolean
 }
 
-const selectedWorkIds = ['W001', 'W003', 'W005', 'P003']
+const selectedWorkIds = ['W001', 'W003', 'W005', 'W002', 'W006', 'P003']
 
 const works = computed<WorkItem[]>(() => {
   const webArchives = tm('archive.dynamic.WebArchives') as WorkItem[]
