@@ -37,6 +37,8 @@ import { ElDialog } from 'element-plus'
 
 import DiamondCloseBtn from '@/components/DiamondCloseBtn/index.vue'
 
+import 'element-plus/es/components/dialog/style/css'
+
 const props = withDefaults(
   defineProps<{
     modelValue: boolean

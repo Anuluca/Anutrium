@@ -51,6 +51,14 @@
           <p>{{ work.description }}</p>
         </div>
 
+        <div v-if="work.confidential" class="confidential-notice">
+          <span class="confidential-kicker">
+            {{ t('workDetailModal.confidentialKicker') }}
+          </span>
+          <strong>{{ t('workDetailModal.confidential') }}</strong>
+          <p>{{ t('workDetailModal.confidentialDescription') }}</p>
+        </div>
+
         <div v-if="work.links?.length" class="aside-links">
           <span class="field-label">LINKS</span>
           <div class="links-list">
@@ -211,6 +219,9 @@ import {
 import ModalWrapper from '@/components/ModalWrapper/index.vue'
 import CrystalLogo from '@/components/CrystalLogo/index.vue'
 
+import 'element-plus/es/components/icon/style/css'
+import 'element-plus/es/components/image-viewer/style/css'
+
 interface WorkItem {
   id: string
   title: string
@@ -226,6 +237,7 @@ interface WorkItem {
   link?: string
   links?: Array<{ label: string; url: string; icon?: string }>
   participation?: number
+  confidential?: boolean
 }
 
 const props = defineProps<{
@@ -320,6 +332,56 @@ const closeImageViewer = () => {
   overflow: hidden;
   position: relative;
   z-index: 1;
+}
+
+.confidential-notice {
+  position: relative;
+  margin-top: 18px;
+  padding: 14px 14px 14px 17px;
+  overflow: hidden;
+  border: 1px solid rgba(226, 52, 86, 0.34);
+  background: repeating-linear-gradient(
+      -45deg,
+      rgba(226, 52, 86, 0.04) 0 8px,
+      transparent 8px 16px
+    ),
+    rgba(226, 52, 86, 0.055);
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 3px;
+    background: @red;
+    box-shadow: 0 0 12px rgba(226, 52, 86, 0.55);
+  }
+
+  .confidential-kicker {
+    display: block;
+    margin-bottom: 8px;
+    color: @red;
+    font-family: 'Unbounded Sans', monospace;
+    font-size: 0.34rem;
+    letter-spacing: 0.08em;
+  }
+
+  strong {
+    display: block;
+    margin-bottom: 7px;
+    color: rgba(255, 255, 255, 0.92);
+    font-family: 'source-han-sans-simplified-c', sans-serif;
+    font-size: 0.48rem;
+    line-height: 1.5;
+  }
+
+  p {
+    color: rgba(255, 255, 255, 0.46);
+    font-family: 'source-han-sans-simplified-c', sans-serif;
+    font-size: 0.38rem;
+    line-height: 1.65;
+  }
 }
 
 .modal-aside {

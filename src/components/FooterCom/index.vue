@@ -8,10 +8,13 @@ import githubImg from '@/assets/img/github_profile.png'
 import mailImg from '@/assets/img/mail_profile.svg'
 import twitterImg from '@/assets/img/twitter_profile.png'
 import bottomLineData from '@/data/bottomLine.js'
+import { getContactLink } from '@/data/contactLinks'
 import { visualState } from '@/stores'
+import { persistLocale, type SiteLocale } from '@/utils/locale'
 
-import 'element-plus/theme-chalk/index.css'
 import './index.less'
+
+import 'element-plus/es/components/loading/style/css'
 
 interface SocialItem {
   type: 'TWITTER' | 'BILIBILI' | 'GITHUB' | 'MAIL'
@@ -27,32 +30,32 @@ const SOCIAL_ITEMS: SocialItem[] = [
   {
     type: 'TWITTER',
     label: 'TWITTER',
-    href: 'https://twitter.com/TILucario',
+    href: getContactLink('TWITTER')!.href,
     image: twitterImg,
   },
   {
     type: 'BILIBILI',
     label: 'BILIBILI',
-    href: 'https://space.bilibili.com/128735968',
+    href: getContactLink('BILIBILI')!.href,
     image: BILIBILI_IMG,
   },
   {
     type: 'GITHUB',
     label: 'GITHUB',
-    href: 'https://github.com/Anuluca',
+    href: getContactLink('GITHUB')!.href,
     image: githubImg,
   },
   {
     type: 'MAIL',
     label: 'MAIL',
-    href: 'mailto:tilucario@outlook.com',
+    href: getContactLink('MAIL')!.href,
     image: mailImg,
   },
 ]
 
 const WEIBO_WIDGET_URL =
   'https://widget.weibo.com/weiboshow/index.php?language=&width=0&height=520&fansRow=1&ptype=1&speed=0&skin=10&isTitle=1&noborder=1&isWeibo=1&isFans=1&uid=7738638501&verifier=4838f435&dpc=1'
-const WEIBO_PROFILE_URL = 'https://weibo.com/u/7738638501'
+const WEIBO_PROFILE_URL = getContactLink('WEIBO')!.href
 
 const { locale } = useI18n()
 const router = useRouter()
@@ -107,8 +110,8 @@ const initFooterAnimation = () => {
   }, 400)
 }
 
-const changeLanguage = (lang: string) => {
-  localStorage.setItem('lang', lang)
+const changeLanguage = (lang: SiteLocale) => {
+  persistLocale(lang)
   locale.value = lang
 }
 

@@ -22,6 +22,9 @@ export default defineConfig({
     },
     extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json'],
   },
+  ssr: {
+    noExternal: ['element-plus'],
+  },
   css: {
     preprocessorOptions: {
       less: {
@@ -47,5 +50,28 @@ export default defineConfig({
   server: {
     port: 3000,
   },
-  base: './',
+  ssgOptions: {
+    dirStyle: 'nested',
+    formatting: 'minify',
+    includedRoutes: () => [
+      '/',
+      '/archive',
+      '/flanerie',
+      '/flanerie/jiujiang',
+      '/flanerie/nanjing',
+      '/flanerie/nanjinghongshan',
+      '/flanerie/singapore',
+      '/flanerie/pingtandao',
+      '/craft',
+      '/colorPalette',
+      '/easeStudio',
+      '/metronome',
+      '/bounceDynamics',
+      '/htmlEntities',
+      '/base64Codec',
+      '/imageBase64',
+      '/about',
+    ],
+  },
+  base: '/',
 })

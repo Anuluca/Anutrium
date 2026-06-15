@@ -25,14 +25,19 @@ const updateMotionPreference = () => {
     document.visibilityState === 'hidden' || !!reducedMotionQuery?.matches
 }
 
-const stars = Array.from({ length: STAR_COUNT }, () => {
-  const size = 0.2 + Math.random()
-  const distance = RADIUS + Math.random() * 900
+const seededValue = (index: number, offset: number) => {
+  const value = Math.sin(index * 91.17 + offset * 47.31) * 10000
+  return value - Math.floor(value)
+}
+
+const stars = Array.from({ length: STAR_COUNT }, (_, index) => {
+  const size = 0.2 + seededValue(index, 1)
+  const distance = RADIUS + seededValue(index, 2) * 900
   return {
     transform: `
       translate3d(0, 0, -${distance}px)
-      rotateY(${Math.random() * 360}deg)
-      rotateX(${Math.random() * 50}deg)
+      rotateY(${seededValue(index, 3) * 360}deg)
+      rotateX(${seededValue(index, 4) * 50}deg)
       scale(${size})
     `,
     origin: `0 0 ${distance}px`,
