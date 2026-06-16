@@ -3,6 +3,11 @@
     <div class="pt-header">
       <div class="pt-header__tag" @click="handleTagClick">CRAFT</div>
       <h1 class="pt-header__title">节拍器</h1>
+      <ToolHeaderActions
+        tool-id="metronome"
+        title="节拍器"
+        description="设置速度和每小节拍数，跟随红色指针和提示音练习。"
+      />
       <p class="pt-header__sub">
         设置速度和每小节拍数，点击开始后跟着红色指针和提示音练习。
         不确定速度时连续点击 TAP，系统会按你的敲击间隔估算 BPM。
@@ -149,6 +154,7 @@ import { useRouter } from 'vue-router'
 
 import CrystalLogo from '@/components/CrystalLogo/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
+import ToolHeaderActions from '@/components/ToolHeaderActions/index.vue'
 
 const router = useRouter()
 

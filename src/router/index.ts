@@ -29,6 +29,10 @@ const PAGE_DESCRIPTIONS: Record<string, { zhCn: string; en: string }> = {
     zhCn: '由 Anuluca 设计与开发的前端创意工具和交互实验。',
     en: 'Frontend utilities and interactive experiments designed and built by Anuluca.',
   },
+  RESUME: {
+    zhCn: 'Anuluca 的简历与下载入口。',
+    en: 'Resume and download entry for Anuluca.',
+  },
   ABOUT: {
     zhCn: '了解前端工程师与 UI/UX 设计师 Anuluca 的经历、技能与设计理念。',
     en: 'About Anuluca, a frontend engineer and UI/UX designer: experience, skills, and design approach.',
@@ -145,6 +149,17 @@ export const routes: RouteConfig[] = [
       titleCn: '关于',
       fullFooter: false,
       ifShow: true,
+    },
+  },
+  {
+    path: '/resume',
+    name: 'RESUME',
+    component: () => import('@/views/Resume/index.vue'),
+    meta: {
+      titleEn: 'RESUME',
+      titleCn: '简历',
+      fullFooter: true,
+      ifShow: false,
     },
   },
 

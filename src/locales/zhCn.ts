@@ -44,13 +44,14 @@ export default {
     statusTitle: '开放新的工作机会',
     statusDescription:
       '目前可以沟通前端工程与创意开发相关工作机会，并根据周期接受自由职业委托。',
-    statusWorkLabel: '开放机会',
-    statusWorkValue: '空闲',
+    statusWorkLabel: '个人状态',
+    statusWorkValue: '空闲_旅行中',
     statusFreelanceLabel: '自由职业',
     statusFreelanceValue: '视周期安排',
     statusLocationLabel: '工作方式',
     statusLocationValue: '中国 / 入职',
     statusCta: '发送工作信息',
+    statusResumeCta: '下载简历',
     dynamic: {
       WebArchives: [
         {

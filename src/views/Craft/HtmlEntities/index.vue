@@ -3,6 +3,11 @@
     <div class="pt-header">
       <div class="pt-header__tag" @click="handleTagClick">CRAFT</div>
       <h1 class="pt-header__title">HTML常用转义字符</h1>
+      <ToolHeaderActions
+        tool-id="html-entities"
+        title="HTML常用转义字符"
+        description="搜索常用 HTML 实体，点击字符、实体名或编号即可复制。"
+      />
       <p class="pt-header__sub">
         搜索常用 HTML 实体，点击字符、实体名或编号即可复制。
         <span class="pt-header__motto">// HUAHUA_THE_CAT</span>
@@ -96,6 +101,7 @@ import { ElMessage } from 'element-plus'
 
 import CrystalLogo from '@/components/CrystalLogo/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
+import ToolHeaderActions from '@/components/ToolHeaderActions/index.vue'
 
 import 'element-plus/es/components/message/style/css'
 

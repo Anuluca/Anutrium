@@ -57,7 +57,7 @@
           :tool="tool"
           :index="i"
           :total="filteredTools.length"
-          @select="router.push(tool.link)"
+          @select="openTool(tool)"
           @tag-select="activeTag = $event"
         />
       </div>
@@ -78,6 +78,7 @@ import { useRoute, useRouter } from 'vue-router'
 import PageFooter from '@/components/PageFooter/index.vue'
 import PageHeader from '@/components/PageHeader/index.vue'
 import ToolCard from '@/components/ToolCard/index.vue'
+import { trackToolClick } from '@/utils/analytics'
 
 const { locale, t, tm } = useI18n()
 const route = useRoute()
@@ -162,6 +163,15 @@ const selectCategory = (category: ToolCategory) => {
       type: category,
     },
   })
+}
+
+const openTool = (tool: NormalizedTool) => {
+  trackToolClick({
+    id: tool.id,
+    title: tool.title,
+    source: 'craft',
+  })
+  router.push(tool.link)
 }
 
 watch(
@@ -700,15 +710,28 @@ watch(
 
 @media (max-width: 600px) {
   .craft-tabs {
-    grid-template-columns: 1fr;
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px;
   }
 
   .craft-tab {
-    min-height: 58px;
+    min-height: 42px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px;
+    padding: 9px 10px;
   }
 
   .craft-tab__label {
-    font-size: 15px;
+    overflow: hidden;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .craft-tab__count {
+    font-size: 12px;
   }
 
   .tl-grid {

@@ -275,6 +275,18 @@ onUnmounted(unlockBackgroundScroll)
   overscroll-behavior: contain;
 }
 
+@media (max-width: 768px) {
+  .modal-wrapper-dialog {
+    width: calc(100vw - 20px) !important;
+    height: calc(100dvh - 20px);
+    max-height: calc(100dvh - 20px) !important;
+
+    .el-dialog__body {
+      min-height: 0;
+    }
+  }
+}
+
 .el-overlay {
   background: rgba(4, 2, 6, 0.85) !important;
   position: fixed !important;

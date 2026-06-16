@@ -71,6 +71,7 @@ export default defineConfig({
       '/base64Codec',
       '/imageBase64',
       '/about',
+      '/resume',
     ],
   },
   base: '/',

@@ -3,6 +3,11 @@
     <div class="pt-header">
       <div class="pt-header__tag" @click="handleTagClick">CRAFT</div>
       <h1 class="pt-header__title">图片转Base64</h1>
+      <ToolHeaderActions
+        tool-id="image-base64"
+        title="图片转Base64"
+        description="上传图片生成 Base64 Data URL，可预览并一键复制完整内容。"
+      />
       <p class="pt-header__sub">
         上传图片生成 Base64 Data URL，可预览并一键复制完整内容。
         <span class="pt-header__motto">// HUAHUA_THE_CAT</span>
@@ -107,6 +112,7 @@ import { ElMessage } from 'element-plus'
 
 import CrystalLogo from '@/components/CrystalLogo/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
+import ToolHeaderActions from '@/components/ToolHeaderActions/index.vue'
 
 import 'element-plus/es/components/message/style/css'
 

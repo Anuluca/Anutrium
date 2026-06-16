@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, defineEmits, onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 import Logo from '@/components/Logo/index.vue'
 import LogoRotating3D from '@/components/Logo_rotating3D/index.vue'
@@ -15,7 +15,7 @@ const isBarsExiting = ref(false)
 const logoRotating3DRef = ref()
 
 const bars = computed(() => {
-  const isMobile = window.innerWidth < 768
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
   const barCount = isMobile ? 10 : 20
   const middleIndex = Math.floor(barCount / 2)
 
@@ -49,6 +49,11 @@ const rotateFinished = () => {
 }
 
 onMounted(() => {
+  if (!document.fonts) {
+    logoRotating3DRef.value?.stop()
+    return
+  }
+
   document.fonts.ready.then(async () => {
     setTimeout(async () => {
       logoRotating3DRef.value.stop()

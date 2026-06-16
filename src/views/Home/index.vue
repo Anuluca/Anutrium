@@ -273,7 +273,7 @@
             :tool="tool"
             :index="index"
             :total="homeTools.length"
-            @select="router.push(tool.link)"
+            @select="openTool(tool)"
           />
         </div>
         <RouterLink class="and-more-entry" to="/craft">
@@ -303,6 +303,7 @@ import ToolCard from '@/components/ToolCard/index.vue'
 import VlogCard from '@/components/VlogCard/index.vue'
 import WorkCard from '@/components/WorkCard/index.vue'
 import WorkDetailModal from '@/components/WorkDetailModal/index.vue'
+import { trackProjectClick, trackToolClick } from '@/utils/analytics'
 
 const { locale, tm } = useI18n()
 const router = useRouter()
@@ -493,6 +494,11 @@ const selectedWork = ref<WorkItem | null>(null)
 
 const openWorkDetail = (work: WorkItem) => {
   selectedWork.value = work
+  trackProjectClick({
+    id: work.id,
+    title: work.title,
+    source: 'home',
+  })
 }
 
 interface JourneyVlog {
@@ -536,6 +542,15 @@ const homeTools = computed<HomeTool[]>(() => {
     .map((id) => tools.find((tool) => tool.id === id))
     .filter((tool): tool is HomeTool => Boolean(tool))
 })
+
+const openTool = (tool: HomeTool) => {
+  trackToolClick({
+    id: tool.id,
+    title: tool.title,
+    source: 'home',
+  })
+  router.push(tool.link)
+}
 </script>
 
 <style lang="less" scoped>

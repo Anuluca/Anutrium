@@ -54,6 +54,7 @@ export default {
     statusLocationLabel: 'WORK MODE',
     statusLocationValue: 'CHINA / ON-SITE',
     statusCta: 'SEND WORK BRIEF',
+    statusResumeCta: 'DOWNLOAD CV',
     dynamic: {
       WebArchives: [
         {

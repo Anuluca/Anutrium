@@ -7,10 +7,14 @@ import BackController from '@/components/BackController/index.vue'
 import { onMounted, onUnmounted, ref } from 'vue'
 import { visualState } from './stores'
 import CursorMove from '@/components/CursorMove/index.vue'
+import { installExternalLinkTracking } from '@/utils/analytics'
 
 const visualStateStore = visualState()
+let removeExternalLinkTracking: (() => void) | null = null
 
 function setRootFontSize() {
+  if (typeof document === 'undefined') return
+
   const deviceWidth = document.documentElement.clientWidth
   const deviceHeight = document.documentElement.clientHeight
   const aspectRatio = deviceWidth / deviceHeight
@@ -34,9 +38,6 @@ function setRootFontSize() {
   document.documentElement.style.fontSize = rootFontSize + 'px'
 }
 
-setRootFontSize()
-window.addEventListener('resize', setRootFontSize)
-
 const showLayout = ref(false)
 const startAnimationFinished = () => {
   setTimeout(() => {
@@ -45,11 +46,15 @@ const startAnimationFinished = () => {
 }
 
 onMounted(() => {
+  setRootFontSize()
+  window.addEventListener('resize', setRootFontSize)
   visualStateStore.setTheme(localStorage.getItem('theme') || 'dark')
+  removeExternalLinkTracking = installExternalLinkTracking()
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', setRootFontSize)
+  removeExternalLinkTracking?.()
 })
 </script>
 

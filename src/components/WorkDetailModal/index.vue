@@ -24,6 +24,15 @@
         <div class="aside-divider" />
 
         <h2 class="aside-title">{{ work.title }}</h2>
+        <ShareButton
+          class="project-share-button"
+          :target-id="work.id"
+          :target-title="work.title"
+          target-type="project"
+          :text="work.description || work.title"
+          :title="work.title"
+          :url="projectShareUrl"
+        />
 
         <div v-if="work.time" class="aside-field">
           <span class="field-label">TIME</span>
@@ -218,6 +227,7 @@ import {
 } from '@element-plus/icons-vue'
 import ModalWrapper from '@/components/ModalWrapper/index.vue'
 import CrystalLogo from '@/components/CrystalLogo/index.vue'
+import ShareButton from '@/components/ShareButton/index.vue'
 
 import 'element-plus/es/components/icon/style/css'
 import 'element-plus/es/components/image-viewer/style/css'
@@ -256,6 +266,13 @@ const currentImageIndex = ref(0)
 const participationText = computed(() => {
   const value = props.work?.participation
   return typeof value === 'number' ? `${value}%` : ''
+})
+
+const projectShareUrl = computed(() => {
+  if (!props.work?.id || typeof window === 'undefined') return ''
+  return `${window.location.origin}/archive?project=${encodeURIComponent(
+    props.work.id
+  )}`
 })
 
 const linkIconMap: Record<string, Component> = {
@@ -452,6 +469,10 @@ const closeImageViewer = () => {
   line-height: 1.2;
   color: #fff;
   letter-spacing: 0.5px;
+}
+
+.project-share-button {
+  width: fit-content;
 }
 
 .aside-field {
@@ -814,20 +835,28 @@ const closeImageViewer = () => {
 
 @media (max-width: 768px) {
   .modal-body {
+    display: block;
+    height: 100%;
+    min-height: 0;
     grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
     overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
   }
 
   .modal-aside {
     border-right: none;
     border-bottom: 1px solid @border;
     padding: 30px 20px;
-    max-height: 45vh;
+    max-height: none;
+    overflow: visible;
   }
 
   .modal-gallery {
     min-height: 240px;
+    overflow: visible;
   }
 
   .gallery-track-wrap {

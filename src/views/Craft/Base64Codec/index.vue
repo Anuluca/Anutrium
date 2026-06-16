@@ -3,6 +3,11 @@
     <div class="pt-header">
       <div class="pt-header__tag" @click="handleTagClick">CRAFT</div>
       <h1 class="pt-header__title">Base64加解密</h1>
+      <ToolHeaderActions
+        tool-id="base64-codec"
+        title="Base64加解密"
+        description="输入文本后选择编码或解码，支持中文和常见 Unicode 内容。"
+      />
       <p class="pt-header__sub">
         输入文本后选择编码或解码，支持中文和常见 Unicode 内容。
         <span class="pt-header__motto">// HUAHUA_THE_CAT</span>
@@ -103,6 +108,7 @@ import { ElMessage } from 'element-plus'
 
 import CrystalLogo from '@/components/CrystalLogo/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
+import ToolHeaderActions from '@/components/ToolHeaderActions/index.vue'
 
 import 'element-plus/es/components/message/style/css'
 

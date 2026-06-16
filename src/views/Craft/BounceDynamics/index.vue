@@ -3,6 +3,11 @@
     <div class="pt-header">
       <div class="pt-header__tag" @click="handleTagClick">CRAFT</div>
       <h1 class="pt-header__title">弹力球</h1>
+      <ToolHeaderActions
+        tool-id="bounce-dynamics"
+        title="弹力球"
+        description="调节弹性与重量，生成弹力球自然落体与弹跳动画。"
+      />
       <p class="pt-header__sub">
         调节弹性与重量，生成一颗弹力球自然落体、撞击地面并向右弹跳的实时物理动画。
         <span class="pt-header__motto">// BOUNCING_BALL</span>
@@ -122,6 +127,7 @@ import { useRouter } from 'vue-router'
 
 import CrystalLogo from '@/components/CrystalLogo/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
+import ToolHeaderActions from '@/components/ToolHeaderActions/index.vue'
 
 interface BallState {
   contactTime: number
@@ -202,7 +208,13 @@ const clamp = (value: number, min: number, max: number) => {
   return Math.min(max, Math.max(min, value))
 }
 
-const getRadius = () => 31 + weight.value * 2.3
+const getRadius = () => {
+  const desiredRadius = 31 + weight.value * 2.3
+  if (!width || !height) return desiredRadius
+
+  const responsiveLimit = Math.min(width * 0.09, height * 0.11)
+  return Math.min(desiredRadius, Math.max(18, responsiveLimit))
+}
 
 const clearTrajectory = () => {
   trajectoryPoints.length = 0
@@ -224,9 +236,13 @@ const recordTrajectoryPoint = () => {
 
 const resetBall = () => {
   ball.r = getRadius()
-  ball.x = Math.max(58, ball.r + 24)
-  ball.y = Math.max(58, ball.r + 18)
-  ball.vx = 270 + elasticity.value * 1.05 - weight.value * 18
+  ball.x = Math.max(ball.r + 18, Math.min(58, width * 0.16))
+  ball.y = Math.max(ball.r + 14, Math.min(58, height * 0.18))
+  ball.vx = clamp(
+    width * 0.38 + elasticity.value * 0.65 - weight.value * 12,
+    145,
+    330
+  )
   ball.vy = 0
   ball.squash = 0
   ball.contactTime = 0
@@ -262,7 +278,7 @@ const resizeCanvas = () => {
   width = nextWidth
   height = nextHeight
   canvasDpr = dpr
-  floorY = height - 82
+  floorY = height - clamp(height * 0.19, 48, 82)
 
   canvas.width = Math.round(width * dpr)
   canvas.height = Math.round(height * dpr)
@@ -1059,8 +1075,14 @@ input[type='range'] {
   }
 
   .motion-track {
-    height: 320px;
+    height: min(320px, 78vw);
+    min-height: 250px;
     margin-top: 24px;
+  }
+
+  .bounce-stage {
+    min-height: 430px;
+    padding: 20px;
   }
 }
 </style>

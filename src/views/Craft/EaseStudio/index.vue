@@ -3,6 +3,11 @@
     <div class="pt-header">
       <div class="pt-header__tag" @click="handleTagClick">CRAFT</div>
       <h1 class="pt-header__title">缓动工作室</h1>
+      <ToolHeaderActions
+        tool-id="ease-studio"
+        title="缓动工作室"
+        description="拖动控制点或调整数值，实时修改并复制 CSS 缓动曲线。"
+      />
       <p class="pt-header__sub">
         拖动左侧两个红点，或直接调整下方数值，实时修改缓动曲线。
         右侧会同步预览动画，确认效果后直接复制 CSS。
@@ -169,6 +174,7 @@ import { useRouter } from 'vue-router'
 
 import CrystalLogo from '@/components/CrystalLogo/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
+import ToolHeaderActions from '@/components/ToolHeaderActions/index.vue'
 
 interface CurvePoint {
   x: number

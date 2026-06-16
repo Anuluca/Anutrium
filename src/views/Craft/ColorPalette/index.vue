@@ -3,6 +3,11 @@
     <div class="pt-header">
       <div class="pt-header__tag" @click="handleTagClick">CRAFT</div>
       <h1 class="pt-header__title">CSS调色盘</h1>
+      <ToolHeaderActions
+        tool-id="palette"
+        title="CSS调色盘"
+        description="上传图片以进行高频像素特征提取，自动输出标准前端调色盘。"
+      />
       <p class="pt-header__sub">
         上传图片以进行高频像素特征提取，自动输出标准前端调色盘。
         <span class="pt-header__motto">// HUAHUA_THE_CAT</span>
@@ -107,6 +112,7 @@ import { useRouter } from 'vue-router'
 
 import CrystalLogo from '@/components/CrystalLogo/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
+import ToolHeaderActions from '@/components/ToolHeaderActions/index.vue'
 
 const previewUrl = ref<string>('')
 const extractedColors = ref<string[]>([])

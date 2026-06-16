@@ -33,13 +33,23 @@
         </div>
       </div>
 
-      <a
-        class="availability-cta"
-        href="mailto:tilucario@outlook.com?subject=Anutrium%20Collaboration"
-      >
-        <span>{{ $t('archive.statusCta') }}</span>
-        <span aria-hidden="true">↗</span>
-      </a>
+      <div class="availability-actions">
+        <a
+          class="availability-cta"
+          href="mailto:tilucario@outlook.com?subject=Anutrium%20Collaboration"
+        >
+          <span>{{ $t('archive.statusCta') }}</span>
+          <span aria-hidden="true">↗</span>
+        </a>
+        <RouterLink
+          class="availability-cta availability-cta--resume"
+          to="/resume"
+          @click="trackResumeOpen"
+        >
+          <span>{{ $t('archive.statusResumeCta') }}</span>
+          <span aria-hidden="true">→</span>
+        </RouterLink>
+      </div>
 
       <div class="availability-corner availability-corner--tl" />
       <div class="availability-corner availability-corner--br" />
@@ -126,21 +136,25 @@
     <WorkDetailModal
       :work="selectedWork"
       :visible="!!selectedWork"
-      @close="selectedWork = null"
+      @close="closeDetail"
     />
   </div>
 </template>
 
 <script setup lang="ts">
 /* eslint-disable simple-import-sort/imports */
-import { computed, onBeforeUnmount, ref } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
 import WorkCard from '@/components/WorkCard/index.vue'
 import WorkDetailModal from '@/components/WorkDetailModal/index.vue'
 import PageHeader from '@/components/PageHeader/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
+import { trackEvent, trackProjectClick } from '@/utils/analytics'
 
 const { t, tm } = useI18n()
+const route = useRoute()
+const router = useRouter()
 
 interface WorkItem {
   id: string
@@ -199,8 +213,50 @@ const selectedWork = ref<WorkItem | MiscWork | null>(null)
 const flashingMiscId = ref('')
 let miscErrorTimer: ReturnType<typeof setTimeout> | null = null
 
-const openDetail = (work: WorkItem | MiscWork) => {
+const allWorks = computed(() => [
+  ...mainWorks.value,
+  ...personalWorks.value,
+  ...miscWorks.value,
+])
+
+const findWorkById = (id: string) =>
+  allWorks.value.find((work) => work.id === id)
+
+const syncProjectQuery = (id?: string) => {
+  const nextQuery = { ...route.query }
+  if (id) {
+    nextQuery.project = id
+  } else {
+    delete nextQuery.project
+  }
+
+  router.replace({ path: route.path, query: nextQuery })
+}
+
+const openDetail = (
+  work: WorkItem | MiscWork,
+  options: { syncQuery?: boolean; track?: boolean } = {}
+) => {
   selectedWork.value = work
+  if (options.syncQuery !== false) syncProjectQuery(work.id)
+  if (options.track !== false) {
+    trackProjectClick({
+      id: work.id,
+      title: work.title,
+      source: 'archive',
+    })
+  }
+}
+
+const closeDetail = () => {
+  selectedWork.value = null
+  syncProjectQuery()
+}
+
+const trackResumeOpen = () => {
+  trackEvent('resume_click', {
+    source: 'availability_panel',
+  })
 }
 
 const hasMiscDetail = (work: MiscWork) => {
@@ -235,6 +291,19 @@ const openMiscDetail = (work: MiscWork) => {
 onBeforeUnmount(() => {
   if (miscErrorTimer) clearTimeout(miscErrorTimer)
 })
+
+watch(
+  () => route.query.project,
+  (project) => {
+    const projectId = Array.isArray(project) ? project[0] : project
+    if (!projectId) return
+    if (selectedWork.value?.id === projectId) return
+
+    const work = findWorkById(projectId)
+    if (work) openDetail(work, { syncQuery: false, track: false })
+  },
+  { immediate: true }
+)
 </script>
 
 <style lang="less" scoped>
@@ -252,153 +321,212 @@ onBeforeUnmount(() => {
 .availability-panel {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(420px, 1fr) auto;
+  grid-template-columns: minmax(360px, 1.2fr) minmax(420px, 1fr) 148px;
   align-items: stretch;
-  gap: 18px;
+  gap: 0;
   margin: 24px 0;
-  padding: 16px 18px;
   overflow: hidden;
-  border: 1px solid rgba(90, 212, 128, 0.28);
-  background: linear-gradient(120deg, rgba(90, 212, 128, 0.1), transparent 42%),
+  border: 1px solid rgba(90, 212, 128, 0.34);
+  background: linear-gradient(90deg, rgba(90, 212, 128, 0.09), transparent 34%),
     repeating-linear-gradient(
       90deg,
-      rgba(255, 255, 255, 0.025) 0 1px,
-      transparent 1px 32px
+      rgba(255, 255, 255, 0.018) 0 1px,
+      transparent 1px 28px
     ),
-    rgba(10, 10, 13, 0.82);
+    rgba(9, 10, 12, 0.92);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    z-index: 2;
+    width: 3px;
+    background: #5ad480;
+    box-shadow: 0 0 18px rgba(90, 212, 128, 0.4);
+    pointer-events: none;
+  }
 
   &::after {
-    content: 'STATUS_CHANNEL_07';
+    content: '';
     position: absolute;
-    right: 18px;
-    bottom: 8px;
-    color: rgba(90, 212, 128, 0.12);
-    font-family: 'Unbounded Sans', monospace;
-    font-size: 0.45rem;
-    letter-spacing: 0.18em;
+    top: 0;
+    left: 3px;
+    z-index: 2;
+    width: 28%;
+    height: 1px;
+    background: linear-gradient(90deg, #5ad480, transparent);
     pointer-events: none;
   }
 }
 
 .availability-copy {
+  position: relative;
   min-width: 0;
+  padding: 13px 22px 12px 24px;
+  border-right: 1px solid rgba(255, 255, 255, 0.09);
 
   h2 {
-    margin: 7px 0 5px;
+    margin: 5px 0 3px;
     color: #fff;
-    font-family: 'anton', 'source-han-sans-simplified-c';
-    font-size: 0.92rem;
+    font-family: 'anton', 'Unbounded Sans';
+    font-size: 1rem;
+
+    letter-spacing: 0.02em;
     line-height: 1.2;
   }
 
   p {
     max-width: 720px;
-    color: rgba(255, 255, 255, 0.52);
+    margin: 0;
+    color: rgba(255, 255, 255, 0.48);
     font-family: 'source-han-sans-simplified-c', sans-serif;
-    font-size: 0.46rem;
-    line-height: 1.55;
+    font-size: 0.4rem;
+    line-height: 1.5;
   }
 }
 
 .availability-kicker {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   color: #5ad480;
   font-family: 'Unbounded Sans', monospace;
-  font-size: 0.42rem;
-  letter-spacing: 0.12em;
+  font-size: 0.34rem;
+  letter-spacing: 0.14em;
 }
 
 .availability-signal {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
   background: #5ad480;
-  box-shadow: 0 0 12px rgba(90, 212, 128, 0.85);
+  box-shadow: 0 0 10px rgba(90, 212, 128, 0.9);
+  transform: rotate(45deg);
   animation: availabilityPulse 1.8s ease-in-out infinite;
 }
 
 .availability-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  min-width: 0;
+  background: rgba(255, 255, 255, 0.012);
 }
 
 .availability-item {
+  position: relative;
   display: flex;
   min-width: 0;
   flex-direction: column;
   justify-content: center;
-  gap: 5px;
-  padding: 9px 12px;
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 6px;
+  padding: 12px 14px;
+
+  & + & {
+    border-left: 1px solid rgba(255, 255, 255, 0.09);
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    right: 7px;
+    bottom: 7px;
+    width: 4px;
+    height: 4px;
+    border-right: 1px solid rgba(90, 212, 128, 0.45);
+    border-bottom: 1px solid rgba(90, 212, 128, 0.45);
+  }
 
   span {
-    color: rgba(255, 255, 255, 0.32);
-    font-family: 'Unbounded Sans', monospace;
-    font-size: 0.34rem;
-    letter-spacing: 0.1em;
+    color: rgba(255, 255, 255, 0.3);
+    font-family: 'source-han-sans-simplified-c', sans-serif;
+    font-size: 0.42rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
   }
 
   strong {
     overflow: hidden;
-    color: rgba(255, 255, 255, 0.84);
+    color: rgba(255, 255, 255, 0.88);
     font-family: 'source-han-sans-simplified-c', sans-serif;
-    font-size: 0.43rem;
+    font-size: 0.7rem;
     font-weight: 700;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 }
 
+.availability-actions {
+  display: grid;
+  min-width: 0;
+  border-left: 1px solid rgba(90, 212, 128, 0.28);
+}
+
 .availability-cta {
   position: relative;
-  min-width: 138px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 18px;
-  align-self: stretch;
-  padding: 0 15px;
-  border: 1px solid rgba(90, 212, 128, 0.46);
+  gap: 12px;
+  padding: 0 16px;
   color: #5ad480;
-  background: rgba(90, 212, 128, 0.06);
+  background: linear-gradient(135deg, rgba(90, 212, 128, 0.09), transparent);
   font-family: 'Unbounded Sans', 'source-han-sans-simplified-c';
-  font-size: 0.4rem;
+  font-size: 0.34rem;
+  letter-spacing: 0.04em;
   line-height: 1.5;
   text-decoration: none;
-  transition: color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+  transition: color 0.25s ease, background 0.25s ease;
+
+  &::before {
+    content: 'CONTACT';
+    position: absolute;
+    top: 7px;
+    right: 9px;
+    color: rgba(90, 212, 128, 0.22);
+    font-size: 0.24rem;
+    letter-spacing: 0.16em;
+  }
 
   &:hover,
   &:focus-visible {
     color: #071009;
     background: #5ad480;
-    box-shadow: 0 0 24px rgba(90, 212, 128, 0.24);
     outline: none;
+
+    &::before {
+      color: rgba(7, 16, 9, 0.4);
+    }
+  }
+}
+
+.availability-cta--resume {
+  border-top: 1px solid rgba(90, 212, 128, 0.22);
+
+  &::before {
+    content: 'RESUME';
   }
 }
 
 .availability-corner {
   position: absolute;
-  width: 14px;
-  height: 14px;
+  z-index: 3;
+  width: 9px;
+  height: 9px;
   pointer-events: none;
 
   &--tl {
-    top: 7px;
+    top: 4px;
     left: 7px;
-    border-top: 1px solid #5ad480;
-    border-left: 1px solid #5ad480;
+    border-top: 1px solid rgba(90, 212, 128, 0.65);
+    border-left: 1px solid rgba(90, 212, 128, 0.65);
   }
 
   &--br {
-    right: 7px;
-    bottom: 7px;
-    border-right: 1px solid #5ad480;
-    border-bottom: 1px solid #5ad480;
+    right: 4px;
+    bottom: 4px;
+    border-right: 1px solid rgba(90, 212, 128, 0.65);
+    border-bottom: 1px solid rgba(90, 212, 128, 0.65);
   }
 }
 
@@ -766,12 +894,18 @@ onBeforeUnmount(() => {
 
 @media (max-width: 1199px) and (min-width: 769px) {
   .availability-panel {
-    grid-template-columns: 1fr minmax(420px, 1fr);
+    grid-template-columns: minmax(320px, 0.9fr) minmax(420px, 1.1fr);
+  }
+
+  .availability-actions {
+    min-height: 48px;
+    grid-column: 1 / -1;
+    border-top: 1px solid rgba(90, 212, 128, 0.22);
+    border-left: 0;
   }
 
   .availability-cta {
-    min-height: 48px;
-    grid-column: 1 / -1;
+    min-height: 42px;
   }
 
   .works-grid {
@@ -786,11 +920,14 @@ onBeforeUnmount(() => {
 @media (max-width: 768px) {
   .availability-panel {
     grid-template-columns: 1fr;
-    gap: 13px;
-    padding: 16px;
+    margin: 18px 0;
   }
 
   .availability-copy {
+    padding: 16px 18px 14px 20px;
+    border-right: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+
     h2 {
       font-size: 0.95rem;
     }
@@ -804,11 +941,15 @@ onBeforeUnmount(() => {
     font-size: 0.52rem;
   }
 
+  .availability-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .availability-item {
     padding: 9px 6px;
 
     span {
-      font-size: 0.45rem;
+      font-size: 0.62rem;
     }
 
     strong {
@@ -816,8 +957,14 @@ onBeforeUnmount(() => {
     }
   }
 
+  .availability-actions {
+    border-top: 1px solid rgba(90, 212, 128, 0.22);
+    border-left: 0;
+  }
+
   .availability-cta {
     min-height: 48px;
+    padding: 0 16px;
     font-size: 0.54rem;
   }
 
