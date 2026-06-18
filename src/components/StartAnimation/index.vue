@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import Logo from '@/components/Logo/index.vue'
 import LogoRotating3D from '@/components/Logo_rotating3D/index.vue'
@@ -13,6 +13,16 @@ const logo2DShow = ref(false)
 const logo2DHide = ref(false)
 const isBarsExiting = ref(false)
 const logoRotating3DRef = ref()
+const timers: number[] = []
+
+const schedule = (handler: () => void, timeout: number) => {
+  const timer = window.setTimeout(() => {
+    const index = timers.indexOf(timer)
+    if (index >= 0) timers.splice(index, 1)
+    handler()
+  }, timeout)
+  timers.push(timer)
+}
 
 const bars = computed(() => {
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
@@ -28,21 +38,21 @@ const bars = computed(() => {
 
 const rotateFinished = () => {
   logo2DShow.value = true
-  setTimeout(() => {
+  schedule(() => {
     isLogoWipingOut.value = true
   }, 400)
-  setTimeout(() => {
+  schedule(() => {
     isBarsExiting.value = true
   }, 850)
 
-  setTimeout(() => {
+  schedule(() => {
     logo2DHide.value = true
 
     showPageContent()
 
     emit('finished')
 
-    setTimeout(() => {
+    schedule(() => {
       isAnimating.value = false
     }, 1200)
   }, 1400)
@@ -54,11 +64,16 @@ onMounted(() => {
     return
   }
 
-  document.fonts.ready.then(async () => {
-    setTimeout(async () => {
-      logoRotating3DRef.value.stop()
+  document.fonts.ready.then(() => {
+    schedule(() => {
+      logoRotating3DRef.value?.stop()
     }, 1600)
   })
+})
+
+onUnmounted(() => {
+  timers.forEach((timer) => window.clearTimeout(timer))
+  timers.length = 0
 })
 </script>
 

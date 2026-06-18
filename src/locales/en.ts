@@ -485,6 +485,253 @@ export default {
     },
   },
 
+  island: {
+    ariaLabel: 'Personal Harbor',
+    headerLabel: '[PERSONAL_HARBOR]',
+    titleCn: 'PERSONAL HARBOR',
+    headerMeta: 'A quiet harbor for feelings that cannot be named.',
+    latestTitle: 'LATEST',
+    playerAria: 'Music player',
+    nowPlaying: 'NOW PLAYING',
+    prevTrack: 'Previous track',
+    nextTrack: 'Next track',
+    pauseTrack: 'Pause',
+    playTrack: 'Play',
+    dynamic: {
+      harborSections: [
+        {
+          id: 'photography',
+          title: 'PHOTOS',
+          subtitle: 'PHOTOGRAPHY',
+          progress: '52%',
+          items: [
+            {
+              title: 'Daily Shots',
+              subtitle: 'DAILY SHOTS',
+              count: '32 PICS',
+              img: 'https://placehold.co/760x480/14070c/e23456?text=DAILY%20SHOTS',
+            },
+            {
+              title: 'Merch Shots',
+              subtitle: 'MERCH SHOTS',
+              count: '24 PICS',
+              img: 'https://placehold.co/760x480/14070c/e23456?text=MERCH%20PHOTO',
+            },
+          ],
+        },
+        {
+          id: 'works',
+          title: 'WORKS',
+          subtitle: 'WORKS',
+          progress: '78%',
+          items: [
+            {
+              title: 'Illustration',
+              subtitle: 'ILLUSTRATION',
+              count: '28 ITEMS',
+              img: 'https://placehold.co/760x480/14070c/e23456?text=ILLUSTRATION',
+            },
+            {
+              title: 'Trainer Card',
+              subtitle: 'TRAINER CARD',
+              count: '18 ITEMS',
+              img: 'https://placehold.co/760x480/14070c/e23456?text=TRAINER%20CARD',
+            },
+            {
+              title: 'Experiments',
+              subtitle: 'EXPERIMENTS',
+              count: '16 ITEMS',
+              img: 'https://placehold.co/760x480/14070c/e23456?text=EXPERIMENTS',
+            },
+            {
+              title: 'Design Goods',
+              subtitle: 'DESIGN GOODS',
+              count: '14 ITEMS',
+              img: 'https://placehold.co/760x480/14070c/e23456?text=DESIGN%20GOODS',
+            },
+          ],
+        },
+        {
+          id: 'notes',
+          title: 'NOTES',
+          subtitle: 'NOTES',
+          progress: '46%',
+          items: [
+            {
+              title: 'Study Notes',
+              subtitle: 'STUDY NOTES',
+              count: '34 NOTES',
+              img: 'https://placehold.co/760x480/14070c/e23456?text=STUDY%20NOTES',
+            },
+            {
+              title: 'Essays & Talks',
+              subtitle: 'ESSAYS & TALKS',
+              count: '30 ARTICLES',
+              img: 'https://placehold.co/760x480/14070c/e23456?text=ESSAYS%20%26%20TALKS',
+            },
+          ],
+        },
+        {
+          id: 'games',
+          title: 'GAMES',
+          subtitle: 'GAMES',
+          progress: '72%',
+          items: [
+            {
+              title: 'Game Library',
+              subtitle: 'GAME LIBRARY',
+              count: '72 GAMES',
+              img: 'https://placehold.co/900x720/14070c/e23456?text=GAME%20LIBRARY',
+            },
+          ],
+        },
+      ],
+      latestPages: [
+        {
+          title: 'State Grid UAV System',
+          module: 'ARCHIVE / MAIN PROJECT',
+          path: '/archive?project=W001',
+          img: 'https://placehold.co/260x180/14070c/e23456?text=STATE%20GRID',
+        },
+        {
+          title: 'Substation Digital Cockpit',
+          module: 'ARCHIVE / MAIN PROJECT',
+          path: '/archive?project=W002',
+          img: 'https://placehold.co/260x180/14070c/e23456?text=COCKPIT',
+        },
+        {
+          title: 'Digital Synergy Supervision',
+          module: 'ARCHIVE / MAIN PROJECT',
+          path: '/archive?project=W003',
+          img: 'https://placehold.co/260x180/14070c/e23456?text=SUPERVISION',
+        },
+        {
+          title: 'CSS Color Palette',
+          module: 'CRAFT / TOOL',
+          path: '/colorPalette',
+          img: 'https://placehold.co/260x180/14070c/e23456?text=COLOR',
+        },
+        {
+          title: 'Ease Studio',
+          module: 'CRAFT / TOOL',
+          path: '/easeStudio',
+          img: 'https://placehold.co/260x180/14070c/e23456?text=EASE',
+        },
+        {
+          title: 'Bounce Dynamics',
+          module: 'CRAFT / TOOL',
+          path: '/bounceDynamics',
+          img: 'https://placehold.co/260x180/14070c/e23456?text=BOUNCE',
+        },
+        {
+          title: 'Base64 Codec',
+          module: 'CRAFT / TOOL',
+          path: '/base64Codec',
+          img: 'https://placehold.co/260x180/14070c/e23456?text=BASE64',
+        },
+        {
+          title: 'Image to Base64',
+          module: 'CRAFT / TOOL',
+          path: '/imageBase64',
+          img: 'https://placehold.co/260x180/14070c/e23456?text=IMAGE',
+        },
+        {
+          title: 'HTML Entities',
+          module: 'CRAFT / TOOL',
+          path: '/htmlEntities',
+          img: 'https://placehold.co/260x180/14070c/e23456?text=HTML',
+        },
+        {
+          title: 'Metronome',
+          module: 'CRAFT / TOOL',
+          path: '/metronome',
+          img: 'https://placehold.co/260x180/14070c/e23456?text=METRONOME',
+        },
+        {
+          title: 'Jiangxi / Jiujiang',
+          module: 'FLÂNERIE / JOURNEY',
+          path: '/flanerie/jiujiang',
+          img: 'https://placehold.co/260x180/14070c/e23456?text=JIUJIANG',
+        },
+        {
+          title: 'Jiangsu / Nanjing',
+          module: 'FLÂNERIE / JOURNEY',
+          path: '/flanerie/nanjing',
+          img: 'https://placehold.co/260x180/14070c/e23456?text=NANJING',
+        },
+        {
+          title: 'Nanjing Hongshan',
+          module: 'FLÂNERIE / JOURNEY',
+          path: '/flanerie/nanjinghongshan',
+          img: 'https://placehold.co/260x180/14070c/e23456?text=HONGSHAN',
+        },
+        {
+          title: 'Singapore',
+          module: 'FLÂNERIE / JOURNEY',
+          path: '/flanerie/singapore',
+          img: 'https://placehold.co/260x180/14070c/e23456?text=SINGAPORE',
+        },
+        {
+          title: 'Pingtan Island',
+          module: 'FLÂNERIE / JOURNEY',
+          path: '/flanerie/pingtandao',
+          img: 'https://placehold.co/260x180/14070c/e23456?text=PINGTAN',
+        },
+        {
+          title: 'Resume',
+          module: 'RESUME / PROFILE',
+          path: '/resume',
+          img: 'https://placehold.co/260x180/14070c/e23456?text=RESUME',
+        },
+        {
+          title: 'Friend Links',
+          module: 'ABOUT / NETWORK',
+          path: '/about',
+          img: 'https://placehold.co/260x180/14070c/e23456?text=ABOUT',
+        },
+        {
+          title: 'Game Library',
+          module: 'ISLAND / GAMES',
+          path: '/test',
+          img: 'https://placehold.co/260x180/14070c/e23456?text=GAMES',
+        },
+        {
+          title: 'Study Notes',
+          module: 'ISLAND / NOTES',
+          path: '/test',
+          img: 'https://placehold.co/260x180/14070c/e23456?text=NOTES',
+        },
+        {
+          title: 'Daily Shots',
+          module: 'ISLAND / PHOTOGRAPHY',
+          path: '/test',
+          img: 'https://placehold.co/260x180/14070c/e23456?text=PHOTO',
+        },
+      ],
+      tracks: [
+        {
+          title: 'Harbor Light Placeholder',
+          artist: 'ANUTRIUM SINGLE TRACK',
+          cover:
+            'https://placehold.co/320x320/14070c/e23456?text=ALBUM%20COVER',
+          src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+        },
+        {
+          title: 'Signal In The Bay',
+          artist: 'ANUTRIUM ARCHIVE',
+          cover: 'https://placehold.co/320x320/14070c/e23456?text=SIGNAL',
+          src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+        },
+        {
+          title: 'Night Port Routine',
+          artist: 'ANUTRIUM ARCHIVE',
+          cover: 'https://placehold.co/320x320/14070c/e23456?text=NIGHT%20PORT',
+          src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
+        },
+      ],
+    },
+  },
+
   flanerie: {
     metaItem: 'Capture the world through my own eyes.',
     videoLabel: 'VIDEO LOG',

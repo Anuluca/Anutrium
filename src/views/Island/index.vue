@@ -1,24 +1,17 @@
-<template>
-  <div class="island-page main-container">
-    <PageHeader
-      header-label="[CYJ]"
-      title-en="ISLAND"
-      title-cn="个人海湾"
-      meta-item="勿忘人皆有死"
-      primary-color="#E23456"
-    />
-    <PageFooter cn-title="个人海湾" en-title="ISLAND" />
-  </div>
-</template>
-
 <script setup lang="ts">
-import PageFooter from '@/components/PageFooter/index.vue'
-import PageHeader from '@/components/PageHeader/index.vue'
+import { computed } from 'vue'
+
+import { visualState } from '@/stores'
+
+import IslandMobile from './Mobile.vue'
+import IslandPC from './PC.vue'
+
+const visualStateStore = visualState()
+const activeComponent = computed(() =>
+  visualStateStore.deviceType === 'desktop' ? IslandPC : IslandMobile
+)
 </script>
 
-<style lang="less" scoped>
-.island-page {
-  width: 100%;
-  color: #fff;
-}
-</style>
+<template>
+  <component :is="activeComponent" />
+</template>

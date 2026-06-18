@@ -11,11 +11,11 @@ const props = withDefaults(defineProps<Props>(), {
   isTextMenu: false,
 })
 
-const STAR_COUNT =
+const isMobileViewport =
   typeof window !== 'undefined' &&
   window.matchMedia('(max-width: 768px)').matches
-    ? 42
-    : 84
+
+const STAR_COUNT = isMobileViewport ? 52 : 84
 const RADIUS = 200
 const isMotionPaused = ref(false)
 let reducedMotionQuery: MediaQueryList | null = null
@@ -31,7 +31,8 @@ const seededValue = (index: number, offset: number) => {
 }
 
 const stars = Array.from({ length: STAR_COUNT }, (_, index) => {
-  const size = 0.2 + seededValue(index, 1)
+  const sizeSeed = seededValue(index, 1)
+  const size = isMobileViewport ? 0.6 + sizeSeed * 0.95 : 0.2 + sizeSeed
   const distance = RADIUS + seededValue(index, 2) * 900
   return {
     transform: `

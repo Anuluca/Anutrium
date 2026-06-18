@@ -4,11 +4,12 @@
     :class="{ 'is-en': locale === 'en' }"
   >
     <PageHeader
-      header-label="[241001_ACCIDENT___CYJ_Simon]"
+      header-label="[241001_ACCIDENT]"
       title-en="FLÂNERIE"
       title-cn="旅程"
       :meta-item="t('flanerie.metaItem')"
       primary-color="#e7492d"
+      mobile-tall
     />
 
     <section class="vlog-section">
@@ -47,6 +48,7 @@ import { useRouter } from 'vue-router'
 import PageHeader from '@/components/PageHeader/index.vue'
 import VlogCard from '@/components/VlogCard/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
+import { visualState } from '@/stores'
 
 interface VlogLocation {
   id: string
@@ -69,6 +71,7 @@ interface VlogItem {
 
 const router = useRouter()
 const { locale, t, tm } = useI18n()
+const visualStateStore = visualState()
 
 const vlogs = computed<VlogItem[]>(() => {
   return tm('flanerie.dynamic.vlogs') as VlogItem[]
@@ -154,6 +157,11 @@ const buildPlacePopup = (place: MapPlaceGroup) => {
   </div>`
 }
 
+const getMapTileUrl = () =>
+  visualStateStore.theme === 'light'
+    ? 'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png'
+    : 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.jpg'
+
 const initMap = async () => {
   if (!mapRef.value) return
 
@@ -170,10 +178,9 @@ const initMap = async () => {
     scrollWheelZoom: false,
   })
 
-  L.tileLayer(
-    'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.jpg',
-    { subdomains: 'abcd', maxZoom: 8 }
-  ).addTo(mapInstance)
+  L.tileLayer(getMapTileUrl(), { subdomains: 'abcd', maxZoom: 8 }).addTo(
+    mapInstance
+  )
 
   L.control.zoom({ position: 'bottomright' }).addTo(mapInstance)
 
@@ -270,6 +277,19 @@ watch(locale, async () => {
   initMap()
 })
 
+watch(
+  () => visualStateStore.theme,
+  async () => {
+    if (mapInstance) {
+      mapInstance.remove()
+      mapInstance = null
+    }
+
+    await nextTick()
+    initMap()
+  }
+)
+
 onUnmounted(() => {
   clearActiveVlogTimer()
 
@@ -295,9 +315,14 @@ onUnmounted(() => {
 }
 
 .vlog-section {
-  padding: 30px;
+  padding: 30px 0;
   overflow-x: hidden;
   overflow-x: clip;
+}
+
+.vlog-grid {
+  content-visibility: auto;
+  contain-intrinsic-size: 760px;
 }
 
 .map-container {
@@ -661,7 +686,8 @@ onUnmounted(() => {
 
 @media (max-width: 768px) {
   .flanerie-page {
-    padding: 0 4vw;
+    isolation: isolate;
+    padding: 0;
   }
 
   .page-title {
@@ -671,36 +697,36 @@ onUnmounted(() => {
   }
 
   .vlog-grid {
-    grid-template-columns: minmax(0, min(84vw, 560px));
-    justify-content: center;
-    gap: 42px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-content: stretch;
+    gap: 28px 10px;
   }
 
   .map-container {
     height: 380px;
   }
 
-  .vlog-card {
-    width: min(84vw, 560px);
-    min-height: 384px;
+  .vlog-grid :deep(.shared-vlog-card) {
+    max-width: none;
+    min-height: clamp(220px, 58vw, 320px);
 
     .vlog-img-wrap {
-      height: 326px;
+      height: clamp(180px, 48vw, 270px);
 
       .vlog-img {
-        max-height: 326px;
+        max-height: clamp(180px, 48vw, 270px);
       }
     }
 
     .vlog-title {
-      font-size: 1.05rem;
+      font-size: clamp(0.72rem, 3.1vw, 0.98rem);
       white-space: normal;
     }
   }
 
   .flanerie-page.is-en {
-    .vlog-title {
-      font-size: 0.86rem;
+    .vlog-grid :deep(.shared-vlog-card .vlog-title) {
+      font-size: clamp(0.62rem, 2.65vw, 0.82rem);
     }
   }
 }

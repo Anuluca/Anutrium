@@ -1,6 +1,6 @@
 <template>
   <div class="home-page main-container">
-    <section class="hero-section">
+    <section ref="heroSection" class="hero-section">
       <div class="hero-content">
         <div class="recommend" @mouseenter="pauseAuto" @mouseleave="resumeAuto">
           <button class="nav-btn nav-btn--prev" @click="prevSlide">
@@ -118,7 +118,7 @@
       </div>
     </section>
 
-    <section class="manifesto-section">
+    <section ref="manifestoSection" class="manifesto-section">
       <h2 class="section-title" data-section="01">{{ $t('home.title01') }}</h2>
       <div v-if="locale === 'en'" class="manifesto-content">
         <div class="background-squares">
@@ -324,12 +324,22 @@ const newsItems = computed<NewsItem[]>(() => {
 const activeIndex = ref(0)
 let autoTimer: ReturnType<typeof setInterval> | null = null
 let rotationTimer: ReturnType<typeof setInterval> | null = null
+let rotationResetTimer: ReturnType<typeof setTimeout> | null = null
+let sectionObserver: IntersectionObserver | null = null
+let isPageVisible = true
+let isHeroVisible = true
+let isManifestoVisible = false
+
+const heroSection = ref<HTMLElement | null>(null)
+const manifestoSection = ref<HTMLElement | null>(null)
 
 const prevSlide = () => {
+  if (!newsItems.value.length) return
   activeIndex.value =
     (activeIndex.value - 1 + newsItems.value.length) % newsItems.value.length
 }
 const nextSlide = () => {
+  if (!newsItems.value.length) return
   activeIndex.value = (activeIndex.value + 1) % newsItems.value.length
 }
 const goTo = (i: number) => {
@@ -389,7 +399,7 @@ const handleCarouselTouchCancel = () => {
 }
 
 const startAuto = () => {
-  if (document.visibilityState === 'hidden') return
+  if (!isPageVisible || !isHeroVisible || !newsItems.value.length) return
   pauseAuto()
   autoTimer = setInterval(nextSlide, 4000)
 }
@@ -416,17 +426,27 @@ const generateBackgroundImages = () => {
     left: Math.random() * 90,
     top: Math.random() * 90,
     size: 80 + Math.random() * 120,
+    rotation: Math.random() * 360,
   }))
 }
 const startRandomRotation = () => {
-  if (document.visibilityState === 'hidden') return
-  if (rotationTimer) clearInterval(rotationTimer)
+  if (
+    !isPageVisible ||
+    !isManifestoVisible ||
+    !backgroundImages.value.length ||
+    rotationTimer
+  ) {
+    return
+  }
+
   rotationTimer = setInterval(() => {
     rotatingImageIndex.value = Math.floor(
       Math.random() * backgroundImages.value.length
     )
-    setTimeout(() => {
+    if (rotationResetTimer) clearTimeout(rotationResetTimer)
+    rotationResetTimer = setTimeout(() => {
       rotatingImageIndex.value = -1
+      rotationResetTimer = null
     }, 2000)
   }, 3000)
 }
@@ -435,29 +455,67 @@ const stopRandomRotation = () => {
   if (!rotationTimer) return
   clearInterval(rotationTimer)
   rotationTimer = null
+  if (rotationResetTimer) {
+    clearTimeout(rotationResetTimer)
+    rotationResetTimer = null
+  }
   rotatingImageIndex.value = -1
 }
 
 const handleVisibilityChange = () => {
-  if (document.visibilityState === 'hidden') {
+  isPageVisible = document.visibilityState !== 'hidden'
+
+  if (!isPageVisible) {
     pauseAuto()
     stopRandomRotation()
     return
   }
 
-  startRandomRotation()
   startAuto()
+  startRandomRotation()
+}
+
+const observeAnimatedSections = () => {
+  if (!('IntersectionObserver' in window)) {
+    isHeroVisible = true
+    isManifestoVisible = true
+    handleVisibilityChange()
+    return
+  }
+
+  sectionObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.target === heroSection.value) {
+          isHeroVisible = entry.isIntersecting
+          if (isHeroVisible) startAuto()
+          else pauseAuto()
+        }
+
+        if (entry.target === manifestoSection.value) {
+          isManifestoVisible = entry.isIntersecting
+          if (isManifestoVisible) startRandomRotation()
+          else stopRandomRotation()
+        }
+      })
+    },
+    { rootMargin: '180px 0px', threshold: 0.01 }
+  )
+
+  if (heroSection.value) sectionObserver.observe(heroSection.value)
+  if (manifestoSection.value) sectionObserver.observe(manifestoSection.value)
 }
 
 onMounted(() => {
+  isPageVisible = document.visibilityState !== 'hidden'
   generateBackgroundImages()
-  startRandomRotation()
-  startAuto()
+  observeAnimatedSections()
   document.addEventListener('visibilitychange', handleVisibilityChange)
 })
 onUnmounted(() => {
   pauseAuto()
   stopRandomRotation()
+  sectionObserver?.disconnect()
   document.removeEventListener('visibilitychange', handleVisibilityChange)
 })
 
@@ -1132,6 +1190,8 @@ const openTool = (tool: HomeTool) => {
 
 .manifesto-section {
   padding: 60px 0;
+  content-visibility: auto;
+  contain-intrinsic-size: 760px;
 
   .manifesto-content {
     position: relative;
@@ -1194,14 +1254,20 @@ const openTool = (tool: HomeTool) => {
 
 .works-section {
   padding: 30px 0;
+  content-visibility: auto;
+  contain-intrinsic-size: 980px;
 }
 
 .journey-section {
   padding: 30px 0;
+  content-visibility: auto;
+  contain-intrinsic-size: 560px;
 }
 
 .craft-section {
   padding: 30px 0;
+  content-visibility: auto;
+  contain-intrinsic-size: 520px;
 }
 
 .home-module-grid {
@@ -1768,13 +1834,14 @@ const openTool = (tool: HomeTool) => {
     }
 
     .journey-grid {
-      grid-template-columns: minmax(0, min(84vw, 560px));
-      justify-content: center;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      justify-content: stretch;
       gap: 10px;
     }
 
     .home-craft-grid {
-      grid-template-columns: 1fr;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
     }
 
     .home-craft-card {

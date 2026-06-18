@@ -1,6 +1,7 @@
 <template>
   <header
     class="page-header"
+    :class="{ 'page-header--mobile-tall': mobileTall }"
     :style="{
       '--primary-color': primaryColor,
       '--title-cn-right': titleCnRight,
@@ -54,6 +55,10 @@ defineProps({
     type: String,
     default: '-3rem',
   },
+  mobileTall: {
+    type: Boolean,
+    default: false,
+  },
 })
 </script>
 
@@ -66,7 +71,6 @@ defineProps({
   padding: 40px 0 30px;
   margin-left: -20px;
   overflow: hidden;
-  border-bottom: 1px solid @border;
   padding-left: 30px;
 
   .header-bg-text {
@@ -197,6 +201,48 @@ defineProps({
 @media (max-width: 768px) {
   .page-header {
     padding: 20px 40px;
+  }
+
+  .page-header--mobile-tall {
+    display: flex;
+    align-items: center;
+    min-height: clamp(150px, 40vw, 188px);
+    padding-top: clamp(24px, 5svh, 40px);
+    padding-bottom: clamp(24px, 5svh, 40px);
+
+    .header-bg-text {
+      top: auto;
+      right: 0.2em;
+      bottom: 0.2em;
+      transform: none;
+      font-size: 16vw;
+      letter-spacing: 0;
+    }
+
+    .header-content {
+      width: 100%;
+    }
+
+    .page-title {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+      margin-top: 4px;
+      letter-spacing: 0;
+
+      .title-en {
+        font-size: clamp(2.25rem, 10.5vw, 3.5rem);
+        line-height: 0.92;
+      }
+
+      .title-cn {
+        display: block;
+        width: fit-content;
+        margin-left: 0;
+        font-size: clamp(0.7rem, 3.2vw, 0.9rem);
+        line-height: 1;
+      }
+    }
   }
 
   .page-title {

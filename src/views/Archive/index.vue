@@ -10,6 +10,7 @@
         ' PROJECTS'
       "
       primary-color="#5AD480"
+      mobile-tall
     />
 
     <section class="availability-panel" aria-labelledby="availability-title">
@@ -603,6 +604,8 @@ watch(
 
 .works-section {
   padding: 30px 0;
+  content-visibility: auto;
+  contain-intrinsic-size: 980px;
 }
 
 .works-grid {
@@ -617,6 +620,8 @@ watch(
 
 .misc-section {
   padding: 60px 0 30px;
+  content-visibility: auto;
+  contain-intrinsic-size: 620px;
 }
 
 .misc-grid {

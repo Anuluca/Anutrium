@@ -23,6 +23,21 @@
             }}</span>
             <span>{{ $t('name[2]') }}</span>
           </p>
+          <span v-if="locale === 'zhCn'" class="site-subtitle">
+            <span class="site-subtitle-text site-subtitle-text--short">
+              <span>A</span>
+              <span>N</span>
+              <span>U</span>
+              <span>T</span>
+              <span>R</span>
+              <span>I</span>
+              <span>U</span>
+              <span>M</span>
+            </span>
+            <span class="site-subtitle-text site-subtitle-text--long">
+              ANULUCA'S ATRIUM
+            </span>
+          </span>
         </div>
       </button>
 

@@ -3,7 +3,7 @@
  * 确保所有自定义字体和 logo 图片加载完成后再显示页面内容
  */
 
-const FONT_FAMILIES = ['enTitle', 'cnTitle']
+const FONT_FAMILIES = ['enTitle', 'cnTitle', 'Unbounded Sans']
 
 const LOGO_IMAGE_PATHS = [
   '/assets/logo.jpg',
@@ -24,8 +24,12 @@ function checkFontLoaded(
 ): Promise<boolean> {
   return new Promise((resolve) => {
     if ('fonts' in document) {
+      const cssFontFamily = fontFamily.includes(' ')
+        ? `"${fontFamily}"`
+        : fontFamily
+
       document.fonts
-        .load(`16px ${fontFamily}`)
+        .load(`16px ${cssFontFamily}`)
         .then(() => {
           if (progressCallback) progressCallback(true)
           resolve(true)

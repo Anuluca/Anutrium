@@ -21,6 +21,10 @@ const currentText = ref('LOADING')
 let isStopping = false
 let renderer, scene, camera, composer, controls, animationId
 let environmentMap = null
+let resizeRafId = null
+let isPageVisible = true
+let lastFrameTime = null
+let animateFrame = null
 const ROTATION_SPEED = 0.6
 const STOP_DURATION = 700
 
@@ -42,6 +46,7 @@ const initThree = () => {
     antialias: true,
     powerPreference: 'high-performance',
   })
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5))
   renderer.setSize(window.innerWidth, window.innerHeight)
 
   renderer.shadowMap.enabled = true
@@ -203,13 +208,17 @@ const initThree = () => {
   crystal.rotation.y = Math.PI / 4
   group.scale.set(0.5, 0.5, 0.5)
 
-  let lastFrameTime = null
   let stopStartTime = null
   let stopStartRotation = null
   let stopTargetRotation = null
 
-  const animate = (frameTime) => {
-    animationId = requestAnimationFrame(animate)
+  animateFrame = (frameTime) => {
+    if (!isPageVisible) {
+      animationId = null
+      return
+    }
+
+    animationId = requestAnimationFrame(animateFrame)
     const deltaSeconds = lastFrameTime
       ? Math.min((frameTime - lastFrameTime) / 1000, 0.05)
       : 0
@@ -269,19 +278,47 @@ const initThree = () => {
     composer.render()
   }
 
-  animate()
+  animateFrame()
 }
 
 const handleResize = () => {
   if (!camera || !renderer) return
   camera.aspect = window.innerWidth / window.innerHeight
   camera.updateProjectionMatrix()
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5))
   renderer.setSize(window.innerWidth, window.innerHeight)
   composer.setSize(window.innerWidth, window.innerHeight)
 }
 
+const scheduleResize = () => {
+  if (resizeRafId !== null) return
+
+  resizeRafId = requestAnimationFrame(() => {
+    resizeRafId = null
+    handleResize()
+  })
+}
+
+const handleVisibilityChange = () => {
+  isPageVisible = document.visibilityState !== 'hidden'
+
+  if (!isPageVisible) {
+    if (animationId) cancelAnimationFrame(animationId)
+    animationId = null
+    return
+  }
+
+  lastFrameTime = null
+  if (renderer && animateFrame && !animationId) {
+    animationId = requestAnimationFrame(animateFrame)
+  }
+}
+
 const stop = () => {
   isStopping = true
+  if (isPageVisible && renderer && animateFrame && !animationId) {
+    animationId = requestAnimationFrame(animateFrame)
+  }
 }
 
 const disposeMaterial = (material) => {
@@ -312,12 +349,16 @@ const disposeScene = () => {
 }
 
 onMounted(() => {
+  isPageVisible = document.visibilityState !== 'hidden'
   initThree()
-  window.addEventListener('resize', handleResize)
+  window.addEventListener('resize', scheduleResize, { passive: true })
+  document.addEventListener('visibilitychange', handleVisibilityChange)
 })
 
 onUnmounted(() => {
-  window.removeEventListener('resize', handleResize)
+  window.removeEventListener('resize', scheduleResize)
+  document.removeEventListener('visibilitychange', handleVisibilityChange)
+  if (resizeRafId !== null) cancelAnimationFrame(resizeRafId)
   if (animationId) cancelAnimationFrame(animationId)
 
   if (controls) controls.dispose()
@@ -337,6 +378,7 @@ onUnmounted(() => {
   composer = null
   controls = null
   environmentMap = null
+  animateFrame = null
 })
 
 defineExpose({

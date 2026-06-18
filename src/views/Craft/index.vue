@@ -6,6 +6,7 @@
       title-cn="工具"
       :meta-item="t('craft.metaItem')"
       primary-color="#3B69F4"
+      mobile-tall
     />
     <div class="craft-filter" :class="`craft-filter--${activeCategory}`">
       <div class="craft-tabs" role="tablist" aria-label="Craft categories">
@@ -221,6 +222,11 @@ watch(
     --filter-accent: @red;
     --filter-accent-dim: @red-dim;
   }
+}
+
+.tool-list {
+  content-visibility: auto;
+  contain-intrinsic-size: 940px;
 }
 
 .craft-tabs {

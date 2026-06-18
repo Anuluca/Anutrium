@@ -34,10 +34,15 @@ const ease = 0.1
 const settleThreshold = 0.35
 let animationFrameId = null
 let hasPointerPosition = false
+let hasPointerListeners = false
 
-const shouldAnimateCursor = computed(() => {
-  return !isMobile.value && isPageVisible.value
+const shouldTrackCursor = computed(() => {
+  return !isMobile.value
 })
+
+const shouldAnimateCursor = computed(
+  () => shouldTrackCursor.value && isPageVisible.value
+)
 
 const checkShouldHideCursor = (target) => {
   if (!target || !target.classList) return false
@@ -128,33 +133,62 @@ const render = () => {
 
 const handleVisibilityChange = () => {
   isPageVisible.value = document.visibilityState !== 'hidden'
+  if (!isPageVisible.value) stopRender()
+  else startRender()
+}
+
+const addPointerListeners = () => {
+  if (hasPointerListeners) return
+
+  window.addEventListener('mousemove', onMouseMove)
+  window.addEventListener('mousedown', onMouseDown)
+  window.addEventListener('mouseup', onMouseUp)
+  window.addEventListener('mouseover', onMouseOver)
+  window.addEventListener('mouseout', onMouseOut)
+  hasPointerListeners = true
+}
+
+const removePointerListeners = () => {
+  if (!hasPointerListeners) return
+
+  window.removeEventListener('mousemove', onMouseMove)
+  window.removeEventListener('mousedown', onMouseDown)
+  window.removeEventListener('mouseup', onMouseUp)
+  window.removeEventListener('mouseover', onMouseOver)
+  window.removeEventListener('mouseout', onMouseOut)
+  hasPointerListeners = false
+  isHovering.value = false
+  isClicked.value = false
+  shouldHideCursor.value = false
+}
+
+const syncPointerListeners = () => {
+  if (shouldTrackCursor.value) {
+    addPointerListeners()
+    return
+  }
+
+  removePointerListeners()
+  stopRender()
 }
 
 onMounted(() => {
   handleVisibilityChange()
-  window.addEventListener('mousemove', onMouseMove)
-  window.addEventListener('mousedown', onMouseDown)
-  window.addEventListener('mouseup', onMouseUp)
+  syncPointerListeners()
   document.addEventListener('visibilitychange', handleVisibilityChange)
-
-  window.addEventListener('mouseover', onMouseOver)
-  window.addEventListener('mouseout', onMouseOut)
 })
 
 onUnmounted(() => {
-  window.removeEventListener('mousemove', onMouseMove)
-  window.removeEventListener('mousedown', onMouseDown)
-  window.removeEventListener('mouseup', onMouseUp)
   document.removeEventListener('visibilitychange', handleVisibilityChange)
-
-  window.removeEventListener('mouseover', onMouseOver)
-  window.removeEventListener('mouseout', onMouseOut)
-
+  removePointerListeners()
   stopRender()
 })
 
+watch(shouldTrackCursor, syncPointerListeners)
+
 watch(shouldAnimateCursor, (canAnimate) => {
-  if (!canAnimate) stopRender()
+  if (canAnimate) startRender()
+  else stopRender()
 })
 </script>
 

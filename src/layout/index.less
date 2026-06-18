@@ -49,13 +49,24 @@
     &.scrolled {
       padding-top: 45px;
 
-      background-color: rgba(27, 27, 27, 0.308);
+      background: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0.88) 0%,
+        rgba(0, 0, 0, 0.58) 48%,
+        transparent 100%
+      );
       backdrop-filter: blur(4px);
       border-bottom: 1px solid rgba(66, 66, 66, 0.542);
-      box-shadow: 0 10px 30px rgb(0, 0, 0);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.7);
       &:hover {
         border-color: #f9446862;
-        background: rgba(226, 52, 87, 0.141);
+        background: linear-gradient(
+            to bottom,
+            rgba(0, 0, 0, 0.88) 0%,
+            rgba(0, 0, 0, 0.58) 48%,
+            transparent 100%
+          ),
+          rgba(226, 52, 87, 0.141);
       }
 
       .logo-box {
@@ -94,6 +105,18 @@
         .zhCn .name-center {
           opacity: 1 !important;
           width: 123px;
+        }
+
+        .zhCn {
+          .site-subtitle-text--short {
+            opacity: 0;
+            transform: translateY(calc(-50% + 3px));
+          }
+
+          .site-subtitle-text--long {
+            opacity: 1;
+            transform: translateY(-50%);
+          }
         }
 
         .en .name-center {
@@ -145,11 +168,64 @@
         }
 
         &.zhCn {
+          display: grid;
+          align-content: center;
           font-size: 40px;
+          margin-top: 4px;
+
+          p {
+            margin: 0;
+            letter-spacing: 2px;
+            line-height: 1;
+          }
+
           .name-center.active {
             width: 95px;
           }
         }
+
+        .site-subtitle {
+          position: relative;
+          display: block;
+          width: calc(100% - 2px);
+          height: 14px;
+          color: #e23456;
+          font-family: 'Unbounded Sans', serif !important;
+          font-size: 11px;
+          font-weight: 900;
+          line-height: 1;
+          pointer-events: none;
+        }
+
+        .site-subtitle-text {
+          position: absolute;
+          top: 50%;
+          left: 0;
+          display: block;
+          color: #e23456;
+          font-family: 'Unbounded Sans', serif !important;
+          line-height: 1;
+          white-space: nowrap;
+          transition: opacity 0.32s ease,
+            transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .site-subtitle-text--short {
+          display: flex;
+          justify-content: space-between;
+          width: 100%;
+          letter-spacing: 0;
+          opacity: 1;
+          transform: translateY(-50%);
+        }
+
+        .site-subtitle-text--long {
+          width: max-content;
+          letter-spacing: 0.08em;
+          opacity: 0;
+          transform: translateY(calc(-50% - 3px));
+        }
+
         &.en {
           font-size: 32px;
           .name-center.active {
@@ -166,6 +242,7 @@
       .menu-box {
         text-decoration: none;
         text-align: right;
+      margin-top: -5px;
 
         .el-menu-item {
           display: inline-flex;
@@ -654,7 +731,7 @@
   transition: filter 0.3s ease;
 
   &.blur {
-    filter: blur(8px) brightness(0) contrast(0.2);
+    filter: blur(8px) brightness(0.8);
   }
 }
 .light {
@@ -663,7 +740,7 @@
       &.scrolled {
         background-color: #ededed60;
         border: 0px solid rgba(66, 66, 66, 0.542);
-        box-shadow: 0 2px 20px rgba(0, 0, 0, 0.258);
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
       }
     }
 
@@ -671,7 +748,7 @@
       &.scrolled {
         background-color: #ededed60;
         border: 0px solid rgba(66, 66, 66, 0.542);
-        box-shadow: 0 2px 20px rgba(0, 0, 0, 0.258);
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
       }
     }
 
@@ -700,14 +777,21 @@
 }
 
 @media screen and (max-aspect-ratio: @ratio-threshold) {
+  .router-container {
+    width: 100%;
+    box-sizing: border-box;
+    padding-right: 4vw;
+    padding-left: 4vw;
+  }
+
   .layout-page {
     .el-menu-layout-all {
       padding: 0 10px;
-      padding-top: 14px;
+      padding-top: max(14px, env(safe-area-inset-top));
 
       &.scrolled {
         padding: 10px 0;
-        padding-top: 20px;
+        padding-top: max(20px, env(safe-area-inset-top));
       }
 
       .logo-box {
@@ -719,6 +803,7 @@
         .right p {
           margin-bottom: 0px;
           color: var(--text-color);
+          margin-top: 3px !important;
         }
 
         &:hover {
@@ -747,10 +832,10 @@
 
     .mobile-menu-icon {
       display: flex;
-      top: 20px;
+      top: max(20px, env(safe-area-inset-top));
 
       &.scrolled {
-        top: 15px;
+        top: max(15px, env(safe-area-inset-top));
       }
     }
   }

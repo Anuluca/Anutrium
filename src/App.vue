@@ -11,6 +11,8 @@ import { installExternalLinkTracking } from '@/utils/analytics'
 
 const visualStateStore = visualState()
 let removeExternalLinkTracking: (() => void) | null = null
+let resizeRafId: number | null = null
+let showLayoutTimer: number | null = null
 
 function setRootFontSize() {
   if (typeof document === 'undefined') return
@@ -33,27 +35,49 @@ function setRootFontSize() {
     deviceType = 'desktop'
   }
 
-  visualStateStore.setDeviceType(deviceType as 'mobile' | 'tablet' | 'desktop')
+  if (visualStateStore.deviceType !== deviceType) {
+    visualStateStore.setDeviceType(
+      deviceType as 'mobile' | 'tablet' | 'desktop'
+    )
+  }
 
   document.documentElement.style.fontSize = rootFontSize + 'px'
 }
 
+function scheduleRootFontSizeUpdate() {
+  if (resizeRafId !== null) return
+
+  resizeRafId = window.requestAnimationFrame(() => {
+    resizeRafId = null
+    setRootFontSize()
+  })
+}
+
 const showLayout = ref(false)
 const startAnimationFinished = () => {
-  setTimeout(() => {
+  if (showLayoutTimer !== null) {
+    window.clearTimeout(showLayoutTimer)
+  }
+
+  showLayoutTimer = window.setTimeout(() => {
     showLayout.value = true
+    showLayoutTimer = null
   }, 250)
 }
 
 onMounted(() => {
   setRootFontSize()
-  window.addEventListener('resize', setRootFontSize)
+  window.addEventListener('resize', scheduleRootFontSizeUpdate, {
+    passive: true,
+  })
   visualStateStore.setTheme(localStorage.getItem('theme') || 'dark')
   removeExternalLinkTracking = installExternalLinkTracking()
 })
 
 onUnmounted(() => {
-  window.removeEventListener('resize', setRootFontSize)
+  window.removeEventListener('resize', scheduleRootFontSizeUpdate)
+  if (resizeRafId !== null) window.cancelAnimationFrame(resizeRafId)
+  if (showLayoutTimer !== null) window.clearTimeout(showLayoutTimer)
   removeExternalLinkTracking?.()
 })
 </script>
