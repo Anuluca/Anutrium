@@ -120,7 +120,7 @@ export const routes: RouteConfig[] = [
   {
     path: '/island',
     name: 'ISLAND',
-    component: () => import('@/views/Island/index.vue'),
+    component: () => import('@/views/404/index.vue'),
     meta: {
       titleEn: 'ISLAND',
       titleCn: '个人海湾',
