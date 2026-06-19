@@ -528,8 +528,6 @@ onMounted(() => {
   document.addEventListener('visibilitychange', handleVisibilityChange)
 })
 onUnmounted(() => {
-  pauseAuto()
-  stopRandomRotation()
   if (dragResetTimer) clearTimeout(dragResetTimer)
   sectionObserver?.disconnect()
   document.removeEventListener('visibilitychange', handleVisibilityChange)
