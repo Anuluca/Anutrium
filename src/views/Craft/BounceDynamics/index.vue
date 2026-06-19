@@ -640,7 +640,7 @@ onBeforeUnmount(() => {
 .bounce-tool {
   width: 100%;
   color: @text;
-  font-family: 'Unbounded Sans', system-ui, sans-serif;
+  font-family: 'cn-custom', system-ui, sans-serif;
 }
 
 .pt-header {
@@ -694,7 +694,7 @@ onBeforeUnmount(() => {
 
   &__title {
     font-size: 42px;
-    font-family: 'Unbounded Sans';
+    font-family: 'cn-custom';
     letter-spacing: 0.05em;
     margin: 0 0 12px;
   }
@@ -754,7 +754,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: baseline;
   gap: 12px;
-  font-family: 'Unbounded Sans', monospace;
+  font-family: 'cn-custom', monospace;
 
   span,
   em {

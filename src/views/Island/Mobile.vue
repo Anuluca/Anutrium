@@ -529,7 +529,7 @@ watch(latestPages, () => {
 .player-clock,
 .player-cover-btn span,
 .player-control {
-  font-family: 'Unbounded Sans', monospace;
+  font-family: 'cn-custom', monospace;
 }
 
 .mobile-port {
@@ -715,7 +715,7 @@ watch(latestPages, () => {
   em {
     margin-top: 5px;
     color: @red;
-    font-family: 'Unbounded Sans', monospace;
+    font-family: 'cn-custom', monospace;
     font-size: 9px;
     font-style: normal;
     letter-spacing: 0.04em;
@@ -783,7 +783,7 @@ watch(latestPages, () => {
 
   > span {
     color: @red;
-    font-family: 'Unbounded Sans', monospace;
+    font-family: 'cn-custom', monospace;
     font-size: 24px;
     font-weight: 900;
     line-height: 1;
@@ -797,7 +797,7 @@ watch(latestPages, () => {
     color: #fff;
     font-size: 35px !important;
     font-weight: 100;
-    font-family: 'Unbounded Sans', monospace;
+    font-family: 'cn-custom', monospace;
     line-height: 1;
     white-space: nowrap;
   }

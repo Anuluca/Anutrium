@@ -306,7 +306,7 @@ const { locale } = useI18n()
 .tl-card__title {
   margin: 2px 0 0;
   color: @text;
-  font-family: 'Unbounded Sans';
+  font-family: 'cn-custom';
   font-size: 17px;
   letter-spacing: 0.04em;
   line-height: 1.15;

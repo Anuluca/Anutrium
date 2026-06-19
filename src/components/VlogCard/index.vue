@@ -271,7 +271,7 @@ const selectVlog = () => {
   margin: 0 0 9px;
   overflow: hidden;
   color: #fff;
-  font-family: 'Unbounded Sans', 'source-han-sans-simplified-c', sans-serif;
+  font-family: 'cn-custom', 'source-han-sans-simplified-c', sans-serif;
   font-size: 1.8rem;
   letter-spacing: 0;
   line-height: 1.35;
@@ -286,7 +286,7 @@ const selectVlog = () => {
   margin-top: -25px;
   margin-bottom: 25px;
   color: rgba(226, 52, 86, 0.9);
-  font-family: 'Unbounded Sans', monospace;
+  font-family: 'cn-custom', monospace;
   font-size: 0.66rem;
   font-weight: 800;
   letter-spacing: 1.2px;

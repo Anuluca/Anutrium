@@ -338,7 +338,7 @@ onUnmounted(() => {
     position: absolute;
     top: 20px;
     left: 20px;
-    font-family: 'Unbounded Sans', monospace;
+    font-family: 'cn-custom', monospace;
     font-size: 0.55rem;
     letter-spacing: 3px;
     color: @red;
@@ -575,7 +575,7 @@ onUnmounted(() => {
 
   .vlog-title {
     max-width: 110%;
-    font-family: 'Unbounded Sans', 'source-han-sans-simplified-c', sans-serif;
+    font-family: 'cn-custom', 'source-han-sans-simplified-c', sans-serif;
     font-size: 1.8rem;
     color: #fff;
     margin: 0 0 9px;
@@ -591,7 +591,7 @@ onUnmounted(() => {
   }
 
   .vlog-date {
-    font-family: 'Unbounded Sans', monospace;
+    font-family: 'cn-custom', monospace;
     font-size: 0.66rem;
     color: rgba(226, 52, 86, 0.9);
     letter-spacing: 1.2px;

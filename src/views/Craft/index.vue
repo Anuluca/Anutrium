@@ -319,7 +319,7 @@ watch(
 }
 
 .craft-tab__label {
-  font-family: 'Unbounded Sans';
+  font-family: 'cn-custom';
   font-size: 18px;
   line-height: 1;
   letter-spacing: 0.12em;
@@ -584,7 +584,7 @@ watch(
 .tl-card__title {
   font-size: 17px;
   letter-spacing: 0.04em;
-  font-family: 'Unbounded Sans';
+  font-family: 'cn-custom';
   color: @text;
   line-height: 1.15;
   margin: 2px 0 0;

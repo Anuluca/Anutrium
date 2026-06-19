@@ -369,7 +369,7 @@ watch(
   h2 {
     margin: 5px 0 3px;
     color: #fff;
-    font-family: 'anton', 'Unbounded Sans';
+    font-family: 'anton', 'cn-custom';
     font-size: 1rem;
 
     letter-spacing: 0.02em;
@@ -391,7 +391,7 @@ watch(
   align-items: center;
   gap: 7px;
   color: #5ad480;
-  font-family: 'Unbounded Sans', monospace;
+  font-family: 'cn-custom', monospace;
   font-size: 0.34rem;
   letter-spacing: 0.14em;
 }
@@ -472,7 +472,7 @@ watch(
   padding: 0 16px;
   color: #5ad480;
   background: linear-gradient(135deg, rgba(90, 212, 128, 0.09), transparent);
-  font-family: 'Unbounded Sans', 'source-han-sans-simplified-c';
+  font-family: 'cn-custom', 'source-han-sans-simplified-c';
   font-size: 0.34rem;
   letter-spacing: 0.04em;
   line-height: 1.5;
@@ -747,7 +747,7 @@ watch(
 
   .misc-card-index {
     color: rgba(255, 255, 255, 0.3);
-    font-family: 'Unbounded Sans', monospace;
+    font-family: 'cn-custom', monospace;
     font-size: 0.5rem;
     letter-spacing: 1.5px;
     transition: color 0.3s ease;
@@ -799,7 +799,7 @@ watch(
   .misc-card-company {
     margin-bottom: 2px;
     color: @text-dim;
-    font-family: 'Unbounded Sans', monospace;
+    font-family: 'cn-custom', monospace;
     font-size: 0.48rem;
     letter-spacing: 0.3px;
     text-transform: uppercase;
@@ -807,7 +807,7 @@ watch(
 
   .misc-card-id {
     color: rgba(255, 255, 255, 0.15);
-    font-family: 'Unbounded Sans', monospace;
+    font-family: 'cn-custom', monospace;
     font-size: 0.43rem;
     letter-spacing: 0.8px;
   }

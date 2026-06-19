@@ -593,7 +593,7 @@ watch(latestPages, () => {
 .track-title,
 .track-status,
 .player-seal {
-  font-family: 'Unbounded Sans', monospace;
+  font-family: 'cn-custom', monospace;
 }
 
 .header-label {
@@ -613,7 +613,7 @@ watch(latestPages, () => {
 
   .title-en {
     color: #fff;
-    font-family: 'Unbounded Sans', monospace;
+    font-family: 'cn-custom', monospace;
     font-size: clamp(28px, 2vw, 46px);
     letter-spacing: -0.03em;
   }
@@ -771,7 +771,7 @@ watch(latestPages, () => {
   }
 
   span {
-    font-family: 'Unbounded Sans';
+    font-family: 'cn-custom';
     color: @red;
     font-size: 0.42rem;
     letter-spacing: 0.18em;
@@ -779,7 +779,7 @@ watch(latestPages, () => {
 
   strong {
     color: @white-bright;
-    font-family: 'Unbounded Sans';
+    font-family: 'cn-custom';
     font-size: 1rem;
     letter-spacing: 0.04em;
     font-weight: 100;
@@ -1269,7 +1269,7 @@ watch(latestPages, () => {
 
   span {
     color: @red;
-    font-family: 'Unbounded Sans', monospace;
+    font-family: 'cn-custom', monospace;
     font-size: clamp(26px, 1.75vw, 42px);
     font-weight: 900;
     line-height: 1;
@@ -1327,7 +1327,7 @@ watch(latestPages, () => {
     background-clip: text;
     background-position: 0 100%;
     background-size: 100% 220%;
-    font-family: 'Unbounded Sans', 'source-han-sans-simplified-c', sans-serif;
+    font-family: 'cn-custom', 'source-han-sans-simplified-c', sans-serif;
     font-size: clamp(26px, 1.8vw, 44px);
     line-height: 1;
     text-shadow: 0 0 16px rgba(255, 255, 255, 0.22);
@@ -1843,7 +1843,7 @@ watch(latestPages, () => {
 
   strong {
     color: @white-bright;
-    font-family: 'Unbounded Sans', monospace;
+    font-family: 'cn-custom', monospace;
     font-size: 0.62rem;
     letter-spacing: 0.06em;
     line-height: 1;
@@ -1853,7 +1853,7 @@ watch(latestPages, () => {
 
   em {
     color: @white-faint;
-    font-family: 'Unbounded Sans', monospace;
+    font-family: 'cn-custom', monospace;
     font-size: 0.4rem;
     font-style: normal;
     letter-spacing: 0.12em;
@@ -2053,7 +2053,7 @@ watch(latestPages, () => {
 
   .seal-date {
     color: @white-faint;
-    font-family: 'Unbounded Sans', monospace;
+    font-family: 'cn-custom', monospace;
     font-size: 0.46rem;
     font-weight: 800;
     font-variant-numeric: tabular-nums;
@@ -2065,7 +2065,7 @@ watch(latestPages, () => {
 
   time {
     color: @white-bright;
-    font-family: 'Unbounded Sans', monospace;
+    font-family: 'cn-custom', monospace;
     font-size: clamp(0.76rem, 0.85vw, 1rem);
     font-weight: 900;
     font-variant-numeric: tabular-nums;

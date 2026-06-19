@@ -15,19 +15,31 @@
             </svg>
           </button>
 
-          <div
+          <Swiper
             class="cards-viewport"
-            @touchstart.passive="handleCarouselTouchStart"
-            @touchmove.passive="handleCarouselTouchMove"
-            @touchend="handleCarouselTouchEnd"
-            @touchcancel="handleCarouselTouchCancel"
+            :modules="swiperModules"
+            :slides-per-view="1"
+            :speed="480"
+            :loop="newsItems.length > 1"
+            :autoplay="swiperAutoplayOptions"
+            :resistance-ratio="0.72"
+            :threshold="3"
+            :touch-start-prevent-default="false"
+            @swiper="setNewsSwiper"
+            @slide-change="handleSwiperSlideChange"
+            @slider-move="handleSwiperSliderMove"
+            @touch-start="handleSwiperTouchStart"
+            @touch-end="handleSwiperTouchEnd"
           >
-            <transition-group name="slide" tag="div" class="cards-inner">
+            <SwiperSlide v-for="(item, i) in newsItems" :key="item.id">
               <div
-                v-for="(item, i) in newsItems"
-                v-show="i === activeIndex"
-                :key="item.id"
                 class="news-card"
+                :class="{ 'news-card--clickable': item.link }"
+                :role="item.link ? 'link' : undefined"
+                :tabindex="item.link ? 0 : -1"
+                @click="openNewsItem(item)"
+                @keydown.enter.prevent="openNewsItem(item)"
+                @keydown.space.prevent="openNewsItem(item)"
               >
                 <div class="card-img">
                   <img
@@ -54,8 +66,8 @@
                   {{ String(i + 1).padStart(2, '0') }}
                 </div>
               </div>
-            </transition-group>
-          </div>
+            </SwiperSlide>
+          </Swiper>
 
           <button class="nav-btn nav-btn--next" @click="nextSlide">
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -91,20 +103,14 @@
         </div>
 
         <div class="main-slogan">
-          <div v-if="locale === 'en'" class="moto">
+          <div class="moto">
             <p>DRIVEN</p>
             <p>BY</p>
+            <p class="passion-cn">热情驱动</p>
             <p class="passion-line">
-              <span class="passion" data-text="PASSION">PASSION</span>.
+              <span class="passion" data-text="PASSION"> PASSION. </span>
             </p>
             <div>WELCOME TO Anuluca'S SECRET BASE.</div>
-          </div>
-          <div v-else class="moto moto-cn">
-            <p class="passion-line">
-              <span class="passion" data-text="热情">热情</span>
-            </p>
-            <p>驱动。</p>
-            <div>欢迎来到路卡的秘密基地。</div>
           </div>
           <LogoOnly3D class="logoWith3d" data-magnetic />
         </div>
@@ -136,11 +142,7 @@
             }"
           >
             <img
-              :src="
-                'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/Logo/' +
-                (index + 1) +
-                '.jpg'
-              "
+              :src="'https://assets.anuluca.com/Logo/' + (index + 1) + '.jpg'"
               alt=""
               loading="lazy"
               decoding="async"
@@ -168,15 +170,10 @@
               top: `${img.top}%`,
               width: `${img.size}px`,
               height: `${img.size}px`,
-              transform: `rotate(${img.rotation}deg)`,
             }"
           >
             <img
-              :src="
-                'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/Logo/' +
-                (index + 1) +
-                '.jpg'
-              "
+              :src="'https://assets.anuluca.com/Logo/' + (index + 1) + '.jpg'"
               alt=""
               loading="lazy"
               decoding="async"
@@ -295,6 +292,9 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
+import { Autoplay } from 'swiper/modules'
+import type { Swiper as SwiperInstance } from 'swiper/types'
+import { Swiper, SwiperSlide } from 'swiper/vue'
 
 import LogoOnly3D from '@/components/LogoOnly3D/index.vue'
 import MarqueeShowcase from '@/components/MarqueeShowcase/index.vue'
@@ -304,6 +304,8 @@ import VlogCard from '@/components/VlogCard/index.vue'
 import WorkCard from '@/components/WorkCard/index.vue'
 import WorkDetailModal from '@/components/WorkDetailModal/index.vue'
 import { trackProjectClick, trackToolClick } from '@/utils/analytics'
+
+import 'swiper/css'
 
 const { locale, tm } = useI18n()
 const router = useRouter()
@@ -315,6 +317,7 @@ interface NewsItem {
   category: string
   date: string
   img: string
+  link?: string
 }
 
 const newsItems = computed<NewsItem[]>(() => {
@@ -322,7 +325,8 @@ const newsItems = computed<NewsItem[]>(() => {
 })
 
 const activeIndex = ref(0)
-let autoTimer: ReturnType<typeof setInterval> | null = null
+const newsSwiper = ref<SwiperInstance | null>(null)
+const isCarouselAutoplay = ref(false)
 let rotationTimer: ReturnType<typeof setInterval> | null = null
 let rotationResetTimer: ReturnType<typeof setTimeout> | null = null
 let sectionObserver: IntersectionObserver | null = null
@@ -332,83 +336,94 @@ let isManifestoVisible = false
 
 const heroSection = ref<HTMLElement | null>(null)
 const manifestoSection = ref<HTMLElement | null>(null)
+const swiperModules = [Autoplay]
+const swiperAutoplayOptions = computed(() => {
+  return {
+    delay: 4000,
+    disableOnInteraction: false,
+    pauseOnMouseEnter: true,
+  }
+})
+
+const setNewsSwiper = (swiper: SwiperInstance) => {
+  newsSwiper.value = swiper
+  activeIndex.value = swiper.realIndex || 0
+  if (isCarouselAutoplay.value) {
+    swiper.autoplay.start()
+  } else {
+    swiper.autoplay.stop()
+  }
+}
 
 const prevSlide = () => {
   if (!newsItems.value.length) return
-  activeIndex.value =
-    (activeIndex.value - 1 + newsItems.value.length) % newsItems.value.length
+  newsSwiper.value?.slidePrev()
 }
 const nextSlide = () => {
   if (!newsItems.value.length) return
-  activeIndex.value = (activeIndex.value + 1) % newsItems.value.length
+  newsSwiper.value?.slideNext()
 }
 const goTo = (i: number) => {
-  activeIndex.value = i
+  newsSwiper.value?.slideToLoop(i)
 }
 
-let touchStartX = 0
-let touchStartY = 0
-let touchDeltaX = 0
-let touchDeltaY = 0
-
-const resetCarouselTouch = () => {
-  touchStartX = 0
-  touchStartY = 0
-  touchDeltaX = 0
-  touchDeltaY = 0
+const handleSwiperSlideChange = (swiper: SwiperInstance) => {
+  activeIndex.value = swiper.realIndex
 }
 
-const handleCarouselTouchStart = (event: TouchEvent) => {
-  const touch = event.touches[0]
-  if (!touch) return
+let didDragSwiper = false
+let dragResetTimer: ReturnType<typeof setTimeout> | null = null
 
+const handleSwiperTouchStart = () => {
   pauseAuto()
-  touchStartX = touch.clientX
-  touchStartY = touch.clientY
-  touchDeltaX = 0
-  touchDeltaY = 0
+  didDragSwiper = false
 }
 
-const handleCarouselTouchMove = (event: TouchEvent) => {
-  const touch = event.touches[0]
-  if (!touch || !touchStartX) return
-
-  touchDeltaX = touch.clientX - touchStartX
-  touchDeltaY = touch.clientY - touchStartY
+const handleSwiperSliderMove = () => {
+  didDragSwiper = true
 }
 
-const handleCarouselTouchEnd = () => {
-  const absX = Math.abs(touchDeltaX)
-  const absY = Math.abs(touchDeltaY)
-
-  if (absX > 48 && absX > absY * 1.25) {
-    if (touchDeltaX < 0) {
-      nextSlide()
-    } else {
-      prevSlide()
-    }
+const handleSwiperTouchEnd = () => {
+  if (didDragSwiper) {
+    if (dragResetTimer) clearTimeout(dragResetTimer)
+    dragResetTimer = setTimeout(() => {
+      didDragSwiper = false
+      dragResetTimer = null
+    }, 350)
   }
-
-  resetCarouselTouch()
-  resumeAuto()
-}
-
-const handleCarouselTouchCancel = () => {
-  resetCarouselTouch()
   resumeAuto()
 }
 
 const startAuto = () => {
-  if (!isPageVisible || !isHeroVisible || !newsItems.value.length) return
-  pauseAuto()
-  autoTimer = setInterval(nextSlide, 4000)
+  isCarouselAutoplay.value =
+    isPageVisible && isHeroVisible && newsItems.value.length > 1
+  if (isCarouselAutoplay.value) {
+    newsSwiper.value?.autoplay.start()
+  } else {
+    newsSwiper.value?.autoplay.stop()
+  }
 }
 const pauseAuto = () => {
-  if (!autoTimer) return
-  clearInterval(autoTimer)
-  autoTimer = null
+  isCarouselAutoplay.value = false
+  newsSwiper.value?.autoplay.stop()
 }
 const resumeAuto = () => startAuto()
+
+const openNewsItem = (item: NewsItem) => {
+  if (didDragSwiper) {
+    didDragSwiper = false
+    return
+  }
+
+  if (!item.link) return
+
+  if (/^https?:\/\//.test(item.link)) {
+    window.open(item.link, '_blank', 'noopener,noreferrer')
+    return
+  }
+
+  router.push(item.link)
+}
 
 interface BackgroundImage {
   id: string
@@ -515,6 +530,7 @@ onMounted(() => {
 onUnmounted(() => {
   pauseAuto()
   stopRandomRotation()
+  if (dragResetTimer) clearTimeout(dragResetTimer)
   sectionObserver?.disconnect()
   document.removeEventListener('visibilitychange', handleVisibilityChange)
 })
@@ -612,6 +628,7 @@ const openTool = (tool: HomeTool) => {
 </script>
 
 <style lang="less" scoped>
+
 .home-page {
   width: 100%;
 }
@@ -646,12 +663,21 @@ const openTool = (tool: HomeTool) => {
   height: 100%;
   overflow: hidden;
   position: relative;
-}
+  touch-action: pan-y;
 
-.cards-inner {
-  width: 100%;
-  height: 100%;
-  position: relative;
+  :deep(.swiper-wrapper),
+  :deep(.swiper-slide) {
+    height: 100%;
+  }
+
+  :deep(.swiper-wrapper) {
+    transition-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  :deep(.swiper-slide) {
+    position: relative;
+    overflow: hidden;
+  }
 }
 
 .news-card {
@@ -660,7 +686,11 @@ const openTool = (tool: HomeTool) => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  cursor: pointer;
+  cursor: default;
+
+  &--clickable {
+    cursor: pointer;
+  }
 
   &:hover {
     .card-img img {
@@ -727,15 +757,16 @@ const openTool = (tool: HomeTool) => {
 }
 
 .card-date {
-  font-family: 'Unbounded Sans', monospace;
+  font-family: 'cn-custom', monospace;
   font-size: 0.58rem;
   letter-spacing: 1px;
   color: rgba(255, 255, 255, 0.4);
 }
 
 .card-title {
-  font-family: 'Unbounded Sans', sans-serif;
+  font-family: 'cn-custom', sans-serif;
   font-size: 1.15rem;
+  font-weight: 100;
   line-height: 1.2;
   color: #fff;
   display: -webkit-box;
@@ -912,13 +943,13 @@ const openTool = (tool: HomeTool) => {
     &.moto-cn {
       padding-right: 130px;
       * {
-        font-family: 'Unbounded Sans';
+        font-family: 'cn-custom';
       }
       > p {
         line-height: 1.6rem;
       }
       > div {
-        font-family: 'Unbounded Sans';
+        font-family: 'cn-custom';
         font-size: 1.2rem;
         height: 0.1rem;
         margin-top: 35px;
@@ -941,7 +972,7 @@ const openTool = (tool: HomeTool) => {
       font-size: 0.88rem;
       animation: motoFadeIn2 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
       animation-delay: 1s;
-      font-family: 'Unbounded Sans';
+      font-family: 'cn-custom';
       border-top: 1px solid var(--text-color);
       margin-top: 10px;
       display: inline-block;
@@ -954,6 +985,9 @@ const openTool = (tool: HomeTool) => {
       animation-delay: 0.4s;
     }
     p:nth-child(3) {
+      animation-delay: 0.6s;
+    }
+    p:nth-child(4) {
       animation-delay: 0.6s;
     }
 
@@ -1016,6 +1050,21 @@ const openTool = (tool: HomeTool) => {
           }
         }
       }
+    }
+
+    .passion-cn {
+      margin: 0.08rem 0 0.16rem 0.02rem;
+      color: #fff;
+      font-family: 'Passion cn-custom', 'cn-custom', sans-serif !important;
+      font-size: clamp(0.72rem, 1.2vw, 0.98rem) !important;
+      font-weight: 400 !important;
+      font-synthesis: none;
+      line-height: 1 !important;
+      letter-spacing: 0.24em;
+      opacity: 0;
+      transform: translateY(12px);
+      animation: motoFadeIn 0.72s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+      animation-delay: 0.56s;
     }
   }
 }
@@ -1162,7 +1211,7 @@ const openTool = (tool: HomeTool) => {
   &__arrow {
     position: relative;
     z-index: 1;
-    font-family: 'Unbounded Sans', monospace;
+    font-family: 'cn-custom', monospace;
     white-space: nowrap;
   }
 
@@ -1279,7 +1328,7 @@ const openTool = (tool: HomeTool) => {
   right: 0;
   bottom: -20px;
   color: #e23456;
-  font-family: 'Unbounded Sans', sans-serif;
+  font-family: 'cn-custom', sans-serif;
   font-size: 1rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -1379,7 +1428,7 @@ const openTool = (tool: HomeTool) => {
   &__status,
   &__cta,
   &__tags span {
-    font-family: 'Unbounded Sans', monospace;
+    font-family: 'cn-custom', monospace;
   }
 
   &__index {
@@ -1414,7 +1463,7 @@ const openTool = (tool: HomeTool) => {
   &__icon {
     min-width: 76px;
     color: #3b69f4;
-    font-family: 'Unbounded Sans', monospace;
+    font-family: 'cn-custom', monospace;
     font-size: 3.4rem;
     line-height: 1;
     text-align: center;
@@ -1575,7 +1624,7 @@ const openTool = (tool: HomeTool) => {
 
   &__date,
   &__id {
-    font-family: 'Unbounded Sans', monospace;
+    font-family: 'cn-custom', monospace;
     font-size: 0.5rem;
     letter-spacing: 1px;
   }
@@ -1712,7 +1761,8 @@ const openTool = (tool: HomeTool) => {
     }
 
     .cards-viewport,
-    .cards-inner,
+    .cards-viewport .swiper-wrapper,
+    .cards-viewport .swiper-slide,
     .news-card {
       width: 100%;
       max-width: 100%;

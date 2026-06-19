@@ -379,7 +379,7 @@ const closeImageViewer = () => {
     display: block;
     margin-bottom: 8px;
     color: @red;
-    font-family: 'Unbounded Sans', monospace;
+    font-family: 'cn-custom', monospace;
     font-size: 0.34rem;
     letter-spacing: 0.08em;
   }
@@ -443,14 +443,14 @@ const closeImageViewer = () => {
 }
 
 .aside-company-name {
-  font-family: 'Unbounded Sans', monospace;
+  font-family: 'cn-custom', monospace;
   font-size: 0.62rem;
   color: rgba(255, 255, 255, 0.5);
   letter-spacing: 0.5px;
 }
 
 .aside-id {
-  font-family: 'Unbounded Sans', monospace;
+  font-family: 'cn-custom', monospace;
   font-size: 0.5rem;
   color: rgba(255, 255, 255, 0.25);
   margin-top: 2px;
@@ -482,7 +482,7 @@ const closeImageViewer = () => {
 }
 
 .field-label {
-  font-family: 'Unbounded Sans', monospace;
+  font-family: 'cn-custom', monospace;
   font-size: 0.5rem;
   letter-spacing: 2px;
   color: @red;
@@ -490,7 +490,7 @@ const closeImageViewer = () => {
 }
 
 .field-val {
-  font-family: 'Unbounded Sans', monospace;
+  font-family: 'cn-custom', monospace;
   font-size: 0.7rem;
   color: rgba(255, 255, 255, 0.6);
   letter-spacing: 1px;
@@ -503,7 +503,7 @@ const closeImageViewer = () => {
 }
 
 .tag {
-  font-family: 'Unbounded Sans', monospace;
+  font-family: 'cn-custom', monospace;
   font-size: 0.52rem;
   border: 1px solid @border;
   padding: 3px 8px;
@@ -765,7 +765,7 @@ const closeImageViewer = () => {
 }
 
 .gallery-empty {
-  font-family: 'Unbounded Sans', monospace;
+  font-family: 'cn-custom', monospace;
   font-size: 0.6rem;
   letter-spacing: 3px;
   color: rgba(255, 255, 255, 0.15);
@@ -788,7 +788,7 @@ const closeImageViewer = () => {
 }
 
 .details-label {
-  font-family: 'Unbounded Sans', monospace;
+  font-family: 'cn-custom', monospace;
   font-size: 0.5rem;
   letter-spacing: 3px;
   color: @red;

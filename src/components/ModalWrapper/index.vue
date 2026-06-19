@@ -232,7 +232,7 @@ onUnmounted(unlockBackgroundScroll)
   position: absolute;
   top: 6px;
   left: 30px;
-  font-family: 'Unbounded Sans', monospace;
+  font-family: 'cn-custom', monospace;
   font-size: 0.48rem;
   color: rgba(255, 255, 255, 0.12);
   letter-spacing: 2px;

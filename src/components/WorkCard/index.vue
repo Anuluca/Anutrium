@@ -256,7 +256,7 @@ const referenceNumber = computed(
 
 .work-subtitle,
 .ref-num {
-  font-family: 'Unbounded Sans', monospace;
+  font-family: 'cn-custom', monospace;
 }
 
 .work-subtitle {
@@ -289,7 +289,7 @@ const referenceNumber = computed(
   padding: 3px clamp(6px, 0.5vw, 10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 0.6);
-  font-family: 'Unbounded Sans', monospace;
+  font-family: 'cn-custom', monospace;
   font-size: clamp(0.45rem, 0.46vw, 0.55rem);
   text-transform: uppercase;
   transition: all 0.3s ease;
@@ -374,7 +374,7 @@ const referenceNumber = computed(
   top: 5px;
   right: 30px;
   color: rgba(255, 255, 255, 0.1);
-  font-family: 'Unbounded Sans', monospace;
+  font-family: 'cn-custom', monospace;
   font-size: 0.5rem;
   pointer-events: none;
   z-index: 3;

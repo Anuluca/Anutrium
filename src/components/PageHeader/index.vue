@@ -94,7 +94,7 @@ defineProps({
   }
 
   .header-label {
-    font-family: 'Unbounded Sans', monospace;
+    font-family: 'cn-custom', monospace;
     font-size: 0.4rem;
     color: var(--primary-color);
   }
@@ -112,7 +112,7 @@ defineProps({
     z-index: 1;
 
     .title-en {
-      font-family: 'Unbounded Sans', monospace;
+      font-family: 'cn-custom', monospace;
       color: #fff;
       position: relative;
       z-index: 3;

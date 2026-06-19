@@ -265,7 +265,7 @@ const handleTagClick = () => {
 
 .palette-tool {
   color: @text;
-  font-family: 'Unbounded Sans', system-ui, sans-serif;
+  font-family: 'cn-custom', system-ui, sans-serif;
 }
 
 .pt-header {
@@ -312,7 +312,7 @@ const handleTagClick = () => {
   }
   &__title {
     font-size: 42px;
-    font-family: 'Unbounded Sans';
+    font-family: 'cn-custom';
     letter-spacing: 0.05em;
     margin: 0 0 12px;
   }

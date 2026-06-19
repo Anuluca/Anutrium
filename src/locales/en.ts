@@ -33,7 +33,17 @@ export default {
             'The third iteration of my personal site — rebuilt from scratch with Vue 3 & Three.js.',
           category: 'RELEASE',
           date: '2026.06.10',
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/YfLHgA_composite.jpg',
+          img: 'https://assets.anuluca.com/other/YfLHgA_composite.jpg',
+        },
+        {
+          id: 2,
+          title: 'DRRR INTELLIGENCE ROOM IS NOW LIVE',
+          subtitle:
+            'A Durarara!! Chinese archive mapping characters, factions, and relationships.',
+          category: 'RELEASE',
+          date: '2026.06.19',
+          img: 'https://assets.anuluca.com/other/27b03fd3-077d-44ae-8965-f0fd0317621e.jpg',
+          link: 'https://Drrr.anuluca.com',
         },
       ],
     },
@@ -65,15 +75,15 @@ export default {
           time: '2023_12 to 2024_08',
           company: 'State_Grid_Corporation_of_China',
           tags: ['VUE3', 'ELEMENTPLUS', 'ECHARTS', 'WEBGL', 'SGMAP'],
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/G.jpg',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.jpg',
+          img: 'https://assets.anuluca.com/other/G.jpg',
+          logo: 'https://assets.anuluca.com/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.jpg',
           description:
             'Improves Jiangxi power-grid inspection efficiency through UAV coverage flights, AI analysis, defect assessment, real-time image transfer, live alerts, and work-order dispatch.',
           images: [
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/7c83cb8a-d86a-42a8-9310-e136acbea961.jpg',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.51.24.jpg',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.51.08.jpg',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/yujinggaojinggongdan.jpg',
+            'https://assets.anuluca.com/other/7c83cb8a-d86a-42a8-9310-e136acbea961.jpg',
+            'https://assets.anuluca.com/other/iShot_2026-06-04_23.51.24.jpg',
+            'https://assets.anuluca.com/other/iShot_2026-06-04_23.51.08.jpg',
+            'https://assets.anuluca.com/other/yujinggaojinggongdan.jpg',
           ],
           imageDescriptions: [
             'News report',
@@ -110,15 +120,15 @@ export default {
           time: '2024_08 to 2025_03',
           company: 'State_Grid_Corporation_of_China',
           tags: ['VUE3', 'ELEMENTPLUS', 'ECHARTS', 'WEBGL', 'SGMAP'],
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.49.55.jpg',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.jpg',
+          img: 'https://assets.anuluca.com/other/iShot_2026-06-04_23.49.55.jpg',
+          logo: 'https://assets.anuluca.com/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.jpg',
           description:
             'A cockpit for power-device operation and IoT sensing scenarios, centralizing device scale, runtime status, alerts, maintenance plans, and map distribution for fast production oversight.',
           images: [
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.49.55.jpg',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.50.18.jpg',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.52.50.jpg',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.53.12.jpg',
+            'https://assets.anuluca.com/other/iShot_2026-06-04_23.49.55.jpg',
+            'https://assets.anuluca.com/other/iShot_2026-06-04_23.50.18.jpg',
+            'https://assets.anuluca.com/other/iShot_2026-06-04_23.52.50.jpg',
+            'https://assets.anuluca.com/other/iShot_2026-06-04_23.53.12.jpg',
           ],
           imageDescriptions: [
             'Prototype 1 - Dashboard home layout',
@@ -142,15 +152,15 @@ export default {
           time: '2025_03 to 2026_01',
           company: 'State_Grid_Corporation_of_China',
           tags: ['VUE3', 'ELEMENTPLUS', 'ECHARTS', 'SGMAP'],
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.48.12.jpg',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.jpg',
+          img: 'https://assets.anuluca.com/other/iShot_2026-06-04_23.48.12.jpg',
+          logo: 'https://assets.anuluca.com/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.jpg',
           description:
             'A supervision platform for discipline inspection and active oversight, integrating case archives, leadership behavior supervision, vehicle-use checks, and anomaly monitoring with AI-model assistance.',
           images: [
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.47.14.jpg',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.48.22.jpg',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.47.39.jpg',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.48.12.jpg',
+            'https://assets.anuluca.com/other/iShot_2026-06-04_23.47.14.jpg',
+            'https://assets.anuluca.com/other/iShot_2026-06-04_23.48.22.jpg',
+            'https://assets.anuluca.com/other/iShot_2026-06-04_23.47.39.jpg',
+            'https://assets.anuluca.com/other/iShot_2026-06-04_23.48.12.jpg',
           ],
           imageDescriptions: [
             'Prototype 1 - Home statistics',
@@ -172,8 +182,8 @@ export default {
           time: '2025_12 to 2025_12',
           company: 'State_Grid_Corporation_of_China',
           tags: ['Vue2', 'ELEMENTUI', 'SASS', 'ECHARTS', 'TAILWINDCSS'],
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/37fdd6dc419b49d785b9cb5d68aa6ef5.jpg',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.jpg',
+          img: 'https://assets.anuluca.com/other/37fdd6dc419b49d785b9cb5d68aa6ef5.jpg',
+          logo: 'https://assets.anuluca.com/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.jpg',
           description:
             'Worked on process orchestration, monitoring dashboards, theme adaptation, and backend management modules.',
           details: [
@@ -191,10 +201,10 @@ export default {
           time: '2022_01 to 2022_07',
           company: 'Memect_Technology_Co.',
           tags: ['REACT', 'Antd', 'D3', 'PDF_VIEWER'],
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/8320d930cbcf10286068ff0c86e76fda398.jpg',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/130958568.jpg',
+          img: 'https://assets.anuluca.com/other/8320d930cbcf10286068ff0c86e76fda398.jpg',
+          logo: 'https://assets.anuluca.com/other/130958568.jpg',
           images: [
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_22.58.57.jpg',
+            'https://assets.anuluca.com/other/iShot_2026-06-04_22.58.57.jpg',
           ],
           description:
             'An intelligent document cognition platform for financial-document scenarios, turning complex documents into reviewable and analyzable structured data.',
@@ -235,8 +245,8 @@ export default {
           time: '2020_09 to 2022_01',
           company: 'Memect_Technology_Co.',
           tags: ['VUE2', 'ELEMENTUI', 'ECHARTS', 'PDF_VIEWER'],
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/171280126412338930EA.jpg',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/130958568.jpg',
+          img: 'https://assets.anuluca.com/other/171280126412338930EA.jpg',
+          logo: 'https://assets.anuluca.com/other/130958568.jpg',
           description:
             'A Vue 2 + ElementUI backend system with PDF_VIEWER based research-report and contract preview/annotation plus ECharts document statistics and trend visualization for investment research and compliance teams.',
           details: [
@@ -255,10 +265,10 @@ export default {
           time: '2019_09 to 2020_09',
           company: 'JIANGXI TOBACCO',
           tags: ['REACT', 'Antd', 'DB2'],
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/0ff41bd5ad6eddc41ffc116415177bf253663375.jpg',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/u=3946042415,1178956773&fm=253&fmt=auto&app=138&f=JPEG.jpg',
+          img: 'https://assets.anuluca.com/other/0ff41bd5ad6eddc41ffc116415177bf253663375.jpg',
+          logo: 'https://assets.anuluca.com/other/u=3946042415,1178956773&fm=253&fmt=auto&app=138&f=JPEG.jpg',
           images: [
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_21.38.58.jpg',
+            'https://assets.anuluca.com/other/iShot_2026-06-04_21.38.58.jpg',
           ],
           description:
             'An integrated internal management platform built with React, Ant Design, and DB2 to support enterprise business-management workflows.',
@@ -276,10 +286,10 @@ export default {
           participation: 100,
           company: 'Anuluca',
           tags: ['REACT19', 'Typescript', 'Vite', 'AntV G6', 'i18next'],
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/27b03fd3-077d-44ae-8965-f0fd0317621e.jpg',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/Logo/drrrfavicon.svg',
+          img: 'https://assets.anuluca.com/other/27b03fd3-077d-44ae-8965-f0fd0317621e.jpg',
+          logo: 'https://assets.anuluca.com/Logo/drrrfavicon.svg',
           images: [
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/27b03fd3-077d-44ae-8965-f0fd0317621e.jpg',
+            'https://assets.anuluca.com/other/27b03fd3-077d-44ae-8965-f0fd0317621e.jpg',
           ],
           imageDescriptions: ['Project homepage'],
           description:
@@ -299,11 +309,11 @@ export default {
           time: '2025_12 to Now',
           company: 'Anuluca',
           tags: ['Vue3', 'Three.js', 'UI/UX', 'TYPESCRIPT'],
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/mega5.jpg',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/Logo/anutrium_favicon.jpg',
+          img: 'https://assets.anuluca.com/other/mega5.jpg',
+          logo: 'https://assets.anuluca.com/Logo/anutrium_favicon.jpg',
           images: [
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/mega5.jpg',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/mega6.jpg',
+            'https://assets.anuluca.com/other/mega5.jpg',
+            'https://assets.anuluca.com/other/mega6.jpg',
           ],
           imageDescriptions: [
             'Early concept design 1',
@@ -333,14 +343,14 @@ export default {
           time: '2019_09 to 2025_12',
           company: 'Anuluca',
           tags: ['HEXO', 'HTML', 'MARKDOWN'],
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_20.59.04.jpg',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/Logo/anutrium_favicon.jpg',
+          img: 'https://assets.anuluca.com/other/iShot_2026-06-04_20.59.04.jpg',
+          logo: 'https://assets.anuluca.com/Logo/anutrium_favicon.jpg',
           images: [
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_20.59.04.jpg',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_20.56.07.jpg',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_20.55.32.jpg',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_21.02.13.jpg',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_21.02.36.jpg',
+            'https://assets.anuluca.com/other/iShot_2026-06-04_20.59.04.jpg',
+            'https://assets.anuluca.com/other/iShot_2026-06-04_20.56.07.jpg',
+            'https://assets.anuluca.com/other/iShot_2026-06-04_20.55.32.jpg',
+            'https://assets.anuluca.com/other/iShot_2026-06-04_21.02.13.jpg',
+            'https://assets.anuluca.com/other/iShot_2026-06-04_21.02.36.jpg',
           ],
           imageDescriptions: [
             'Home page',
@@ -373,11 +383,11 @@ export default {
           title: 'State Grid KPI System',
           participation: 100,
           company: 'State Grid',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.jpg',
+          logo: 'https://assets.anuluca.com/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.jpg',
           description:
             'A full-process KPI assessment system covering performance designer, template configuration, monthly assessment startup, and evaluation, with low-code-like component customization as a core challenge.',
           images: [
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_23.44.04.jpg',
+            'https://assets.anuluca.com/other/iShot_2026-06-04_23.44.04.jpg',
           ],
           imageDescriptions: ['Prototype 1'],
           details: [
@@ -391,8 +401,8 @@ export default {
           participation: 100,
           company: 'State Grid',
           tags: ['Vue2', 'ELEMENTUI', 'TAILWINDCSS', 'Vant2'],
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.jpg',
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/8320d930cbcf10286068ff0c86e76fda398.jpg',
+          logo: 'https://assets.anuluca.com/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.jpg',
+          img: 'https://assets.anuluca.com/other/8320d930cbcf10286068ff0c86e76fda398.jpg',
           description:
             'I led the design and development of the Jiangxi Power Grid inspection app, helping field teams handle equipment inspection, defect reporting, and task dispatch through a mobile workflow.',
           details: [
@@ -407,11 +417,11 @@ export default {
           title: 'Level 4 Daily Control System',
           participation: 30,
           company: 'State Grid',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.jpg',
+          logo: 'https://assets.anuluca.com/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.jpg',
           description:
             'Mainly responsible for UI design, main framework setup, page construction, and interaction implementation.',
           images: [
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/iShot_2026-06-04_21.31.42.jpg',
+            'https://assets.anuluca.com/other/iShot_2026-06-04_21.31.42.jpg',
           ],
           imageDescriptions: ['System screenshot 1'],
         },
@@ -420,7 +430,7 @@ export default {
           title: 'KuaiCha',
           participation: 33.33,
           company: 'Memect_Technology_Co.',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/130958568.jpg',
+          logo: 'https://assets.anuluca.com/other/130958568.jpg',
           tags: ['VUE2', 'ELEMENTUI', 'ECHARTS', 'PDF_VIEWER'],
           description:
             'An intelligent financial-document quality-control system supporting single-document checking, multi-document cross-review, and version comparison.',
@@ -442,13 +452,13 @@ export default {
           title: 'Anulife',
           participation: 100,
           company: 'Anuluca',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/Logo/anutrium_favicon.jpg',
+          logo: 'https://assets.anuluca.com/Logo/anutrium_favicon.jpg',
           tags: ['HTML5', 'CSS'],
           description:
             'The first version of my personal website, hand-built with pure HTML during university.',
           images: [
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/YHpcGj.jpg',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/YHp2zn.jpg',
+            'https://assets.anuluca.com/other/YHpcGj.jpg',
+            'https://assets.anuluca.com/other/YHp2zn.jpg',
           ],
           imageDescriptions: ['Early development', 'Final screenshot'],
           links: [
@@ -469,16 +479,16 @@ export default {
           title: 'WEB CLASS GRAD PROJECT',
           participation: 100,
           company: 'Anuluca',
-          logo: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/Logo/anutrium_favicon.jpg',
+          logo: 'https://assets.anuluca.com/Logo/anutrium_favicon.jpg',
           tags: ['HTML5', 'CSS'],
           description:
             'My first real self-written web project; the source code is gone, but screenshots remain.',
           images: [
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/first1.jpg',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/first2.jpg',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/first3.jpg',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/first4.jpg',
-            'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/first5.jpg',
+            'https://assets.anuluca.com/other/first1.jpg',
+            'https://assets.anuluca.com/other/first2.jpg',
+            'https://assets.anuluca.com/other/first3.jpg',
+            'https://assets.anuluca.com/other/first4.jpg',
+            'https://assets.anuluca.com/other/first5.jpg',
           ],
         },
       ],
@@ -750,7 +760,7 @@ export default {
           date: '2026.04',
           tagline: 'Return. Remain.',
           device: ['Sony RX100M6', 'iPhone 17'],
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/porygon.png',
+          img: 'https://assets.anuluca.com/other/porygon.png',
           location: {
             id: 'jiangxi',
             name: 'Jiangxi',
@@ -775,7 +785,7 @@ export default {
           tagline:
             'Half Jinling in mist and rain, half Stone City in its bones.',
           device: ['Sony RX100M6', 'iPhone 17'],
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/porygon.png',
+          img: 'https://assets.anuluca.com/other/porygon.png',
           location: {
             id: 'jiangsu',
             name: 'Jiangsu',
@@ -792,7 +802,7 @@ export default {
           date: '2026.03',
           tagline: "A visit to mainland China's most highly regarded zoo.",
           device: ['Sony RX100M6', 'iPhone 17'],
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/porygon.png',
+          img: 'https://assets.anuluca.com/other/porygon.png',
           location: {
             id: 'jiangsu',
             name: 'Jiangsu',
@@ -841,7 +851,7 @@ export default {
           date: '2026.02',
           tagline: 'Glance over the flowers hurriedly.',
           device: ['Sony RX100M6', 'iPhone 17'],
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/porygon.png',
+          img: 'https://assets.anuluca.com/other/porygon.png',
           location: {
             id: 'singapore',
             name: 'Singapore',
@@ -877,7 +887,7 @@ export default {
           date: '2024.06',
           tagline: 'A dream island for Alolans at heart.',
           device: ['Sony RX100M6', 'iPhone 17'],
-          img: 'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/porygon.png',
+          img: 'https://assets.anuluca.com/other/porygon.png',
           location: {
             id: 'fujian',
             name: 'Fujian',
@@ -1041,7 +1051,7 @@ export default {
           date: '2026-01-27',
           title: 'STATIC ASSET LIBRARY',
           details: [
-            "Adopted Supabase as the site's static asset library.",
+            "Adopted Cloudflare R2 as the site's static asset library.",
             'Completed designs for the homepage, archive, Flânerie, personal bay, tools, and About pages.',
           ],
         },

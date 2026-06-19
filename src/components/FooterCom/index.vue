@@ -23,8 +23,7 @@ interface SocialItem {
   image: string
 }
 
-const BILIBILI_IMG =
-  'https://agzhrzaeerclitlfnhhz.supabase.co/storage/v1/object/public/assets/other/bilibili_profile.jpg'
+const BILIBILI_IMG = 'https://assets.anuluca.com/other/bilibili_profile.jpg'
 
 const SOCIAL_ITEMS: SocialItem[] = [
   {

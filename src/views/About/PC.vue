@@ -415,7 +415,7 @@ const neighbors = ref([
   border-bottom: 1px solid rgba(0, 0, 0, 0.18);
 
   span {
-    font-family: 'Unbounded Sans', 'anton', monospace;
+    font-family: 'cn-custom', 'anton', monospace;
     font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.14em;
@@ -450,18 +450,18 @@ const neighbors = ref([
 
   span {
     font-size: clamp(16px, 1.5vw, 24px);
-    font-family: 'Unbounded Sans';
+    font-family: 'cn-custom';
     font-weight: 100;
   }
 
   strong {
-    font-family: 'Unbounded Sans', 'anton', sans-serif;
+    font-family: 'cn-custom', 'anton', sans-serif;
     font-size: clamp(10px, 0.85vw, 13px);
   }
 }
 
 .passion-color-code {
-  font-family: 'anton', 'Unbounded Sans', sans-serif;
+  font-family: 'anton', 'cn-custom', sans-serif;
   font-size: clamp(76px, 10vw, 180px);
   font-weight: 900;
   letter-spacing: -0.055em;

@@ -3,7 +3,7 @@
  * 确保所有自定义字体和 logo 图片加载完成后再显示页面内容
  */
 
-const FONT_FAMILIES = ['enTitle', 'cnTitle', 'Unbounded Sans']
+const FONT_FAMILIES = ['enTitle', 'cnTitle', 'cn-custom']
 
 const LOGO_IMAGE_PATHS = [
   '/assets/logo.jpg',

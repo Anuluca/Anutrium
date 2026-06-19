@@ -88,7 +88,7 @@ import PageHeader from '@/components/PageHeader/index.vue'
   align-items: center;
   gap: 8px;
   color: #5ad480;
-  font-family: 'Unbounded Sans', monospace;
+  font-family: 'cn-custom', monospace;
   font-size: 0.4rem;
   letter-spacing: 0.16em;
 }

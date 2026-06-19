@@ -261,7 +261,7 @@ watch(
 @panel: rgba(18, 5, 12, 0.72);
 @line: rgba(226, 52, 86, 0.28);
 @bg: #050206;
-@mono: 'Unbounded Sans', 'Courier New', monospace;
+@mono: 'cn-custom', 'Courier New', monospace;
 @cjk: 'source-han-sans-simplified-c', sans-serif;
 
 .flr-page {

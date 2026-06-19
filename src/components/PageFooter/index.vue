@@ -314,7 +314,7 @@ onUnmounted(() => {
       padding-bottom: 2px;
       color: rgb(88, 88, 88);
       * {
-        font-family: 'Unbounded Sans', monospace;
+        font-family: 'cn-custom', monospace;
       }
     }
   }
