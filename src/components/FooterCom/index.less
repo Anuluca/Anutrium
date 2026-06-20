@@ -93,11 +93,12 @@
         transition: all 0.2s;
         white-space: nowrap;
         align-items: center;
-        display: flex;
+        display: inline-flex;
         align-items: center;
         will-change: transform;
-        -webkit-animation: marquee 48s linear infinite;
-        animation: marquee 48s linear infinite;
+        -webkit-animation: marquee var(--footer-marquee-duration, 24s) linear
+          infinite;
+        animation: marquee var(--footer-marquee-duration, 24s) linear infinite;
         animation-play-state: running;
 
         span {
@@ -108,12 +109,15 @@
         &:hover {
           animation-play-state: paused;
         }
-        .left-space {
-          display: inline-block;
-          width: 400px;
-          height: 10px;
+
+        .marquee-content {
+          display: inline-flex;
+          align-items: center;
+          flex: 0 0 auto;
+          padding-right: clamp(36px, 8vw, 120px);
         }
-        > b {
+
+        b {
           color: var(--text-color);
           font-family: 'cn-custom';
           font-size: 12px;
@@ -153,21 +157,11 @@
 
     @keyframes marquee {
       0% {
-        opacity: 0;
         transform: translate3d(0, 0, 0);
       }
 
-      5% {
-        opacity: 1;
-      }
-
-      95% {
-        opacity: 1;
-      }
-
       100% {
-        transform: translate3d(-2000px, 0, 0);
-        opacity: 0;
+        transform: translate3d(-50%, 0, 0);
       }
     }
   }

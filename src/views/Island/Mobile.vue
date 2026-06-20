@@ -190,16 +190,22 @@ const harborSections: HarborSection[] = [
     progress: '52%',
     items: [
       {
-        title: '日常摄影',
-        subtitle: 'DAILY SHOTS',
+        title: '摄影作品',
+        subtitle: 'PHOTO WORKS',
         count: '32 PICS',
-        img: placeholder('DAILY SHOTS'),
+        img: placeholder('PHOTO WORKS'),
       },
       {
         title: '周边摄影',
-        subtitle: 'MERCH SHOTS',
+        subtitle: 'MERCH PHOTOS',
         count: '24 PICS',
         img: placeholder('MERCH PHOTO'),
+      },
+      {
+        title: '图像记录',
+        subtitle: 'IMAGE LOG',
+        count: '18 PICS',
+        img: placeholder('IMAGE LOG'),
       },
     ],
   },

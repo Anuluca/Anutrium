@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { ElLoading } from 'element-plus'
@@ -67,13 +67,17 @@ const theme = ref(false)
 const isScrollingDown = ref<boolean>(false)
 const isMotionPaused = ref(false)
 const weiboSrc = ref('')
+const marqueeContent = ref<HTMLElement | null>(null)
+const marqueeDuration = ref('24s')
 let footerAnimationTimer: number | null = null
 let reducedMotionQuery: MediaQueryList | null = null
 
 onMounted(() => {
   initFooterAnimation()
+  nextTick(updateMarqueeDuration)
   reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
   updateMotionState()
+  window.addEventListener('resize', updateMarqueeDuration, { passive: true })
   document.addEventListener('visibilitychange', updateMotionState)
   reducedMotionQuery.addEventListener('change', updateMotionState)
 })
@@ -82,6 +86,7 @@ onUnmounted(() => {
   if (footerAnimationTimer !== null) {
     window.clearTimeout(footerAnimationTimer)
   }
+  window.removeEventListener('resize', updateMarqueeDuration)
   document.removeEventListener('visibilitychange', updateMotionState)
   reducedMotionQuery?.removeEventListener('change', updateMotionState)
 })
@@ -89,6 +94,14 @@ onUnmounted(() => {
 const updateMotionState = () => {
   isMotionPaused.value =
     document.visibilityState === 'hidden' || !!reducedMotionQuery?.matches
+}
+
+const updateMarqueeDuration = () => {
+  const contentWidth = marqueeContent.value?.scrollWidth ?? 0
+  if (!contentWidth) return
+
+  const duration = Math.min(52, Math.max(12, contentWidth / 46))
+  marqueeDuration.value = `${duration.toFixed(2)}s`
 }
 
 const initFooterAnimation = () => {
@@ -178,31 +191,61 @@ const loadWeiboWidget = () => {
 
     <div class="center">
       <div class="expand">
-        <div class="marquee-wrap">
-          <span class="left-space" />
-          <span class="recommend">
-            <a
-              v-for="(item, key) in bottomLineData.recommand"
-              :key="key"
-              style="color: white"
-              :href="item.href"
-            >
-              「
-              <span
-                :style="[
-                  {
-                    color: item.color || '#5F9DDD',
-                    fontWeight: 600,
-                  },
-                ]"
-                >{{ item.title }}\{{ item.sort }}</span
+        <div
+          class="marquee-wrap"
+          :style="{ '--footer-marquee-duration': marqueeDuration }"
+        >
+          <div ref="marqueeContent" class="marquee-content">
+            <span class="recommend">
+              <a
+                v-for="(item, key) in bottomLineData.recommand"
+                :key="key"
+                style="color: white"
+                :href="item.href"
               >
-              」
-              <span style="color: #ffffff96">{{ item.date }}</span>
-              &nbsp;
-            </a>
-          </span>
-          <b>{{ bottomLineData.intro }}</b>
+                「
+                <span
+                  :style="[
+                    {
+                      color: item.color || '#5F9DDD',
+                      fontWeight: 600,
+                    },
+                  ]"
+                  >{{ item.title }}\{{ item.sort }}</span
+                >
+                」
+                <span style="color: #ffffff96">{{ item.date }}</span>
+                &nbsp;
+              </a>
+            </span>
+            <b>{{ bottomLineData.intro }}</b>
+          </div>
+          <div class="marquee-content" aria-hidden="true">
+            <span class="recommend">
+              <a
+                v-for="(item, key) in bottomLineData.recommand"
+                :key="key"
+                style="color: white"
+                :href="item.href"
+                tabindex="-1"
+              >
+                「
+                <span
+                  :style="[
+                    {
+                      color: item.color || '#5F9DDD',
+                      fontWeight: 600,
+                    },
+                  ]"
+                  >{{ item.title }}\{{ item.sort }}</span
+                >
+                」
+                <span style="color: #ffffff96">{{ item.date }}</span>
+                &nbsp;
+              </a>
+            </span>
+            <b>{{ bottomLineData.intro }}</b>
+          </div>
         </div>
       </div>
     </div>

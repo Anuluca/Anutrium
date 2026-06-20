@@ -17,7 +17,7 @@
 
 <style lang="less" scoped>
 .marquee-wrapper {
-  opacity: 0.2;
+  opacity: 0;
   z-index: -2;
   width: 100%;
   overflow: hidden;
@@ -30,6 +30,9 @@
   user-select: none;
 
   perspective: 1000px;
+  transform: translateY(72px) scale(1.16);
+  transform-origin: center bottom;
+  animation: marqueeWrapperIn 1.1s cubic-bezier(0.23, 1, 0.32, 1) 0.95s forwards;
 
   -webkit-mask-image: linear-gradient(
     to right,
@@ -97,6 +100,17 @@
   }
   100% {
     transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes marqueeWrapperIn {
+  from {
+    opacity: 0;
+    transform: translateY(72px) scale(1.16);
+  }
+  to {
+    opacity: 0.2;
+    transform: translateY(0) scale(1);
   }
 }
 </style>

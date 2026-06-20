@@ -14,7 +14,12 @@
 
     <section class="vlog-section">
       <div ref="mapContainerRef" class="map-container">
-        <div class="map-hud-label">// TRAVEL_MAP</div>
+        <div class="map-hud-label">
+          <span>TRAVEL_MAP</span>
+          <span v-if="locale !== 'en'" class="map-hud-label__cn">
+            旅行地图
+          </span>
+        </div>
         <div id="travel-map" ref="mapRef" class="travel-map" />
 
         <div class="corner corner-tl" />
@@ -24,16 +29,31 @@
         <div class="map-scanlines" />
       </div>
 
-      <div class="vlog-grid">
-        <VlogCard
-          v-for="vlog in vlogs"
-          :id="`vlog-${vlog.id}`"
-          :key="vlog.id"
-          :vlog="vlog"
-          :active="activeVlogId === vlog.id"
-          :interactive="true"
-          @select="openVlog(vlog)"
-        />
+      <div class="vlog-groups">
+        <section
+          v-for="(group, index) in vlogGroups"
+          :key="group.id"
+          class="vlog-group"
+        >
+          <HomeSectionBlock
+            :section-number="String(index + 1).padStart(2, '0')"
+            :rail-label="group.railLabel"
+            :title="group.title"
+            :title-en="group.titleEn"
+          >
+            <div class="vlog-grid">
+              <VlogCard
+                v-for="vlog in group.items"
+                :id="`vlog-${vlog.id}`"
+                :key="vlog.id"
+                :vlog="vlog"
+                :active="activeVlogId === vlog.id"
+                :interactive="true"
+                @select="openVlog(vlog)"
+              />
+            </div>
+          </HomeSectionBlock>
+        </section>
       </div>
     </section>
     <PageFooter cn-title="旅程" en-title="FLÂNERIE" />
@@ -42,13 +62,34 @@
 
 <script setup lang="ts">
 /* eslint-disable simple-import-sort/imports */
-import { computed, ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import {
+  computed,
+  createVNode,
+  nextTick,
+  onMounted,
+  onUnmounted,
+  ref,
+  render,
+  watch,
+} from 'vue'
+import type { Component } from 'vue'
+import { Minus, Plus } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
+import HomeSectionBlock from '@/components/HomeSectionBlock/index.vue'
 import PageHeader from '@/components/PageHeader/index.vue'
 import VlogCard from '@/components/VlogCard/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
 import { visualState } from '@/stores'
+
+type VlogCategory = 'visited' | 'resident' | 'activity'
+
+interface VlogGroup {
+  id: VlogCategory
+  title: string
+  titleEn?: string
+  railLabel: string
+}
 
 interface VlogLocation {
   id: string
@@ -59,6 +100,7 @@ interface VlogLocation {
 
 interface VlogItem {
   id: string
+  category?: VlogCategory
   title: string
   mapLabel: string
   date: string
@@ -75,6 +117,17 @@ const visualStateStore = visualState()
 
 const vlogs = computed<VlogItem[]>(() => {
   return tm('flanerie.dynamic.vlogs') as VlogItem[]
+})
+
+const vlogGroups = computed(() => {
+  const groups = tm('flanerie.dynamic.groups') as VlogGroup[]
+
+  return groups.map((group) => ({
+    ...group,
+    items: vlogs.value.filter(
+      (vlog) => (vlog.category || 'visited') === group.id
+    ),
+  }))
 })
 
 const openVlog = (vlog: VlogItem) => {
@@ -94,26 +147,42 @@ interface MapPlaceGroup extends VlogLocation {
   }>
 }
 
+const VISITED_REGION_GEOJSON_URLS: Record<string, string> = {
+  beijing: 'https://geo.datav.aliyun.com/areas_v3/bound/110000.json',
+  hunan: 'https://geo.datav.aliyun.com/areas_v3/bound/430000.json',
+  anhui: 'https://geo.datav.aliyun.com/areas_v3/bound/340000.json',
+  chongqing: 'https://geo.datav.aliyun.com/areas_v3/bound/500000.json',
+  shanghai: 'https://geo.datav.aliyun.com/areas_v3/bound/310000.json',
+  hubei: 'https://geo.datav.aliyun.com/areas_v3/bound/420000.json',
+  guangdong: 'https://geo.datav.aliyun.com/areas_v3/bound/440000.json',
+  jiangxi: 'https://geo.datav.aliyun.com/areas_v3/bound/360000.json',
+  jiangsu: 'https://geo.datav.aliyun.com/areas_v3/bound/320000.json',
+  fujian: 'https://geo.datav.aliyun.com/areas_v3/bound/350000.json',
+  singapore: 'https://www.geoboundaries.org/api/current/gbOpen/SGP/ADM0',
+}
+
 const mapPlaces = computed<MapPlaceGroup[]>(() => {
   const places = new Map<string, MapPlaceGroup>()
 
-  vlogs.value.forEach((vlog) => {
-    const currentPlace = places.get(vlog.location.id)
-    const target = {
-      label: vlog.mapLabel || vlog.title,
-      vlogId: vlog.id,
-    }
+  vlogs.value
+    .filter((vlog) => vlog.category !== 'activity')
+    .forEach((vlog) => {
+      const currentPlace = places.get(vlog.location.id)
+      const target = {
+        label: vlog.mapLabel || vlog.title,
+        vlogId: vlog.id,
+      }
 
-    if (currentPlace) {
-      currentPlace.targets.push(target)
-      return
-    }
+      if (currentPlace) {
+        currentPlace.targets.push(target)
+        return
+      }
 
-    places.set(vlog.location.id, {
-      ...vlog.location,
-      targets: [target],
+      places.set(vlog.location.id, {
+        ...vlog.location,
+        targets: [target],
+      })
     })
-  })
 
   return Array.from(places.values())
 })
@@ -162,6 +231,75 @@ const getMapTileUrl = () =>
     ? 'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png'
     : 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.jpg'
 
+const loadGeoJsonBoundary = async (url: string) => {
+  const response = await fetch(url)
+  if (!response.ok) return null
+
+  const data = await response.json()
+  if (data?.type === 'FeatureCollection' || data?.type === 'Feature') {
+    return data
+  }
+  if (!data?.gjDownloadURL) return null
+
+  const geoJsonResponse = await fetch(data.gjDownloadURL)
+  if (!geoJsonResponse.ok) return null
+
+  return geoJsonResponse.json()
+}
+
+const addVisitedRegionHighlights = async (L: any) => {
+  const visitedRegionIds = new Set(mapPlaces.value.map((place) => place.id))
+  const paneName = 'visited-region-pane'
+
+  mapInstance.createPane(paneName)
+  const pane = mapInstance.getPane(paneName)
+  if (pane) {
+    pane.style.zIndex = '350'
+    pane.style.pointerEvents = 'none'
+  }
+
+  await Promise.all(
+    Array.from(visitedRegionIds).map(async (regionId) => {
+      const geoJsonUrl = VISITED_REGION_GEOJSON_URLS[regionId]
+      if (!geoJsonUrl) return
+
+      try {
+        const geoJson = await loadGeoJsonBoundary(geoJsonUrl)
+        if (!geoJson) return
+
+        L.geoJSON(geoJson, {
+          pane: paneName,
+          interactive: false,
+          className: 'visited-region-highlight',
+          style: {
+            color: '#e23456',
+            weight: 1.4,
+            opacity: 0.88,
+            fillColor: '#e23456',
+            fillOpacity: visualStateStore.theme === 'light' ? 0.1 : 0.18,
+          },
+        }).addTo(mapInstance)
+      } catch {
+        // Region highlights are decorative; keep the map usable if a boundary API is unavailable.
+      }
+    })
+  )
+}
+
+const renderZoomIcon = (selector: string, Icon: Component) => {
+  const button = mapContainerRef.value?.querySelector<HTMLElement>(selector)
+  if (!button) return
+
+  button.textContent = ''
+  button.classList.add('map-zoom-button')
+  render(createVNode(Icon), button)
+}
+
+const renderZoomControlIcons = () => {
+  renderZoomIcon('.leaflet-control-zoom-in', Plus)
+  renderZoomIcon('.leaflet-control-zoom-out', Minus)
+}
+
 const initMap = async () => {
   if (!mapRef.value) return
 
@@ -170,7 +308,7 @@ const initMap = async () => {
 
   mapInstance = L.map(mapRef.value, {
     center: [25, 105],
-    zoom: 3,
+    zoom: 4,
     minZoom: 2,
     maxZoom: 8,
     zoomControl: false,
@@ -183,6 +321,9 @@ const initMap = async () => {
   )
 
   L.control.zoom({ position: 'bottomright' }).addTo(mapInstance)
+  renderZoomControlIcons()
+
+  await addVisitedRegionHighlights(L)
 
   mapPlaces.value.forEach((place) => {
     const icon = L.divIcon({
@@ -325,6 +466,16 @@ onUnmounted(() => {
   contain-intrinsic-size: 760px;
 }
 
+.vlog-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 54px;
+}
+
+.vlog-group {
+  min-width: 0;
+}
+
 .map-container {
   position: relative;
   width: 100%;
@@ -338,17 +489,34 @@ onUnmounted(() => {
     position: absolute;
     top: 20px;
     left: 20px;
+    display: flex;
+    flex-direction: column;
+    padding-left: 10px;
+    border-left: 10px solid #e23456;
+    gap: 3px;
     font-family: 'cn-custom', monospace;
     font-size: 0.55rem;
     letter-spacing: 3px;
     color: @red;
     z-index: 500;
     opacity: 0.8;
+
+    &__cn {
+      font-family: 'source-han-sans-simplified-c', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+    }
   }
 
   .travel-map {
     width: 100%;
     height: 100%;
+  }
+
+  :deep(.visited-region-highlight) {
+    filter: drop-shadow(0 0 7px rgba(226, 52, 86, 0.48));
+    stroke-linejoin: round;
   }
 
   .map-scanlines {
@@ -703,7 +871,7 @@ onUnmounted(() => {
   }
 
   .map-container {
-    height: 380px;
+    height: 570px;
   }
 
   .vlog-grid :deep(.shared-vlog-card) {
@@ -719,14 +887,14 @@ onUnmounted(() => {
     }
 
     .vlog-title {
-      font-size: clamp(0.72rem, 3.1vw, 0.98rem);
+      font-size: clamp(0.98rem, 4.2vw, 1.24rem);
       white-space: normal;
     }
   }
 
   .flanerie-page.is-en {
     .vlog-grid :deep(.shared-vlog-card .vlog-title) {
-      font-size: clamp(0.62rem, 2.65vw, 0.82rem);
+      font-size: clamp(0.86rem, 3.7vw, 1.06rem);
     }
   }
 }
@@ -759,13 +927,23 @@ onUnmounted(() => {
   filter: brightness(0.7) saturate(0.5) hue-rotate(180deg) invert(0.05);
 }
 .leaflet-control-zoom a {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
   background: rgba(13, 9, 18, 0.9) !important;
   color: #e23456 !important;
   border-color: rgba(226, 52, 86, 0.3) !important;
   font-family: 'anton', monospace !important;
+  line-height: 1 !important;
 
   &:hover {
     background: rgba(226, 52, 86, 0.15) !important;
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+    display: block;
   }
 }
 
@@ -864,6 +1042,31 @@ onUnmounted(() => {
   &:hover {
     background: rgba(226, 52, 86, 0.18);
     color: #fff;
+  }
+}
+
+@media (min-width: 769px) {
+  .map-place-popup-wrap {
+    .leaflet-popup-content-wrapper,
+    .leaflet-popup-content {
+      width: max-content !important;
+      max-width: min(560px, 72vw);
+    }
+  }
+
+  .map-place-menu {
+    min-width: max-content;
+    max-width: min(560px, 72vw);
+  }
+
+  .map-place-list {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .map-place-option {
+    width: auto;
+    white-space: nowrap;
   }
 }
 </style>

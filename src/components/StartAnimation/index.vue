@@ -3,7 +3,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import Logo from '@/components/Logo/index.vue'
 import LogoRotating3D from '@/components/Logo_rotating3D/index.vue'
-import { showPageContent } from '@/utils/fontLoader'
+import { loadCriticalFont, showPageContent } from '@/utils/fontLoader'
 
 const emit = defineEmits(['finished'])
 
@@ -14,6 +14,9 @@ const logo2DHide = ref(false)
 const isBarsExiting = ref(false)
 const logoRotating3DRef = ref()
 const timers: number[] = []
+let isUnmounted = false
+
+const INTRO_MIN_DURATION = 1600
 
 const schedule = (handler: () => void, timeout: number) => {
   const timer = window.setTimeout(() => {
@@ -23,6 +26,11 @@ const schedule = (handler: () => void, timeout: number) => {
   }, timeout)
   timers.push(timer)
 }
+
+const waitWithSchedule = (timeout: number) =>
+  new Promise<void>((resolve) => {
+    schedule(resolve, timeout)
+  })
 
 const bars = computed(() => {
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
@@ -59,19 +67,16 @@ const rotateFinished = () => {
 }
 
 onMounted(() => {
-  if (!document.fonts) {
-    logoRotating3DRef.value?.stop()
-    return
-  }
-
-  document.fonts.ready.then(() => {
-    schedule(() => {
+  Promise.all([loadCriticalFont(), waitWithSchedule(INTRO_MIN_DURATION)]).then(
+    () => {
+      if (isUnmounted) return
       logoRotating3DRef.value?.stop()
-    }, 1600)
-  })
+    }
+  )
 })
 
 onUnmounted(() => {
+  isUnmounted = true
   timers.forEach((timer) => window.clearTimeout(timer))
   timers.length = 0
 })

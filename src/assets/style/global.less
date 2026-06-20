@@ -3,10 +3,18 @@
 @import url('https://fontsapi.zeoseven.com/18/main/result.css');
 
 html {
-  scrollbar-gutter: stable;
+  scrollbar-gutter: auto;
   height: 100%;
   min-height: 100%;
   background-color: var(--bg-color);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+  }
 }
 
 body {
@@ -19,24 +27,13 @@ body {
   color: var(--text-color);
   padding: 0 40px;
   padding-left: 60px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 
   &::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: var(--bg-color);
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: @primary-color;
-    border-radius: 0;
-    margin: 2px;
-    cursor: move;
-  }
-
-  &::-webkit-scrollbar-thumb:hover {
-    background: @primary-color;
+    width: 0;
+    height: 0;
+    display: none;
   }
 
   #app {

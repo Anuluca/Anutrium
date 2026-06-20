@@ -269,24 +269,25 @@ const selectVlog = () => {
   position: relative;
   max-width: 110%;
   margin: 0 0 9px;
-  overflow: hidden;
   color: #fff;
   font-family: 'cn-custom', 'source-han-sans-simplified-c', sans-serif;
-  font-size: 1.8rem;
+  font-size: 1.3rem;
+  -webkit-text-stroke: 1px #000000;
   letter-spacing: 0;
-  line-height: 1.35;
+  line-height: 1.12;
+  text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
-  text-shadow: 3px 3px 0 rgba(226, 52, 86, 0.42),
-    -2px 0 0 rgba(54, 209, 255, 0.12), 0 0 18px rgba(0, 0, 0, 0.45);
   transition: text-shadow 0.35s ease, letter-spacing 0.35s ease;
+  text-shadow: 0 0 20px #000;
 }
 
 .vlog-date {
-  margin-top: -25px;
+  margin-top: -16px;
   margin-bottom: 25px;
   color: rgba(226, 52, 86, 0.9);
   font-family: 'cn-custom', monospace;
+  text-shadow: 0 0 10px #000;
   font-size: 0.66rem;
   font-weight: 800;
   letter-spacing: 1.2px;

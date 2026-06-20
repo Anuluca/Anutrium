@@ -8,6 +8,10 @@
     "preview": "vite preview",
     "build-only": "vite-ssg build",
     "type-check": "vue-tsc --noEmit",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:install": "playwright install",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
     "format": "prettier --write src/"
   },
@@ -34,6 +38,7 @@
     "vue-router": "^4.1.6"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.0",
     "@rushstack/eslint-patch": "^1.2.0",
     "@types/jquery": "^3.5.16",
     "@types/js-yaml": "^4.0.5",

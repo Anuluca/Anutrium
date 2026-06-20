@@ -10,8 +10,8 @@
       @click="scrollToTop"
     >
       <span class="button-progress" aria-hidden="true" />
-      <span class="button-arrow" aria-hidden="true" />
-      <span class="button-label">TOP</span>
+      <span class="button-arrow no-rem" aria-hidden="true" />
+      <span class="button-label no-rem">TOP</span>
     </button>
   </Transition>
 </template>
@@ -97,7 +97,7 @@ onUnmounted(() => {
       0 0 18px rgba(226, 52, 86, 0.24);
     transform: translateY(-2px);
 
-    .button-arrow {
+    .button-arrow.no-rem {
       border-color: #e23456;
       transform: translate(-50%, -2px) rotate(45deg);
     }
@@ -132,7 +132,7 @@ onUnmounted(() => {
   }
 }
 
-.button-arrow {
+.button-arrow.no-rem {
   position: absolute;
   top: 14px;
   left: 50%;
@@ -145,7 +145,7 @@ onUnmounted(() => {
   transition: border-color 0.25s ease, transform 0.25s ease;
 }
 
-.button-label {
+.button-label.no-rem {
   position: absolute;
   right: 0;
   bottom: 10px;
@@ -176,18 +176,23 @@ onUnmounted(() => {
   .back-to-top-button.no-rem {
     right: 16px;
     bottom: 20px;
-    width: 46px;
-    height: 46px;
+    width: 54px;
+    height: 54px;
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.32);
   }
 
-  .button-arrow {
+  .button-arrow.no-rem {
     top: 12px;
+    width: 9px;
+    height: 9px;
+    border-top-width: 2.5px;
+    border-left-width: 2.5px;
   }
 
-  .button-label {
-    bottom: 9px;
-    font-size: 9px;
+  .button-label.no-rem {
+    bottom: 10px;
+    font-size: 12px;
+    letter-spacing: 0.06em;
   }
 }
 </style>

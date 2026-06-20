@@ -30,3 +30,10 @@ npm run build
 ```sh
 npm run lint
 ```
+
+### Run E2E Tests with [Playwright](https://playwright.dev/)
+
+```sh
+yarn test:e2e:install chromium
+yarn test:e2e
+```

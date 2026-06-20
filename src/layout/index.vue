@@ -183,6 +183,12 @@
       </router-view>
     </div>
     <BackToTop />
+    <span
+      v-if="isPageScrollable"
+      class="page-scroll-progress no-rem"
+      :style="{ '--scroll-progress': `${scrollProgress}%` }"
+      aria-hidden="true"
+    />
     <button
       class="fullscreen"
       type="button"
@@ -193,7 +199,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { Moon, Sunny } from '@element-plus/icons-vue'
@@ -233,6 +239,8 @@ const isMobile = computed(() => visualStateStore.deviceType !== 'desktop')
 const isMobileMenuOpen = ref(false)
 
 const isFullscreen = ref(false)
+const scrollProgress = ref(0)
+const isPageScrollable = ref(false)
 let scrollRafId: number | null = null
 let logoTimer: number | null = null
 let layoutTimer: number | null = null
@@ -273,6 +281,15 @@ const handleScroll = () => {
   if (scrollRafId !== null) return
 
   scrollRafId = window.requestAnimationFrame(() => {
+    const maxScroll = Math.max(
+      0,
+      document.documentElement.scrollHeight - window.innerHeight
+    )
+    scrollProgress.value = maxScroll
+      ? Math.min(100, (window.scrollY / maxScroll) * 100)
+      : 0
+    isPageScrollable.value = maxScroll > 1
+
     const nextValue =
       window.scrollY > 50 || document.documentElement.scrollTop > 50
     if (isScrolled.value !== nextValue) {
@@ -306,14 +323,24 @@ onMounted(() => {
   }, 100)
   handleScroll()
   document.addEventListener('scroll', handleScroll, { passive: true })
+  window.addEventListener('resize', handleScroll, { passive: true })
 })
 
 onUnmounted(() => {
   document.removeEventListener('scroll', handleScroll)
+  window.removeEventListener('resize', handleScroll)
   if (scrollRafId !== null) window.cancelAnimationFrame(scrollRafId)
   if (logoTimer !== null) window.clearTimeout(logoTimer)
   if (layoutTimer !== null) window.clearTimeout(layoutTimer)
 })
+
+watch(
+  () => route.fullPath,
+  async () => {
+    await nextTick()
+    handleScroll()
+  }
+)
 </script>
 
 <style lang="less" scoped>
@@ -330,8 +357,7 @@ onUnmounted(() => {
 
 .route-enter-from {
   opacity: 0;
-  transform: scale(0.8);
-  filter: blur(10px);
+  transform: scale(0.92);
 }
 
 .route-leave-to {

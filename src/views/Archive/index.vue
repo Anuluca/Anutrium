@@ -57,80 +57,92 @@
     </section>
 
     <section class="works-section">
-      <h2 class="section-title" data-section="01">
-        {{ $t('archive.title01') }}
-      </h2>
-      <div class="works-grid">
-        <WorkCard
-          v-for="(work, index) in mainWorks"
-          :key="work.id"
-          :work="work"
-          :index="index"
-          @select="openDetail(work)"
-        />
-      </div>
+      <HomeSectionBlock
+        section-number="01"
+        rail-label="MAIN"
+        :title="$t('archive.title01')"
+        title-en="MAIN PROJECTS"
+      >
+        <div class="works-grid">
+          <WorkCard
+            v-for="(work, index) in mainWorks"
+            :key="work.id"
+            :work="work"
+            :index="index"
+            @select="openDetail(work)"
+          />
+        </div>
+      </HomeSectionBlock>
     </section>
 
     <section class="works-section personal-works-section">
-      <h2 class="section-title" data-section="02">
-        {{ $t('archive.title02') }}
-      </h2>
-      <div class="works-grid">
-        <WorkCard
-          v-for="(work, index) in personalWorks"
-          :key="work.id"
-          :work="work"
-          :index="index"
-          @select="openDetail(work)"
-        />
-      </div>
+      <HomeSectionBlock
+        section-number="02"
+        rail-label="PERSONAL"
+        :title="$t('archive.title02')"
+        title-en="PERSONAL PROJECTS"
+      >
+        <div class="works-grid">
+          <WorkCard
+            v-for="(work, index) in personalWorks"
+            :key="work.id"
+            :work="work"
+            :index="index"
+            @select="openDetail(work)"
+          />
+        </div>
+      </HomeSectionBlock>
     </section>
 
     <section class="misc-section">
-      <h2 class="section-title" data-section="03">
-        {{ $t('archive.title03') }}
-      </h2>
-      <div class="misc-grid">
-        <div
-          v-for="(item, index) in miscWorks"
-          :key="item.id"
-          class="misc-card"
-          :class="{
-            'has-detail': hasMiscDetail(item),
-            'is-error': flashingMiscId === item.id,
-          }"
-          role="button"
-          tabindex="0"
-          @click="openMiscDetail(item)"
-          @keydown.enter.prevent="openMiscDetail(item)"
-          @keydown.space.prevent="openMiscDetail(item)"
-        >
-          <div class="misc-card-content">
-            <div class="misc-card-head">
-              <div class="misc-card-index">
-                {{ String(index + 1).padStart(2, '0') }}
+      <HomeSectionBlock
+        section-number="03"
+        rail-label="OTHER"
+        :title="$t('archive.title03')"
+        title-en="OTHER PROJECTS"
+      >
+        <div class="misc-grid">
+          <div
+            v-for="(item, index) in miscWorks"
+            :key="item.id"
+            class="misc-card"
+            :class="{
+              'has-detail': hasMiscDetail(item),
+              'is-error': flashingMiscId === item.id,
+            }"
+            role="button"
+            tabindex="0"
+            @click="openMiscDetail(item)"
+            @keydown.enter.prevent="openMiscDetail(item)"
+            @keydown.space.prevent="openMiscDetail(item)"
+          >
+            <div class="misc-card-content">
+              <div class="misc-card-head">
+                <div class="misc-card-index">
+                  {{ String(index + 1).padStart(2, '0') }}
+                </div>
+                <div v-if="item.logo" class="misc-card-logo" aria-hidden="true">
+                  <img
+                    :src="item.logo"
+                    :alt="item.company"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </div>
               </div>
-              <div v-if="item.logo" class="misc-card-logo" aria-hidden="true">
-                <img
-                  :src="item.logo"
-                  :alt="item.company"
-                  loading="lazy"
-                  decoding="async"
-                />
+              <h4 class="misc-card-title">{{ item.title }}</h4>
+              <div class="misc-card-footer">
+                <div class="misc-card-company">{{ item.company }}</div>
+                <div class="misc-card-id">{{ item.id }}</div>
               </div>
             </div>
-            <h4 class="misc-card-title">{{ item.title }}</h4>
-            <div class="misc-card-footer">
-              <div class="misc-card-company">{{ item.company }}</div>
-              <div class="misc-card-id">{{ item.id }}</div>
-            </div>
+            <div class="corner corner-tl" />
+            <div class="corner corner-tr" />
+            <div class="corner corner-bl" />
+            <div class="corner corner-br" />
           </div>
-          <div class="corner corner-tl" />
-          <div class="corner corner-tr" />
-          <div class="corner corner-bl" />
-          <div class="corner corner-br" />
         </div>
-      </div>
+      </HomeSectionBlock>
     </section>
     <PageFooter cn-title="作品集" en-title="ARCHIVE" />
 
@@ -147,6 +159,7 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
+import HomeSectionBlock from '@/components/HomeSectionBlock/index.vue'
 import WorkCard from '@/components/WorkCard/index.vue'
 import WorkDetailModal from '@/components/WorkDetailModal/index.vue'
 import PageHeader from '@/components/PageHeader/index.vue'
@@ -535,35 +548,6 @@ watch(
   50% {
     opacity: 0.35;
     box-shadow: 0 0 3px rgba(90, 212, 128, 0.4);
-  }
-}
-
-.section-title {
-  font-family: 'anton', 'source-han-sans-simplified-c';
-  font-size: 1.2rem;
-  font-weight: 900;
-  color: @red;
-  border-bottom: 1px solid var(--opacity-color2);
-  padding-bottom: 20px;
-  margin-bottom: 20px;
-
-  .section-cn {
-    font-family: 'source-han-sans-simplified-c';
-    font-size: 0.9rem;
-    opacity: 0.6;
-    margin-left: 10px;
-  }
-
-  &::before {
-    content: attr(data-section);
-    display: inline-block;
-    background: @red;
-    color: #000;
-    padding: 2px 12px;
-    margin-right: 8px;
-    font-size: 1.1rem;
-    line-height: 1.2;
-    clip-path: polygon(0% 50%, 15% 0%, 85% 0%, 100% 50%, 85% 100%, 15% 100%);
   }
 }
 
