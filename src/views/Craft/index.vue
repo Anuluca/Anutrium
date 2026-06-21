@@ -8,7 +8,10 @@
       primary-color="#3B69F4"
       mobile-tall
     />
-    <div class="craft-filter" :class="`craft-filter--${activeCategory}`">
+    <div
+      class="craft-filter craft-enter craft-enter--filter"
+      :class="`craft-filter--${activeCategory}`"
+    >
       <div class="craft-tabs" role="tablist" aria-label="Craft categories">
         <button
           v-for="tab in categoryTabs"
@@ -50,14 +53,16 @@
       </div>
     </div>
 
-    <div class="tool-list">
+    <div class="tool-list craft-enter craft-enter--list">
       <div class="tl-grid">
         <ToolCard
           v-for="(tool, i) in filteredTools"
-          :key="tool.id"
+          :key="`${activeCategory}-${activeTag || 'all'}-${tool.id}`"
+          class="craft-tool-card"
           :tool="tool"
           :index="i"
           :total="filteredTools.length"
+          :style="{ '--delay': `${0.24 + i * 0.06}s` }"
           @select="openTool(tool)"
           @tag-select="activeTag = $event"
         />
@@ -67,7 +72,9 @@
       </div>
     </div>
 
-    <PageFooter cn-title="工具" en-title="CRAFT" />
+    <div class="craft-page-footer craft-enter craft-enter--footer">
+      <PageFooter cn-title="工具" en-title="CRAFT" />
+    </div>
   </div>
 </template>
 
@@ -217,10 +224,40 @@ watch(
   align-items: end;
   gap: 18px;
   margin: 18px 0 28px;
+  margin-bottom: 15px;
 
   &--general {
     --filter-accent: @red;
     --filter-accent-dim: @red-dim;
+  }
+}
+
+.craft-enter {
+  opacity: 0;
+  will-change: opacity, transform;
+  animation: craftSectionIn 0.82s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.craft-enter--filter {
+  animation-delay: 0.06s;
+}
+
+.craft-enter--list {
+  animation-delay: 0.16s;
+}
+
+.craft-enter--footer {
+  animation-delay: 0.34s;
+}
+
+@keyframes craftSectionIn {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -362,13 +399,13 @@ watch(
 .tool-list {
   width: 100%;
   position: relative;
-  margin-top: 20px;
 }
 
 .tl-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 24px 20px;
+  margin-top: 20px;
   position: relative;
 }
 

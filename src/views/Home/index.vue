@@ -1080,6 +1080,8 @@ const openTool = (tool: HomeTool) => {
       rgba(0, 0, 0, 0.1) 100%
     );
     opacity: 0.9;
+    transform-origin: center center;
+    animation: cardsProjectionIn 1.24s cubic-bezier(0.23, 1, 0.32, 1) 0.42s both;
     mask-image: linear-gradient(
       to bottom,
       transparent 0%,
@@ -1104,6 +1106,9 @@ const openTool = (tool: HomeTool) => {
   overflow: hidden;
   position: relative;
   touch-action: pan-y;
+  transform-origin: center center;
+  will-change: transform;
+  animation: cardsViewportIn 1.24s cubic-bezier(0.23, 1, 0.32, 1) 0.42s both;
   mask-image: linear-gradient(
     to bottom,
     transparent 0%,
@@ -1366,6 +1371,9 @@ const openTool = (tool: HomeTool) => {
   z-index: 5;
   width: 4px;
   height: auto;
+  transform-origin: center center;
+  will-change: transform;
+  animation: cardsViewportIn 1.24s cubic-bezier(0.23, 1, 0.32, 1) 0.42s both;
   mask-image: linear-gradient(
     to bottom,
     transparent 0%,
@@ -2160,6 +2168,22 @@ const openTool = (tool: HomeTool) => {
   to {
     opacity: 1;
     filter: blur(0) saturate(1);
+  }
+}
+@keyframes cardsViewportIn {
+  from {
+    transform: scale(0.33);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+@keyframes cardsProjectionIn {
+  from {
+    transform: translate3d(12px, 35px, -1px) scale(0.33);
+  }
+  to {
+    transform: translate3d(12px, 35px, -1px) scale(1);
   }
 }
 @keyframes motoFadeIn2 {

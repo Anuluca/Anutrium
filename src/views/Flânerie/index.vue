@@ -13,7 +13,11 @@
     />
 
     <section class="vlog-section">
-      <div ref="mapContainerRef" class="map-container">
+      <div
+        ref="mapContainerRef"
+        class="map-container"
+        @animationend="handleMapRevealEnd"
+      >
         <div class="map-hud-label">
           <span>TRAVEL_MAP</span>
           <span v-if="locale !== 'en'" class="map-hud-label__cn">
@@ -63,6 +67,7 @@
 <script setup lang="ts">
 /* eslint-disable simple-import-sort/imports */
 import {
+  type Component,
   computed,
   createVNode,
   nextTick,
@@ -72,7 +77,6 @@ import {
   render,
   watch,
 } from 'vue'
-import type { Component } from 'vue'
 import { Minus, Plus } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
@@ -139,6 +143,7 @@ const mapContainerRef = ref<HTMLElement | null>(null)
 const activeVlogId = ref<string | null>(null)
 let mapInstance: any = null
 let activeVlogTimer: number | undefined
+let mapRevealRefreshTimer: number | undefined
 
 interface MapPlaceGroup extends VlogLocation {
   targets: Array<{
@@ -300,6 +305,33 @@ const renderZoomControlIcons = () => {
   renderZoomIcon('.leaflet-control-zoom-out', Minus)
 }
 
+const refreshMapSize = () => {
+  if (!mapInstance) return
+
+  window.requestAnimationFrame(() => {
+    mapInstance?.invalidateSize({ animate: false, pan: false })
+  })
+}
+
+const scheduleMapSizeRefresh = (delay = 0) => {
+  window.clearTimeout(mapRevealRefreshTimer)
+  mapRevealRefreshTimer = window.setTimeout(() => {
+    refreshMapSize()
+    mapRevealRefreshTimer = undefined
+  }, delay)
+}
+
+const handleMapRevealEnd = (event: AnimationEvent) => {
+  if (
+    event.target !== mapContainerRef.value ||
+    !event.animationName.includes('travelMapClipIn')
+  ) {
+    return
+  }
+
+  refreshMapSize()
+}
+
 const initMap = async () => {
   if (!mapRef.value) return
 
@@ -322,6 +354,8 @@ const initMap = async () => {
 
   L.control.zoom({ position: 'bottomright' }).addTo(mapInstance)
   renderZoomControlIcons()
+  refreshMapSize()
+  scheduleMapSizeRefresh(900)
 
   await addVisitedRegionHighlights(L)
 
@@ -433,6 +467,7 @@ watch(
 
 onUnmounted(() => {
   clearActiveVlogTimer()
+  window.clearTimeout(mapRevealRefreshTimer)
 
   if (mapInstance) {
     mapInstance.remove()
@@ -477,13 +512,18 @@ onUnmounted(() => {
 }
 
 .map-container {
+  --travel-map-height: 400px;
+
   position: relative;
   width: 100%;
-  height: 400px;
+  height: var(--travel-map-height);
+  max-height: var(--travel-map-height);
   border: 1px solid @border;
   overflow: hidden;
   margin-bottom: 40px;
   background: #0a050f;
+  isolation: isolate;
+  animation: travelMapClipIn 0.64s cubic-bezier(0.18, 0.84, 0.28, 1) 0.18s both;
 
   .map-hud-label {
     position: absolute;
@@ -511,7 +551,7 @@ onUnmounted(() => {
 
   .travel-map {
     width: 100%;
-    height: 100%;
+    height: var(--travel-map-height);
   }
 
   :deep(.visited-region-highlight) {
@@ -566,6 +606,26 @@ onUnmounted(() => {
       border-left: 0;
       border-top: 0;
     }
+  }
+}
+
+@keyframes travelMapClipIn {
+  0% {
+    clip-path: inset(0 0 100% 0);
+    opacity: 0;
+  }
+
+  100% {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-container {
+    animation: none;
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
   }
 }
 
@@ -871,7 +931,7 @@ onUnmounted(() => {
   }
 
   .map-container {
-    height: 570px;
+    --travel-map-height: 570px;
   }
 
   .vlog-grid :deep(.shared-vlog-card) {

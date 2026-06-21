@@ -694,7 +694,6 @@ const closeImageViewer = () => {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  backdrop-filter: blur(4px);
   transition: all 0.2s;
 
   &--prev {

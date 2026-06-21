@@ -20,6 +20,8 @@ const visualStateStore = visualState()
 const isMobile = computed(() => visualStateStore.deviceType !== 'desktop')
 
 const HIDDEN_CURSOR_CLASSNAMES = ['no-cursor', 'hide-cursor', 'cursor-none']
+const INTERACTIVE_CURSOR_SELECTOR =
+  'a, button, [role="button"], [data-magnetic], .is-clickable'
 
 const cursorElement = ref(null)
 const mouse = { x: 0, y: 0 }
@@ -79,7 +81,7 @@ const onMouseOver = (e) => {
     return
   }
 
-  if (e.target.closest('a, button, [data-magnetic]')) {
+  if (e.target.closest(INTERACTIVE_CURSOR_SELECTOR)) {
     isHovering.value = true
   }
 }
@@ -87,7 +89,7 @@ const onMouseOver = (e) => {
 const onMouseOut = (e) => {
   if (!shouldAnimateCursor.value) return
 
-  if (e.target.closest('a, button, [data-magnetic]')) {
+  if (e.target.closest(INTERACTIVE_CURSOR_SELECTOR)) {
     isHovering.value = false
   }
 }

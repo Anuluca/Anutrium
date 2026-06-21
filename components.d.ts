@@ -36,6 +36,7 @@ declare module '@vue/runtime-core' {
     StartAnimation: typeof import('./src/components/StartAnimation/index.vue')['default']
     ToolCard: typeof import('./src/components/ToolCard/index.vue')['default']
     ToolHeaderActions: typeof import('./src/components/ToolHeaderActions/index.vue')['default']
+    TypedText: typeof import('./src/components/TypedText/index.vue')['default']
     VlogCard: typeof import('./src/components/VlogCard/index.vue')['default']
     WorkCard: typeof import('./src/components/WorkCard/index.vue')['default']
     WorkDetailModal: typeof import('./src/components/WorkDetailModal/index.vue')['default']

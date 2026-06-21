@@ -73,7 +73,7 @@ onUnmounted(() => {
 
 .back-to-top-button.no-rem {
   position: fixed;
-  right: 38px;
+  right: 1.35rem;
   bottom: 42px;
   z-index: 140;
   width: 52px;
@@ -84,7 +84,6 @@ onUnmounted(() => {
   color: rgba(255, 255, 255, 0.76);
   background: #000;
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.28);
-  backdrop-filter: blur(7px);
   cursor: pointer;
   transition: color 0.25s ease, border-color 0.25s ease, background 0.25s ease,
     box-shadow 0.25s ease, transform 0.25s ease;

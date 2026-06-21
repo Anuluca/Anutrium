@@ -12,6 +12,7 @@
     :style="{
       '--modal-width': typeof width === 'number' ? `${width}px` : width,
     }"
+    @close="handleClose"
     @closed="handleClosed"
   >
     <DiamondCloseBtn :title="closeTitle" @click="handleClose" />
@@ -69,6 +70,8 @@ const dialogVisible = ref(false)
 let lockedScrollX = 0
 let lockedScrollY = 0
 let isScrollLocked = false
+let restoreScrollFrame: number | null = null
+let restoreScrollTimer: number | null = null
 
 const isInsideModal = (target: EventTarget | null) =>
   target instanceof Element &&
@@ -115,6 +118,25 @@ const restoreLockedScroll = () => {
   window.scrollTo(lockedScrollX, lockedScrollY)
 }
 
+const scheduleLockedScrollRestore = () => {
+  if (restoreScrollFrame !== null) {
+    window.cancelAnimationFrame(restoreScrollFrame)
+  }
+  if (restoreScrollTimer !== null) {
+    window.clearTimeout(restoreScrollTimer)
+  }
+
+  restoreScrollFrame = window.requestAnimationFrame(() => {
+    restoreScrollFrame = null
+    restoreLockedScroll()
+  })
+
+  restoreScrollTimer = window.setTimeout(() => {
+    restoreScrollTimer = null
+    restoreLockedScroll()
+  }, 80)
+}
+
 const lockBackgroundScroll = () => {
   if (isScrollLocked) return
 
@@ -131,12 +153,21 @@ const lockBackgroundScroll = () => {
   })
   document.addEventListener('keydown', preventBackgroundScrollKeys, true)
   window.addEventListener('scroll', restoreLockedScroll, { passive: true })
+  scheduleLockedScrollRestore()
 }
 
 const unlockBackgroundScroll = () => {
   if (!isScrollLocked) return
 
   isScrollLocked = false
+  if (restoreScrollFrame !== null) {
+    window.cancelAnimationFrame(restoreScrollFrame)
+    restoreScrollFrame = null
+  }
+  if (restoreScrollTimer !== null) {
+    window.clearTimeout(restoreScrollTimer)
+    restoreScrollTimer = null
+  }
   document.removeEventListener('wheel', preventBackgroundScroll, true)
   document.removeEventListener('touchmove', preventBackgroundScroll, true)
   document.removeEventListener('keydown', preventBackgroundScrollKeys, true)
@@ -299,7 +330,11 @@ onUnmounted(unlockBackgroundScroll)
   justify-content: center;
 }
 .el-overlay-dialog {
-  position: relative !important;
+  position: fixed !important;
+  inset: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .crt-effect-enter-active,

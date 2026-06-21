@@ -15,7 +15,7 @@ export const getPreferredLocale = (): SiteLocale => {
   )
   if (storedLocale) return storedLocale
 
-  return navigator.language.toLowerCase().startsWith('zh') ? 'zhCn' : 'en'
+  return 'zhCn'
 }
 
 export const persistLocale = (locale: SiteLocale) => {

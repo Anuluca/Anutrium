@@ -1,12 +1,12 @@
 <template>
-  <div class="scene-container">
+  <div class="scene-container" :class="{ 'is-transparent': transparent }">
     <div class="loading-text">{{ currentText }}</div>
     <div ref="container" class="canvas-container" />
   </div>
 </template>
 
 <script setup>
-import { defineEmits, onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
@@ -15,6 +15,20 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
 
 const emit = defineEmits(['finished'])
+const props = defineProps({
+  interactive: {
+    type: Boolean,
+    default: true,
+  },
+  lowPower: {
+    type: Boolean,
+    default: false,
+  },
+  transparent: {
+    type: Boolean,
+    default: false,
+  },
+})
 
 const container = ref(null)
 const currentText = ref('LOADING')
@@ -28,28 +42,39 @@ let animateFrame = null
 const ROTATION_SPEED = 0.6
 const STOP_DURATION = 700
 
-const initThree = () => {
-  scene = new THREE.Scene()
-  scene.background = new THREE.Color('#050505')
-  scene.fog = new THREE.FogExp2(0x050505, 0.02)
+const getSceneSize = () => {
+  const rect = container.value?.getBoundingClientRect()
 
-  camera = new THREE.PerspectiveCamera(
-    45,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    100
-  )
+  return {
+    width: Math.max(1, Math.round(rect?.width || window.innerWidth)),
+    height: Math.max(1, Math.round(rect?.height || window.innerHeight)),
+  }
+}
+
+const initThree = () => {
+  const { width, height } = getSceneSize()
+
+  scene = new THREE.Scene()
+  scene.background = props.transparent ? null : new THREE.Color('#050505')
+  if (!props.transparent) {
+    scene.fog = new THREE.FogExp2(0x050505, 0.02)
+  }
+
+  camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100)
   camera.position.set(0, 0, 9)
   camera.lookAt(0, 0, 0)
 
   renderer = new THREE.WebGLRenderer({
-    antialias: true,
-    powerPreference: 'high-performance',
+    alpha: props.transparent,
+    antialias: !props.lowPower,
+    powerPreference: props.lowPower ? 'low-power' : 'high-performance',
   })
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5))
-  renderer.setSize(window.innerWidth, window.innerHeight)
+  renderer.setPixelRatio(
+    props.lowPower ? 0.75 : Math.min(window.devicePixelRatio || 1, 1.5)
+  )
+  renderer.setSize(width, height)
 
-  renderer.shadowMap.enabled = true
+  renderer.shadowMap.enabled = !props.lowPower
   renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
   container.value.appendChild(renderer.domElement)
@@ -66,28 +91,32 @@ const initThree = () => {
   spotLight.position.set(5, 10, 5)
   spotLight.angle = Math.PI / 4
   spotLight.penumbra = 0.5
-  spotLight.castShadow = true
+  spotLight.castShadow = !props.lowPower
   spotLight.shadow.bias = -0.0001
   scene.add(spotLight)
 
-  const renderScene = new RenderPass(scene, camera)
-  const bloomPass = new UnrealBloomPass(
-    new THREE.Vector2(window.innerWidth, window.innerHeight),
-    1.5,
-    0.4,
-    0.85
-  )
-  bloomPass.threshold = 0.01
-  bloomPass.strength = 0.4
-  bloomPass.radius = 0.01
+  if (!props.lowPower) {
+    const renderScene = new RenderPass(scene, camera)
+    const bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(width, height),
+      1.5,
+      0.4,
+      0.85
+    )
+    bloomPass.threshold = 0.01
+    bloomPass.strength = 0.4
+    bloomPass.radius = 0.01
 
-  composer = new EffectComposer(renderer)
-  composer.addPass(renderScene)
-  composer.addPass(bloomPass)
+    composer = new EffectComposer(renderer)
+    composer.addPass(renderScene)
+    composer.addPass(bloomPass)
+  }
 
-  controls = new OrbitControls(camera, renderer.domElement)
-  controls.enableDamping = true
-  controls.dampingFactor = 0.05
+  if (props.interactive) {
+    controls = new OrbitControls(camera, renderer.domElement)
+    controls.enableDamping = true
+    controls.dampingFactor = 0.05
+  }
 
   const cageMaterial = new THREE.MeshStandardMaterial({
     color: 'black',
@@ -274,8 +303,12 @@ const initThree = () => {
       cage.rotation.y -= rotationDelta
     }
 
-    controls.update()
-    composer.render()
+    controls?.update()
+    if (composer) {
+      composer.render()
+    } else {
+      renderer.render(scene, camera)
+    }
   }
 
   animateFrame()
@@ -283,11 +316,15 @@ const initThree = () => {
 
 const handleResize = () => {
   if (!camera || !renderer) return
-  camera.aspect = window.innerWidth / window.innerHeight
+  const { width, height } = getSceneSize()
+
+  camera.aspect = width / height
   camera.updateProjectionMatrix()
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5))
-  renderer.setSize(window.innerWidth, window.innerHeight)
-  composer.setSize(window.innerWidth, window.innerHeight)
+  renderer.setPixelRatio(
+    props.lowPower ? 0.75 : Math.min(window.devicePixelRatio || 1, 1.5)
+  )
+  renderer.setSize(width, height)
+  composer?.setSize(width, height)
 }
 
 const scheduleResize = () => {
@@ -397,6 +434,18 @@ defineExpose({
   align-items: center;
   justify-content: center;
   background-color: #050505;
+
+  &.is-transparent {
+    background-color: transparent;
+
+    .canvas-container {
+      background-color: transparent;
+    }
+
+    :deep(canvas) {
+      background-color: transparent;
+    }
+  }
 }
 
 .canvas-container {

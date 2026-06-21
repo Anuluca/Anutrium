@@ -1,12 +1,19 @@
 <template>
-  <div class="home-section-layout">
-    <aside class="home-section-rail" aria-hidden="true">
+  <div
+    ref="sectionRef"
+    class="home-section-layout scroll-reveal-section"
+    :class="{ 'scroll-reveal-ready': isScrollRevealReady }"
+  >
+    <aside class="home-section-rail scroll-reveal-title" aria-hidden="true">
       <span class="home-section-rail__num">{{ sectionNumber }}</span>
       <span class="home-section-rail__label">{{ railLabel }}</span>
     </aside>
 
     <div class="home-section-panel">
-      <div v-if="$slots.actions" class="home-section-title-row">
+      <div
+        v-if="$slots.actions"
+        class="home-section-title-row home-section-heading scroll-reveal-title"
+      >
         <h2 class="home-section-title">
           <span v-if="shouldShowEnglishTitle" class="home-section-title__en">
             {{ titleEn }}
@@ -15,21 +22,28 @@
         </h2>
         <slot name="actions" />
       </div>
-      <h2 v-else class="home-section-title">
+      <h2
+        v-else
+        class="home-section-title home-section-heading scroll-reveal-title"
+      >
         <span v-if="shouldShowEnglishTitle" class="home-section-title__en">
           {{ titleEn }}
         </span>
         {{ title }}
       </h2>
 
-      <slot />
+      <div class="home-section-content scroll-reveal-content">
+        <slot />
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+
+import { useScrollReveal } from '@/composables/useScrollReveal'
 
 const props = defineProps<{
   sectionNumber: string
@@ -39,6 +53,12 @@ const props = defineProps<{
 }>()
 
 const { locale } = useI18n()
+const sectionRef = ref<HTMLElement | null>(null)
+const { isReady: isScrollRevealReady } = useScrollReveal({
+  rootMargin: '0px 0px -12% 0px',
+  target: sectionRef,
+  threshold: 0.04,
+})
 
 const shouldShowEnglishTitle = computed(
   () => locale.value !== 'en' && !!props.titleEn
@@ -161,6 +181,10 @@ const shouldShowEnglishTitle = computed(
 .home-section-panel {
   min-width: 0;
   padding-top: 10px;
+}
+
+.home-section-content {
+  min-width: 0;
 }
 
 .home-section-title {

@@ -1,8 +1,12 @@
-.not-found-page {
+.not-found-page.main-container.no-rem {
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
+  height: calc(100dvh - 120px);
+  min-height: 0;
+  max-height: calc(100dvh - 120px);
+  padding-bottom: 0 !important;
 
   .inner {
     width: 1000px;
@@ -100,6 +104,17 @@
         }
       }
     }
+  }
+}
+
+html.not-found-no-scroll,
+body.not-found-no-scroll {
+  overflow: hidden !important;
+}
+
+body.not-found-no-scroll {
+  .page-scroll-progress.no-rem {
+    display: none !important;
   }
 }
 

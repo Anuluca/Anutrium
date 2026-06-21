@@ -12,12 +12,22 @@
       <div class="header-label">{{ headerLabel }}</div>
       <div class="page-title-wrapper">
         <h1 class="page-title">
-          <span class="title-en">{{ titleEn }}</span>
+          <TypedText
+            class="title-en"
+            :text="titleEn"
+            :delay="220"
+            :speed="42"
+          />
           <span class="title-cn">{{ titleCn }}</span>
         </h1>
       </div>
       <div class="header-meta">
-        <span class="meta-item">{{ metaItem }}</span>
+        <TypedText
+          class="meta-item"
+          :text="metaItem"
+          :delay="520"
+          :speed="24"
+        />
         <div class="header-scan-line" />
       </div>
     </div>
@@ -30,6 +40,8 @@
 </template>
 
 <script setup lang="ts">
+import TypedText from '@/components/TypedText/index.vue'
+
 defineProps({
   headerLabel: {
     type: String,
@@ -72,6 +84,8 @@ defineProps({
   margin-left: -20px;
   overflow: hidden;
   padding-left: 30px;
+  opacity: 0;
+  animation: pageHeaderFadeIn 0.42s ease-out 0.08s both;
 
   .header-bg-text {
     position: absolute;
@@ -82,10 +96,11 @@ defineProps({
     font-size: 8vw;
     line-height: 1;
     color: var(--primary-color);
-    opacity: 0.1;
+    opacity: 0;
     pointer-events: none;
     letter-spacing: -4px;
     white-space: nowrap;
+    animation: headerBgTextFadeIn 0.58s ease-out 0.78s both;
   }
 
   .header-content {
@@ -198,6 +213,26 @@ defineProps({
   }
 }
 
+@keyframes pageHeaderFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes headerBgTextFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 0.1;
+  }
+}
+
 @media (max-width: 768px) {
   .page-header {
     padding: 20px 40px;
@@ -266,6 +301,18 @@ defineProps({
 
   .header-label {
     font-size: 0.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-header {
+    animation: none;
+    opacity: 1;
+
+    .header-bg-text {
+      animation: none;
+      opacity: 0.1;
+    }
   }
 }
 </style>

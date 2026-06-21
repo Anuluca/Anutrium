@@ -1393,9 +1393,9 @@ export default {
     brandColorTitleLead: 'VIVID AND DELIBERATE. ',
     brandColorName: 'PASSION RED',
     changelogLabel: 'RELEASE HISTORY',
-    majorReleaseLabel: 'MAJOR RELEASE',
-    entriesLabel: 'ENTRIES',
-    expandReleaseLabel: 'EXPAND ALL',
+    majorOnlyLabel: 'MAJOR ONLY',
+    majorUpdateLabel: 'MAJOR UPDATE',
+    latestLabel: 'LATEST',
     dynamic: {
       changelogs: [
         {
@@ -1411,60 +1411,6 @@ export default {
           ],
         },
         {
-          version: 'v0.9-alpha',
-          codename: '',
-          date: '2026-05-18',
-          title: 'FLÂNERIE PAGE',
-          details: [
-            'Completed development of the Flânerie page.',
-            'Organized assets for the Fuzhou and Pingtan Island subpages.',
-            'Improved visual consistency across the travel subpages.',
-          ],
-        },
-        {
-          version: 'v0.8-alpha',
-          codename: 'AGENT',
-          date: '2026-04-12',
-          title: 'TOOLS PAGE',
-          details: [
-            'Completed development of the tools page.',
-            'Built the CSS Color Palette, Easing Studio, HTML Entities, Base64 Codec, Image to Base64, and Metronome tools.',
-          ],
-        },
-        {
-          version: 'v0.8-alpha',
-          codename: '',
-          date: '2026-04-02',
-          title: 'ARCHIVE PAGE',
-          details: ['Completed development of the archive page.'],
-        },
-        {
-          version: 'v0.7-alpha',
-          codename: '',
-          date: '2026-03-01',
-          title: 'BRAND DESIGN',
-          details: [
-            "Developed the site's brand identity, strengthened the UI, and unified its visual language.",
-          ],
-        },
-        {
-          version: 'v0.6-alpha',
-          codename: '',
-          date: '2026-02-10',
-          title: 'HOMEPAGE',
-          details: ['Completed the initial homepage implementation.'],
-        },
-        {
-          version: 'v0.5-alpha',
-          codename: '',
-          date: '2026-01-27',
-          title: 'STATIC ASSET LIBRARY',
-          details: [
-            "Adopted Cloudflare R2 as the site's static asset library.",
-            'Completed designs for the homepage, archive, Flânerie, personal bay, tools, and About pages.',
-          ],
-        },
-        {
           version: 'v0.4-alpha',
           codename: 'MIRAGE',
           date: '2026-01-21',
@@ -1475,24 +1421,6 @@ export default {
             'Added language and theme switching.',
             'Reorganized project assets and improved code reuse.',
           ],
-        },
-        {
-          version: 'v0.3-alpha',
-          codename: null,
-          date: '2026-01-12',
-          title: 'VISUAL REDESIGN',
-          details: [
-            'Designed motion effects and entrance animations for page elements.',
-            'Refined the site color palette.',
-            'Introduced custom fonts.',
-          ],
-        },
-        {
-          version: 'v0.2-alpha',
-          codename: null,
-          date: '2026-01-07',
-          title: 'MOBILE SUPPORT',
-          details: ['Launched the mobile-responsive layout.'],
         },
         {
           version: 'v0.1-alpha',

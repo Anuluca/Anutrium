@@ -13,24 +13,52 @@
       mobile-tall
     />
 
-    <section class="availability-panel" aria-labelledby="availability-title">
+    <section
+      class="availability-panel"
+      aria-labelledby="availability-title"
+      @animationend="startAvailabilityTyping"
+    >
       <div class="availability-copy">
         <div class="availability-kicker">
           <span class="availability-signal" aria-hidden="true" />
           {{ $t('archive.statusKicker') }}
         </div>
-        <h2 id="availability-title">{{ $t('archive.statusTitle') }}</h2>
-        <p>{{ $t('archive.statusDescription') }}</p>
+        <h2 id="availability-title">
+          <TypedText
+            class="availability-type availability-type--title"
+            :text="$t('archive.statusTitle')"
+            :delay="820"
+            :speed="38"
+            :start="availabilityTypingReady"
+          />
+        </h2>
+        <p>
+          <TypedText
+            class="availability-type availability-type--desc"
+            :text="$t('archive.statusDescription')"
+            :delay="1060"
+            :speed="20"
+            :start="availabilityTypingReady"
+          />
+        </p>
       </div>
 
       <div class="availability-grid">
         <div
-          v-for="item in availabilityItems"
+          v-for="(item, index) in availabilityItems"
           :key="item.label"
           class="availability-item"
         >
           <span>{{ item.label }}</span>
-          <strong>{{ item.value }}</strong>
+          <strong>
+            <TypedText
+              class="availability-type availability-type--metric-value"
+              :text="item.value"
+              :delay="760 + index * 220"
+              :speed="30"
+              :start="availabilityTypingReady"
+            />
+          </strong>
         </div>
       </div>
 
@@ -156,19 +184,17 @@
 
 <script setup lang="ts">
 /* eslint-disable simple-import-sort/imports */
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute, useRouter } from 'vue-router'
 import HomeSectionBlock from '@/components/HomeSectionBlock/index.vue'
 import WorkCard from '@/components/WorkCard/index.vue'
 import WorkDetailModal from '@/components/WorkDetailModal/index.vue'
 import PageHeader from '@/components/PageHeader/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
+import TypedText from '@/components/TypedText/index.vue'
 import { trackEvent, trackProjectClick } from '@/utils/analytics'
 
 const { t, tm } = useI18n()
-const route = useRoute()
-const router = useRouter()
 
 interface WorkItem {
   id: string
@@ -225,46 +251,28 @@ const availabilityItems = computed(() => [
 
 const selectedWork = ref<WorkItem | MiscWork | null>(null)
 const flashingMiscId = ref('')
+const availabilityTypingReady = ref(false)
 let miscErrorTimer: ReturnType<typeof setTimeout> | null = null
 
-const allWorks = computed(() => [
-  ...mainWorks.value,
-  ...personalWorks.value,
-  ...miscWorks.value,
-])
-
-const findWorkById = (id: string) =>
-  allWorks.value.find((work) => work.id === id)
-
-const syncProjectQuery = (id?: string) => {
-  const nextQuery = { ...route.query }
-  if (id) {
-    nextQuery.project = id
-  } else {
-    delete nextQuery.project
-  }
-
-  router.replace({ path: route.path, query: nextQuery })
-}
-
-const openDetail = (
-  work: WorkItem | MiscWork,
-  options: { syncQuery?: boolean; track?: boolean } = {}
-) => {
+const openDetail = (work: WorkItem | MiscWork) => {
   selectedWork.value = work
-  if (options.syncQuery !== false) syncProjectQuery(work.id)
-  if (options.track !== false) {
-    trackProjectClick({
-      id: work.id,
-      title: work.title,
-      source: 'archive',
-    })
-  }
+  trackProjectClick({
+    id: work.id,
+    title: work.title,
+    source: 'archive',
+  })
 }
 
 const closeDetail = () => {
   selectedWork.value = null
-  syncProjectQuery()
+}
+
+const startAvailabilityTyping = (event: AnimationEvent) => {
+  if (availabilityTypingReady.value) return
+  if (event.target !== event.currentTarget) return
+  if (!event.animationName.includes('availabilityCrtOn')) return
+
+  availabilityTypingReady.value = true
 }
 
 const trackResumeOpen = () => {
@@ -305,19 +313,6 @@ const openMiscDetail = (work: MiscWork) => {
 onBeforeUnmount(() => {
   if (miscErrorTimer) clearTimeout(miscErrorTimer)
 })
-
-watch(
-  () => route.query.project,
-  (project) => {
-    const projectId = Array.isArray(project) ? project[0] : project
-    if (!projectId) return
-    if (selectedWork.value?.id === projectId) return
-
-    const work = findWorkById(projectId)
-    if (work) openDetail(work, { syncQuery: false, track: false })
-  },
-  { immediate: true }
-)
 </script>
 
 <style lang="less" scoped>
@@ -348,6 +343,10 @@ watch(
       transparent 1px 28px
     ),
     rgba(9, 10, 12, 0.92);
+  opacity: 0;
+  transform-origin: center;
+  will-change: opacity, transform, filter;
+  animation: availabilityCrtOn 0.52s cubic-bezier(0.19, 1, 0.22, 1) 0.08s both;
 
   &::before {
     content: '';
@@ -371,6 +370,15 @@ watch(
     background: linear-gradient(90deg, #5ad480, transparent);
     pointer-events: none;
   }
+}
+
+.availability-type {
+  max-width: 100%;
+}
+
+.availability-type--desc {
+  display: block;
+  white-space: normal;
 }
 
 .availability-copy {
@@ -450,7 +458,7 @@ watch(
     border-bottom: 1px solid rgba(90, 212, 128, 0.45);
   }
 
-  span {
+  > span {
     color: rgba(255, 255, 255, 0.3);
     font-family: 'source-han-sans-simplified-c', sans-serif;
     font-size: 0.42rem;
@@ -459,7 +467,7 @@ watch(
     text-transform: uppercase;
   }
 
-  strong {
+  > strong {
     overflow: hidden;
     color: rgba(255, 255, 255, 0.88);
     font-family: 'source-han-sans-simplified-c', sans-serif;
@@ -548,6 +556,29 @@ watch(
   50% {
     opacity: 0.35;
     box-shadow: 0 0 3px rgba(90, 212, 128, 0.4);
+  }
+}
+
+@keyframes availabilityCrtOn {
+  0% {
+    transform: scale3d(0, 0.005, 1);
+    filter: brightness(6) contrast(2);
+    opacity: 0;
+  }
+  45% {
+    transform: scale3d(1, 0.005, 1);
+    filter: brightness(4) contrast(1.5);
+    opacity: 0.36;
+  }
+  72% {
+    transform: scale3d(1, 0.7, 1);
+    filter: brightness(1.8) contrast(1.18);
+    opacity: 0.72;
+  }
+  100% {
+    transform: scale3d(1, 1, 1);
+    filter: brightness(1) contrast(1);
+    opacity: 1;
   }
 }
 

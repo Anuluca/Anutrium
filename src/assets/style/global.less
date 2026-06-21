@@ -212,12 +212,13 @@ body.light {
   .pt-panel,
   .codec-stage,
   .availability-panel {
-    background: linear-gradient(
-        rgba(0, 0, 0, 0.04) 1px,
-        transparent 1px
-      ),
+    background: linear-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px),
       linear-gradient(90deg, rgba(0, 0, 0, 0.035) 1px, transparent 1px),
-      radial-gradient(circle at 68% 24%, rgba(226, 52, 86, 0.1), transparent 34%),
+      radial-gradient(
+        circle at 68% 24%,
+        rgba(226, 52, 86, 0.1),
+        transparent 34%
+      ),
       rgba(255, 255, 255, 0.86) !important;
     background-size: 36px 36px, 36px 36px, auto, auto !important;
   }
@@ -421,8 +422,7 @@ body.light {
   .back-to-top-button.no-rem:focus-visible {
     color: #e23456 !important;
     background: rgba(255, 255, 255, 0.9) !important;
-    box-shadow: 0 10px 26px var(--shadow-color),
-      0 0 18px rgba(226, 52, 86, 0.2) !important;
+    box-shadow: 0 10px 26px var(--shadow-color), 0 0 18px rgba(226, 52, 86, 0.2) !important;
   }
 
   .modal-wrapper-dialog {
@@ -497,7 +497,10 @@ body.light {
 
     .center .expand {
       background-color: rgb(23 23 23 / 45%) !important;
-      background-image: radial-gradient(#fcfcfc12 1px, #57575733 1px) !important;
+      background-image: radial-gradient(
+        #fcfcfc12 1px,
+        #57575733 1px
+      ) !important;
     }
 
     .center .expand .marquee-wrap {
@@ -702,6 +705,79 @@ body.light {
   * {
     font-family: 'source-han-sans-simplified-c', sans-serif !important;
     font-weight: 900 !important;
+  }
+}
+
+.scroll-reveal-section {
+  position: relative;
+}
+
+.scroll-reveal-ready {
+  &.scroll-reveal-section,
+  .scroll-reveal-section {
+    .scroll-reveal-title,
+    .scroll-reveal-content {
+      opacity: 0;
+      transform: translateY(-34px);
+      will-change: opacity, transform;
+    }
+
+    .home-section-heading.scroll-reveal-title {
+      clip-path: inset(0 100% 0 0);
+      transform: translateX(-96px);
+      will-change: opacity, transform, clip-path;
+    }
+
+    &.is-revealed {
+      .scroll-reveal-title {
+        animation: scrollRevealTitleIn 0.72s cubic-bezier(0.23, 1, 0.32, 1) both;
+      }
+
+      .home-section-heading.scroll-reveal-title {
+        animation: scrollRevealTitleRowIn 0.96s cubic-bezier(0.16, 1, 0.3, 1)
+          both;
+      }
+
+      .scroll-reveal-content {
+        animation: scrollRevealContentIn 0.82s cubic-bezier(0.23, 1, 0.32, 1)
+          0.24s both;
+      }
+    }
+  }
+}
+
+@keyframes scrollRevealTitleIn {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scrollRevealTitleRowIn {
+  from {
+    opacity: 0;
+    clip-path: inset(0 100% 0 0);
+    transform: translateX(-96px);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+    transform: translateX(0);
+  }
+}
+
+@keyframes scrollRevealContentIn {
+  from {
+    opacity: 0;
+    transform: translateY(-34px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 

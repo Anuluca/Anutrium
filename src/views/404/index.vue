@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import './index.less'
@@ -15,6 +15,9 @@ const porygonStyle = ref({
 })
 
 onMounted(() => {
+  document.documentElement.classList.add('not-found-no-scroll')
+  document.body.classList.add('not-found-no-scroll')
+
   setTimeout(() => {
     showTextClass.value = 'active-shadow'
     porygonStyle.value = {
@@ -32,10 +35,15 @@ onMounted(() => {
     lastShowTextWidth.value = '100%'
   }, 400)
 })
+
+onUnmounted(() => {
+  document.documentElement.classList.remove('not-found-no-scroll')
+  document.body.classList.remove('not-found-no-scroll')
+})
 </script>
 
 <template>
-  <div class="not-found-page main-container">
+  <div class="not-found-page main-container no-rem">
     <div class="inner">
       <div class="porygon" :style="porygonStyle" />
       <div class="show-text" :class="showTextClass">
