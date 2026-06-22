@@ -43,7 +43,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="not-found-page main-container no-rem">
+  <div class="not-found-page main-container">
     <div class="inner">
       <div class="porygon" :style="porygonStyle" />
       <div class="show-text" :class="showTextClass">

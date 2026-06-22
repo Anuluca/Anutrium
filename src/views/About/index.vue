@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ArrowDown, DArrowRight, StarFilled } from '@element-plus/icons-vue'
 
@@ -106,6 +106,68 @@ const neighbors = ref([
       '此处是由一位业余宝可梦爱好者Asimov创建的宝可梦全栈资料整理站点&个人研究据点。',
   },
 ])
+
+const overflowingNeighborUrls = ref(new Set<string>())
+const neighborDescElements = new Map<string, HTMLElement>()
+let descMeasureRafId: number | null = null
+
+const setNeighborDescRef = (url: string, element: Element | null) => {
+  if (element instanceof HTMLElement) {
+    neighborDescElements.set(url, element)
+  } else {
+    neighborDescElements.delete(url)
+  }
+}
+
+const measureNeighborDescriptions = () => {
+  const overflowingUrls = new Set<string>()
+
+  neighborDescElements.forEach((element, url) => {
+    const textElement = element.querySelector(
+      '.nb-desc-text'
+    ) as HTMLElement | null
+    if (!textElement) return
+
+    const overflowDistance = Math.ceil(
+      textElement.scrollWidth - element.clientWidth
+    )
+
+    if (overflowDistance > 2) {
+      overflowingUrls.add(url)
+      element.style.setProperty('--nb-desc-distance', `${overflowDistance}px`)
+    } else {
+      element.style.removeProperty('--nb-desc-distance')
+    }
+  })
+
+  overflowingNeighborUrls.value = overflowingUrls
+}
+
+const scheduleNeighborDescriptionMeasure = async () => {
+  await nextTick()
+  if (descMeasureRafId !== null) {
+    window.cancelAnimationFrame(descMeasureRafId)
+  }
+
+  descMeasureRafId = window.requestAnimationFrame(() => {
+    descMeasureRafId = null
+    measureNeighborDescriptions()
+  })
+}
+
+onMounted(() => {
+  scheduleNeighborDescriptionMeasure()
+  window.addEventListener('resize', scheduleNeighborDescriptionMeasure, {
+    passive: true,
+  })
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', scheduleNeighborDescriptionMeasure)
+  if (descMeasureRafId !== null) window.cancelAnimationFrame(descMeasureRafId)
+})
+
+watch(locale, scheduleNeighborDescriptionMeasure)
 </script>
 
 <template>
@@ -323,7 +385,15 @@ const neighbors = ref([
                 <h4 class="nb-name">{{ nb.name }}</h4>
                 <span class="nb-host">{{ getNeighborHost(nb.url) }}</span>
               </div>
-              <p class="nb-desc">{{ nb.description }}</p>
+              <p
+                :ref="(element) => setNeighborDescRef(nb.url, element)"
+                class="nb-desc"
+                :class="{
+                  'is-overflowing': overflowingNeighborUrls.has(nb.url),
+                }"
+              >
+                <span class="nb-desc-text">{{ nb.description }}</span>
+              </p>
             </div>
 
             <DArrowRight class="nb-arrow" aria-hidden="true" />
@@ -362,7 +432,7 @@ const neighbors = ref([
   grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
   align-items: stretch;
   gap: 28px;
-  margin: 30px 0 68px;
+  margin-bottom:20px;
 
   > .block,
   > .passion-section {
@@ -395,6 +465,12 @@ const neighbors = ref([
   border-radius: 2px;
   box-shadow: inset 0 0 0 1px rgba(226, 52, 86, 0.12),
     0 0 30px rgba(226, 52, 86, 0.1);
+  &:hover {
+    .passion-color-code {
+      text-shadow: 0 0 30px #e23456;
+      color: #000;
+    }
+  }
 }
 
 .passion-crosshair {
@@ -435,6 +511,8 @@ const neighbors = ref([
 .passion-copy {
   position: relative;
   z-index: 3;
+  text-align: left;
+  margin-left: 40px;
   min-width: 0;
   padding: 0;
 }
@@ -456,7 +534,7 @@ const neighbors = ref([
   margin: 0;
   color: @red;
   font-family: 'source-han-sans-simplified-c', sans-serif;
-  font-size: clamp(26px, 2.35vw, 38px);
+  font-size: 38px;
   font-weight: 900;
   letter-spacing: -0.02em;
   line-height: 1.05;
@@ -502,7 +580,6 @@ const neighbors = ref([
   align-items: center;
   justify-content: center;
   gap: 18px;
-  width: 100%;
   max-width: 100%;
   text-align: center;
 }
@@ -667,6 +744,7 @@ const neighbors = ref([
   font-size: clamp(46px, 4.2vw, 68px);
   font-weight: 900;
   letter-spacing: -0.055em;
+  margin-left: -12px;
   line-height: 0.9;
   white-space: nowrap;
   color: @red;
@@ -993,7 +1071,7 @@ const neighbors = ref([
 .log-latest {
   padding: 3px 8px 5px;
   color: @red;
-  border:1px solid @red;
+  border: 1px solid @red;
   font-family: 'anton', monospace;
   font-size: 0.58rem;
   letter-spacing: 1.5px;
@@ -1018,7 +1096,7 @@ const neighbors = ref([
 
   .log-card.is-expanded & {
     grid-template-rows: 1fr;
-    margin-top: 2px;
+    margin-top: 8px;
   }
 }
 
@@ -1073,7 +1151,7 @@ const neighbors = ref([
   position: relative;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 22px;
+  gap: 5px;
 }
 
 .neighbor-item {
@@ -1217,6 +1295,7 @@ const neighbors = ref([
 
     .nb-hover-chevron {
       transform: translateX(26%);
+      opacity: 1;
     }
 
     .nb-logo {
@@ -1275,16 +1354,17 @@ const neighbors = ref([
 
 .nb-hover-chevron {
   position: absolute;
-  top: 0;
-  bottom: 0;
+  top: 3px;
+  bottom: 3px;
   left: 0;
   z-index: 2;
+  opacity: 0;
   width: 64%;
   pointer-events: none;
   background: rgba(0, 0, 0, 0.36);
-  clip-path: polygon(0 0, 84% 0, 100% 50%, 84% 100%, 0 100%, 16% 50%);
-  transform: translateX(-112%);
-  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  clip-path: polygon(0 0, 90% 0, 100% 50%, 90% 100%, 0 100%, 10% 50%);
+  transform: translateX(-12%);
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s;
 }
 
 .nb-node {
@@ -1324,17 +1404,16 @@ const neighbors = ref([
   align-items: baseline;
   gap: 10px;
   min-width: 0;
-  margin-bottom: 5px;
 }
 
 .nb-host {
   flex-shrink: 0;
   max-width: 45%;
-  overflow: hidden;
   text-overflow: ellipsis;
   font-family: 'anton', monospace;
   font-size: 0.58rem;
   letter-spacing: 1.4px;
+  margin-bottom: 5px;
   color: rgba(226, 52, 86, 0.72);
   white-space: nowrap;
 }
@@ -1342,11 +1421,9 @@ const neighbors = ref([
 .nb-name {
   flex: 1 1 auto;
   min-width: 0;
-  overflow: hidden;
-  font-family: 'source-han-sans-simplified-c';
-  font-size: 0.98rem;
+  font-family: 'source-han-sans-simplified-c', monospace;
+  font-size: 0.8rem;
   font-weight: 900;
-  letter-spacing: 1px;
   color: #fff;
   min-width: 0;
   text-overflow: ellipsis;
@@ -1360,13 +1437,12 @@ const neighbors = ref([
 .nb-desc {
   display: block;
   font-family: 'source-han-sans-simplified-c', monospace;
-  font-size: 0.74rem;
+  font-size: 0.54rem;
   color: @text-dim;
   line-height: 1.45;
   max-width: 100%;
   white-space: nowrap;
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: hidden;
   text-overflow: clip;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
@@ -1374,6 +1450,22 @@ const neighbors = ref([
   &::-webkit-scrollbar {
     display: none;
   }
+
+  &.is-overflowing {
+    .nb-desc-text {
+      padding-right: 1.2rem;
+      animation: nbDescScroll 7.2s ease-in-out 0.8s infinite alternate;
+    }
+  }
+}
+
+.nb-desc-text {
+  display: inline-block;
+  min-width: max-content;
+  font-size: 0.5rem;
+  font-weight: 700;
+  font-style: italic;
+  will-change: transform;
 }
 
 .nb-arrow {
@@ -1403,6 +1495,18 @@ const neighbors = ref([
   }
 }
 
+@keyframes nbDescScroll {
+  0%,
+  18% {
+    transform: translateX(0);
+  }
+
+  82%,
+  100% {
+    transform: translateX(calc(var(--nb-desc-distance, 0px) * -1));
+  }
+}
+
 .about-footer {
   text-align: center;
   border-top: 1px solid @border;
@@ -1424,9 +1528,18 @@ const neighbors = ref([
     gap: 48px;
     margin: 32px 0 50px;
 
-    > .block,
-    > .passion-section {
+    > .block {
       height: auto;
+    }
+
+    > .passion-section {
+      order: -1;
+      display: block;
+      width: 100%;
+      aspect-ratio: 7 / 3;
+      height: auto;
+      min-height: 0;
+      flex: 0 0 auto;
     }
   }
 
@@ -1441,9 +1554,6 @@ const neighbors = ref([
   }
 
   .passion-section {
-    order: -1;
-    height: 360px;
-    min-height: 0;
     margin: 0;
   }
 
@@ -1543,7 +1653,7 @@ const neighbors = ref([
     gap: 20px;
 
     &.is-major {
-      grid-template-columns: 20px 176px minmax(0, 1fr);
+      grid-template-columns: 20px 156px minmax(0, 1fr);
       min-height: 150px;
     }
   }
@@ -1584,7 +1694,7 @@ const neighbors = ref([
     }
 
     &.is-regular-card {
-      grid-template-columns: 172px minmax(0, 1fr);
+      grid-template-columns: 154px minmax(0, 1fr);
       padding-right: 28px;
       column-gap: 22px;
     }
@@ -1624,7 +1734,7 @@ const neighbors = ref([
 
   .neighbors-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
+    gap: 2px;
   }
 
   .c-gear {
@@ -1654,7 +1764,7 @@ const neighbors = ref([
     min-height: auto;
     grid-template-columns: 32px minmax(0, 1fr) 22px;
     gap: 8px;
-    padding: 10px 22px 10px 18px;
+    padding: 20px 20px;
   }
 
   .nb-node {
@@ -1674,16 +1784,26 @@ const neighbors = ref([
 
   .nb-desc {
     font-size: 0.66rem;
+    margin-top: -6px;
+
+    &.is-overflowing {
+      .nb-desc-text {
+        animation-duration: 8.8s;
+      }
+    }
   }
 
   .nb-title-row {
-    flex-wrap: nowrap;
-    gap: 6px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
   }
 
   .nb-host {
-    width: auto;
-    max-width: 44%;
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 0;
     font-size: 0.48rem;
     letter-spacing: 0.8px;
   }
@@ -1691,6 +1811,16 @@ const neighbors = ref([
   .nb-arrow {
     width: 18px;
     height: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nb-desc.is-overflowing {
+    overflow-x: auto;
+
+    .nb-desc-text {
+      animation: none;
+    }
   }
 }
 </style>

@@ -49,9 +49,9 @@
   }
 
   .el-menu-layout-all {
-    height: 100px;
-    padding: 40px;
-    padding-top: 70px;
+    height: 3.33333rem;
+    padding: 1.33333rem;
+    padding-top: 2.33333rem;
     display: flex;
     align-items: center;
     position: fixed;
@@ -68,7 +68,7 @@
     border: 0px solid #00000000;
 
     &.scrolled {
-      padding-top: 45px;
+      padding-top: 1.5rem;
 
       background: linear-gradient(
         to bottom,
@@ -92,10 +92,10 @@
 
       .logo-box {
         margin-top: -1px;
-        padding-left: 15px !important;
+        padding-left: 0.5rem !important;
 
         .logo {
-          height: 50px;
+          height: 1.66667rem;
         }
         .right {
           margin-top: 0px;
@@ -108,12 +108,12 @@
     }
 
     .logo-box {
-      flex-wrap: 0 0 390px;
-      padding-left: 30px;
+      flex-wrap: 0 0 13rem;
+      padding-left: 1rem;
       padding-top: 0;
       padding-right: 0;
       padding-bottom: 0;
-      margin-top: -6px;
+      margin-top: -0.2rem;
       display: flex;
       align-items: center;
       color: inherit;
@@ -125,13 +125,13 @@
       &:hover {
         .zhCn .name-center {
           opacity: 1 !important;
-          width: 123px;
+          width: 4.1rem;
         }
 
         .zhCn {
           .site-subtitle-text--short {
             opacity: 0;
-            transform: translateY(calc(-50% + 3px));
+            transform: translateY(calc(-50% + 0.1rem));
           }
 
           .site-subtitle-text--long {
@@ -142,15 +142,15 @@
 
         .en .name-center {
           opacity: 1 !important;
-          width: 155px;
+          width: 5.16667rem;
         }
       }
 
       .logo {
-        width: 55px;
-        height: 55px;
+        width: 1.83333rem;
+        height: 1.83333rem;
         transition: all 0.5s ease;
-        margin-right: 5px;
+        margin-right: 0.16667rem;
         color: var(--text-color);
         opacity: 1;
       }
@@ -191,28 +191,28 @@
         &.zhCn {
           display: grid;
           align-content: center;
-          font-size: 40px;
-          margin-top: 4px;
+          font-size: 1.33333rem;
+          margin-top: 0.13333rem;
 
           p {
             margin: 0;
-            letter-spacing: 2px;
+            letter-spacing: 0.06667rem;
             line-height: 1;
           }
 
           .name-center.active {
-            width: 95px;
+            width: 3.16667rem;
           }
         }
 
         .site-subtitle {
           position: relative;
           display: block;
-          width: calc(100% - 2px);
-          height: 14px;
+          width: calc(100% - 0.06667rem);
+          height: 0.46667rem;
           color: #e23456;
           font-family: 'cn-custom', serif !important;
-          font-size: 11px;
+          font-size: 0.36667rem;
           font-weight: 900;
           line-height: 1;
           pointer-events: none;
@@ -244,13 +244,13 @@
           width: max-content;
           letter-spacing: 0.08em;
           opacity: 0;
-          transform: translateY(calc(-50% - 3px));
+          transform: translateY(calc(-50% - 0.1rem));
         }
 
         &.en {
-          font-size: 32px;
+          font-size: 1.06667rem;
           .name-center.active {
-            width: 150px;
+            width: 5rem;
           }
         }
       }
@@ -258,7 +258,7 @@
 
     .el-menu {
       border-bottom: 0;
-      flex-wrap: 0 0 790px;
+      flex-wrap: 0 0 26.33333rem;
 
       .menu-box {
         text-decoration: none;
@@ -270,7 +270,7 @@
           justify-content: center;
           align-items: center;
           background-color: transparent;
-          padding: 20px;
+          padding: 0.66667rem;
 
           &:hover {
             .line {
@@ -281,11 +281,11 @@
           .title-box {
             transition: all 0.4s;
             color: var(--text-color);
-            font-size: 20px;
+            font-size: 0.66667rem;
             letter-spacing: 1px;
 
             .main-title {
-              line-height: 20px;
+              line-height: 0.66667rem;
               transform: scale(1, 1.2);
               transition: all 0.4s;
               font-family: 'cn-custom';
@@ -293,7 +293,7 @@
 
             .second-title {
               width: 100%;
-              height: 20px;
+              height: 0.66667rem;
               display: flex;
               align-items: center;
               justify-content: space-between;
@@ -310,8 +310,8 @@
 
               span {
                 flex: 0 0 1;
-                line-height: 20px;
-                font-size: 18px;
+                line-height: 0.66667rem;
+                font-size: 0.6rem;
                 letter-spacing: -0.1px;
                 font-weight: bold;
                 margin: 0 2px;
@@ -533,22 +533,22 @@
 
     .mobile-menu-wrapper {
       opacity: 0;
-      font-size: 40px;
-      filter: blur(10px);
+      font-size: 1.33333rem;
+      filter: blur(0.33333rem);
       transition: all 0.6s ease, filter 0.4s;
       width: 100vw;
-      height: calc(100vh - 80px);
+      height: calc(100vh - 2.66667rem);
       overflow: hidden;
-      border-radius: 0 0 100px 100px;
+      border-radius: 0 0 3.33333rem 3.33333rem;
       display: flex;
       justify-content: center;
       align-items: center;
-      margin-top: -20px;
+      margin-top: -0.66667rem;
       position: relative;
 
       .mobile-menu-content {
         border-radius: 4px;
-        max-width: 500px;
+        max-width: 16.66667rem;
 
         .mobile-menu-items {
           display: flex;
@@ -556,7 +556,7 @@
           width: 100%;
 
           .mobile-menu-item {
-            padding: 20px 0;
+            padding: 0.66667rem 0;
             width: 100%;
             color: var(--text-color);
             text-align: center;
@@ -575,8 +575,8 @@
             }
 
             .little-title {
-              margin-top: 2px;
-              font-size: 28px;
+              margin-top: 0.06667rem;
+              font-size: 0.93333rem;
               letter-spacing: -1px;
               font-weight: 900;
             }
@@ -627,7 +627,7 @@
 
       .mobile-footer {
         position: absolute;
-        bottom: -100px;
+        bottom: -3.33333rem;
         left: 0;
         right: 0;
         opacity: 0;
@@ -638,10 +638,10 @@
 
           .mobile-menu-language,
           .mobile-menu-theme {
-            width: 60px;
-            height: 60px;
+            width: 2rem;
+            height: 2rem;
             overflow: hidden;
-            border-radius: 10px;
+            border-radius: 0.33333rem;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -655,43 +655,43 @@
             .first,
             .second {
               position: absolute;
-              font-size: 20px;
+              font-size: 0.66667rem;
 
               &.first {
-                font-size: 28px;
-                margin-right: 15px;
-                margin-bottom: 10px;
+                font-size: 0.93333rem;
+                margin-right: 0.5rem;
+                margin-bottom: 0.33333rem;
                 font-weight: 900;
                 z-index: 1;
               }
 
               &.second {
-                margin-left: 15px;
-                margin-top: 10px;
+                margin-left: 0.5rem;
+                margin-top: 0.33333rem;
                 font-weight: 900;
                 color: #ffffff77;
               }
             }
 
             .cnArt {
-              font-size: 24px;
+              font-size: 0.8rem;
             }
 
             &.mobile-menu-theme {
-              margin-left: 10px;
+              margin-left: 0.33333rem;
               .first {
-                margin-right: 10px;
-                margin-bottom: 10px;
+                margin-right: 0.33333rem;
+                margin-bottom: 0.33333rem;
                 z-index: 1;
               }
               .sun {
-                font-size: 30px;
+                font-size: 1rem;
               }
 
               .second {
-                font-size: 25px;
-                margin-left: 10px;
-                margin-top: 10px;
+                font-size: 0.83333rem;
+                margin-left: 0.33333rem;
+                margin-top: 0.33333rem;
               }
             }
           }
@@ -705,7 +705,7 @@
           justify-content: center;
 
           * {
-            font-size: 16px;
+            font-size: 0.53333rem;
             font-family: 'cn-custom';
             color: @primary-color !important;
           }
@@ -713,7 +713,7 @@
           .mobile-contact-link,
           .mail-link {
             display: inline-flex;
-            padding: 2px 5px;
+            padding: 0.06667rem 0.16667rem;
             text-decoration: none;
             transition: color 0.2s ease, text-shadow 0.2s ease;
 
@@ -729,11 +729,11 @@
         .about-me {
           transition: all 0.4s ease;
           margin: 0 auto;
-          margin-top: 2px;
+          margin-top: 0.06667rem;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 12px;
+          font-size: 0.4rem;
           font-family: 'cn-custom';
           color: #c0c0c0;
         }
@@ -812,24 +812,24 @@
     }
 
     .el-menu-layout-all {
-      padding: 0 10px;
-      padding-top: max(14px, env(safe-area-inset-top));
+      padding: 0 0.33333rem;
+      padding-top: max(0.46667rem, env(safe-area-inset-top));
 
       &.scrolled {
-        padding: 10px 0;
-        padding-top: max(20px, env(safe-area-inset-top));
+        padding: 0.33333rem 0;
+        padding-top: max(0.66667rem, env(safe-area-inset-top));
       }
 
       .logo-box {
         min-width: auto;
         width: 100%;
-        margin-left: -10px;
+        margin-left: -0.33333rem;
         justify-content: center;
 
         .right p {
-          margin-bottom: 0px;
+          margin-bottom: 0;
           color: var(--text-color);
-          margin-top: 3px !important;
+          margin-top: 0.1rem !important;
         }
 
         &:hover {

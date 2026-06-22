@@ -330,7 +330,7 @@ onBeforeUnmount(() => {
 .availability-panel {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(360px, 1.2fr) minmax(420px, 1fr) 148px;
+  grid-template-columns: minmax(360px, 1.2fr) minmax(420px, 1fr) 178px;
   align-items: stretch;
   gap: 0;
   margin: 24px 0;
@@ -494,7 +494,7 @@ onBeforeUnmount(() => {
   color: #5ad480;
   background: linear-gradient(135deg, rgba(90, 212, 128, 0.09), transparent);
   font-family: 'cn-custom', 'source-han-sans-simplified-c';
-  font-size: 0.34rem;
+  font-size: 0.54rem;
   letter-spacing: 0.04em;
   line-height: 1.5;
   text-decoration: none;

@@ -81,7 +81,6 @@ defineProps({
 .page-header {
   position: relative;
   padding: 40px 0 30px;
-  margin-left: -20px;
   overflow: hidden;
   padding-left: 30px;
   opacity: 0;
@@ -89,11 +88,11 @@ defineProps({
 
   .header-bg-text {
     position: absolute;
-    top: 50%;
-    right: 0;
+    top: 45%;
+    right: 20px;
     transform: translateY(-50%);
     font-family: 'anton', sans-serif;
-    font-size: 8vw;
+    font-size: 3rem;
     line-height: 1;
     color: var(--primary-color);
     opacity: 0;
@@ -189,7 +188,7 @@ defineProps({
 
   &-tl {
     top: 15px;
-    left: 15px;
+    left: 0;
     border-right: 0;
     border-bottom: 0;
   }
@@ -201,7 +200,7 @@ defineProps({
   }
   &-bl {
     bottom: 15px;
-    left: 15px;
+    left: 0;
     border-right: 0;
     border-top: 0;
   }
@@ -236,6 +235,7 @@ defineProps({
 @media (max-width: 768px) {
   .page-header {
     padding: 20px 40px;
+    padding-left: 20px;
   }
 
   .page-header--mobile-tall {
