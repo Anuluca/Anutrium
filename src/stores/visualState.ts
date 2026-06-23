@@ -6,7 +6,7 @@ export type DeviceType = 'mobile' | 'tablet' | 'desktop'
 
 export default defineStore('visualState', {
   state: (): { theme: Theme; deviceType: DeviceType } => ({
-    theme: 'light',
+    theme: 'dark',
     deviceType: 'desktop',
   }),
 
@@ -17,10 +17,8 @@ export default defineStore('visualState', {
      */
     setTheme(theme: Theme): void {
       if (theme !== 'light' && theme !== 'dark') {
-        console.warn(
-          `Invalid theme value: ${theme}. Using 'light' as fallback.`
-        )
-        theme = 'light'
+        console.warn(`Invalid theme value: ${theme}. Using 'dark' as fallback.`)
+        theme = 'dark'
       }
 
       localStorage.setItem('theme', theme)

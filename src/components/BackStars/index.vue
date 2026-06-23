@@ -7,7 +7,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  theme: 'light',
+  theme: 'dark',
   isTextMenu: false,
 })
 
