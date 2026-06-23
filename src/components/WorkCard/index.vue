@@ -387,9 +387,9 @@ const referenceNumber = computed(
   }
 
   .work-content {
-    width: calc(100% - 36px);
-    height: calc(100% - 36px);
-    padding: 18px;
+    width: 100%;
+    height: 100%;
+    padding: 30px 20px;
   }
 
   .work-top-info {
@@ -407,7 +407,7 @@ const referenceNumber = computed(
   }
 
   .work-name {
-    font-size: 1.8rem;
+        font-size: 1.6rem;
   }
 }
 </style>
