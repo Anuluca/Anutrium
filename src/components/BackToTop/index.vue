@@ -82,7 +82,10 @@ onUnmounted(() => {
   overflow: hidden;
   border: 0;
   color: rgba(255, 255, 255, 0.76);
-  background: #000;
+  border-top: 1px solid #e23456;
+  border-left: 1px solid #e23456;
+  border-right: 1px solid #e23456;
+  background-color: transparent;
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.28);
   cursor: pointer;
   transition: color 0.25s ease, border-color 0.25s ease, background 0.25s ease,
@@ -91,13 +94,10 @@ onUnmounted(() => {
   &:hover,
   &:focus-visible {
     color: #fff;
-    background: rgba(7, 8, 10, 0.9);
-    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.34),
-      0 0 18px rgba(226, 52, 86, 0.24);
+    box-shadow:0 0 18px rgba(203, 15, 53, 0.457);
     transform: translateY(-2px);
 
     .button-arrow.no-rem {
-      border-color: #e23456;
       transform: translate(-50%, -2px) rotate(45deg);
     }
   }
@@ -133,7 +133,7 @@ onUnmounted(() => {
 
 .button-arrow.no-rem {
   position: absolute;
-  top: 14px;
+  top: 10px;
   left: 50%;
   width: 8px;
   height: 8px;
@@ -150,7 +150,7 @@ onUnmounted(() => {
   bottom: 10px;
   left: 0;
   font-family: 'anton', 'source-han-sans-simplified-c';
-  font-size: 10px;
+  font-size: 16px;
   letter-spacing: 0.08em;
   line-height: 1;
   text-align: center;
@@ -189,8 +189,8 @@ onUnmounted(() => {
   }
 
   .button-label.no-rem {
-    bottom: 10px;
-    font-size: 12px;
+    bottom: 13px;
+    font-size: 14px;
     letter-spacing: 0.06em;
   }
 }
