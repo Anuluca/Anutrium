@@ -14,8 +14,8 @@ const ROUTE_CONFIG = {
 
 const PAGE_DESCRIPTIONS: Record<string, { zhCn: string; en: string }> = {
   HOME: {
-    zhCn: 'Anutrium 是前端工程师与 UI/UX 设计师 Anuluca 的个人作品集，记录技术项目、创意工具、旅行影像与设计实践。',
-    en: 'Anutrium is the portfolio of frontend engineer and UI/UX designer Anuluca, featuring web projects, creative tools, travel logs, and design experiments.',
+    zhCn: 'Anutrium 是前端工程师 Anuluca 的个人网站，记录作品、创意工具、生活记录与设计实践。',
+    en: 'Anutrium is the portfolio of frontend engineer Anuluca, featuring web projects, creative tools, travel logs, and design experiments.',
   },
   ARCHIVE: {
     zhCn: '浏览 Anuluca 的主要项目与个人项目，包括 Vue、React、TypeScript、Three.js、WebGL 与数据可视化实践。',
@@ -34,8 +34,8 @@ const PAGE_DESCRIPTIONS: Record<string, { zhCn: string; en: string }> = {
     en: 'Resume and download entry for Anuluca.',
   },
   ABOUT: {
-    zhCn: '了解前端工程师与 UI/UX 设计师 Anuluca 的经历、技能与设计理念。',
-    en: 'About Anuluca, a frontend engineer and UI/UX designer: experience, skills, and design approach.',
+    zhCn: '了解前端工程师 Anuluca 的经历、技能与设计理念。',
+    en: 'About Anuluca, a frontend engineer: experience, skills, and design approach.',
   },
   ISLAND: {
     zhCn: 'Anuluca 的个人内容与兴趣空间。',
@@ -307,7 +307,7 @@ export const getSeoMeta = (
     : undefined
   const pageTitle = vlogTitle || String(to.meta.titleEn || 'HOME')
   const siteTitle =
-    locale === 'en' ? 'Anutrium by Anuluca' : 'Anutrium · 路卡的自由庭院'
+    locale === 'en' ? 'Anutrium by Anuluca' : 'Anutrium'
   const descriptionRouteName = DESCRIPTION_ROUTE_GROUPS[routeName] || routeName
   const description =
     PAGE_DESCRIPTIONS[descriptionRouteName]?.[locale] ||

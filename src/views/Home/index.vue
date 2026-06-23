@@ -2246,7 +2246,7 @@ const openTool = (tool: HomeTool) => {
 
         .main-slogan {
           order: 2;
-          zoom: 1.04;
+          zoom: 1;
           padding-right: 0;
           margin-right: 0;
           margin-left: 0;
