@@ -310,7 +310,7 @@ const referenceNumber = computed(
   margin-right: 15px;
   color: var(--text-color);
   font-family: 'anton', sans-serif;
-  font-size: clamp(1.1rem, 1.1vw, 2rem);
+  font-size: 40px;
   line-height: 1.1;
   overflow-wrap: anywhere;
 }

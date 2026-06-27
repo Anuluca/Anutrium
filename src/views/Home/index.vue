@@ -203,8 +203,8 @@
           <p>我是 <span style="color: #e23456">路卡</span>。</p>
           <p class="highlight">{{ $t('home.highlight') }}</p>
           <p class="desc">
-            在这里，我呈现我的作品、观察与生活碎片。<br />
-            我想要打造一个有灵魂与创意的数字空间。
+            这里是我用来堆放作品、想法和生活碎片的小地方。<br />
+            我想慢慢把它打造成一个毛糙但有温度、有创意，也有自己脾气的数字空间。
           </p>
         </div>
       </HomeSectionBlock>
@@ -1202,7 +1202,7 @@ const openTool = (tool: HomeTool) => {
 }
 
 .card-cat {
-  font-family: 'anton', 'source-han-sans-simplified-c';
+  font-family: 'anton', 'alibaba-puhuiti';
   font-size: 0.55rem;
   letter-spacing: 3px;
   color: #fff;
@@ -1245,10 +1245,11 @@ const openTool = (tool: HomeTool) => {
     display: -webkit-box;
     padding-right: 5.75rem;
     font-size: 0.6rem;
-    font-weight: 800;
+    letter-spacing: 0;
+    font-weight: 700;
     color: rgba(255, 255, 255, 0.45);
-    font-family: 'source-han-sans-simplified-c';
-    line-height: 1.5;
+    font-family: 'alibaba-puhuiti';
+    line-height: 1;
     overflow: hidden;
     overflow-wrap: anywhere;
     -webkit-line-clamp: 2;
@@ -1491,7 +1492,7 @@ const openTool = (tool: HomeTool) => {
     }
 
     * {
-      font-family: 'anton', 'source-han-sans-simplified-c';
+      font-family: 'anton', 'alibaba-puhuiti';
       font-size: 5.6rem;
       text-shadow: 0 14px 34px rgba(0, 0, 0, 0.48),
         0 4px 12px rgba(0, 0, 0, 0.36);
@@ -1595,7 +1596,7 @@ const openTool = (tool: HomeTool) => {
   }
 
   .scroll-text {
-    font-family: 'anton', 'source-han-sans-simplified-c';
+    font-family: 'anton', 'alibaba-puhuiti';
     font-size: 12px;
     letter-spacing: 2px;
     margin-bottom: 10px;
@@ -1976,7 +1977,7 @@ const openTool = (tool: HomeTool) => {
     h3 {
       margin-bottom: 9px;
       overflow: hidden;
-      font-family: 'source-han-sans-simplified-c', sans-serif;
+      font-family: 'alibaba-puhuiti', sans-serif;
       font-size: 1.05rem;
       font-weight: 900;
       text-overflow: ellipsis;
@@ -2103,7 +2104,7 @@ const openTool = (tool: HomeTool) => {
     h3 {
       margin: 6px 0 8px;
       overflow: hidden;
-      font-family: 'source-han-sans-simplified-c', sans-serif;
+      font-family: 'alibaba-puhuiti', sans-serif;
       font-size: 0.88rem;
       font-weight: 900;
       text-overflow: ellipsis;

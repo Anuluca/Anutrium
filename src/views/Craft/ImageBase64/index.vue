@@ -190,7 +190,7 @@ const handleTagClick = () => {
 @border: rgba(255, 255, 255, 0.07);
 @text: #ffffff;
 @muted: rgba(255, 255, 255, 0.45);
-@mono: 'source-han-sans-simplified-c', monospace;
+@mono: 'alibaba-puhuiti', monospace;
 
 .font-squish(@origin: center) {
   font-family: 'STSong', serif;

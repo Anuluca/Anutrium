@@ -633,7 +633,7 @@ watch(latestPages, () => {
   padding: 4px 14px 7px;
   color: #fff;
   background: @red;
-  font-family: 'source-han-sans-simplified-c', sans-serif;
+  font-family: 'alibaba-puhuiti', sans-serif;
   font-size: clamp(12px, 0.72vw, 16px);
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -649,7 +649,7 @@ watch(latestPages, () => {
 
   span {
     color: rgba(255, 255, 255, 0.38);
-    font-family: 'source-han-sans-simplified-c', sans-serif;
+    font-family: 'alibaba-puhuiti', sans-serif;
     font-size: 0.38rem;
     font-weight: 700;
   }
@@ -998,7 +998,7 @@ watch(latestPages, () => {
 
   strong {
     color: @white-bright;
-    font-family: 'source-han-sans-simplified-c', sans-serif;
+    font-family: 'alibaba-puhuiti', sans-serif;
     font-size: 0.6rem;
     font-weight: 900;
     line-height: 1;
@@ -1011,7 +1011,7 @@ watch(latestPages, () => {
     font-size: 0.39rem;
     font-style: normal;
     font-weight: 800;
-    font-family: 'source-han-sans-simplified-c', sans-serif;
+    font-family: 'alibaba-puhuiti', sans-serif;
     letter-spacing: 0.12em;
     line-height: 1;
     text-overflow: ellipsis;
@@ -1333,7 +1333,7 @@ watch(latestPages, () => {
     background-clip: text;
     background-position: 0 100%;
     background-size: 100% 220%;
-    font-family: 'cn-custom', 'source-han-sans-simplified-c', sans-serif;
+    font-family: 'cn-custom', 'alibaba-puhuiti', sans-serif;
     font-size: clamp(26px, 1.8vw, 44px);
     line-height: 1;
     text-shadow: 0 0 16px rgba(255, 255, 255, 0.22);
@@ -1681,7 +1681,7 @@ watch(latestPages, () => {
     position: relative;
     z-index: 1;
     color: @white-bright;
-    font-family: 'source-han-sans-simplified-c', sans-serif;
+    font-family: 'alibaba-puhuiti', sans-serif;
     font-size: 0.66rem;
     font-weight: 900;
     letter-spacing: 0.04em;

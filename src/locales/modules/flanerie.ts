@@ -2,8 +2,8 @@ import dynamic from '../dynamic/flanerie'
 
 const flanerie = {
   metaItem: {
-    zhCn: '通过自己的双眼捕捉世界。',
-    en: 'Capture the world through my own eyes.',
+    zhCn: '总会忘的，也总会离开的，所以趁现在先记下来。',
+    en: 'Someday, I may forget all this, or leave it behind.That’s why I keep recording.',
   },
   videoLabel: {
     zhCn: '视频记录',

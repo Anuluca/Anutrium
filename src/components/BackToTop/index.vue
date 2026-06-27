@@ -149,7 +149,7 @@ onUnmounted(() => {
   right: 0;
   bottom: 10px;
   left: 0;
-  font-family: 'anton', 'source-han-sans-simplified-c';
+  font-family: 'anton', 'alibaba-puhuiti';
   font-size: 16px;
   letter-spacing: 0.08em;
   line-height: 1;

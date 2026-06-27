@@ -11,7 +11,7 @@
           <span class="flr-sub-date">{{ vlog.date }}</span>
         </h1>
         <p class="flr-tagline">{{ vlog.tagline }}</p>
-        <div v-if="vlog.device.length" class="flr-devices">
+        <div v-if="vlog.device?.length" class="flr-devices">
           <span class="flr-device-label">
             {{ t('flanerie.deviceLabel') }}
           </span>
@@ -86,14 +86,14 @@
       <div class="photo-grid">
         <button
           v-for="(photo, index) in paginatedPhotos"
-          :key="photo.src"
+          :key="photo.url"
           class="photo-card"
           type="button"
           @click="openViewer((currentPage - 1) * PAGE_SIZE + index)"
         >
           <div class="photo-image-stage">
             <img
-              :src="photo.src"
+              :src="photo.url"
               :alt="photo.title || ''"
               loading="lazy"
               decoding="async"
@@ -262,7 +262,7 @@ watch(
 @line: rgba(226, 52, 86, 0.28);
 @bg: #050206;
 @mono: 'cn-custom', 'Courier New', monospace;
-@cjk: 'source-han-sans-simplified-c', sans-serif;
+@cjk: 'alibaba-puhuiti', sans-serif;
 
 .flr-page {
   color: #fff;
@@ -465,7 +465,7 @@ watch(
     }
 
     .vi-title {
-      font-family: 'source-han-sans-simplified-c';
+      font-family: 'alibaba-puhuiti';
       font-size: 0.66rem;
       color: rgba(255, 255, 255, 0.5);
       font-weight: 700;

@@ -191,11 +191,10 @@ const shouldShowEnglishTitle = computed(
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 4px;
   margin-bottom: 20px;
   padding-bottom: 10px;
   color: #e23456;
-  font-family: 'anton', 'source-han-sans-simplified-c';
+  font-family: 'anton', 'alibaba-puhuiti';
   font-size: 1.3rem;
   font-weight: 900;
 }

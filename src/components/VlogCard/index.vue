@@ -270,7 +270,7 @@ const selectVlog = () => {
   max-width: 110%;
   margin: 0 0 9px;
   color: #fff;
-  font-family: 'cn-custom', 'source-han-sans-simplified-c', sans-serif;
+  font-family: 'cn-custom', 'alibaba-puhuiti', sans-serif;
   font-size: 1.3rem;
   -webkit-text-stroke: 1px #000000;
   letter-spacing: 0;

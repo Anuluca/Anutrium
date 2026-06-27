@@ -141,7 +141,7 @@ const handleShare = async () => {
   color: #e23456;
   background: linear-gradient(120deg, rgba(226, 52, 86, 0.14), transparent 52%),
     rgba(8, 5, 10, 0.88);
-  font-family: 'source-han-sans-simplified-c', sans-serif;
+  font-family: 'alibaba-puhuiti', sans-serif;
   cursor: pointer;
   transition: color 0.22s ease, border-color 0.22s ease,
     background-color 0.22s ease;

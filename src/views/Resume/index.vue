@@ -69,7 +69,7 @@ import PageHeader from '@/components/PageHeader/index.vue'
   h2 {
     margin: 12px 0 10px;
     color: #fff;
-    font-family: 'anton', 'source-han-sans-simplified-c';
+    font-family: 'anton', 'alibaba-puhuiti';
     font-size: 1.08rem;
     letter-spacing: 0.02em;
   }
@@ -77,7 +77,7 @@ import PageHeader from '@/components/PageHeader/index.vue'
   p {
     max-width: 760px;
     color: rgba(255, 255, 255, 0.54);
-    font-family: 'source-han-sans-simplified-c', sans-serif;
+    font-family: 'alibaba-puhuiti', sans-serif;
     font-size: 0.54rem;
     line-height: 1.8;
   }
@@ -112,7 +112,7 @@ import PageHeader from '@/components/PageHeader/index.vue'
   border: 1px solid rgba(90, 212, 128, 0.42);
   color: #5ad480;
   background: rgba(90, 212, 128, 0.06);
-  font-family: 'source-han-sans-simplified-c', sans-serif;
+  font-family: 'alibaba-puhuiti', sans-serif;
   font-size: 0.48rem;
   font-weight: 800;
   text-decoration: none;

@@ -133,7 +133,7 @@ defineProps({
     }
 
     .title-cn {
-      font-family: 'source-han-sans-simplified-c', sans-serif;
+      font-family: 'alibaba-puhuiti', sans-serif;
       font-weight: 700;
       font-size: 0.3em;
       color: #fff;
@@ -156,12 +156,12 @@ defineProps({
     display: flex;
     align-items: center;
     gap: 9px;
-    margin-top: 10px;
+    margin-top: 4px;
     padding-bottom: 6px;
 
     .meta-item {
-      font-family: 'source-han-sans-simplified-c', monospace;
-      font-weight: 700;
+      font-family: 'alibaba-puhuiti', monospace;
+      font-weight: 600;
       font-size: 0.4rem;
       color: @text-dim;
     }

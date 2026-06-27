@@ -401,7 +401,7 @@ onBeforeUnmount(() => {
     max-width: 720px;
     margin: 0;
     color: rgba(255, 255, 255, 0.48);
-    font-family: 'source-han-sans-simplified-c', sans-serif;
+    font-family: 'alibaba-puhuiti', sans-serif;
     font-size: 0.4rem;
     line-height: 1.5;
   }
@@ -460,7 +460,7 @@ onBeforeUnmount(() => {
 
   > span {
     color: rgba(255, 255, 255, 0.3);
-    font-family: 'source-han-sans-simplified-c', sans-serif;
+    font-family: 'alibaba-puhuiti', sans-serif;
     font-size: 0.42rem;
     font-weight: 700;
     letter-spacing: 0.08em;
@@ -470,7 +470,7 @@ onBeforeUnmount(() => {
   > strong {
     overflow: hidden;
     color: rgba(255, 255, 255, 0.88);
-    font-family: 'source-han-sans-simplified-c', sans-serif;
+    font-family: 'alibaba-puhuiti', sans-serif;
     font-size: 0.7rem;
     font-weight: 700;
     text-overflow: ellipsis;
@@ -493,7 +493,7 @@ onBeforeUnmount(() => {
   padding: 0 16px;
   color: #5ad480;
   background: linear-gradient(135deg, rgba(90, 212, 128, 0.09), transparent);
-  font-family: 'cn-custom', 'source-han-sans-simplified-c';
+  font-family: 'cn-custom', 'alibaba-puhuiti';
   font-size: 0.54rem;
   letter-spacing: 0.04em;
   line-height: 1.5;
@@ -794,7 +794,7 @@ onBeforeUnmount(() => {
     margin: -18px 0 12px;
     overflow: hidden;
     color: rgba(255, 255, 255, 0.95);
-    font-family: 'anton', 'source-han-sans-simplified-c';
+    font-family: 'anton', 'alibaba-puhuiti';
     font-size: 0.75rem;
     font-weight: 900;
     line-height: 1.2;
@@ -963,6 +963,7 @@ onBeforeUnmount(() => {
 
   .availability-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-left: 4px;
   }
 
   .availability-item {
@@ -980,12 +981,21 @@ onBeforeUnmount(() => {
   .availability-actions {
     border-top: 1px solid rgba(90, 212, 128, 0.22);
     border-left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .availability-cta {
+    width: 100%;
     min-height: 48px;
     padding: 0 16px;
-    font-size: 0.54rem;
+    font-family: 'alibaba-puhuiti';
+    font-weight: 900;
+    font-size: 0.74rem;
+  }
+  .availability-cta--resume{
+    border-top: 0;
   }
 
   .page-title {

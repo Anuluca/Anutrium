@@ -1,6 +1,6 @@
 <template>
   <div class="scene-container" :class="{ 'is-transparent': transparent }">
-    <div class="loading-text">{{ currentText }}</div>
+    <!-- <div class="loading-text">{{ currentText }}</div> -->
     <div ref="container" class="canvas-container" />
   </div>
 </template>

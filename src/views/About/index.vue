@@ -519,13 +519,13 @@ watch(locale, scheduleNeighborDescriptionMeasure)
 
 .passion-kicker {
   color: @red;
-  font-family: 'cn-custom', 'source-han-sans-simplified-c', sans-serif;
+  font-family: 'cn-custom', 'alibaba-puhuiti', sans-serif;
   font-size: 18px;
   margin-top: 10px;
   text-transform: uppercase;
 
   span {
-    font-family: 'cn-custom', 'source-han-sans-simplified-c', sans-serif;
+    font-family: 'cn-custom', 'alibaba-puhuiti', sans-serif;
     font-size: 15px;
   }
 }
@@ -533,7 +533,7 @@ watch(locale, scheduleNeighborDescriptionMeasure)
 .passion-title {
   margin: 0;
   color: @red;
-  font-family: 'source-han-sans-simplified-c', sans-serif;
+  font-family: 'alibaba-puhuiti', sans-serif;
   font-size: 38px;
   font-weight: 900;
   letter-spacing: -0.02em;
@@ -555,7 +555,7 @@ watch(locale, scheduleNeighborDescriptionMeasure)
   max-width: 780px;
   margin: 24px auto 0;
   color: rgba(0, 0, 0, 0.6);
-  font-family: 'source-han-sans-simplified-c', sans-serif;
+  font-family: 'alibaba-puhuiti', sans-serif;
   font-size: clamp(14px, 1.05vw, 18px);
   font-weight: 700;
   letter-spacing: 0.025em;
@@ -721,13 +721,13 @@ watch(locale, scheduleNeighborDescriptionMeasure)
 
   span,
   strong {
-    font-family: 'source-han-sans-simplified-c', sans-serif;
+    font-family: 'alibaba-puhuiti', sans-serif;
     font-weight: 900;
     letter-spacing: 0.08em;
   }
 
   span {
-    font-family: 'source-han-sans-simplified-c', sans-serif;
+    font-family: 'alibaba-puhuiti', sans-serif;
     font-size: 11px;
     font-weight: 900;
   }
@@ -771,19 +771,19 @@ watch(locale, scheduleNeighborDescriptionMeasure)
   display: inline-flex;
   align-items: center;
   gap: 14px;
-  font-family: 'anton', 'source-han-sans-simplified-c';
+  font-family: 'anton', 'alibaba-puhuiti';
   font-size: 1.5rem;
   font-weight: 900;
   letter-spacing: 2px;
   line-height: 1;
   white-space: nowrap;
   .changelog {
-    font-family: 'anton', 'source-han-sans-simplified-c';
+    font-family: 'anton', 'alibaba-puhuiti';
     margin-top: -10px;
   }
 
   .cn {
-    font-family: 'source-han-sans-simplified-c';
+    font-family: 'alibaba-puhuiti';
     font-size: 1rem;
     font-weight: 800;
     opacity: 0.35;
@@ -809,7 +809,7 @@ watch(locale, scheduleNeighborDescriptionMeasure)
   color: rgba(255, 255, 255, 0.72);
   background: rgba(226, 52, 86, 0.035);
   cursor: pointer;
-  font-family: 'source-han-sans-simplified-c', 'anton', sans-serif;
+  font-family: 'alibaba-puhuiti', 'anton', sans-serif;
   font-size: 0.72rem;
   font-weight: 900;
   letter-spacing: 1px;
@@ -979,7 +979,7 @@ watch(locale, scheduleNeighborDescriptionMeasure)
   border: 1px solid rgba(255, 255, 255, 0.08);
   color: #fff;
   background: rgba(255, 255, 255, 0.018);
-  font-family: 'anton', 'source-han-sans-simplified-c', sans-serif;
+  font-family: 'anton', 'alibaba-puhuiti', sans-serif;
   text-align: center;
 
   > span {
@@ -1004,7 +1004,7 @@ watch(locale, scheduleNeighborDescriptionMeasure)
     small {
       margin-top: 14px;
       color: rgba(255, 255, 255, 0.58);
-      font-family: 'source-han-sans-simplified-c', sans-serif;
+      font-family: 'alibaba-puhuiti', sans-serif;
       font-size: 0.78rem;
       font-weight: 600;
       letter-spacing: 1px;
@@ -1044,7 +1044,7 @@ watch(locale, scheduleNeighborDescriptionMeasure)
 }
 
 .log-title {
-  font-family: 'source-han-sans-simplified-c';
+  font-family: 'alibaba-puhuiti';
   font-size: clamp(18px, 1.55vw, 28px);
   font-weight: 900;
   letter-spacing: 1px;
@@ -1117,7 +1117,7 @@ watch(locale, scheduleNeighborDescriptionMeasure)
 .log-details li {
   display: flex;
   gap: 11px;
-  font-family: 'source-han-sans-simplified-c', monospace;
+  font-family: 'alibaba-puhuiti', monospace;
   font-size: 15px;
   font-weight: 700;
   line-height: 1.55;
@@ -1421,7 +1421,7 @@ watch(locale, scheduleNeighborDescriptionMeasure)
 .nb-name {
   flex: 1 1 auto;
   min-width: 0;
-  font-family: 'source-han-sans-simplified-c', monospace;
+  font-family: 'alibaba-puhuiti', monospace;
   font-size: 0.8rem;
   font-weight: 900;
   color: #fff;
@@ -1436,7 +1436,7 @@ watch(locale, scheduleNeighborDescriptionMeasure)
 
 .nb-desc {
   display: block;
-  font-family: 'source-han-sans-simplified-c', monospace;
+  font-family: 'alibaba-puhuiti', monospace;
   font-size: 0.54rem;
   color: @text-dim;
   line-height: 1.45;

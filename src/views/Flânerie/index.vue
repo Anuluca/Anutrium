@@ -542,7 +542,7 @@ onUnmounted(() => {
     opacity: 0.8;
 
     &__cn {
-      font-family: 'source-han-sans-simplified-c', sans-serif;
+      font-family: 'alibaba-puhuiti', sans-serif;
       font-size: 0.72rem;
       font-weight: 900;
       letter-spacing: 0.12em;
@@ -803,7 +803,7 @@ onUnmounted(() => {
 
   .vlog-title {
     max-width: 110%;
-    font-family: 'cn-custom', 'source-han-sans-simplified-c', sans-serif;
+    font-family: 'cn-custom', 'alibaba-puhuiti', sans-serif;
     font-size: 1.8rem;
     color: #fff;
     margin: 0 0 9px;
@@ -1073,7 +1073,7 @@ onUnmounted(() => {
   margin-bottom: 8px;
   padding-bottom: 6px;
   border-bottom: 1px solid rgba(226, 52, 86, 0.28);
-  font-family: 'source-han-sans-simplified-c', monospace;
+  font-family: 'alibaba-puhuiti', monospace;
   font-size: 0.58rem;
   font-weight: 900;
   letter-spacing: 1.6px;
@@ -1094,7 +1094,7 @@ onUnmounted(() => {
   color: rgba(255, 255, 255, 0.82);
   cursor: pointer;
   text-align: left;
-  font-family: 'source-han-sans-simplified-c', sans-serif;
+  font-family: 'alibaba-puhuiti', sans-serif;
   font-size: 0.74rem;
   font-weight: 900;
   transition: background 0.2s, color 0.2s, transform 0.2s;

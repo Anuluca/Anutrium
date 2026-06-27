@@ -388,14 +388,14 @@ const closeImageViewer = () => {
     display: block;
     margin-bottom: 7px;
     color: rgba(255, 255, 255, 0.92);
-    font-family: 'source-han-sans-simplified-c', sans-serif;
+    font-family: 'alibaba-puhuiti', sans-serif;
     font-size: 0.48rem;
     line-height: 1.5;
   }
 
   p {
     color: rgba(255, 255, 255, 0.46);
-    font-family: 'source-han-sans-simplified-c', sans-serif;
+    font-family: 'alibaba-puhuiti', sans-serif;
     font-size: 0.38rem;
     line-height: 1.65;
   }
@@ -463,7 +463,7 @@ const closeImageViewer = () => {
 }
 
 .aside-title {
-  font-family: 'anton', 'source-han-sans-simplified-c';
+  font-family: 'anton', 'alibaba-puhuiti';
   font-size: 1.4rem;
   font-weight: 900;
   line-height: 1.2;
@@ -518,7 +518,7 @@ const closeImageViewer = () => {
   gap: 8px;
 
   p {
-    font-family: 'source-han-sans-simplified-c', monospace;
+    font-family: 'alibaba-puhuiti', monospace;
     font-size: 0.75rem;
     font-weight: 700;
     color: rgba(255, 255, 255, 0.5);
@@ -560,7 +560,7 @@ const closeImageViewer = () => {
   }
 
   .link-text {
-    font-family: 'source-han-sans-simplified-c';
+    font-family: 'alibaba-puhuiti';
     font-weight: 800 !important;
     font-size: 0.6rem;
     color: rgba(255, 255, 255, 0.65);
@@ -824,7 +824,7 @@ const closeImageViewer = () => {
 }
 
 .detail-text {
-  font-family: 'source-han-sans-simplified-c', monospace;
+  font-family: 'alibaba-puhuiti', monospace;
   font-size: 0.75rem;
   font-weight: 700;
   color: rgba(255, 255, 255, 0.55);

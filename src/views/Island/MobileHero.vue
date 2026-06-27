@@ -89,7 +89,7 @@ h1 {
 
   span {
     color: #fff;
-    font-family: 'source-han-sans-simplified-c', sans-serif;
+    font-family: 'alibaba-puhuiti', sans-serif;
     font-size: 20px;
     font-weight: 900;
     line-height: 1;

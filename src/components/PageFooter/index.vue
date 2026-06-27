@@ -329,10 +329,10 @@ onUnmounted(() => {
     padding-bottom: 0;
   }
   .third-party-recommend {
-    font-family: 'source-han-sans-simplified-c' !important;
+    font-family: 'alibaba-puhuiti' !important;
     font-weight: 600;
     * {
-      font-family: 'source-han-sans-simplified-c' !important;
+      font-family: 'alibaba-puhuiti' !important;
       font-weight: 600;
     }
     a {
