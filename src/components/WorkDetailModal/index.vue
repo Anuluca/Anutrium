@@ -187,6 +187,7 @@
           v-if="showImageViewer && work.images"
           :url-list="work.images"
           :initial-index="currentImageIndex"
+          hide-on-click-modal
           teleported
           @close="closeImageViewer"
         />

@@ -407,7 +407,7 @@ const referenceNumber = computed(
   }
 
   .work-name {
-        font-size: 1.6rem;
+    font-size: 1.6rem;
   }
 }
 </style>

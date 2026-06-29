@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="360" height="132" viewBox="0 0 360 132">
-  <rect width="360" height="132" rx="8" fill="#080808"/>
-  <rect x="1" y="1" width="358" height="130" rx="7" fill="none" stroke="#e23456" stroke-opacity=".55"/>
-  <path d="M26 32h80v68H26z" fill="#e23456"/>
-  <path d="m34 43 32 26 32-26M34 89l22-23m42 23L76 66" fill="none" stroke="#080808" stroke-width="6" stroke-linejoin="round"/>
-  <text x="128" y="55" fill="#e23456" font-family="monospace" font-size="13" font-weight="700" letter-spacing="2">MAIL / CONTACT</text>
-  <text x="128" y="82" fill="#fff" font-family="monospace" font-size="15" font-weight="700">tilucario@outlook.com</text>
-  <text x="128" y="104" fill="#fff" fill-opacity=".38" font-family="monospace" font-size="10" letter-spacing="1">CLICK TO OPEN MAIL CLIENT</text>
-</svg>

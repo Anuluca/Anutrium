@@ -1,6 +1,6 @@
-import common from './modules/common'
 import about from './modules/about'
 import archive from './modules/archive'
+import common from './modules/common'
 import craft from './modules/craft'
 import flanerie from './modules/flanerie'
 import home from './modules/home'

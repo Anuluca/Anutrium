@@ -187,10 +187,7 @@
           </div>
         </div>
         <div class="player-seal">
-          <span class="seal-clock">
-            <span class="seal-date">{{ currentDate }}</span>
-            <time>{{ currentTime }}</time>
-          </span>
+          <IslandClock />
           <i />
         </div>
       </section>
@@ -201,6 +198,8 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+
+import IslandClock from '@/components/IslandClock/index.vue'
 
 const { t, tm } = useI18n()
 
@@ -359,10 +358,7 @@ const isPlaying = ref(false)
 const isLatestScrollAtTop = ref(true)
 const isLatestScrollAtBottom = ref(false)
 const trackProgress = ref(0)
-const currentDate = ref('')
-const currentTime = ref('')
 const currentTrackIndex = ref(0)
-let clockTimer: number | undefined
 
 const track = computed(
   () => tracks.value[currentTrackIndex.value] || fallbackTrack
@@ -419,21 +415,6 @@ const togglePlayback = async () => {
   audio.pause()
 }
 
-const updateCurrentTime = () => {
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = String(now.getMonth() + 1).padStart(2, '0')
-  const date = String(now.getDate()).padStart(2, '0')
-
-  currentDate.value = `${year}/${month}/${date}`
-  currentTime.value = now.toLocaleTimeString('zh-CN', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-  })
-}
-
 const updateLatestScrollState = () => {
   const scrollEl = latestScrollRef.value
   if (!scrollEl) return
@@ -446,15 +427,12 @@ const updateLatestScrollState = () => {
 
 onMounted(() => {
   document.body.classList.add('island-pc-shell')
-  updateCurrentTime()
   nextTick(updateLatestScrollState)
-  clockTimer = window.setInterval(updateCurrentTime, 1000)
   window.addEventListener('resize', updateLatestScrollState)
 })
 
 onUnmounted(() => {
   document.body.classList.remove('island-pc-shell')
-  if (clockTimer) window.clearInterval(clockTimer)
   window.removeEventListener('resize', updateLatestScrollState)
 })
 

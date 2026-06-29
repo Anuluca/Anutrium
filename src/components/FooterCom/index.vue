@@ -2,10 +2,10 @@
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
+import { Message } from '@element-plus/icons-vue'
 import { ElLoading } from 'element-plus'
 
 import githubImg from '@/assets/img/github_profile.png'
-import mailImg from '@/assets/img/mail_profile.svg'
 import twitterImg from '@/assets/img/twitter_profile.png'
 import bottomLineData from '@/data/bottomLine.js'
 import { getContactLink } from '@/data/contactLinks'
@@ -20,7 +20,7 @@ interface SocialItem {
   type: 'TWITTER' | 'BILIBILI' | 'GITHUB' | 'MAIL'
   label: string
   href: string
-  image: string
+  image?: string
 }
 
 const BILIBILI_IMG = 'https://assets.anuluca.com/other/bilibili_profile.jpg'
@@ -48,9 +48,9 @@ const SOCIAL_ITEMS: SocialItem[] = [
     type: 'MAIL',
     label: 'MAIL',
     href: getContactLink('MAIL')!.href,
-    image: mailImg,
   },
 ]
+const MAIL_ITEM = SOCIAL_ITEMS.find((item) => item.type === 'MAIL')!
 
 const WEIBO_WIDGET_URL =
   'https://widget.weibo.com/weiboshow/index.php?language=&width=0&height=520&fansRow=1&ptype=1&speed=0&skin=10&isTitle=1&noborder=1&isWeibo=1&isFans=1&uid=7738638501&verifier=4838f435&dpc=1'
@@ -211,7 +211,7 @@ const loadWeiboWidget = () => {
                       fontWeight: 600,
                     },
                   ]"
-                  >{{ item.title }}\{{ item.sort }}</span
+                  >{{ item.title }}{{ item.sort ? `/${item.sort}` : '' }}</span
                 >
                 」
                 <span style="color: #ffffff96">{{ item.date }}</span>
@@ -237,7 +237,7 @@ const loadWeiboWidget = () => {
                       fontWeight: 600,
                     },
                   ]"
-                  >{{ item.title }}\{{ item.sort }}</span
+                  >{{ item.title }}{{ item.sort ? `/${item.sort}` : '' }}</span
                 >
                 」
                 <span style="color: #ffffff96">{{ item.date }}</span>
@@ -301,7 +301,9 @@ const loadWeiboWidget = () => {
           </a>
         </span>
         <span
-          v-for="social in SOCIAL_ITEMS.slice(1)"
+          v-for="social in SOCIAL_ITEMS.filter(
+            (item) => item.type !== 'TWITTER' && item.type !== 'MAIL'
+          )"
           :key="social.type"
           class="social-link"
           :class="`social-link--${social.type.toLowerCase()}`"
@@ -309,8 +311,8 @@ const loadWeiboWidget = () => {
           <a
             class="social-preview"
             :href="social.href"
-            :target="social.type === 'MAIL' ? undefined : '_blank'"
-            :rel="social.type === 'MAIL' ? undefined : 'noopener noreferrer'"
+            target="_blank"
+            rel="noopener noreferrer"
             :aria-label="`${social.label} profile`"
           >
             <img :src="social.image" :alt="`${social.label} profile`" />
@@ -318,11 +320,24 @@ const loadWeiboWidget = () => {
           <a
             class="social-trigger"
             :href="social.href"
-            :target="social.type === 'MAIL' ? undefined : '_blank'"
-            :rel="social.type === 'MAIL' ? undefined : 'noopener noreferrer'"
+            target="_blank"
+            rel="noopener noreferrer"
           >
             {{ social.label }}
           </a>
+        </span>
+        <span class="social-link social-link--mail">
+          <a
+            class="social-preview"
+            :href="MAIL_ITEM.href"
+            aria-label="Open mail client"
+          >
+            <span class="mail-preview__icon" aria-hidden="true">
+              <el-icon><Message /></el-icon>
+            </span>
+            <span class="mail-preview__content">tilucario@outlook.com</span>
+          </a>
+          <a class="social-trigger" :href="MAIL_ITEM.href">MAIL</a>
         </span>
       </div>
       <button class="mark" type="button" @click="router.push('/')">

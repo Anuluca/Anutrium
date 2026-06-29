@@ -30,6 +30,36 @@ const homeDynamic = {
       link: 'https://Drrr.anuluca.com',
       openInNewWindow: true,
     },
+    {
+      id: 3,
+      title: {
+        zhCn: '庐山/旅程',
+        en: 'LUSHAN / FLÂNERIE',
+      },
+      subtitle: {
+        zhCn: '旅程数据更新',
+        en: 'Journey data updated.',
+      },
+      category: 'UPDATE',
+      date: '2026/06/25',
+      img: 'https://assets.anuluca.com/Flanerie/cities/lushan/DSC07767.jpg',
+      link: '/flanerie/lushan',
+    },
+    {
+      id: 4,
+      title: {
+        zhCn: '节拍器/工具',
+        en: 'METRONOME / TOOL',
+      },
+      subtitle: {
+        zhCn: '新增工具项',
+        en: 'New tool released.',
+      },
+      category: 'RELEASE',
+      date: '2026/01/21',
+      img: 'https://assets.anuluca.com/other/YfLHgA_composite.jpg',
+      link: '/metronome',
+    },
   ],
 } as const
 

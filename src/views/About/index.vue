@@ -432,7 +432,7 @@ watch(locale, scheduleNeighborDescriptionMeasure)
   grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
   align-items: stretch;
   gap: 28px;
-  margin-bottom:20px;
+  margin-bottom: 20px;
 
   > .block,
   > .passion-section {

@@ -53,7 +53,12 @@
 
                 <div class="card-content">
                   <div class="card-top">
-                    <span class="card-cat">{{ item.category }}</span>
+                    <span
+                      class="card-cat"
+                      :class="`card-cat--${item.category.toLowerCase()}`"
+                    >
+                      {{ item.category }}
+                    </span>
                   </div>
                   <h3 class="card-title">{{ item.title }}</h3>
                   <p class="card-subtitle">
@@ -140,7 +145,7 @@
         <span class="scroll-text scroll-text--below">返回第一屏</span>
       </button>
 
-      <HomeSectionBlock
+      <Sections
         section-number="01"
         rail-label="ABOUT"
         :title="$t('home.title01')"
@@ -207,11 +212,11 @@
             我想慢慢把它打造成一个毛糙但有温度、有创意，也有自己脾气的数字空间。
           </p>
         </div>
-      </HomeSectionBlock>
+      </Sections>
     </section>
 
     <section class="works-section home-indexed-section">
-      <HomeSectionBlock
+      <Sections
         section-number="02"
         rail-label="WORKS"
         :title="$t('home.title02')"
@@ -240,11 +245,11 @@
             AND MORE...
           </RouterLink>
         </div>
-      </HomeSectionBlock>
+      </Sections>
     </section>
 
     <section class="journey-section home-indexed-section">
-      <HomeSectionBlock
+      <Sections
         section-number="03"
         rail-label="FLÂNERIE"
         :title="$t('home.title03')"
@@ -273,11 +278,11 @@
             AND MORE...
           </RouterLink>
         </div>
-      </HomeSectionBlock>
+      </Sections>
     </section>
 
     <section class="craft-section home-indexed-section">
-      <HomeSectionBlock
+      <Sections
         section-number="04"
         rail-label="CRAFT"
         :title="$t('home.title04')"
@@ -307,7 +312,7 @@
             AND MORE...
           </RouterLink>
         </div>
-      </HomeSectionBlock>
+      </Sections>
     </section>
 
     <PageFooter />
@@ -327,7 +332,7 @@ import { Autoplay, Mousewheel } from 'swiper/modules'
 import type { Swiper as SwiperInstance } from 'swiper/types'
 import { Swiper, SwiperSlide } from 'swiper/vue'
 
-import HomeSectionBlock from '@/components/HomeSectionBlock/index.vue'
+import Sections from '@/components/Sections/index.vue'
 import LogoOnly3D from '@/components/LogoOnly3D/index.vue'
 import MarqueeShowcase from '@/components/MarqueeShowcase/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
@@ -1211,6 +1216,10 @@ const openTool = (tool: HomeTool) => {
   padding-top: 0px;
   padding-right: 6px;
   line-height: 1.6;
+}
+
+.card-cat--update {
+  background: #3c5de8;
 }
 
 .card-date {

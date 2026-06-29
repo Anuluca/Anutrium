@@ -344,12 +344,6 @@ const islandDynamic = {
         img: 'https://placehold.co/260x180/14070c/e23456?text=PINGTAN',
       },
       {
-        title: 'Resume',
-        module: 'RESUME / PROFILE',
-        path: '/resume',
-        img: 'https://placehold.co/260x180/14070c/e23456?text=RESUME',
-      },
-      {
         title: 'Friend Links',
         module: 'ABOUT / NETWORK',
         path: '/about',

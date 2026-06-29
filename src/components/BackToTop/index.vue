@@ -94,7 +94,7 @@ onUnmounted(() => {
   &:hover,
   &:focus-visible {
     color: #fff;
-    box-shadow:0 0 18px rgba(203, 15, 53, 0.457);
+    box-shadow: 0 0 18px rgba(203, 15, 53, 0.457);
     transform: translateY(-2px);
 
     .button-arrow.no-rem {

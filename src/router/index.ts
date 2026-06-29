@@ -29,10 +29,6 @@ const PAGE_DESCRIPTIONS: Record<string, { zhCn: string; en: string }> = {
     zhCn: '由 Anuluca 设计与开发的前端创意工具和交互实验。',
     en: 'Frontend utilities and interactive experiments designed and built by Anuluca.',
   },
-  RESUME: {
-    zhCn: 'Anuluca 的简历与下载入口。',
-    en: 'Resume and download entry for Anuluca.',
-  },
   ABOUT: {
     zhCn: '了解前端工程师 Anuluca 的经历、技能与设计理念。',
     en: 'About Anuluca, a frontend engineer: experience, skills, and design approach.',
@@ -150,18 +146,6 @@ export const routes: RouteConfig[] = [
       ifShow: true,
     },
   },
-  {
-    path: '/resume',
-    name: 'RESUME',
-    component: () => import('@/views/Resume/index.vue'),
-    meta: {
-      titleEn: 'RESUME',
-      titleCn: '简历',
-      fullFooter: true,
-      ifShow: false,
-    },
-  },
-
   {
     path: '/404',
     name: '404',
@@ -306,8 +290,7 @@ export const getSeoMeta = (
     ? vlogs.find((vlog) => vlog.id === vlogId)?.title
     : undefined
   const pageTitle = vlogTitle || String(to.meta.titleEn || 'HOME')
-  const siteTitle =
-    locale === 'en' ? 'Anutrium by Anuluca' : 'Anutrium'
+  const siteTitle = locale === 'en' ? 'Anutrium by Anuluca' : 'Anutrium'
   const descriptionRouteName = DESCRIPTION_ROUTE_GROUPS[routeName] || routeName
   const description =
     PAGE_DESCRIPTIONS[descriptionRouteName]?.[locale] ||

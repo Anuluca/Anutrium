@@ -39,7 +39,7 @@
           :key="group.id"
           class="vlog-group"
         >
-          <HomeSectionBlock
+          <Sections
             :section-number="String(index + 1).padStart(2, '0')"
             :rail-label="group.railLabel"
             :title="group.title"
@@ -56,7 +56,7 @@
                 @select="openVlog(vlog)"
               />
             </div>
-          </HomeSectionBlock>
+          </Sections>
         </section>
       </div>
     </section>
@@ -80,7 +80,7 @@ import {
 import { Minus, Plus } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
-import HomeSectionBlock from '@/components/HomeSectionBlock/index.vue'
+import Sections from '@/components/Sections/index.vue'
 import PageHeader from '@/components/PageHeader/index.vue'
 import VlogCard from '@/components/VlogCard/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
@@ -153,17 +153,17 @@ interface MapPlaceGroup extends VlogLocation {
 }
 
 const VISITED_REGION_GEOJSON_URLS: Record<string, string> = {
-  beijing: 'https://geo.datav.aliyun.com/areas_v3/bound/110000.json',
-  hunan: 'https://geo.datav.aliyun.com/areas_v3/bound/430000.json',
-  anhui: 'https://geo.datav.aliyun.com/areas_v3/bound/340000.json',
-  chongqing: 'https://geo.datav.aliyun.com/areas_v3/bound/500000.json',
-  shanghai: 'https://geo.datav.aliyun.com/areas_v3/bound/310000.json',
-  hubei: 'https://geo.datav.aliyun.com/areas_v3/bound/420000.json',
-  guangdong: 'https://geo.datav.aliyun.com/areas_v3/bound/440000.json',
-  jiangxi: 'https://geo.datav.aliyun.com/areas_v3/bound/360000.json',
-  jiangsu: 'https://geo.datav.aliyun.com/areas_v3/bound/320000.json',
-  fujian: 'https://geo.datav.aliyun.com/areas_v3/bound/350000.json',
-  singapore: 'https://www.geoboundaries.org/api/current/gbOpen/SGP/ADM0',
+  beijing: '/geo/visited-regions/beijing.geojson',
+  hunan: '/geo/visited-regions/hunan.geojson',
+  anhui: '/geo/visited-regions/anhui.geojson',
+  chongqing: '/geo/visited-regions/chongqing.geojson',
+  shanghai: '/geo/visited-regions/shanghai.geojson',
+  hubei: '/geo/visited-regions/hubei.geojson',
+  guangdong: '/geo/visited-regions/guangdong.geojson',
+  jiangxi: '/geo/visited-regions/jiangxi.geojson',
+  jiangsu: '/geo/visited-regions/jiangsu.geojson',
+  fujian: '/geo/visited-regions/fujian.geojson',
+  singapore: '/geo/visited-regions/singapore.geojson',
 }
 
 const mapPlaces = computed<MapPlaceGroup[]>(() => {
@@ -241,15 +241,9 @@ const loadGeoJsonBoundary = async (url: string) => {
   if (!response.ok) return null
 
   const data = await response.json()
-  if (data?.type === 'FeatureCollection' || data?.type === 'Feature') {
-    return data
-  }
-  if (!data?.gjDownloadURL) return null
-
-  const geoJsonResponse = await fetch(data.gjDownloadURL)
-  if (!geoJsonResponse.ok) return null
-
-  return geoJsonResponse.json()
+  return data?.type === 'FeatureCollection' || data?.type === 'Feature'
+    ? data
+    : null
 }
 
 const addVisitedRegionHighlights = async (L: any) => {
@@ -279,9 +273,9 @@ const addVisitedRegionHighlights = async (L: any) => {
           style: {
             color: '#e23456',
             weight: 1.4,
-            opacity: 0.88,
+            opacity: 0.68,
             fillColor: '#e23456',
-            fillOpacity: visualStateStore.theme === 'light' ? 0.1 : 0.18,
+            fillOpacity: visualStateStore.theme === 'light' ? 0.07 : 0.13,
           },
         }).addTo(mapInstance)
       } catch {

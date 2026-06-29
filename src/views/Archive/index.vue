@@ -70,14 +70,14 @@
           <span>{{ $t('archive.statusCta') }}</span>
           <span aria-hidden="true">↗</span>
         </a>
-        <RouterLink
+        <button
+          type="button"
           class="availability-cta availability-cta--resume"
-          to="/resume"
-          @click="trackResumeOpen"
+          @click="requestResume"
         >
           <span>{{ $t('archive.statusResumeCta') }}</span>
           <span aria-hidden="true">→</span>
-        </RouterLink>
+        </button>
       </div>
 
       <div class="availability-corner availability-corner--tl" />
@@ -85,7 +85,7 @@
     </section>
 
     <section class="works-section">
-      <HomeSectionBlock
+      <Sections
         section-number="01"
         rail-label="MAIN"
         :title="$t('archive.title01')"
@@ -100,11 +100,11 @@
             @select="openDetail(work)"
           />
         </div>
-      </HomeSectionBlock>
+      </Sections>
     </section>
 
     <section class="works-section personal-works-section">
-      <HomeSectionBlock
+      <Sections
         section-number="02"
         rail-label="PERSONAL"
         :title="$t('archive.title02')"
@@ -119,11 +119,11 @@
             @select="openDetail(work)"
           />
         </div>
-      </HomeSectionBlock>
+      </Sections>
     </section>
 
     <section class="misc-section">
-      <HomeSectionBlock
+      <Sections
         section-number="03"
         rail-label="OTHER"
         :title="$t('archive.title03')"
@@ -170,7 +170,7 @@
             <div class="corner corner-br" />
           </div>
         </div>
-      </HomeSectionBlock>
+      </Sections>
     </section>
     <PageFooter cn-title="作品集" en-title="ARCHIVE" />
 
@@ -186,7 +186,8 @@
 /* eslint-disable simple-import-sort/imports */
 import { computed, onBeforeUnmount, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import HomeSectionBlock from '@/components/HomeSectionBlock/index.vue'
+import { ElMessageBox } from 'element-plus'
+import Sections from '@/components/Sections/index.vue'
 import WorkCard from '@/components/WorkCard/index.vue'
 import WorkDetailModal from '@/components/WorkDetailModal/index.vue'
 import PageHeader from '@/components/PageHeader/index.vue'
@@ -194,7 +195,9 @@ import PageFooter from '@/components/PageFooter/index.vue'
 import TypedText from '@/components/TypedText/index.vue'
 import { trackEvent, trackProjectClick } from '@/utils/analytics'
 
-const { t, tm } = useI18n()
+import 'element-plus/es/components/message-box/style/css'
+
+const { locale, t, tm } = useI18n()
 
 interface WorkItem {
   id: string
@@ -275,10 +278,39 @@ const startAvailabilityTyping = (event: AnimationEvent) => {
   availabilityTypingReady.value = true
 }
 
-const trackResumeOpen = () => {
+const requestResume = async () => {
   trackEvent('resume_click', {
     source: 'availability_panel',
   })
+
+  const isEnglish = locale.value === 'en'
+
+  try {
+    await ElMessageBox.confirm(
+      isEnglish
+        ? 'Would you like to email Anuluca to request a resume?'
+        : '是否向 Anuluca 发送简历请求？',
+      isEnglish ? 'Request Resume' : '请求简历',
+      {
+        confirmButtonText: isEnglish ? 'Send Request' : '发送请求',
+        cancelButtonText: isEnglish ? 'Cancel' : '取消',
+        type: 'info',
+      }
+    )
+
+    const subject = isEnglish
+      ? 'Resume Request via Anutrium'
+      : '通过 Anutrium 请求简历'
+    const body = isEnglish
+      ? 'Hi Anuluca,\n\nI would like to request your resume.\n\nCompany / Team:\nRole / Opportunity:\nAdditional context:\n'
+      : '你好 Anuluca：\n\n我希望获取你的完整简历。\n\n公司 / 团队：\n职位 / 合作机会：\n补充说明：\n'
+
+    window.location.href = `mailto:tilucario@outlook.com?subject=${encodeURIComponent(
+      subject
+    )}&body=${encodeURIComponent(body)}`
+  } catch {
+    // The user cancelled or closed the confirmation dialog.
+  }
 }
 
 const hasMiscDetail = (work: MiscWork) => {
@@ -523,7 +555,13 @@ onBeforeUnmount(() => {
 }
 
 .availability-cta--resume {
+  width: 100%;
   border-top: 1px solid rgba(90, 212, 128, 0.22);
+  border-right: 0;
+  border-bottom: 0;
+  border-left: 0;
+  appearance: none;
+  cursor: pointer;
 
   &::before {
     content: 'RESUME';
@@ -994,7 +1032,7 @@ onBeforeUnmount(() => {
     font-weight: 900;
     font-size: 0.74rem;
   }
-  .availability-cta--resume{
+  .availability-cta--resume {
     border-top: 0;
   }
 
