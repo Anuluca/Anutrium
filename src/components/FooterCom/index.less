@@ -11,8 +11,25 @@
   justify-content: space-evenly;
   align-items: center;
   transition: all 0.5s ease;
-  animation: fadeIn 0.4s ease-in forwards;
   opacity: 0;
+
+  &.footer-ready {
+    animation: fadeIn 0.4s ease-in forwards;
+  }
+
+  &.footer-expanded {
+    .center {
+      .expand {
+        width: 100%;
+      }
+    }
+
+    .right {
+      .text-links {
+        opacity: 1;
+      }
+    }
+  }
 
   &.full-footer {
     left: 0;
@@ -78,11 +95,12 @@
 
     .expand {
       background-color: rgb(23 23 23 / 45%);
-      width: 100%;
+      width: 0;
       height: 100%;
       background-image: radial-gradient(#fcfcfc12 1px, #57575733 1px);
       background-size: 0.14286rem 0.14286rem;
-      transition: all 1s;
+      overflow: hidden;
+      transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
       display: flex;
       align-items: center;
       justify-content: flex-start;
@@ -176,7 +194,8 @@
     .text-links {
       height: 100%;
       margin-left: 10px;
-      transition: all 1s;
+      opacity: 0;
+      transition: opacity 0.45s ease 0.65s;
       white-space: nowrap;
       display: inline-flex;
       align-items: center;

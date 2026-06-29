@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { Message } from '@element-plus/icons-vue'
@@ -24,6 +24,12 @@ interface SocialItem {
 }
 
 const BILIBILI_IMG = 'https://assets.anuluca.com/other/bilibili_profile.jpg'
+const props = defineProps({
+  entryActive: {
+    type: Boolean,
+    default: false,
+  },
+})
 
 const SOCIAL_ITEMS: SocialItem[] = [
   {
@@ -66,15 +72,19 @@ const currentRouter = computed(() => route.path)
 const theme = ref(false)
 const isScrollingDown = ref<boolean>(false)
 const isMotionPaused = ref(false)
+const footerExpanded = ref(false)
 const weiboSrc = ref('')
 const marqueeContent = ref<HTMLElement | null>(null)
 const marqueeDuration = ref('24s')
 let footerAnimationTimer: number | null = null
 let reducedMotionQuery: MediaQueryList | null = null
+let hasPlayedEntryAnimation = false
 
 onMounted(() => {
-  initFooterAnimation()
   nextTick(updateMarqueeDuration)
+  if (props.entryActive) {
+    nextTick(initFooterAnimation)
+  }
   reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
   updateMotionState()
   window.addEventListener('resize', updateMarqueeDuration, { passive: true })
@@ -105,19 +115,12 @@ const updateMarqueeDuration = () => {
 }
 
 const initFooterAnimation = () => {
-  const expandElement = document.querySelector('.expand') as HTMLElement
-  const textElement = document.querySelector('.text-links') as HTMLElement
-
-  if (!expandElement || !textElement) return
-
-  expandElement.style.width = '0px'
-  expandElement.style.overflow = 'hidden'
-  textElement.style.opacity = '0'
+  if (hasPlayedEntryAnimation) return
+  hasPlayedEntryAnimation = true
+  footerExpanded.value = false
 
   footerAnimationTimer = window.setTimeout(() => {
-    expandElement.style.width = '100%'
-    expandElement.style.overflow = 'visible'
-    textElement.style.opacity = '1'
+    footerExpanded.value = true
     theme.value = localStorage.getItem('theme') === 'dark'
   }, 400)
 }
@@ -154,6 +157,15 @@ const loadWeiboWidget = () => {
     weiboSrc.value = WEIBO_WIDGET_URL
   }
 }
+
+watch(
+  () => props.entryActive,
+  (entryActive) => {
+    if (entryActive) {
+      nextTick(initFooterAnimation)
+    }
+  }
+)
 </script>
 
 <template>
@@ -161,6 +173,8 @@ const loadWeiboWidget = () => {
     :class="{
       'footer-com': true,
       'full-footer': fullFooter,
+      'footer-ready': props.entryActive,
+      'footer-expanded': footerExpanded,
       'scrolling-down': isScrollingDown,
       'motion-paused': isMotionPaused,
     }"

@@ -7,7 +7,27 @@
 
 <script setup>
 import { onMounted, onUnmounted, ref } from 'vue'
-import * as THREE from 'three'
+import {
+  AmbientLight,
+  BoxGeometry,
+  Color,
+  ConeGeometry,
+  CylinderGeometry,
+  DoubleSide,
+  FogExp2,
+  Group,
+  Matrix4,
+  Mesh,
+  MeshPhysicalMaterial,
+  MeshStandardMaterial,
+  PCFSoftShadowMap,
+  PerspectiveCamera,
+  PMREMGenerator,
+  Scene,
+  SpotLight,
+  Vector2,
+  WebGLRenderer,
+} from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
@@ -54,17 +74,17 @@ const getSceneSize = () => {
 const initThree = () => {
   const { width, height } = getSceneSize()
 
-  scene = new THREE.Scene()
-  scene.background = props.transparent ? null : new THREE.Color('#050505')
+  scene = new Scene()
+  scene.background = props.transparent ? null : new Color('#050505')
   if (!props.transparent) {
-    scene.fog = new THREE.FogExp2(0x050505, 0.02)
+    scene.fog = new FogExp2(0x050505, 0.02)
   }
 
-  camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100)
+  camera = new PerspectiveCamera(45, width / height, 0.1, 100)
   camera.position.set(0, 0, 9)
   camera.lookAt(0, 0, 0)
 
-  renderer = new THREE.WebGLRenderer({
+  renderer = new WebGLRenderer({
     alpha: props.transparent,
     antialias: !props.lowPower,
     powerPreference: props.lowPower ? 'low-power' : 'high-performance',
@@ -75,19 +95,19 @@ const initThree = () => {
   renderer.setSize(width, height)
 
   renderer.shadowMap.enabled = !props.lowPower
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap
+  renderer.shadowMap.type = PCFSoftShadowMap
 
   container.value.appendChild(renderer.domElement)
 
-  const pmremGenerator = new THREE.PMREMGenerator(renderer)
+  const pmremGenerator = new PMREMGenerator(renderer)
   environmentMap = pmremGenerator.fromScene(new RoomEnvironment(), 0.04)
   scene.environment = environmentMap.texture
   pmremGenerator.dispose()
 
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.1)
+  const ambientLight = new AmbientLight(0xffffff, 0.1)
   scene.add(ambientLight)
 
-  const spotLight = new THREE.SpotLight(0xffffff, 50)
+  const spotLight = new SpotLight(0xffffff, 50)
   spotLight.position.set(5, 10, 5)
   spotLight.angle = Math.PI / 4
   spotLight.penumbra = 0.5
@@ -98,7 +118,7 @@ const initThree = () => {
   if (!props.lowPower) {
     const renderScene = new RenderPass(scene, camera)
     const bloomPass = new UnrealBloomPass(
-      new THREE.Vector2(width, height),
+      new Vector2(width, height),
       1.5,
       0.4,
       0.85
@@ -118,14 +138,14 @@ const initThree = () => {
     controls.dampingFactor = 0.05
   }
 
-  const cageMaterial = new THREE.MeshStandardMaterial({
+  const cageMaterial = new MeshStandardMaterial({
     color: 'black',
     metalness: 0.5,
     roughness: 0.5,
     envMapIntensity: 0,
   })
 
-  const crystalMaterial = new THREE.MeshPhysicalMaterial({
+  const crystalMaterial = new MeshPhysicalMaterial({
     color: 0xffffff,
     metalness: 0.01,
     roughness: 0.01,
@@ -133,31 +153,31 @@ const initThree = () => {
     thickness: 2,
     ior: 1.5,
     reflectivity: 0.1,
-    side: THREE.DoubleSide,
+    side: DoubleSide,
     transparent: true,
   })
 
-  const group = new THREE.Group()
+  const group = new Group()
   scene.add(group)
 
   const createCrystal = () => {
-    const crystalGroup = new THREE.Group()
+    const crystalGroup = new Group()
     const radius = 1.5
     const cylinderHeight = 4
     const coneHeight = radius * 1.3
     const segments = 4
 
-    const cylinder = new THREE.Mesh(
-      new THREE.CylinderGeometry(radius, radius, cylinderHeight, segments),
+    const cylinder = new Mesh(
+      new CylinderGeometry(radius, radius, cylinderHeight, segments),
       crystalMaterial
     )
-    const topCone = new THREE.Mesh(
-      new THREE.ConeGeometry(radius, coneHeight, segments),
+    const topCone = new Mesh(
+      new ConeGeometry(radius, coneHeight, segments),
       crystalMaterial
     )
     topCone.position.y = cylinderHeight / 2 + coneHeight / 2
-    const bottomCone = new THREE.Mesh(
-      new THREE.ConeGeometry(radius, coneHeight, segments),
+    const bottomCone = new Mesh(
+      new ConeGeometry(radius, coneHeight, segments),
       crystalMaterial
     )
     bottomCone.rotation.x = Math.PI
@@ -168,7 +188,7 @@ const initThree = () => {
   }
 
   const createNCage = () => {
-    const cageGroup = new THREE.Group()
+    const cageGroup = new Group()
     const size = 1.4
     const height = 1
     const pillarThickness = 0.7
@@ -180,8 +200,8 @@ const initThree = () => {
     ]
 
     positions.forEach((pos) => {
-      const mesh = new THREE.Mesh(
-        new THREE.BoxGeometry(pillarThickness, height * 2, pillarThickness),
+      const mesh = new Mesh(
+        new BoxGeometry(pillarThickness, height * 2, pillarThickness),
         cageMaterial
       )
       mesh.position.set(pos.x, 0, pos.z)
@@ -198,12 +218,12 @@ const initThree = () => {
     const shearRate = -(height * 1.2) / width
 
     faces.forEach((face) => {
-      const diagGeo = new THREE.BoxGeometry(
+      const diagGeo = new BoxGeometry(
         width,
         pillarThickness + 0.1,
         pillarThickness
       )
-      const shearMatrix = new THREE.Matrix4().set(
+      const shearMatrix = new Matrix4().set(
         1,
         0,
         0,
@@ -222,7 +242,7 @@ const initThree = () => {
         1
       )
       diagGeo.applyMatrix4(shearMatrix)
-      const diagMesh = new THREE.Mesh(diagGeo, cageMaterial)
+      const diagMesh = new Mesh(diagGeo, cageMaterial)
       diagMesh.rotation.y = face.r
       diagMesh.position.set(face.x, 0, face.z)
       cageGroup.add(diagMesh)

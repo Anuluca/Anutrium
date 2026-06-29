@@ -212,6 +212,12 @@ import { visualState } from '@/stores'
 import { persistLocale, type SiteLocale } from '@/utils/locale'
 
 const { locale } = useI18n()
+const props = defineProps({
+  entryActive: {
+    type: Boolean,
+    default: false,
+  },
+})
 
 const logoActive = ref(true)
 
@@ -244,6 +250,36 @@ const isPageScrollable = ref(false)
 let scrollRafId: number | null = null
 let logoTimer: number | null = null
 let layoutTimer: number | null = null
+let hasPlayedEntryAnimation = false
+
+const clearEntryAnimationTimers = () => {
+  if (logoTimer !== null) {
+    window.clearTimeout(logoTimer)
+    logoTimer = null
+  }
+  if (layoutTimer !== null) {
+    window.clearTimeout(layoutTimer)
+    layoutTimer = null
+  }
+}
+
+const startEntryAnimation = () => {
+  if (hasPlayedEntryAnimation) return
+  hasPlayedEntryAnimation = true
+
+  clearEntryAnimationTimers()
+  logoActive.value = true
+  layoutShow.value = false
+
+  logoTimer = window.setTimeout(() => {
+    logoActive.value = false
+    logoTimer = null
+  }, 400)
+  layoutTimer = window.setTimeout(() => {
+    layoutShow.value = true
+    layoutTimer = null
+  }, 100)
+}
 
 const toggleFullscreen = () => {
   if (!document.fullscreenElement) {
@@ -315,12 +351,7 @@ const toggleTheme = () => {
 }
 
 onMounted(() => {
-  logoTimer = window.setTimeout(() => {
-    logoActive.value = false
-  }, 400)
-  layoutTimer = window.setTimeout(() => {
-    layoutShow.value = true
-  }, 100)
+  if (props.entryActive) startEntryAnimation()
   handleScroll()
   document.addEventListener('scroll', handleScroll, { passive: true })
   window.addEventListener('resize', handleScroll, { passive: true })
@@ -330,9 +361,15 @@ onUnmounted(() => {
   document.removeEventListener('scroll', handleScroll)
   window.removeEventListener('resize', handleScroll)
   if (scrollRafId !== null) window.cancelAnimationFrame(scrollRafId)
-  if (logoTimer !== null) window.clearTimeout(logoTimer)
-  if (layoutTimer !== null) window.clearTimeout(layoutTimer)
+  clearEntryAnimationTimers()
 })
+
+watch(
+  () => props.entryActive,
+  (entryActive) => {
+    if (entryActive) startEntryAnimation()
+  }
+)
 
 watch(
   () => route.fullPath,

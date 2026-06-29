@@ -34,6 +34,7 @@ export default defineConfig({
     },
   },
   build: {
+    chunkSizeWarningLimit: 550,
     minify: 'terser',
     terserOptions: {
       compress: {
@@ -44,6 +45,39 @@ export default defineConfig({
     rollupOptions: {
       output: {
         assetFileNames: 'assets/[name][extname]',
+        manualChunks(id) {
+          const normalizedId = id.replace(/\\/g, '/')
+
+          if (!normalizedId.includes('/node_modules/')) return undefined
+
+          if (normalizedId.includes('/three/examples/')) {
+            return 'vendor-three-addons'
+          }
+          if (normalizedId.includes('/three/')) return 'vendor-three'
+          if (normalizedId.includes('/swiper/')) return 'vendor-swiper'
+          if (
+            normalizedId.includes('/element-plus/') ||
+            normalizedId.includes('/@element-plus/')
+          ) {
+            return 'vendor-element-plus'
+          }
+          if (
+            normalizedId.includes('/@vueuse/') ||
+            normalizedId.includes('/@unhead/')
+          ) {
+            return 'vendor-head'
+          }
+          if (
+            normalizedId.includes('/vue/') ||
+            normalizedId.includes('/vue-i18n/') ||
+            normalizedId.includes('/vue-router/') ||
+            normalizedId.includes('/pinia/')
+          ) {
+            return 'vendor-vue'
+          }
+
+          return 'vendor'
+        },
       },
     },
   },
@@ -68,6 +102,7 @@ export default defineConfig({
       '/flanerie/jingdezhen',
       '/flanerie/lushan',
       '/flanerie/donglin-buddha',
+      '/flanerie/poyang-lake',
       '/flanerie/fuzhou-fujian',
       '/flanerie/shanghai',
       '/flanerie/suzhou',

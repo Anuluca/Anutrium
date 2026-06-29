@@ -121,7 +121,7 @@ export const routes: RouteConfig[] = [
       titleEn: 'ISLAND',
       titleCn: '个人海湾',
       fullFooter: true,
-      ifShow: true,
+      ifShow: false,
     },
   },
   {
