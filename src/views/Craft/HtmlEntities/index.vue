@@ -1,19 +1,11 @@
 <template>
-  <div class="entity-tool main-container">
-    <div class="pt-header">
-      <div class="pt-header__tag" @click="handleTagClick">CRAFT</div>
-      <h1 class="pt-header__title">HTML常用转义字符</h1>
-      <ToolHeaderActions
-        tool-id="html-entities"
-        title="HTML常用转义字符"
-        description="搜索常用 HTML 实体，点击字符、实体名或编号即可复制。"
-      />
-      <p class="pt-header__sub">
-        搜索常用 HTML 实体，点击字符、实体名或编号即可复制。
-        <span class="pt-header__motto">// HUAHUA_THE_CAT</span>
-      </p>
-    </div>
-
+  <ToolPageLayout
+    page-class="entity-tool"
+    tool-id="html-entities"
+    title="HTML常用转义字符"
+    description="搜索常用 HTML 实体，点击字符、实体名或编号即可复制。"
+    :recommended-tools="recommendedTools"
+  >
     <div class="pt-grid">
       <div class="pt-panel entity-stage">
         <label class="search-box">
@@ -87,21 +79,15 @@
         </div>
       </div>
     </div>
-
-    <div class="footer-wrap">
-      <PageFooter :third-party="true" :recommended-tools="recommendedTools" />
-    </div>
-  </div>
+  </ToolPageLayout>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 
 import CrystalLogo from '@/components/CrystalLogo/index.vue'
-import PageFooter from '@/components/PageFooter/index.vue'
-import ToolHeaderActions from '@/components/ToolHeaderActions/index.vue'
+import ToolPageLayout from '@/components/ToolPageLayout/index.vue'
 
 import 'element-plus/es/components/message/style/css'
 
@@ -113,7 +99,6 @@ interface HtmlEntity {
   search: string
 }
 
-const router = useRouter()
 const keyword = ref('')
 const copiedText = ref('')
 
@@ -321,10 +306,6 @@ const copyText = async (text: string) => {
 
 const visibleChar = (char: string) => {
   return char === '\u00A0' ? '␠' : char
-}
-
-const handleTagClick = () => {
-  router.push('/craft')
 }
 </script>
 

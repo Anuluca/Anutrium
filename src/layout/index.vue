@@ -206,12 +206,12 @@ import { Moon, Sunny } from '@element-plus/icons-vue'
 
 import BackToTop from '@/components/BackToTop/index.vue'
 import Logo from '@/components/Logo/index.vue'
-import { CONTACT_LINKS, getContactLink } from '@/data/contactLinks'
+import type { ContactLink } from '@/locales/modules/contactLinks'
 import { routes, syncSeoMeta } from '@/router'
 import { visualState } from '@/stores'
 import { persistLocale, type SiteLocale } from '@/utils/locale'
 
-const { locale } = useI18n()
+const { locale, tm } = useI18n()
 const props = defineProps({
   entryActive: {
     type: Boolean,
@@ -232,8 +232,15 @@ const layoutPage = ref<HTMLElement | null>(null)
 const isScrolled = ref(false)
 const layoutShow = ref(false)
 const theme = computed(() => visualStateStore.theme)
-const socialContacts = CONTACT_LINKS.filter((item) => item.type !== 'MAIL')
-const mailContact = getContactLink('MAIL')!
+const contactLinks = computed(
+  () => tm('contactLinks') as unknown as ContactLink[]
+)
+const socialContacts = computed(() =>
+  contactLinks.value.filter((item) => item.type !== 'MAIL')
+)
+const mailContact = computed(
+  () => contactLinks.value.find((item) => item.type === 'MAIL')!
+)
 
 const filterRoutes = routes.filter((item) => {
   return item?.meta?.ifShow

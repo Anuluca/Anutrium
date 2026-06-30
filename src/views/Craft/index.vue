@@ -405,6 +405,8 @@ watch(
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 24px 20px;
+  margin-left: 2px;
+  margin-right: 2px;
   margin-top: 20px;
   position: relative;
 }

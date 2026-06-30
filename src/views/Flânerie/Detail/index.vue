@@ -13,7 +13,7 @@
         <p class="flr-tagline">{{ vlog.tagline }}</p>
         <div v-if="vlog.device?.length" class="flr-devices">
           <span class="flr-device-label">
-            {{ t('flanerie.deviceLabel') }}
+            {{ t('flanerie.deviceLabel') }}: 
           </span>
           <span v-for="device in vlog.device" :key="device" class="flr-device">
             {{ device }}
@@ -258,10 +258,10 @@ watch(
 
   .title {
     margin: 0 0 6px;
-    font-family: @cjk;
+    font-family: @mono;
     font-size: clamp(1.6rem, 3.2vw, 2.4rem);
     font-weight: 900;
-    line-height: 1.1;
+    line-height: 1;
     color: #fff;
   }
 }
@@ -270,8 +270,12 @@ watch(
   letter-spacing: 0;
   font-size: 0.6rem;
   font-weight: 900;
-  color: rgba(226, 52, 86, 0.7);
-  padding-bottom: 6px;
+    font-family: @mono;
+    background-color: #E23456;
+  color: #000;
+  padding: 3px 10px;
+  margin-bottom: 5px;
+  margin-left: 20px;
 }
 
 .flr-tagline {
@@ -299,11 +303,14 @@ watch(
 
 .flr-device-label {
   margin-right: 2px;
-  color: rgba(226, 52, 86, 0.72);
+  color: rgb(226, 52, 87);
+  font-weight: 100;
 }
 
 .flr-device {
   padding: 4px 8px;
+  font-size: 15px;
+  letter-spacing: 0;
   border: 1px solid rgba(226, 52, 86, 0.22);
   color: rgba(255, 255, 255, 0.58);
   background: rgba(226, 52, 86, 0.06);

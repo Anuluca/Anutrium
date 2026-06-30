@@ -6,6 +6,9 @@
       target-type="tool"
       :text="description || title"
       :title="title"
+      :show-arrow="false"
+      show-icon
+      :show-label="false"
     />
   </div>
 </template>
@@ -37,8 +40,10 @@ onMounted(() => {
 
 <style lang="less" scoped>
 .tool-header-actions {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
-  margin: -4px 0 12px;
+  justify-content: flex-end;
+  margin-left: auto;
 }
 </style>

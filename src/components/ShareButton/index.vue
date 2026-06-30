@@ -1,18 +1,28 @@
 <template>
   <button
     class="share-button"
-    :class="{ 'share-button--copied': copied }"
+    :class="{
+      'share-button--copied': copied,
+      'share-button--compact': !showLabel && !showArrow,
+      'share-button--with-icon': showIcon,
+    }"
     type="button"
     @click="handleShare"
   >
+    <ShareIcon v-if="showIcon" class="share-button__icon" aria-hidden="true" />
     <span class="share-button__code">{{ copied ? 'COPIED' : 'SHARE' }}</span>
-    <span class="share-button__label">{{ copied ? copiedText : label }}</span>
-    <span class="share-button__arrow" aria-hidden="true">↗</span>
+    <span v-if="showLabel" class="share-button__label">{{
+      copied ? copiedText : label
+    }}</span>
+    <span v-if="showArrow" class="share-button__arrow" aria-hidden="true">
+      ↗
+    </span>
   </button>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { Share as ShareIcon } from '@element-plus/icons-vue'
 
 import { trackShare } from '@/utils/analytics'
 
@@ -26,6 +36,9 @@ const props = withDefaults(
     text?: string
     title: string
     url?: string
+    showArrow?: boolean
+    showIcon?: boolean
+    showLabel?: boolean
   }>(),
   {
     copiedText: '已复制',
@@ -35,6 +48,9 @@ const props = withDefaults(
     targetType: 'page',
     text: '',
     url: '',
+    showArrow: true,
+    showIcon: false,
+    showLabel: true,
   }
 )
 
@@ -155,6 +171,17 @@ const handleShare = async () => {
     opacity: 0.8;
   }
 
+  &--compact {
+    grid-template-columns: auto;
+    min-height: 26px;
+    gap: 6px;
+    padding: 3px 8px;
+  }
+
+  &--compact&--with-icon {
+    grid-template-columns: auto auto;
+  }
+
   &:hover,
   &:focus-visible,
   &--copied {
@@ -163,6 +190,11 @@ const handleShare = async () => {
     background: #5ad480;
     outline: none;
   }
+}
+
+.share-button__icon {
+  width: 0.52rem;
+  height: 0.52rem;
 }
 
 .share-button__code {

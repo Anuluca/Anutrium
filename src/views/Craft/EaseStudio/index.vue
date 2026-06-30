@@ -1,20 +1,12 @@
 <template>
-  <div class="ease-tool main-container">
-    <div class="pt-header">
-      <div class="pt-header__tag" @click="handleTagClick">CRAFT</div>
-      <h1 class="pt-header__title">缓动工作室</h1>
-      <ToolHeaderActions
-        tool-id="ease-studio"
-        title="缓动工作室"
-        description="拖动控制点或调整数值，实时修改并复制 CSS 缓动曲线。"
-      />
-      <p class="pt-header__sub">
-        拖动左侧两个红点，或直接调整下方数值，实时修改缓动曲线。
-        右侧会同步预览动画，确认效果后直接复制 CSS。
-        <span class="pt-header__motto">// HUAHUA_THE_CAT</span>
-      </p>
-    </div>
-
+  <ToolPageLayout
+    page-class="ease-tool"
+    tool-id="ease-studio"
+    title="可视化贝塞尔曲线调整"
+    description="拖动左侧两个红点，或直接调整下方数值，实时修改缓动曲线。右侧会同步预览动画，确认效果后直接复制 CSS。"
+    share-description="拖动控制点或调整数值，实时修改并复制 CSS 缓动曲线。"
+    :recommended-tools="recommendedTools"
+  >
     <div class="pt-grid">
       <div class="pt-panel curve-panel">
         <div class="curve-stage">
@@ -161,20 +153,14 @@
         <div class="corner corner--br" />
       </div>
     </div>
-
-    <div class="footer-wrap">
-      <PageFooter :third-party="true" :recommended-tools="recommendedTools" />
-    </div>
-  </div>
+  </ToolPageLayout>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
 
 import CrystalLogo from '@/components/CrystalLogo/index.vue'
-import PageFooter from '@/components/PageFooter/index.vue'
-import ToolHeaderActions from '@/components/ToolHeaderActions/index.vue'
+import ToolPageLayout from '@/components/ToolPageLayout/index.vue'
 
 interface CurvePoint {
   x: number
@@ -186,13 +172,12 @@ interface EasePreset {
   points: [number, number, number, number]
 }
 
-const router = useRouter()
 const svgRef = ref<SVGSVGElement | null>(null)
 const copied = ref(false)
 
 const recommendedTools = [
   { label: 'CSS调色盘', path: '/colorPalette' },
-  { label: '缓动工作室', path: '/easeStudio' },
+  { label: '可视化贝塞尔曲线调整', path: '/easeStudio' },
 ]
 const previewKey = ref(0)
 const duration = ref(1200)
@@ -327,10 +312,6 @@ const copyCss = async () => {
   } catch (err) {
     console.error('Copy failed', err)
   }
-}
-
-const handleTagClick = () => {
-  router.push('/craft')
 }
 </script>
 

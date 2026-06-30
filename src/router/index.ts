@@ -175,7 +175,7 @@ export const routes: RouteConfig[] = [
     component: () => import('@/views/Craft/EaseStudio/index.vue'),
     meta: {
       titleEn: 'EASE STUDIO',
-      titleCn: '缓动工作室',
+      titleCn: '可视化贝塞尔曲线调整',
       fullFooter: true,
       ifShow: false,
       noMenu: true,

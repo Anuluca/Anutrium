@@ -1,19 +1,14 @@
 <template>
-  <div class="bounce-tool main-container">
-    <div class="pt-header">
-      <div class="pt-header__tag" @click="handleTagClick">CRAFT</div>
-      <h1 class="pt-header__title">弹力球</h1>
-      <ToolHeaderActions
-        tool-id="bounce-dynamics"
-        title="弹力球"
-        description="调节弹性与重量，生成弹力球自然落体与弹跳动画。"
-      />
-      <p class="pt-header__sub">
-        调节弹性与重量，生成一颗弹力球自然落体、撞击地面并向右弹跳的实时物理动画。
-        <span class="pt-header__motto">// BOUNCING_BALL</span>
-      </p>
-    </div>
-
+  <ToolPageLayout
+    back-path="/craft?type=work"
+    page-class="bounce-tool"
+    tool-id="bounce-dynamics"
+    title="弹力球"
+    description="调节弹性与重量，生成一颗弹力球自然落体、撞击地面并向右弹跳的实时物理动画。"
+    share-description="调节弹性与重量，生成弹力球自然落体与弹跳动画。"
+    motto="BOUNCING_BALL"
+    :recommended-tools="recommendedTools"
+  >
     <div class="pt-grid">
       <div class="pt-panel bounce-stage">
         <div class="stage-readout">
@@ -114,20 +109,14 @@
         </div>
       </div>
     </div>
-
-    <div class="footer-wrap">
-      <PageFooter :third-party="true" :recommended-tools="recommendedTools" />
-    </div>
-  </div>
+  </ToolPageLayout>
 </template>
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
 
 import CrystalLogo from '@/components/CrystalLogo/index.vue'
-import PageFooter from '@/components/PageFooter/index.vue'
-import ToolHeaderActions from '@/components/ToolHeaderActions/index.vue'
+import ToolPageLayout from '@/components/ToolPageLayout/index.vue'
 
 interface BallState {
   contactTime: number
@@ -145,7 +134,6 @@ interface TrajectoryPoint {
   y: number
 }
 
-const router = useRouter()
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 const trackRef = ref<HTMLElement | null>(null)
 const isRunning = ref(true)
@@ -157,7 +145,7 @@ const compressionPercent = ref(0)
 
 const recommendedTools = [
   { label: 'CSS调色盘', path: '/colorPalette' },
-  { label: '缓动工作室', path: '/easeStudio' },
+  { label: '可视化贝塞尔曲线调整', path: '/easeStudio' },
   { label: '弹力球', path: '/bounceDynamics' },
 ]
 
@@ -537,10 +525,6 @@ const applyPreset = (nextElasticity: number, nextWeight: number) => {
   elasticity.value = nextElasticity
   weight.value = nextWeight
   restartSimulation()
-}
-
-const handleTagClick = () => {
-  router.push('/craft?type=work')
 }
 
 const handleVisibilityChange = () => {

@@ -22,7 +22,7 @@ const craftDynamic = {
     {
       id: 'motion',
       title: {
-        zhCn: '缓动工作室',
+        zhCn: '可视化贝塞尔曲线调整',
         en: 'EASE STUDIO',
       },
       sub: {

@@ -1,19 +1,11 @@
 <template>
-  <div class="codec-tool main-container">
-    <div class="pt-header">
-      <div class="pt-header__tag" @click="handleTagClick">CRAFT</div>
-      <h1 class="pt-header__title">Base64加解密</h1>
-      <ToolHeaderActions
-        tool-id="base64-codec"
-        title="Base64加解密"
-        description="输入文本后选择编码或解码，支持中文和常见 Unicode 内容。"
-      />
-      <p class="pt-header__sub">
-        输入文本后选择编码或解码，支持中文和常见 Unicode 内容。
-        <span class="pt-header__motto">// HUAHUA_THE_CAT</span>
-      </p>
-    </div>
-
+  <ToolPageLayout
+    page-class="codec-tool"
+    tool-id="base64-codec"
+    title="Base64加解密"
+    description="输入文本后选择编码或解码，支持中文和常见 Unicode 内容。"
+    :recommended-tools="recommendedTools"
+  >
     <div class="pt-grid">
       <div class="pt-panel codec-stage">
         <div class="pt-panel-title">
@@ -94,25 +86,18 @@
         </div>
       </div>
     </div>
-
-    <div class="footer-wrap">
-      <PageFooter :third-party="true" :recommended-tools="recommendedTools" />
-    </div>
-  </div>
+  </ToolPageLayout>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 
 import CrystalLogo from '@/components/CrystalLogo/index.vue'
-import PageFooter from '@/components/PageFooter/index.vue'
-import ToolHeaderActions from '@/components/ToolHeaderActions/index.vue'
+import ToolPageLayout from '@/components/ToolPageLayout/index.vue'
 
 import 'element-plus/es/components/message/style/css'
 
-const router = useRouter()
 const inputText = ref('')
 const outputText = ref('')
 const copied = ref(false)
@@ -201,10 +186,6 @@ const copyOutput = async () => {
     ElMessage.error('复制失败，请手动复制')
     console.error('Copy failed', err)
   }
-}
-
-const handleTagClick = () => {
-  router.push('/craft')
 }
 </script>
 

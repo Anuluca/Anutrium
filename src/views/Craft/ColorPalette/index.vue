@@ -1,19 +1,11 @@
 <template>
-  <div class="palette-tool main-container">
-    <div class="pt-header">
-      <div class="pt-header__tag" @click="handleTagClick">CRAFT</div>
-      <h1 class="pt-header__title">CSS调色盘</h1>
-      <ToolHeaderActions
-        tool-id="palette"
-        title="CSS调色盘"
-        description="上传图片以进行高频像素特征提取，自动输出标准前端调色盘。"
-      />
-      <p class="pt-header__sub">
-        上传图片以进行高频像素特征提取，自动输出标准前端调色盘。
-        <span class="pt-header__motto">// HUAHUA_THE_CAT</span>
-      </p>
-    </div>
-
+  <ToolPageLayout
+    page-class="palette-tool"
+    tool-id="palette"
+    title="CSS调色盘"
+    description="上传图片以进行高频像素特征提取，自动输出标准前端调色盘。"
+    :recommended-tools="recommendedTools"
+  >
     <div class="pt-grid">
       <div
         class="pt-panel pt-upload-area"
@@ -99,31 +91,23 @@
         <div class="corner corner--br" />
       </div>
     </div>
-
-    <div class="footer-wrap">
-      <PageFooter :third-party="true" :recommended-tools="recommendedTools" />
-    </div>
-  </div>
+  </ToolPageLayout>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
 
 import CrystalLogo from '@/components/CrystalLogo/index.vue'
-import PageFooter from '@/components/PageFooter/index.vue'
-import ToolHeaderActions from '@/components/ToolHeaderActions/index.vue'
+import ToolPageLayout from '@/components/ToolPageLayout/index.vue'
 
 const previewUrl = ref<string>('')
 const extractedColors = ref<string[]>([])
 const isExtracting = ref(false)
 const copied = ref(false)
 
-const router = useRouter()
-
 const recommendedTools = [
   { label: 'CSS调色盘', path: '/colorPalette' },
-  { label: '缓动工作室', path: '/easeStudio' },
+  { label: '可视化贝塞尔曲线调整', path: '/easeStudio' },
 ]
 
 const cssVariablesText = computed(() => {
@@ -228,10 +212,6 @@ const exportCssVariables = async () => {
   } catch (err) {
     console.error('Export failed', err)
   }
-}
-
-const handleTagClick = () => {
-  router.push('/craft')
 }
 </script>
 

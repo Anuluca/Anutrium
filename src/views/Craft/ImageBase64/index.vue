@@ -1,19 +1,11 @@
 <template>
-  <div class="image64-tool main-container">
-    <div class="pt-header">
-      <div class="pt-header__tag" @click="handleTagClick">CRAFT</div>
-      <h1 class="pt-header__title">图片转Base64</h1>
-      <ToolHeaderActions
-        tool-id="image-base64"
-        title="图片转Base64"
-        description="上传图片生成 Base64 Data URL，可预览并一键复制完整内容。"
-      />
-      <p class="pt-header__sub">
-        上传图片生成 Base64 Data URL，可预览并一键复制完整内容。
-        <span class="pt-header__motto">// HUAHUA_THE_CAT</span>
-      </p>
-    </div>
-
+  <ToolPageLayout
+    page-class="image64-tool"
+    tool-id="image-base64"
+    title="图片转Base64"
+    description="上传图片生成 Base64 Data URL，可预览并一键复制完整内容。"
+    :recommended-tools="recommendedTools"
+  >
     <div class="pt-grid">
       <div
         class="pt-panel upload-stage"
@@ -98,25 +90,18 @@
         </div>
       </div>
     </div>
-
-    <div class="footer-wrap">
-      <PageFooter :third-party="true" :recommended-tools="recommendedTools" />
-    </div>
-  </div>
+  </ToolPageLayout>
 </template>
 
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 
 import CrystalLogo from '@/components/CrystalLogo/index.vue'
-import PageFooter from '@/components/PageFooter/index.vue'
-import ToolHeaderActions from '@/components/ToolHeaderActions/index.vue'
+import ToolPageLayout from '@/components/ToolPageLayout/index.vue'
 
 import 'element-plus/es/components/message/style/css'
 
-const router = useRouter()
 const dataUrl = ref('')
 const copied = ref(false)
 const fileInfo = reactive({
@@ -176,10 +161,6 @@ const formatSize = (size: number) => {
   if (size < 1024) return `${size} B`
   if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`
   return `${(size / 1024 / 1024).toFixed(2)} MB`
-}
-
-const handleTagClick = () => {
-  router.push('/craft')
 }
 </script>
 

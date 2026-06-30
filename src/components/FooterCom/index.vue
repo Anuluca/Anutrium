@@ -7,8 +7,7 @@ import { ElLoading } from 'element-plus'
 
 import githubImg from '@/assets/img/github_profile.png'
 import twitterImg from '@/assets/img/twitter_profile.png'
-import bottomLineData from '@/data/bottomLine.js'
-import { getContactLink } from '@/data/contactLinks'
+import type { ContactLink, ContactType } from '@/locales/modules/contactLinks'
 import { visualState } from '@/stores'
 import { persistLocale, type SiteLocale } from '@/utils/locale'
 
@@ -17,10 +16,24 @@ import './index.less'
 import 'element-plus/es/components/loading/style/css'
 
 interface SocialItem {
-  type: 'TWITTER' | 'BILIBILI' | 'GITHUB' | 'MAIL'
+  type: Extract<ContactType, 'TWITTER' | 'BILIBILI' | 'GITHUB' | 'MAIL'>
   label: string
   href: string
   image?: string
+}
+
+interface BottomLineItem {
+  title: string
+  sort: string
+  color: string
+  date: string
+  href: string
+}
+
+interface BottomLineData {
+  intro: string
+  lastUpdate: string
+  recommand: BottomLineItem[]
 }
 
 const BILIBILI_IMG = 'https://assets.anuluca.com/other/bilibili_profile.jpg'
@@ -31,7 +44,23 @@ const props = defineProps({
   },
 })
 
-const SOCIAL_ITEMS: SocialItem[] = [
+const WEIBO_WIDGET_URL =
+  'https://widget.weibo.com/weiboshow/index.php?language=&width=0&height=520&fansRow=1&ptype=1&speed=0&skin=10&isTitle=1&noborder=1&isWeibo=1&isFans=1&uid=7738638501&verifier=4838f435&dpc=1'
+
+const { locale, tm } = useI18n()
+const router = useRouter()
+const route = useRoute()
+const visualStateStore = visualState()
+
+const bottomLineData = computed(
+  () => tm('bottomLine') as unknown as BottomLineData
+)
+const contactLinks = computed(
+  () => tm('contactLinks') as unknown as ContactLink[]
+)
+const getContactLink = (type: ContactType) =>
+  contactLinks.value.find((item) => item.type === type)
+const socialItems = computed<SocialItem[]>(() => [
   {
     type: 'TWITTER',
     label: 'TWITTER',
@@ -55,17 +84,11 @@ const SOCIAL_ITEMS: SocialItem[] = [
     label: 'MAIL',
     href: getContactLink('MAIL')!.href,
   },
-]
-const MAIL_ITEM = SOCIAL_ITEMS.find((item) => item.type === 'MAIL')!
-
-const WEIBO_WIDGET_URL =
-  'https://widget.weibo.com/weiboshow/index.php?language=&width=0&height=520&fansRow=1&ptype=1&speed=0&skin=10&isTitle=1&noborder=1&isWeibo=1&isFans=1&uid=7738638501&verifier=4838f435&dpc=1'
-const WEIBO_PROFILE_URL = getContactLink('WEIBO')!.href
-
-const { locale } = useI18n()
-const router = useRouter()
-const route = useRoute()
-const visualStateStore = visualState()
+])
+const mailItem = computed(
+  () => socialItems.value.find((item) => item.type === 'MAIL')!
+)
+const weiboProfileUrl = computed(() => getContactLink('WEIBO')!.href)
 
 const fullFooter = computed(() => router.currentRoute.value.meta.fullFooter)
 const currentRouter = computed(() => route.path)
@@ -166,6 +189,8 @@ watch(
     }
   }
 )
+
+watch(locale, () => nextTick(updateMarqueeDuration))
 </script>
 
 <template>
@@ -194,7 +219,6 @@ watch(
         <el-button
           link
           type="danger"
-          style="margin-right: 2px"
           :disabled="locale === 'en'"
           @click="changeLanguage('en')"
         >
@@ -267,7 +291,7 @@ watch(
     <div class="right">
       <div class="text-links">
         <span
-          v-for="social in SOCIAL_ITEMS.slice(0, 1)"
+          v-for="social in socialItems.slice(0, 1)"
           :key="social.type"
           class="social-link"
           :class="`social-link--${social.type.toLowerCase()}`"
@@ -307,7 +331,7 @@ watch(
           </div>
           <a
             class="social-trigger"
-            :href="WEIBO_PROFILE_URL"
+            :href="weiboProfileUrl"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -315,7 +339,7 @@ watch(
           </a>
         </span>
         <span
-          v-for="social in SOCIAL_ITEMS.filter(
+          v-for="social in socialItems.filter(
             (item) => item.type !== 'TWITTER' && item.type !== 'MAIL'
           )"
           :key="social.type"
@@ -343,7 +367,7 @@ watch(
         <span class="social-link social-link--mail">
           <a
             class="social-preview"
-            :href="MAIL_ITEM.href"
+            :href="mailItem.href"
             aria-label="Open mail client"
           >
             <span class="mail-preview__icon" aria-hidden="true">
@@ -351,14 +375,15 @@ watch(
             </span>
             <span class="mail-preview__content">tilucario@outlook.com</span>
           </a>
-          <a class="social-trigger" :href="MAIL_ITEM.href">MAIL</a>
+          <a class="social-trigger" :href="mailItem.href">MAIL</a>
         </span>
       </div>
       <button class="mark" type="button" @click="router.push('/')">
-        2018-2026 ANULUCA
+        LAST UPDATE: {{ bottomLineData.lastUpdate }}
       </button>
       <el-switch
         v-model="theme"
+        class="is-clickable"
         style="
           --el-switch-on-color: #1a1a1aa8;
           --el-switch-off-color: #ffffff1f;

@@ -19,20 +19,23 @@
             <p class="aside-company-name">{{ work.company }}</p>
             <p class="aside-id">{{ work.id }}</p>
           </div>
+          <ShareButton
+            class="project-share-button"
+            :target-id="work.id"
+            :target-title="work.title"
+            target-type="project"
+            :text="work.description || work.title"
+            :title="work.title"
+            :url="projectShareUrl"
+            :show-arrow="false"
+            show-icon
+            :show-label="false"
+          />
         </div>
 
         <div class="aside-divider" />
 
         <h2 class="aside-title">{{ work.title }}</h2>
-        <ShareButton
-          class="project-share-button"
-          :target-id="work.id"
-          :target-title="work.title"
-          target-type="project"
-          :text="work.description || work.title"
-          :title="work.title"
-          :url="projectShareUrl"
-        />
 
         <div v-if="work.time" class="aside-field">
           <span class="field-label">TIME</span>
@@ -428,6 +431,11 @@ const closeImageViewer = () => {
   gap: 12px;
 }
 
+.aside-company-info {
+  flex: 1;
+  min-width: 0;
+}
+
 .aside-logo {
   width: 40px;
   height: 40px;
@@ -464,7 +472,7 @@ const closeImageViewer = () => {
 }
 
 .aside-title {
-  font-family: 'anton', 'alibaba-puhuiti';
+  font-family: 'alibaba-puhuiti';
   font-size: 1.4rem;
   font-weight: 900;
   line-height: 1.2;
@@ -473,6 +481,8 @@ const closeImageViewer = () => {
 }
 
 .project-share-button {
+  align-self: flex-start;
+  margin-left: auto;
   width: fit-content;
 }
 

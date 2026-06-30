@@ -47,7 +47,7 @@ const craftToolRoutes = [
   {
     path: '/easeStudio',
     selector: '.ease-tool',
-    title: /EASE STUDIO|缓动工作室/,
+    title: /EASE STUDIO|可视化贝塞尔曲线调整/,
   },
   {
     path: '/metronome',

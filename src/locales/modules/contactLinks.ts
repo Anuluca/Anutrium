@@ -7,7 +7,7 @@ export interface ContactLink {
   external: boolean
 }
 
-export const CONTACT_LINKS: ContactLink[] = [
+const contactLinks: ContactLink[] = [
   {
     type: 'GITHUB',
     label: 'GITHUB',
@@ -40,5 +40,4 @@ export const CONTACT_LINKS: ContactLink[] = [
   },
 ]
 
-export const getContactLink = (type: ContactType) =>
-  CONTACT_LINKS.find((item) => item.type === type)
+export default contactLinks

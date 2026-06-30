@@ -431,12 +431,37 @@ const archiveDynamic = {
       img: 'https://assets.anuluca.com/other/27b03fd3-077d-44ae-8965-f0fd0317621e.jpg',
       logo: 'https://assets.anuluca.com/Logo/drrrfavicon.svg',
       images: [
-        'https://assets.anuluca.com/other/27b03fd3-077d-44ae-8965-f0fd0317621e.jpg',
+        'https://assets.anuluca.com/other/22.png',
+        'https://assets.anuluca.com/other/11.png',
+        'https://assets.anuluca.com/other/33.png',
+        'https://assets.anuluca.com/other/44.png',
+        'https://assets.anuluca.com/other/55.png',
+        'https://assets.anuluca.com/other/66.png',
       ],
       imageDescriptions: [
         {
-          zhCn: '项目首页',
-          en: 'Project homepage',
+          zhCn: '首页',
+          en: 'Home page',
+        },
+        {
+          zhCn: '加载页',
+          en: 'Loading page',
+        },
+        {
+          zhCn: '名词页',
+          en: 'Terms page',
+        },
+        {
+          zhCn: '作品页',
+          en: 'Works page',
+        },
+        {
+          zhCn: '资料页',
+          en: 'Resource page',
+        },
+        {
+          zhCn: '手机端',
+          en: 'Mobile page',
         },
       ],
       description: {
@@ -463,6 +488,16 @@ const archiveDynamic = {
         {
           zhCn: '通过 i18next 支持中日双语，并适配桌面端与移动端访问。',
           en: 'Supports Chinese and Japanese through i18next with responsive desktop and mobile layouts.',
+        },
+      ],
+      links: [
+        {
+          label: {
+            zhCn: '官方网站',
+            en: 'Official Website',
+          },
+          url: 'https://drrr.anuluca.com',
+          icon: 'Link',
         },
       ],
     },
@@ -524,7 +559,7 @@ const archiveDynamic = {
             zhCn: '官方网站',
             en: 'Official Website',
           },
-          url: 'https://anutrium.com',
+          url: 'https://anuluca.com',
           icon: 'Link',
         },
       ],
@@ -602,7 +637,7 @@ const archiveDynamic = {
             zhCn: '官方网站',
             en: 'Official Website',
           },
-          url: 'https://anulucas-blog.pages.dev/',
+          url: 'https://anulife.anuluca.com/',
           icon: 'Link',
         },
       ],
