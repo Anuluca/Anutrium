@@ -61,21 +61,6 @@ export default defineConfig({
           ) {
             return 'vendor-element-plus'
           }
-          if (
-            normalizedId.includes('/@vueuse/') ||
-            normalizedId.includes('/@unhead/')
-          ) {
-            return 'vendor-head'
-          }
-          if (
-            normalizedId.includes('/vue/') ||
-            normalizedId.includes('/vue-i18n/') ||
-            normalizedId.includes('/vue-router/') ||
-            normalizedId.includes('/pinia/')
-          ) {
-            return 'vendor-vue'
-          }
-
           return 'vendor'
         },
       },
