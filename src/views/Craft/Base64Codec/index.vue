@@ -82,7 +82,7 @@
         <div class="corner corner--bl" />
         <div class="corner corner--br" />
         <div class="crystal-container">
-          <CrystalLogo />
+          <ToolCrystalLogo tool-id="base64-codec" />
         </div>
       </div>
     </div>
@@ -93,7 +93,7 @@
 import { computed, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 
-import CrystalLogo from '@/components/CrystalLogo/index.vue'
+import ToolCrystalLogo from '@/components/ToolCrystalLogo/index.vue'
 import ToolPageLayout from '@/components/ToolPageLayout/index.vue'
 
 import 'element-plus/es/components/message/style/css'

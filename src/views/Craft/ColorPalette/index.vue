@@ -2,7 +2,7 @@
   <ToolPageLayout
     page-class="palette-tool"
     tool-id="palette"
-    title="CSS调色盘"
+    title="配色提取器"
     description="上传图片以进行高频像素特征提取，自动输出标准前端调色盘。"
     :recommended-tools="recommendedTools"
   >
@@ -81,7 +81,7 @@
             class="pt-code-block"
           ><code class="pt-code-inner">{{ cssVariablesText || '// NO DATA\n// 请先上传图片...' }}</code></pre>
           <div class="crystal-container">
-            <CrystalLogo />
+            <ToolCrystalLogo tool-id="palette" />
           </div>
         </div>
 
@@ -97,7 +97,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
-import CrystalLogo from '@/components/CrystalLogo/index.vue'
+import ToolCrystalLogo from '@/components/ToolCrystalLogo/index.vue'
 import ToolPageLayout from '@/components/ToolPageLayout/index.vue'
 
 const previewUrl = ref<string>('')
@@ -106,7 +106,7 @@ const isExtracting = ref(false)
 const copied = ref(false)
 
 const recommendedTools = [
-  { label: 'CSS调色盘', path: '/colorPalette' },
+  { label: '配色提取器', path: '/colorPalette' },
   { label: '可视化贝塞尔曲线调整', path: '/easeStudio' },
 ]
 

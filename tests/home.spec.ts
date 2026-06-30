@@ -42,7 +42,7 @@ const craftToolRoutes = [
   {
     path: '/colorPalette',
     selector: '.palette-tool',
-    title: /COLOR PALETTE|调色盘/,
+    title: /COLOR EXTRACTOR|配色提取器/,
   },
   {
     path: '/easeStudio',

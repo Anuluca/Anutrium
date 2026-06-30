@@ -13,7 +13,7 @@
         <p class="flr-tagline">{{ vlog.tagline }}</p>
         <div v-if="vlog.device?.length" class="flr-devices">
           <span class="flr-device-label">
-            {{ t('flanerie.deviceLabel') }}: 
+            {{ t('flanerie.deviceLabel') }}:
           </span>
           <span v-for="device in vlog.device" :key="device" class="flr-device">
             {{ device }}
@@ -220,25 +220,34 @@ watch(
 }
 
 .flr-back {
-  display: inline-flex;
-  justify-content: start;
-  background: none;
-  border: none;
-  color: @red;
-  font-family: @mono;
-  font-size: 0.66rem;
+  position: relative;
+  display: inline-block;
+  margin: 0 0 12px;
   padding: 0;
-  font-weight: 900;
+  border: 0;
+  color: #3276fe;
+  background: transparent;
+  font-family: 'Unbounded Sans';
+  font-size: 17px;
+  letter-spacing: 0.1em;
+  transform: scaleX(0.9);
+  transform-origin: left;
   cursor: pointer;
-  opacity: 0.65;
-  transition: opacity 0.2s;
+  transition: color 0.2s ease, margin 0.2s ease;
+  user-select: none;
 
-  &:hover {
-    opacity: 1;
+  &::before {
+    content: '// ';
   }
 
-  .back-bracket {
-    opacity: 0.5;
+  &:hover {
+    margin-left: -4px;
+    color: #e8284a;
+
+    &::before {
+      color: #e8284a;
+      content: '<< ';
+    }
   }
 }
 
@@ -270,8 +279,8 @@ watch(
   letter-spacing: 0;
   font-size: 0.6rem;
   font-weight: 900;
-    font-family: @mono;
-    background-color: #E23456;
+  font-family: @mono;
+  background-color: #e23456;
   color: #000;
   padding: 3px 10px;
   margin-bottom: 5px;

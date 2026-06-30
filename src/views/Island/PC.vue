@@ -3,7 +3,9 @@
     <section class="harbor-stage">
       <aside class="harbor-side">
         <header class="harbor-title">
-          <div class="header-bg-text">ISLAND</div>
+          <div class="header-bg-icon" aria-hidden="true">
+            <Ship />
+          </div>
           <div class="header-label">[Crying_Yet_Joyless]</div>
           <h1 class="page-title">
             <span class="title-en">ISLAND</span>
@@ -198,6 +200,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { Ship } from '@element-plus/icons-vue'
 
 import IslandClock from '@/components/IslandClock/index.vue'
 

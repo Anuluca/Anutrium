@@ -8,18 +8,20 @@
       >
         CRAFT
       </button>
-      <div class="pt-header__title-row">
-        <h1 class="pt-header__title">{{ title }}</h1>
-        <ToolHeaderActions
-          :tool-id="toolId"
-          :title="title"
-          :description="shareDescription || description"
-        />
+      <div class="pt-header__title-block">
+        <div class="pt-header__title-row">
+          <h1 class="pt-header__title">{{ title }}</h1>
+          <ToolHeaderActions
+            :tool-id="toolId"
+            :title="title"
+            :description="shareDescription || description"
+          />
+        </div>
+        <p class="pt-header__sub">
+          {{ description }}
+          <span class="pt-header__motto">// {{ motto }}</span>
+        </p>
       </div>
-      <p class="pt-header__sub">
-        {{ description }}
-        <span class="pt-header__motto">// {{ motto }}</span>
-      </p>
     </header>
 
     <slot />
@@ -106,6 +108,11 @@ const router = useRouter()
     align-items: flex-start;
     gap: 12px;
     margin-bottom: 12px;
+  }
+
+  &__title-block {
+    padding-left: 18px;
+    border-left: 8px solid #e23456;
   }
 
   &__title {

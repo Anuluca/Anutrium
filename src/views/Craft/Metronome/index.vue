@@ -128,9 +128,6 @@
         <div class="corner corner--tr" />
         <div class="corner corner--bl" />
         <div class="corner corner--br" />
-        <div class="crystal-container">
-          <CrystalLogo />
-        </div>
       </div>
     </div>
   </ToolPageLayout>
@@ -139,10 +136,9 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
-import CrystalLogo from '@/components/CrystalLogo/index.vue'
 import ToolPageLayout from '@/components/ToolPageLayout/index.vue'
 
-const recommendedTools = [{ label: 'CSS调色盘', path: '/colorPalette' }]
+const recommendedTools = [{ label: '配色提取器', path: '/colorPalette' }]
 
 const bpm = ref(80)
 const beatsPerBar = ref(4)
@@ -609,13 +605,6 @@ onBeforeUnmount(() => {
     font-size: 14px;
   }
 }
-.crystal-container {
-  position: absolute;
-  bottom: 15px;
-  right: 32px;
-  z-index: 1;
-}
-
 .pt-panel-title {
   display: flex;
   justify-content: space-between;

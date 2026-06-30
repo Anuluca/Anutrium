@@ -169,9 +169,43 @@ onUnmounted(() => {
     :key="`layout-${entryAnimationRenderKey}`"
     :entry-active="entryAnimationReady"
   />
+  <div
+    class="footer-bottom-gradient"
+    :class="{ 'footer-bottom-gradient--ready': entryAnimationReady }"
+    aria-hidden="true"
+  />
   <FooterCom
     :key="`footer-${entryAnimationRenderKey}`"
     :entry-active="entryAnimationReady"
   />
   <BackController />
 </template>
+
+<style scoped lang="less">
+.footer-bottom-gradient {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 99;
+  height: 64px;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 0, 0, 0.62) 100%
+  );
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+
+  &--ready {
+    opacity: 1;
+  }
+}
+
+@media screen and (max-aspect-ratio: @ratio-threshold) {
+  .footer-bottom-gradient {
+    display: none;
+  }
+}
+</style>

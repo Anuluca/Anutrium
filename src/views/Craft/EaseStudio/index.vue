@@ -110,9 +110,6 @@
         <div class="corner-img corner--tr" />
         <div class="corner-img corner--bl" />
         <div class="corner-img corner--br" />
-        <div class="crystal-container">
-          <CrystalLogo />
-        </div>
       </div>
 
       <div class="right-panel pt-result-area">
@@ -159,7 +156,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
-import CrystalLogo from '@/components/CrystalLogo/index.vue'
 import ToolPageLayout from '@/components/ToolPageLayout/index.vue'
 
 interface CurvePoint {
@@ -176,7 +172,7 @@ const svgRef = ref<SVGSVGElement | null>(null)
 const copied = ref(false)
 
 const recommendedTools = [
-  { label: 'CSS调色盘', path: '/colorPalette' },
+  { label: '配色提取器', path: '/colorPalette' },
   { label: '可视化贝塞尔曲线调整', path: '/easeStudio' },
 ]
 const previewKey = ref(0)
@@ -900,13 +896,6 @@ input[type='range'] {
     flex-direction: column;
     gap: 8px;
   }
-}
-
-.crystal-container {
-  position: absolute;
-  bottom: 22px;
-  right: 30px;
-  z-index: 45;
 }
 
 @media (max-width: 600px) {

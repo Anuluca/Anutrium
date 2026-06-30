@@ -38,6 +38,7 @@ declare module '@vue/runtime-core' {
     ShareButton: typeof import('./src/components/ShareButton/index.vue')['default']
     StartAnimation: typeof import('./src/components/StartAnimation/index.vue')['default']
     ToolCard: typeof import('./src/components/ToolCard/index.vue')['default']
+    ToolCrystalLogo: typeof import('./src/components/ToolCrystalLogo/index.vue')['default']
     ToolHeaderActions: typeof import('./src/components/ToolHeaderActions/index.vue')['default']
     ToolPageLayout: typeof import('./src/components/ToolPageLayout/index.vue')['default']
     TypedText: typeof import('./src/components/TypedText/index.vue')['default']

@@ -3,8 +3,8 @@ const craftDynamic = {
     {
       id: 'palette',
       title: {
-        zhCn: 'CSS 调色盘',
-        en: 'CSS COLOR PALETTE',
+        zhCn: '配色提取器',
+        en: 'COLOR EXTRACTOR',
       },
       sub: {
         zhCn: '上传图片以进行高频像素特征提取，自动输出标准前端调色盘。',
@@ -18,6 +18,18 @@ const craftDynamic = {
         en: 'LIVE',
       },
       link: '/colorPalette',
+      crystal: {
+        text: {
+          zhCn: '旧版链接：',
+          en: 'Legacy version:',
+        },
+        links: [
+          {
+            label: 'garden.anuluca.com/45597/',
+            href: 'https://garden.anuluca.com/45597/',
+          },
+        ],
+      },
     },
     {
       id: 'motion',
@@ -56,6 +68,12 @@ const craftDynamic = {
         en: 'LIVE',
       },
       link: '/bounceDynamics',
+      crystal: {
+        text: {
+          zhCn: '本页面灵感来自友人的请求。',
+          en: "Inspired by a friend's request.",
+        },
+      },
     },
     {
       id: 'metronome',
@@ -94,6 +112,18 @@ const craftDynamic = {
         en: 'LIVE',
       },
       link: '/htmlEntities',
+      crystal: {
+        text: {
+          zhCn: '旧版链接：',
+          en: 'Legacy version:',
+        },
+        links: [
+          {
+            label: 'garden.anuluca.com/60328/',
+            href: 'https://garden.anuluca.com/60328/',
+          },
+        ],
+      },
     },
     {
       id: 'base64-codec',
@@ -113,6 +143,18 @@ const craftDynamic = {
         en: 'LIVE',
       },
       link: '/base64Codec',
+      crystal: {
+        text: {
+          zhCn: '旧版链接：',
+          en: 'Legacy version:',
+        },
+        links: [
+          {
+            label: 'garden.anuluca.com/base64/',
+            href: 'https://garden.anuluca.com/base64/',
+          },
+        ],
+      },
     },
     {
       id: 'image-base64',

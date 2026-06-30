@@ -1,7 +1,11 @@
 <template>
   <ModalWrapper v-model="dialogVisible" width="1480px" @close="handleClose">
-    <div class="modal-crystal-logo">
-      <CrystalLogo />
+    <div v-if="work?.crystal" class="modal-crystal-logo">
+      <CrystalLogo
+        :image="work.crystal.image"
+        :links="work.crystal.links"
+        :text="work.crystal.text"
+      />
     </div>
 
     <div class="modal-body">
@@ -252,6 +256,15 @@ interface WorkItem {
   links?: Array<{ label: string; url: string; icon?: string }>
   participation?: number
   confidential?: boolean
+  crystal?: {
+    image?: string
+    links?: Array<{
+      href: string
+      label: string
+      target?: '_blank' | '_self'
+    }>
+    text?: string
+  }
 }
 
 const props = defineProps<{

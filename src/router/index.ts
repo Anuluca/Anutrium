@@ -55,9 +55,18 @@ interface RouteMeta {
   titleEn: string
   titleCn: string
   fullFooter: boolean
+  headerIcon?: HeaderIconName
   ifShow: boolean
   noMenu?: boolean
 }
+
+export type HeaderIconName =
+  | 'Collection'
+  | 'HomeFilled'
+  | 'MapLocation'
+  | 'Ship'
+  | 'Tools'
+  | 'UserFilled'
 
 interface RouteConfig {
   path: string
@@ -75,6 +84,7 @@ export const routes: RouteConfig[] = [
       titleEn: 'HOME',
       titleCn: '主页',
       fullFooter: false,
+      headerIcon: 'HomeFilled',
       ifShow: true,
     },
   },
@@ -86,6 +96,7 @@ export const routes: RouteConfig[] = [
       titleEn: 'ARCHIVE',
       titleCn: '作品集',
       fullFooter: true,
+      headerIcon: 'Collection',
       ifShow: true,
     },
   },
@@ -97,6 +108,7 @@ export const routes: RouteConfig[] = [
       titleEn: 'FLÂNERIE',
       titleCn: '旅程',
       fullFooter: true,
+      headerIcon: 'MapLocation',
       ifShow: true,
     },
   },
@@ -121,6 +133,7 @@ export const routes: RouteConfig[] = [
       titleEn: 'ISLAND',
       titleCn: '个人海湾',
       fullFooter: true,
+      headerIcon: 'Ship',
       ifShow: false,
     },
   },
@@ -132,6 +145,7 @@ export const routes: RouteConfig[] = [
       titleEn: 'CRAFT',
       titleCn: '工具',
       fullFooter: true,
+      headerIcon: 'Tools',
       ifShow: true,
     },
   },
@@ -143,6 +157,7 @@ export const routes: RouteConfig[] = [
       titleEn: 'ABOUT',
       titleCn: '关于',
       fullFooter: false,
+      headerIcon: 'UserFilled',
       ifShow: true,
     },
   },
@@ -162,8 +177,8 @@ export const routes: RouteConfig[] = [
     name: 'COLORPALETTE',
     component: () => import('@/views/Craft/ColorPalette/index.vue'),
     meta: {
-      titleEn: 'COLOR PALETTE',
-      titleCn: '调色盘',
+      titleEn: 'COLOR EXTRACTOR',
+      titleCn: '配色提取器',
       fullFooter: true,
       ifShow: false,
       noMenu: true,
@@ -249,6 +264,7 @@ export const routes: RouteConfig[] = [
       titleEn: 'TEST',
       titleCn: '测试',
       fullFooter: true,
+      headerIcon: 'Ship',
       ifShow: false,
     },
   },

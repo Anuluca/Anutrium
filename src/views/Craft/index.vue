@@ -408,6 +408,7 @@ watch(
   margin-left: 2px;
   margin-right: 2px;
   margin-top: 20px;
+  margin-bottom: 2px;
   position: relative;
 }
 

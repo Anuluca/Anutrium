@@ -85,9 +85,6 @@
         <div class="corner corner--tr" />
         <div class="corner corner--bl" />
         <div class="corner corner--br" />
-        <div class="crystal-container">
-          <CrystalLogo />
-        </div>
       </div>
     </div>
   </ToolPageLayout>
@@ -97,7 +94,6 @@
 import { reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 
-import CrystalLogo from '@/components/CrystalLogo/index.vue'
 import ToolPageLayout from '@/components/ToolPageLayout/index.vue'
 
 import 'element-plus/es/components/message/style/css'
@@ -571,13 +567,6 @@ const formatSize = (size: number) => {
   overflow: auto;
   white-space: pre-wrap;
   word-break: break-all;
-}
-
-.crystal-container {
-  position: absolute;
-  bottom: 40px;
-  right: 42px;
-  z-index: 1;
 }
 
 @media (max-width: 900px) {

@@ -425,6 +425,7 @@ const archiveDynamic = {
         zhCn: 'DRRR情报屋',
         en: 'DRRR INTELLIGENCE ROOM',
       },
+      time: '2024_02 to Now',
       participation: 100,
       company: 'Anuluca',
       tags: ['REACT19', 'Typescript', 'Vite', 'AntV G6', 'i18next'],
@@ -467,6 +468,13 @@ const archiveDynamic = {
       description: {
         zhCn: '一个由个人维护的《无头骑士异闻录》中文资料站，也是目前唯一的系统梳理该作品人物关系的网站。',
         en: 'The only Chinese encyclopedia dedicated to Durarara!! and the only site presenting a structured relationship map for its ensemble cast.',
+      },
+      crystal: {
+        text: {
+          zhCn: '这个百科网站源于我对自己第一个 Web 项目的纪念。',
+          en: 'This encyclopedia began as a tribute to my first web project.',
+        },
+        image: 'https://assets.anuluca.com/other/first1.jpg',
       },
       details: [
         {
@@ -637,7 +645,7 @@ const archiveDynamic = {
             zhCn: '官方网站',
             en: 'Official Website',
           },
-          url: 'https://anulife.anuluca.com/',
+          url: 'https://garden.anuluca.com/',
           icon: 'Link',
         },
       ],
@@ -861,6 +869,20 @@ const archiveDynamic = {
       description: {
         zhCn: '真正意义上自己写的第一个WEB项目，代码已经丢了但有照片。',
         en: 'My first real self-written web project; the source code is gone, but screenshots remain.',
+      },
+      crystal: {
+        text: {
+          zhCn: '几年后对这个项目进行了重置并在社区发行。',
+          en: 'Years later, I rebuilt this project and released it to the community.',
+        },
+        image:
+          'https://assets.anuluca.com/other/27b03fd3-077d-44ae-8965-f0fd0317621e.jpg',
+        links: [
+          {
+            label: 'drrr.anuluca.com',
+            href: 'https://drrr.anuluca.com',
+          },
+        ],
       },
       images: [
         'https://assets.anuluca.com/other/first1.jpg',

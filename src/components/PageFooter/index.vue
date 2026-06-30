@@ -90,7 +90,7 @@ const {
 const isLogoHovered = ref(false)
 
 const defaultRecommendedTools: RecommendedTool[] = [
-  { label: 'CSS调色盘', path: '/colorPalette' },
+  { label: '配色提取器', path: '/colorPalette' },
   { label: 'EASE STUDIO', path: '/easeStudio' },
 ]
 

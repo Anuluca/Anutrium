@@ -379,7 +379,7 @@ watch(locale, () => nextTick(updateMarqueeDuration))
         </span>
       </div>
       <button class="mark" type="button" @click="router.push('/')">
-        LAST UPDATE: {{ bottomLineData.lastUpdate }}
+        LAST UPDATE： {{ bottomLineData.lastUpdate }}
       </button>
       <el-switch
         v-model="theme"

@@ -105,7 +105,7 @@
         <div class="corner corner--bl" />
         <div class="corner corner--br" />
         <div class="crystal-container">
-          <CrystalLogo />
+          <ToolCrystalLogo tool-id="bounce-dynamics" />
         </div>
       </div>
     </div>
@@ -115,7 +115,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
-import CrystalLogo from '@/components/CrystalLogo/index.vue'
+import ToolCrystalLogo from '@/components/ToolCrystalLogo/index.vue'
 import ToolPageLayout from '@/components/ToolPageLayout/index.vue'
 
 interface BallState {
@@ -144,7 +144,7 @@ const impactSpeed = ref(0)
 const compressionPercent = ref(0)
 
 const recommendedTools = [
-  { label: 'CSS调色盘', path: '/colorPalette' },
+  { label: '配色提取器', path: '/colorPalette' },
   { label: '可视化贝塞尔曲线调整', path: '/easeStudio' },
   { label: '弹力球', path: '/bounceDynamics' },
 ]

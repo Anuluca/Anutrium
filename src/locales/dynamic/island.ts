@@ -278,7 +278,7 @@ const islandDynamic = {
         img: 'https://placehold.co/260x180/14070c/e23456?text=SUPERVISION',
       },
       {
-        title: 'CSS Color Palette',
+        title: 'Color Extractor',
         module: 'CRAFT / TOOL',
         path: '/colorPalette',
         img: 'https://placehold.co/260x180/14070c/e23456?text=COLOR',

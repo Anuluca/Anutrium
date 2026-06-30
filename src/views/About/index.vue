@@ -16,9 +16,15 @@ interface ChangelogItem {
   details: string[]
 }
 
+interface MarkedTextSegment {
+  highlighted: boolean
+  text: string
+}
+
 const { locale, t, tm } = useI18n()
 const activeLogKey = ref<string | null>(null)
 const majorOnly = ref(false)
+const showAllChangelogs = ref(false)
 
 const getNeighborHost = (url: string) => {
   try {
@@ -40,6 +46,16 @@ const filteredChangelogs = computed(() => {
     : changelogs.value
 })
 
+const maxVisibleChangelogs = 4
+const displayedChangelogs = computed(() =>
+  showAllChangelogs.value
+    ? filteredChangelogs.value
+    : filteredChangelogs.value.slice(0, maxVisibleChangelogs + 1)
+)
+const hasMoreChangelogs = computed(
+  () => filteredChangelogs.value.length > maxVisibleChangelogs
+)
+
 const latestLogVersion = computed(() => changelogs.value[0]?.version ?? '')
 
 const getDefaultDetailCount = (log: ChangelogItem) => (isMajorLog(log) ? 4 : 1)
@@ -54,9 +70,45 @@ const hasHiddenDetails = (log: ChangelogItem) => {
   return log.details.length > getDefaultDetailCount(log)
 }
 
+const parseMarkedText = (value: string): MarkedTextSegment[] => {
+  const segments: MarkedTextSegment[] = []
+  const markerPattern = /____([\s\S]+?)____|__([\s\S]+?)__/g
+  let cursor = 0
+  let match: RegExpExecArray | null
+
+  while ((match = markerPattern.exec(value)) !== null) {
+    if (match.index > cursor) {
+      segments.push({
+        highlighted: false,
+        text: value.slice(cursor, match.index),
+      })
+    }
+
+    segments.push({
+      highlighted: true,
+      text: match[1] ?? match[2],
+    })
+    cursor = markerPattern.lastIndex
+  }
+
+  if (cursor < value.length) {
+    segments.push({
+      highlighted: false,
+      text: value.slice(cursor),
+    })
+  }
+
+  return segments
+}
+
 const toggleMajorOnly = () => {
   majorOnly.value = !majorOnly.value
   activeLogKey.value = null
+  showAllChangelogs.value = false
+}
+
+const toggleChangelogList = () => {
+  showAllChangelogs.value = !showAllChangelogs.value
 }
 
 const toggleLog = (logKey: string) => {
@@ -201,12 +253,14 @@ watch(locale, scheduleNeighborDescriptionMeasure)
 
         <div class="timeline">
           <div
-            v-for="log in filteredChangelogs"
+            v-for="(log, logIndex) in displayedChangelogs"
             :key="log.version"
             class="timeline-item"
             :class="{
               'is-expanded': activeLogKey === log.version,
               'is-major': isMajorLog(log),
+              'is-changelog-preview':
+                !showAllChangelogs && logIndex === maxVisibleChangelogs,
             }"
           >
             <div class="axis">
@@ -236,7 +290,11 @@ watch(locale, scheduleNeighborDescriptionMeasure)
               @keydown.enter.prevent="toggleLogDetails(log)"
               @keydown.space.prevent="toggleLogDetails(log)"
             >
-              <span v-if="!isMajorLog(log)" class="log-inline-version">
+              <span
+                v-if="!isMajorLog(log)"
+                class="log-inline-version"
+                :class="{ 'is-simple-version': !log.version.includes('-') }"
+              >
                 {{ log.version }}
               </span>
 
@@ -258,7 +316,18 @@ watch(locale, scheduleNeighborDescriptionMeasure)
 
                 <ul class="log-details">
                   <li v-for="(item, i) in getDefaultDetails(log)" :key="i">
-                    <span class="li-bullet">◆</span>{{ item }}
+                    <span class="li-bullet">◆</span>
+                    <span class="log-detail-text">
+                      <span
+                        v-for="(segment, segmentIndex) in parseMarkedText(item)"
+                        :key="segmentIndex"
+                        :class="{
+                          'log-detail-highlight': segment.highlighted,
+                        }"
+                      >
+                        {{ segment.text }}
+                      </span>
+                    </span>
                   </li>
                 </ul>
 
@@ -268,7 +337,20 @@ watch(locale, scheduleNeighborDescriptionMeasure)
                       v-for="(item, i) in getHiddenDetails(log)"
                       :key="`extra-${i}`"
                     >
-                      <span class="li-bullet">◆</span>{{ item }}
+                      <span class="li-bullet">◆</span>
+                      <span class="log-detail-text">
+                        <span
+                          v-for="(segment, segmentIndex) in parseMarkedText(
+                            item
+                          )"
+                          :key="segmentIndex"
+                          :class="{
+                            'log-detail-highlight': segment.highlighted,
+                          }"
+                        >
+                          {{ segment.text }}
+                        </span>
+                      </span>
                     </li>
                   </ul>
                 </div>
@@ -282,6 +364,20 @@ watch(locale, scheduleNeighborDescriptionMeasure)
             </div>
           </div>
         </div>
+
+        <button
+          v-if="hasMoreChangelogs"
+          class="changelog-list-toggle"
+          :class="{ 'is-expanded': showAllChangelogs }"
+          type="button"
+          :aria-expanded="showAllChangelogs"
+          @click="toggleChangelogList"
+        >
+          <span>
+            {{ showAllChangelogs ? 'CLICK TO CLOSE' : 'CLICK TO EXPLORE' }}
+          </span>
+          <ArrowDown class="changelog-list-toggle__icon" aria-hidden="true" />
+        </button>
       </section>
 
       <section
@@ -876,6 +972,14 @@ watch(locale, scheduleNeighborDescriptionMeasure)
       }
     }
   }
+
+  &.is-changelog-preview {
+    height: 58px;
+    max-height: 58px;
+    overflow: hidden;
+    pointer-events: none;
+    user-select: none;
+  }
 }
 
 .axis {
@@ -950,9 +1054,13 @@ watch(locale, scheduleNeighborDescriptionMeasure)
 
   &.is-regular-card {
     display: grid;
-    grid-template-columns: 155px minmax(0, 1fr);
+    grid-template-columns: 153px minmax(0, 1fr);
     padding-right: 28px;
     column-gap: 22px;
+  }
+
+  &.is-major-card {
+    padding-right: 28px;
   }
 
   &.is-expanded {
@@ -1037,10 +1145,17 @@ watch(locale, scheduleNeighborDescriptionMeasure)
 .log-inline-version {
   flex-shrink: 0;
   align-self: center;
+  justify-self: center;
   color: rgba(255, 255, 255, 0.88);
   font-family: 'anton', monospace;
   font-size: 1rem;
   letter-spacing: 0.5px;
+  text-align: center;
+  transform: translateX(-8px);
+
+  &.is-simple-version {
+    font-size: 1.12rem;
+  }
 }
 
 .log-title {
@@ -1124,6 +1239,14 @@ watch(locale, scheduleNeighborDescriptionMeasure)
   color: rgba(255, 255, 255, 0.54);
 }
 
+.log-detail-text {
+  min-width: 0;
+}
+
+.log-detail-highlight {
+  color: rgba(255, 255, 255, 0.78);
+}
+
 .li-bullet {
   color: @red;
   flex-shrink: 0;
@@ -1145,6 +1268,59 @@ watch(locale, scheduleNeighborDescriptionMeasure)
 
 .log-card.is-clickable:hover .log-expand-icon {
   color: rgba(226, 52, 86, 0.86);
+}
+
+.changelog-list-toggle {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: calc(100% + 10px);
+  min-height: 58px;
+  margin: -58px 0 0;
+  padding: 8px 16px;
+  border: 0;
+  color: #e23456;
+  background: linear-gradient(
+    to top,
+    rgba(5, 2, 6, 0.96) 0%,
+    rgba(5, 2, 6, 0) 100%
+  );
+  box-shadow: inset 0 0 24px rgba(226, 52, 86, 0.045);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  font-family: 'anton', monospace;
+  font-size: 0.64rem;
+  letter-spacing: 0.14em;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    background: linear-gradient(
+        to top,
+        rgba(5, 2, 6, 0.96) 0%,
+        rgba(5, 2, 6, 0) 100%
+      ),
+      rgba(226, 52, 87, 0.141);
+    box-shadow: inset 0 0 28px rgba(226, 52, 86, 0.08);
+  }
+
+  &.is-expanded {
+    margin-top: 12px;
+    padding: 12px 16px;
+
+    .changelog-list-toggle__icon {
+      transform: rotate(180deg);
+    }
+  }
+
+  &__icon {
+    width: 18px;
+    height: 18px;
+    transition: transform 0.25s ease;
+  }
 }
 
 .neighbors-grid {
@@ -1697,6 +1873,10 @@ watch(locale, scheduleNeighborDescriptionMeasure)
       grid-template-columns: 154px minmax(0, 1fr);
       padding-right: 28px;
       column-gap: 22px;
+    }
+
+    &.is-major-card {
+      padding-right: 28px;
     }
   }
 

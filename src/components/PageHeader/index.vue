@@ -7,7 +7,9 @@
       '--title-cn-right': titleCnRight,
     }"
   >
-    <div class="header-bg-text">{{ titleEn }}</div>
+    <div class="header-bg-icon" aria-hidden="true">
+      <component :is="headerIcon" />
+    </div>
     <div class="header-content">
       <div class="header-label">{{ headerLabel }}</div>
       <div class="page-title-wrapper">
@@ -40,7 +42,36 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+import {
+  Collection,
+  HomeFilled,
+  MapLocation,
+  Ship,
+  Tools,
+  UserFilled,
+} from '@element-plus/icons-vue'
+
 import TypedText from '@/components/TypedText/index.vue'
+import type { HeaderIconName } from '@/router'
+
+const route = useRoute()
+const headerIconMap: Record<HeaderIconName, typeof Collection> = {
+  Collection,
+  HomeFilled,
+  MapLocation,
+  Ship,
+  Tools,
+  UserFilled,
+}
+
+const headerIcon = computed(
+  () =>
+    headerIconMap[
+      (route.meta.headerIcon as HeaderIconName | undefined) || 'HomeFilled'
+    ]
+)
 
 defineProps({
   headerLabel: {
@@ -86,20 +117,32 @@ defineProps({
   opacity: 0;
   animation: pageHeaderFadeIn 0.42s ease-out 0.08s both;
 
-  .header-bg-text {
+  .header-bg-icon {
     position: absolute;
-    top: 45%;
-    right: 20px;
+    top: 50%;
+    right: 28px;
+    display: grid;
+    place-items: center;
+    width: clamp(78px, 7vw, 116px);
+    height: clamp(78px, 7vw, 116px);
+    padding: 13px;
+    box-sizing: border-box;
     transform: translateY(-50%);
-    font-family: 'anton', sans-serif;
-    font-size: 3rem;
-    line-height: 1;
     color: var(--primary-color);
     opacity: 0;
     pointer-events: none;
-    letter-spacing: -4px;
-    white-space: nowrap;
-    animation: headerBgTextFadeIn 0.58s ease-out 0.78s both;
+    background: linear-gradient(currentColor 0 0) left top / 18px 1px no-repeat,
+      linear-gradient(currentColor 0 0) left top / 1px 18px no-repeat,
+      linear-gradient(currentColor 0 0) right bottom / 18px 1px no-repeat,
+      linear-gradient(currentColor 0 0) right bottom / 1px 18px no-repeat;
+    filter: drop-shadow(0 0 14px var(--primary-color));
+    animation: headerBgIconFadeIn 0.58s ease-out 0.78s both;
+
+    svg {
+      width: 100%;
+      height: 100%;
+      stroke-width: 1.4;
+    }
   }
 
   .header-content {
@@ -222,13 +265,13 @@ defineProps({
   }
 }
 
-@keyframes headerBgTextFadeIn {
+@keyframes headerBgIconFadeIn {
   from {
     opacity: 0;
   }
 
   to {
-    opacity: 0.1;
+    opacity: 0.4;
   }
 }
 
@@ -245,13 +288,14 @@ defineProps({
     padding-top: clamp(24px, 5svh, 40px);
     padding-bottom: clamp(24px, 5svh, 40px);
 
-    .header-bg-text {
+    .header-bg-icon {
       top: auto;
-      right: 0.2em;
-      bottom: 0.2em;
+      right: clamp(12px, 4vw, 24px);
+      bottom: clamp(12px, 3vw, 22px);
+      width: clamp(76px, 24vw, 112px);
+      height: clamp(76px, 24vw, 112px);
+      padding: clamp(10px, 3vw, 14px);
       transform: none;
-      font-size: 16vw;
-      letter-spacing: 0;
     }
 
     .header-content {
@@ -309,9 +353,9 @@ defineProps({
     animation: none;
     opacity: 1;
 
-    .header-bg-text {
+    .header-bg-icon {
       animation: none;
-      opacity: 0.1;
+      opacity: 0.3;
     }
   }
 }
