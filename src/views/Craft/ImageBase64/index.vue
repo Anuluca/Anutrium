@@ -192,10 +192,8 @@ const formatSize = (size: number) => {
   font-family: 'cn-custom', system-ui, sans-serif;
 }
 
-.pt-header,
 .upload-stage,
-.image64-result,
-.footer-wrap {
+.image64-result {
   animation: tacticalIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
@@ -205,66 +203,6 @@ const formatSize = (size: number) => {
 
 .image64-result {
   animation-delay: 0.15s;
-}
-
-.footer-wrap {
-  animation-delay: 0.25s;
-}
-
-.pt-header {
-  margin-bottom: 20px;
-  border-bottom: 1px solid @border;
-  padding-bottom: 20px;
-
-  &__tag {
-    .font-squish(left);
-    font-size: 14px;
-    color: #3276fe;
-    letter-spacing: 0.1em;
-    margin-bottom: 12px;
-    cursor: pointer;
-    position: relative;
-    transition: color 0.2s ease, margin 0.2s ease;
-    user-select: none;
-
-    &::before {
-      content: '// ';
-    }
-
-    &:hover {
-      color: @red;
-      margin-left: -4px;
-
-      &::before {
-        content: '<< ';
-        color: @red;
-      }
-    }
-  }
-
-  &__title {
-    font-size: 42px;
-    font-family: 'cn-custom';
-    letter-spacing: 0.05em;
-    margin: 0 0 12px;
-  }
-
-  &__sub {
-    font-size: 16px;
-    color: @muted;
-    margin: 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 18px;
-  }
-
-  &__motto {
-    font-family: @mono;
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.15);
-    white-space: nowrap;
-  }
 }
 
 .pt-grid {

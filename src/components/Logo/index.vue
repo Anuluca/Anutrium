@@ -93,11 +93,6 @@ const maskId = computed(() => `mask-${props.id}`)
   animation: draw 3s ease-out forwards;
 }
 
-.draw-animation2 {
-  animation: draw2 0.3s ease-out forwards;
-  clip-path: inset(0 100% 0 0);
-}
-
 .delay-1-6 {
   animation-delay: 0.8s;
 }
@@ -108,15 +103,6 @@ const maskId = computed(() => `mask-${props.id}`)
 @keyframes draw {
   to {
     stroke-dashoffset: 0;
-  }
-}
-
-@keyframes draw2 {
-  from {
-    clip-path: inset(0 100% 0 0);
-  }
-  to {
-    clip-path: inset(0 0 0 0);
   }
 }
 

@@ -22,10 +22,6 @@ const common = {
       zhCn: '这个页面可能还在开发中',
       en: 'THIS PAGE MAY STILL BE UNDER DEVELOPMENT',
     },
-    back: {
-      zhCn: '返回到主页',
-      en: 'CLICK HERE TO RETURN TO HOMEPAGE',
-    },
   },
   workDetailModal: {
     participation: {

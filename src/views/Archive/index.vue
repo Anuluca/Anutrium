@@ -349,10 +349,8 @@ onBeforeUnmount(() => {
 
 <style lang="less" scoped>
 @red: #e23456;
-@red-dim: rgba(226, 52, 86, 0.15);
 @border: rgba(255, 255, 255, 0.08);
 @text-dim: rgba(255, 255, 255, 0.4);
-@card-bg: rgba(13, 9, 18, 0.8);
 
 .archives-page {
   width: 100%;

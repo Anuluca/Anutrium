@@ -209,7 +209,6 @@ onUnmounted(unlockBackgroundScroll)
 
 <style lang="less" scoped>
 @red: #e23456;
-@border: rgba(255, 255, 255, 0.08);
 
 .modal-scanlines {
   position: absolute;

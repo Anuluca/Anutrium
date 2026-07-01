@@ -1,7 +1,6 @@
 @primary-orange: #e7492d;
 @primary-blue: #3276fe;
 @primary-pink: #e23456;
-@primary-yellow: #ffed47;
 @primary-green: #01dd83;
 @primary-purple: #5d3aba;
 
@@ -364,15 +363,6 @@
           }
         }
 
-        .el-menu-item.xx:not(.is-active):hover {
-          .title-box {
-            .main-title {
-              text-shadow: 0 0 4px #f0a0d0;
-              color: #f0a0d0 !important;
-            }
-          }
-        }
-
         .define-menu-style(@class, @color, @shadow) {
           .el-menu-item.@{class} {
             .menu-route-icon {
@@ -407,7 +397,6 @@
         .define-menu-style(ARCHIVE, #01dd83, #00653bfb);
         .define-menu-style(FLANERIE, @primary-orange, #e7492dda);
         .define-menu-style(ISLAND, @primary-pink, #E23456c5);
-        .define-menu-style(POKEYARD, @primary-yellow, #d6c52ed4);
         .define-menu-style(CRAFT, @primary-blue, #6596f9da);
         .define-menu-style(ABOUT, @primary-purple, #5d3abac3);
 
@@ -418,18 +407,6 @@
             }
 
             opacity: 0;
-          }
-        }
-
-        .xxx.is-active {
-          .title-box {
-            .main-title {
-              -webkit-text-stroke: 1px #f0a0d0;
-            }
-
-            .line {
-              border-top: 2px solid #f0a0d0;
-            }
           }
         }
       }
@@ -640,11 +617,6 @@
 
             &.ISLAND.active {
               color: @primary-pink;
-            }
-
-            &.POKEYARD.active {
-              color: @primary-yellow;
-              text-shadow: 0 0 10px #0000008c;
             }
 
             &.CRAFT.active {

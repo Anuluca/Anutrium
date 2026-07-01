@@ -577,7 +577,6 @@ onBeforeUnmount(() => {
 @border: rgba(255, 255, 255, 0.07);
 @text: #ffffff;
 @muted: rgba(255, 255, 255, 0.45);
-@mono: 'alibaba-puhuiti', monospace;
 
 .font-squish(@origin: center) {
   font-family: 'STSong', serif;
@@ -597,38 +596,10 @@ onBeforeUnmount(() => {
   }
 }
 
-@keyframes glitch-text {
-  0% {
-    opacity: 0;
-    transform: scaleX(0.9) skew(-10deg);
-    text-shadow: 2px 0 0 rgba(255, 0, 0, 0.5), -2px 0 0 rgba(0, 0, 255, 0.5);
-  }
-  20% {
-    opacity: 1;
-    transform: scaleX(0.9) skew(10deg) translateX(2px);
-  }
-  40% {
-    transform: scaleX(0.9) skew(-5deg) translateX(-1px);
-    text-shadow: -1px 0 0 rgba(255, 0, 0, 0.5);
-  }
-  60% {
-    transform: scaleX(0.9) skew(0deg);
-    text-shadow: none;
-  }
-  100% {
-    opacity: 1;
-    transform: scaleX(0.9);
-  }
-}
-
 .bounce-tool {
   width: 100%;
   color: @text;
   font-family: 'cn-custom', system-ui, sans-serif;
-}
-
-.pt-header {
-  animation: tacticalIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 .bounce-stage {
@@ -637,68 +608,6 @@ onBeforeUnmount(() => {
 
 .right-panel {
   animation: tacticalIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s both;
-}
-
-.footer-wrap {
-  animation: tacticalIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) 0.25s both;
-}
-
-.pt-header {
-  margin-bottom: 20px;
-  padding-bottom: 20px;
-}
-
-.pt-header {
-  &__tag {
-    .font-squish(left);
-    font-size: 11px;
-    color: #3276fe;
-    letter-spacing: 0.1em;
-    margin-bottom: 12px;
-    cursor: pointer;
-    position: relative;
-    transition: color 0.2s ease, margin 0.2s ease;
-    user-select: none;
-
-    &::before {
-      content: '// ';
-    }
-
-    &:hover {
-      color: @red;
-      margin-left: -4px;
-      animation: glitch-text 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
-
-      &::before {
-        content: '<< ';
-        color: @red;
-      }
-    }
-  }
-
-  &__title {
-    font-size: 42px;
-    font-family: 'cn-custom';
-    letter-spacing: 0.05em;
-    margin: 0 0 12px;
-  }
-
-  &__sub {
-    font-size: 13px;
-    color: @muted;
-    margin: 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 18px;
-  }
-
-  &__motto {
-    font-family: @mono;
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.15);
-    white-space: nowrap;
-  }
 }
 
 .pt-grid {

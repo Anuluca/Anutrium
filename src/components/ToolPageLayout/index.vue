@@ -79,7 +79,7 @@ const router = useRouter()
     border: 0;
     color: #3276fe;
     background: transparent;
-    font-family: 'Unbounded Sans';
+    font-family: 'cn-custom';
     font-size: 17px;
     letter-spacing: 0.1em;
     transform: scaleX(0.9);
@@ -155,32 +155,6 @@ const router = useRouter()
   100% {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@keyframes tool-tag-glitch {
-  0% {
-    opacity: 0;
-    transform: scaleX(0.9) skew(-10deg);
-    text-shadow: 2px 0 0 rgba(255, 0, 0, 0.5), -2px 0 0 rgba(0, 0, 255, 0.5);
-  }
-
-  20% {
-    opacity: 1;
-    transform: scaleX(0.9) skew(10deg) translateX(2px);
-  }
-
-  40% {
-    transform: scaleX(0.9) skew(-5deg) translateX(-2px);
-  }
-
-  60% {
-    transform: scaleX(0.9) skew(3deg);
-  }
-
-  100% {
-    opacity: 1;
-    transform: scaleX(0.9);
   }
 }
 

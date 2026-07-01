@@ -106,7 +106,6 @@ defineProps({
 </script>
 
 <style lang="less" scoped>
-@border: rgba(255, 255, 255, 0.08);
 @text-dim: rgba(255, 255, 255, 0.4);
 
 .page-header {

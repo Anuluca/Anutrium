@@ -207,10 +207,7 @@ watch(
 
 <style lang="less" scoped>
 @red: #e23456;
-@purple: #9a76ff;
-@panel: rgba(18, 5, 12, 0.72);
 @line: rgba(226, 52, 86, 0.28);
-@bg: #050206;
 @mono: 'cn-custom', 'Courier New', monospace;
 @cjk: 'alibaba-puhuiti', sans-serif;
 
@@ -227,14 +224,17 @@ watch(
   border: 0;
   color: #3276fe;
   background: transparent;
-  font-family: 'Unbounded Sans';
   font-size: 17px;
   letter-spacing: 0.1em;
   transform: scaleX(0.9);
   transform-origin: left;
   cursor: pointer;
+    font-family: 'cn-custom';
   transition: color 0.2s ease, margin 0.2s ease;
   user-select: none;
+  *{
+    font-family: 'cn-custom';
+  }
 
   &::before {
     content: '// ';
@@ -400,157 +400,7 @@ watch(
   }
 }
 
-.photo-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0;
-  align-items: stretch;
-}
-
-.photo-card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-width: 0;
-  width: 100%;
-  padding: 14px 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  box-sizing: border-box;
-  --photo-media-max-height: clamp(220px, 25vw, 360px);
-
-  &:not(:nth-child(3n))::after {
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: 1px;
-    content: '';
-    background: rgba(255, 255, 255, 0.05);
-    pointer-events: none;
-  }
-}
-
-.photo-media-shell {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: fit-content;
-  max-width: 100%;
-  margin-right: auto;
-  margin-left: auto;
-}
-
-.photo-visual {
-  position: relative;
-  width: fit-content;
-  max-width: 100%;
-}
-
-.photo-image-frame {
-  position: relative;
-  z-index: 1;
-  width: fit-content;
-  max-width: 100%;
-  max-height: var(--photo-media-max-height);
-
-  &.is-loading {
-    width: 12rem;
-    height: var(--photo-media-max-height);
-    overflow: hidden;
-    background: rgba(226, 52, 86, 0.04);
-
-    &::before {
-      position: absolute;
-      inset: 0;
-      content: '';
-      background: linear-gradient(
-        105deg,
-        transparent 30%,
-        rgba(226, 52, 86, 0.12) 50%,
-        transparent 70%
-      );
-      transform: translateX(-100%);
-      animation: photo-placeholder-shimmer 1.6s ease-in-out infinite;
-    }
-
-    .photo-image-stage {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-    }
-  }
-}
-
-.photo-image-stage {
-  width: fit-content;
-  max-width: 100%;
-  max-height: var(--photo-media-max-height);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-
-  .photo-open {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: fit-content;
-    max-width: 100%;
-    max-height: var(--photo-media-max-height);
-    padding: 0;
-    border: 0;
-    background: transparent;
-    cursor: zoom-in;
-  }
-
-  img {
-    display: block;
-    width: auto;
-    max-width: 100%;
-    height: auto;
-    max-height: var(--photo-media-max-height);
-    object-fit: contain;
-    object-position: center;
-    filter: saturate(0.88) contrast(1.06) brightness(0.82);
-    transition: filter 0.28s ease, transform 0.28s ease;
-  }
-
-  video {
-    position: relative;
-    z-index: 4;
-    display: block;
-    width: auto;
-    max-width: 100%;
-    height: auto;
-    max-height: var(--photo-media-max-height);
-    object-fit: contain;
-    background: #000;
-  }
-}
-
-.photo-open:hover img,
-.photo-open:focus-visible img {
-  filter: saturate(1.12) contrast(1.1) brightness(0.94);
-  transform: scale(1.015);
-}
-
-@keyframes photo-placeholder-shimmer {
-  to {
-    transform: translateX(100%);
-  }
-}
-
 .photo-info {
-  position: relative;
-  width: 100%;
-  min-width: 12rem;
-  min-height: 28px;
-  margin-top: 14px;
-  background: rgba(5, 2, 6, 0.39);
-  box-sizing: border-box;
-
   &__inner {
     position: relative;
     z-index: 1;
@@ -653,42 +503,6 @@ watch(
 @media (max-width: 900px) {
   .flr-page {
     padding-top: 88px;
-  }
-
-  .photo-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0;
-  }
-
-  .photo-image-frame {
-    max-height: clamp(150px, 42vw, 220px);
-  }
-
-  .photo-card {
-    padding: 10px 5px;
-    border-bottom-color: rgba(255, 255, 255, 0.04);
-    --photo-media-max-height: clamp(150px, 42vw, 220px);
-
-    &::after,
-    &:not(:nth-child(3n))::after {
-      display: none;
-    }
-
-    &:nth-child(odd)::after {
-      position: absolute;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      display: block;
-      width: 1px;
-      content: '';
-      background: rgba(255, 255, 255, 0.04);
-      pointer-events: none;
-    }
-  }
-
-  .photo-info {
-    min-height: 26px;
   }
 
   .photo-info__inner {

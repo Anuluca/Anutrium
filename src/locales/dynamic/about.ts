@@ -1,23 +1,5 @@
 const aboutDynamic = {
   changelogs: [
-    // {
-    //   version: 'v1.2',
-    //   date: '2026-07-06',
-    //   title: {
-    //     zhCn: '',
-    //     en: '',
-    //   },
-    //   details: [
-    //     {
-    //       zhCn: '',
-    //       en: '',
-    //     },
-    //     {
-    //       zhCn: '诸多bug修复、细节增补、整体性能优化',
-    //       en: '',
-    //     },
-    //   ],
-    // },
     {
       version: 'v1.1',
       date: '2026-07-01',
@@ -44,6 +26,10 @@ const aboutDynamic = {
         },
         {
           zhCn: '新增__当前工作状态__模块',
+          en: '',
+        },
+        {
+          zhCn: '移除无用样式变量和代码清理',
           en: '',
         },
         {

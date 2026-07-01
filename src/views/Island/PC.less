@@ -1621,38 +1621,6 @@
   cursor: pointer;
   transition: color 0.24s ease;
 
-  .seal-clock {
-    display: grid;
-    gap: 5px;
-    justify-items: end;
-    min-width: 104px;
-  }
-
-  .seal-date {
-    color: @white-faint;
-    font-family: 'cn-custom', monospace;
-    font-size: 0.46rem;
-    font-weight: 800;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: 0.1em;
-    line-height: 1;
-    white-space: nowrap;
-    transition: color 0.24s ease, text-shadow 0.24s ease;
-  }
-
-  time {
-    color: @white-bright;
-    font-family: 'cn-custom', monospace;
-    font-size: clamp(0.76rem, 0.85vw, 1rem);
-    font-weight: 900;
-    font-variant-numeric: tabular-nums;
-    line-height: 1;
-    min-width: 104px;
-    text-align: right;
-    white-space: nowrap;
-    transition: color 0.24s ease, text-shadow 0.24s ease;
-  }
-
   i {
     position: relative;
     width: 58px;
@@ -1738,16 +1706,6 @@
   }
 
   &:hover {
-    .seal-date {
-      color: rgba(226, 52, 86, 0.72);
-      text-shadow: 0 0 10px rgba(226, 52, 86, 0.32);
-    }
-
-    time {
-      color: @red;
-      text-shadow: 0 0 12px rgba(226, 52, 86, 0.58);
-    }
-
     i {
       border-color: @red;
       box-shadow: 0 0 24px rgba(226, 52, 86, 0.34);

@@ -1,7 +1,5 @@
 @import url(./font.less);
 @import url(./variables.less);
-@import url('https://fontsapi.zeoseven.com/18/main/result.css');
-
 html {
   scrollbar-gutter: auto;
   height: 100%;
@@ -97,29 +95,18 @@ body.light {
     }
   }
 
-  .pt-header,
-  .about-section-header,
-  .about-timeline-title,
-  .timeline-section,
-  .footer-top {
+  .pt-header {
     border-color: var(--border-color) !important;
   }
 
   .pt-header__title,
   .section-title,
-  .about-section-title,
   .aside-title,
   .details-label,
-  .misc-section-title,
   .tl-card__title,
   .work-name,
   .card-title,
-  .home-status-card__title,
-  .home-flanerie-card__title,
-  .availability-copy h2,
-  .version-title,
-  .story-title,
-  .timeline-title {
+  .availability-copy h2 {
     color: var(--text-color) !important;
   }
 
@@ -142,17 +129,9 @@ body.light {
   .card-subtitle,
   .card-date,
   .scroll-text,
-  .home-status-card__body,
-  .home-flanerie-card__meta,
-  .timeline-meta,
-  .timeline-desc,
-  .version-meta,
-  .story-desc,
   .availability-copy p,
   .availability-item span,
-  .misc-card-company,
-  .misc-card-desc,
-  .misc-card-meta {
+  .misc-card-company {
     color: var(--text-muted) !important;
   }
 
@@ -164,25 +143,14 @@ body.light {
   .shared-tool-card,
   .shared-vlog-card,
   .news-card,
-  .home-status-card,
-  .home-flanerie-card,
   .misc-card,
   .pt-panel,
   .right-panel,
   .codec-stage,
   .codec-result,
-  .entity-panel,
   .entity-card,
-  .palette-panel,
-  .ease-panel,
-  .bounce-panel,
-  .metronome-panel,
-  .image64-panel,
   .availability-panel,
-  .about-feature,
-  .about-panel,
   .timeline-item,
-  .version-group,
   .log-card,
   .share-button,
   .link-item {
@@ -192,14 +160,9 @@ body.light {
 
   .tl-card__body,
   .shared-work-card,
-  .home-status-card,
-  .home-flanerie-card,
   .right-panel,
   .entity-card,
-  .version-group,
   .log-card,
-  .about-feature,
-  .about-panel,
   .timeline-item {
     background: var(--surface-color) !important;
   }
@@ -348,15 +311,9 @@ body.light {
   input,
   select,
   .codec-textarea,
-  .entity-input,
-  .image-dropzone,
   .pt-code-block,
   .pt-code-wrap,
-  .result-box,
-  .output-box,
   .search-box,
-  .control-card,
-  .settings-card,
   .preset-btn,
   .metric-card {
     color: var(--text-color) !important;
@@ -371,8 +328,6 @@ body.light {
 
   .pt-btn,
   .transport-btn,
-  .copy-btn,
-  .clear-btn,
   .gallery-btn,
   .nav-btn {
     background: rgba(255, 255, 255, 0.78) !important;
@@ -382,8 +337,6 @@ body.light {
 
   .transport-btn:hover,
   .pt-btn:hover,
-  .copy-btn:hover,
-  .clear-btn:hover,
   .gallery-btn:hover,
   .nav-btn:hover {
     border-color: #e23456 !important;
@@ -478,14 +431,6 @@ body.light {
     color: #e23456 !important;
   }
 
-  .bottom-text-label {
-    color: var(--text-faint) !important;
-  }
-
-  .footer-nav {
-    border-color: var(--border-color) !important;
-  }
-
   .footer-com {
     background-color: rgb(32 32 32 / 83%) !important;
     box-shadow: 0px 0 10px rgba(0, 0, 0, 0.509) !important;
@@ -552,9 +497,7 @@ body.light {
     color: #fff !important;
   }
 
-  .shared-vlog-card,
-  .journey-card,
-  .home-flanerie-card {
+  .shared-vlog-card {
     box-shadow: none !important;
   }
 
@@ -617,19 +560,11 @@ body.light {
       background-color: var(--border-color) !important;
     }
 
-    .version-group-expand,
-    .log-expand {
-      border-color: var(--border-color) !important;
-    }
-
-    .version-group-head,
     .log-head,
     .neighbor-card {
       color: var(--text-color) !important;
     }
 
-    .version-group-head strong,
-    .log-version,
     .log-title {
       color: var(--text-color) !important;
     }
@@ -638,35 +573,15 @@ body.light {
       color: #e23456 !important;
     }
 
-    .version-group-label,
-    .version-group-range,
-    .version-group-count,
     .log-date,
-    .log-expand-inner li,
     .nb-host,
     .nb-desc {
       color: var(--text-muted) !important;
     }
 
-    .version-group-more {
-      color: var(--text-muted) !important;
-      background: linear-gradient(
-        to bottom,
-        transparent,
-        rgba(255, 255, 255, 0.94) 58%,
-        #fff
-      ) !important;
-    }
-
-    .version-group-mark,
     .axis-diamond {
       background: rgba(0, 0, 0, 0.08) !important;
       border-color: rgba(0, 0, 0, 0.2) !important;
-    }
-
-    .version-group-arrow,
-    .log-arrow {
-      border-color: rgba(0, 0, 0, 0.35) !important;
     }
 
     .log-head:hover {
@@ -1165,21 +1080,7 @@ body .el-message-box {
   opacity: 0;
 }
 
-.dialog-fade-enter-active .el-overlay-dialog,
-.dialog-fade-leave-active .el-overlay-dialog {
-  animation: none !important;
-}
-
-.dialog-fade-enter-active {
-  animation-duration: 0.46s !important;
-}
-
-.dialog-fade-leave-active {
-  animation-duration: 0.42s !important;
-}
-
-.crt-effect-enter-active .el-dialog,
-.dialog-fade-enter-active .el-dialog {
+.crt-effect-enter-active .el-dialog {
   animation: anutriumCrtOn 0.46s cubic-bezier(0.19, 1, 0.22, 1) forwards !important;
 
   &::after {
@@ -1187,8 +1088,7 @@ body .el-message-box {
   }
 }
 
-.crt-effect-leave-active .el-dialog,
-.dialog-fade-leave-active .el-dialog {
+.crt-effect-leave-active .el-dialog {
   animation: anutriumCrtOff 0.42s cubic-bezier(0.2, 1, 0.22, 1) forwards !important;
 
   &::after {

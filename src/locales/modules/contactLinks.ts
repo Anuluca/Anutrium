@@ -4,7 +4,6 @@ export interface ContactLink {
   type: ContactType
   label: string
   href: string
-  external: boolean
 }
 
 const contactLinks: ContactLink[] = [
@@ -12,31 +11,26 @@ const contactLinks: ContactLink[] = [
     type: 'GITHUB',
     label: 'GITHUB',
     href: 'https://github.com/Anuluca',
-    external: true,
   },
   {
     type: 'WEIBO',
     label: 'WEIBO',
     href: 'https://weibo.com/u/7738638501',
-    external: true,
   },
   {
     type: 'TWITTER',
     label: 'TWITTER',
     href: 'https://twitter.com/TILucario',
-    external: true,
   },
   {
     type: 'BILIBILI',
     label: 'BILIBILI',
     href: 'https://space.bilibili.com/128735968',
-    external: true,
   },
   {
     type: 'MAIL',
     label: 'MAIL',
     href: 'mailto:tilucario@outlook.com',
-    external: false,
   },
 ]
 

@@ -68,9 +68,6 @@ onUnmounted(() => {
 </script>
 
 <style lang="less" scoped>
-@red: #e23456;
-@green: #5ad480;
-
 .back-to-top-button.no-rem {
   position: fixed;
   right: 1.35rem;

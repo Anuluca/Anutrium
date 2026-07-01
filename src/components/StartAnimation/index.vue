@@ -3,7 +3,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import Logo from '@/components/Logo/index.vue'
 import LogoRotating3D from '@/components/Logo_rotating3D/index.vue'
-import { loadCriticalFont, showPageContent } from '@/utils/fontLoader'
+import { loadCriticalFont } from '@/utils/fontLoader'
 
 const emit = defineEmits(['finished'])
 
@@ -55,8 +55,6 @@ const rotateFinished = () => {
 
   schedule(() => {
     logo2DHide.value = true
-
-    showPageContent()
 
     emit('finished')
 

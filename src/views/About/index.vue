@@ -507,7 +507,6 @@ watch(locale, scheduleNeighborDescriptionMeasure)
 
 <style lang="less" scoped>
 @red: #e23456;
-@red-dim: rgba(226, 52, 86, 0.15);
 @border: rgba(255, 255, 255, 0.07);
 @text-dim: rgba(255, 255, 255, 0.4);
 @card-bg: rgba(255, 255, 255, 0.025);
@@ -645,17 +644,6 @@ watch(locale, scheduleNeighborDescriptionMeasure)
     font-size: clamp(23px, 2vw, 32px);
     letter-spacing: 0;
   }
-}
-
-.passion-description {
-  max-width: 780px;
-  margin: 24px auto 0;
-  color: rgba(0, 0, 0, 0.6);
-  font-family: 'alibaba-puhuiti', sans-serif;
-  font-size: clamp(14px, 1.05vw, 18px);
-  font-weight: 700;
-  letter-spacing: 0.025em;
-  line-height: 1.65;
 }
 
 .passion-color-field {

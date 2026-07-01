@@ -5,11 +5,6 @@ const island = {
     zhCn: '个人海湾',
     en: 'Personal Harbor',
   },
-  headerLabel: '[PERSONAL_HARBOR]',
-  titleCn: {
-    zhCn: '个人海湾',
-    en: 'PERSONAL HARBOR',
-  },
   headerMeta: {
     zhCn: '把无法归类的心情停泊在这里。',
     en: 'A quiet harbor for feelings that cannot be named.',
