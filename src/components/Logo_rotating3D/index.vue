@@ -13,7 +13,6 @@ import {
   Color,
   ConeGeometry,
   CylinderGeometry,
-  DoubleSide,
   FogExp2,
   Group,
   Matrix4,
@@ -153,7 +152,6 @@ const initThree = () => {
     thickness: 2,
     ior: 1.5,
     reflectivity: 0.1,
-    side: DoubleSide,
     transparent: true,
   })
 

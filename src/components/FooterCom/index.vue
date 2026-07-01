@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute, useRouter } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { Message } from '@element-plus/icons-vue'
 import { ElLoading } from 'element-plus'
 
@@ -89,6 +89,8 @@ const mailItem = computed(
   () => socialItems.value.find((item) => item.type === 'MAIL')!
 )
 const weiboProfileUrl = computed(() => getContactLink('WEIBO')!.href)
+const isInternalHref = (href: string) =>
+  href.startsWith('/') && !href.startsWith('//')
 
 const fullFooter = computed(() => router.currentRoute.value.meta.fullFooter)
 const currentRouter = computed(() => route.path)
@@ -235,11 +237,13 @@ watch(locale, () => nextTick(updateMarqueeDuration))
         >
           <div ref="marqueeContent" class="marquee-content">
             <span class="recommend">
-              <a
+              <component
+                :is="isInternalHref(item.href) ? RouterLink : 'a'"
                 v-for="(item, key) in bottomLineData.recommand"
                 :key="key"
                 style="color: white"
-                :href="item.href"
+                :to="isInternalHref(item.href) ? item.href : undefined"
+                :href="isInternalHref(item.href) ? undefined : item.href"
               >
                 「
                 <span
@@ -254,17 +258,19 @@ watch(locale, () => nextTick(updateMarqueeDuration))
                 」
                 <span style="color: #ffffff96">{{ item.date }}</span>
                 &nbsp;
-              </a>
+              </component>
             </span>
             <b>{{ bottomLineData.intro }}</b>
           </div>
           <div class="marquee-content" aria-hidden="true">
             <span class="recommend">
-              <a
+              <component
+                :is="isInternalHref(item.href) ? RouterLink : 'a'"
                 v-for="(item, key) in bottomLineData.recommand"
                 :key="key"
                 style="color: white"
-                :href="item.href"
+                :to="isInternalHref(item.href) ? item.href : undefined"
+                :href="isInternalHref(item.href) ? undefined : item.href"
                 tabindex="-1"
               >
                 「
@@ -280,7 +286,7 @@ watch(locale, () => nextTick(updateMarqueeDuration))
                 」
                 <span style="color: #ffffff96">{{ item.date }}</span>
                 &nbsp;
-              </a>
+              </component>
             </span>
             <b>{{ bottomLineData.intro }}</b>
           </div>

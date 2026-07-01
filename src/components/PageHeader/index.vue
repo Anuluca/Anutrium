@@ -131,14 +131,38 @@ defineProps({
     color: var(--primary-color);
     opacity: 0;
     pointer-events: none;
-    background: linear-gradient(currentColor 0 0) left top / 18px 1px no-repeat,
-      linear-gradient(currentColor 0 0) left top / 1px 18px no-repeat,
-      linear-gradient(currentColor 0 0) right bottom / 18px 1px no-repeat,
-      linear-gradient(currentColor 0 0) right bottom / 1px 18px no-repeat;
     filter: drop-shadow(0 0 14px var(--primary-color));
     animation: headerBgIconFadeIn 0.58s ease-out 0.78s both;
 
+    &::before {
+      position: absolute;
+      inset: 7px;
+      border: 1px solid currentColor;
+      content: '';
+      opacity: 0.46;
+      transform: rotate(45deg) scale(0.72);
+    }
+
+    &::after {
+      position: absolute;
+      top: 50%;
+      right: -18px;
+      left: -18px;
+      height: 1px;
+      background: linear-gradient(
+        to right,
+        transparent,
+        currentColor 24%,
+        currentColor 76%,
+        transparent
+      );
+      content: '';
+      opacity: 0.34;
+    }
+
     svg {
+      position: relative;
+      z-index: 1;
       width: 100%;
       height: 100%;
       stroke-width: 1.4;
@@ -271,7 +295,7 @@ defineProps({
   }
 
   to {
-    opacity: 0.4;
+    opacity: 0.5;
   }
 }
 
@@ -355,7 +379,7 @@ defineProps({
 
     .header-bg-icon {
       animation: none;
-      opacity: 0.3;
+      opacity: 0.5;
     }
   }
 }

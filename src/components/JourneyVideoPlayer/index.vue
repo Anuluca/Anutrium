@@ -114,7 +114,7 @@ onBeforeUnmount(() => {
   display: grid;
   grid-template-columns: repeat(var(--video-columns), minmax(0, 300px));
   justify-content: center;
-  gap: 16px;
+  gap: 50px;
 }
 
 .video-item {
@@ -149,7 +149,7 @@ onBeforeUnmount(() => {
   overflow: hidden;
   border: 1px solid @line;
   background: @bg;
-  box-shadow: 8px 10px 0 rgba(0, 0, 0, 0.5), 0 0 24px rgba(226, 52, 86, 0.08);
+  box-shadow: 8px 10px 0 rgba(0, 0, 0, 0.213);
   transition: border-color 0.2s, transform 0.2s;
 
   img {

@@ -713,23 +713,18 @@ body.light {
 .el-image-viewer__wrapper .el-image-viewer__next,
 .el-image-viewer__wrapper .el-image-viewer__actions {
   color: #fff;
-  background:
-    linear-gradient(135deg, rgb(226 52 86 / 10%), transparent 60%),
+  background: linear-gradient(135deg, rgb(226 52 86 / 10%), transparent 60%),
     rgb(5 2 6 / 92%);
   border: 1px solid rgb(226 52 86 / 58%);
   border-radius: 0;
-  box-shadow:
-    0 8px 24px rgb(0 0 0 / 55%),
-    inset 0 0 14px rgb(226 52 86 / 5%);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 55%), inset 0 0 14px rgb(226 52 86 / 5%);
 }
 
 .el-image-viewer__wrapper .el-image-viewer__actions__inner {
   color: #fff;
 
   .el-icon {
-    transition:
-      color 0.18s ease,
-      transform 0.18s ease;
+    transition: color 0.18s ease, transform 0.18s ease;
 
     &:hover {
       color: #e23456;
@@ -752,8 +747,11 @@ body.light {
 }
 
 .el-image-viewer__wrapper .el-image-viewer__mask {
-  background:
-    radial-gradient(circle at center, rgb(226 52 86 / 4%), transparent 48%),
+  background: radial-gradient(
+      circle at center,
+      rgb(226 52 86 / 4%),
+      transparent 48%
+    ),
     rgb(0 0 0 / 88%);
   opacity: 1;
   backdrop-filter: blur(3px);
@@ -777,12 +775,8 @@ body.light {
   height: 46px;
   color: #e23456;
   opacity: 0.88;
-  transition:
-    color 0.2s ease,
-    background-color 0.2s ease,
-    border-color 0.2s ease,
-    opacity 0.2s ease,
-    transform 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease,
+    border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
 
   &:hover {
     border-color: #e23456;
@@ -818,9 +812,7 @@ body.light {
     height: 0;
     content: '';
     filter: drop-shadow(0 0 8px rgb(226 52 86 / 45%));
-    transition:
-      border-color 0.2s ease,
-      filter 0.2s ease;
+    transition: border-color 0.2s ease, filter 0.2s ease;
   }
 
   &:hover {
@@ -881,18 +873,14 @@ body.light {
 
   .el-icon {
     transform: rotate(-45deg) scale(2);
-    transition:
-      color 0.3s ease,
-      filter 0.3s ease,
-      transform 0.3s ease;
+    transition: color 0.3s ease, filter 0.3s ease, transform 0.3s ease;
   }
 
   &:hover {
     border: 2px solid #e23456;
     color: #fff;
     background: rgb(0 0 0 / 85%);
-    box-shadow:
-      0 0 15px rgb(226 52 86 / 40%),
+    box-shadow: 0 0 15px rgb(226 52 86 / 40%),
       inset 0 0 10px rgb(226 52 86 / 20%);
     transform: rotate(45deg);
 
@@ -954,17 +942,14 @@ body .el-message-box {
   border: 1px solid rgb(90 212 128 / 48%);
   border-left: 6px solid #5ad480;
   border-radius: 0;
-  background:
-    linear-gradient(120deg, rgb(90 212 128 / 9%), transparent 45%),
+  background: linear-gradient(120deg, rgb(90 212 128 / 9%), transparent 45%),
     repeating-linear-gradient(
       90deg,
       rgb(255 255 255 / 2%) 0 1px,
       transparent 1px 28px
     ),
     #080b09;
-  box-shadow:
-    0 24px 70px rgb(0 0 0 / 70%),
-    0 0 32px rgb(90 212 128 / 10%);
+  box-shadow: 0 24px 70px rgb(0 0 0 / 70%), 0 0 32px rgb(90 212 128 / 10%);
   font-family: 'alibaba-puhuiti', sans-serif;
 
   &::after {
@@ -1147,6 +1132,145 @@ body .el-message-box {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+// Shared CRT open/close treatment for every Element Plus dialog.
+.el-dialog {
+  transform-origin: center center;
+
+  &::after {
+    position: absolute;
+    inset: 0;
+    z-index: 999;
+    border-radius: inherit;
+    background: rgba(255, 255, 255, 0.62);
+    content: '';
+    opacity: 0;
+    mix-blend-mode: screen;
+    pointer-events: none;
+  }
+}
+
+.crt-effect-enter-active {
+  transition: opacity 0.46s ease;
+}
+
+.crt-effect-leave-active {
+  transition: opacity 0.42s ease;
+}
+
+.crt-effect-enter-from,
+.crt-effect-leave-to {
+  opacity: 0;
+}
+
+.dialog-fade-enter-active .el-overlay-dialog,
+.dialog-fade-leave-active .el-overlay-dialog {
+  animation: none !important;
+}
+
+.dialog-fade-enter-active {
+  animation-duration: 0.46s !important;
+}
+
+.dialog-fade-leave-active {
+  animation-duration: 0.42s !important;
+}
+
+.crt-effect-enter-active .el-dialog,
+.dialog-fade-enter-active .el-dialog {
+  animation: anutriumCrtOn 0.46s cubic-bezier(0.19, 1, 0.22, 1) forwards !important;
+
+  &::after {
+    animation: anutriumCrtFlashOn 0.46s linear forwards;
+  }
+}
+
+.crt-effect-leave-active .el-dialog,
+.dialog-fade-leave-active .el-dialog {
+  animation: anutriumCrtOff 0.42s cubic-bezier(0.2, 1, 0.22, 1) forwards !important;
+
+  &::after {
+    animation: anutriumCrtFlashOff 0.42s linear forwards;
+  }
+}
+
+@keyframes anutriumCrtOn {
+  0% {
+    transform: scale3d(0, 0.005, 1);
+    filter: brightness(6) contrast(2);
+    opacity: 0;
+  }
+
+  45% {
+    transform: scale3d(1, 0.005, 1);
+    filter: brightness(4) contrast(1.5);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale3d(1, 1, 1);
+    filter: brightness(1) contrast(1);
+    opacity: 1;
+  }
+}
+
+@keyframes anutriumCrtOff {
+  0% {
+    transform: scale3d(1, 1, 1);
+    filter: brightness(1);
+    opacity: 1;
+  }
+
+  55% {
+    transform: scale3d(1, 0.005, 1);
+    filter: brightness(4) contrast(1.5);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale3d(0, 0, 1);
+    filter: brightness(12);
+    opacity: 0;
+  }
+}
+
+@keyframes anutriumCrtFlashOn {
+  0%,
+  40%,
+  49%,
+  56%,
+  65%,
+  100% {
+    opacity: 0;
+  }
+
+  45% {
+    opacity: 0.52;
+  }
+
+  61% {
+    opacity: 0.42;
+  }
+}
+
+@keyframes anutriumCrtFlashOff {
+  0%,
+  4%,
+  16%,
+  22%,
+  34%,
+  100% {
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 0.42;
+  }
+
+  28% {
+    opacity: 0.52;
   }
 }
 

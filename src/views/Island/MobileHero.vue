@@ -10,19 +10,16 @@
       <p>{{ t('island.headerMeta') }}</p>
     </div>
     <div class="hero-watermark" aria-hidden="true">ANULUCA'S ISLAND</div>
-    <svg class="hero-anchor" viewBox="0 0 80 72" aria-hidden="true">
-      <path
-        d="M40 5a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13Zm0 13v50M40 36H27m13 0h13"
-      />
-      <path d="M15 45c5 16 13 23 25 23s20-7 25-23" />
-      <path d="M15 45l16 4-11 10M65 45l-16 4 11 10" />
-    </svg>
+    <div class="hero-route-icon" aria-hidden="true">
+      <Ship />
+    </div>
     <div class="hero-beam" aria-hidden="true" />
   </section>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { Ship } from '@element-plus/icons-vue'
 
 const { t } = useI18n()
 </script>
@@ -117,20 +114,53 @@ h1 {
   word-break: break-word;
 }
 
-.hero-anchor {
+.hero-route-icon {
   position: absolute;
-  top: clamp(68px, 11svh, 90px);
-  right: 24px;
+  right: 18px;
+  bottom: 32px;
   z-index: 3;
-  width: 82px;
-  height: 74px;
-  fill: none;
-  stroke: @red;
-  stroke-width: 4.4;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  filter: drop-shadow(0 0 8px rgba(226, 52, 86, 0.88))
-    drop-shadow(0 0 22px rgba(226, 52, 86, 0.42));
+  width: clamp(104px, 29vw, 128px);
+  height: clamp(104px, 29vw, 128px);
+  padding: 14px;
+  box-sizing: border-box;
+  color: @red;
+  opacity: 0.3;
+  pointer-events: none;
+  filter: drop-shadow(0 0 14px rgba(226, 52, 86, 0.8));
+
+  &::before {
+    position: absolute;
+    inset: 7px;
+    border: 1px solid currentColor;
+    content: '';
+    opacity: 0.46;
+    transform: rotate(45deg) scale(0.72);
+  }
+
+  &::after {
+    position: absolute;
+    top: 50%;
+    right: -18px;
+    left: -18px;
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      transparent,
+      currentColor 24%,
+      currentColor 76%,
+      transparent
+    );
+    content: '';
+    opacity: 0.34;
+  }
+
+  svg {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    stroke-width: 1.4;
+  }
 }
 
 .hero-beam {

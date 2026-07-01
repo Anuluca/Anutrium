@@ -138,31 +138,19 @@
             v-if="work.images.length > 1"
             class="gallery-btn gallery-btn--prev"
             :disabled="imgIndex === 0"
+            aria-label="上一张图片"
             @click="imgIndex = Math.max(0, imgIndex - 1)"
           >
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <path
-                d="M11 4L6 9L11 14"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-              />
-            </svg>
+            <span class="gallery-btn__triangle" aria-hidden="true" />
           </button>
           <button
             v-if="work.images.length > 1"
             class="gallery-btn gallery-btn--next"
             :disabled="imgIndex === work.images.length - 1"
+            aria-label="下一张图片"
             @click="imgIndex = Math.min(work.images.length - 1, imgIndex + 1)"
           >
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <path
-                d="M7 4L12 9L7 14"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-              />
-            </svg>
+            <span class="gallery-btn__triangle" aria-hidden="true" />
           </button>
 
           <div v-if="work.images.length > 1" class="gallery-progress">
@@ -711,9 +699,9 @@ const closeImageViewer = () => {
   z-index: 10;
   width: 36px;
   height: 36px;
-  background: rgba(10, 6, 14, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 0;
   color: #fff;
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -722,20 +710,42 @@ const closeImageViewer = () => {
 
   &--prev {
     left: 14px;
+
+    .gallery-btn__triangle {
+      border-right: 13px solid currentColor;
+    }
   }
+
   &--next {
     right: 14px;
+
+    .gallery-btn__triangle {
+      border-left: 13px solid currentColor;
+    }
   }
 
   &:hover:not(:disabled) {
-    background: @red;
-    border-color: @red;
+    color: @red;
+
+    .gallery-btn__triangle {
+      transform: scale(1.25);
+    }
   }
 
   &:disabled {
     opacity: 0.2;
     cursor: not-allowed;
   }
+}
+
+.gallery-btn__triangle {
+  display: block;
+  width: 0;
+  height: 0;
+  border-top: 9px solid transparent;
+  border-bottom: 9px solid transparent;
+  transform-origin: center;
+  transition: transform 0.2s ease;
 }
 
 .gallery-progress {

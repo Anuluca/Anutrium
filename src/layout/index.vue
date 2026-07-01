@@ -55,6 +55,11 @@
             :to="item.path"
           >
             <el-menu-item :index="item.path" :class="item.name">
+              <component
+                :is="getRouteIcon(item.meta.headerIcon)"
+                class="menu-route-icon"
+                aria-hidden="true"
+              />
               <div class="title-box">
                 <div class="main-title">{{ item.meta.titleEn }}</div>
                 <div class="second-title">
@@ -202,12 +207,21 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
-import { Moon, Sunny } from '@element-plus/icons-vue'
+import {
+  Collection,
+  HomeFilled,
+  MapLocation,
+  Moon,
+  Ship,
+  Sunny,
+  Tools,
+  UserFilled,
+} from '@element-plus/icons-vue'
 
 import BackToTop from '@/components/BackToTop/index.vue'
 import Logo from '@/components/Logo/index.vue'
 import type { ContactLink } from '@/locales/modules/contactLinks'
-import { routes, syncSeoMeta } from '@/router'
+import { type HeaderIconName, routes, syncSeoMeta } from '@/router'
 import { visualState } from '@/stores'
 import { persistLocale, type SiteLocale } from '@/utils/locale'
 
@@ -227,6 +241,16 @@ const visualStateStore = visualState()
 const currentRouter = computed(() => {
   return route.path
 })
+const routeIconMap: Record<HeaderIconName, typeof HomeFilled> = {
+  Collection,
+  HomeFilled,
+  MapLocation,
+  Ship,
+  Tools,
+  UserFilled,
+}
+const getRouteIcon = (icon?: HeaderIconName) =>
+  routeIconMap[icon || 'HomeFilled']
 
 const layoutPage = ref<HTMLElement | null>(null)
 const isScrolled = ref(false)

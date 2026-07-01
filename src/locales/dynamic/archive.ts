@@ -536,7 +536,7 @@ const archiveDynamic = {
         },
       ],
       description: {
-        zhCn: '个人网站第三次迭代，使用 Vue 3 和 Vite 从零重构。',
+        zhCn: '个人网站第三次迭代，结合第一版的设计风格与第二版的内容，使用 Vue 3 和 Vite 从零重构。',
         en: 'The third iteration of my personal website, rebuilt from scratch with Vue 3 and Vite.',
       },
       details: [
