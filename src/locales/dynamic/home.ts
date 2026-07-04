@@ -1,4 +1,12 @@
 const homeDynamic = {
+  aboutImageUrls: [
+    'https://assets.anuluca.com/Logo/1.jpg',
+    'https://assets.anuluca.com/Logo/2.jpg',
+    'https://assets.anuluca.com/Logo/3.jpg',
+    'https://assets.anuluca.com/Logo/4.jpg',
+    'https://assets.anuluca.com/Logo/5.jpg',
+    'https://assets.anuluca.com/Logo/6.jpg',
+  ],
   recommend: [
     {
       id: 1,

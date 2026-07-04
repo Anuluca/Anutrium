@@ -11,6 +11,67 @@ const ROUTE_CONFIG = {
   NOT_FOUND_PATH: '/404',
   SITE_URL: 'https://anutrium.com',
 } as const
+const ROUTE_LEAVE_LEAD_TIME = 140
+const ROUTE_PRE_LEAVE_CLASS = 'route-pre-leave'
+
+let pendingRouteLeaveElement: HTMLElement | null = null
+
+const cancelPendingRouteLeave = () => {
+  pendingRouteLeaveElement?.classList.remove(ROUTE_PRE_LEAVE_CLASS)
+  pendingRouteLeaveElement = null
+}
+
+const beginRouteLeave = () => {
+  cancelPendingRouteLeave()
+
+  const routeContainer = document.querySelector('.router-container')
+  const routeElements = routeContainer
+    ? Array.from(routeContainer.children).filter(
+        (element): element is HTMLElement => element instanceof HTMLElement
+      )
+    : []
+  const routeElement =
+    [...routeElements]
+      .reverse()
+      .find((element) => !element.classList.contains('route-leave-active')) ||
+    null
+
+  if (!routeElement) return null
+
+  routeElement.classList.add(ROUTE_PRE_LEAVE_CLASS)
+  pendingRouteLeaveElement = routeElement
+  return routeElement
+}
+
+const waitForRouteLeaveLead = () =>
+  new Promise<void>((resolve) => {
+    window.setTimeout(resolve, ROUTE_LEAVE_LEAD_TIME)
+  })
+
+const preloadRouteComponent = async (routeName: unknown) => {
+  const targetRoute = routes.find((item) => item.name === routeName)
+  if (typeof targetRoute?.component === 'function') {
+    await targetRoute.component()
+  }
+}
+
+const settlePendingRouteLeave = () => {
+  const leavingElement = pendingRouteLeaveElement
+  if (!leavingElement) return
+
+  window.requestAnimationFrame(() => {
+    if (
+      leavingElement.isConnected &&
+      !leavingElement.classList.contains('route-leave-active')
+    ) {
+      leavingElement.classList.remove(ROUTE_PRE_LEAVE_CLASS)
+    }
+
+    if (pendingRouteLeaveElement === leavingElement) {
+      pendingRouteLeaveElement = null
+    }
+  })
+}
 
 const PAGE_DESCRIPTIONS: Record<string, { zhCn: string; en: string }> = {
   HOME: {
@@ -49,6 +110,7 @@ const DESCRIPTION_ROUTE_GROUPS: Record<string, keyof typeof PAGE_DESCRIPTIONS> =
     HTMLENTITIES: 'CRAFT',
     BASE64CODEC: 'CRAFT',
     IMAGEBASE64: 'CRAFT',
+    TEST: 'ISLAND',
   }
 
 interface RouteMeta {
@@ -58,6 +120,7 @@ interface RouteMeta {
   headerIcon?: HeaderIconName
   ifShow: boolean
   noMenu?: boolean
+  starBackground?: 'default' | 'deep-black'
 }
 
 export type HeaderIconName =
@@ -71,7 +134,8 @@ export type HeaderIconName =
 interface RouteConfig {
   path: string
   name: string
-  component: any
+  component?: any
+  redirect?: string
   meta: RouteMeta
 }
 
@@ -122,19 +186,59 @@ export const routes: RouteConfig[] = [
       fullFooter: true,
       ifShow: false,
       noMenu: false,
+      starBackground: 'deep-black',
     },
   },
 
   {
     path: '/island',
     name: 'ISLAND',
-    component: () => import('@/views/404/index.vue'),
+    redirect: ROUTE_CONFIG.NOT_FOUND_PATH,
     meta: {
       titleEn: 'ISLAND',
       titleCn: '个人海湾',
       fullFooter: true,
       headerIcon: 'Ship',
+      ifShow: true,
+    },
+  },
+  {
+    path: '/island/photography',
+    name: 'ISLAND_PHOTOGRAPHY',
+    component: () => import('@/views/Island/Photography/index.vue'),
+    meta: {
+      titleEn: 'PHOTOGRAPHY',
+      titleCn: '摄影作品',
+      fullFooter: true,
       ifShow: false,
+      noMenu: false,
+      starBackground: 'deep-black',
+    },
+  },
+  {
+    path: '/island/merch-photography',
+    name: 'ISLAND_MERCH_PHOTOGRAPHY',
+    component: () => import('@/views/Island/MerchPhotography/index.vue'),
+    meta: {
+      titleEn: 'MERCH PHOTOGRAPHY',
+      titleCn: '周边摄影',
+      fullFooter: true,
+      ifShow: false,
+      noMenu: false,
+      starBackground: 'deep-black',
+    },
+  },
+  {
+    path: '/island/merch-photography/:collectionId',
+    name: 'ISLAND_MERCH_PHOTOGRAPHY_DETAIL',
+    component: () => import('@/views/Island/MerchPhotography/Detail/index.vue'),
+    meta: {
+      titleEn: 'MERCH PHOTOGRAPHY',
+      titleCn: '周边摄影',
+      fullFooter: true,
+      ifShow: false,
+      noMenu: false,
+      starBackground: 'deep-black',
     },
   },
   {
@@ -261,8 +365,8 @@ export const routes: RouteConfig[] = [
     name: 'TEST',
     component: () => import('@/views/Island/index.vue'),
     meta: {
-      titleEn: 'TEST',
-      titleCn: '测试',
+      titleEn: 'ISLAND',
+      titleCn: '个人海湾',
       fullFooter: true,
       headerIcon: 'Ship',
       ifShow: false,
@@ -344,22 +448,45 @@ export const syncSeoMeta = (to: RouteLocationNormalizedLoaded) => {
 }
 
 export const installRouterGuards = (router: Router) => {
-  router.beforeEach((to) => {
-    if (typeof document !== 'undefined') NProgress.start()
-
+  router.beforeEach(async (to) => {
     if (!router.hasRoute(to.name)) {
       if (to.path !== ROUTE_CONFIG.NOT_FOUND_PATH) {
         return { path: ROUTE_CONFIG.NOT_FOUND_PATH }
       }
     }
 
+    if (typeof document !== 'undefined') {
+      NProgress.start()
+      const leavingElement = beginRouteLeave()
+
+      if (leavingElement) {
+        await Promise.all([
+          preloadRouteComponent(to.name),
+          waitForRouteLeaveLead(),
+        ])
+      }
+    }
+
     return true
   })
 
-  router.afterEach((to) => {
+  router.afterEach((to, _from, failure) => {
     if (typeof window === 'undefined') return
 
     NProgress.done()
+    if (failure) {
+      cancelPendingRouteLeave()
+      return
+    }
+
+    settlePendingRouteLeave()
     syncSeoMeta(to)
+  })
+
+  router.onError(() => {
+    if (typeof window === 'undefined') return
+
+    NProgress.done()
+    cancelPendingRouteLeave()
   })
 }

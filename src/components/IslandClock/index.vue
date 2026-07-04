@@ -274,17 +274,21 @@ onBeforeUnmount(() => {
   }
 }
 
-:global(.layout-page > .el-menu-layout-all),
-:global(.layout-page > .mobile-menu-icon),
-:global(.footer-com),
-:global(.cursor-position),
-:global(.harbor-side),
-:global(.harbor-board),
-:global(.harbor-player),
-:global(.mobile-hero),
-:global(.mobile-latest),
-:global(.mobile-ports),
-:global(.mobile-player) {
+:global(body.island-pc-shell .layout-page > .el-menu-layout-all),
+:global(body.island-mobile-shell .layout-page > .el-menu-layout-all),
+:global(body.island-pc-shell .layout-page > .mobile-menu-icon),
+:global(body.island-mobile-shell .layout-page > .mobile-menu-icon),
+:global(body.island-pc-shell .footer-com),
+:global(body.island-mobile-shell .footer-com),
+:global(body.island-pc-shell .cursor-position),
+:global(body.island-mobile-shell .cursor-position),
+:global(body.island-pc-shell .harbor-side),
+:global(body.island-pc-shell .harbor-board),
+:global(body.island-pc-shell .harbor-player),
+:global(body.island-mobile-shell .mobile-hero),
+:global(body.island-mobile-shell .mobile-latest),
+:global(body.island-mobile-shell .mobile-ports),
+:global(body.island-mobile-shell .mobile-player) {
   transition: opacity 0.38s ease !important;
 }
 

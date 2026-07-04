@@ -8,67 +8,43 @@
       primary-color="#3B69F4"
       mobile-tall
     />
-    <div
-      class="craft-filter craft-enter craft-enter--filter"
-      :class="`craft-filter--${activeCategory}`"
-    >
-      <div class="craft-tabs" role="tablist" aria-label="Craft categories">
-        <button
-          v-for="tab in categoryTabs"
-          :key="tab.value"
-          class="craft-tab"
-          :class="[
-            `craft-tab--${tab.value}`,
-            { 'craft-tab--active': activeCategory === tab.value },
-          ]"
-          type="button"
-          role="tab"
-          :aria-selected="activeCategory === tab.value"
-          @click="selectCategory(tab.value)"
-        >
-          <span class="craft-tab__label">{{ tab.label }}</span>
-          <span class="craft-tab__count">{{ categoryCount(tab.value) }}</span>
-        </button>
-      </div>
-
-      <div class="craft-tag-filter" aria-label="Craft tag filters">
-        <button
-          class="craft-filter-chip"
-          :class="{ 'craft-filter-chip--active': activeTag === null }"
-          type="button"
-          @click="activeTag = null"
-        >
-          ALL
-        </button>
-        <button
-          v-for="tag in availableTags"
-          :key="tag"
-          class="craft-filter-chip"
-          :class="{ 'craft-filter-chip--active': activeTag === tag }"
-          type="button"
-          @click="activeTag = tag"
-        >
-          {{ tag }}
-        </button>
-      </div>
+    <div class="craft-filter craft-enter craft-enter--filter">
+      <CollectionTabs
+        aria-label="Craft categories"
+        :items="categoryTabs"
+        :model-value="activeCategory"
+        size="small"
+        @update:model-value="selectCategoryTab"
+      />
     </div>
 
-    <div class="tool-list craft-enter craft-enter--list">
-      <div class="tl-grid">
-        <ToolCard
-          v-for="(tool, i) in filteredTools"
-          :key="`${activeCategory}-${activeTag || 'all'}-${tool.id}`"
-          class="craft-tool-card"
-          :tool="tool"
-          :index="i"
-          :total="filteredTools.length"
-          :style="{ '--delay': `${0.24 + i * 0.06}s` }"
-          @select="openTool(tool)"
-          @tag-select="activeTag = $event"
-        />
-      </div>
-      <div v-if="filteredTools.length === 0" class="tl-empty">
-        NO MATCHED TOOLS
+    <div class="craft-workspace craft-enter craft-enter--list">
+      <FilterRail
+        :accent-color="activeCategory === 'work' ? '#3c5de8' : '#e8284a'"
+        aria-label="Craft tag filters"
+        :items="toolFilterItems"
+        :model-value="activeTag || 'all'"
+        :show-avatar="false"
+        @update:model-value="selectToolFilter"
+      />
+
+      <div class="tool-list">
+        <div class="tl-grid">
+          <ToolCard
+            v-for="(tool, i) in filteredTools"
+            :key="`${activeCategory}-${activeTag || 'all'}-${tool.id}`"
+            class="craft-tool-card"
+            :tool="tool"
+            :index="i"
+            :total="filteredTools.length"
+            :style="{ '--delay': `${0.24 + i * 0.06}s` }"
+            @select="openTool(tool)"
+            @tag-select="activeTag = $event"
+          />
+        </div>
+        <div v-if="filteredTools.length === 0" class="tl-empty">
+          NO MATCHED TOOLS
+        </div>
       </div>
     </div>
 
@@ -83,6 +59,12 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 
+import CollectionTabs, {
+  type CollectionTabItem,
+} from '@/components/CollectionTabs/index.vue'
+import FilterRail, {
+  type FilterRailItem,
+} from '@/components/FilterRail/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
 import PageHeader from '@/components/PageHeader/index.vue'
 import ToolCard from '@/components/ToolCard/index.vue'
@@ -123,18 +105,28 @@ const tools = computed<NormalizedTool[]>(() => {
   }))
 })
 
-const categoryTabs = computed(() => [
-  {
-    value: 'work' as const,
-    label: locale.value === 'zhCn' ? '工作' : 'WORK',
-    mark: 'W',
-  },
-  {
-    value: 'general' as const,
-    label: locale.value === 'zhCn' ? '生活' : 'GENERAL',
-    mark: 'G',
-  },
-])
+const categoryTabs = computed<CollectionTabItem[]>(() =>
+  toolCategories.map((category) => ({
+    id: category,
+    title:
+      category === 'work'
+        ? locale.value === 'zhCn'
+          ? '工作'
+          : 'WORK'
+        : locale.value === 'zhCn'
+        ? '生活'
+        : 'GENERAL',
+    subtitle:
+      locale.value === 'zhCn'
+        ? category === 'work'
+          ? 'WORK'
+          : 'GENERAL'
+        : undefined,
+    count: tools.value.filter((tool) => tool.category === category).length,
+    accentColor: category === 'work' ? '#3c5de8' : '#e8284a',
+    coverUrl: tools.value.find((tool) => tool.category === category)?.img,
+  }))
+)
 
 const categoryTools = computed(() => {
   return tools.value.filter((tool) => tool.category === activeCategory.value)
@@ -144,16 +136,25 @@ const availableTags = computed(() => {
   return Array.from(new Set(categoryTools.value.flatMap((tool) => tool.tags)))
 })
 
+const toolFilterItems = computed<FilterRailItem[]>(() => [
+  {
+    id: 'all',
+    title: 'ALL',
+    count: categoryTools.value.length,
+  },
+  ...availableTags.value.map((tag) => ({
+    id: tag,
+    title: tag,
+    count: categoryTools.value.filter((tool) => tool.tags.includes(tag)).length,
+  })),
+])
+
 const filteredTools = computed(() => {
   if (!activeTag.value) return categoryTools.value
   return categoryTools.value.filter((tool) =>
     tool.tags.includes(activeTag.value as string)
   )
 })
-
-const categoryCount = (category: ToolCategory) => {
-  return tools.value.filter((tool) => tool.category === category).length
-}
 
 const normalizeCategory = (value: unknown): ToolCategory => {
   return toolCategories.includes(value as ToolCategory)
@@ -171,6 +172,14 @@ const selectCategory = (category: ToolCategory) => {
       type: category,
     },
   })
+}
+
+const selectCategoryTab = (category: string) => {
+  selectCategory(normalizeCategory(category))
+}
+
+const selectToolFilter = (filterId: string) => {
+  activeTag.value = filterId === 'all' ? null : filterId
 }
 
 const openTool = (tool: NormalizedTool) => {
@@ -196,12 +205,6 @@ watch(
 </script>
 
 <style lang="less" scoped>
-@red: #e8284a;
-@red-dim: rgba(232, 40, 74, 0.15);
-@blue: #3c5de8;
-@blue-dim: rgba(60, 93, 232, 0.18);
-@border2: rgba(255, 255, 255, 0.069);
-@text: #ffffff;
 @muted: rgb(83, 83, 83);
 @mono: 'Anton', monospace;
 
@@ -211,19 +214,7 @@ watch(
 }
 
 .craft-filter {
-  --filter-accent: @blue;
-  --filter-accent-dim: @blue-dim;
-  display: grid;
-  grid-template-columns: minmax(320px, 520px) 1fr;
-  align-items: end;
-  gap: 18px;
-  margin: 18px 0 28px;
-  margin-bottom: 15px;
-
-  &--general {
-    --filter-accent: @red;
-    --filter-accent-dim: @red-dim;
-  }
+  margin: 18px 0 15px;
 }
 
 .craft-enter {
@@ -233,6 +224,9 @@ watch(
 }
 
 .craft-enter--filter {
+  transform-origin: center top;
+  animation-name: craftFilterIn;
+  animation-duration: 0.5s;
   animation-delay: 0.06s;
 }
 
@@ -255,128 +249,28 @@ watch(
   }
 }
 
+@keyframes craftFilterIn {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0) rotateX(-8deg);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) rotateX(0);
+  }
+}
+
 .tool-list {
   content-visibility: auto;
   contain-intrinsic-size: 940px;
 }
 
-.craft-tabs {
-  position: relative;
+.craft-workspace {
   display: grid;
-  width: 400px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  padding: 2px;
-  background: linear-gradient(90deg, rgba(60, 93, 232, 0.16), transparent 42%),
-    linear-gradient(270deg, rgba(232, 52, 86, 0.12), transparent 46%), #090406;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.035),
-    0 20px 60px rgba(0, 0, 0, 0.45);
-
-  &::before {
-    top: -1px;
-    left: -1px;
-    border-top: 2px solid @blue;
-    border-left: 2px solid @blue;
-  }
-
-  &::after {
-    right: -1px;
-    bottom: -1px;
-    border-right: 2px solid @red;
-    border-bottom: 2px solid @red;
-  }
-}
-
-.craft-tab {
-  --tab-accent: @blue;
-  --tab-accent-dim: @blue-dim;
-  position: relative;
-  min-height: 40px;
-  padding: 12px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.02);
-  color: @muted;
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  text-align: left;
-  overflow: hidden;
-  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
-
-  &::before {
-    content: '';
-    position: absolute;
-    inset: auto 0 0;
-    height: 2px;
-    background: var(--tab-accent);
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.25s ease;
-  }
-
-  &:hover,
-  &--active {
-    color: #fff;
-    border-color: var(--tab-accent);
-    border-bottom-color: transparent;
-    background: linear-gradient(
-      135deg,
-      var(--tab-accent-dim),
-      rgba(255, 255, 255, 0.02) 58%
-    );
-
-    &::before {
-      transform: scaleX(1);
-    }
-  }
-
-  &--general {
-    --tab-accent: @red;
-    --tab-accent-dim: @red-dim;
-  }
-}
-
-.craft-tab__label {
-  font-family: 'cn-custom';
-  font-size: 18px;
-  line-height: 1;
-  letter-spacing: 0.12em;
-}
-
-.craft-tab__count {
-  font-family: @mono;
-  font-size: 14px;
-  color: var(--tab-accent);
-}
-
-.craft-tag-filter {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding-bottom: 4px;
-}
-
-.craft-filter-chip {
-  font-family: @mono;
-  font-size: 10px;
-  letter-spacing: 0.18em;
-  color: @muted;
-  border: 1px solid @border2;
-  background: transparent;
-  padding: 7px 10px;
-  cursor: pointer;
-  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
-
-  &:hover,
-  &--active {
-    color: @text;
-    border-color: var(--filter-accent);
-    background: var(--filter-accent-dim);
-  }
+  grid-template-columns: 172px minmax(0, 1fr);
+  align-items: start;
+  column-gap: clamp(18px, 2.5vw, 34px);
 }
 
 .tool-list {
@@ -405,13 +299,8 @@ watch(
 }
 
 @media (max-width: 900px) {
-  .craft-filter {
-    grid-template-columns: 1fr;
-    align-items: stretch;
-  }
-
-  .craft-tag-filter {
-    justify-content: flex-start;
+  .craft-workspace {
+    display: block;
   }
 
   .tl-grid {
@@ -420,31 +309,6 @@ watch(
 }
 
 @media (max-width: 600px) {
-  .craft-tabs {
-    width: 100%;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 4px;
-  }
-
-  .craft-tab {
-    min-height: 42px;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 6px;
-    padding: 9px 10px;
-  }
-
-  .craft-tab__label {
-    overflow: hidden;
-    font-size: 13px;
-    letter-spacing: 0.08em;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .craft-tab__count {
-    font-size: 12px;
-  }
-
   .tl-grid {
     grid-template-columns: 1fr;
   }

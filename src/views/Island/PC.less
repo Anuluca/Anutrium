@@ -3,7 +3,8 @@
 @white-soft: rgba(255, 255, 255, 0.62);
 @white-faint: rgba(255, 255, 255, 0.3);
 
-:global(body.island-pc-shell) {
+:global(body.island-pc-shell),
+:global(body.island-pc-shell-leaving) {
   width: 100%;
   height: 100vh;
   margin: 0;
@@ -11,7 +12,8 @@
   overflow: hidden;
 }
 
-:global(body.island-pc-shell .router-container) {
+:global(body.island-pc-shell .router-container),
+:global(body.island-pc-shell-leaving .router-container) {
   width: 100vw;
   margin-top: 0;
 }
@@ -685,6 +687,7 @@
   align-items: stretch;
   min-height: 0;
   height: 100%;
+  perspective: 1000px;
 }
 
 .port-panel {
@@ -699,7 +702,8 @@
   box-shadow: none;
   opacity: 0;
   transform: translateY(22px);
-  animation: port-enter 1.75s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: center top;
+  animation: port-enter 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 
   &::before {
     content: '';
@@ -807,9 +811,14 @@
 }
 
 @keyframes port-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0) rotateX(-8deg);
+  }
+
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translate3d(0, 0, 0) rotateX(0);
   }
 }
 
@@ -1440,6 +1449,15 @@
   }
 }
 
+.track-store-link {
+  color: inherit;
+  text-decoration: none;
+
+  &:hover strong {
+    color: #fff;
+  }
+}
+
 .track-controls {
   position: absolute;
   inset: 50% auto auto 50%;
@@ -1600,9 +1618,13 @@
 
   i {
     display: block;
+    width: 100%;
     height: 100%;
     background: @red;
     box-shadow: 0 0 14px rgba(226, 52, 86, 0.74);
+    transform: scaleX(0);
+    transform-origin: left center;
+    will-change: transform;
   }
 }
 

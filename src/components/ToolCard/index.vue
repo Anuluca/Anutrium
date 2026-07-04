@@ -9,13 +9,9 @@
     @keydown.space.prevent="emit('select', tool)"
   >
     <div class="tl-card__index">
-      <span class="tl-card__index-num">{{
-        String(index + 1).padStart(2, '0')
-      }}</span>
+      <span class="tl-card__index-num">{{ index + 1 }}</span>
       <span class="tl-card__index-slash">/</span>
-      <span class="tl-card__index-total">{{
-        String(total).padStart(2, '0')
-      }}</span>
+      <span class="tl-card__index-total">{{ total }}</span>
     </div>
 
     <div class="tl-card__img-wrap">
@@ -116,7 +112,8 @@ const { locale } = useI18n()
   position: relative;
   overflow: visible;
   cursor: pointer;
-  animation: cardIn 0.6s cubic-bezier(0.23, 1, 0.32, 1) var(--delay, 0s) both;
+  transform-origin: center top;
+  animation: toolCardIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) var(--delay, 0s) both;
   transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1),
     border-color 0.3s ease, box-shadow 0.3s ease;
 
@@ -173,6 +170,8 @@ const { locale } = useI18n()
   gap: 2px;
   padding: 3px 10px;
   z-index: 2;
+  animation: toolCardMediaRise 0.52s cubic-bezier(0.16, 1, 0.3, 1)
+    calc(var(--delay, 0s) + 0.14s) both;
 
   &-num,
   &-slash,
@@ -205,6 +204,8 @@ const { locale } = useI18n()
   margin: 0 auto;
   overflow: hidden;
   background: @bg;
+  animation: toolCardMediaRise 0.52s cubic-bezier(0.16, 1, 0.3, 1)
+    calc(var(--delay, 0s) + 0.14s) both;
   transition: width 0.2s;
 }
 
@@ -381,14 +382,29 @@ const { locale } = useI18n()
   }
 }
 
-@keyframes cardIn {
+@keyframes toolCardIn {
   from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translate3d(0, 18px, 0) rotateX(-8deg);
   }
+
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translate3d(0, 0, 0) rotateX(0);
+  }
+}
+
+@keyframes toolCardMediaRise {
+  from {
+    opacity: 0;
+    clip-path: inset(100% 0 0);
+    transform: translate3d(0, 32px, 0);
+  }
+
+  to {
+    opacity: 1;
+    clip-path: inset(0);
+    transform: translate3d(0, 0, 0);
   }
 }
 

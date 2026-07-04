@@ -20,8 +20,22 @@
             />
           </div>
           <div class="aside-company-info">
-            <p class="aside-company-name">{{ work.company }}</p>
-            <p class="aside-id">{{ work.id }}</p>
+            <p class="aside-company-name">
+              <TypedText
+                :text="work.company"
+                :delay="480"
+                :speed="24"
+                :start="dialogVisible"
+              />
+            </p>
+            <p class="aside-id">
+              <TypedText
+                :text="work.id"
+                :delay="540"
+                :speed="32"
+                :start="dialogVisible"
+              />
+            </p>
           </div>
           <ShareButton
             class="project-share-button"
@@ -39,40 +53,87 @@
 
         <div class="aside-divider" />
 
-        <h2 class="aside-title">{{ work.title }}</h2>
+        <h2 class="aside-title">
+          <TypedText
+            :text="work.title"
+            :delay="520"
+            :speed="30"
+            :start="dialogVisible"
+          />
+        </h2>
 
         <div v-if="work.time" class="aside-field">
           <span class="field-label">TIME</span>
-          <span class="field-val">{{ work.time }}</span>
+          <span class="field-val">
+            <TypedText
+              :text="work.time"
+              :delay="620"
+              :speed="26"
+              :start="dialogVisible"
+            />
+          </span>
         </div>
 
         <div v-if="participationText" class="aside-field">
           <span class="field-label">{{
             t('workDetailModal.participation')
           }}</span>
-          <span class="field-val">{{ participationText }}</span>
+          <span class="field-val">
+            <TypedText
+              :text="participationText"
+              :delay="680"
+              :speed="34"
+              :start="dialogVisible"
+            />
+          </span>
         </div>
 
         <div v-if="work.tags?.length" class="aside-field aside-tags">
           <span class="field-label">STACK</span>
           <div class="tags-wrap">
-            <span v-for="tag in work.tags" :key="tag" class="tag">{{
-              tag
-            }}</span>
+            <span v-for="(tag, index) in work.tags" :key="tag" class="tag">
+              <TypedText
+                :text="tag"
+                :delay="720 + index * 55"
+                :speed="28"
+                :start="dialogVisible"
+              />
+            </span>
           </div>
         </div>
 
         <div v-if="work.description" class="aside-desc">
           <span class="field-label">ABOUT</span>
-          <p>{{ work.description }}</p>
+          <p>
+            <TypedText
+              :text="work.description"
+              :delay="780"
+              :speed="14"
+              :start="dialogVisible"
+            />
+          </p>
         </div>
 
         <div v-if="work.confidential" class="confidential-notice">
           <span class="confidential-kicker">
             {{ t('workDetailModal.confidentialKicker') }}
           </span>
-          <strong>{{ t('workDetailModal.confidential') }}</strong>
-          <p>{{ t('workDetailModal.confidentialDescription') }}</p>
+          <strong>
+            <TypedText
+              :text="t('workDetailModal.confidential')"
+              :delay="840"
+              :speed="22"
+              :start="dialogVisible"
+            />
+          </strong>
+          <p>
+            <TypedText
+              :text="t('workDetailModal.confidentialDescription')"
+              :delay="920"
+              :speed="14"
+              :start="dialogVisible"
+            />
+          </p>
         </div>
 
         <div v-if="work.links?.length" class="aside-links">
@@ -89,7 +150,14 @@
               <ElIcon class="link-icon" aria-hidden="true">
                 <component :is="getLinkIcon(link.icon)" />
               </ElIcon>
-              <span class="link-text">{{ link.label }}</span>
+              <span class="link-text">
+                <TypedText
+                  :text="link.label"
+                  :delay="900 + idx * 90"
+                  :speed="24"
+                  :start="dialogVisible"
+                />
+              </span>
               <span class="link-arrow">→</span>
             </a>
           </div>
@@ -99,6 +167,7 @@
       <div v-if="work" class="modal-gallery">
         <div
           v-if="work.images && work.images.length"
+          :key="`${work.id}-${animationRun}`"
           class="gallery-carousel"
           @touchstart="onTouchStart"
           @touchend="onTouchEnd"
@@ -127,7 +196,12 @@
                   v-if="work.imageDescriptions && work.imageDescriptions[i]"
                   class="slide-description"
                 >
-                  {{ work.imageDescriptions[i] }}
+                  <TypedText
+                    :text="work.imageDescriptions[i]"
+                    :delay="720"
+                    :speed="18"
+                    :start="dialogVisible"
+                  />
                 </div>
                 <div class="slide-scanlines" />
               </div>
@@ -164,18 +238,33 @@
           </div>
 
           <div class="gallery-counter">
-            <span class="counter-cur">{{
-              String(imgIndex + 1).padStart(2, '0')
-            }}</span>
+            <span class="counter-cur">
+              <TypedText
+                :text="String(imgIndex + 1)"
+                :delay="680"
+                :speed="36"
+                :start="dialogVisible"
+              />
+            </span>
             <span class="counter-sep">/</span>
-            <span class="counter-total">{{
-              String(work.images.length).padStart(2, '0')
-            }}</span>
+            <span class="counter-total">
+              <TypedText
+                :text="String(work.images.length)"
+                :delay="720"
+                :speed="36"
+                :start="dialogVisible"
+              />
+            </span>
           </div>
         </div>
 
         <div v-else class="gallery-empty">
-          <span>NO MEDIA AVAILABLE</span>
+          <TypedText
+            text="NO MEDIA AVAILABLE"
+            :delay="680"
+            :speed="28"
+            :start="dialogVisible"
+          />
         </div>
 
         <ElImageViewer
@@ -198,10 +287,22 @@
               :key="idx"
               class="detail-item"
             >
-              <span class="detail-index">{{
-                String(idx + 1).padStart(2, '0')
-              }}</span>
-              <span class="detail-text">{{ detail }}</span>
+              <span class="detail-index">
+                <TypedText
+                  :text="String(idx + 1)"
+                  :delay="980 + idx * 140"
+                  :speed="34"
+                  :start="dialogVisible"
+                />
+              </span>
+              <span class="detail-text">
+                <TypedText
+                  :text="detail"
+                  :delay="1020 + idx * 140"
+                  :speed="14"
+                  :start="dialogVisible"
+                />
+              </span>
             </li>
           </ul>
         </div>
@@ -224,6 +325,7 @@ import {
 import ModalWrapper from '@/components/ModalWrapper/index.vue'
 import CrystalLogo from '@/components/CrystalLogo/index.vue'
 import ShareButton from '@/components/ShareButton/index.vue'
+import TypedText from '@/components/TypedText/index.vue'
 
 import 'element-plus/es/components/icon/style/css'
 import 'element-plus/es/components/image-viewer/style/css'
@@ -263,6 +365,7 @@ const emit = defineEmits<{ close: [] }>()
 const { t } = useI18n()
 
 const dialogVisible = ref(false)
+const animationRun = ref(0)
 
 const imgIndex = ref(0)
 const showImageViewer = ref(false)
@@ -298,6 +401,7 @@ watch(
     dialogVisible.value = newVal
     if (newVal) {
       imgIndex.value = 0
+      animationRun.value += 1
     }
   },
   { immediate: true }
@@ -378,6 +482,27 @@ const closeImageViewer = () => {
     width: 3px;
     background: @red;
     box-shadow: 0 0 12px rgba(226, 52, 86, 0.55);
+    z-index: 2;
+  }
+
+  &::after {
+    position: absolute;
+    inset: -45% -30%;
+    content: '';
+    background: linear-gradient(
+      112deg,
+      transparent 36%,
+      rgba(255, 255, 255, 0.025) 42%,
+      rgba(255, 255, 255, 0.2) 49%,
+      rgba(226, 52, 86, 0.08) 53%,
+      transparent 61%
+    );
+    mix-blend-mode: screen;
+    pointer-events: none;
+    transform: translateX(-72%);
+    animation: confidentialMetalSheen 4.2s ease-in-out infinite;
+    will-change: transform;
+    z-index: 0;
   }
 
   .confidential-kicker {
@@ -387,6 +512,8 @@ const closeImageViewer = () => {
     font-family: 'cn-custom', monospace;
     font-size: 0.34rem;
     letter-spacing: 0.08em;
+    position: relative;
+    z-index: 1;
   }
 
   strong {
@@ -396,6 +523,8 @@ const closeImageViewer = () => {
     font-family: 'alibaba-puhuiti', sans-serif;
     font-size: 0.48rem;
     line-height: 1.5;
+    position: relative;
+    z-index: 1;
   }
 
   p {
@@ -403,6 +532,8 @@ const closeImageViewer = () => {
     font-family: 'alibaba-puhuiti', sans-serif;
     font-size: 0.38rem;
     line-height: 1.65;
+    position: relative;
+    z-index: 1;
   }
 }
 
@@ -600,6 +731,7 @@ const closeImageViewer = () => {
   background: #050208;
   display: flex;
   flex-direction: column;
+  perspective: 1200px;
 
   &::-webkit-scrollbar {
     width: 2px;
@@ -613,6 +745,11 @@ const closeImageViewer = () => {
   width: 100%;
   flex-shrink: 0;
   position: relative;
+  backface-visibility: hidden;
+  transform-origin: center top;
+  transform-style: preserve-3d;
+  animation: galleryVertical3dIn 0.78s cubic-bezier(0.16, 1, 0.3, 1) 0.18s both;
+  will-change: transform, opacity;
 }
 
 .gallery-track-wrap {
@@ -846,12 +983,13 @@ const closeImageViewer = () => {
 .detail-item {
   display: flex;
   gap: 14px;
-  align-items: baseline;
+  align-items: flex-start;
 }
 
 .detail-index {
   font-family: 'anton', monospace;
   font-size: 0.7rem;
+  line-height: 1.275rem;
   color: @red;
   min-width: 20px;
   opacity: 0.7;
@@ -864,6 +1002,30 @@ const closeImageViewer = () => {
   color: rgba(255, 255, 255, 0.55);
   line-height: 1.7;
   flex: 1;
+}
+
+@keyframes galleryVertical3dIn {
+  from {
+    opacity: 0;
+    transform: translateY(34px) rotateX(-78deg) scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) rotateX(0) scale(1);
+  }
+}
+
+@keyframes confidentialMetalSheen {
+  0%,
+  18% {
+    transform: translateX(-72%);
+  }
+
+  52%,
+  100% {
+    transform: translateX(72%);
+  }
 }
 
 @media (max-width: 768px) {
@@ -898,6 +1060,19 @@ const closeImageViewer = () => {
 
   .details-section {
     padding: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gallery-carousel {
+    opacity: 1;
+    animation: none;
+    transform: none;
+  }
+
+  .confidential-notice::after {
+    animation: none;
+    transform: translateX(72%);
   }
 }
 </style>

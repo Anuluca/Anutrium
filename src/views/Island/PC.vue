@@ -68,7 +68,7 @@
             :class="`port-panel--${section.id}`"
           >
             <div class="port-anchor">
-              <span>{{ String(index + 1).padStart(2, '0') }}</span>
+              <span>{{ index + 1 }}</span>
               <svg viewBox="0 0 80 72" aria-hidden="true">
                 <path
                   class="anchor-body"
@@ -96,6 +96,7 @@
                 :key="item.title"
                 class="bay-card"
                 type="button"
+                @click="openHarborItem(item)"
               >
                 <span class="card-hover-shell" aria-hidden="true">
                   <i class="card-hover-corners" />
@@ -123,7 +124,7 @@
             </div>
 
             <footer class="port-progress">
-              <span>PORT.{{ String(index + 1).padStart(2, '0') }}</span>
+              <span>PORT.{{ index + 1 }}</span>
               <div />
             </footer>
           </article>
@@ -134,10 +135,11 @@
         <audio
           ref="audioRef"
           :src="track.src"
+          crossorigin="anonymous"
           loop
           preload="auto"
-          @play="isPlaying = true"
-          @pause="isPlaying = false"
+          @play="handleAudioPlay"
+          @pause="handleAudioPause"
           @timeupdate="syncProgress"
         />
         <img
@@ -149,7 +151,16 @@
           <div class="track-copy">
             <span class="track-title">
               <span class="track-text">
-                <strong>{{ track.title }}</strong>
+                <a
+                  v-if="track.storeUrl"
+                  class="track-store-link"
+                  :href="track.storeUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <strong>{{ track.title }}</strong>
+                </a>
+                <strong v-else>{{ track.title }}</strong>
                 <em>{{ track.artist }}</em>
               </span>
               <span class="track-controls">
@@ -185,7 +196,7 @@
             <span class="track-status">{{ t('island.nowPlaying') }}</span>
           </div>
           <div class="track-bar">
-            <i :style="{ width: `${trackProgress}%` }" />
+            <i ref="progressBarRef" />
           </div>
         </div>
         <div class="player-seal">
@@ -200,17 +211,20 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 import { Ship } from '@element-plus/icons-vue'
 
 import IslandClock from '@/components/IslandClock/index.vue'
 
 const { t, tm } = useI18n()
+const router = useRouter()
 
 interface HarborItem {
   title: string
   subtitle: string
   count: string
   img: string
+  path?: string
 }
 
 interface HarborSection {
@@ -233,12 +247,56 @@ interface TrackItem {
   artist: string
   cover: string
   src: string
+  volume?: number
+  storeUrl?: string
 }
+
+interface PhotographyGroupSummary {
+  photos?: unknown[]
+  photoGroups?: Array<{ photos: unknown[] }>
+}
+
+const photographyPhotoCount = computed(() => {
+  const groups = tm(
+    'island.dynamic.photographyGroups'
+  ) as PhotographyGroupSummary[]
+
+  return groups.reduce(
+    (total, group) =>
+      total +
+      (group.photos?.length ||
+        group.photoGroups?.reduce(
+          (groupTotal, photoGroup) => groupTotal + photoGroup.photos.length,
+          0
+        ) ||
+        0),
+    0
+  )
+})
+
+const photographyCoverUrl = computed(
+  () => tm('island.dynamic.photographyCoverUrl') as unknown as string
+)
 
 const placeholder = (label: string, width = 760, height = 480) =>
   `https://placehold.co/${width}x${height}/14070c/e23456?text=${encodeURIComponent(
     label
   )}`
+const developingPlaceholder = placeholder('WIP')
+const merchCollections = computed(
+  () =>
+    tm('island.dynamic.merchPhotographyCollections') as Array<{
+      cover: string
+    }>
+)
+const merchCollectionCount = computed(() => merchCollections.value.length)
+const merchCoverUrl = computed(
+  () => merchCollections.value[0]?.cover || developingPlaceholder
+)
+
+const openHarborItem = (item: HarborItem) => {
+  router.push(item.path || '/404')
+}
 
 const harborSections: HarborSection[] = [
   {
@@ -250,20 +308,30 @@ const harborSections: HarborSection[] = [
       {
         title: '摄影作品',
         subtitle: 'PHOTO WORKS',
-        count: '32 PICS',
-        img: placeholder('PHOTO WORKS'),
+        get count() {
+          return `${photographyPhotoCount.value} PICS`
+        },
+        get img() {
+          return photographyCoverUrl.value
+        },
+        path: '/island/photography',
       },
       {
         title: '周边摄影',
         subtitle: 'MERCH PHOTOS',
-        count: '24 PICS',
-        img: placeholder('MERCH PHOTO'),
+        get count() {
+          return `${merchCollectionCount.value} COLLECTIONS`
+        },
+        get img() {
+          return merchCoverUrl.value
+        },
+        path: '/island/merch-photography',
       },
       {
         title: '图像记录',
         subtitle: 'IMAGE LOG',
-        count: '18 PICS',
-        img: placeholder('IMAGE LOG'),
+        count: '0 PICS',
+        img: developingPlaceholder,
       },
     ],
   },
@@ -276,26 +344,26 @@ const harborSections: HarborSection[] = [
       {
         title: '绘画',
         subtitle: 'ILLUSTRATION',
-        count: '28 ITEMS',
-        img: placeholder('ILLUSTRATION'),
+        count: '0 ITEMS',
+        img: developingPlaceholder,
       },
       {
         title: '训练家卡',
         subtitle: 'TRAINER CARD',
-        count: '18 ITEMS',
-        img: placeholder('TRAINER CARD'),
+        count: '0 ITEMS',
+        img: developingPlaceholder,
       },
       {
         title: '实验',
         subtitle: 'EXPERIMENTS',
-        count: '16 ITEMS',
-        img: placeholder('EXPERIMENTS'),
+        count: '0 ITEMS',
+        img: developingPlaceholder,
       },
       {
         title: '设计小物',
         subtitle: 'DESIGN GOODS',
-        count: '14 ITEMS',
-        img: placeholder('DESIGN GOODS'),
+        count: '0 ITEMS',
+        img: developingPlaceholder,
       },
     ],
   },
@@ -308,14 +376,14 @@ const harborSections: HarborSection[] = [
       {
         title: '学习笔记',
         subtitle: 'STUDY NOTES',
-        count: '34 NOTES',
-        img: placeholder('STUDY NOTES'),
+        count: '0 NOTES',
+        img: developingPlaceholder,
       },
       {
         title: '文章杂谈',
         subtitle: 'ESSAYS & TALKS',
-        count: '30 ARTICLES',
-        img: placeholder('ESSAYS & TALKS'),
+        count: '0 ARTICLES',
+        img: developingPlaceholder,
       },
     ],
   },
@@ -328,8 +396,8 @@ const harborSections: HarborSection[] = [
       {
         title: '游戏库',
         subtitle: 'GAME LIBRARY',
-        count: '72 GAMES',
-        img: placeholder('GAME LIBRARY', 900, 720),
+        count: '0 GAMES',
+        img: developingPlaceholder,
       },
     ],
   },
@@ -356,12 +424,17 @@ const splitCount = (count: string) => {
 }
 
 const audioRef = ref<HTMLAudioElement | null>(null)
+const progressBarRef = ref<HTMLElement | null>(null)
 const latestScrollRef = ref<HTMLElement | null>(null)
 const isPlaying = ref(false)
 const isLatestScrollAtTop = ref(true)
 const isLatestScrollAtBottom = ref(false)
-const trackProgress = ref(0)
 const currentTrackIndex = ref(0)
+const DEFAULT_PLAYER_VOLUME = 0.12
+const FADE_IN_DURATION = 900
+const FADE_OUT_DURATION = 520
+let volumeFadeRafId: number | null = null
+let progressRafId: number | null = null
 
 const track = computed(
   () => tracks.value[currentTrackIndex.value] || fallbackTrack
@@ -370,16 +443,96 @@ const track = computed(
 const syncProgress = () => {
   const audio = audioRef.value
   if (!audio?.duration) return
-  trackProgress.value = Math.min(
-    100,
-    (audio.currentTime / audio.duration) * 100
-  )
+
+  const progress = Math.min(1, audio.currentTime / audio.duration)
+  if (progressBarRef.value) {
+    progressBarRef.value.style.transform = `scaleX(${progress})`
+  }
+}
+
+const stopProgressAnimation = () => {
+  if (progressRafId === null) return
+  window.cancelAnimationFrame(progressRafId)
+  progressRafId = null
+}
+
+const startProgressAnimation = () => {
+  stopProgressAnimation()
+
+  const update = () => {
+    const audio = audioRef.value
+    if (!audio || audio.paused) {
+      progressRafId = null
+      return
+    }
+
+    syncProgress()
+    progressRafId = window.requestAnimationFrame(update)
+  }
+
+  progressRafId = window.requestAnimationFrame(update)
+}
+
+const handleAudioPlay = () => {
+  isPlaying.value = true
+  startProgressAnimation()
+}
+
+const handleAudioPause = () => {
+  isPlaying.value = false
+  stopProgressAnimation()
+  syncProgress()
+}
+
+const cancelVolumeFade = () => {
+  if (volumeFadeRafId === null) return
+  window.cancelAnimationFrame(volumeFadeRafId)
+  volumeFadeRafId = null
+}
+
+const fadeAudioVolume = (
+  audio: HTMLAudioElement,
+  targetVolume: number,
+  duration: number,
+  onComplete?: () => void
+) => {
+  cancelVolumeFade()
+  const initialVolume = audio.volume
+  const startedAt = performance.now()
+
+  const step = (now: number) => {
+    const progress = Math.min(1, (now - startedAt) / duration)
+    const easedProgress = 1 - Math.pow(1 - progress, 3)
+    audio.volume =
+      initialVolume + (targetVolume - initialVolume) * easedProgress
+
+    if (progress < 1) {
+      volumeFadeRafId = window.requestAnimationFrame(step)
+      return
+    }
+
+    volumeFadeRafId = null
+    onComplete?.()
+  }
+
+  volumeFadeRafId = window.requestAnimationFrame(step)
 }
 
 const startPlayback = async () => {
+  const audio = audioRef.value
+  if (!audio) return
+
+  cancelVolumeFade()
+  audio.volume = 0
+
   try {
-    await audioRef.value?.play()
+    await audio.play()
     isPlaying.value = true
+    fadeAudioVolume(
+      audio,
+      track.value.volume ?? DEFAULT_PLAYER_VOLUME,
+      FADE_IN_DURATION
+    )
   } catch {
     isPlaying.value = false
   }
@@ -391,7 +544,9 @@ const playTrackAt = async (index: number) => {
 
   const shouldResume = isPlaying.value || !audioRef.value?.paused
   currentTrackIndex.value = (index + trackCount) % trackCount
-  trackProgress.value = 0
+  if (progressBarRef.value) {
+    progressBarRef.value.style.transform = 'scaleX(0)'
+  }
   await nextTick()
   audioRef.value?.load()
 
@@ -410,12 +565,13 @@ const togglePlayback = async () => {
   const audio = audioRef.value
   if (!audio) return
 
-  if (audio.paused) {
+  if (audio.paused || !isPlaying.value) {
     await startPlayback()
     return
   }
 
-  audio.pause()
+  isPlaying.value = false
+  fadeAudioVolume(audio, 0, FADE_OUT_DURATION, () => audio.pause())
 }
 
 const updateLatestScrollState = () => {
@@ -430,11 +586,21 @@ const updateLatestScrollState = () => {
 
 onMounted(() => {
   document.body.classList.add('island-pc-shell')
-  nextTick(updateLatestScrollState)
+  nextTick(() => {
+    updateLatestScrollState()
+    if (audioRef.value) {
+      audioRef.value.autoplay = false
+      audioRef.value.pause()
+      audioRef.value.volume = 0
+    }
+  })
   window.addEventListener('resize', updateLatestScrollState)
 })
 
 onUnmounted(() => {
+  cancelVolumeFade()
+  stopProgressAnimation()
+  audioRef.value?.pause()
   document.body.classList.remove('island-pc-shell')
   window.removeEventListener('resize', updateLatestScrollState)
 })

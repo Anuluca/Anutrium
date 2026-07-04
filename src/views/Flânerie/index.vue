@@ -40,7 +40,7 @@
           class="vlog-group"
         >
           <Sections
-            :section-number="String(index + 1).padStart(2, '0')"
+            :section-number="index + 1"
             :rail-label="group.railLabel"
             :title="group.title"
             :title-en="group.titleEn"

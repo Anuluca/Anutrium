@@ -5,7 +5,7 @@
     :class="{ 'scroll-reveal-ready': isScrollRevealReady }"
   >
     <aside class="home-section-rail scroll-reveal-title" aria-hidden="true">
-      <span class="home-section-rail__num">{{ sectionNumber }}</span>
+      <span class="home-section-rail__num">{{ formattedSectionNumber }}</span>
       <span class="home-section-rail__label">{{ railLabel }}</span>
     </aside>
 
@@ -46,7 +46,7 @@ import { useI18n } from 'vue-i18n'
 import { useScrollReveal } from '@/composables/useScrollReveal'
 
 const props = defineProps<{
-  sectionNumber: string
+  sectionNumber: string | number
   railLabel: string
   title: string
   titleEn?: string
@@ -62,6 +62,9 @@ const { isReady: isScrollRevealReady } = useScrollReveal({
 
 const shouldShowEnglishTitle = computed(
   () => locale.value !== 'en' && !!props.titleEn
+)
+const formattedSectionNumber = computed(() =>
+  String(props.sectionNumber).padStart(2, '0')
 )
 </script>
 

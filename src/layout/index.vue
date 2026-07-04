@@ -45,7 +45,6 @@
         v-if="!isMobile"
         :default-active="currentRouter"
         mode="horizontal"
-        router
         :ellipsis="false"
       >
         <div class="menu-box">
@@ -182,12 +181,18 @@
       :class="{ 'router-container': true, blur: isMobile && isMobileMenuOpen }"
     >
       <router-view v-slot="{ Component }">
-        <transition name="route" mode="out-in">
+        <transition
+          name="route"
+          @before-leave="lockIslandRouteGeometry"
+          @after-leave="unlockIslandRouteGeometry"
+          @after-enter="unlockIslandRouteGeometry"
+          @leave-cancelled="unlockIslandRouteGeometry"
+        >
           <component :is="Component" />
         </transition>
       </router-view>
     </div>
-    <BackToTop />
+    <BackToTop :suppressed="isMobile && isMobileMenuOpen" />
     <span
       v-if="isPageScrollable"
       class="page-scroll-progress no-rem"
@@ -224,6 +229,12 @@ import type { ContactLink } from '@/locales/modules/contactLinks'
 import { type HeaderIconName, routes, syncSeoMeta } from '@/router'
 import { visualState } from '@/stores'
 import { persistLocale, type SiteLocale } from '@/utils/locale'
+import {
+  addPageScrollListener,
+  getPageMaxScrollTop,
+  getPageScrollTop,
+  scrollPageTo,
+} from '@/utils/pageScroll'
 
 const { locale, tm } = useI18n()
 const props = defineProps({
@@ -274,6 +285,9 @@ const ifNoMenu = computed(() => !!route.meta?.noMenu)
 
 const isMobile = computed(() => visualStateStore.deviceType !== 'desktop')
 const isMobileMenuOpen = ref(false)
+let isMobileScrollLocked = false
+let lockedMobileScrollY = 0
+let removePageScrollListener: (() => void) | null = null
 
 const isFullscreen = ref(false)
 const scrollProgress = ref(0)
@@ -281,7 +295,15 @@ const isPageScrollable = ref(false)
 let scrollRafId: number | null = null
 let logoTimer: number | null = null
 let layoutTimer: number | null = null
+let islandGeometryUnlockTimer: number | null = null
 let hasPlayedEntryAnimation = false
+const ISLAND_ROUTE_NAME = 'TEST'
+const ISLAND_GEOMETRY_UNLOCK_DELAY = 260
+const islandShellClasses = ['island-pc-shell', 'island-mobile-shell'] as const
+const islandLeavingClasses = [
+  'island-pc-shell-leaving',
+  'island-mobile-shell-leaving',
+] as const
 
 const clearEntryAnimationTimers = () => {
   if (logoTimer !== null) {
@@ -344,21 +366,45 @@ const closeMobileMenu = () => {
   isMobileMenuOpen.value = false
 }
 
+const preventBackgroundTouchMove = (event: TouchEvent) => {
+  event.preventDefault()
+}
+
+const lockMobilePageScroll = () => {
+  if (isMobileScrollLocked) return
+
+  isMobileScrollLocked = true
+  lockedMobileScrollY = getPageScrollTop()
+  document.documentElement.classList.add('mobile-menu-scroll-locked')
+  document.body.classList.add('mobile-menu-scroll-locked')
+  document.addEventListener('touchmove', preventBackgroundTouchMove, {
+    passive: false,
+  })
+}
+
+const unlockMobilePageScroll = () => {
+  if (!isMobileScrollLocked) return
+
+  isMobileScrollLocked = false
+  const scrollY = lockedMobileScrollY
+  document.documentElement.classList.remove('mobile-menu-scroll-locked')
+  document.body.classList.remove('mobile-menu-scroll-locked')
+  document.removeEventListener('touchmove', preventBackgroundTouchMove)
+  scrollPageTo({ top: scrollY })
+}
+
 const handleScroll = () => {
   if (scrollRafId !== null) return
 
   scrollRafId = window.requestAnimationFrame(() => {
-    const maxScroll = Math.max(
-      0,
-      document.documentElement.scrollHeight - window.innerHeight
-    )
+    const scrollTop = getPageScrollTop()
+    const maxScroll = getPageMaxScrollTop()
     scrollProgress.value = maxScroll
-      ? Math.min(100, (window.scrollY / maxScroll) * 100)
+      ? Math.min(100, (scrollTop / maxScroll) * 100)
       : 0
     isPageScrollable.value = maxScroll > 1
 
-    const nextValue =
-      window.scrollY > 50 || document.documentElement.scrollTop > 50
+    const nextValue = scrollTop > 50
     if (isScrolled.value !== nextValue) {
       isScrolled.value = nextValue
     }
@@ -381,15 +427,85 @@ const toggleTheme = () => {
   visualStateStore.toggleTheme()
 }
 
+const clearIslandGeometryUnlockTimer = () => {
+  if (islandGeometryUnlockTimer === null) return
+
+  window.clearTimeout(islandGeometryUnlockTimer)
+  islandGeometryUnlockTimer = null
+}
+
+const hasIslandShellClass = () =>
+  [...islandShellClasses, ...islandLeavingClasses].some((className) =>
+    document.body.classList.contains(className)
+  )
+
+const refreshScrollState = () => {
+  if (scrollRafId !== null) {
+    window.cancelAnimationFrame(scrollRafId)
+    scrollRafId = null
+  }
+  handleScroll()
+}
+
+const lockIslandRouteGeometry = (leavingElement: Element) => {
+  clearIslandGeometryUnlockTimer()
+
+  if (leavingElement instanceof HTMLElement) {
+    const bounds = leavingElement.getBoundingClientRect()
+    Object.assign(leavingElement.style, {
+      position: 'fixed',
+      top: `${bounds.top}px`,
+      left: `${bounds.left}px`,
+      width: `${bounds.width}px`,
+      height: `${bounds.height}px`,
+      margin: '0',
+    })
+  }
+
+  if (hasIslandShellClass() && route.name !== ISLAND_ROUTE_NAME) {
+    unlockIslandRouteGeometry()
+  }
+}
+
+const unlockIslandRouteGeometry = () => {
+  clearIslandGeometryUnlockTimer()
+  document.body.classList.remove(...islandLeavingClasses)
+
+  if (route.name !== ISLAND_ROUTE_NAME) {
+    document.body.classList.remove(...islandShellClasses)
+  }
+
+  nextTick(refreshScrollState)
+}
+
+const scheduleIslandGeometryUnlock = () => {
+  if (
+    route.name === ISLAND_ROUTE_NAME ||
+    !hasIslandShellClass() ||
+    islandGeometryUnlockTimer !== null
+  ) {
+    return
+  }
+
+  islandGeometryUnlockTimer = window.setTimeout(
+    unlockIslandRouteGeometry,
+    ISLAND_GEOMETRY_UNLOCK_DELAY
+  )
+}
+
 onMounted(() => {
   if (props.entryActive) startEntryAnimation()
   handleScroll()
-  document.addEventListener('scroll', handleScroll, { passive: true })
+  removePageScrollListener = addPageScrollListener(handleScroll)
   window.addEventListener('resize', handleScroll, { passive: true })
 })
 
 onUnmounted(() => {
-  document.removeEventListener('scroll', handleScroll)
+  clearIslandGeometryUnlockTimer()
+  document.body.classList.remove(...islandShellClasses, ...islandLeavingClasses)
+  unlockMobilePageScroll()
+  removePageScrollListener?.()
+  removePageScrollListener = null
   window.removeEventListener('resize', handleScroll)
   if (scrollRafId !== null) window.cancelAnimationFrame(scrollRafId)
   clearEntryAnimationTimers()
@@ -402,11 +518,22 @@ watch(
   }
 )
 
+watch([isMobile, isMobileMenuOpen], ([mobile, menuOpen]) => {
+  if (mobile && menuOpen) {
+    lockMobilePageScroll()
+    return
+  }
+
+  unlockMobilePageScroll()
+})
+
 watch(
   () => route.fullPath,
   async () => {
+    closeMobileMenu()
     await nextTick()
-    handleScroll()
+    scheduleIslandGeometryUnlock()
+    refreshScrollState()
   }
 )
 </script>
@@ -415,20 +542,32 @@ watch(
 @import './index.less';
 
 .route-enter-active {
-  transition: opacity 0.2s ease, transform 0.6s ease, filter 0.6s ease;
+  transition: opacity 0.12s ease, transform 0.6s ease, filter 0.6s ease;
+  transition-delay: 0.12s;
+  transform-origin: top center;
 }
 
 .route-leave-active {
-  transition: opacity 0.2s ease;
+  transition: opacity 0.12s ease;
+  transition-delay: 0.12s;
   will-change: opacity;
+  pointer-events: none;
 }
 
 .route-enter-from {
   opacity: 0;
-  transform: scale(0.92);
+  transform: scale(0.86);
 }
 
 .route-leave-to {
   opacity: 0;
+}
+
+:global(.route-pre-leave) {
+  opacity: 0;
+  transition: opacity 0.12s ease;
+  transition-delay: 0.12s;
+  will-change: opacity;
+  pointer-events: none;
 }
 </style>

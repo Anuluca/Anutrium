@@ -1,9 +1,17 @@
 <template>
-  <div class="media-gallery">
+  <div
+    ref="galleryRef"
+    class="media-gallery"
+    :class="{
+      'media-gallery--staggered': staggeredEntrance,
+      'is-entered': entranceStarted,
+    }"
+  >
     <article
       v-for="(media, index) in items"
       :key="media.url"
       class="media-gallery__card"
+      :style="getEntranceStyle(index)"
     >
       <div class="media-gallery__shell">
         <div
@@ -41,7 +49,10 @@
           </div>
         </div>
 
-        <div v-if="$slots.info" class="media-gallery__info">
+        <div
+          v-if="$slots.info && shouldShowMediaInfo(media)"
+          class="media-gallery__info"
+        >
           <slot name="info" :item="media" :index="index" />
         </div>
       </div>
@@ -59,7 +70,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { ElImageViewer } from 'element-plus'
 
 import 'element-plus/es/components/image-viewer/style/css'
@@ -76,19 +87,41 @@ const props = withDefaults(
   defineProps<{
     items: GalleryMedia[]
     getMediaLabel?: (media: GalleryMedia) => string
+    showMediaInfo?: (media: GalleryMedia) => boolean
+    staggeredEntrance?: boolean
+    entranceReady?: boolean
+    entranceStepMs?: number
   }>(),
   {
     getMediaLabel: (media: GalleryMedia) => media.title || 'Photo',
+    showMediaInfo: () => true,
+    staggeredEntrance: false,
+    entranceReady: true,
+    entranceStepMs: 70,
   }
 )
 
 const VIDEO_FILE_PATTERN = /\.(?:mov|mp4|webm|m4v|ogv)(?:[?#].*)?$/i
+const galleryRef = ref<HTMLElement | null>(null)
 const loadedMediaUrls = ref(new Set<string>())
 const showViewer = ref(false)
 const currentImageIndex = ref(0)
+const entranceStarted = ref(!props.staggeredEntrance)
+let galleryObserver: IntersectionObserver | null = null
+let isGalleryVisible = false
 
 const isVideoUrl = (url: string) => VIDEO_FILE_PATTERN.test(url)
 const getLabel = (media: GalleryMedia) => props.getMediaLabel(media)
+const shouldShowMediaInfo = (media: GalleryMedia) => props.showMediaInfo(media)
+const getEntranceStyle = (index: number) =>
+  props.staggeredEntrance
+    ? {
+        '--media-gallery-entry-delay': `${Math.max(
+          0,
+          index * props.entranceStepMs
+        )}ms`,
+      }
+    : undefined
 const imageUrls = computed(() =>
   props.items
     .filter((media) => !isVideoUrl(media.url))
@@ -107,13 +140,77 @@ const openViewer = (url: string) => {
   showViewer.value = true
 }
 
+const replayEntrance = async () => {
+  if (!props.staggeredEntrance) return
+
+  entranceStarted.value = false
+  await nextTick()
+
+  if (isGalleryVisible && props.entranceReady) {
+    entranceStarted.value = true
+  }
+}
+
 watch(
   () => props.items,
   () => {
     showViewer.value = false
     loadedMediaUrls.value = new Set()
+    replayEntrance()
   }
 )
+
+watch(
+  () => props.entranceReady,
+  (isReady) => {
+    if (!props.staggeredEntrance) return
+
+    if (!isReady) {
+      entranceStarted.value = false
+      return
+    }
+
+    if (isGalleryVisible) {
+      entranceStarted.value = true
+    }
+  }
+)
+
+onMounted(() => {
+  if (!props.staggeredEntrance) return
+
+  if (!('IntersectionObserver' in window)) {
+    isGalleryVisible = true
+    entranceStarted.value = true
+    return
+  }
+
+  galleryObserver = new IntersectionObserver(
+    ([entry]) => {
+      isGalleryVisible = entry.isIntersecting
+
+      if (
+        entry.isIntersecting &&
+        props.entranceReady &&
+        !entranceStarted.value
+      ) {
+        entranceStarted.value = true
+      }
+    },
+    {
+      threshold: 0.08,
+      rootMargin: '0px 0px -8% 0px',
+    }
+  )
+
+  if (galleryRef.value) {
+    galleryObserver.observe(galleryRef.value)
+  }
+})
+
+onBeforeUnmount(() => {
+  galleryObserver?.disconnect()
+})
 </script>
 
 <style lang="less" scoped>
@@ -146,6 +243,50 @@ watch(
     background: rgba(255, 255, 255, 0.05);
     pointer-events: none;
   }
+}
+
+.media-gallery--staggered:not(.is-entered) .media-gallery__frame {
+  opacity: 0.2;
+  clip-path: inset(49% 49%);
+  filter: brightness(1.25) contrast(1.08);
+  transform: scale(0.9);
+}
+
+.media-gallery--staggered:not(.is-entered) .media-gallery__info {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.media-gallery--staggered.is-entered .media-gallery__frame {
+  transform-origin: center;
+  animation: media-gallery-shutter-in 0.88s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--media-gallery-entry-delay, 0ms);
+}
+
+.media-gallery--staggered.is-entered .media-gallery__frame::after {
+  position: absolute;
+  inset: calc(50% - 10px);
+  z-index: 5;
+  content: '';
+  background: linear-gradient(currentColor 0 0) top left / 22px 1px no-repeat,
+    linear-gradient(currentColor 0 0) top left / 1px 22px no-repeat,
+    linear-gradient(currentColor 0 0) top right / 22px 1px no-repeat,
+    linear-gradient(currentColor 0 0) top right / 1px 22px no-repeat,
+    linear-gradient(currentColor 0 0) bottom left / 22px 1px no-repeat,
+    linear-gradient(currentColor 0 0) bottom left / 1px 22px no-repeat,
+    linear-gradient(currentColor 0 0) bottom right / 22px 1px no-repeat,
+    linear-gradient(currentColor 0 0) bottom right / 1px 22px no-repeat;
+  color: rgba(255, 255, 255, 0.78);
+  opacity: 0;
+  pointer-events: none;
+  animation: media-gallery-corners-expand 0.9s cubic-bezier(0.22, 1, 0.36, 1)
+    both;
+  animation-delay: var(--media-gallery-entry-delay, 0ms);
+}
+
+.media-gallery--staggered.is-entered .media-gallery__info {
+  animation: media-gallery-info-in 0.36s ease-out both;
+  animation-delay: calc(var(--media-gallery-entry-delay, 0ms) + 0.54s);
 }
 
 .media-gallery__shell,
@@ -252,13 +393,80 @@ watch(
   min-width: 12rem;
   min-height: 28px;
   margin-top: 14px;
-  background: rgba(5, 2, 6, 0.39);
+  background: rgb(35 35 35 / 40%);
   box-sizing: border-box;
 }
 
 @keyframes media-placeholder-shimmer {
   to {
     transform: translateX(100%);
+  }
+}
+
+@keyframes media-gallery-shutter-in {
+  from {
+    opacity: 0.2;
+    clip-path: inset(49% 49%);
+    filter: brightness(1.25) contrast(1.08);
+    transform: scale(0.9);
+  }
+
+  56% {
+    opacity: 1;
+    clip-path: inset(12% 12%);
+  }
+
+  to {
+    opacity: 1;
+    clip-path: inset(0);
+    filter: brightness(1) contrast(1);
+    transform: scale(1);
+  }
+}
+
+@keyframes media-gallery-corners-expand {
+  0% {
+    opacity: 0;
+    inset: calc(50% - 10px);
+    transform: scale(0.72);
+  }
+
+  12% {
+    opacity: 0.82;
+  }
+
+  52% {
+    inset: -8px;
+    opacity: 0.76;
+    transform: scale(1);
+  }
+
+  64% {
+    inset: -8px;
+    opacity: 0.24;
+  }
+
+  72% {
+    inset: -8px;
+    opacity: 0;
+  }
+
+  100% {
+    inset: -8px;
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+
+@keyframes media-gallery-info-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -292,6 +500,22 @@ watch(
 
   .media-gallery__info {
     min-height: 26px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .media-gallery--staggered:not(.is-entered) .media-gallery__frame,
+  .media-gallery--staggered:not(.is-entered) .media-gallery__info {
+    opacity: 1;
+    clip-path: none;
+    filter: none;
+    transform: none;
+  }
+
+  .media-gallery--staggered.is-entered .media-gallery__frame,
+  .media-gallery--staggered.is-entered .media-gallery__frame::after,
+  .media-gallery--staggered.is-entered .media-gallery__info {
+    animation: none;
   }
 }
 </style>

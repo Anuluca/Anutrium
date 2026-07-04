@@ -1,26 +1,21 @@
 <template>
   <div v-if="vlog" class="flr-page main-container">
-    <section class="flr-hero">
-      <button class="flr-back" type="button" @click="router.push('/flanerie')">
-        <span>FLANERIE</span>
-      </button>
-
-      <div class="flr-title-block">
-        <h1 class="flr-main-title">
-          <span class="title">{{ vlog.title }}</span>
-          <span class="flr-sub-date">{{ vlog.date }}</span>
-        </h1>
-        <p class="flr-tagline">{{ vlog.tagline }}</p>
-        <div v-if="vlog.device?.length" class="flr-devices">
-          <span class="flr-device-label">
-            {{ t('flanerie.deviceLabel') }}:
-          </span>
-          <span v-for="device in vlog.device" :key="device" class="flr-device">
-            {{ device }}
-          </span>
-        </div>
+    <DetailPageHeader
+      back-label="FLANERIE"
+      back-path="/flanerie"
+      :subtitle="vlog.tagline"
+      :title="vlog.title"
+    >
+      <template #title-extra>
+        <span class="flr-sub-date">{{ vlog.date }}</span>
+      </template>
+      <div v-if="vlog.device?.length" class="flr-devices">
+        <span class="flr-device-label">{{ t('flanerie.deviceLabel') }}:</span>
+        <span v-for="device in vlog.device" :key="device" class="flr-device">
+          {{ device }}
+        </span>
       </div>
-    </section>
+    </DetailPageHeader>
 
     <section v-if="videos.length" class="flr-video-panel">
       <div class="section-head">
@@ -29,25 +24,36 @@
           <span class="head-label">{{ t('flanerie.videoLabel') }}</span>
         </div>
         <strong class="head-count">
-          {{ t('flanerie.countLabel') }} {{ String(videos.length) }}
+          <span>{{ videos.length }}</span>
+          <span>ITEMS</span>
         </strong>
       </div>
 
-      <JourneyVideoPlayer :videos="videos" />
+      <JourneyVideoPlayer
+        :videos="videos"
+        @entrance-handoff="videoEntranceHandoff = true"
+      />
     </section>
 
     <section v-if="photos.length" ref="galleryRef" class="flr-gallery">
       <div class="section-head">
         <div class="head-left">
-          <span class="head-slash">{{ videos.length ? '02' : '01' }} </span>
+          <span class="head-slash">{{ videos.length ? 2 : 1 }} </span>
           <span class="head-label">{{ t('flanerie.photoLabel') }}</span>
         </div>
         <strong class="head-count">
-          {{ t('flanerie.countLabel') }} {{ String(photos.length) }}
+          <span>{{ photos.length }}</span>
+          <span>ITEMS</span>
         </strong>
       </div>
 
-      <MediaGallery :items="paginatedPhotos" :get-media-label="getMediaLabel">
+      <MediaGallery
+        :items="paginatedPhotos"
+        :get-media-label="getMediaLabel"
+        :entrance-ready="!videos.length || videoEntranceHandoff"
+        :entrance-step-ms="90"
+        staggered-entrance
+      >
         <template #info="{ item: photo }">
           <div class="photo-info__inner">
             <span class="photo-info__device">{{ photo.device || '' }}</span>
@@ -112,6 +118,7 @@ import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { Location } from '@element-plus/icons-vue'
 
+import DetailPageHeader from '@/components/DetailPageHeader/index.vue'
 import JourneyVideoPlayer from '@/components/JourneyVideoPlayer/index.vue'
 import MediaGallery, {
   type GalleryMedia,
@@ -152,6 +159,7 @@ interface VlogItem {
 const PAGE_SIZE = 30
 const galleryRef = ref<HTMLElement | null>(null)
 const currentPage = ref(1)
+const videoEntranceHandoff = ref(false)
 
 const vlogId = computed(() => route.params.vlogId as string)
 const vlog = computed<VlogItem | undefined>(() => {
@@ -199,6 +207,7 @@ watch(
       return
     }
 
+    videoEntranceHandoff.value = false
     currentPage.value = 1
   },
   { immediate: true }
@@ -216,65 +225,6 @@ watch(
   overflow: hidden;
 }
 
-.flr-back {
-  position: relative;
-  display: inline-block;
-  margin: 0 0 12px;
-  padding: 0;
-  border: 0;
-  color: #3276fe;
-  background: transparent;
-  font-size: 17px;
-  letter-spacing: 0.1em;
-  transform: scaleX(0.9);
-  transform-origin: left;
-  cursor: pointer;
-    font-family: 'cn-custom';
-  transition: color 0.2s ease, margin 0.2s ease;
-  user-select: none;
-  *{
-    font-family: 'cn-custom';
-  }
-
-  &::before {
-    content: '// ';
-  }
-
-  &:hover {
-    margin-left: -4px;
-    color: #e8284a;
-
-    &::before {
-      color: #e8284a;
-      content: '<< ';
-    }
-  }
-}
-
-.flr-hero {
-  margin-bottom: 0;
-}
-
-.flr-title-block {
-  padding-left: 18px;
-  border-left: 8px solid @red;
-}
-
-.flr-main-title {
-  display: flex;
-  justify-content: start;
-  align-items: end;
-
-  .title {
-    margin: 0 0 6px;
-    font-family: @mono;
-    font-size: clamp(1.6rem, 3.2vw, 2.4rem);
-    font-weight: 900;
-    line-height: 1;
-    color: #fff;
-  }
-}
-
 .flr-sub-date {
   letter-spacing: 0;
   font-size: 0.6rem;
@@ -285,13 +235,6 @@ watch(
   padding: 3px 10px;
   margin-bottom: 5px;
   margin-left: 20px;
-}
-
-.flr-tagline {
-  font-family: @cjk;
-  font-size: 0.76rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.4);
 }
 
 .flr-devices {
@@ -362,10 +305,13 @@ watch(
   }
 
   .head-count {
-    font-family: @cjk;
-    font-size: 0.68rem;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 7px;
+    font-family: @mono;
+    font-size: 0.56rem;
     color: rgba(255, 255, 255, 0.3);
-    font-weight: 600;
+    font-weight: 100;
   }
 }
 
@@ -433,7 +379,7 @@ watch(
   }
 
   &__time {
-    padding-right: 16px !important;
+    padding-right: 18px !important;
 
     &--divided {
       background: linear-gradient(

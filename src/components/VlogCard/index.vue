@@ -5,6 +5,8 @@
       'is-map-target': active,
       'has-detail': interactive,
       'is-en': locale === 'en',
+      'is-base-loaded': isBaseLoaded,
+      'is-hover-loaded': isHoverLoaded,
     }"
     :role="interactive ? 'button' : undefined"
     :tabindex="interactive ? 0 : undefined"
@@ -13,12 +15,18 @@
     @keydown.space.prevent="selectVlog"
   >
     <div class="vlog-img-wrap">
+      <div
+        v-if="!isBaseLoaded"
+        class="vlog-image-placeholder"
+        aria-hidden="true"
+      />
       <img
         class="vlog-img vlog-img--base"
         :src="vlog.img"
         :alt="vlog.title"
         loading="lazy"
         decoding="async"
+        @load="isBaseLoaded = true"
       />
       <img
         class="vlog-img vlog-img--hover"
@@ -27,6 +35,7 @@
         aria-hidden="true"
         loading="lazy"
         decoding="async"
+        @load="isHoverLoaded = true"
       />
       <div class="vlog-blueprint-lines" aria-hidden="true" />
     </div>
@@ -38,6 +47,7 @@
 </template>
 
 <script setup lang="ts">
+import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 interface VlogCardItem {
@@ -65,11 +75,21 @@ const emit = defineEmits<{
 }>()
 
 const { locale } = useI18n()
+const isBaseLoaded = ref(false)
+const isHoverLoaded = ref(false)
 
 const selectVlog = () => {
   if (!props.interactive) return
   emit('select', props.vlog)
 }
+
+watch(
+  () => [props.vlog.img, props.vlog.img2],
+  () => {
+    isBaseLoaded.value = false
+    isHoverLoaded.value = false
+  }
+)
 </script>
 
 <style lang="less" scoped>
@@ -146,16 +166,6 @@ const selectVlog = () => {
       animation: vlogSpectralDrift 0.9s steps(3, end) infinite;
     }
 
-    .vlog-img--base {
-      opacity: 0;
-    }
-
-    .vlog-img--hover {
-      opacity: 1;
-      filter: drop-shadow(10px 12px 0 rgba(0, 0, 0, 0.46))
-        drop-shadow(0 0 22px rgba(226, 52, 86, 0.24));
-    }
-
     .vlog-blueprint-lines {
       opacity: 0.82;
       transform: scaleX(1);
@@ -172,6 +182,19 @@ const selectVlog = () => {
       text-shadow: 7px 0 0 rgba(226, 52, 86, 0.72),
         -7px 0 0 rgba(54, 209, 255, 0.58), 0 3px 0 rgba(255, 255, 255, 0.16),
         0 0 24px rgba(255, 255, 255, 0.22);
+    }
+  }
+
+  &.is-hover-loaded:hover,
+  &.is-hover-loaded.is-map-target {
+    .vlog-img--base {
+      opacity: 0;
+    }
+
+    .vlog-img--hover {
+      opacity: 1;
+      filter: drop-shadow(10px 12px 0 rgba(0, 0, 0, 0.46))
+        drop-shadow(0 0 22px rgba(226, 52, 86, 0.24));
     }
   }
 }
@@ -195,6 +218,7 @@ const selectVlog = () => {
     filter: drop-shadow(10px 12px 0 rgba(0, 0, 0, 0.46))
       drop-shadow(0 0 18px rgba(226, 52, 86, 0.18));
     transition: opacity 0.62s ease, filter 0.62s ease;
+    opacity: 0;
     z-index: 1;
   }
 
@@ -205,6 +229,36 @@ const selectVlog = () => {
     opacity: 0;
     transform: translateX(-50%);
     z-index: 2;
+  }
+}
+
+.shared-vlog-card.is-base-loaded .vlog-img--base {
+  opacity: 1;
+}
+
+.vlog-image-placeholder {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 12rem;
+  max-width: 70%;
+  height: 78%;
+  overflow: hidden;
+  background: rgba(226, 52, 86, 0.04);
+  transform: translateX(-50%);
+
+  &::after {
+    position: absolute;
+    inset: 0;
+    content: '';
+    background: linear-gradient(
+      105deg,
+      transparent 30%,
+      rgba(226, 52, 86, 0.12) 50%,
+      transparent 70%
+    );
+    transform: translateX(-100%);
+    animation: vlogPlaceholderShimmer 1.6s ease-in-out infinite;
   }
 }
 
@@ -312,6 +366,12 @@ const selectVlog = () => {
 
   50% {
     transform: translateX(8px) skew(-14deg);
+  }
+}
+
+@keyframes vlogPlaceholderShimmer {
+  to {
+    transform: translateX(100%);
   }
 }
 

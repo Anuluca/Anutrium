@@ -256,6 +256,9 @@ watch(locale, scheduleNeighborDescriptionMeasure)
             v-for="(log, logIndex) in displayedChangelogs"
             :key="log.version"
             class="timeline-item"
+            :style="{
+              '--changelog-enter-delay': `${0.48 + logIndex * 0.09}s`,
+            }"
             :class="{
               'is-expanded': activeLogKey === log.version,
               'is-major': isMajorLog(log),
@@ -434,7 +437,7 @@ watch(locale, scheduleNeighborDescriptionMeasure)
       </section>
     </div>
 
-    <section class="block">
+    <section class="block neighbors-block">
       <div class="section-header">
         <h3 class="section-title">
           <span class="c-gear" aria-hidden="true">
@@ -548,6 +551,7 @@ watch(locale, scheduleNeighborDescriptionMeasure)
 
   .section-header {
     margin-top: 0;
+    animation: changelogHeaderIn 0.46s cubic-bezier(0.2, 0.8, 0.2, 1) 0.32s both;
   }
 }
 
@@ -560,11 +564,76 @@ watch(locale, scheduleNeighborDescriptionMeasure)
   border-radius: 2px;
   box-shadow: inset 0 0 0 1px rgba(226, 52, 86, 0.12),
     0 0 30px rgba(226, 52, 86, 0.1);
+  opacity: 0;
+  animation: passionCrtOn 0.58s cubic-bezier(0.19, 1, 0.22, 1) 0.44s both;
+  will-change: clip-path, filter, opacity;
+
+  &::after {
+    position: absolute;
+    inset: 0;
+    z-index: 8;
+    content: '';
+    background: linear-gradient(
+      to bottom,
+      transparent 47%,
+      rgba(255, 255, 255, 0.92) 50%,
+      transparent 53%
+    );
+    opacity: 0;
+    mix-blend-mode: screen;
+    pointer-events: none;
+    animation: passionCrtFlash 0.58s linear 0.44s both;
+  }
+
   &:hover {
     .passion-color-code {
       text-shadow: 0 0 30px #e23456;
       color: #000;
     }
+  }
+}
+
+@keyframes passionCrtOn {
+  0% {
+    opacity: 0;
+    clip-path: inset(49.7% 50%);
+    filter: brightness(7) contrast(2);
+  }
+
+  44% {
+    opacity: 1;
+    clip-path: inset(49.7% 0);
+    filter: brightness(4) contrast(1.5);
+  }
+
+  58% {
+    clip-path: inset(45% 0);
+    filter: brightness(1.8) contrast(1.25);
+  }
+
+  100% {
+    opacity: 1;
+    clip-path: inset(0);
+    filter: brightness(1) contrast(1);
+  }
+}
+
+@keyframes passionCrtFlash {
+  0%,
+  37% {
+    opacity: 0;
+  }
+
+  44% {
+    opacity: 0.95;
+  }
+
+  58% {
+    opacity: 0.28;
+  }
+
+  100% {
+    opacity: 0;
   }
 }
 
@@ -927,6 +996,7 @@ watch(locale, scheduleNeighborDescriptionMeasure)
   gap: 12px;
   margin-top: 30px;
   padding-left: 8px;
+  perspective: 1000px;
 
   &::before {
     position: absolute;
@@ -936,6 +1006,10 @@ watch(locale, scheduleNeighborDescriptionMeasure)
     width: 1px;
     content: '';
     background: rgba(226, 52, 86, 0.35);
+    transform: scaleY(0);
+    transform-origin: top;
+    animation: changelogAxisIn 0.72s cubic-bezier(0.2, 0.8, 0.2, 1) 0.42s
+      forwards;
   }
 }
 
@@ -945,6 +1019,10 @@ watch(locale, scheduleNeighborDescriptionMeasure)
   gap: 20px;
   position: relative;
   align-items: stretch;
+  opacity: 0;
+  transform-origin: center top;
+  animation: changelogItemIn 0.5s cubic-bezier(0.16, 1, 0.3, 1)
+    var(--changelog-enter-delay, 0.48s) both;
 
   &.is-major {
     grid-template-columns: 20px 156px minmax(0, 1fr);
@@ -1284,6 +1362,7 @@ watch(locale, scheduleNeighborDescriptionMeasure)
   letter-spacing: 0.14em;
   cursor: pointer;
   transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+  animation: changelogToggleIn 0.42s ease-out 1.08s both;
 
   &:hover {
     background: linear-gradient(
@@ -1308,6 +1387,73 @@ watch(locale, scheduleNeighborDescriptionMeasure)
     width: 18px;
     height: 18px;
     transition: transform 0.25s ease;
+  }
+}
+
+@keyframes changelogHeaderIn {
+  from {
+    opacity: 0;
+    clip-path: inset(0 100% 0 0);
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    clip-path: inset(0);
+    transform: translateY(0);
+  }
+}
+
+@keyframes changelogAxisIn {
+  from {
+    opacity: 0;
+    transform: scaleY(0);
+  }
+
+  to {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+
+@keyframes changelogItemIn {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0) rotateX(-8deg);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) rotateX(0);
+  }
+}
+
+@keyframes changelogToggleIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.neighbors-block {
+  opacity: 0;
+  animation: neighborsBlockIn 0.56s cubic-bezier(0.16, 1, 0.3, 1) 1.04s both;
+}
+
+@keyframes neighborsBlockIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -1983,6 +2129,33 @@ watch(locale, scheduleNeighborDescriptionMeasure)
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .changelog-block .section-header,
+  .timeline::before,
+  .timeline-item,
+  .changelog-list-toggle {
+    opacity: 1;
+    animation: none;
+    transform: none;
+  }
+
+  .passion-section {
+    opacity: 1;
+    animation: none;
+    clip-path: none;
+    filter: none;
+    transform: none;
+
+    &::after {
+      animation: none;
+    }
+  }
+
+  .neighbors-block {
+    opacity: 1;
+    animation: none;
+    transform: none;
+  }
+
   .nb-desc.is-overflowing {
     overflow-x: auto;
 

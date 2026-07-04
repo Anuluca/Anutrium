@@ -86,7 +86,7 @@
 
     <section class="works-section">
       <Sections
-        section-number="01"
+        section-number="1"
         rail-label="MAIN"
         :title="$t('archive.title01')"
         title-en="MAIN PROJECTS"
@@ -105,7 +105,7 @@
 
     <section class="works-section personal-works-section">
       <Sections
-        section-number="02"
+        section-number="2"
         rail-label="PERSONAL"
         :title="$t('archive.title02')"
         title-en="PERSONAL PROJECTS"
@@ -124,7 +124,7 @@
 
     <section class="misc-section">
       <Sections
-        section-number="03"
+        section-number="3"
         rail-label="OTHER"
         :title="$t('archive.title03')"
         title-en="OTHER PROJECTS"
@@ -147,7 +147,7 @@
             <div class="misc-card-content">
               <div class="misc-card-head">
                 <div class="misc-card-index">
-                  {{ String(index + 1).padStart(2, '0') }}
+                  {{ index + 1 }}
                 </div>
                 <div v-if="item.logo" class="misc-card-logo" aria-hidden="true">
                   <img

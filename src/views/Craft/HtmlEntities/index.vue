@@ -636,19 +636,9 @@ const visibleChar = (char: string) => {
   .right-panel {
     min-height: 480px;
   }
-
-  .pt-header__sub {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 8px;
-  }
 }
 
 @media (max-width: 600px) {
-  .pt-header__title {
-    font-size: 32px;
-  }
-
   .entity-grid {
     grid-template-columns: repeat(2, 1fr);
   }

@@ -33,7 +33,9 @@ const visibleText = ref('')
 const isComplete = ref(false)
 const hasStarted = ref(false)
 let delayTimer: ReturnType<typeof setTimeout> | null = null
+let cursorTimer: ReturnType<typeof setTimeout> | null = null
 let typeTimer: ReturnType<typeof setTimeout> | null = null
+const CURSOR_LEAD_TIME = 180
 
 const showCursor = computed(
   () => props.keepCursor || (hasStarted.value && !isComplete.value)
@@ -43,6 +45,10 @@ const clearTimers = () => {
   if (delayTimer) {
     clearTimeout(delayTimer)
     delayTimer = null
+  }
+  if (cursorTimer) {
+    clearTimeout(cursorTimer)
+    cursorTimer = null
   }
   if (typeTimer) {
     clearTimeout(typeTimer)
@@ -67,7 +73,6 @@ const startTyping = () => {
   hasStarted.value = false
 
   if (!props.start) return
-  hasStarted.value = true
 
   const characters = Array.from(props.text)
   if (!characters.length) {
@@ -84,7 +89,15 @@ const startTyping = () => {
     return
   }
 
-  delayTimer = setTimeout(() => typeNext(characters, 0), props.delay)
+  const cursorDelay = Math.max(0, props.delay - CURSOR_LEAD_TIME)
+  cursorTimer = setTimeout(() => {
+    hasStarted.value = true
+    cursorTimer = null
+  }, cursorDelay)
+  delayTimer = setTimeout(() => {
+    delayTimer = null
+    typeNext(characters, 0)
+  }, props.delay)
 }
 
 watch(() => [props.text, props.delay, props.speed, props.start], startTyping, {

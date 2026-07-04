@@ -1,7 +1,7 @@
 <template>
   <Transition name="back-to-top">
     <button
-      v-if="isVisible"
+      v-if="isVisible && !suppressed"
       class="back-to-top-button no-rem"
       type="button"
       aria-label="回到页面顶部"
@@ -19,24 +19,37 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue'
 
+import {
+  addPageScrollListener,
+  getPageMaxScrollTop,
+  getPageScrollTop,
+  scrollPageTo,
+} from '@/utils/pageScroll'
+
+withDefaults(
+  defineProps<{
+    suppressed?: boolean
+  }>(),
+  {
+    suppressed: false,
+  }
+)
+
 const SHOW_THRESHOLD = 240
 const isVisible = ref(false)
 const scrollProgress = ref(0)
 let scrollRafId: number | null = null
+let removePageScrollListener: (() => void) | null = null
 
 const updateVisibility = () => {
   if (scrollRafId !== null) return
 
   scrollRafId = window.requestAnimationFrame(() => {
-    const maxScroll = Math.max(
-      1,
-      document.documentElement.scrollHeight - window.innerHeight
-    )
-    scrollProgress.value = Math.min(100, (window.scrollY / maxScroll) * 100)
+    const scrollTop = getPageScrollTop()
+    const maxScroll = Math.max(1, getPageMaxScrollTop())
+    scrollProgress.value = Math.min(100, (scrollTop / maxScroll) * 100)
 
-    const nextValue =
-      window.scrollY > SHOW_THRESHOLD ||
-      document.documentElement.scrollTop > SHOW_THRESHOLD
+    const nextValue = scrollTop > SHOW_THRESHOLD
     if (isVisible.value !== nextValue) {
       isVisible.value = nextValue
     }
@@ -49,7 +62,7 @@ const scrollToTop = () => {
     '(prefers-reduced-motion: reduce)'
   ).matches
 
-  window.scrollTo({
+  scrollPageTo({
     top: 0,
     left: 0,
     behavior: reduceMotion ? 'auto' : 'smooth',
@@ -58,11 +71,12 @@ const scrollToTop = () => {
 
 onMounted(() => {
   updateVisibility()
-  document.addEventListener('scroll', updateVisibility, { passive: true })
+  removePageScrollListener = addPageScrollListener(updateVisibility)
 })
 
 onUnmounted(() => {
-  document.removeEventListener('scroll', updateVisibility)
+  removePageScrollListener?.()
+  removePageScrollListener = null
   if (scrollRafId !== null) window.cancelAnimationFrame(scrollRafId)
 })
 </script>

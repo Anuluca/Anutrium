@@ -699,19 +699,9 @@ input[type='range'] {
   .right-panel {
     min-height: 480px;
   }
-
-  .pt-header__sub {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 8px;
-  }
 }
 
 @media (max-width: 600px) {
-  .pt-header__title {
-    font-size: 32px;
-  }
-
   .tempo-readout {
     grid-template-columns: 1fr;
     gap: 8px;

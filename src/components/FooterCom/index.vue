@@ -207,6 +207,12 @@ watch(locale, () => nextTick(updateMarqueeDuration))
     }"
   >
     <div class="left">
+      <button
+        class="footer-test-entry"
+        type="button"
+        aria-label="打开开发测试页"
+        @click="router.push('/test')"
+      />
       <div class="language">
         <el-button
           link

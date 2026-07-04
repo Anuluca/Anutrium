@@ -84,9 +84,7 @@ const emit = defineEmits<{
 
 const { locale } = useI18n()
 
-const referenceNumber = computed(
-  () => `${String(props.index + 1).padStart(2, '0')}A`
-)
+const referenceNumber = computed(() => `${props.index + 1}A`)
 </script>
 
 <style lang="less" scoped>
@@ -98,50 +96,145 @@ const referenceNumber = computed(
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(13, 9, 18, 0.8);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
   cursor: pointer;
-  transition: transform 0.4s ease, border-color 0.4s ease;
+  transform-style: preserve-3d;
+  transition: transform 0.46s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.28s ease, box-shadow 0.46s ease;
+
+  &::before,
+  &::after {
+    position: absolute;
+    z-index: 4;
+    content: '';
+    pointer-events: none;
+  }
+
+  &::before {
+    inset: 8px;
+    border: 1px solid rgba(226, 52, 86, 0);
+    opacity: 0;
+    transform: scale(0.965);
+    transition: opacity 0.25s ease, border-color 0.25s ease,
+      transform 0.46s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  &::after {
+    top: 0;
+    left: -42%;
+    width: 36%;
+    height: 2px;
+    opacity: 0;
+    background: linear-gradient(90deg, transparent, #fff 35%, #e23456 75%);
+    box-shadow: 0 0 18px rgba(226, 52, 86, 0.8);
+    transition: opacity 0.15s ease,
+      transform 0.62s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
 
   &:focus-visible {
     border-color: rgba(226, 52, 86, 0.72);
     outline: 2px solid rgba(226, 52, 86, 0.28);
     outline-offset: 2px;
   }
+}
 
-  &:hover {
-    border-color: #e23456;
-    transform: translateY(-5px);
+@media (hover: hover) and (pointer: fine) {
+  .shared-work-card:hover {
+    border-color: rgba(226, 52, 86, 0.84);
+    box-shadow: 0 24px 54px rgba(0, 0, 0, 0.42),
+      0 0 0 1px rgba(226, 52, 86, 0.16), 0 0 32px rgba(226, 52, 86, 0.12);
+
+    &::before {
+      border-color: rgba(226, 52, 86, 0.44);
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    &::after {
+      opacity: 1;
+      transform: translateX(410%);
+    }
 
     .work-base img {
-      transform: scale(1.05);
-      filter: brightness(0.7) saturate(0.9);
+      filter: brightness(0.76) saturate(0.88) contrast(1.08);
+    }
+
+    .work-hud-overlay::before {
+      opacity: 1;
+      animation: work-hud-scan 1.05s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+
+    .work-hud-overlay::after {
+      opacity: 0.48;
+      transform: perspective(500px) rotateX(58deg) translateY(0);
+    }
+
+    .scanlines {
+      opacity: 0.86;
+      animation: work-scanline-drift 0.36s linear infinite;
     }
 
     .work-red-plate {
-      transform: scaleY(1);
+      transform: translateX(0) skewX(0);
     }
 
-    .work-content * {
+    .work-top-info {
+      transform: translateY(-4px);
+    }
+
+    .work-title-row {
+      transform: translateY(-3px);
+    }
+
+    .work-name {
       color: #fff;
+      letter-spacing: 0.015em;
+      text-shadow: 0 0 24px rgba(226, 52, 86, 0.32);
+    }
+
+    .work-subtitle,
+    .ref-num,
+    .project-ref-id div {
+      color: rgba(255, 255, 255, 0.78);
     }
 
     .tech-label,
     .company-logo {
-      border-color: rgba(255, 255, 255, 0.4);
+      border-color: rgba(255, 255, 255, 0.42);
+      background-color: rgba(10, 5, 10, 0.56);
     }
 
     .tech-label {
-      color: rgba(255, 255, 255, 0.8);
+      color: rgba(255, 255, 255, 0.9);
+      transform: translateY(-2px);
     }
 
     .work-corner {
-      width: 15px;
-      height: 15px;
-      border-color: #e23456;
+      width: 23px;
+      height: 23px;
+      border-color: #fff;
       border-width: 2px;
     }
 
+    .work-corner--tl {
+      transform: translate(-7px, -7px);
+    }
+
+    .work-corner--tr {
+      transform: translate(7px, -7px);
+    }
+
+    .work-corner--bl {
+      transform: translate(-7px, 7px);
+    }
+
+    .work-corner--br {
+      transform: translate(7px, 7px);
+    }
+
     .tactical-text {
-      color: rgba(255, 255, 255, 0.4);
+      color: rgba(255, 255, 255, 0.62);
+      letter-spacing: 0.12em;
     }
   }
 }
@@ -165,12 +258,53 @@ const referenceNumber = computed(
 .work-hud-overlay {
   position: absolute;
   inset: 0;
+  overflow: hidden;
   background: linear-gradient(
     to right,
     rgba(10, 5, 10, 0.5),
     rgba(10, 5, 10, 0.9)
   );
   z-index: 1;
+
+  &::before,
+  &::after {
+    position: absolute;
+    content: '';
+    pointer-events: none;
+  }
+
+  &::before {
+    top: 0;
+    bottom: 0;
+    left: -18%;
+    width: 18%;
+    opacity: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.2) 42%,
+      rgba(226, 52, 86, 0.52) 76%,
+      transparent
+    );
+    filter: blur(1px);
+  }
+
+  &::after {
+    right: -10%;
+    bottom: -58%;
+    left: -10%;
+    height: 76%;
+    opacity: 0;
+    background-image: linear-gradient(
+        rgba(226, 52, 86, 0.18) 1px,
+        transparent 1px
+      ),
+      linear-gradient(90deg, rgba(226, 52, 86, 0.18) 1px, transparent 1px);
+    background-size: 28px 22px;
+    transform: perspective(500px) rotateX(58deg) translateY(24px);
+    transform-origin: center bottom;
+    transition: opacity 0.3s ease, transform 0.5s ease;
+  }
 }
 
 .scanlines {
@@ -183,6 +317,7 @@ const referenceNumber = computed(
   );
   background-size: 100% 4px;
   opacity: 0.6;
+  transition: opacity 0.25s ease;
   z-index: 2;
 }
 
@@ -193,13 +328,14 @@ const referenceNumber = computed(
   width: 100%;
   height: 100%;
   background: linear-gradient(
-    to bottom,
-    transparent 0%,
-    rgba(226, 52, 86, 0.7) 100%
+    112deg,
+    rgba(226, 52, 86, 0.06) 0 28%,
+    rgba(226, 52, 86, 0.58) 66%,
+    rgba(39, 7, 17, 0.82) 100%
   );
-  transform: scaleY(0);
-  transform-origin: bottom;
-  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transform: translateX(-106%) skewX(-9deg);
+  transform-origin: left;
+  transition: transform 0.52s cubic-bezier(0.16, 1, 0.3, 1);
   z-index: 1;
 }
 
@@ -221,6 +357,7 @@ const referenceNumber = computed(
   align-items: flex-start;
   justify-content: space-between;
   gap: clamp(10px, 1vw, 20px);
+  transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .company-row {
@@ -292,7 +429,8 @@ const referenceNumber = computed(
   font-family: 'cn-custom', monospace;
   font-size: clamp(0.45rem, 0.46vw, 0.55rem);
   text-transform: uppercase;
-  transition: all 0.3s ease;
+  transition: color 0.25s ease, border-color 0.25s ease,
+    background-color 0.25s ease, transform 0.36s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .work-title-row {
@@ -302,6 +440,7 @@ const referenceNumber = computed(
   align-items: flex-end;
   justify-content: space-between;
   margin-top: auto;
+  transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .work-name {
@@ -313,6 +452,7 @@ const referenceNumber = computed(
   font-size: 40px;
   line-height: 1.1;
   overflow-wrap: anywhere;
+  transition: color 0.25s ease, letter-spacing 0.42s ease, text-shadow 0.3s ease;
 }
 
 .project-ref-id {
@@ -377,7 +517,28 @@ const referenceNumber = computed(
   font-family: 'cn-custom', monospace;
   font-size: 0.5rem;
   pointer-events: none;
+  transition: color 0.25s ease, letter-spacing 0.4s ease;
   z-index: 3;
+}
+
+@keyframes work-hud-scan {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(760%);
+  }
+}
+
+@keyframes work-scanline-drift {
+  from {
+    background-position-y: 0;
+  }
+
+  to {
+    background-position-y: 4px;
+  }
 }
 
 @media (max-width: 768px) {

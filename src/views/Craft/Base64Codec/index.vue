@@ -510,19 +510,9 @@ const copyOutput = async () => {
   .right-panel {
     min-height: 480px;
   }
-
-  .pt-header__sub {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 8px;
-  }
 }
 
 @media (max-width: 600px) {
-  .pt-header__title {
-    font-size: 32px;
-  }
-
   .action-row {
     grid-template-columns: 1fr 1fr;
   }

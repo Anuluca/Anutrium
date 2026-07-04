@@ -2,7 +2,7 @@ import dynamic from '../dynamic/flanerie'
 
 const flanerie = {
   metaItem: {
-    zhCn: '总会忘的，也总会离开的，所以趁现在先记下来。',
+    zhCn: '记录这些总会忘记的事情。',
     en: 'Someday, I may forget all this, or leave it behind.That’s why I keep recording.',
   },
   videoLabel: {

@@ -4,11 +4,13 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 interface Props {
   theme?: 'light' | 'dark'
   isTextMenu?: boolean
+  deepBlack?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   theme: 'dark',
   isTextMenu: false,
+  deepBlack: false,
 })
 
 const isMobileViewport =
@@ -50,6 +52,7 @@ const containerClass = computed(() => [
   props.theme,
   {
     'menu-hidden': props.isTextMenu,
+    'is-deep-black': props.deepBlack,
     'is-paused': isMotionPaused.value,
   },
 ])

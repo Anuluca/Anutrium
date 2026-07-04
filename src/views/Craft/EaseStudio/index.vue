@@ -791,19 +791,9 @@ input[type='range'] {
     flex: none;
     grid-template-columns: repeat(2, 1fr);
   }
-
-  .pt-header__sub {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 8px;
-  }
 }
 
 @media (max-width: 600px) {
-  .pt-header__title {
-    font-size: 32px;
-  }
-
   .curve-stage {
     width: auto;
     min-height: 330px;

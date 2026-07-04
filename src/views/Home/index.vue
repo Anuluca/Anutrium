@@ -69,7 +69,7 @@
                 </div>
 
                 <div class="card-watermark">
-                  {{ String(i + 1).padStart(2, '0') }}
+                  {{ i + 1 }}
                 </div>
               </div>
             </SwiperSlide>
@@ -90,13 +90,9 @@
           </div>
 
           <div class="carousel-counter">
-            <span class="counter-cur">{{
-              String(activeIndex + 1).padStart(2, '0')
-            }}</span>
+            <span class="counter-cur">{{ activeIndex + 1 }}</span>
             <span class="counter-sep">/</span>
-            <span class="counter-total">{{
-              String(newsItems.length).padStart(2, '0')
-            }}</span>
+            <span class="counter-total">{{ newsItems.length }}</span>
           </div>
         </div>
 
@@ -146,78 +142,63 @@
       </button>
 
       <Sections
-        section-number="01"
+        section-number="1"
         rail-label="ABOUT"
         :title="$t('home.title01')"
         title-en="ABOUT ME"
       >
-        <div v-if="locale === 'en'" class="manifesto-content">
-          <div class="background-squares">
-            <div
-              v-for="(img, index) in backgroundImages"
-              :key="img.id"
-              class="square-image"
-              :class="{ rotating: rotatingImageIndex === index }"
-              :style="{
-                left: `${img.left}%`,
-                top: `${img.top}%`,
-                width: `${img.size}px`,
-                height: `${img.size}px`,
-                transform: `rotate(${img.rotation}deg)`,
-              }"
-            >
-              <img
-                :src="'https://assets.anuluca.com/Logo/' + (index + 1) + '.jpg'"
-                alt=""
-                loading="lazy"
-                decoding="async"
-              />
+        <div class="manifesto-content" :class="{ 'cn-font': locale !== 'en' }">
+          <div class="manifesto-copy">
+            <p class="manifesto-intro">
+              <template v-if="locale === 'en'">
+                I'm <span>Anu</span>luca.
+              </template>
+              <template v-else>我是<span>路卡</span>。</template>
+            </p>
+            <p class="highlight">{{ $t('home.highlight') }}</p>
+            <p class="desc">{{ $t('home.aboutDescription') }}</p>
+            <RouterLink class="manifesto-link" to="/island">
+              <span>{{ $t('home.aboutMore') }}</span>
+              <Ship class="manifesto-link__logo" aria-hidden="true" />
+            </RouterLink>
+          </div>
+
+          <div class="manifesto-visual" aria-hidden="true">
+            <div class="visual-glow" />
+            <div class="visual-wordmark">ANULUCA</div>
+            <div class="background-squares">
+              <div
+                v-for="(img, index) in backgroundImages"
+                :key="img.id"
+                class="square-image"
+                :class="{ rotating: rotatingImageIndex === index }"
+                :style="{
+                  left: `${img.left}%`,
+                  top: `${img.top}%`,
+                  width: `${img.size}px`,
+                  height: `${img.size}px`,
+                }"
+              >
+                <img
+                  :src="aboutImageUrls[index]"
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+            </div>
+            <div class="visual-caption">
+              <span>CREATIVE DEVELOPER</span>
+              <span>WUHAN · CN</span>
             </div>
           </div>
-          <p>I'm <span style="color: #e23456">Anu</span>luca.</p>
-          <p class="highlight">{{ $t('home.highlight') }}</p>
-          <p class="desc">
-            This is the place where I can share my work, thoughts, and fragments
-            of my life.<br />
-            I want to build digital experiences that live on the edge of
-            creativity and performance.
-          </p>
-        </div>
-        <div v-else class="manifesto-content cn-font">
-          <div class="background-squares">
-            <div
-              v-for="(img, index) in backgroundImages"
-              :key="img.id"
-              class="square-image"
-              :class="{ rotating: rotatingImageIndex === index }"
-              :style="{
-                left: `${img.left}%`,
-                top: `${img.top}%`,
-                width: `${img.size}px`,
-                height: `${img.size}px`,
-              }"
-            >
-              <img
-                :src="'https://assets.anuluca.com/Logo/' + (index + 1) + '.jpg'"
-                alt=""
-                loading="lazy"
-                decoding="async"
-              />
-            </div>
-          </div>
-          <p>我是 <span style="color: #e23456">路卡</span>。</p>
-          <p class="highlight">{{ $t('home.highlight') }}</p>
-          <p class="desc">
-            这里是我用来堆放作品、想法和生活碎片的小地方。<br />
-            我想慢慢把它打造成一个毛糙但有温度、有创意，也有自己脾气的数字空间。
-          </p>
         </div>
       </Sections>
     </section>
 
     <section class="works-section home-indexed-section">
       <Sections
-        section-number="02"
+        section-number="2"
         rail-label="WORKS"
         :title="$t('home.title02')"
         title-en="SELECTED ARCHIVES"
@@ -250,7 +231,7 @@
 
     <section class="journey-section home-indexed-section">
       <Sections
-        section-number="03"
+        section-number="3"
         rail-label="FLÂNERIE"
         :title="$t('home.title03')"
         title-en="FLÂNERIE LOG"
@@ -283,7 +264,7 @@
 
     <section class="craft-section home-indexed-section">
       <Sections
-        section-number="04"
+        section-number="4"
         rail-label="CRAFT"
         :title="$t('home.title04')"
         title-en="UTILITY CRAFTS"
@@ -328,6 +309,7 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
+import { Ship } from '@element-plus/icons-vue'
 import { Autoplay, Mousewheel } from 'swiper/modules'
 import type { Swiper as SwiperInstance } from 'swiper/types'
 import { Swiper, SwiperSlide } from 'swiper/vue'
@@ -341,6 +323,11 @@ import VlogCard from '@/components/VlogCard/index.vue'
 import WorkCard from '@/components/WorkCard/index.vue'
 import WorkDetailModal from '@/components/WorkDetailModal/index.vue'
 import { trackProjectClick, trackToolClick } from '@/utils/analytics'
+import {
+  getPageMaxScrollTop,
+  getPageScrollTop,
+  scrollPageTo,
+} from '@/utils/pageScroll'
 
 import 'swiper/css'
 
@@ -360,6 +347,10 @@ interface NewsItem {
 
 const newsItems = computed<NewsItem[]>(() => {
   return tm('home.dynamic.recommend') as NewsItem[]
+})
+
+const aboutImageUrls = computed<string[]>(() => {
+  return tm('home.dynamic.aboutImageUrls') as string[]
 })
 
 const activeIndex = ref(0)
@@ -523,7 +514,7 @@ const refreshHeroInteractionMetrics = () => {
       halfHeight: Math.max(1, rect.height / 2),
       nextSectionTop:
         manifestoSection.value?.offsetTop ?? heroMetrics.nextSectionTop,
-      scrollY: window.scrollY,
+      scrollY: getPageScrollTop(),
     }
   }
 
@@ -549,17 +540,19 @@ const isInFirstScreenScrollZone = () => {
   if (isMobileCarousel.value || !manifestoSection.value) return false
 
   return (
-    window.scrollY < heroMetrics.nextSectionTop - 80 &&
-    window.scrollY < window.innerHeight * 0.9
+    getPageScrollTop() < heroMetrics.nextSectionTop - 80 &&
+    getPageScrollTop() < window.innerHeight * 0.9
   )
 }
 
 const isInSecondScreenReturnZone = () => {
   if (isMobileCarousel.value || !manifestoSection.value) return false
 
+  const scrollTop = getPageScrollTop()
+
   return (
-    window.scrollY > 0 &&
-    window.scrollY <=
+    scrollTop > 0 &&
+    scrollTop <=
       heroMetrics.nextSectionTop +
         SECOND_SCREEN_SCROLL_BUFFER +
         SECOND_SCREEN_RETURN_ZONE
@@ -571,13 +564,10 @@ const scrollToNextScreenFromHero = () => {
 
   const targetTop =
     heroMetrics.nextSectionTop || manifestoSection.value.offsetTop
-  const maxScroll = Math.max(
-    0,
-    document.documentElement.scrollHeight - window.innerHeight
-  )
+  const maxScroll = getPageMaxScrollTop()
 
   isFirstScreenAutoScrolling = true
-  window.scrollTo({
+  scrollPageTo({
     top: Math.min(
       maxScroll,
       targetTop + (isMobileCarousel.value ? 0 : SECOND_SCREEN_SCROLL_BUFFER)
@@ -595,7 +585,7 @@ const scrollToFirstScreen = () => {
   if (isFirstScreenAutoScrolling) return
 
   isFirstScreenAutoScrolling = true
-  window.scrollTo({
+  scrollPageTo({
     top: heroSection.value?.offsetTop || 0,
     behavior: reducedMotionQuery?.matches ? 'auto' : 'smooth',
   })
@@ -690,7 +680,7 @@ const handleHeroMouseMove = (event: MouseEvent) => {
     return
   }
 
-  if (Math.abs(window.scrollY - heroMetrics.scrollY) > 48) {
+  if (Math.abs(getPageScrollTop() - heroMetrics.scrollY) > 48) {
     refreshHeroInteractionMetrics()
   }
 
@@ -804,13 +794,16 @@ const backgroundImages = ref<BackgroundImage[]>([])
 const rotatingImageIndex = ref(-1)
 
 const generateBackgroundImages = () => {
-  backgroundImages.value = Array.from({ length: 6 }, (_, i) => ({
-    id: `sq-${i}`,
-    left: Math.random() * 90,
-    top: Math.random() * 90,
-    size: 80 + Math.random() * 120,
-    rotation: Math.random() * 360,
-  }))
+  backgroundImages.value = Array.from(
+    { length: aboutImageUrls.value.length },
+    (_, i) => ({
+      id: `sq-${i}`,
+      left: Math.random() * 90,
+      top: Math.random() * 90,
+      size: 80 + Math.random() * 120,
+      rotation: Math.random() * 360,
+    })
+  )
 }
 const startRandomRotation = () => {
   if (

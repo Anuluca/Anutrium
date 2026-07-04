@@ -10,12 +10,22 @@ import 'reset-css'
 import 'element-plus/theme-chalk/dark/css-vars.css'
 import '@/assets/style/global.less'
 
+const restoreScrollAfterLayout = (position: ScrollToOptions) =>
+  new Promise<ScrollToOptions>((resolve) => {
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => resolve(position))
+    })
+  })
+
 export const createApp = ViteSSG(
   App,
   {
     base: import.meta.env.BASE_URL,
     routes,
-    scrollBehavior: () => ({ top: 0 }),
+    scrollBehavior: (_to, _from, savedPosition) => {
+      if (!savedPosition) return { left: 0, top: 0 }
+      return restoreScrollAfterLayout(savedPosition)
+    },
   },
   ({ app, router }) => {
     app.use(i18n)

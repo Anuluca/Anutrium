@@ -8,6 +8,21 @@ const pageRoutes = [
   { path: '/flanerie', selector: '.flanerie-page', title: /FLÂNERIE|旅程/ },
   { path: '/craft', selector: '.craft-page', title: /CRAFT|工具/ },
   { path: '/about', selector: '.about-page', title: /ABOUT|关于/ },
+  {
+    path: '/test',
+    selector: '.island-page, .island-mobile-page',
+    title: /ISLAND|个人海湾/,
+  },
+  {
+    path: '/island/photography',
+    selector: '.photography-page',
+    title: /PHOTOGRAPHY|摄影作品/,
+  },
+  {
+    path: '/island/merch-photography',
+    selector: '.merch-page',
+    title: /MERCH PHOTOGRAPHY|周边摄影/,
+  },
 ]
 
 test.describe('top-level pages', () => {
@@ -26,6 +41,196 @@ test.describe('top-level pages', () => {
   }
 })
 
+test('personal bay menu entry redirects to 404', async ({ page }, testInfo) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.home-page')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+
+  if (testInfo.project.name.includes('mobile')) {
+    await page.locator('.mobile-menu-icon').click()
+    await page.locator('.mobile-menu-items a[href="/island"]').click()
+  } else {
+    await page.locator('.menu-box a[href="/island"]').click()
+  }
+
+  await expect(page).toHaveURL(/\/404$/)
+  await expect(page.locator('.not-found-page')).toBeVisible()
+})
+
+test('hidden footer debug entry opens the personal bay test route', async ({
+  page,
+}) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  const testEntry = page.getByRole('button', { name: '打开开发测试页' })
+  await expect(testEntry).toBeAttached({ timeout: PAGE_LOAD_TIMEOUT })
+  await testEntry.click()
+
+  await expect(page).toHaveURL(/\/test$/)
+  await expect(
+    page.locator('.island-page, .island-mobile-page').first()
+  ).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
+})
+
+test('cards and harbor panels use the changelog flip entrance', async ({
+  page,
+}, testInfo) => {
+  await page.goto('/craft', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.craft-page')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+
+  const craftAnimations = await page.evaluate(() => {
+    const getAnimationName = (selector: string) =>
+      getComputedStyle(document.querySelector(selector) as Element)
+        .animationName
+
+    return {
+      filter: getAnimationName('.craft-filter'),
+      card: getAnimationName('.shared-tool-card'),
+      image: getAnimationName('.shared-tool-card .tl-card__img-wrap'),
+      index: getAnimationName('.shared-tool-card .tl-card__index'),
+      imageDelay: getComputedStyle(
+        document.querySelector(
+          '.shared-tool-card .tl-card__img-wrap'
+        ) as Element
+      ).animationDelay,
+      indexDelay: getComputedStyle(
+        document.querySelector('.shared-tool-card .tl-card__index') as Element
+      ).animationDelay,
+    }
+  })
+  expect(craftAnimations.filter).toContain('craftFilterIn')
+  expect(craftAnimations.card).toContain('toolCardIn')
+  expect(craftAnimations.image).toContain('toolCardMediaRise')
+  expect(craftAnimations.index).toContain('toolCardMediaRise')
+  expect(craftAnimations.indexDelay).toBe(craftAnimations.imageDelay)
+
+  await page.goto('/test', { waitUntil: 'domcontentloaded' })
+  const panelSelector = testInfo.project.name.includes('mobile')
+    ? '.mobile-port'
+    : '.port-panel'
+  await expect(page.locator(panelSelector).first()).toBeAttached({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+  const panelAnimation = await page
+    .locator(panelSelector)
+    .first()
+    .evaluate((element) => getComputedStyle(element).animationName)
+  expect(panelAnimation).toContain(
+    testInfo.project.name.includes('mobile')
+      ? 'mobile-port-enter'
+      : 'port-enter'
+  )
+})
+
+test('mobile menu locks background scrolling', async ({ page }, testInfo) => {
+  test.skip(!testInfo.project.name.includes('mobile'))
+
+  await page.goto('/about', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.about-page')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+
+  await page.evaluate(() => window.scrollTo(0, 500))
+
+  await page.locator('.mobile-menu-icon').click()
+  await expect(page.locator('.mobile-menu-panel')).toHaveClass(/\bactive\b/)
+  await expect(page.locator('html')).toHaveClass(/mobile-menu-scroll-locked/)
+  const lockedScrollPosition = await page.evaluate(() =>
+    Math.abs(Number.parseFloat(document.body.style.top))
+  )
+
+  await page.mouse.wheel(0, 900)
+  await page.waitForTimeout(100)
+
+  await expect
+    .poll(() =>
+      page.evaluate(() => Math.abs(Number.parseFloat(document.body.style.top)))
+    )
+    .toBe(lockedScrollPosition)
+
+  await page.locator('.mobile-menu-icon').click()
+  await expect(page.locator('html')).not.toHaveClass(
+    /mobile-menu-scroll-locked/
+  )
+  await expect
+    .poll(() => page.evaluate(() => window.scrollY))
+    .toBe(lockedScrollPosition)
+})
+
+test('leaving personal bay restores document scrolling', async ({
+  page,
+}, testInfo) => {
+  await page.goto('/test', { waitUntil: 'domcontentloaded' })
+  await expect(
+    page.locator('.island-page, .island-mobile-page').first()
+  ).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
+
+  if (testInfo.project.name.includes('mobile')) {
+    await page.locator('.mobile-menu-icon').click()
+    await page.locator('.mobile-menu-items a[href="/"]').click()
+  } else {
+    await page.locator('.menu-box a[href="/"]').click()
+  }
+
+  await expect(page.locator('.home-page')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+  await expect(page.locator('body')).not.toHaveClass(
+    /island-(?:pc|mobile)-shell/
+  )
+  await expect(page.locator('html')).not.toHaveClass(
+    /mobile-menu-scroll-locked/
+  )
+  await expect(page.locator('body')).not.toHaveClass(
+    /mobile-menu-scroll-locked/
+  )
+  await expect
+    .poll(() => page.evaluate(() => getComputedStyle(document.body).overflowY))
+    .not.toBe('hidden')
+
+  await page.evaluate(() => {
+    window.scrollTo(0, 700)
+    document.documentElement.scrollTop = 700
+    document.body.scrollTop = 700
+  })
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        Math.max(
+          window.scrollY,
+          document.documentElement.scrollTop,
+          document.body.scrollTop
+        )
+      )
+    )
+    .toBeGreaterThan(50)
+  await expect(page.locator('.el-menu-layout-all')).toHaveClass(/\bscrolled\b/)
+
+  await page.evaluate(() => {
+    window.scrollTo(0, 0)
+    document.documentElement.scrollTop = 0
+    document.body.scrollTop = 0
+  })
+  await page.evaluate(() => {
+    window.scrollTo(0, 700)
+    document.documentElement.scrollTop = 700
+    document.body.scrollTop = 700
+  })
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        Math.max(
+          window.scrollY,
+          document.documentElement.scrollTop,
+          document.body.scrollTop
+        )
+      )
+    )
+    .toBeGreaterThan(50)
+})
+
 test('flanerie detail page renders', async ({ page }) => {
   await page.goto('/flanerie/changsha', { waitUntil: 'domcontentloaded' })
 
@@ -36,6 +241,224 @@ test('flanerie detail page renders', async ({ page }) => {
     timeout: PAGE_LOAD_TIMEOUT,
   })
   await expect(page.locator('.not-found-page')).toHaveCount(0)
+})
+
+test('flanerie photos use sequential shutter entrances', async ({ page }) => {
+  await page.goto('/flanerie/nanchang', { waitUntil: 'domcontentloaded' })
+  const gallery = page.locator('.flr-gallery .media-gallery')
+  await gallery.scrollIntoViewIfNeeded()
+  await expect(gallery).toHaveClass(/\bis-entered\b/, {
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+
+  const shutterAnimations = await gallery.evaluate((element) => {
+    const frames = element.querySelectorAll('.media-gallery__frame')
+    return [...frames].slice(0, 2).map((frame) => {
+      const style = getComputedStyle(frame)
+      const cornerStyle = getComputedStyle(frame, '::after')
+      return {
+        name: style.animationName,
+        delay: Number.parseFloat(style.animationDelay),
+        cornerName: cornerStyle.animationName,
+        cornerBackground: cornerStyle.backgroundImage,
+      }
+    })
+  })
+
+  expect(shutterAnimations).toHaveLength(2)
+  expect(
+    shutterAnimations.every((animation) =>
+      animation.name.includes('media-gallery-shutter-in')
+    )
+  ).toBeTruthy()
+  expect(
+    shutterAnimations.every(
+      (animation) =>
+        animation.cornerName.includes('media-gallery-corners-expand') &&
+        !animation.cornerBackground.includes('transparent')
+    )
+  ).toBeTruthy()
+  expect(shutterAnimations[1].delay).toBeGreaterThan(shutterAnimations[0].delay)
+})
+
+test('detail back navigation restores the previous scroll position', async ({
+  page,
+}) => {
+  await page.goto('/flanerie', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.flanerie-page')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+
+  const maxScrollTop = await page.evaluate(
+    () => document.documentElement.scrollHeight - window.innerHeight
+  )
+  test.skip(maxScrollTop < 300, 'Page is not tall enough to test scrolling')
+
+  const expectedScrollTop = Math.min(700, maxScrollTop)
+  await page.evaluate((top) => window.scrollTo(0, top), expectedScrollTop)
+  await expect
+    .poll(() => page.evaluate(() => window.scrollY))
+    .toBeGreaterThanOrEqual(expectedScrollTop - 1)
+
+  await page
+    .locator('.shared-vlog-card[role="button"]')
+    .first()
+    .evaluate((element: HTMLElement) => element.click())
+  await expect(page).toHaveURL(/\/flanerie\/[^/?#]+/)
+  await page.locator('.detail-page-header__back').click()
+  await expect(page).toHaveURL(/\/flanerie$/)
+  await expect
+    .poll(() =>
+      page.evaluate(
+        (expected) => Math.abs(window.scrollY - expected),
+        expectedScrollTop
+      )
+    )
+    .toBeLessThanOrEqual(2)
+})
+
+test('merch photography detail page renders', async ({ page }) => {
+  await page.goto('/island/merch-photography/pokemon-plush', {
+    waitUntil: 'domcontentloaded',
+  })
+
+  await expect(page.locator('.merch-detail-page')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+  await expect(page).toHaveTitle(/MERCH PHOTOGRAPHY|周边摄影/)
+})
+
+for (const galleryRoute of [
+  '/island/photography',
+  '/island/merch-photography/pokemon-plush',
+]) {
+  test(`${galleryRoute} uses the journey detail shutter entrance`, async ({
+    page,
+  }) => {
+    await page.goto(galleryRoute, { waitUntil: 'domcontentloaded' })
+    const gallery = page.locator('.media-gallery--staggered').first()
+    await expect(gallery).toBeAttached({ timeout: PAGE_LOAD_TIMEOUT })
+    await gallery.scrollIntoViewIfNeeded()
+    await expect(gallery).toHaveClass(/is-entered/, {
+      timeout: PAGE_LOAD_TIMEOUT,
+    })
+
+    const entrance = await gallery.evaluate((element) => {
+      const cards = [
+        ...element.querySelectorAll('.media-gallery__frame'),
+      ].slice(0, 2)
+
+      return {
+        cardAnimations: cards.map(
+          (card) => getComputedStyle(card).animationName
+        ),
+        cardDelays: cards.map((card) =>
+          Number.parseFloat(getComputedStyle(card).animationDelay)
+        ),
+      }
+    })
+
+    expect(
+      entrance.cardAnimations.every((name) =>
+        name.includes('media-gallery-shutter-in')
+      )
+    ).toBeTruthy()
+    expect(entrance.cardDelays[1]).toBeGreaterThan(entrance.cardDelays[0])
+  })
+}
+
+test('work detail modal plays text and gallery entrance animations', async ({
+  page,
+}) => {
+  await page.goto('/archive', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.archives-page')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+
+  await page.locator('.shared-work-card').first().click()
+  await expect(page.locator('.modal-wrapper-dialog')).toBeVisible()
+  await expect(page.locator('.aside-title .typed-text')).toHaveCount(1)
+
+  const galleryAnimation = await page
+    .locator('.gallery-carousel')
+    .evaluate((element) => getComputedStyle(element).animationName)
+  expect(galleryAnimation).toContain('galleryVertical3dIn')
+
+  const confidentialAnimation = await page
+    .locator('.confidential-notice')
+    .evaluate((element) => getComputedStyle(element, '::after').animationName)
+  expect(confidentialAnimation).toContain('confidentialMetalSheen')
+})
+
+test('about modules use sequenced entrance animations', async ({ page }) => {
+  await page.goto('/about', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.changelog-block')).toBeAttached({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+
+  const animation = await page.locator('.changelog-block').evaluate((block) => {
+    const items = [...block.querySelectorAll('.timeline-item')]
+    const headerStyle = getComputedStyle(
+      block.querySelector('.section-header') as Element
+    )
+    const passionStyle = getComputedStyle(
+      block.parentElement?.querySelector('.passion-section') as Element
+    )
+    const neighborsBlock =
+      block.parentElement?.parentElement?.querySelector('.neighbors-block')
+    const neighborsBlockStyle = getComputedStyle(neighborsBlock as Element)
+    return {
+      headerName: headerStyle.animationName,
+      headerDelay: Number.parseFloat(headerStyle.animationDelay),
+      itemNames: items.map((item) => getComputedStyle(item).animationName),
+      itemDelays: items.map((item) =>
+        Number.parseFloat(getComputedStyle(item).animationDelay)
+      ),
+      itemDurations: items.map((item) =>
+        Number.parseFloat(getComputedStyle(item).animationDuration)
+      ),
+      passionName: passionStyle.animationName,
+      passionDelay: Number.parseFloat(passionStyle.animationDelay),
+      passionDuration: Number.parseFloat(passionStyle.animationDuration),
+      neighborsBlockName: neighborsBlockStyle.animationName,
+      neighborsBlockDelay: Number.parseFloat(
+        neighborsBlockStyle.animationDelay
+      ),
+    }
+  })
+
+  expect(animation.headerName).toContain('changelogHeaderIn')
+  expect(animation.passionName).toContain('passionCrtOn')
+  expect(animation.passionDelay).toBeGreaterThan(animation.headerDelay)
+  expect(animation.passionDelay - animation.headerDelay).toBeLessThanOrEqual(
+    0.2
+  )
+  expect(animation.neighborsBlockName).toContain('neighborsBlockIn')
+  expect(animation.neighborsBlockDelay).toBeGreaterThanOrEqual(
+    animation.passionDelay + animation.passionDuration
+  )
+  expect(
+    animation.itemNames.every((name) => name.includes('changelogItemIn'))
+  ).toBeTruthy()
+  expect(animation.itemDelays[0] - animation.headerDelay).toBeLessThanOrEqual(
+    0.16
+  )
+  expect(animation.itemDelays[1]).toBeGreaterThan(animation.itemDelays[0])
+
+  await expect
+    .poll(() =>
+      page.locator('.passion-logo-bg canvas').evaluate((canvas) => {
+        const element = canvas as HTMLCanvasElement
+        const bounds = element.getBoundingClientRect()
+        return Math.min(
+          element.width,
+          element.height,
+          bounds.width,
+          bounds.height
+        )
+      })
+    )
+    .toBeGreaterThan(0)
 })
 
 const craftToolRoutes = [

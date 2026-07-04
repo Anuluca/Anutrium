@@ -15,6 +15,15 @@ html {
   }
 }
 
+html.mobile-menu-scroll-locked,
+body.mobile-menu-scroll-locked {
+  overscroll-behavior: none;
+}
+
+body.mobile-menu-scroll-locked {
+  touch-action: none;
+}
+
 body {
   width: calc(100% - 120px);
   height: 100%;
@@ -95,11 +104,6 @@ body.light {
     }
   }
 
-  .pt-header {
-    border-color: var(--border-color) !important;
-  }
-
-  .pt-header__title,
   .section-title,
   .aside-title,
   .details-label,
@@ -110,8 +114,6 @@ body.light {
     color: var(--text-color) !important;
   }
 
-  .pt-header__sub,
-  .pt-header__motto,
   .pt-panel-title,
   .aside-company-name,
   .aside-id,

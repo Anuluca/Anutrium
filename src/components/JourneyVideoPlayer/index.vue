@@ -1,14 +1,18 @@
 <template>
   <div
+    ref="videoListRef"
     class="video-list"
+    :class="{ 'is-entered': entranceStarted }"
     :style="{ '--video-columns': Math.min(videos.length, 3) }"
   >
     <button
       v-for="(video, index) in videos"
       :key="video.bvid || index"
       class="video-item"
+      :style="{ '--video-entry-delay': `${360 + index * 90}ms` }"
       type="button"
       :aria-label="`播放 ${video.title}`"
+      @animationstart="handleEntranceHandoff(index, $event)"
       @click="openVideo(video)"
     >
       <div class="video-frame">
@@ -62,7 +66,7 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import DiamondCloseBtn from '@/components/DiamondCloseBtn/index.vue'
 
@@ -77,8 +81,16 @@ interface VideoItem {
 const props = defineProps<{
   videos: VideoItem[]
 }>()
+const emit = defineEmits<{
+  (event: 'entranceHandoff'): void
+}>()
 
+const videoListRef = ref<HTMLElement | null>(null)
 const activeVideo = ref<VideoItem | null>(null)
+const entranceStarted = ref(false)
+let videoListObserver: IntersectionObserver | null = null
+let isVideoListVisible = false
+let hasEmittedEntranceHandoff = false
 
 const openVideo = (video: VideoItem) => {
   activeVideo.value = video
@@ -96,10 +108,77 @@ const handleKeydown = (event: KeyboardEvent) => {
   if (event.key === 'Escape' && activeVideo.value) closeVideo()
 }
 
-watch(() => props.videos, closeVideo)
+const emitEntranceHandoff = () => {
+  if (hasEmittedEntranceHandoff) return
+  hasEmittedEntranceHandoff = true
+  emit('entranceHandoff')
+}
 
-onMounted(() => window.addEventListener('keydown', handleKeydown))
+const handleEntranceHandoff = (index: number, event: AnimationEvent) => {
+  if (
+    index !== props.videos.length - 1 ||
+    !event.animationName.includes('journey-video-in')
+  ) {
+    return
+  }
+
+  emitEntranceHandoff()
+}
+
+const replayEntrance = async () => {
+  hasEmittedEntranceHandoff = false
+  entranceStarted.value = false
+  await nextTick()
+
+  if (isVideoListVisible) {
+    entranceStarted.value = true
+  }
+}
+
+watch(
+  () => props.videos,
+  () => {
+    closeVideo()
+    replayEntrance()
+  }
+)
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    entranceStarted.value = true
+    emitEntranceHandoff()
+    return
+  }
+
+  if (!('IntersectionObserver' in window)) {
+    isVideoListVisible = true
+    entranceStarted.value = true
+    return
+  }
+
+  videoListObserver = new IntersectionObserver(
+    ([entry]) => {
+      isVideoListVisible = entry.isIntersecting
+
+      if (entry.isIntersecting && !entranceStarted.value) {
+        entranceStarted.value = true
+      }
+    },
+    {
+      threshold: 0.12,
+      rootMargin: '0px 0px -8% 0px',
+    }
+  )
+
+  if (videoListRef.value) {
+    videoListObserver.observe(videoListRef.value)
+  }
+})
+
 onBeforeUnmount(() => {
+  videoListObserver?.disconnect()
   window.removeEventListener('keydown', handleKeydown)
   document.body.classList.remove('video-modal-open')
 })
@@ -129,6 +208,18 @@ onBeforeUnmount(() => {
   cursor: pointer;
 }
 
+.video-list:not(.is-entered) .video-item {
+  opacity: 0;
+  filter: blur(10px) brightness(0.55);
+  transform: translateY(48px) scale(0.95);
+}
+
+.video-list.is-entered .video-item {
+  transform-origin: center bottom;
+  animation: journey-video-in 0.78s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--video-entry-delay, 0ms);
+}
+
 .video-title {
   overflow: hidden;
   color: rgba(255, 255, 255, 0.72);
@@ -147,10 +238,10 @@ onBeforeUnmount(() => {
   width: 100%;
   aspect-ratio: 16 / 9;
   overflow: hidden;
-  border: 1px solid @line;
+  border: 1px solid rgb(68 68 68 / 28%);
   background: @bg;
   box-shadow: 8px 10px 0 rgba(0, 0, 0, 0.213);
-  transition: border-color 0.2s, transform 0.2s;
+  transition: border-color 0.25s, box-shadow 0.3s, transform 0.2s;
 
   img {
     position: absolute;
@@ -159,18 +250,19 @@ onBeforeUnmount(() => {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: filter 0.2s, transform 0.2s;
+    transition: filter 0.25s;
   }
 }
 
 .video-item:hover .video-frame,
 .video-item:focus-visible .video-frame {
   border-color: @red;
-  transform: translateY(-2px);
+  transform: scale(1.025);
+  box-shadow: 0 0 10px rgba(226, 52, 86, 0.48), 0 0 32px rgba(226, 52, 86, 0.28),
+    inset 0 0 22px rgba(226, 52, 86, 0.12), 8px 10px 0 rgba(0, 0, 0, 0.213);
 
   img {
-    filter: brightness(0.78);
-    transform: scale(1.02);
+    filter: brightness(0.82) saturate(1.08);
   }
 
   .video-play {
@@ -270,6 +362,20 @@ onBeforeUnmount(() => {
   color: #fff;
 }
 
+@keyframes journey-video-in {
+  from {
+    opacity: 0;
+    filter: blur(10px) brightness(0.55);
+    transform: translateY(48px) scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    filter: blur(0) brightness(1);
+    transform: translateY(0) scale(1);
+  }
+}
+
 @media (max-width: 640px) {
   .video-list {
     grid-template-columns: 1fr;
@@ -277,6 +383,18 @@ onBeforeUnmount(() => {
 
   .video-modal {
     padding: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .video-list:not(.is-entered) .video-item {
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+
+  .video-list.is-entered .video-item {
+    animation: none;
   }
 }
 </style>

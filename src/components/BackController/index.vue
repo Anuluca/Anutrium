@@ -11,11 +11,18 @@ const visualStateStore = visualState()
 const currentRouter = computed(() => route.path)
 
 const isTextMenu = computed(() => currentRouter.value !== '/')
+const useDeepBlackBackground = computed(
+  () => route.meta.starBackground === 'deep-black'
+)
 </script>
 
 <template>
   <div class="back-controller">
-    <BackStars :theme="visualStateStore.theme" :is-text-menu="isTextMenu" />
+    <BackStars
+      :theme="visualStateStore.theme"
+      :is-text-menu="isTextMenu"
+      :deep-black="useDeepBlackBackground"
+    />
   </div>
 </template>
 
