@@ -146,7 +146,7 @@ const flanerieDynamic = {
             en: '',
           },
           time: '2026',
-          device: 'iPhone 17',
+          device: 'Sony RX100M6',
           url: 'https://assets.anuluca.com/Flanerie/cities/xiangtan/DSC06981.jpg',
         },
       ],
@@ -693,7 +693,7 @@ const flanerieDynamic = {
           },
           time: '2026',
           device: 'iPhone 17',
-          url: 'https://assets.anuluca.com/Flanerie/cities/fuzhou/IMG_3045.jpg',
+          url: 'https://assets.anuluca.com/Flanerie/cities/fuzhou/IMG_3109.jpg',
         },
         {
           location: {
@@ -702,7 +702,7 @@ const flanerieDynamic = {
           },
           time: '2026',
           device: 'iPhone 17',
-          url: 'https://assets.anuluca.com/Flanerie/cities/fuzhou/IMG_3109.jpg',
+          url: 'https://assets.anuluca.com/Flanerie/cities/fuzhou/IMG_3139.jpg',
         },
         {
           location: {
@@ -757,7 +757,8 @@ const flanerieDynamic = {
             zhCn: 'VLOG',
             en: 'VLOG',
           },
-          cover: 'https://assets.anuluca.com/other/videoCover/DSC06743.jpg',
+          cover:
+            'https://assets.anuluca.com/other/videoCover/f9838bb94cb29474000fdcf2b2392c1ebae651d0.jpg@672w_378h_1c.webp',
           bvid: 'BV1R9oaBREMo',
           url: 'https://www.bilibili.com/video/BV1R9oaBREMo',
           orientation: 'landscape',
@@ -838,28 +839,28 @@ const flanerieDynamic = {
         lat: 28.682,
         lng: 115.8582,
       },
-      videos: [
-        {
-          title: {
-            zhCn: '人文篇',
-            en: '',
-          },
-          cover: 'https://assets.anuluca.com/other/videoCover/',
-          bvid: '',
-          url: 'https://www.bilibili.com/video/',
-          orientation: 'landscape',
-        },
-        {
-          title: {
-            zhCn: '山水篇',
-            en: '',
-          },
-          cover: 'https://assets.anuluca.com/other/videoCover/',
-          bvid: '',
-          url: 'https://www.bilibili.com/video/',
-          orientation: 'landscape',
-        },
-      ],
+      // videos: [
+      //   {
+      //     title: {
+      //       zhCn: '人文篇',
+      //       en: '',
+      //     },
+      //     cover: 'https://assets.anuluca.com/other/videoCover/',
+      //     bvid: '',
+      //     url: 'https://www.bilibili.com/video/',
+      //     orientation: 'landscape',
+      //   },
+      //   {
+      //     title: {
+      //       zhCn: '山水篇',
+      //       en: '',
+      //     },
+      //     cover: 'https://assets.anuluca.com/other/videoCover/',
+      //     bvid: '',
+      //     url: 'https://www.bilibili.com/video/',
+      //     orientation: 'landscape',
+      //   },
+      // ],
       photos: [
         {
           location: {
@@ -999,7 +1000,7 @@ const flanerieDynamic = {
         zhCn: '好像主要在观鸟了。',
         en: '',
       },
-      device: ['Sony RX100M6', 'iPhone 17'],
+      device: ['Passonic Lumix ZX99', 'Sony RX100M6', 'iPhone 17'],
       img: 'https://assets.anuluca.com/Flanerie/cities/poyang-lake/P1011274.jpg',
       location: {
         id: 'jiangxi',
@@ -1017,7 +1018,7 @@ const flanerieDynamic = {
             en: '',
           },
           time: '2026',
-          device: 'Sony RX100M6',
+          device: 'Passonic Lumix ZX99',
           url: 'https://assets.anuluca.com/Flanerie/cities/poyang-lake/P1011274.jpg',
         },
       ],
@@ -1167,7 +1168,7 @@ const flanerieDynamic = {
       photos: [
         {
           location: {
-            zhCn: '',
+            zhCn: '南京路步行街',
             en: '',
           },
           time: '2016',
@@ -1283,7 +1284,7 @@ const flanerieDynamic = {
           },
           time: '2025',
           device: 'Sony RX100M6',
-          url: 'https://assets.anuluca.com/Flanerie/cities/suzhouDSC06053.jpg',
+          url: 'https://assets.anuluca.com/Flanerie/cities/suzhou/DSC06053.jpg',
         },
         {
           location: {
@@ -1388,7 +1389,7 @@ const flanerieDynamic = {
         },
         {
           location: {
-            zhCn: '',
+            zhCn: '鸡。',
             en: '',
           },
           time: '2025',
@@ -1439,15 +1440,6 @@ const flanerieDynamic = {
           time: '2025',
           device: 'iPhone 12 mini',
           url: 'https://assets.anuluca.com/Flanerie/cities/nanchang/IMG_4203.jpg',
-        },
-        {
-          location: {
-            zhCn: '赣江沿岸',
-            en: '',
-          },
-          time: '2025',
-          device: 'Sony RX100M6',
-          url: 'https://assets.anuluca.com/Flanerie/cities/nanchang/DSC05783.jpg',
         },
         {
           location: {
@@ -1556,15 +1548,6 @@ const flanerieDynamic = {
           time: '2023',
           device: 'Sony RX100M6',
           url: 'https://assets.anuluca.com/Flanerie/cities/nanchang/DSC05381.jpg',
-        },
-        {
-          location: {
-            zhCn: '艾溪湖公园',
-            en: '',
-          },
-          time: '2023',
-          device: 'Sony RX100M6',
-          url: 'https://assets.anuluca.com/Flanerie/cities/nanchang/DSC05353.jpg',
         },
         {
           location: {
@@ -1831,20 +1814,12 @@ const flanerieDynamic = {
         zhCn: '武汉',
         en: 'Wuhan',
       },
-      date: '2026',
+      date: '',
       tagline: {
-        zhCn: '',
+        zhCn: '小学时间，偶尔回去看看。',
         en: '',
       },
-      device: [
-        'SAMSUNG i8268',
-        'OnePlus 3',
-        'MI 6',
-        'OnePLus 7T',
-        'Sony RX100M6',
-        'iPhone 17',
-      ],
-      img: 'https://assets.anuluca.com/Flanerie/cities/',
+      img: 'https://assets.anuluca.com/Flanerie/cities/wuhan/IMG_2348.jpg',
       location: {
         id: 'hubei',
         name: {
@@ -1854,36 +1829,270 @@ const flanerieDynamic = {
         lat: 30.5928,
         lng: 114.3055,
       },
-      videos: [
-        {
-          title: {
-            zhCn: 'VLOG',
-            en: 'VLOG',
-          },
-          cover: 'https://assets.anuluca.com/other/videoCover/',
-          bvid: '',
-          url: 'https://www.bilibili.com/video/',
-          orientation: 'landscape',
-        },
-      ],
+      // videos: [
+      //   {
+      //     title: {
+      //       zhCn: 'VLOG',
+      //       en: 'VLOG',
+      //     },
+      //     cover: 'https://assets.anuluca.com/other/videoCover/',
+      //     bvid: '',
+      //     url: 'https://www.bilibili.com/video/',
+      //     orientation: 'landscape',
+      //   },
+      // ],
       photos: [
         {
           location: {
-            zhCn: '',
+            zhCn: '人民公园',
             en: '',
           },
-          time: '2026',
+          time: '2024',
           device: 'Sony RX100M6',
-          url: 'https://assets.anuluca.com/Flanerie/cities/',
+          url: 'https://assets.anuluca.com/Flanerie/cities/wuhan/DSC05183.jpg',
+        },
+        {
+          location: {
+            zhCn: '人民公园',
+            en: '',
+          },
+          time: '2024',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/cities/wuhan/DSC05200.jpg',
+        },
+        {
+          location: {
+            zhCn: '古德寺',
+            en: '',
+          },
+          time: '2024',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/cities/wuhan/DSC05298.jpg',
+        },
+        {
+          location: {
+            zhCn: '古德寺',
+            en: '',
+          },
+          time: '2024',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/cities/wuhan/DSC05307.jpg',
+        },
+        {
+          location: {
+            zhCn: '古德寺',
+            en: '',
+          },
+          time: '2024',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/cities/wuhan/DSC05318.jpg',
+        },
+        {
+          location: {
+            zhCn: '龙泉山墓园',
+            en: '',
+          },
+          time: '2024',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/cities/wuhan/IMG_2487.jpg',
+        },
+        {
+          location: {
+            zhCn: '龙泉山墓园',
+            en: '',
+          },
+          time: '2024',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/cities/wuhan/IMG_2484.jpg',
+        },
+        {
+          location: {
+            zhCn: '车辆爆炸',
+            en: '',
+          },
+          time: '2024',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/cities/wuhan/DSC05248.jpg',
+        },
+        {
+          location: {
+            zhCn: '车辆爆炸',
+            en: '',
+          },
+          time: '2024',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/cities/wuhan/DSC05260.jpg',
+        },
+        {
+          location: {
+            zhCn: '车辆爆炸',
+            en: '',
+          },
+          time: '2024',
+          device: 'iPhone 12 mini',
+          url: 'https://assets.anuluca.com/Flanerie/cities/wuhan/IMG_2419.mp4',
+        },
+        {
+          location: {
+            zhCn: '辛亥革命起义纪念馆',
+            en: '',
+          },
+          time: '2019',
+          device: 'One Plus 7T',
+          url: 'https://assets.anuluca.com/Flanerie/cities/wuhan/IMG_20191004_153906-01.jpeg',
+        },
+        {
+          location: {
+            zhCn: '辛亥革命起义纪念馆',
+            en: '',
+          },
+          time: '2019',
+          device: 'One Plus 7T',
+          url: 'https://assets.anuluca.com/Flanerie/cities/wuhan/IMG_20191004_153602-01.jpeg',
+        },
+        {
+          location: {
+            zhCn: '黄鹤楼',
+            en: '',
+          },
+          time: '2019',
+          device: 'One Plus 7T',
+          url: 'https://assets.anuluca.com/Flanerie/cities/wuhan/IMG_20191004_162913-01.jpeg',
+        },
+        {
+          location: {
+            zhCn: '武汉市长江大桥',
+            en: '',
+          },
+          time: '2023',
+          device: 'iPhone 12 mini',
+          url: 'https://assets.anuluca.com/Flanerie/cities/wuhan/copy_8B4C8519-71F3-4B5A-BC0F-A35F5C491CB4.mp4',
+        },
+        {
+          location: {
+            zhCn: '武汉市长江大桥',
+            en: '',
+          },
+          time: '2023',
+          device: 'iPhone 12 mini',
+          url: 'https://assets.anuluca.com/Flanerie/cities/wuhan/IMG_2319.mp4',
+        },
+        {
+          location: {
+            zhCn: '武汉市长江大桥',
+            en: '',
+          },
+          time: '2023',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/cities/wuhan/IMG_2348.jpg',
+        },
+        {
+          location: {
+            zhCn: '武汉市长江大桥',
+            en: '',
+          },
+          time: '2019',
+          device: 'One Plus 7T',
+          url: 'https://assets.anuluca.com/Flanerie/cities/wuhan/IMG_20191004_184444-01.jpeg',
+        },
+        {
+          location: {
+            zhCn: '武汉市长江大桥',
+            en: '',
+          },
+          time: '2019',
+          device: 'One Plus 7T',
+          url: 'https://assets.anuluca.com/Flanerie/cities/wuhan/IMG_20191004_184554-01.jpeg',
+        },
+        {
+          location: {
+            zhCn: '越王勾践剑-湖北省博物馆',
+            en: '',
+          },
+          time: '2019',
+          device: 'One Plus 7T',
+          url: 'https://assets.anuluca.com/Flanerie/cities/wuhan/IMG_20191005_111719_1-01-01-01.jpeg',
+        },
+        {
+          location: {
+            zhCn: '曾侯乙编钟-湖北省博物馆',
+            en: '',
+          },
+          time: '2019',
+          device: 'One Plus 7T',
+          url: 'https://assets.anuluca.com/Flanerie/cities/wuhan/IMG_20191005_113234-01.jpeg',
+        },
+        {
+          location: {
+            zhCn: '江汉关大楼',
+            en: '',
+          },
+          time: '2019',
+          device: 'One Plus 7T',
+          url: 'https://assets.anuluca.com/Flanerie/cities/wuhan/IMG_20191005_151112-01.jpeg',
+        },
+        {
+          location: {
+            zhCn: '小时候托管我的奶奶家。',
+            en: '',
+          },
+          time: '2019',
+          device: 'One Plus 7T',
+          url: 'https://assets.anuluca.com/Flanerie/cities/wuhan/IMG_20191006_101840.jpg',
         },
         {
           location: {
             zhCn: '',
             en: '',
           },
-          time: '2026',
-          device: 'iPhone 17',
-          url: 'https://assets.anuluca.com/Flanerie/cities/',
+          time: '2023',
+          device: 'iPhone 12 mini',
+          url: 'https://assets.anuluca.com/Flanerie/cities/wuhan/IMG_2533.jpg',
+        },
+        {
+          location: {
+            zhCn: '大成路',
+            en: '',
+          },
+          time: '2023',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/cities/wuhan/IMG_2353.jpg',
+        },
+        {
+          location: {
+            zhCn: '大成路',
+            en: '',
+          },
+          time: '2019',
+          device: 'One Plus 7T',
+          url: 'https://assets.anuluca.com/Flanerie/cities/wuhan/DSC05166.jpg',
+        },
+        {
+          location: {
+            zhCn: '大成路小巷',
+            en: '',
+          },
+          time: '2019',
+          device: 'One Plus 7T',
+          url: 'https://assets.anuluca.com/Flanerie/cities/wuhan/YRL2ct.jpg',
+        },
+        {
+          location: {
+            zhCn: '老家一角',
+            en: '',
+          },
+          time: '2023',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/cities/wuhan/DSC05165.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2024',
+          device: 'iPhone 12 mini',
+          url: 'https://assets.anuluca.com/Flanerie/cities/wuhan/00104 IMG_0437.jpg',
         },
       ],
     },
@@ -1898,13 +2107,11 @@ const flanerieDynamic = {
         zhCn: '深圳',
         en: 'Shenzhen',
       },
-      date: '2026',
       tagline: {
-        zhCn: '',
+        zhCn: '我的前端生涯开始的地方。',
         en: '',
       },
-      device: ['Sony RX100M6', 'iPhone 17'],
-      img: 'https://assets.anuluca.com/Flanerie/cities/',
+      img: 'https://assets.anuluca.com/Flanerie/cities/shenzhen/00157 IMG_6060.jpg',
       location: {
         id: 'guangdong',
         name: {
@@ -1914,36 +2121,171 @@ const flanerieDynamic = {
         lat: 23.1291,
         lng: 113.2644,
       },
-      videos: [
-        {
-          title: {
-            zhCn: 'VLOG',
-            en: 'VLOG',
-          },
-          cover: 'https://assets.anuluca.com/other/videoCover/',
-          bvid: '',
-          url: 'https://www.bilibili.com/video/',
-          orientation: 'landscape',
-        },
-      ],
+      // videos: [
+      //   {
+      //     title: {
+      //       zhCn: 'VLOG',
+      //       en: 'VLOG',
+      //     },
+      //     cover: 'https://assets.anuluca.com/other/videoCover/',
+      //     bvid: '',
+      //     url: 'https://www.bilibili.com/video/',
+      //     orientation: 'landscape',
+      //   },
+      // ],
       photos: [
         {
           location: {
-            zhCn: '',
+            zhCn: '云雾里的平安大厦',
             en: '',
           },
-          time: '2026',
-          device: 'Sony RX100M6',
-          url: 'https://assets.anuluca.com/Flanerie/cities/',
+          time: '2022',
+          device: 'iPhone 12 mini',
+          url: 'https://assets.anuluca.com/Flanerie/cities/shenzhen/00157 IMG_6060.jpg',
         },
         {
           location: {
-            zhCn: '',
+            zhCn: '平安大厦',
             en: '',
           },
-          time: '2026',
-          device: 'iPhone 17',
-          url: 'https://assets.anuluca.com/Flanerie/cities/',
+          time: '2022',
+          device: 'iPhone 12 mini',
+          url: 'https://assets.anuluca.com/Flanerie/cities/shenzhen/00254 IMG_8607.jpg',
+        },
+        {
+          location: {
+            zhCn: '平安大厦50楼',
+            en: '',
+          },
+          time: '2022',
+          device: 'iPhone 12 mini',
+          url: 'https://assets.anuluca.com/Flanerie/cities/shenzhen/00372 IMG_962222222233.mp4',
+        },
+        {
+          location: {
+            zhCn: '深圳市市民中心',
+            en: '',
+          },
+          time: '2021',
+          device: 'iPhone 12 mini',
+          url: 'https://assets.anuluca.com/Flanerie/cities/shenzhen/00289 IMG_9630.jpeg',
+        },
+        {
+          location: {
+            zhCn: '漾日湖',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/cities/shenzhen/IMG_20201015_153308.jpg',
+        },
+        {
+          location: {
+            zhCn: '工位',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/cities/shenzhen/DSC00829.jpg',
+        },
+        {
+          location: {
+            zhCn: '龙光 玖龙玺',
+            en: '',
+          },
+          time: '2021',
+          device: 'iPhone 12 mini',
+          url: 'https://assets.anuluca.com/Flanerie/cities/shenzhen/IMG_20200912_112706.jpg',
+        },
+        {
+          location: {
+            zhCn: '吃饭',
+            en: '',
+          },
+          time: '2021',
+          device: 'iPhone 12 mini',
+          url: 'https://assets.anuluca.com/Flanerie/cities/shenzhen/IMG_20201115_115155.jpg',
+        },
+        {
+          location: {
+            zhCn: '吃饭',
+            en: '',
+          },
+          time: '2021',
+          device: 'iPhone 12 mini',
+          url: 'https://assets.anuluca.com/Flanerie/cities/shenzhen/00226 IMG_7710.jpg',
+        },
+        {
+          location: {
+            zhCn: '下午茶',
+            en: '',
+          },
+          time: '2021',
+          device: 'iPhone 12 mini',
+          url: 'https://assets.anuluca.com/Flanerie/cities/shenzhen/00139 IMG_5721.jpg',
+        },
+        {
+          location: {
+            zhCn: '同事家',
+            en: '',
+          },
+          time: '2021',
+          device: 'iPhone 12 mini',
+          url: 'https://assets.anuluca.com/Flanerie/cities/shenzhen/00166 IMG_6204.jpeg',
+        },
+        {
+          location: {
+            zhCn: '活动照片',
+            en: '',
+          },
+          time: '2021',
+          url: 'https://assets.anuluca.com/Flanerie/cities/shenzhen/00194 IMG_6997.jpeg',
+        },
+
+        {
+          location: {
+            zhCn: '街头live',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Island/picWork/normal/DSC00583.jpg',
+        },
+        {
+          location: {
+            zhCn: '✈️',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Island/picWork/normal/DSC00786-01.jpeg',
+        },
+        {
+          location: {
+            zhCn: '✈️',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Island/picWork/normal/DSC00812-01-01.jpeg',
+        },
+        {
+          location: {
+            zhCn: '✈️',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Island/picWork/normal/DSC00814-01.jpeg',
+        },
+        {
+          location: {
+            zhCn: '✈️',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Island/picWork/normal/DSC00508.JPG',
         },
       ],
     },
@@ -1958,13 +2300,13 @@ const flanerieDynamic = {
         zhCn: '深圳',
         en: 'Shenzhen',
       },
-      date: '2026',
+      date: '2020',
       tagline: {
         zhCn: '',
         en: '',
       },
       device: ['Sony RX100M6', 'iPhone 17'],
-      img: 'https://assets.anuluca.com/Flanerie/cities/',
+      img: 'https://assets.anuluca.com/Flanerie/events/poke_event1/DSC00981.jpg',
       location: {
         id: 'guangdong',
         name: {
@@ -1974,36 +2316,60 @@ const flanerieDynamic = {
         lat: 23.1291,
         lng: 113.2644,
       },
-      videos: [
-        {
-          title: {
-            zhCn: 'VLOG',
-            en: 'VLOG',
-          },
-          cover: 'https://assets.anuluca.com/other/videoCover/',
-          bvid: '',
-          url: 'https://www.bilibili.com/video/',
-          orientation: 'landscape',
-        },
-      ],
       photos: [
         {
           location: {
-            zhCn: '',
+            zhCn: '车站广告',
+            en: '',
+          },
+          time: '2026',
+          device: 'iPhone 12 mini',
+          url: 'https://assets.anuluca.com/Flanerie/events/poke_event1/1.jpg',
+        },
+        {
+          location: {
+            zhCn: '活动现场',
+            en: '',
+          },
+          time: '2026',
+          device: 'iPhone 12 mini',
+          url: 'https://assets.anuluca.com/Flanerie/events/poke_event1/2.mp4',
+        },
+        {
+          location: {
+            zhCn: '皮卡丘人偶服',
             en: '',
           },
           time: '2026',
           device: 'Sony RX100M6',
-          url: 'https://assets.anuluca.com/Flanerie/cities/',
+          url: 'https://assets.anuluca.com/Flanerie/events/poke_event1/DSC00981.jpg',
         },
         {
           location: {
-            zhCn: '',
+            zhCn: '皮卡丘人偶服',
             en: '',
           },
           time: '2026',
-          device: 'iPhone 17',
-          url: 'https://assets.anuluca.com/Flanerie/cities/',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/poke_event1/DSC01026.jpg',
+        },
+        {
+          location: {
+            zhCn: '皮卡丘人偶服',
+            en: '',
+          },
+          time: '2026',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/poke_event1/DSC01074.jpg',
+        },
+        {
+          location: {
+            zhCn: '第二天腾讯举办的比赛',
+            en: '',
+          },
+          time: '2026',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/poke_event1/DSC01166.jpg',
         },
       ],
     },
@@ -2018,13 +2384,13 @@ const flanerieDynamic = {
         zhCn: '武汉',
         en: 'Wuhan',
       },
-      date: '2026',
+      date: '2023',
       tagline: {
         zhCn: '',
         en: '',
       },
-      device: ['iPhone 17'],
-      img: 'https://assets.anuluca.com/Flanerie/cities/',
+      device: ['iPhone 12 mini'],
+      img: 'https://assets.anuluca.com/Flanerie/events/poke_event2/IMG_0750 (1).jpg',
       location: {
         id: 'hubei',
         name: {
@@ -2034,36 +2400,60 @@ const flanerieDynamic = {
         lat: 30.5928,
         lng: 114.3055,
       },
-      videos: [
-        {
-          title: {
-            zhCn: 'VLOG',
-            en: 'VLOG',
-          },
-          cover: 'https://assets.anuluca.com/other/videoCover/',
-          bvid: '',
-          url: 'https://www.bilibili.com/video/',
-          orientation: 'landscape',
-        },
-      ],
       photos: [
         {
           location: {
-            zhCn: '',
+            zhCn: '城市活动',
             en: '',
           },
-          time: '2026',
-          device: 'Sony RX100M6',
-          url: 'https://assets.anuluca.com/Flanerie/cities/',
+          time: '2023',
+          device: 'iPhone 12 mini',
+          url: 'https://assets.anuluca.com/Flanerie/events/poke_event2/IMG_0704 (1).jpg',
         },
         {
           location: {
-            zhCn: '',
+            zhCn: '超级巨皮卡丘',
             en: '',
           },
-          time: '2026',
-          device: 'iPhone 17',
-          url: 'https://assets.anuluca.com/Flanerie/cities/',
+          time: '2023',
+          device: 'iPhone 12 mini',
+          url: 'https://assets.anuluca.com/Flanerie/events/poke_event2/IMG_0734 (1).jpg',
+        },
+        {
+          location: {
+            zhCn: '超级巨屁卡丘',
+            en: '',
+          },
+          time: '2023',
+          device: 'iPhone 12 mini',
+          url: 'https://assets.anuluca.com/Flanerie/events/poke_event2/IMG_0734 (1).jpg',
+        },
+        {
+          location: {
+            zhCn: '活动现场',
+            en: '',
+          },
+          time: '2023',
+          device: 'iPhone 12 mini',
+          url: 'https://assets.anuluca.com/Flanerie/events/poke_event2/IMG_0750 (1).jpg',
+        },
+        {
+          location: {
+            zhCn: '活动现场',
+            en: '',
+          },
+          time: '2023',
+          device: 'iPhone 12 mini',
+          url: 'https://assets.anuluca.com/Flanerie/events/poke_event2/IMG_0771.mp4',
+        },
+        {
+          location: {
+            zhCn: '小孩哥现场开包',
+            en: '',
+          },
+          time: '2023',
+          device: 'iPhone 12 mini',
+          url: 'https://assets.anuluca.com/Flanerie/events/poke_event2/IMG_0819 (1).jpg',
         },
       ],
     },
@@ -2078,13 +2468,13 @@ const flanerieDynamic = {
         zhCn: '北京',
         en: 'Beijing',
       },
-      date: '2026',
+      date: '2021',
       tagline: {
         zhCn: '',
         en: '',
       },
       device: ['iPhone 12 mini'],
-      img: 'https://assets.anuluca.com/Flanerie/cities/',
+      img: 'https://assets.anuluca.com/Flanerie/events/poke_event3/6.jpg',
       location: {
         id: 'beijing',
         name: {
@@ -2094,36 +2484,60 @@ const flanerieDynamic = {
         lat: 39.9042,
         lng: 116.4074,
       },
-      videos: [
-        {
-          title: {
-            zhCn: 'VLOG',
-            en: 'VLOG',
-          },
-          cover: 'https://assets.anuluca.com/other/videoCover/',
-          bvid: '',
-          url: 'https://www.bilibili.com/video/',
-          orientation: 'landscape',
-        },
-      ],
       photos: [
         {
           location: {
-            zhCn: '',
+            zhCn: '地铁广告',
             en: '',
           },
-          time: '2026',
-          device: 'Sony RX100M6',
-          url: 'https://assets.anuluca.com/Flanerie/cities/',
+          time: '2021',
+          device: 'iPhone 12 mini',
+          url: 'https://assets.anuluca.com/Flanerie/events/poke_event3/7.jpg',
         },
         {
           location: {
-            zhCn: '',
+            zhCn: '车站广告',
             en: '',
           },
-          time: '2026',
-          device: 'iPhone 17',
-          url: 'https://assets.anuluca.com/Flanerie/cities/',
+          time: '2021',
+          device: 'iPhone 12 mini',
+          url: 'https://assets.anuluca.com/Flanerie/events/poke_event3/4.jpg',
+        },
+        {
+          location: {
+            zhCn: '影院布置',
+            en: '',
+          },
+          time: '2021',
+          device: 'iPhone 12 mini',
+          url: 'https://assets.anuluca.com/Flanerie/events/poke_event3/2.jpg',
+        },
+        {
+          location: {
+            zhCn: '影院布置',
+            en: '',
+          },
+          time: '2021',
+          device: 'iPhone 12 mini',
+          url: 'https://assets.anuluca.com/Flanerie/events/poke_event3/3.jpg',
+        },
+        {
+          location: {
+            zhCn: '影院布置',
+            en: '',
+          },
+          time: '2021',
+          device: 'iPhone 12 mini',
+          url: 'https://assets.anuluca.com/Flanerie/events/poke_event3/5.jpg',
+        },
+        {
+          location: {
+            zhCn: '寄语',
+            en: '',
+          },
+          time: '2021',
+          device: 'iPhone 12 mini',
+          url: 'https://assets.anuluca.com/Flanerie/events/poke_event3/6.jpg',
         },
       ],
     },
@@ -2138,13 +2552,13 @@ const flanerieDynamic = {
         zhCn: '武汉',
         en: 'Wuhan',
       },
-      date: '2026',
+      date: '2023',
       tagline: {
         zhCn: '',
         en: '',
       },
-      device: ['Sony RX100M6', 'iPhone 17'],
-      img: 'https://assets.anuluca.com/Flanerie/cities/',
+      device: ['Sony RX100M6'],
+      img: 'https://assets.anuluca.com/Flanerie/events/ultramanDynaGaia/IMG_0508.JPG',
       location: {
         id: 'hubei',
         name: {
@@ -2154,36 +2568,69 @@ const flanerieDynamic = {
         lat: 30.5928,
         lng: 114.3055,
       },
-      videos: [
-        {
-          title: {
-            zhCn: 'VLOG',
-            en: 'VLOG',
-          },
-          cover: 'https://assets.anuluca.com/other/videoCover/',
-          bvid: '',
-          url: 'https://www.bilibili.com/video/',
-          orientation: 'landscape',
-        },
-      ],
       photos: [
         {
           location: {
-            zhCn: '',
+            zhCn: '盖亚',
             en: '',
           },
           time: '2026',
           device: 'Sony RX100M6',
-          url: 'https://assets.anuluca.com/Flanerie/cities/',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanDynaGaia/IMG_0508.JPG',
         },
         {
           location: {
-            zhCn: '',
+            zhCn: '盖亚',
             en: '',
           },
           time: '2026',
-          device: 'iPhone 17',
-          url: 'https://assets.anuluca.com/Flanerie/cities/',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanDynaGaia/IMG_8549.JPG',
+        },
+        {
+          location: {
+            zhCn: '戴拿',
+            en: '',
+          },
+          time: '2026',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanDynaGaia/IMG_8545.JPG',
+        },
+        {
+          location: {
+            zhCn: '戴拿',
+            en: '',
+          },
+          time: '2026',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanDynaGaia/IMG_8546.JPG',
+        },
+        {
+          location: {
+            zhCn: '戴拿',
+            en: '',
+          },
+          time: '2026',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanDynaGaia/IMG_0509.jpg',
+        },
+        {
+          location: {
+            zhCn: '戴拿',
+            en: '',
+          },
+          time: '2026',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanDynaGaia/IMG_8547.JPG',
+        },
+        {
+          location: {
+            zhCn: '戴拿',
+            en: '',
+          },
+          time: '2026',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanDynaGaia/IMG_8548.JPG',
         },
       ],
     },
@@ -2198,13 +2645,13 @@ const flanerieDynamic = {
         zhCn: '深圳',
         en: 'Shenzhen',
       },
-      date: '2026',
+      date: '2021',
       tagline: {
         zhCn: '',
         en: '',
       },
-      device: ['Sony RX100M6', 'iPhone 17'],
-      img: 'https://assets.anuluca.com/Flanerie/cities/',
+      device: ['Sony RX100M6'],
+      img: 'https://assets.anuluca.com/Flanerie/events/ultramanGinga/IMG_8558.JPG',
       location: {
         id: 'guangdong',
         name: {
@@ -2214,36 +2661,87 @@ const flanerieDynamic = {
         lat: 23.1291,
         lng: 113.2644,
       },
-      videos: [
-        {
-          title: {
-            zhCn: 'VLOG',
-            en: 'VLOG',
-          },
-          cover: 'https://assets.anuluca.com/other/videoCover/',
-          bvid: '',
-          url: 'https://www.bilibili.com/video/',
-          orientation: 'landscape',
-        },
-      ],
       photos: [
         {
           location: {
             zhCn: '',
             en: '',
           },
-          time: '2026',
+          time: '2021',
           device: 'Sony RX100M6',
-          url: 'https://assets.anuluca.com/Flanerie/cities/',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanGinga/IMG_8552.JPG',
         },
         {
           location: {
             zhCn: '',
             en: '',
           },
-          time: '2026',
-          device: 'iPhone 17',
-          url: 'https://assets.anuluca.com/Flanerie/cities/',
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanGinga/IMG_8553.JPG',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanGinga/IMG_8554.JPG',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanGinga/IMG_8555.JPG',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanGinga/IMG_8556.JPG',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanGinga/IMG_8557.JPG',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanGinga/IMG_8558.JPG',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanGinga/IMG_8559.JPG',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanGinga/IMG_8560.JPG',
         },
       ],
     },
@@ -2258,13 +2756,13 @@ const flanerieDynamic = {
         zhCn: '深圳',
         en: 'Shenzhen',
       },
-      date: '2026',
+      date: '2021',
       tagline: {
         zhCn: '',
         en: '',
       },
-      device: ['Sony RX100M6', 'iPhone 17'],
-      img: 'https://assets.anuluca.com/Flanerie/cities/',
+      device: ['Sony RX100M6'],
+      img: 'https://assets.anuluca.com/Flanerie/events/ultramanZ/DSC01949.jpg',
       location: {
         id: 'guangdong',
         name: {
@@ -2274,36 +2772,249 @@ const flanerieDynamic = {
         lat: 23.1291,
         lng: 113.2644,
       },
-      videos: [
-        {
-          title: {
-            zhCn: 'VLOG',
-            en: 'VLOG',
-          },
-          cover: 'https://assets.anuluca.com/other/videoCover/',
-          bvid: '',
-          url: 'https://www.bilibili.com/video/',
-          orientation: 'landscape',
-        },
-      ],
       photos: [
         {
           location: {
             zhCn: '',
             en: '',
           },
-          time: '2026',
+          time: '2021',
           device: 'Sony RX100M6',
-          url: 'https://assets.anuluca.com/Flanerie/cities/',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZ/DSC01919.jpg',
         },
         {
           location: {
             zhCn: '',
             en: '',
           },
-          time: '2026',
-          device: 'iPhone 17',
-          url: 'https://assets.anuluca.com/Flanerie/cities/',
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZ/DSC01949.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZ/DSC01951.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZ/DSC01955.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZ/DSC01957.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZ/DSC01965.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZ/DSC01969.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZ/DSC02010.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZ/DSC02023.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZ/DSC02054.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZ/DSC02055.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZ/DSC02063.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZ/DSC02069.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZ/DSC02075.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZ/DSC02107.JPG',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZ/DSC02115.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZ/DSC02120.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZ/DSC02126.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZ/DSC02132.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZ/DSC02148.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZ/DSC02168.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZ/DSC02175.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZ/DSC02182.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZ/DSC02198.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZ/DSC02227.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZ/DSC02242.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZ/DSC02251.jpg',
         },
       ],
     },
@@ -2318,13 +3029,13 @@ const flanerieDynamic = {
         zhCn: '深圳',
         en: 'Shenzhen',
       },
-      date: '2026',
+      date: '2021',
       tagline: {
         zhCn: '',
         en: '',
       },
-      device: ['Sony RX100M6', 'iPhone 17'],
-      img: 'https://assets.anuluca.com/Flanerie/cities/',
+      device: ['Sony RX100M6'],
+      img: 'https://assets.anuluca.com/Flanerie/events/ultramanZero/DSC02578.jpg',
       location: {
         id: 'guangdong',
         name: {
@@ -2334,36 +3045,195 @@ const flanerieDynamic = {
         lat: 23.1291,
         lng: 113.2644,
       },
-      videos: [
-        {
-          title: {
-            zhCn: 'VLOG',
-            en: 'VLOG',
-          },
-          cover: 'https://assets.anuluca.com/other/videoCover/',
-          bvid: '',
-          url: 'https://www.bilibili.com/video/',
-          orientation: 'landscape',
-        },
-      ],
       photos: [
         {
           location: {
             zhCn: '',
             en: '',
           },
-          time: '2026',
+          time: '2021',
           device: 'Sony RX100M6',
-          url: 'https://assets.anuluca.com/Flanerie/cities/',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZero/DSC02359.jpg',
         },
         {
           location: {
             zhCn: '',
             en: '',
           },
-          time: '2026',
-          device: 'iPhone 17',
-          url: 'https://assets.anuluca.com/Flanerie/cities/',
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZero/DSC02363.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZero/DSC02368.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZero/DSC02369.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZero/DSC02387.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZero/DSC02406.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZero/DSC02407.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZero/DSC02411.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZero/DSC02414.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZero/DSC02436.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZero/DSC02448.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZero/DSC02452.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZero/DSC02500.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZero/DSC02516.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZero/DSC02545.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZero/DSC02578.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZero/DSC02583.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZero/DSC02587.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZero/DSC02596.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZero/DSC02615.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZero/DSC02621.JPG',
         },
       ],
     },
@@ -2931,15 +3801,6 @@ const flanerieDynamic = {
           time: '2024',
           device: 'Sony RX100M6',
           url: 'https://assets.anuluca.com/Flanerie/cities/pingtandao/DSC06442.jpg',
-        },
-        {
-          location: {
-            zhCn: '风车好看啊',
-            en: '',
-          },
-          time: '2024',
-          device: 'Sony RX100M6',
-          url: 'https://assets.anuluca.com/Flanerie/cities/pingtandao/IMG_9051.jpg',
         },
         {
           location: {

@@ -292,7 +292,7 @@ onBeforeUnmount(() => {
   font-size: 1.05rem;
   line-height: 1;
   transform: translate(-50%, -50%);
-  box-shadow: 0 0 22px rgba(226, 52, 86, 0.42);
+  box-shadow: 0 0 22px rgba(176, 176, 176, 0.42);
 
   span {
     padding-top: 3px;
