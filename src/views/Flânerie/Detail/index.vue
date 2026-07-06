@@ -7,51 +7,43 @@
       :title="vlog.title"
     >
       <template #title-extra>
-        <span class="flr-sub-date">{{ vlog.date }}</span>
+        <span v-if="vlog.date" class="flr-sub-date">{{ vlog.date }}</span>
       </template>
-      <div v-if="vlog.device?.length" class="flr-devices">
+      <div v-if="devices.length" class="flr-devices">
         <span class="flr-device-label">{{ t('flanerie.deviceLabel') }}:</span>
-        <span v-for="device in vlog.device" :key="device" class="flr-device">
+        <span v-for="device in devices" :key="device" class="flr-device">
           {{ device }}
         </span>
       </div>
     </DetailPageHeader>
 
-    <section v-if="videos.length" class="flr-video-panel">
-      <div class="section-head">
-        <div class="head-left">
-          <span class="head-slash">01 </span>
-          <span class="head-label">{{ t('flanerie.videoLabel') }}</span>
-        </div>
-        <strong class="head-count">
-          <span>{{ videos.length }}</span>
-          <span>ITEMS</span>
-        </strong>
-      </div>
-
+    <DetailSections
+      v-if="videos.length"
+      class="flr-video-panel"
+      section-number="1"
+      :title="t('flanerie.videoLabel')"
+      :item-count="videos.length"
+    >
       <JourneyVideoPlayer
         :videos="videos"
         @entrance-handoff="videoEntranceHandoff = true"
       />
-    </section>
+    </DetailSections>
 
-    <section v-if="photos.length" ref="galleryRef" class="flr-gallery">
-      <div class="section-head">
-        <div class="head-left">
-          <span class="head-slash">{{ videos.length ? 2 : 1 }} </span>
-          <span class="head-label">{{ t('flanerie.photoLabel') }}</span>
-        </div>
-        <strong class="head-count">
-          <span>{{ photos.length }}</span>
-          <span>ITEMS</span>
-        </strong>
-      </div>
-
+    <DetailSections
+      v-if="photos.length"
+      ref="galleryRef"
+      class="flr-gallery"
+      :section-number="videos.length ? 2 : 1"
+      :title="t('flanerie.photoLabel')"
+      :item-count="photos.length"
+    >
       <MediaGallery
         :items="paginatedPhotos"
         :get-media-label="getMediaLabel"
         :entrance-ready="!videos.length || videoEntranceHandoff"
         :entrance-step-ms="90"
+        preserve-image-colors
         staggered-entrance
       >
         <template #info="{ item: photo }">
@@ -107,7 +99,7 @@
           {{ t('flanerie.nextPage') }}
         </button>
       </nav>
-    </section>
+    </DetailSections>
     <PageFooter cn-title="旅程" en-title="FLÂNERIE" />
   </div>
 </template>
@@ -119,6 +111,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { Location } from '@element-plus/icons-vue'
 
 import DetailPageHeader from '@/components/DetailPageHeader/index.vue'
+import DetailSections from '@/components/DetailSections/index.vue'
 import JourneyVideoPlayer from '@/components/JourneyVideoPlayer/index.vue'
 import MediaGallery, {
   type GalleryMedia,
@@ -151,13 +144,14 @@ interface VlogItem {
   title: string
   date: string
   tagline: string
-  device: string[]
   videos: Omit<VideoItem, 'embedUrl'>[]
   photos: PhotoItem[]
 }
 
 const PAGE_SIZE = 30
-const galleryRef = ref<HTMLElement | null>(null)
+const galleryRef = ref<{
+  scrollIntoView: (options?: ScrollIntoViewOptions) => void
+} | null>(null)
 const currentPage = ref(1)
 const videoEntranceHandoff = ref(false)
 
@@ -183,6 +177,13 @@ const videos = computed<VideoItem[]>(() => {
 })
 
 const photos = computed<PhotoItem[]>(() => vlog.value?.photos || [])
+const devices = computed(() => [
+  ...new Set(
+    photos.value
+      .map((photo) => photo.device?.trim())
+      .filter((device): device is string => Boolean(device))
+  ),
+])
 const totalPages = computed(() => Math.ceil(photos.value.length / PAGE_SIZE))
 const paginatedPhotos = computed(() => {
   const start = (currentPage.value - 1) * PAGE_SIZE
@@ -216,7 +217,6 @@ watch(
 
 <style lang="less" scoped>
 @red: #e23456;
-@line: rgba(226, 52, 86, 0.28);
 @mono: 'cn-custom', 'Courier New', monospace;
 @cjk: 'alibaba-puhuiti', sans-serif;
 
@@ -271,48 +271,6 @@ watch(
 .flr-video-panel,
 .flr-gallery {
   margin-top: 30px;
-}
-
-.section-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid @line;
-
-  .head-left {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-  }
-
-  .head-slash {
-    font-family: @mono;
-    font-size: 0.68rem;
-    color: rgba(226, 52, 86, 0.55);
-    font-weight: 900;
-  }
-
-  .head-label {
-    font-family: @cjk;
-    font-size: 0.68rem;
-    color: @red;
-    font-weight: 900;
-    margin-left: 5px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-  }
-
-  .head-count {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 7px;
-    font-family: @mono;
-    font-size: 0.56rem;
-    color: rgba(255, 255, 255, 0.3);
-    font-weight: 100;
-  }
 }
 
 .corner {

@@ -1,5 +1,9 @@
 <template>
-  <header class="detail-page-header" :class="{ 'has-divider': divider }">
+  <header
+    ref="headerRef"
+    class="detail-page-header"
+    :class="{ 'has-divider': divider }"
+  >
     <button class="detail-page-header__back" type="button" @click="goBack">
       <span>{{ backLabel }}</span>
     </button>
@@ -31,10 +35,33 @@
       <slot />
     </div>
   </header>
+
+  <Teleport v-if="isClient" to="body">
+    <Transition name="detail-fixed-nav">
+      <nav
+        v-if="isFixedNavigationVisible"
+        class="detail-fixed-navigation"
+        :style="{ top: `${menuBottom}px` }"
+        :aria-label="`${backLabel} / ${title}`"
+      >
+        <button
+          class="detail-fixed-navigation__back"
+          type="button"
+          @click="goBack"
+        >
+          <span>{{ backLabel }}</span>
+        </button>
+        <strong class="detail-fixed-navigation__title">{{ title }}</strong>
+      </nav>
+    </Transition>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
+import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+
+import { addPageScrollListener } from '@/utils/pageScroll'
 
 export interface DetailPageHeaderCounter {
   value: number | string
@@ -58,6 +85,34 @@ const props = withDefaults(
 )
 
 const router = useRouter()
+const headerRef = ref<HTMLElement | null>(null)
+const isClient = ref(false)
+const isFixedNavigationVisible = ref(false)
+const menuBottom = ref(0)
+let removeScrollListener: (() => void) | null = null
+let navigationFrame = 0
+let navigationResizeObserver: ResizeObserver | null = null
+
+const updateFixedNavigation = () => {
+  navigationFrame = 0
+
+  const menu = document.querySelector<HTMLElement>('.el-menu-layout-all')
+  const currentMenuBottom =
+    menu && getComputedStyle(menu).display !== 'none'
+      ? Math.max(0, menu.getBoundingClientRect().bottom)
+      : 0
+
+  menuBottom.value = currentMenuBottom
+  isFixedNavigationVisible.value =
+    Boolean(headerRef.value) &&
+    headerRef.value!.getBoundingClientRect().bottom <= currentMenuBottom + 12
+}
+
+const scheduleFixedNavigationUpdate = () => {
+  if (navigationFrame) return
+  navigationFrame = window.requestAnimationFrame(updateFixedNavigation)
+}
+
 const goBack = () => {
   const previousPath = window.history.state?.back
   const expectedPath = router.resolve(props.backPath).fullPath
@@ -72,6 +127,32 @@ const goBack = () => {
 
   router.push(props.backPath)
 }
+
+onMounted(async () => {
+  isClient.value = true
+  await nextTick()
+
+  removeScrollListener = addPageScrollListener(scheduleFixedNavigationUpdate)
+  window.addEventListener('resize', scheduleFixedNavigationUpdate, {
+    passive: true,
+  })
+
+  const menu = document.querySelector<HTMLElement>('.el-menu-layout-all')
+  if ('ResizeObserver' in window) {
+    navigationResizeObserver = new ResizeObserver(scheduleFixedNavigationUpdate)
+    if (menu) navigationResizeObserver.observe(menu)
+    if (headerRef.value) navigationResizeObserver.observe(headerRef.value)
+  }
+
+  scheduleFixedNavigationUpdate()
+})
+
+onBeforeUnmount(() => {
+  removeScrollListener?.()
+  window.removeEventListener('resize', scheduleFixedNavigationUpdate)
+  navigationResizeObserver?.disconnect()
+  if (navigationFrame) window.cancelAnimationFrame(navigationFrame)
+})
 </script>
 
 <style lang="less" scoped>
@@ -189,6 +270,68 @@ const goBack = () => {
   }
 }
 
+.detail-fixed-navigation {
+  position: fixed;
+  right: 0;
+  left: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  backdrop-filter: blur(4px);
+  box-shadow: inset 0 -1px 0 rgb(255 255 255 / 8%);
+  gap: clamp(14px, 2vw, 28px);
+  min-height: 28px;
+  padding: 8px 8.5vw;
+
+  &__back {
+    flex: 0 0 auto;
+    padding: 0;
+    border: 0;
+    color: #3276fe;
+    background: transparent;
+    font-family: 'cn-custom', 'Courier New', monospace;
+    font-size: 14px;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &::before {
+      content: '// ';
+    }
+
+    &:hover {
+      color: #e23456;
+
+      &::before {
+        content: '<< ';
+      }
+    }
+  }
+
+  &__title {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--text-color);
+    font-family: 'cn-custom', 'Courier New', monospace;
+    font-size: clamp(15px, 1.35vw, 20px);
+    font-weight: 900;
+    line-height: 1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.detail-fixed-nav-enter-active,
+.detail-fixed-nav-leave-active {
+  transition: opacity 0.2s ease, transform 0.24s ease;
+}
+
+.detail-fixed-nav-enter-from,
+.detail-fixed-nav-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
 @keyframes detailPageHeaderFadeIn {
   from {
     opacity: 0;
@@ -241,6 +384,19 @@ const goBack = () => {
     flex-direction: column;
     gap: 8px;
   }
+
+  .detail-fixed-navigation {
+    min-height: 24px;
+    padding: 7px 4vw;
+
+    &__back {
+      font-size: 12px;
+    }
+
+    &__title {
+      font-size: 15px;
+    }
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -255,6 +411,11 @@ const goBack = () => {
     opacity: 1;
     animation: none !important;
     transform: none;
+  }
+
+  .detail-fixed-nav-enter-active,
+  .detail-fixed-nav-leave-active {
+    transition: none;
   }
 }
 </style>

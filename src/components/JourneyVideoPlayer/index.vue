@@ -258,8 +258,7 @@ onBeforeUnmount(() => {
 .video-item:focus-visible .video-frame {
   border-color: @red;
   transform: scale(1.025);
-  box-shadow: 0 0 10px rgba(226, 52, 86, 0.48), 0 0 32px rgba(226, 52, 86, 0.28),
-    inset 0 0 22px rgba(226, 52, 86, 0.12), 8px 10px 0 rgba(0, 0, 0, 0.213);
+  box-shadow: 0 0 10px rgba(226, 52, 86, 0.48);
 
   img {
     filter: brightness(0.82) saturate(1.08);

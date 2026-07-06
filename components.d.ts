@@ -16,6 +16,8 @@ declare module '@vue/runtime-core' {
     CrystalLogo: typeof import('./src/components/CrystalLogo/index.vue')['default']
     CursorMove: typeof import('./src/components/CursorMove/index.vue')['default']
     DetailPageHeader: typeof import('./src/components/DetailPageHeader/index.vue')['default']
+    DetailSectionHeader: typeof import('./src/components/DetailSectionHeader/index.vue')['default']
+    DetailSections: typeof import('./src/components/DetailSections/index.vue')['default']
     DiamondCloseBtn: typeof import('./src/components/DiamondCloseBtn/index.vue')['default']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElHeader: typeof import('element-plus/es')['ElHeader']

@@ -277,7 +277,7 @@ onUnmounted(unlockBackgroundScroll)
 .modal-wrapper-dialog {
   background: rgba(11, 7, 14, 0.99) !important;
   border: 1px solid rgba(226, 52, 86, 0.35) !important;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.85), 0 0 30px rgba(226, 52, 86, 0.05) !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.85) !important;
 
   margin: 0 !important;
   width: var(--modal-width, 1280px) !important;

@@ -45,7 +45,6 @@ const flanerieDynamic = {
         zhCn: '感觉没什么看的。',
         en: 'It doesn’t look that interesting.',
       },
-      device: ['Sony RX100M6', 'iPhone 17'],
       img: 'https://assets.anuluca.com/Flanerie/cities/changsha/01.jpg',
       location: {
         id: 'hunan',
@@ -106,7 +105,6 @@ const flanerieDynamic = {
         zhCn: '槟榔大城，湘江边很漂亮。',
         en: 'A city of betel nuts, with beautiful scenery along the Xiang River.',
       },
-      device: ['Sony RX100M6', 'iPhone 17'],
       img: 'https://assets.anuluca.com/Flanerie/cities/xiangtan/DSC06981.jpg',
       location: {
         id: 'hunan',
@@ -134,7 +132,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '齐白石公园',
-            en: '',
+            en: 'Qi Baishi Park',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -143,7 +141,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '湘江沿岸',
-            en: '',
+            en: 'Along the Xiang River',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -165,9 +163,8 @@ const flanerieDynamic = {
       date: '2026',
       tagline: {
         zhCn: '青山中的红色记忆与小镇风情。',
-        en: '',
+        en: 'A red legacy among green hills, with the charm of a small town.',
       },
-      device: ['Sony RX100M6', 'iPhone 17'],
       img: 'https://assets.anuluca.com/Flanerie/cities/shaoshan/DSC06929.jpg',
       location: {
         id: 'hunan',
@@ -195,7 +192,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '韶山大道',
-            en: '',
+            en: 'Shaoshan Avenue',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -217,9 +214,8 @@ const flanerieDynamic = {
       date: '2026',
       tagline: {
         zhCn: '宁静的小城。',
-        en: '',
+        en: 'A quiet little city.',
       },
-      device: ['Sony RX100M6', 'iPhone 17'],
       img: 'https://assets.anuluca.com/Flanerie/cities/anqing/DSC07722.jpg',
       location: {
         id: 'anhui',
@@ -247,7 +243,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '步行街',
-            en: '',
+            en: 'Pedestrian Street',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -256,7 +252,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '江毛水饺',
-            en: '',
+            en: 'Jiangmao Dumplings',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -278,9 +274,8 @@ const flanerieDynamic = {
       date: '2026',
       tagline: {
         zhCn: '我妈妈的家乡。',
-        en: '',
+        en: "My mother's hometown.",
       },
-      device: ['MI 6', 'iPhone 12 mini', 'SONY RX100M6'],
       img: 'https://assets.anuluca.com/Flanerie/cities/chizhou/05.jpg',
       location: {
         id: 'anhui',
@@ -295,7 +290,7 @@ const flanerieDynamic = {
         {
           title: {
             zhCn: '旅行VLOG',
-            en: '',
+            en: 'Travel Vlog',
           },
           cover:
             'https://assets.anuluca.com/other/videoCover/db519ef0ee839ed9e64ee33518223d38912a3d23.jpg@672w_378h_1c.webp',
@@ -308,7 +303,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '西递古村',
-            en: '',
+            en: 'Xidi Ancient Village',
           },
           time: '2019',
           device: 'MI 6',
@@ -317,7 +312,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '西递古村',
-            en: '',
+            en: 'Xidi Ancient Village',
           },
           time: '2019',
           device: 'MI 6',
@@ -326,7 +321,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '西递古村',
-            en: '',
+            en: 'Xidi Ancient Village',
           },
           time: '2019',
           device: 'MI 6',
@@ -335,7 +330,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '西递古村',
-            en: '',
+            en: 'Xidi Ancient Village',
           },
           time: '2019',
           device: 'MI 6',
@@ -344,7 +339,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '忘记是什么野山了。',
-            en: '',
+            en: 'I forgot which wild mountain this was.',
           },
           time: '2020',
           device: 'MI 6',
@@ -353,7 +348,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '草。',
-            en: '',
+            en: 'Grass.',
           },
           time: '2020',
           device: 'iPhone 12 mini',
@@ -362,7 +357,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '妈妈老家前的小道。',
-            en: '',
+            en: "The path in front of my mother's old home.",
           },
           time: '2020',
           device: 'iPhone 12 mini',
@@ -371,7 +366,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '过年。',
-            en: '',
+            en: 'Chinese New Year.',
           },
           time: '2020',
           device: 'SONY RX100M6',
@@ -380,7 +375,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '步行街',
-            en: '',
+            en: 'Pedestrian Street',
           },
           time: '2026',
           device: 'SONY RX100M6',
@@ -402,9 +397,8 @@ const flanerieDynamic = {
       date: '2024',
       tagline: {
         zhCn: '奇石多到看到腻。',
-        en: '',
+        en: 'So many bizarre rocks that I eventually got tired of them.',
       },
-      device: ['Sony RX100M6', 'iPhone 12 mini'],
       img: 'https://assets.anuluca.com/Flanerie/cities/huangshan/DSC04850 (1).jpg',
       location: {
         id: 'anhui',
@@ -419,7 +413,7 @@ const flanerieDynamic = {
         {
           title: {
             zhCn: '随记',
-            en: '',
+            en: 'Notes from the Trip',
           },
           cover:
             'https://assets.anuluca.com/other/videoCover/c95e33a6a565c65e01598dea869ee792093a2ad9.jpg@672w_378h_1c.webp',
@@ -441,7 +435,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '留念',
-            en: '',
+            en: 'A Keepsake',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -450,7 +444,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '缆车',
-            en: '',
+            en: 'Cable Car',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -472,9 +466,8 @@ const flanerieDynamic = {
       date: '2026',
       tagline: {
         zhCn: '完全在爬山，这里的口味比南昌更辣。',
-        en: '',
+        en: 'It was all uphill walking, and the food here is even spicier than in Nanchang.',
       },
-      device: ['Sony RX100M6', 'iPhone 17'],
       img: 'https://assets.anuluca.com/Flanerie/cities/chongqing/IMG_4225.jpg',
       location: {
         id: 'chongqing',
@@ -502,7 +495,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '山城巷的奇怪涂鸦',
-            en: '',
+            en: 'Strange Graffiti in Shancheng Alley',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -511,7 +504,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '得意世界',
-            en: '',
+            en: 'Deyi World',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -520,7 +513,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '罗汉寺',
-            en: '',
+            en: 'Luohan Temple',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -529,7 +522,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '罗汉寺',
-            en: '',
+            en: 'Luohan Temple',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -538,7 +531,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '罗汉寺',
-            en: '',
+            en: 'Luohan Temple',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -547,7 +540,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '罗汉寺',
-            en: '',
+            en: 'Luohan Temple',
           },
           time: '2026',
           device: 'iPhone 17',
@@ -556,7 +549,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '罗汉寺',
-            en: '',
+            en: 'Luohan Temple',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -565,7 +558,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '罗汉寺',
-            en: '',
+            en: 'Luohan Temple',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -574,7 +567,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '街道。',
-            en: '',
+            en: 'Street.',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -583,7 +576,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '重庆美术馆',
-            en: '',
+            en: 'Chongqing Art Museum',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -601,7 +594,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '洪崖洞',
-            en: '',
+            en: 'Hongya Cave',
           },
           time: '2026',
           device: 'iPhone 17',
@@ -610,7 +603,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '白象居',
-            en: '',
+            en: 'Baixiangju',
           },
           time: '2026',
           device: 'iPhone 17',
@@ -619,7 +612,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '解放碑',
-            en: '',
+            en: 'Jiefangbei',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -641,9 +634,8 @@ const flanerieDynamic = {
       date: '2026',
       tagline: {
         zhCn: '来看《牡丹亭》。',
-        en: '',
+        en: 'Here to see The Peony Pavilion.',
       },
-      device: ['Sony RX100M6', 'iPhone 17'],
       img: 'https://assets.anuluca.com/Flanerie/cities/fuzhou/IMG_3109.jpg',
       location: {
         id: 'jiangxi',
@@ -671,7 +663,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '商业街的鸽子。',
-            en: '',
+            en: 'Pigeons on the shopping street.',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -680,7 +672,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '审 美 升 级。',
-            en: '',
+            en: 'A E S T H E T I C  U P G R A D E.',
           },
           time: '2026',
           device: 'iPhone 17',
@@ -689,7 +681,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '留念。',
-            en: '',
+            en: 'A keepsake.',
           },
           time: '2026',
           device: 'iPhone 17',
@@ -698,7 +690,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '维护很差的戏曲博物馆',
-            en: '',
+            en: 'A poorly maintained opera museum',
           },
           time: '2026',
           device: 'iPhone 17',
@@ -707,7 +699,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '杜丽娘',
-            en: '',
+            en: 'Du Liniang',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -716,7 +708,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '杜丽娘',
-            en: '',
+            en: 'Du Liniang',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -738,9 +730,8 @@ const flanerieDynamic = {
       date: '2026',
       tagline: {
         zhCn: '瓷博太夯了。',
-        en: '',
+        en: 'The ceramics museum absolutely lives up to the hype.',
       },
-      device: ['Sony RX100M6', 'iPhone 17'],
       img: 'https://assets.anuluca.com/Flanerie/cities/jingdezhen/DSC06743.jpg',
       location: {
         id: 'jiangxi',
@@ -768,7 +759,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '中国瓷器博物馆',
-            en: '',
+            en: 'China Ceramics Museum',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -777,7 +768,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '中国瓷器博物馆',
-            en: '',
+            en: 'China Ceramics Museum',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -786,7 +777,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '御窑厂',
-            en: '',
+            en: 'Imperial Kiln Factory',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -795,7 +786,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '龙珠阁',
-            en: '',
+            en: 'Longzhu Pavilion',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -804,7 +795,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '特色路牌',
-            en: '',
+            en: 'Distinctive Street Sign',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -826,9 +817,8 @@ const flanerieDynamic = {
       date: '2026',
       tagline: {
         zhCn: '这里分人文线路和山水线路，真的太大了，至少五天才能充分看完。',
-        en: '',
+        en: 'There are separate cultural and scenic routes here. The place is enormous—it takes at least five days to see it properly.',
       },
-      device: ['Sony RX100M6', 'iPhone 17'],
       img: 'https://assets.anuluca.com/Flanerie/cities/lushan/DSC07767.jpg',
       location: {
         id: 'jiangxi',
@@ -865,7 +855,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '如琴湖',
-            en: '',
+            en: 'Ruqin Lake',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -874,7 +864,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '白居易草堂的猫',
-            en: '',
+            en: "A Cat at Bai Juyi's Cottage",
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -883,7 +873,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '白居易草堂的猫',
-            en: '',
+            en: "A Cat at Bai Juyi's Cottage",
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -892,7 +882,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '牯岭镇的猫',
-            en: '',
+            en: 'A Cat in Guling Town',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -901,7 +891,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '牯岭镇',
-            en: '',
+            en: 'Guling Town',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -910,7 +900,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '三叠泉',
-            en: '',
+            en: 'Sandie Spring',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -928,7 +918,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '秀峰瀑布',
-            en: '',
+            en: 'Xiufeng Waterfall',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -937,7 +927,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '红嘴蓝鹊',
-            en: '',
+            en: 'Red-billed Blue Magpie',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -959,9 +949,8 @@ const flanerieDynamic = {
       date: '2026',
       tagline: {
         zhCn: '好高啊，好大啊。',
-        en: '',
+        en: 'So tall. So huge.',
       },
-      device: ['Sony RX100M6', 'iPhone 17'],
       img: 'https://assets.anuluca.com/Flanerie/cities/donglin-buddha/DSC07786.jpg',
       location: {
         id: 'jiangxi',
@@ -998,9 +987,8 @@ const flanerieDynamic = {
       date: '2026',
       tagline: {
         zhCn: '好像主要在观鸟了。',
-        en: '',
+        en: 'I mostly ended up birdwatching.',
       },
-      device: ['Passonic Lumix ZX99', 'Sony RX100M6', 'iPhone 17'],
       img: 'https://assets.anuluca.com/Flanerie/cities/poyang-lake/P1011274.jpg',
       location: {
         id: 'jiangxi',
@@ -1037,9 +1025,8 @@ const flanerieDynamic = {
       date: '2025',
       tagline: {
         zhCn: '家人居住的地方，海鲜也吃爽了，琵琶虾好鲜啊。',
-        en: '',
+        en: 'Where my family lives. I had my fill of seafood too—the mantis shrimp was incredibly fresh.',
       },
-      device: ['Sony RX100M6', 'iPhone 12 mini'],
       img: 'https://assets.anuluca.com/Flanerie/cities/fuzhou2/DSC04393.jpg',
       location: {
         id: 'fujian',
@@ -1067,7 +1054,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '傍晚的城市。',
-            en: '',
+            en: 'The City at Dusk.',
           },
           time: '2025',
           device: 'Sony RX100M6',
@@ -1076,7 +1063,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '傍晚的船政博物馆。',
-            en: '',
+            en: 'Foochow Arsenal Museum at Dusk.',
           },
           time: '2025',
           device: 'Sony RX100M6',
@@ -1085,7 +1072,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '家人。',
-            en: '',
+            en: 'Family.',
           },
           time: '2025',
           device: 'Sony RX100M6',
@@ -1094,7 +1081,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '船政博物馆',
-            en: '',
+            en: 'Foochow Arsenal Museum',
           },
           time: '2025',
           device: 'Sony RX100M6',
@@ -1103,7 +1090,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '船政博物馆',
-            en: '',
+            en: 'Foochow Arsenal Museum',
           },
           time: '2025',
           device: 'Sony RX100M6',
@@ -1112,7 +1099,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '船政博物馆',
-            en: '',
+            en: 'Foochow Arsenal Museum',
           },
           time: '2025',
           device: 'Sony RX100M6',
@@ -1121,7 +1108,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '烟台山(?)',
-            en: '',
+            en: 'Yantai Hill (?)',
           },
           time: '2025',
           device: 'Sony RX100M6',
@@ -1130,7 +1117,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '烟台山(?)',
-            en: '',
+            en: 'Yantai Hill (?)',
           },
           time: '2025',
           device: 'Sony RX100M6',
@@ -1152,9 +1139,8 @@ const flanerieDynamic = {
       date: '2024',
       tagline: {
         zhCn: '去了好多次，想去的活动大多都在上海举办。',
-        en: '',
+        en: "I've been many times; most of the events I want to attend are held in Shanghai.",
       },
-      device: ['SAMSUNG i8268', 'iPhone 12 mini'],
       img: 'https://assets.anuluca.com/Flanerie/cities/shanghai/20160710_195758.jpeg',
       location: {
         id: 'shanghai',
@@ -1169,7 +1155,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '南京路步行街',
-            en: '',
+            en: 'Nanjing Road Pedestrian Street',
           },
           time: '2016',
           device: 'SAMSUNG i8268',
@@ -1178,7 +1164,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '像拿座机拍的。',
-            en: '',
+            en: 'Looks like it was shot on a landline.',
           },
           time: '2016',
           device: 'SAMSUNG i8268',
@@ -1187,7 +1173,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '2016CJ现场',
-            en: '',
+            en: 'ChinaJoy 2016',
           },
           time: '2016',
           device: 'SAMSUNG i8268',
@@ -1196,7 +1182,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '2016CJ现场',
-            en: '',
+            en: 'ChinaJoy 2016',
           },
           time: '2016',
           device: 'SAMSUNG i8268',
@@ -1205,7 +1191,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '和宝友面基',
-            en: '',
+            en: 'Meeting Up with Fellow Pokémon Fans',
           },
           time: '2024',
           device: 'iPhone 12 mini',
@@ -1214,7 +1200,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '官方道馆（古月鸟）',
-            en: '',
+            en: 'Official Pokémon Gym (Cramorant)',
           },
           time: '2024',
           device: 'iPhone 12 mini',
@@ -1223,7 +1209,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '第二十六届上海国际电影节《波导的勇者》',
-            en: '',
+            en: 'Pokémon: Lucario and the Mystery of Mew at the 26th Shanghai International Film Festival',
           },
           time: '2024',
           device: 'iPhone 12 mini',
@@ -1245,9 +1231,8 @@ const flanerieDynamic = {
       date: '2025',
       tagline: {
         zhCn: '西园寺素面好吃。',
-        en: '',
+        en: 'The vegetarian noodles at Xiyuan Temple are delicious.',
       },
-      device: ['Sony RX100M6', 'iPhone 12 mini'],
       img: 'https://assets.anuluca.com/Flanerie/cities/suzhou/IMG_6267.jpg',
       location: {
         id: 'jiangsu',
@@ -1271,7 +1256,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '虎丘塔',
-            en: '',
+            en: 'Tiger Hill Pagoda',
           },
           time: '2025',
           device: 'Sony RX100M6',
@@ -1280,7 +1265,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '松鼠桂鱼',
-            en: '',
+            en: 'Sweet-and-Sour Mandarin Fish',
           },
           time: '2025',
           device: 'Sony RX100M6',
@@ -1289,7 +1274,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '游船',
-            en: '',
+            en: 'Boat Ride',
           },
           time: '2025',
           device: 'Sony RX100M6',
@@ -1298,7 +1283,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '游船',
-            en: '',
+            en: 'Boat Ride',
           },
           time: '2025',
           device: 'Sony RX100M6',
@@ -1320,7 +1305,7 @@ const flanerieDynamic = {
       date: '',
       tagline: {
         zhCn: '初中～现在',
-        en: '',
+        en: 'From Middle School to the Present',
       },
       img: 'https://assets.anuluca.com/Flanerie/cities/nanchang/DSC05796.jpg',
       location: {
@@ -1336,7 +1321,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '孺子亭公园',
-            en: '',
+            en: 'Ruzi Pavilion Park',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -1345,7 +1330,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '滕王阁',
-            en: '',
+            en: 'Pavilion of Prince Teng',
           },
           time: '2025',
           device: 'Sony RX100M6',
@@ -1354,7 +1339,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '泰妃殿 in 武商',
-            en: '',
+            en: 'Thai Fei Dian at Wushang Mall',
           },
           time: '2025',
           device: 'iPhone 12 mini',
@@ -1372,7 +1357,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '八一广场',
-            en: '',
+            en: 'Bayi Square',
           },
           time: '2025',
           device: 'Sony RX100M6',
@@ -1381,7 +1366,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '瑶湖森林公园',
-            en: '',
+            en: 'Yaohu Forest Park',
           },
           time: '2025',
           device: 'Sony RX100M6',
@@ -1390,7 +1375,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '鸡。',
-            en: '',
+            en: 'Chicken.',
           },
           time: '2025',
           device: 'Sony RX100M6',
@@ -1426,7 +1411,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '八一大桥',
-            en: '',
+            en: 'Bayi Bridge',
           },
           time: '2025',
           device: 'Sony RX100M6',
@@ -1435,7 +1420,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '赣江沿岸',
-            en: '',
+            en: 'Along the Gan River',
           },
           time: '2025',
           device: 'iPhone 12 mini',
@@ -1444,7 +1429,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '赣江沿岸',
-            en: '',
+            en: 'Along the Gan River',
           },
           time: '2025',
           device: 'Sony RX100M6',
@@ -1453,7 +1438,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '赣江沿岸',
-            en: '',
+            en: 'Along the Gan River',
           },
           time: '2025',
           device: 'Sony RX100M6',
@@ -1462,7 +1447,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '南昌的妖风。',
-            en: '',
+            en: "Nanchang's infamous gale-force winds.",
           },
           time: '2025',
           device: 'Sony RX100M6',
@@ -1489,7 +1474,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '秋水广场',
-            en: '',
+            en: 'Qiushui Square',
           },
           time: '2024',
           device: 'Sony RX100M6',
@@ -1498,7 +1483,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '艾溪湖公园',
-            en: '',
+            en: 'Aixi Lake Park',
           },
           time: '2023',
           device: 'Sony RX100M6',
@@ -1507,7 +1492,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '艾溪湖公园',
-            en: '',
+            en: 'Aixi Lake Park',
           },
           time: '2023',
           device: 'Sony RX100M6',
@@ -1516,7 +1501,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '艾溪湖公园',
-            en: '',
+            en: 'Aixi Lake Park',
           },
           time: '2023',
           device: 'Sony RX100M6',
@@ -1525,7 +1510,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '艾溪湖公园',
-            en: '',
+            en: 'Aixi Lake Park',
           },
           time: '2023',
           device: 'Sony RX100M6',
@@ -1534,7 +1519,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '艾溪湖公园',
-            en: '',
+            en: 'Aixi Lake Park',
           },
           time: '2023',
           device: 'Sony RX100M6',
@@ -1543,7 +1528,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '艾溪湖公园',
-            en: '',
+            en: 'Aixi Lake Park',
           },
           time: '2023',
           device: 'Sony RX100M6',
@@ -1552,7 +1537,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '艾溪湖公园',
-            en: '',
+            en: 'Aixi Lake Park',
           },
           time: '2023',
           device: 'Sony RX100M6',
@@ -1561,7 +1546,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '艾溪湖公园',
-            en: '',
+            en: 'Aixi Lake Park',
           },
           time: '2023',
           device: 'Sony RX100M6',
@@ -1570,7 +1555,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '艾溪湖公园',
-            en: '',
+            en: 'Aixi Lake Park',
           },
           time: '2023',
           device: 'Sony RX100M6',
@@ -1579,7 +1564,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '艾溪湖公园',
-            en: '',
+            en: 'Aixi Lake Park',
           },
           time: '2023',
           device: 'Sony RX100M6',
@@ -1588,7 +1573,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '艾溪湖公园',
-            en: '',
+            en: 'Aixi Lake Park',
           },
           time: '2023',
           device: 'Sony RX100M6',
@@ -1597,7 +1582,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '艾溪湖公园',
-            en: '',
+            en: 'Aixi Lake Park',
           },
           time: '2023',
           device: 'Sony RX100M6',
@@ -1606,7 +1591,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '艾溪湖公园',
-            en: '',
+            en: 'Aixi Lake Park',
           },
           time: '2023',
           device: 'Sony RX100M6',
@@ -1615,7 +1600,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '艾溪湖公园',
-            en: '',
+            en: 'Aixi Lake Park',
           },
           time: '2023',
           device: 'Sony RX100M6',
@@ -1624,7 +1609,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '艾溪湖公园',
-            en: '',
+            en: 'Aixi Lake Park',
           },
           time: '2023',
           device: 'Sony RX100M6',
@@ -1633,7 +1618,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '艾溪湖公园',
-            en: '',
+            en: 'Aixi Lake Park',
           },
           time: '2023',
           device: 'Sony RX100M6',
@@ -1642,7 +1627,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '艾溪湖公园',
-            en: '',
+            en: 'Aixi Lake Park',
           },
           time: '2023',
           device: 'Sony RX100M6',
@@ -1651,7 +1636,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '艾溪湖公园',
-            en: '',
+            en: 'Aixi Lake Park',
           },
           time: '2023',
           device: 'Sony RX100M6',
@@ -1660,7 +1645,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '武商任天堂授权店',
-            en: '',
+            en: 'Nintendo Authorized Store at Wushang Mall',
           },
           time: '2023',
           device: 'iPhone 12 mini',
@@ -1669,7 +1654,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '江西艺术中心',
-            en: '',
+            en: 'Jiangxi Arts Center',
           },
           time: '2023',
           device: 'Sony RX100M6',
@@ -1687,7 +1672,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '小学附近的电玩店',
-            en: '',
+            en: 'Arcade near My Elementary School',
           },
           time: '2023',
           device: 'OnePlus 7T',
@@ -1696,7 +1681,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '艾溪湖公园',
-            en: '',
+            en: 'Aixi Lake Park',
           },
           time: '2023',
           device: 'Sony RX100M6',
@@ -1705,7 +1690,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '核酸采样点',
-            en: '',
+            en: 'COVID Testing Site',
           },
           time: '2023',
           device: 'OnePlus 7T',
@@ -1714,7 +1699,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '南昌之星摩天轮',
-            en: '',
+            en: 'Star of Nanchang Ferris Wheel',
           },
           time: '2023',
           device: 'Sony RX100M6',
@@ -1723,7 +1708,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '东湖',
-            en: '',
+            en: 'East Lake',
           },
           time: '2020',
           device: 'OnePlus 7T',
@@ -1732,7 +1717,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '绳金塔',
-            en: '',
+            en: 'Shengjin Pagoda',
           },
           time: '2020',
           device: 'Sony RX100M6',
@@ -1741,7 +1726,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '八一起义纪念馆',
-            en: '',
+            en: 'August 1st Nanchang Uprising Memorial Museum',
           },
           time: '2019',
           device: 'OnePlus 7T',
@@ -1750,7 +1735,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '八一起义纪念馆',
-            en: '',
+            en: 'August 1st Nanchang Uprising Memorial Museum',
           },
           time: '2019',
           device: 'OnePlus 7T',
@@ -1817,7 +1802,7 @@ const flanerieDynamic = {
       date: '',
       tagline: {
         zhCn: '小学时间，偶尔回去看看。',
-        en: '',
+        en: 'My elementary school years; I still go back occasionally.',
       },
       img: 'https://assets.anuluca.com/Flanerie/cities/wuhan/IMG_2348.jpg',
       location: {
@@ -1845,7 +1830,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '人民公园',
-            en: '',
+            en: "People's Park",
           },
           time: '2024',
           device: 'Sony RX100M6',
@@ -1854,7 +1839,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '人民公园',
-            en: '',
+            en: "People's Park",
           },
           time: '2024',
           device: 'Sony RX100M6',
@@ -1863,7 +1848,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '古德寺',
-            en: '',
+            en: 'Gude Temple',
           },
           time: '2024',
           device: 'Sony RX100M6',
@@ -1872,7 +1857,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '古德寺',
-            en: '',
+            en: 'Gude Temple',
           },
           time: '2024',
           device: 'Sony RX100M6',
@@ -1881,7 +1866,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '古德寺',
-            en: '',
+            en: 'Gude Temple',
           },
           time: '2024',
           device: 'Sony RX100M6',
@@ -1890,7 +1875,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '龙泉山墓园',
-            en: '',
+            en: 'Longquan Mountain Cemetery',
           },
           time: '2024',
           device: 'Sony RX100M6',
@@ -1899,7 +1884,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '龙泉山墓园',
-            en: '',
+            en: 'Longquan Mountain Cemetery',
           },
           time: '2024',
           device: 'Sony RX100M6',
@@ -1908,7 +1893,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '车辆爆炸',
-            en: '',
+            en: 'Vehicle Explosion',
           },
           time: '2024',
           device: 'Sony RX100M6',
@@ -1917,7 +1902,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '车辆爆炸',
-            en: '',
+            en: 'Vehicle Explosion',
           },
           time: '2024',
           device: 'Sony RX100M6',
@@ -1926,7 +1911,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '车辆爆炸',
-            en: '',
+            en: 'Vehicle Explosion',
           },
           time: '2024',
           device: 'iPhone 12 mini',
@@ -1935,7 +1920,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '辛亥革命起义纪念馆',
-            en: '',
+            en: '1911 Revolution Museum',
           },
           time: '2019',
           device: 'One Plus 7T',
@@ -1944,7 +1929,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '辛亥革命起义纪念馆',
-            en: '',
+            en: '1911 Revolution Museum',
           },
           time: '2019',
           device: 'One Plus 7T',
@@ -1953,7 +1938,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '黄鹤楼',
-            en: '',
+            en: 'Yellow Crane Tower',
           },
           time: '2019',
           device: 'One Plus 7T',
@@ -1962,7 +1947,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '武汉市长江大桥',
-            en: '',
+            en: 'Wuhan Yangtze River Bridge',
           },
           time: '2023',
           device: 'iPhone 12 mini',
@@ -1971,7 +1956,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '武汉市长江大桥',
-            en: '',
+            en: 'Wuhan Yangtze River Bridge',
           },
           time: '2023',
           device: 'iPhone 12 mini',
@@ -1980,7 +1965,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '武汉市长江大桥',
-            en: '',
+            en: 'Wuhan Yangtze River Bridge',
           },
           time: '2023',
           device: 'Sony RX100M6',
@@ -1989,7 +1974,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '武汉市长江大桥',
-            en: '',
+            en: 'Wuhan Yangtze River Bridge',
           },
           time: '2019',
           device: 'One Plus 7T',
@@ -1998,7 +1983,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '武汉市长江大桥',
-            en: '',
+            en: 'Wuhan Yangtze River Bridge',
           },
           time: '2019',
           device: 'One Plus 7T',
@@ -2007,7 +1992,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '越王勾践剑-湖北省博物馆',
-            en: '',
+            en: 'Sword of Goujian — Hubei Provincial Museum',
           },
           time: '2019',
           device: 'One Plus 7T',
@@ -2016,7 +2001,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '曾侯乙编钟-湖北省博物馆',
-            en: '',
+            en: 'Chime Bells of Marquis Yi of Zeng — Hubei Provincial Museum',
           },
           time: '2019',
           device: 'One Plus 7T',
@@ -2025,7 +2010,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '江汉关大楼',
-            en: '',
+            en: 'Jianghanguan Building',
           },
           time: '2019',
           device: 'One Plus 7T',
@@ -2034,7 +2019,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '小时候托管我的奶奶家。',
-            en: '',
+            en: "My grandmother's home, where I stayed after school as a child.",
           },
           time: '2019',
           device: 'One Plus 7T',
@@ -2052,7 +2037,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '大成路',
-            en: '',
+            en: 'Dacheng Road',
           },
           time: '2023',
           device: 'Sony RX100M6',
@@ -2061,7 +2046,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '大成路',
-            en: '',
+            en: 'Dacheng Road',
           },
           time: '2019',
           device: 'One Plus 7T',
@@ -2070,7 +2055,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '大成路小巷',
-            en: '',
+            en: 'An Alley off Dacheng Road',
           },
           time: '2019',
           device: 'One Plus 7T',
@@ -2079,7 +2064,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '老家一角',
-            en: '',
+            en: 'A Corner of My Old Home',
           },
           time: '2023',
           device: 'Sony RX100M6',
@@ -2109,7 +2094,7 @@ const flanerieDynamic = {
       },
       tagline: {
         zhCn: '我的前端生涯开始的地方。',
-        en: '',
+        en: 'Where my front-end career began.',
       },
       img: 'https://assets.anuluca.com/Flanerie/cities/shenzhen/00157 IMG_6060.jpg',
       location: {
@@ -2137,7 +2122,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '云雾里的平安大厦',
-            en: '',
+            en: 'Ping An Finance Center in the Clouds',
           },
           time: '2022',
           device: 'iPhone 12 mini',
@@ -2146,7 +2131,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '平安大厦',
-            en: '',
+            en: 'Ping An Finance Center',
           },
           time: '2022',
           device: 'iPhone 12 mini',
@@ -2155,7 +2140,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '平安大厦50楼',
-            en: '',
+            en: '50th Floor of Ping An Finance Center',
           },
           time: '2022',
           device: 'iPhone 12 mini',
@@ -2164,7 +2149,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '深圳市市民中心',
-            en: '',
+            en: 'Shenzhen Civic Center',
           },
           time: '2021',
           device: 'iPhone 12 mini',
@@ -2173,7 +2158,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '漾日湖',
-            en: '',
+            en: 'Yangri Lake',
           },
           time: '2021',
           device: 'Sony RX100M6',
@@ -2182,7 +2167,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '工位',
-            en: '',
+            en: 'My Desk',
           },
           time: '2021',
           device: 'Sony RX100M6',
@@ -2191,7 +2176,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '龙光 玖龙玺',
-            en: '',
+            en: 'Logan Jiulongxi',
           },
           time: '2021',
           device: 'iPhone 12 mini',
@@ -2200,7 +2185,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '吃饭',
-            en: '',
+            en: 'A Meal',
           },
           time: '2021',
           device: 'iPhone 12 mini',
@@ -2209,7 +2194,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '吃饭',
-            en: '',
+            en: 'A Meal',
           },
           time: '2021',
           device: 'iPhone 12 mini',
@@ -2218,7 +2203,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '下午茶',
-            en: '',
+            en: 'Afternoon Tea',
           },
           time: '2021',
           device: 'iPhone 12 mini',
@@ -2227,7 +2212,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '同事家',
-            en: '',
+            en: "A Colleague's Home",
           },
           time: '2021',
           device: 'iPhone 12 mini',
@@ -2236,7 +2221,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '活动照片',
-            en: '',
+            en: 'Event Photo',
           },
           time: '2021',
           url: 'https://assets.anuluca.com/Flanerie/cities/shenzhen/00194 IMG_6997.jpeg',
@@ -2245,7 +2230,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '街头live',
-            en: '',
+            en: 'Street Performance',
           },
           time: '2021',
           device: 'Sony RX100M6',
@@ -2254,7 +2239,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '✈️',
-            en: '',
+            en: '✈️',
           },
           time: '2021',
           device: 'Sony RX100M6',
@@ -2263,7 +2248,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '✈️',
-            en: '',
+            en: '✈️',
           },
           time: '2021',
           device: 'Sony RX100M6',
@@ -2272,7 +2257,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '✈️',
-            en: '',
+            en: '✈️',
           },
           time: '2021',
           device: 'Sony RX100M6',
@@ -2281,7 +2266,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '✈️',
-            en: '',
+            en: '✈️',
           },
           time: '2021',
           device: 'Sony RX100M6',
@@ -2305,7 +2290,6 @@ const flanerieDynamic = {
         zhCn: '',
         en: '',
       },
-      device: ['Sony RX100M6', 'iPhone 17'],
       img: 'https://assets.anuluca.com/Flanerie/events/poke_event1/DSC00981.jpg',
       location: {
         id: 'guangdong',
@@ -2320,7 +2304,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '车站广告',
-            en: '',
+            en: 'Station Advertisement',
           },
           time: '2026',
           device: 'iPhone 12 mini',
@@ -2329,7 +2313,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '活动现场',
-            en: '',
+            en: 'Event Venue',
           },
           time: '2026',
           device: 'iPhone 12 mini',
@@ -2338,7 +2322,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '皮卡丘人偶服',
-            en: '',
+            en: 'Pikachu Mascot Costume',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -2347,7 +2331,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '皮卡丘人偶服',
-            en: '',
+            en: 'Pikachu Mascot Costume',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -2356,7 +2340,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '皮卡丘人偶服',
-            en: '',
+            en: 'Pikachu Mascot Costume',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -2365,7 +2349,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '第二天腾讯举办的比赛',
-            en: '',
+            en: 'The Tournament Hosted by Tencent the Next Day',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -2389,7 +2373,6 @@ const flanerieDynamic = {
         zhCn: '',
         en: '',
       },
-      device: ['iPhone 12 mini'],
       img: 'https://assets.anuluca.com/Flanerie/events/poke_event2/IMG_0750 (1).jpg',
       location: {
         id: 'hubei',
@@ -2404,7 +2387,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '城市活动',
-            en: '',
+            en: 'City Event',
           },
           time: '2023',
           device: 'iPhone 12 mini',
@@ -2413,7 +2396,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '超级巨皮卡丘',
-            en: '',
+            en: 'Gigantamax Pikachu',
           },
           time: '2023',
           device: 'iPhone 12 mini',
@@ -2422,7 +2405,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '超级巨屁卡丘',
-            en: '',
+            en: 'Gigantamax Pika-butt',
           },
           time: '2023',
           device: 'iPhone 12 mini',
@@ -2431,7 +2414,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '活动现场',
-            en: '',
+            en: 'Event Venue',
           },
           time: '2023',
           device: 'iPhone 12 mini',
@@ -2440,7 +2423,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '活动现场',
-            en: '',
+            en: 'Event Venue',
           },
           time: '2023',
           device: 'iPhone 12 mini',
@@ -2449,7 +2432,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '小孩哥现场开包',
-            en: '',
+            en: 'A Kid Opening Packs Live at the Event',
           },
           time: '2023',
           device: 'iPhone 12 mini',
@@ -2473,7 +2456,6 @@ const flanerieDynamic = {
         zhCn: '',
         en: '',
       },
-      device: ['iPhone 12 mini'],
       img: 'https://assets.anuluca.com/Flanerie/events/poke_event3/6.jpg',
       location: {
         id: 'beijing',
@@ -2488,7 +2470,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '地铁广告',
-            en: '',
+            en: 'Subway Advertisement',
           },
           time: '2021',
           device: 'iPhone 12 mini',
@@ -2497,7 +2479,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '车站广告',
-            en: '',
+            en: 'Station Advertisement',
           },
           time: '2021',
           device: 'iPhone 12 mini',
@@ -2506,7 +2488,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '影院布置',
-            en: '',
+            en: 'Cinema Decorations',
           },
           time: '2021',
           device: 'iPhone 12 mini',
@@ -2515,7 +2497,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '影院布置',
-            en: '',
+            en: 'Cinema Decorations',
           },
           time: '2021',
           device: 'iPhone 12 mini',
@@ -2524,7 +2506,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '影院布置',
-            en: '',
+            en: 'Cinema Decorations',
           },
           time: '2021',
           device: 'iPhone 12 mini',
@@ -2533,7 +2515,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '寄语',
-            en: '',
+            en: 'A Message',
           },
           time: '2021',
           device: 'iPhone 12 mini',
@@ -2557,7 +2539,6 @@ const flanerieDynamic = {
         zhCn: '',
         en: '',
       },
-      device: ['Sony RX100M6'],
       img: 'https://assets.anuluca.com/Flanerie/events/ultramanDynaGaia/IMG_0508.JPG',
       location: {
         id: 'hubei',
@@ -2572,7 +2553,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '盖亚',
-            en: '',
+            en: 'Ultraman Gaia',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -2581,7 +2562,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '盖亚',
-            en: '',
+            en: 'Ultraman Gaia',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -2590,7 +2571,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '戴拿',
-            en: '',
+            en: 'Ultraman Dyna',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -2599,7 +2580,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '戴拿',
-            en: '',
+            en: 'Ultraman Dyna',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -2608,7 +2589,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '戴拿',
-            en: '',
+            en: 'Ultraman Dyna',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -2617,7 +2598,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '戴拿',
-            en: '',
+            en: 'Ultraman Dyna',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -2626,7 +2607,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '戴拿',
-            en: '',
+            en: 'Ultraman Dyna',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -2650,7 +2631,6 @@ const flanerieDynamic = {
         zhCn: '',
         en: '',
       },
-      device: ['Sony RX100M6'],
       img: 'https://assets.anuluca.com/Flanerie/events/ultramanGinga/IMG_8558.JPG',
       location: {
         id: 'guangdong',
@@ -2761,7 +2741,6 @@ const flanerieDynamic = {
         zhCn: '',
         en: '',
       },
-      device: ['Sony RX100M6'],
       img: 'https://assets.anuluca.com/Flanerie/events/ultramanZ/DSC01949.jpg',
       location: {
         id: 'guangdong',
@@ -3034,7 +3013,6 @@ const flanerieDynamic = {
         zhCn: '',
         en: '',
       },
-      device: ['Sony RX100M6'],
       img: 'https://assets.anuluca.com/Flanerie/events/ultramanZero/DSC02578.jpg',
       location: {
         id: 'guangdong',
@@ -3253,7 +3231,6 @@ const flanerieDynamic = {
         zhCn: '回留。',
         en: 'Return. Remain.',
       },
-      device: ['Sony RX100M6', 'iPhone 17'],
       img: 'https://assets.anuluca.com/Flanerie/cities/jiujiang/_DSC7531.jpg',
       location: {
         id: 'jiangxi',
@@ -3278,7 +3255,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '儿童墙绘',
-            en: '',
+            en: "Children's Mural",
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -3305,7 +3282,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '九江长江大桥',
-            en: '',
+            en: 'Jiujiang Yangtze River Bridge',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -3314,7 +3291,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '鸽子但没对上焦',
-            en: '',
+            en: 'A Pigeon, but Out of Focus',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -3323,7 +3300,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '摊前的快乐',
-            en: '',
+            en: 'Joy by the Street Stall',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -3332,7 +3309,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '东林寺',
-            en: '',
+            en: 'Donglin Temple',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -3356,7 +3333,6 @@ const flanerieDynamic = {
         zhCn: '历史与烟火气在此交融。',
         en: 'Half Jinling in mist and rain, half Stone City in its bones.',
       },
-      device: ['Sony RX100M6', 'iPhone 17'],
       img: 'https://assets.anuluca.com/Flanerie/cities/nanjing/DSC07049.jpg',
       location: {
         id: 'jiangsu',
@@ -3379,7 +3355,7 @@ const flanerieDynamic = {
         {
           title: {
             zhCn: '红山动物园记录',
-            en: '',
+            en: 'Hongshan Zoo Visit',
           },
           cover:
             'https://assets.anuluca.com/other/videoCover/778b1499e9704aa53d9e43d92e6761c984875ecd.jpg@672w_378h_1c.webp',
@@ -3392,7 +3368,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '和平雕塑',
-            en: '',
+            en: 'Peace Statue',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -3401,7 +3377,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '莫愁女',
-            en: '',
+            en: 'Lady Mochou',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -3410,7 +3386,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '车流',
-            en: '',
+            en: 'Traffic',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -3428,7 +3404,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '总统府',
-            en: '',
+            en: 'Presidential Palace',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -3437,7 +3413,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '陵园路',
-            en: '',
+            en: 'Lingyuan Road',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -3446,7 +3422,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '中山陵',
-            en: '',
+            en: 'Sun Yat-sen Mausoleum',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -3455,7 +3431,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '檐上航线',
-            en: '',
+            en: 'Flight Path above the Eaves',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -3464,7 +3440,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '明孝陵',
-            en: '',
+            en: 'Ming Xiaoling Mausoleum',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -3473,7 +3449,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '长椅',
-            en: '',
+            en: 'Bench',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -3482,7 +3458,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '灵谷寺',
-            en: '',
+            en: 'Linggu Temple',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -3491,7 +3467,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '古鸡鸣寺',
-            en: '',
+            en: 'Jiming Temple',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -3500,7 +3476,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '古鸡鸣寺',
-            en: '',
+            en: 'Jiming Temple',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -3509,7 +3485,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '古鸡鸣寺的樱花',
-            en: '',
+            en: 'Cherry Blossoms at Jiming Temple',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -3518,7 +3494,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '狐獴 in 红山动物园',
-            en: '',
+            en: 'Meerkat at Hongshan Zoo',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -3527,7 +3503,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '考拉 in 红山动物园',
-            en: '',
+            en: 'Koala at Hongshan Zoo',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -3536,7 +3512,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '金头狮狨 in 红山动物园',
-            en: '',
+            en: 'Golden-headed Lion Tamarin at Hongshan Zoo',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -3545,7 +3521,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '豹猫 in 红山动物园',
-            en: '',
+            en: 'Leopard Cat at Hongshan Zoo',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -3554,7 +3530,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '白腰文鸟 in 红山动物园',
-            en: '',
+            en: 'White-rumped Munia at Hongshan Zoo',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -3563,7 +3539,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '大桥公园 傍晚',
-            en: '',
+            en: 'Bridge Park at Dusk',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -3587,7 +3563,6 @@ const flanerieDynamic = {
         zhCn: '走马观花。',
         en: 'Glance over the flowers hurriedly.',
       },
-      device: ['Sony RX100M6', 'iPhone 17'],
       img: 'https://assets.anuluca.com/Flanerie/cities/singapore/f1ae5f2f-5d6d-422e-b4ef-475a20c31484 (1).png',
       location: {
         id: 'singapore',
@@ -3634,7 +3609,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '新加坡Pokemon Center',
-            en: '',
+            en: 'Pokémon Center Singapore',
           },
           time: '2026',
           device: 'iPhone 17',
@@ -3643,7 +3618,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '树篱迷宫',
-            en: '',
+            en: 'Hedge Maze',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -3652,7 +3627,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '虎豹别墅的壁画',
-            en: '',
+            en: 'Mural at Haw Par Villa',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -3661,7 +3636,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '鱼尾狮雕像',
-            en: '',
+            en: 'Merlion Statue',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -3670,7 +3645,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '阿努比斯雕像 in 新加坡环球影城《木乃伊》主题馆',
-            en: '',
+            en: 'Statue of Anubis in Revenge of the Mummy at Universal Studios Singapore',
           },
           time: '2026',
           device: 'iPhone 17',
@@ -3679,7 +3654,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '威震天 in 新加坡环球影城',
-            en: '',
+            en: 'Megatron at Universal Studios Singapore',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -3688,7 +3663,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '后厨小巷',
-            en: '',
+            en: 'Back-Kitchen Alley',
           },
           time: '2026',
           device: 'Sony RX100M6',
@@ -3697,7 +3672,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '滨海湾花园的雕塑',
-            en: '',
+            en: 'Sculpture at Gardens by the Bay',
           },
           time: '2026',
           device: 'iPhone 17',
@@ -3706,7 +3681,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '中国旅游广告',
-            en: '',
+            en: 'China Tourism Advertisement',
           },
           time: '2026',
           device: 'iPhone 17',
@@ -3730,7 +3705,6 @@ const flanerieDynamic = {
         zhCn: '精神阿罗拉人的梦中情岛。',
         en: 'A dream island for Alolans at heart.',
       },
-      device: ['Sony RX100M6', 'iPhone 17'],
       img: 'https://assets.anuluca.com/Flanerie/cities/pingtandao/IMG_9051.jpg',
       location: {
         id: 'fujian',
@@ -3756,7 +3730,7 @@ const flanerieDynamic = {
         {
           title: {
             zhCn: '海滩/日出记录',
-            en: '',
+            en: 'Beach / Sunrise Footage',
           },
           cover:
             'https://assets.anuluca.com/other/videoCover/ee17390a07bda7ec40dc62d1dcf19509c5d38ae7.jpg@672w_378h_1c.webp',
@@ -3769,7 +3743,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '风车',
-            en: '',
+            en: 'Wind Turbine',
           },
           time: '2024',
           device: 'Sony RX100M6',
@@ -3778,7 +3752,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '还是风车',
-            en: '',
+            en: 'Another Wind Turbine',
           },
           time: '2024',
           device: 'Sony RX100M6',
@@ -3787,7 +3761,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '依旧风车',
-            en: '',
+            en: 'Yet Another Wind Turbine',
           },
           time: '2024',
           device: 'Sony RX100M6',
@@ -3796,7 +3770,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '好多风车',
-            en: '',
+            en: 'So Many Wind Turbines',
           },
           time: '2024',
           device: 'Sony RX100M6',
@@ -3805,7 +3779,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '风车好看啊',
-            en: '',
+            en: 'The Wind Turbines Look Great',
           },
           time: '2024',
           device: 'Sony RX100M6',
@@ -3814,7 +3788,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '大福湾观景区',
-            en: '',
+            en: 'Dafu Bay Scenic Area',
           },
           time: '2024',
           device: 'Sony RX100M6',
@@ -3823,7 +3797,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '68海里',
-            en: '',
+            en: '68 Nautical Miles Scenic Area',
           },
           time: '2024',
           device: 'Sony RX100M6',
@@ -3832,7 +3806,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '随机的贝壳',
-            en: '',
+            en: 'A Random Seashell',
           },
           time: '2024',
           device: 'Sony RX100M6',
@@ -3841,7 +3815,7 @@ const flanerieDynamic = {
         {
           location: {
             zhCn: '龙王头沙滩',
-            en: '',
+            en: 'Longwangtou Beach',
           },
           time: '2024',
           device: 'Sony RX100M6',

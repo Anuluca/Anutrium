@@ -1,14 +1,3 @@
-const OUTSIDE_PHOTO_PREFIX = 'https://assets.anuluca.com/Island/picWork/normal/'
-const PEOPLE_PHOTO_PREFIX = 'https://assets.anuluca.com/Island/picWork/people/'
-const PHOTOGRAPHY_DEVICE = 'Sony RX100M6'
-
-const buildPhotographyPhotos = (prefix: string, filenames: string[]) =>
-  filenames.map((filename) => ({
-    title: filename,
-    device: PHOTOGRAPHY_DEVICE,
-    url: `${prefix}${encodeURIComponent(filename)}`,
-  }))
-
 const islandDynamic = {
   photographyCoverUrl:
     'https://assets.anuluca.com/Island/picWork/normal/DSC00812-01-01.jpeg',
@@ -24,45 +13,341 @@ const islandDynamic = {
       coverUrl:
         'https://assets.anuluca.com/Island/picWork/normal/DSC00812-01-01.jpeg',
       coverPosition: 'right center',
-      photos: buildPhotographyPhotos(OUTSIDE_PHOTO_PREFIX, [
-        'https://assets.anuluca.com/Island/picWork/normal/DSC00037.JPG',
-        'https://assets.anuluca.com/Island/picWork/normal/DSC00054.JPG',
-        'https://assets.anuluca.com/Island/picWork/normal/DSC00172.JPG',
-        'https://assets.anuluca.com/Island/picWork/normal/DSC00274.JPG',
-        'https://assets.anuluca.com/Island/picWork/normal/DSC00508.JPG',
-        'https://assets.anuluca.com/Island/picWork/normal/DSC00583.jpg',
-        'https://assets.anuluca.com/Island/picWork/normal/DSC00786-01.jpeg',
-        'https://assets.anuluca.com/Island/picWork/normal/DSC00812-01-01.jpeg',
-        'https://assets.anuluca.com/Island/picWork/normal/DSC00814-01.jpeg',
-        'https://assets.anuluca.com/Island/picWork/normal/DSC04376.jpg',
-        'https://assets.anuluca.com/Island/picWork/normal/dXWAS0.jpg',
-        'https://assets.anuluca.com/Island/picWork/normal/DSC06667.jpg',
-        'https://assets.anuluca.com/Flanerie/cities/chongqing/IMG_4535.jpg',
-        'https://assets.anuluca.com/Flanerie/cities/chizhou/09.jpg',
-        'https://assets.anuluca.com/Flanerie/cities/changsha/01.jpg',
-        'https://assets.anuluca.com/Flanerie/cities/lushan/DSC07756.jpg',
-        'https://assets.anuluca.com/Flanerie/cities/lushan/IMG_0735.jpg',
-        'https://assets.anuluca.com/Flanerie/cities/jiujiang/IMG_8779.jpg',
-        'https://assets.anuluca.com/Flanerie/cities/nanjing/DSC07085.jpg',
-        'https://assets.anuluca.com/Flanerie/cities/nanjing/DSC07068.jpg',
-        'https://assets.anuluca.com/Flanerie/cities/nanjing/IMG_0729.jpg',
-        'https://assets.anuluca.com/Flanerie/cities/nanjing/IMG_7170.jpg',
-        'https://assets.anuluca.com/Flanerie/cities/nanjing/IMG_0730.jpg',
-        'https://assets.anuluca.com/Flanerie/cities/nanjing/DSC07357.jpg',
-        'https://assets.anuluca.com/Flanerie/cities/nanjing/DSC07419.jpg',
-        'https://assets.anuluca.com/Flanerie/cities/nanjing/DSC07458.jpg',
-        'https://assets.anuluca.com/Flanerie/cities/nanjing/DSC07467.jpg',
-        'https://assets.anuluca.com/Flanerie/cities/pingtandao/IMG_9051.jpg',
-        'https://assets.anuluca.com/Flanerie/cities/pingtandao/IMG_9123.jpg',
-        'https://assets.anuluca.com/Flanerie/cities/nanchang/DSC06198.jpg',
-        'https://assets.anuluca.com/Flanerie/cities/nanchang/IMG_4203.jpg',
-        'https://assets.anuluca.com/Flanerie/cities/nanchang/IMG_4739.jpg',
-        'https://assets.anuluca.com/Flanerie/cities/nanchang/DSC05381.jpg',
-        'https://assets.anuluca.com/Flanerie/cities/nanchang/IMG_4346.jpg',
-        'https://assets.anuluca.com/Flanerie/cities/nanchang/IMG_4593.jpg',
-        'https://assets.anuluca.com/Flanerie/cities/nanchang/IMG_4349.jpg',
-        'https://assets.anuluca.com/Flanerie/cities/nanchang/IMG_6828.jpg',
-      ]),
+      photos: [
+        {
+          location: {
+            zhCn: '深圳',
+            en: 'Shenzhen',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Island/picWork/normal/DSC00037.JPG',
+        },
+        {
+          location: {
+            zhCn: '深圳',
+            en: 'Shenzhen',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Island/picWork/normal/DSC00054.JPG',
+        },
+        {
+          location: {
+            zhCn: '深圳',
+            en: 'Shenzhen',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Island/picWork/normal/DSC00172.JPG',
+        },
+        {
+          location: {
+            zhCn: '深圳',
+            en: 'Shenzhen',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Island/picWork/normal/DSC00274.JPG',
+        },
+        {
+          location: {
+            zhCn: '✈️',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Island/picWork/normal/DSC00508.JPG',
+        },
+        {
+          location: {
+            zhCn: '街头live',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Island/picWork/normal/DSC00583.jpg',
+        },
+        {
+          location: {
+            zhCn: '✈️',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Island/picWork/normal/DSC00786-01.jpeg',
+        },
+        {
+          location: {
+            zhCn: '✈️',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Island/picWork/normal/DSC00812-01-01.jpeg',
+        },
+        {
+          location: {
+            zhCn: '✈️',
+            en: '',
+          },
+          time: '2021',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Island/picWork/normal/DSC00814-01.jpeg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Island/picWork/normal/DSC04376.jpg',
+        },
+        {
+          location: {
+            zhCn: '',
+            en: '',
+          },
+          time: '',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Island/picWork/normal/dXWAS0.jpg',
+        },
+        {
+          location: {
+            zhCn: '罗汉寺',
+            en: '',
+          },
+          time: '2026',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/cities/chongqing/DSC06667.jpg',
+        },
+        {
+          location: {
+            zhCn: '罗汉寺',
+            en: '',
+          },
+          time: '2026',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/cities/chongqing/IMG_4535.jpg',
+        },
+        {
+          location: {
+            zhCn: '过年。',
+            en: '',
+          },
+          time: '2020',
+          device: 'SONY RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/cities/chizhou/09.jpg',
+        },
+        {
+          location: {
+            zhCn: '橘子洲',
+            en: 'Orange Isle',
+          },
+          time: '2026',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/cities/changsha/01.jpg',
+        },
+        {
+          location: {
+            zhCn: '白居易草堂的猫',
+            en: '',
+          },
+          time: '2026',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/cities/lushan/DSC07756.jpg',
+        },
+        {
+          location: {
+            zhCn: '红嘴蓝鹊',
+            en: '',
+          },
+          time: '2026',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/cities/lushan/IMG_0735.jpg',
+        },
+        {
+          location: {
+            zhCn: '摊前的快乐',
+            en: '',
+          },
+          time: '2026',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/cities/jiujiang/IMG_8779.jpg',
+        },
+        {
+          location: {
+            zhCn: '车流',
+            en: '',
+          },
+          time: '2026',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/cities/nanjing/DSC07085.jpg',
+        },
+        {
+          location: {
+            zhCn: '莫愁女',
+            en: '',
+          },
+          time: '2026',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/cities/nanjing/DSC07068.jpg',
+        },
+        {
+          location: {
+            zhCn: '长椅',
+            en: '',
+          },
+          time: '2026',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/cities/nanjing/IMG_0729.jpg',
+        },
+        {
+          location: {
+            zhCn: '灵谷寺',
+            en: '',
+          },
+          time: '2026',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/cities/nanjing/IMG_7170.jpg',
+        },
+        {
+          location: {
+            zhCn: '古鸡鸣寺的樱花',
+            en: '',
+          },
+          time: '2026',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/cities/nanjing/IMG_0730.jpg',
+        },
+        {
+          location: {
+            zhCn: '狐獴 in 红山动物园',
+            en: '',
+          },
+          time: '2026',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/cities/nanjing/DSC07357.jpg',
+        },
+        {
+          location: {
+            zhCn: '金头狮狨 in 红山动物园',
+            en: '',
+          },
+          time: '2026',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/cities/nanjing/DSC07419.jpg',
+        },
+        {
+          location: {
+            zhCn: '豹猫 in 红山动物园',
+            en: '',
+          },
+          time: '2026',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/cities/nanjing/DSC07458.jpg',
+        },
+        {
+          location: {
+            zhCn: '白腰文鸟 in 红山动物园',
+            en: '',
+          },
+          time: '2026',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/cities/nanjing/DSC07467.jpg',
+        },
+        {
+          location: {
+            zhCn: '风车好看啊',
+            en: '',
+          },
+          time: '2024',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/cities/pingtandao/IMG_9051.jpg',
+        },
+        {
+          location: {
+            zhCn: '龙王头沙滩',
+            en: '',
+          },
+          time: '2024',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/cities/pingtandao/IMG_9123.jpg',
+        },
+        {
+          location: {
+            zhCn: '鸡。',
+            en: '',
+          },
+          time: '2025',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/cities/nanchang/DSC06198.jpg',
+        },
+        {
+          location: {
+            zhCn: '赣江沿岸',
+            en: '',
+          },
+          time: '2025',
+          device: 'iPhone 12 mini',
+          url: 'https://assets.anuluca.com/Flanerie/cities/nanchang/IMG_4203.jpg',
+        },
+        {
+          location: {
+            zhCn: '艾溪湖公园',
+            en: '',
+          },
+          time: '2023',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/cities/nanchang/IMG_4739.jpg',
+        },
+        {
+          location: {
+            zhCn: '艾溪湖公园',
+            en: '',
+          },
+          time: '2023',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/cities/nanchang/DSC05381.jpg',
+        },
+        {
+          location: {
+            zhCn: '艾溪湖公园',
+            en: '',
+          },
+          time: '2023',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/cities/nanchang/IMG_4346.jpg',
+        },
+        {
+          location: {
+            zhCn: '艾溪湖公园',
+            en: '',
+          },
+          time: '2023',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/cities/nanchang/IMG_4593.jpg',
+        },
+        {
+          location: {
+            zhCn: '艾溪湖公园',
+            en: '',
+          },
+          time: '2023',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/cities/nanchang/IMG_4349.jpg',
+        },
+        {
+          location: {
+            zhCn: '江西艺术中心',
+            en: '',
+          },
+          time: '2023',
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Flanerie/cities/nanchang/IMG_6828.jpg',
+        },
+      ],
     },
     {
       id: 'home',
@@ -84,18 +369,71 @@ const islandDynamic = {
           },
           avatarUrl:
             'https://assets.anuluca.com/Island/picWork/people/familyMember/DSC00012.JPG',
-          photos: buildPhotographyPhotos(
-            `${PEOPLE_PHOTO_PREFIX}familyMember/`,
-            [
-              'https://assets.anuluca.com/Island/picWork/people/DSC00012.JPG',
-              'https://assets.anuluca.com/Island/picWork/people/DSC00072 (1).jpg',
-              'https://assets.anuluca.com/Island/picWork/people/DSC00257.JPG',
-              'https://assets.anuluca.com/Island/picWork/people/DSC00361.JPG',
-              'https://assets.anuluca.com/Island/picWork/people/DSC01768.JPG',
-              'https://assets.anuluca.com/Island/picWork/people/DSC01795.JPG',
-              'https://assets.anuluca.com/Island/picWork/people/IMG_5188.jpg',
-            ]
-          ),
+          photos: [
+            {
+              location: {
+                zhCn: '家',
+                en: 'Home',
+              },
+              time: '',
+              device: 'Sony RX100M6',
+              url: 'https://assets.anuluca.com/Island/picWork/people/familyMember/DSC00012.JPG',
+            },
+            {
+              location: {
+                zhCn: '家',
+                en: 'Home',
+              },
+              time: '',
+              device: 'Sony RX100M6',
+              url: 'https://assets.anuluca.com/Island/picWork/people/familyMember/DSC00072%20%281%29.jpg',
+            },
+            {
+              location: {
+                zhCn: '家',
+                en: 'Home',
+              },
+              time: '',
+              device: 'Sony RX100M6',
+              url: 'https://assets.anuluca.com/Island/picWork/people/familyMember/DSC00257.JPG',
+            },
+            {
+              location: {
+                zhCn: '家',
+                en: 'Home',
+              },
+              time: '',
+              device: 'Sony RX100M6',
+              url: 'https://assets.anuluca.com/Island/picWork/people/familyMember/DSC00361.JPG',
+            },
+            {
+              location: {
+                zhCn: '家',
+                en: 'Home',
+              },
+              time: '',
+              device: 'Sony RX100M6',
+              url: 'https://assets.anuluca.com/Island/picWork/people/familyMember/DSC01768.JPG',
+            },
+            {
+              location: {
+                zhCn: '家',
+                en: 'Home',
+              },
+              time: '',
+              device: 'Sony RX100M6',
+              url: 'https://assets.anuluca.com/Island/picWork/people/familyMember/DSC01795.JPG',
+            },
+            {
+              location: {
+                zhCn: '家',
+                en: 'Home',
+              },
+              time: '',
+              device: 'Sony RX100M6',
+              url: 'https://assets.anuluca.com/Island/picWork/people/familyMember/IMG_5188.jpg',
+            },
+          ],
         },
         {
           id: 'hei',
@@ -105,10 +443,26 @@ const islandDynamic = {
           },
           avatarUrl:
             'https://assets.anuluca.com/Island/picWork/people/hei/DSC00208.JPG',
-          photos: buildPhotographyPhotos(`${PEOPLE_PHOTO_PREFIX}hei/`, [
-            'DSC00208.JPG',
-            'YRXes0.jpg',
-          ]),
+          photos: [
+            {
+              location: {
+                zhCn: '家',
+                en: 'Home',
+              },
+              time: '',
+              device: 'Sony RX100M6',
+              url: 'https://assets.anuluca.com/Island/picWork/people/hei/DSC00208.JPG',
+            },
+            {
+              location: {
+                zhCn: '家',
+                en: 'Home',
+              },
+              time: '',
+              device: 'Sony RX100M6',
+              url: 'https://assets.anuluca.com/Island/picWork/people/hei/YRXes0.jpg',
+            },
+          ],
         },
       ],
     },

@@ -133,7 +133,7 @@ const { locale } = useI18n()
 
     .tl-card__body {
       border-color: var(--card-accent-dim);
-      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--card-accent);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
       color: var(--card-accent);
     }
 

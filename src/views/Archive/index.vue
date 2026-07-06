@@ -80,6 +80,7 @@
         </button>
       </div>
 
+      <div class="availability-flash" aria-hidden="true" />
       <div class="availability-corner availability-corner--tl" />
       <div class="availability-corner availability-corner--br" />
     </section>
@@ -144,6 +145,8 @@
             @keydown.enter.prevent="openMiscDetail(item)"
             @keydown.space.prevent="openMiscDetail(item)"
           >
+            <div class="misc-card-frame" aria-hidden="true" />
+            <div class="misc-card-sweep" aria-hidden="true" />
             <div class="misc-card-content">
               <div class="misc-card-head">
                 <div class="misc-card-index">
@@ -404,6 +407,17 @@ onBeforeUnmount(() => {
 
 .availability-type {
   max-width: 100%;
+}
+
+.availability-flash {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  background: rgba(255, 255, 255, 0.62);
+  opacity: 0;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  animation: anutriumCrtFlashOn 0.52s linear 0.08s both;
 }
 
 .availability-type--desc {
@@ -692,8 +706,7 @@ onBeforeUnmount(() => {
   background: linear-gradient(135deg, rgba(226, 52, 86, 0.08), transparent 42%),
     rgba(13, 9, 18, 0.78);
   cursor: pointer;
-  transition: transform 0.4s ease, border-color 0.4s ease,
-    background-color 0.4s ease;
+  transition: border-color 0.28s ease, box-shadow 0.46s ease;
 
   &::before {
     content: '';
@@ -715,12 +728,19 @@ onBeforeUnmount(() => {
     content: '';
     position: absolute;
     top: 0;
-    right: 0;
+    left: 0;
     z-index: 1;
-    width: 44%;
+    width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(226, 52, 86, 0.08));
-    clip-path: polygon(28% 0, 100% 0, 100% 100%, 0 100%);
+    background: linear-gradient(
+      112deg,
+      rgba(226, 52, 86, 0.06) 0 28%,
+      rgba(226, 52, 86, 0.58) 66%,
+      rgba(39, 7, 17, 0.82) 100%
+    );
+    transform: translateX(-106%) skewX(-9deg);
+    transform-origin: left;
+    transition: transform 0.52s cubic-bezier(0.16, 1, 0.3, 1);
     pointer-events: none;
   }
 
@@ -737,42 +757,12 @@ onBeforeUnmount(() => {
     }
 
     &::after {
+      transform: translateX(0) skewX(0);
       animation: miscDetailErrorWash 0.72s ease both;
     }
 
     .corner {
       border-color: @red;
-    }
-  }
-
-  &:hover {
-    border-color: @red;
-    transform: translateY(-2px);
-
-    &::before {
-      opacity: 0.55;
-    }
-
-    .misc-card-index {
-      color: @red;
-    }
-
-    .misc-card-title {
-      color: #fff;
-    }
-
-    .misc-card-logo {
-      opacity: 1;
-      filter: grayscale(0) contrast(1);
-      border-color: rgba(135, 135, 135, 0.75);
-      background: rgba(226, 52, 86, 0.1);
-    }
-
-    .corner {
-      width: 10px;
-      height: 10px;
-      border-color: @red;
-      border-width: 1.2px;
     }
   }
 
@@ -787,6 +777,7 @@ onBeforeUnmount(() => {
     align-items: stretch;
     justify-content: space-between;
     padding: 18px;
+    transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .misc-card-head {
@@ -838,6 +829,8 @@ onBeforeUnmount(() => {
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     line-clamp: 2;
+    transition: color 0.25s ease, letter-spacing 0.42s ease,
+      text-shadow 0.3s ease;
   }
 
   .misc-card-footer {
@@ -889,6 +882,119 @@ onBeforeUnmount(() => {
   }
 }
 
+.misc-card-frame,
+.misc-card-sweep {
+  position: absolute;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.misc-card-frame {
+  inset: 8px;
+  border: 1px solid rgba(226, 52, 86, 0);
+  opacity: 0;
+  transform: scale(0.965);
+  transition: opacity 0.25s ease, border-color 0.25s ease,
+    transform 0.46s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.misc-card-sweep {
+  top: 0;
+  left: -42%;
+  width: 36%;
+  height: 2px;
+  opacity: 0;
+  background: linear-gradient(90deg, transparent, #fff 35%, #e23456 75%);
+  box-shadow: 0 0 18px rgba(226, 52, 86, 0.8);
+  transition: opacity 0.15s ease, transform 0.62s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .misc-card:hover {
+    border-color: rgba(226, 52, 86, 0.84);
+    box-shadow: 0 24px 54px rgba(0, 0, 0, 0.42);
+
+    &::before {
+      opacity: 0.86;
+      animation: misc-card-grid-drift 0.36s linear infinite;
+    }
+
+    &::after {
+      transform: translateX(0) skewX(0);
+    }
+
+    .misc-card-frame {
+      border-color: rgba(226, 52, 86, 0.44);
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .misc-card-sweep {
+      opacity: 1;
+      transform: translateX(410%);
+    }
+
+    .misc-card-content {
+      transform: translateY(-3px);
+    }
+
+    .misc-card-index {
+      color: rgba(255, 255, 255, 0.78);
+    }
+
+    .misc-card-title {
+      color: #fff;
+      letter-spacing: 0.015em;
+      text-shadow: 0 0 24px rgba(226, 52, 86, 0.32);
+    }
+
+    .misc-card-company,
+    .misc-card-id {
+      color: rgba(255, 255, 255, 0.78);
+    }
+
+    .misc-card-logo {
+      border-color: rgba(255, 255, 255, 0.42);
+      background: rgba(10, 5, 10, 0.56);
+      opacity: 1;
+      filter: contrast(1);
+    }
+
+    .corner {
+      width: 23px;
+      height: 23px;
+      border-color: #fff;
+      border-width: 2px;
+    }
+
+    .corner-tl {
+      transform: translate(-4px, -4px);
+    }
+
+    .corner-tr {
+      transform: translate(4px, -4px);
+    }
+
+    .corner-bl {
+      transform: translate(-4px, 4px);
+    }
+
+    .corner-br {
+      transform: translate(4px, 4px);
+    }
+  }
+}
+
+@keyframes misc-card-grid-drift {
+  from {
+    background-position: 0 0;
+  }
+
+  to {
+    background-position: 0 4px;
+  }
+}
+
 @keyframes miscDetailError {
   0%,
   100% {
@@ -899,8 +1005,7 @@ onBeforeUnmount(() => {
   12%,
   42% {
     border-color: @red;
-    box-shadow: 0 0 0 1px rgba(226, 52, 86, 0.4),
-      0 0 22px rgba(226, 52, 86, 0.28);
+    box-shadow: 0 0 0 1px rgba(226, 52, 86, 0.4);
   }
 
   24%,

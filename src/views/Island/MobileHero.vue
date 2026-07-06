@@ -171,6 +171,6 @@ h1 {
   z-index: 2;
   height: 2px;
   background: linear-gradient(90deg, transparent, @red 28%, transparent);
-  box-shadow: 0 0 16px rgba(226, 52, 86, 0.9), 0 0 36px rgba(226, 52, 86, 0.38);
+  box-shadow: 0 0 16px rgba(226, 52, 86, 0.9);
 }
 </style>

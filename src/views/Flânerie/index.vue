@@ -109,7 +109,6 @@ interface VlogItem {
   mapLabel: string
   date: string
   tagline: string
-  device: string[]
   img: string
   img2?: string
   location: VlogLocation

@@ -141,8 +141,7 @@ const referenceNumber = computed(() => `${props.index + 1}A`)
 @media (hover: hover) and (pointer: fine) {
   .shared-work-card:hover {
     border-color: rgba(226, 52, 86, 0.84);
-    box-shadow: 0 24px 54px rgba(0, 0, 0, 0.42),
-      0 0 0 1px rgba(226, 52, 86, 0.16), 0 0 32px rgba(226, 52, 86, 0.12);
+    box-shadow: 0 24px 54px rgba(0, 0, 0, 0.42);
 
     &::before {
       border-color: rgba(226, 52, 86, 0.44);

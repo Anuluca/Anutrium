@@ -117,9 +117,7 @@ const handleSelect = () => {
   background: linear-gradient(145deg, #29272d, #101014 56%, #1d1015);
   text-align: left;
   cursor: pointer;
-  box-shadow: 8px 15px 22px rgba(0, 0, 0, 0.5),
-    0 7px 8px -6px rgba(0, 0, 0, 0.98),
-    inset 0 0 0 5px rgba(255, 255, 255, 0.025);
+  box-shadow: 8px 15px 22px rgba(0, 0, 0, 0.5);
   transform: translateZ(12px);
   transform-origin: center bottom;
   transform-style: preserve-3d;
@@ -142,8 +140,7 @@ const handleSelect = () => {
     border: 1px solid rgba(255, 255, 255, 0.16);
     background: linear-gradient(to bottom, #4a434b, #272229 48%, #121216);
     clip-path: polygon(18px 0, calc(100% - 18px) 0, 100% 100%, 0 100%);
-    box-shadow: inset 0 1px rgba(255, 255, 255, 0.2),
-      0 -4px 12px rgba(0, 0, 0, 0.4);
+    box-shadow: inset 0 1px rgba(255, 255, 255, 0.2);
     transition: top 0.52s cubic-bezier(0.22, 1, 0.36, 1),
       height 0.52s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.42s ease,
       clip-path 0.52s cubic-bezier(0.22, 1, 0.36, 1);
@@ -278,10 +275,7 @@ const handleSelect = () => {
   .collection-card {
     &:hover {
       z-index: 4;
-      box-shadow: 8px 15px 22px rgba(0, 0, 0, 0.5),
-        0 26px 18px -12px rgba(172, 42, 66, 0.22),
-        0 40px 30px -24px rgba(226, 52, 86, 0.1),
-        inset 0 0 0 5px rgba(255, 255, 255, 0.025);
+      box-shadow: 8px 15px 22px rgba(0, 0, 0, 0.5);
       transform: translateY(-10px) translateZ(12px) scale(1.025);
     }
   }

@@ -700,8 +700,7 @@ onBeforeUnmount(() => {
   );
   background-size: 100% 4px;
   animation: trackScanDrift 9s linear infinite;
-  box-shadow: inset 0 0 0 1px rgba(232, 40, 74, 0.08),
-    inset 0 -80px 90px rgba(232, 40, 74, 0.07);
+  box-shadow: inset 0 0 0 1px rgba(232, 40, 74, 0.08);
 }
 
 @keyframes trackScanDrift {

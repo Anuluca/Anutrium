@@ -50,17 +50,48 @@
         </div>
 
         <div class="pt-swatches">
-          <div
-            v-for="(color, index) in extractedColors"
-            :key="index"
-            class="pt-swatch-item"
-            @click="copySingle(color)"
-          >
-            <div class="pt-swatch-color" :style="{ backgroundColor: color }" />
-            <div class="pt-swatch-hex">
-              <span>{{ color }}</span>
+          <template v-if="extractedColors.length">
+            <div
+              class="pt-swatch-controls"
+              :style="{
+                gridTemplateColumns: `repeat(${extractedColors.length}, minmax(0, 1fr))`,
+              }"
+            >
+              <button
+                v-for="color in extractedColors"
+                :key="`copy-${color}`"
+                class="pt-swatch-copy"
+                :class="{ 'is-copied': copiedColor === color }"
+                type="button"
+                :style="{ '--swatch-color': color }"
+                :aria-label="`复制颜色 ${color}`"
+                :title="copiedColor === color ? '已复制' : `复制 ${color}`"
+                @click="copySingle(color)"
+              >
+                <span aria-hidden="true">
+                  {{ copiedColor === color ? '✓' : '' }}
+                </span>
+              </button>
             </div>
-          </div>
+
+            <div
+              class="pt-swatch-capsule"
+              :style="{
+                background: paletteGradient,
+                boxShadow: paletteShadow,
+                gridTemplateColumns: `repeat(${extractedColors.length}, minmax(0, 1fr))`,
+              }"
+              @pointermove="updatePaletteSheen"
+            >
+              <div
+                v-for="color in extractedColors"
+                :key="color"
+                class="pt-swatch-segment"
+              >
+                <span>{{ color }}</span>
+              </div>
+            </div>
+          </template>
           <div v-if="extractedColors.length === 0" class="pt-swatches-empty">
             <span>等待图片数据...</span>
           </div>
@@ -95,7 +126,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, ref } from 'vue'
 
 import ToolCrystalLogo from '@/components/ToolCrystalLogo/index.vue'
 import ToolPageLayout from '@/components/ToolPageLayout/index.vue'
@@ -104,6 +135,8 @@ const previewUrl = ref<string>('')
 const extractedColors = ref<string[]>([])
 const isExtracting = ref(false)
 const copied = ref(false)
+const copiedColor = ref('')
+let copiedColorTimer: ReturnType<typeof window.setTimeout> | null = null
 
 const recommendedTools = [
   { label: '配色提取器', path: '/colorPalette' },
@@ -119,6 +152,31 @@ const cssVariablesText = computed(() => {
   })
   text += '}'
   return text
+})
+
+const paletteGradient = computed(() => {
+  const colors = extractedColors.value
+  if (colors.length === 0) return 'transparent'
+  if (colors.length === 1) return colors[0]
+
+  const segmentSize = 100 / colors.length
+  const transitionSize = Math.min(3, segmentSize * 0.18)
+  const stops = colors.flatMap((color, index) => {
+    const solidStart = index === 0 ? 0 : index * segmentSize + transitionSize
+    const solidEnd =
+      index === colors.length - 1
+        ? 100
+        : (index + 1) * segmentSize - transitionSize
+    return [`${color} ${solidStart}%`, `${color} ${solidEnd}%`]
+  })
+
+  return `linear-gradient(90deg, ${stops.join(', ')})`
+})
+
+const paletteShadow = computed(() => {
+  const colors = extractedColors.value
+  const shadowColor = colors[Math.floor(colors.length / 2)] ?? 'transparent'
+  return `0 10px 24px -10px ${shadowColor}`
 })
 
 const handleFileChange = (e: Event) => {
@@ -180,7 +238,7 @@ const analyzeColors = (src: string) => {
     }
 
     const sorted = [...colorMap.entries()].sort((a, b) => b[1] - a[1])
-    extractedColors.value = sorted.slice(0, 6).map((item) => item[0])
+    extractedColors.value = sorted.slice(0, 5).map((item) => item[0])
     isExtracting.value = false
   }
 }
@@ -196,10 +254,30 @@ const rgbToHex = (r: number, g: number, b: number) => {
 const copySingle = async (color: string) => {
   try {
     await navigator.clipboard.writeText(color)
-    console.log(`Copied: ${color}`)
+    if (copiedColorTimer !== null) {
+      window.clearTimeout(copiedColorTimer)
+    }
+    copiedColor.value = color
+    copiedColorTimer = window.setTimeout(() => {
+      copiedColor.value = ''
+      copiedColorTimer = null
+    }, 1200)
   } catch (err) {
     console.error('Copy failed', err)
   }
+}
+
+const updatePaletteSheen = (event: PointerEvent) => {
+  const capsule = event.currentTarget as HTMLElement
+  const bounds = capsule.getBoundingClientRect()
+  capsule.style.setProperty(
+    '--palette-sheen-x',
+    `${event.clientX - bounds.left}px`
+  )
+  capsule.style.setProperty(
+    '--palette-sheen-y',
+    `${event.clientY - bounds.top}px`
+  )
 }
 
 const exportCssVariables = async () => {
@@ -213,6 +291,12 @@ const exportCssVariables = async () => {
     console.error('Export failed', err)
   }
 }
+
+onBeforeUnmount(() => {
+  if (copiedColorTimer !== null) {
+    window.clearTimeout(copiedColorTimer)
+  }
+})
 </script>
 
 <style lang="less" scoped>
@@ -449,10 +533,11 @@ const exportCssVariables = async () => {
 }
 
 .pt-swatches {
-  display: flex;
-  gap: 12px;
+  display: block;
+  height: 118px;
   margin-bottom: 30px;
-  height: 80px;
+  padding: 4px 0;
+  font-family: 'alibaba-puhuiti', sans-serif;
 
   &-empty {
     width: 100%;
@@ -471,36 +556,111 @@ const exportCssVariables = async () => {
   }
 }
 
-.pt-swatch-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  cursor: pointer;
-  transition: transform 0.2s ease;
+.pt-swatch-controls {
+  display: grid;
+  align-items: center;
+  justify-items: center;
+  margin-bottom: 12px;
+}
 
-  &:hover {
-    transform: translateY(-4px);
-    .pt-swatch-hex {
-      color: @text;
-    }
+.pt-swatch-copy {
+  --swatch-color: #e23456;
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  place-items: center;
+  padding: 0;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  color: #fff;
+  background: var(--swatch-color);
+  cursor: pointer;
+  font-family: 'alibaba-puhuiti', sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  transition: transform 0.22s ease, filter 0.22s ease;
+
+  &:hover,
+  &:focus-visible {
+    outline: none;
+    filter: brightness(1.08);
+    transform: translateY(-3px) scale(1.06);
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.45);
+    outline-offset: 3px;
+  }
+
+  &.is-copied {
+    transform: scale(1.08);
   }
 }
 
-.pt-swatch-color {
-  flex: 1;
+.pt-swatch-capsule {
+  --palette-sheen-x: 50%;
+  --palette-sheen-y: 50%;
+  position: relative;
+  display: grid;
   width: 100%;
-  border: 1px solid @border;
+  min-height: 42px;
+  box-sizing: border-box;
+  overflow: hidden;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  color: #fff;
+
+  &::after {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    border-radius: inherit;
+    background: radial-gradient(
+        ellipse 30px 20px at var(--palette-sheen-x) var(--palette-sheen-y),
+        rgba(255, 252, 241, 0.38),
+        rgba(255, 239, 204, 0.2) 42%,
+        transparent 78%
+      ),
+      radial-gradient(
+        circle 88px at var(--palette-sheen-x) var(--palette-sheen-y),
+        rgba(255, 240, 207, 0.28),
+        rgba(194, 220, 255, 0.14) 34%,
+        rgba(255, 255, 255, 0.05) 58%,
+        transparent 78%
+      );
+    content: '';
+    mix-blend-mode: screen;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.24s ease;
+  }
+
+  &:hover::after {
+    opacity: 1;
+  }
 }
 
-.pt-swatch-hex {
-  margin-top: 8px;
-  color: @muted;
+.pt-swatch-segment {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 4px;
   text-align: center;
-  transition: color 0.2s;
 
   span {
-    .font-squish(center);
-    font-size: 11px;
+    overflow: hidden;
+    font-family: 'alibaba-puhuiti', sans-serif;
+    font-size: clamp(8px, 0.5vw, 11px);
+    font-weight: 800;
+    letter-spacing: 0;
+    line-height: 1;
+    text-overflow: ellipsis;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.75);
+    white-space: nowrap;
   }
 }
 

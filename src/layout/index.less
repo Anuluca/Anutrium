@@ -294,8 +294,7 @@
             pointer-events: none;
             transform: translate(-50%, 0.82rem) rotate(0deg) scale(0.72);
             transform-origin: center;
-            filter: drop-shadow(0 0 5px currentColor)
-              drop-shadow(0 0 14px currentColor);
+            filter: drop-shadow(0 0 5px currentColor);
             transition: opacity 0.28s ease,
               transform 0.48s cubic-bezier(0.16, 1, 0.3, 1);
           }
@@ -367,7 +366,7 @@
           .el-menu-item.@{class} {
             .menu-route-icon {
               color: @color;
-              filter: drop-shadow(0 0 5px #000) drop-shadow(0 0 14px @shadow);
+              filter: drop-shadow(0 0 5px #000);
             }
           }
 

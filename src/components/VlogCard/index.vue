@@ -173,15 +173,12 @@ watch(
 
     .vlog-info::before {
       background: rgba(54, 209, 255, 0.26);
-      box-shadow: -8px 0 0 rgba(226, 52, 86, 0.36),
-        8px 0 0 rgba(255, 255, 255, 0.12);
+      box-shadow: -8px 0 0 rgba(226, 52, 86, 0.36);
     }
 
     .vlog-title {
       letter-spacing: 0.04em;
-      text-shadow: 7px 0 0 rgba(226, 52, 86, 0.72),
-        -7px 0 0 rgba(54, 209, 255, 0.58), 0 3px 0 rgba(255, 255, 255, 0.16),
-        0 0 24px rgba(255, 255, 255, 0.22);
+      text-shadow: 7px 0 0 rgba(226, 52, 86, 0.72);
     }
   }
 
@@ -193,8 +190,7 @@ watch(
 
     .vlog-img--hover {
       opacity: 1;
-      filter: drop-shadow(10px 12px 0 rgba(0, 0, 0, 0.46))
-        drop-shadow(0 0 22px rgba(226, 52, 86, 0.24));
+      filter: drop-shadow(10px 12px 0 rgba(0, 0, 0, 0.46));
     }
   }
 }
@@ -215,8 +211,7 @@ watch(
     max-height: 345px;
     object-fit: contain;
     display: block;
-    filter: drop-shadow(10px 12px 0 rgba(0, 0, 0, 0.46))
-      drop-shadow(0 0 18px rgba(226, 52, 86, 0.18));
+    filter: drop-shadow(10px 12px 0 rgba(0, 0, 0, 0.46));
     transition: opacity 0.62s ease, filter 0.62s ease;
     opacity: 0;
     z-index: 1;
@@ -389,6 +384,7 @@ watch(
 
     .vlog-title {
       font-size: 1.05rem;
+      -webkit-text-stroke: 0;
       white-space: normal;
     }
 

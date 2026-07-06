@@ -437,8 +437,7 @@
     * {
       font-family: 'anton', 'alibaba-puhuiti';
       font-size: 5.6rem;
-      text-shadow: 0 14px 34px rgba(0, 0, 0, 0.48),
-        0 4px 12px rgba(0, 0, 0, 0.36);
+      text-shadow: 0 14px 34px rgba(0, 0, 0, 0.48);
       opacity: 0;
       transform: translateY(30px);
       animation: motoFadeIn 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
@@ -747,8 +746,7 @@
         box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
         cursor: default;
         transition: opacity 0.35s ease, filter 0.35s ease,
-          transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-          box-shadow 0.45s ease;
+          transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.45s ease;
 
         &:hover {
           z-index: 5;
@@ -777,7 +775,11 @@
       overflow: hidden;
       border: 1px solid color-mix(in srgb, var(--text-color) 9%, transparent);
       border-radius: clamp(28px, 3vw, 48px);
-      background: linear-gradient(145deg, rgba(255, 255, 255, 0.055), transparent 55%),
+      background: linear-gradient(
+          145deg,
+          rgba(255, 255, 255, 0.055),
+          transparent 55%
+        ),
         rgba(255, 255, 255, 0.018);
       box-shadow: 0 20px 80px rgba(0, 0, 0, 0.22);
       isolation: isolate;
@@ -807,20 +809,14 @@
       }
 
       &:hover {
-        border-color: color-mix(
-          in srgb,
-          var(--text-color) 26%,
-          transparent
-        );
+        border-color: color-mix(in srgb, var(--text-color) 26%, transparent);
         background: linear-gradient(
             145deg,
             rgba(255, 255, 255, 0.095),
             transparent 52%
           ),
           rgba(255, 255, 255, 0.035);
-        box-shadow: 0 48px 130px rgba(0, 0, 0, 0.3),
-          0 0 70px rgba(255, 255, 255, 0.055),
-          inset 0 1px 0 rgba(255, 255, 255, 0.16);
+        box-shadow: 0 48px 130px rgba(0, 0, 0, 0.3);
 
         &::after {
           opacity: 1;

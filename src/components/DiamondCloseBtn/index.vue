@@ -78,8 +78,7 @@ defineEmits<{
   &:hover {
     .diamond-shape {
       background: rgba(0, 0, 0, 0.8);
-      box-shadow: 0 0 15px rgba(226, 52, 86, 0.4),
-        inset 0 0 10px rgba(226, 52, 86, 0.2);
+      box-shadow: 0 0 15px rgba(226, 52, 86, 0.4);
 
       &::before {
         opacity: 1;

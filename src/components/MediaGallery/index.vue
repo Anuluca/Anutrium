@@ -4,6 +4,7 @@
     class="media-gallery"
     :class="{
       'media-gallery--staggered': staggeredEntrance,
+      'media-gallery--preserve-image-colors': preserveImageColors,
       'is-entered': entranceStarted,
     }"
   >
@@ -91,6 +92,7 @@ const props = withDefaults(
     staggeredEntrance?: boolean
     entranceReady?: boolean
     entranceStepMs?: number
+    preserveImageColors?: boolean
   }>(),
   {
     getMediaLabel: (media: GalleryMedia) => media.title || 'Photo',
@@ -98,6 +100,7 @@ const props = withDefaults(
     staggeredEntrance: false,
     entranceReady: true,
     entranceStepMs: 70,
+    preserveImageColors: false,
   }
 )
 
@@ -384,6 +387,14 @@ onBeforeUnmount(() => {
   &:focus-visible img {
     filter: saturate(1.12) contrast(1.1) brightness(0.94);
     transform: scale(1.015);
+  }
+}
+
+.media-gallery--preserve-image-colors {
+  .media-gallery__stage img,
+  .media-gallery__open:hover img,
+  .media-gallery__open:focus-visible img {
+    filter: none;
   }
 }
 

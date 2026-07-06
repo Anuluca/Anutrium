@@ -23,7 +23,6 @@
           class="library-workspace"
           :class="{
             'has-subject-filter': activeGroup.photoGroups?.length,
-            'is-home-collection': activeGroupId === 'home',
           }"
         >
           <header class="library-toolbar">
@@ -53,6 +52,7 @@
               :entrance-step-ms="90"
               :items="paginatedPhotos"
               :get-media-label="getMediaLabel"
+              preserve-image-colors
               staggered-entrance
             >
               <template #info="{ item: photo }">
@@ -285,14 +285,6 @@ const getMediaLabel = (media: GalleryMedia) =>
 .photography-page {
   color: #fff;
   overflow: hidden;
-
-  :deep(.media-gallery) {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  :deep(.media-gallery__card::after) {
-    display: none !important;
-  }
 }
 
 .photo-library {
@@ -513,14 +505,6 @@ const getMediaLabel = (media: GalleryMedia) =>
     &:disabled {
       cursor: not-allowed;
       opacity: 0.25;
-    }
-  }
-}
-
-@media (min-width: 901px) {
-  .library-workspace.is-home-collection {
-    :deep(.media-gallery__shell) {
-      transform: translateX(clamp(-56px, -3vw, -24px));
     }
   }
 }

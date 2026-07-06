@@ -277,9 +277,7 @@ const openCollection = (collectionId: string) => {
         )
         0 0 / 24px 24px,
       linear-gradient(90deg, #111116, #1a1a20 50%, #111116);
-    box-shadow: inset 0 22px 38px rgba(0, 0, 0, 0.72),
-      inset 24px 0 42px rgba(0, 0, 0, 0.5),
-      inset -24px 0 42px rgba(0, 0, 0, 0.5);
+    box-shadow: inset 0 22px 38px rgba(0, 0, 0, 0.72);
 
     &::after {
       position: absolute;
@@ -336,8 +334,7 @@ const openCollection = (collectionId: string) => {
     height: 22px;
     z-index: 1;
     background: linear-gradient(to bottom, #34343b, #15151a 78%);
-    box-shadow: inset 0 1px rgba(255, 255, 255, 0.2),
-      0 -7px 16px rgba(0, 0, 0, 0.35);
+    box-shadow: inset 0 1px rgba(255, 255, 255, 0.2);
     clip-path: polygon(2.8% 0, 97.2% 0, 100% 100%, 0 100%);
   }
 
@@ -357,8 +354,7 @@ const openCollection = (collectionId: string) => {
     z-index: 2;
     border-top: 1px solid rgba(255, 255, 255, 0.14);
     background: linear-gradient(to bottom, #222228, #0d0d11 55%, #050507);
-    box-shadow: 0 12px 26px rgba(0, 0, 0, 0.66),
-      inset 0 1px rgba(255, 255, 255, 0.08);
+    box-shadow: 0 12px 26px rgba(0, 0, 0, 0.66);
 
     &::after {
       position: absolute;

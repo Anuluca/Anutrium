@@ -312,8 +312,7 @@ watch(hasContent, (hasValue) => {
   border: 1px solid rgba(226, 52, 86, 0.58);
   background: linear-gradient(145deg, rgba(226, 52, 86, 0.12), transparent 42%),
     rgba(8, 5, 10, 0.97);
-  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.72),
-    inset 0 0 30px rgba(226, 52, 86, 0.05);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.72);
   box-sizing: border-box;
   color: #fff;
   line-height: 1.5;

@@ -562,8 +562,7 @@ watch(locale, scheduleNeighborDescriptionMeasure)
   overflow: hidden;
   margin: 30px 0 68px;
   border-radius: 2px;
-  box-shadow: inset 0 0 0 1px rgba(226, 52, 86, 0.12),
-    0 0 30px rgba(226, 52, 86, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(226, 52, 86, 0.12);
   opacity: 0;
   animation: passionCrtOn 0.58s cubic-bezier(0.19, 1, 0.22, 1) 0.44s both;
   will-change: clip-path, filter, opacity;
@@ -1031,7 +1030,7 @@ watch(locale, scheduleNeighborDescriptionMeasure)
     .axis-diamond {
       border-color: @red;
       background: @red;
-      box-shadow: 0 0 10px @red, 0 0 20px rgba(226, 52, 86, 0.4);
+      box-shadow: 0 0 10px @red;
 
       &::before {
         border-color: rgba(226, 52, 86, 0.3);
@@ -1616,8 +1615,7 @@ watch(locale, scheduleNeighborDescriptionMeasure)
 
     .nb-node {
       background: @red;
-      box-shadow: 0 0 0 6px rgba(226, 52, 86, 0.12),
-        0 0 18px rgba(226, 52, 86, 0.65);
+      box-shadow: 0 0 0 6px rgba(226, 52, 86, 0.12);
     }
 
     .nb-arrow {
