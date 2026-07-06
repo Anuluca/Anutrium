@@ -53,7 +53,16 @@
             :key="index"
             :to="item.path"
           >
-            <el-menu-item :index="item.path" :class="item.name">
+            <el-menu-item
+              :index="item.path"
+              :class="[
+                item.name,
+                {
+                  'is-inner-active':
+                    isInnerMenuRoute && currentRouter === item.path,
+                },
+              ]"
+            >
               <component
                 :is="getRouteIcon(item.meta.headerIcon)"
                 class="menu-route-icon"
@@ -250,8 +259,15 @@ const route = useRoute()
 const router = useRouter()
 const visualStateStore = visualState()
 const currentRouter = computed(() => {
-  return route.path
+  return typeof route.meta.activeMenu === 'string'
+    ? route.meta.activeMenu
+    : route.path
 })
+const isInnerMenuRoute = computed(
+  () =>
+    typeof route.meta.activeMenu === 'string' &&
+    route.path !== route.meta.activeMenu
+)
 const routeIconMap: Record<HeaderIconName, typeof HomeFilled> = {
   Collection,
   HomeFilled,

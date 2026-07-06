@@ -1354,8 +1354,6 @@ watch(locale, scheduleNeighborDescriptionMeasure)
     rgba(5, 2, 6, 0) 100%
   );
   box-shadow: inset 0 0 24px rgba(226, 52, 86, 0.045);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
   font-family: 'anton', monospace;
   font-size: 0.64rem;
   letter-spacing: 0.14em;

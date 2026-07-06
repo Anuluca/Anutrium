@@ -27,7 +27,7 @@
             activeAnchorId === item.anchorId ? 'location' : undefined
           "
           :title="item.title"
-          @click="scrollToSection(item)"
+          @click="scrollToSection(item, $event)"
         >
           <span class="detail-sections-nav__marker" aria-hidden="true" />
           <span class="detail-sections-nav__copy">
@@ -247,7 +247,7 @@ const announceNavigationRefresh = () => {
   window.dispatchEvent(new CustomEvent(NAVIGATION_REFRESH_EVENT))
 }
 
-const scrollToSection = (item: NavigationItem) => {
+const scrollToSection = (item: NavigationItem, event: MouseEvent) => {
   activeAnchorId.value = item.anchorId
   const measuredTop = Number.isNaN(item.top)
     ? getPageScrollTop() + item.target.getBoundingClientRect().top
@@ -261,6 +261,9 @@ const scrollToSection = (item: NavigationItem) => {
     behavior: reduceMotion ? 'auto' : 'smooth',
     duration: reduceMotion ? undefined : 260,
   })
+
+  const trigger = event.currentTarget as HTMLButtonElement | null
+  trigger?.blur()
 }
 
 const scrollIntoView = (options?: ScrollIntoViewOptions) => {

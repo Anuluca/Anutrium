@@ -114,6 +114,7 @@ const DESCRIPTION_ROUTE_GROUPS: Record<string, keyof typeof PAGE_DESCRIPTIONS> =
   }
 
 interface RouteMeta {
+  activeMenu?: string
   titleEn: string
   titleCn: string
   fullFooter: boolean
@@ -181,6 +182,7 @@ export const routes: RouteConfig[] = [
     name: 'FLANERIE_DETAIL',
     component: () => import('@/views/Flânerie/Detail/index.vue'),
     meta: {
+      activeMenu: '/flanerie',
       titleEn: 'FLÂNERIE',
       titleCn: '旅程',
       fullFooter: true,
@@ -207,6 +209,7 @@ export const routes: RouteConfig[] = [
     name: 'ISLAND_PHOTOGRAPHY',
     component: () => import('@/views/Island/Photography/index.vue'),
     meta: {
+      activeMenu: '/island',
       titleEn: 'PHOTOGRAPHY',
       titleCn: '摄影作品',
       fullFooter: true,
@@ -220,6 +223,7 @@ export const routes: RouteConfig[] = [
     name: 'ISLAND_MERCH_PHOTOGRAPHY',
     component: () => import('@/views/Island/MerchPhotography/index.vue'),
     meta: {
+      activeMenu: '/island',
       titleEn: 'MERCH PHOTOGRAPHY',
       titleCn: '周边摄影',
       fullFooter: true,
@@ -233,6 +237,7 @@ export const routes: RouteConfig[] = [
     name: 'ISLAND_MERCH_PHOTOGRAPHY_DETAIL',
     component: () => import('@/views/Island/MerchPhotography/Detail/index.vue'),
     meta: {
+      activeMenu: '/island',
       titleEn: 'MERCH PHOTOGRAPHY',
       titleCn: '周边摄影',
       fullFooter: true,
@@ -365,6 +370,7 @@ export const routes: RouteConfig[] = [
     name: 'TEST',
     component: () => import('@/views/Island/index.vue'),
     meta: {
+      activeMenu: '/island',
       titleEn: 'ISLAND',
       titleCn: '个人海湾',
       fullFooter: true,

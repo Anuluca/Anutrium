@@ -63,7 +63,7 @@ const getContactLink = (type: ContactType) =>
 const socialItems = computed<SocialItem[]>(() => [
   {
     type: 'TWITTER',
-    label: 'TWITTER',
+    label: 'X / TWITTER',
     href: getContactLink('TWITTER')!.href,
     image: twitterImg,
   },
@@ -99,6 +99,7 @@ const isScrollingDown = ref<boolean>(false)
 const isMotionPaused = ref(false)
 const footerExpanded = ref(false)
 const weiboSrc = ref('')
+const dismissedSocialPreview = ref<ContactType | null>(null)
 const marqueeContent = ref<HTMLElement | null>(null)
 const marqueeDuration = ref('24s')
 let footerAnimationTimer: number | null = null
@@ -113,6 +114,8 @@ onMounted(() => {
   reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
   updateMotionState()
   window.addEventListener('resize', updateMarqueeDuration, { passive: true })
+  window.addEventListener('blur', clearActiveSocialFocus)
+  window.addEventListener('focus', clearActiveSocialFocus)
   document.addEventListener('visibilitychange', updateMotionState)
   reducedMotionQuery.addEventListener('change', updateMotionState)
 })
@@ -122,6 +125,8 @@ onUnmounted(() => {
     window.clearTimeout(footerAnimationTimer)
   }
   window.removeEventListener('resize', updateMarqueeDuration)
+  window.removeEventListener('blur', clearActiveSocialFocus)
+  window.removeEventListener('focus', clearActiveSocialFocus)
   document.removeEventListener('visibilitychange', updateMotionState)
   reducedMotionQuery?.removeEventListener('change', updateMotionState)
 })
@@ -129,6 +134,22 @@ onUnmounted(() => {
 const updateMotionState = () => {
   isMotionPaused.value =
     document.visibilityState === 'hidden' || !!reducedMotionQuery?.matches
+}
+
+const clearActiveSocialFocus = () => {
+  const activeElement = document.activeElement
+  if (
+    activeElement instanceof HTMLElement &&
+    activeElement.closest('.social-link')
+  ) {
+    activeElement.blur()
+  }
+}
+
+const dismissSocialPreview = (event: MouseEvent, type: ContactType) => {
+  const target = event.currentTarget
+  if (target instanceof HTMLElement) target.blur()
+  dismissedSocialPreview.value = type
 }
 
 const updateMarqueeDuration = () => {
@@ -306,7 +327,13 @@ watch(locale, () => nextTick(updateMarqueeDuration))
           v-for="social in socialItems.slice(0, 1)"
           :key="social.type"
           class="social-link"
-          :class="`social-link--${social.type.toLowerCase()}`"
+          :class="[
+            `social-link--${social.type.toLowerCase()}`,
+            {
+              'is-preview-dismissed': dismissedSocialPreview === social.type,
+            },
+          ]"
+          @mouseleave="dismissedSocialPreview = null"
         >
           <a
             class="social-preview"
@@ -314,6 +341,7 @@ watch(locale, () => nextTick(updateMarqueeDuration))
             :target="social.type === 'MAIL' ? undefined : '_blank'"
             :rel="social.type === 'MAIL' ? undefined : 'noopener noreferrer'"
             :aria-label="`${social.label} profile`"
+            @click="dismissSocialPreview($event, social.type)"
           >
             <img :src="social.image" :alt="`${social.label} profile`" />
           </a>
@@ -322,13 +350,18 @@ watch(locale, () => nextTick(updateMarqueeDuration))
             :href="social.href"
             :target="social.type === 'MAIL' ? undefined : '_blank'"
             :rel="social.type === 'MAIL' ? undefined : 'noopener noreferrer'"
+            @click="dismissSocialPreview($event, social.type)"
           >
             {{ social.label }}
           </a>
         </span>
         <span
-          class="social-link social-link--weibo"
+          class="social-link social-link--weibo no-cursor"
+          :class="{
+            'is-preview-dismissed': dismissedSocialPreview === 'WEIBO',
+          }"
           @mouseenter="loadWeiboWidget"
+          @mouseleave="dismissedSocialPreview = null"
           @focusin="loadWeiboWidget"
         >
           <div class="social-preview social-preview--weibo">
@@ -346,6 +379,7 @@ watch(locale, () => nextTick(updateMarqueeDuration))
             :href="weiboProfileUrl"
             target="_blank"
             rel="noopener noreferrer"
+            @click="dismissSocialPreview($event, 'WEIBO')"
           >
             WEIBO
           </a>
@@ -356,7 +390,13 @@ watch(locale, () => nextTick(updateMarqueeDuration))
           )"
           :key="social.type"
           class="social-link"
-          :class="`social-link--${social.type.toLowerCase()}`"
+          :class="[
+            `social-link--${social.type.toLowerCase()}`,
+            {
+              'is-preview-dismissed': dismissedSocialPreview === social.type,
+            },
+          ]"
+          @mouseleave="dismissedSocialPreview = null"
         >
           <a
             class="social-preview"
@@ -364,6 +404,7 @@ watch(locale, () => nextTick(updateMarqueeDuration))
             target="_blank"
             rel="noopener noreferrer"
             :aria-label="`${social.label} profile`"
+            @click="dismissSocialPreview($event, social.type)"
           >
             <img :src="social.image" :alt="`${social.label} profile`" />
           </a>
@@ -372,22 +413,36 @@ watch(locale, () => nextTick(updateMarqueeDuration))
             :href="social.href"
             target="_blank"
             rel="noopener noreferrer"
+            @click="dismissSocialPreview($event, social.type)"
           >
             {{ social.label }}
           </a>
         </span>
-        <span class="social-link social-link--mail">
+        <span
+          class="social-link social-link--mail"
+          :class="{
+            'is-preview-dismissed': dismissedSocialPreview === 'MAIL',
+          }"
+          @mouseleave="dismissedSocialPreview = null"
+        >
           <a
             class="social-preview"
             :href="mailItem.href"
             aria-label="Open mail client"
+            @click="dismissSocialPreview($event, 'MAIL')"
           >
             <span class="mail-preview__icon" aria-hidden="true">
               <el-icon><Message /></el-icon>
             </span>
             <span class="mail-preview__content">tilucario@outlook.com</span>
           </a>
-          <a class="social-trigger" :href="mailItem.href">MAIL</a>
+          <a
+            class="social-trigger"
+            :href="mailItem.href"
+            @click="dismissSocialPreview($event, 'MAIL')"
+          >
+            MAIL
+          </a>
         </span>
       </div>
       <button class="mark" type="button" @click="router.push('/')">

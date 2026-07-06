@@ -3,6 +3,10 @@
     <DetailPageHeader
       back-label="FLANERIE"
       back-path="/flanerie"
+      :counter="{
+        value: String(videos.length + photos.length).padStart(2, '0'),
+        label: 'MEDIAS',
+      }"
       :subtitle="vlog.tagline"
       :title="vlog.title"
     >

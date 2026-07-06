@@ -122,7 +122,6 @@ watch(
       rgba(54, 209, 255, 0.12) 42%,
       transparent 72%
     );
-    filter: blur(6px);
     opacity: 0.72;
     z-index: -1;
     transition: opacity 0.35s ease, filter 0.35s ease;
@@ -158,7 +157,7 @@ watch(
   &.is-map-target {
     &::before {
       opacity: 0.95;
-      filter: blur(12px) hue-rotate(28deg);
+      filter: hue-rotate(28deg);
     }
 
     &::after {

@@ -3,6 +3,10 @@
     <DetailPageHeader
       back-label="ISLAND"
       back-path="/test"
+      :counter="{
+        value: String(activePhotos.length).padStart(2, '0'),
+        label: 'PHOTOES',
+      }"
       :subtitle="t('island.photographyTagline')"
       :title="t('island.photographyTitle')"
     />

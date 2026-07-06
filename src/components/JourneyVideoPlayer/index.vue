@@ -210,7 +210,7 @@ onBeforeUnmount(() => {
 
 .video-list:not(.is-entered) .video-item {
   opacity: 0;
-  filter: blur(10px) brightness(0.55);
+  filter: brightness(0.55);
   transform: translateY(48px) scale(0.95);
 }
 
@@ -312,7 +312,6 @@ onBeforeUnmount(() => {
   justify-content: center;
   padding: 32px;
   background: rgba(0, 0, 0, 0.86);
-  backdrop-filter: blur(8px);
   transition: opacity 0.24s ease;
 }
 
@@ -364,13 +363,13 @@ onBeforeUnmount(() => {
 @keyframes journey-video-in {
   from {
     opacity: 0;
-    filter: blur(10px) brightness(0.55);
+    filter: brightness(0.55);
     transform: translateY(48px) scale(0.95);
   }
 
   to {
     opacity: 1;
-    filter: blur(0) brightness(1);
+    filter: brightness(1);
     transform: translateY(0) scale(1);
   }
 }

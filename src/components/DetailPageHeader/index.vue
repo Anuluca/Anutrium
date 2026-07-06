@@ -12,24 +12,22 @@
       <div class="detail-page-header__title-row">
         <h1>{{ title }}</h1>
         <slot name="title-extra" />
-        <div
-          v-if="counter || $slots.actions"
-          class="detail-page-header__actions"
-        >
-          <span v-if="counter" class="detail-page-header__counter">
-            <strong>{{ counter.value }}</strong>
-            <span>{{ counter.label }}</span>
-          </span>
+        <div v-if="$slots.actions" class="detail-page-header__actions">
           <slot name="actions" />
         </div>
       </div>
 
       <div
-        v-if="subtitle || $slots['subtitle-extra']"
+        v-if="subtitle || $slots['subtitle-extra'] || counter"
         class="detail-page-header__subtitle-row"
+        :class="{ 'has-counter': counter }"
       >
         <p v-if="subtitle">{{ subtitle }}</p>
         <slot name="subtitle-extra" />
+        <span v-if="counter" class="detail-page-header__counter">
+          <strong>{{ counter.value }}</strong>
+          <span>{{ counter.label }}</span>
+        </span>
       </div>
 
       <slot />
@@ -231,13 +229,15 @@ onBeforeUnmount(() => {
   }
 
   &__counter {
+    position: absolute;
+    right: 0;
+    bottom: 0;
     display: inline-flex;
     align-items: baseline;
     gap: 5px;
-    margin-bottom: 6px;
     color: var(--text-faint);
     font-family: 'cn-custom', 'Courier New', monospace;
-    font-size: 10px;
+    font-size: 20px;
     font-weight: 700;
     letter-spacing: 0.08em;
     white-space: nowrap;
@@ -245,14 +245,15 @@ onBeforeUnmount(() => {
     strong {
       color: #e23456;
       font-family: 'Anton', 'cn-custom', 'Courier New', monospace;
-      font-size: 16px;
+      font-size: 32px;
       line-height: 1;
     }
   }
 
   &__subtitle-row {
+    position: relative;
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: space-between;
     gap: 16px;
     animation: detailPageHeaderMetaIn 0.34s ease-out 0.44s both;
@@ -277,7 +278,6 @@ onBeforeUnmount(() => {
   z-index: 90;
   display: flex;
   align-items: center;
-  backdrop-filter: blur(4px);
   box-shadow: inset 0 -1px 0 rgb(255 255 255 / 8%);
   gap: clamp(14px, 2vw, 28px);
   min-height: 28px;
@@ -383,6 +383,11 @@ onBeforeUnmount(() => {
     align-items: flex-start;
     flex-direction: column;
     gap: 8px;
+
+    &.has-counter {
+      align-items: flex-end;
+      flex-direction: row;
+    }
   }
 
   .detail-fixed-navigation {

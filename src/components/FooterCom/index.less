@@ -280,8 +280,8 @@
           transition: color 0.2s;
         }
 
-        &:hover,
-        &:focus-within {
+        &:not(.is-preview-dismissed):hover,
+        &:not(.is-preview-dismissed):focus-within {
           .social-preview {
             visibility: visible;
             opacity: 1;
@@ -367,30 +367,72 @@
     bottom: calc(100% + 12px);
     z-index: 4;
     display: block;
+    box-sizing: border-box;
     overflow: hidden;
     visibility: hidden;
     opacity: 0;
+    padding: 6px;
     cursor: pointer;
     transform: translate(-50%, 8px);
     transform-origin: bottom center;
     pointer-events: none;
-    border: 1px solid rgba(226, 52, 86, 0.35);
-    background: #080808;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.62);
-    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 18px;
+    background: rgba(12, 11, 17, 0.97);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.56);
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease,
+      border-color 0.2s ease, box-shadow 0.25s ease, background-color 0.2s ease;
 
     img {
       display: block;
       width: 100%;
       height: auto;
       max-height: 520px;
+      border-radius: 12px;
+      background: #fff;
       object-fit: contain;
+      transition: filter 0.25s ease;
     }
   }
 
-  .social-link--twitter .social-preview {
-    width: 246px;
-    border-radius: 31px;
+  .social-link--twitter,
+  .social-link--weibo,
+  .social-link--bilibili,
+  .social-link--github,
+  .social-link--mail {
+    .social-preview:hover {
+      border-color: rgba(255, 255, 255, 0.5);
+      background-color: rgba(23, 19, 29, 0.98);
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.62);
+
+      img {
+        filter: brightness(1.06) saturate(1.04);
+      }
+
+      iframe {
+        filter: brightness(1.04) saturate(1.02);
+      }
+    }
+  }
+
+  .social-link--twitter .social-preview,
+  .social-link--bilibili .social-preview {
+    width: 248px;
+  }
+
+  .social-link--twitter .social-preview,
+  .social-link--github .social-preview,
+  .social-link--mail .social-preview {
+    border-radius: 999px;
+  }
+
+  .social-link--twitter .social-preview img,
+  .social-link--github .social-preview img {
+    border-radius: 999px;
+  }
+
+  .social-link--github .social-preview {
+    width: 180px;
   }
 
   .social-preview--weibo {
@@ -400,50 +442,56 @@
     iframe {
       display: block;
       width: 100%;
-      height: 520px;
+      height: 100%;
+      border-radius: 12px;
+      background: #fff;
+      transition: filter 0.25s ease;
     }
-  }
-
-  .social-link--bilibili .social-preview {
-    width: 280px;
-  }
-
-  .social-link--github .social-preview {
-    width: 148px;
-    border-radius: 16px;
   }
 
   .social-link--mail .social-preview {
     display: flex;
     align-items: center;
-    gap: 7px;
-    width: 200px;
-    min-height: 30px;
-    padding: 5px 10px;
-    border-radius: 100000px;
-    background: #e23456 !important;
-    box-sizing: border-box;
+    gap: 10px;
+    width: 248px;
+    min-height: 44px;
+    padding: 8px 10px;
   }
 
   .mail-preview__icon {
     display: flex;
-    flex: 0 0 18px;
+    flex: 0 0 26px;
     align-items: center;
     justify-content: center;
-    width: 18px;
-    height: 18px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #e23456;
     color: #fff;
-    font-size: 13px;
+    font-size: 14px;
+    transition: background-color 0.2s ease, transform 0.25s ease;
   }
 
   .mail-preview__content {
     min-width: 0;
     color: #fff;
     font-family: monospace;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     line-height: 1;
     white-space: nowrap;
+    transition: color 0.2s ease;
+  }
+
+  .social-link--mail .social-preview:hover {
+    .mail-preview__icon {
+      background: #f04464;
+      transform: scale(1.08);
+    }
+
+    .mail-preview__content {
+      color: #ff8fa5;
+    }
   }
 }
 

@@ -158,11 +158,6 @@ const referenceNumber = computed(() => `${props.index + 1}A`)
       filter: brightness(0.76) saturate(0.88) contrast(1.08);
     }
 
-    .work-hud-overlay::before {
-      opacity: 1;
-      animation: work-hud-scan 1.05s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-    }
-
     .work-hud-overlay::after {
       opacity: 0.48;
       transform: perspective(500px) rotateX(58deg) translateY(0);
@@ -175,14 +170,6 @@ const referenceNumber = computed(() => `${props.index + 1}A`)
 
     .work-red-plate {
       transform: translateX(0) skewX(0);
-    }
-
-    .work-top-info {
-      transform: translateY(-4px);
-    }
-
-    .work-title-row {
-      transform: translateY(-3px);
     }
 
     .work-name {
@@ -205,7 +192,6 @@ const referenceNumber = computed(() => `${props.index + 1}A`)
 
     .tech-label {
       color: rgba(255, 255, 255, 0.9);
-      transform: translateY(-2px);
     }
 
     .work-corner {
@@ -233,7 +219,6 @@ const referenceNumber = computed(() => `${props.index + 1}A`)
 
     .tactical-text {
       color: rgba(255, 255, 255, 0.62);
-      letter-spacing: 0.12em;
     }
   }
 }
@@ -265,27 +250,10 @@ const referenceNumber = computed(() => `${props.index + 1}A`)
   );
   z-index: 1;
 
-  &::before,
   &::after {
     position: absolute;
     content: '';
     pointer-events: none;
-  }
-
-  &::before {
-    top: 0;
-    bottom: 0;
-    left: -18%;
-    width: 18%;
-    opacity: 0;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.2) 42%,
-      rgba(226, 52, 86, 0.52) 76%,
-      transparent
-    );
-    filter: blur(1px);
   }
 
   &::after {
@@ -356,7 +324,6 @@ const referenceNumber = computed(() => `${props.index + 1}A`)
   align-items: flex-start;
   justify-content: space-between;
   gap: clamp(10px, 1vw, 20px);
-  transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .company-row {
@@ -429,7 +396,7 @@ const referenceNumber = computed(() => `${props.index + 1}A`)
   font-size: clamp(0.45rem, 0.46vw, 0.55rem);
   text-transform: uppercase;
   transition: color 0.25s ease, border-color 0.25s ease,
-    background-color 0.25s ease, transform 0.36s cubic-bezier(0.16, 1, 0.3, 1);
+    background-color 0.25s ease;
 }
 
 .work-title-row {
@@ -439,7 +406,6 @@ const referenceNumber = computed(() => `${props.index + 1}A`)
   align-items: flex-end;
   justify-content: space-between;
   margin-top: auto;
-  transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .work-name {
@@ -516,18 +482,8 @@ const referenceNumber = computed(() => `${props.index + 1}A`)
   font-family: 'cn-custom', monospace;
   font-size: 0.5rem;
   pointer-events: none;
-  transition: color 0.25s ease, letter-spacing 0.4s ease;
+  transition: color 0.25s ease;
   z-index: 3;
-}
-
-@keyframes work-hud-scan {
-  from {
-    transform: translateX(0);
-  }
-
-  to {
-    transform: translateX(760%);
-  }
 }
 
 @keyframes work-scanline-drift {
