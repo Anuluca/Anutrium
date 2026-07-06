@@ -2270,7 +2270,7 @@ const flanerieDynamic = {
           },
           time: '2021',
           device: 'Sony RX100M6',
-          url: 'https://assets.anuluca.com/Island/picWork/normal/DSC00508.JPG',
+          url: 'https://assets.anuluca.com/Island/picWork/normal/DSC00508.jpg',
         },
       ],
     },
@@ -2631,7 +2631,7 @@ const flanerieDynamic = {
         zhCn: '',
         en: '',
       },
-      img: 'https://assets.anuluca.com/Flanerie/events/ultramanGinga/IMG_8558.JPG',
+      img: 'https://assets.anuluca.com/Flanerie/events/ultramanGinga/IMG_8558.jpg',
       location: {
         id: 'guangdong',
         name: {
@@ -2649,7 +2649,7 @@ const flanerieDynamic = {
           },
           time: '2021',
           device: 'Sony RX100M6',
-          url: 'https://assets.anuluca.com/Flanerie/events/ultramanGinga/IMG_8552.JPG',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanGinga/IMG_8552.jpg',
         },
         {
           location: {
@@ -2658,7 +2658,7 @@ const flanerieDynamic = {
           },
           time: '2021',
           device: 'Sony RX100M6',
-          url: 'https://assets.anuluca.com/Flanerie/events/ultramanGinga/IMG_8553.JPG',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanGinga/IMG_8553.jpg',
         },
         {
           location: {
@@ -2667,7 +2667,7 @@ const flanerieDynamic = {
           },
           time: '2021',
           device: 'Sony RX100M6',
-          url: 'https://assets.anuluca.com/Flanerie/events/ultramanGinga/IMG_8554.JPG',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanGinga/IMG_8554.jpg',
         },
         {
           location: {
@@ -2676,7 +2676,7 @@ const flanerieDynamic = {
           },
           time: '2021',
           device: 'Sony RX100M6',
-          url: 'https://assets.anuluca.com/Flanerie/events/ultramanGinga/IMG_8555.JPG',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanGinga/IMG_8555.jpg',
         },
         {
           location: {
@@ -2685,7 +2685,7 @@ const flanerieDynamic = {
           },
           time: '2021',
           device: 'Sony RX100M6',
-          url: 'https://assets.anuluca.com/Flanerie/events/ultramanGinga/IMG_8556.JPG',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanGinga/IMG_8556.jpg',
         },
         {
           location: {
@@ -2694,7 +2694,7 @@ const flanerieDynamic = {
           },
           time: '2021',
           device: 'Sony RX100M6',
-          url: 'https://assets.anuluca.com/Flanerie/events/ultramanGinga/IMG_8557.JPG',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanGinga/IMG_8557.jpg',
         },
         {
           location: {
@@ -2703,7 +2703,7 @@ const flanerieDynamic = {
           },
           time: '2021',
           device: 'Sony RX100M6',
-          url: 'https://assets.anuluca.com/Flanerie/events/ultramanGinga/IMG_8558.JPG',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanGinga/IMG_8558.jpg',
         },
         {
           location: {
@@ -2712,7 +2712,7 @@ const flanerieDynamic = {
           },
           time: '2021',
           device: 'Sony RX100M6',
-          url: 'https://assets.anuluca.com/Flanerie/events/ultramanGinga/IMG_8559.JPG',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanGinga/IMG_8559.jpg',
         },
         {
           location: {
@@ -2721,7 +2721,7 @@ const flanerieDynamic = {
           },
           time: '2021',
           device: 'Sony RX100M6',
-          url: 'https://assets.anuluca.com/Flanerie/events/ultramanGinga/IMG_8560.JPG',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanGinga/IMG_8560.jpg',
         },
       ],
     },
@@ -2885,7 +2885,7 @@ const flanerieDynamic = {
           },
           time: '2021',
           device: 'Sony RX100M6',
-          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZ/DSC02107.JPG',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZ/DSC02107.jpg',
         },
         {
           location: {
@@ -3211,7 +3211,7 @@ const flanerieDynamic = {
           },
           time: '2021',
           device: 'Sony RX100M6',
-          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZero/DSC02621.JPG',
+          url: 'https://assets.anuluca.com/Flanerie/events/ultramanZero/DSC02621.jpg',
         },
       ],
     },
