@@ -89,39 +89,59 @@ import MerchCollectionCard, {
 } from '@/components/MerchCollectionCard/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
 
-interface MerchCollection extends MerchCollectionCardData {
-  category?: 'pokemon' | 'tokusatsu' | 'other'
+type MerchCategoryId = 'pokemon' | 'tokusatsu' | 'other'
+
+type MerchPhotoGroups = Record<MerchCategoryId, MerchCollectionCardData[]>
+
+interface MerchCategoryMeta {
+  id: MerchCategoryId
+  title: {
+    zhCn: string
+    en: string
+  }
 }
 
-const { locale, t, tm } = useI18n()
-const router = useRouter()
-const collections = computed<MerchCollection[]>(() => {
-  return tm('island.dynamic.merchPhotographyCollections') as MerchCollection[]
-})
-
-const collectionGroups = computed(() => [
+const merchCategoryMeta: MerchCategoryMeta[] = [
   {
     id: 'pokemon',
-    title: locale.value === 'en' ? 'POKÉMON' : '宝可梦',
-    collections: collections.value.filter(
-      (collection) => collection.category === 'pokemon'
-    ),
+    title: {
+      zhCn: '宝可梦',
+      en: 'POKÉMON',
+    },
   },
   {
     id: 'tokusatsu',
-    title: locale.value === 'en' ? 'TOKUSATSU' : '特摄',
-    collections: collections.value.filter(
-      (collection) => collection.category === 'tokusatsu'
-    ),
+    title: {
+      zhCn: '特摄',
+      en: 'TOKUSATSU',
+    },
   },
   {
     id: 'other',
-    title: locale.value === 'en' ? 'OTHER' : '其他',
-    collections: collections.value.filter(
-      (collection) => !collection.category || collection.category === 'other'
-    ),
+    title: {
+      zhCn: '其他',
+      en: 'OTHER',
+    },
   },
-])
+]
+
+const { locale, t, tm } = useI18n()
+const router = useRouter()
+const merchPhotos = computed<MerchPhotoGroups>(() => {
+  return tm('island.dynamic.merchPhotos') as MerchPhotoGroups
+})
+
+const collections = computed<MerchCollectionCardData[]>(() =>
+  Object.values(merchPhotos.value).flat()
+)
+
+const collectionGroups = computed(() =>
+  merchCategoryMeta.map((category) => ({
+    id: category.id,
+    title: locale.value === 'en' ? category.title.en : category.title.zhCn,
+    collections: merchPhotos.value[category.id] || [],
+  }))
+)
 
 const getCollectionIndex = (collectionId: string) =>
   String(

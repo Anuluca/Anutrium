@@ -1,6 +1,19 @@
 @tech-ease: cubic-bezier(0.7, 0, 0.3, 1);
+@entry-bg-ease: cubic-bezier(0.24, 0.72, 0.24, 1);
+@entry-logo-ease: cubic-bezier(0.22, 0.78, 0.22, 1);
 
 .entry-overlay-container {
+  --entry-bg-target-x: 0px;
+  --entry-bg-target-y: 0px;
+  --entry-bg-target-scale-x: 1;
+  --entry-bg-target-scale-y: 1;
+  --entry-bg-target-opacity: 0.98;
+  --entry-bg-target-radius: 0px;
+  --entry-logo-target-left: 0px;
+  --entry-logo-target-top: 0px;
+  --entry-logo-target-width: 34px;
+  --entry-logo-target-height: 34px;
+
   position: fixed;
   inset: 0;
   z-index: 9000;
@@ -11,24 +24,38 @@
   pointer-events: none;
 }
 
-.bars-layout {
+.entry-background {
   position: absolute;
   inset: 0;
-  display: flex;
   z-index: 1;
+  background-color: #000000c0;
+  backdrop-filter: blur(4px);
+  border-radius: 0;
+  transform-origin: top left;
+  transition: transform 1.26s @entry-bg-ease, opacity 1s ease-out,
+    border-radius 1.26s @entry-bg-ease, backdrop-filter 1s ease-out;
+  will-change: transform, opacity, border-radius;
+}
 
-  .bg-bar {
-    flex: 1;
-    height: 100%;
-    background-color: #000000c0;
-    backdrop-filter: blur(4px);
-    transition: transform 1s @tech-ease;
-    will-change: transform;
+.entry-overlay-container.is-background-exiting {
+  .entry-background {
+    border-radius: var(--entry-bg-target-radius);
+    opacity: var(--entry-bg-target-opacity);
+    transform: translate3d(
+        var(--entry-bg-target-x),
+        var(--entry-bg-target-y),
+        0
+      )
+      scale(var(--entry-bg-target-scale-x), var(--entry-bg-target-scale-y));
+    backdrop-filter: blur(0);
+  }
+}
 
-    &.is-exit {
-      transform: translateY(calc(var(--dir) * 100%));
-      transition-delay: var(--delay);
-    }
+.entry-overlay-container.is-background-fading {
+  .entry-background {
+    opacity: 0;
+    transition: transform 1.26s @entry-bg-ease, opacity 0.76s ease,
+      border-radius 1.26s @entry-bg-ease, backdrop-filter 0.76s ease;
   }
 }
 
@@ -49,18 +76,42 @@
 .logo-wrapper2 {
   position: absolute;
   z-index: 3;
-  top: calc(50% - 125px);
-  left: calc(50% - 100px);
-  width: 200px;
-  height: 250px;
-  zoom: 1.2;
+  top: 50%;
+  left: 50%;
+  width: min(240px, 46vw);
+  height: min(300px, 57.5vw);
+  color: #fffff4;
   opacity: 0;
-  transition: opacity 1s;
-  opacity: 0;
+  transform: translate3d(-50%, -50%, 0);
+  transition: opacity 0.54s ease-out, color 0.54s ease;
+  will-change: top, left, width, height, transform, opacity;
+
   &.show {
     opacity: 1;
   }
+
+  &.is-docking {
+    top: var(--entry-logo-target-top);
+    left: var(--entry-logo-target-left);
+    width: var(--entry-logo-target-width);
+    height: var(--entry-logo-target-height);
+    color: var(--text-color);
+    transform: translate3d(0, 0, 0);
+    transition: top 1.22s @entry-logo-ease, left 1.22s @entry-logo-ease,
+      width 1.22s @entry-logo-ease, height 1.22s @entry-logo-ease,
+      transform 1.22s @entry-logo-ease, opacity 0.42s ease-out,
+      color 0.54s ease;
+  }
+
+  &.is-hidden {
+    opacity: 0;
+    transition: opacity 0.42s ease;
+  }
+
   .logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 100%;
     height: 100%;
   }
@@ -93,15 +144,13 @@
   }
 }
 
-.light .bg-bar {
-  background-color: #ffffffb8;
+.light .entry-background {
+  background-color: #000000c0;
 }
 
 @media screen and (max-width: 767px) {
   .logo-wrapper2 {
-    .logo {
-      transform: scale(0.68);
-      transform-origin: center;
-    }
+    width: min(172px, 46vw);
+    height: min(215px, 57.5vw);
   }
 }

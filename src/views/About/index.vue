@@ -3,7 +3,6 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ArrowDown, DArrowRight, StarFilled } from '@element-plus/icons-vue'
 
-import PokeAmice from '@/assets/img/about/pokeAmice.png'
 import LogoRotating3D from '@/components/Logo_rotating3D/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
 import PageHeader from '@/components/PageHeader/index.vue'
@@ -19,6 +18,13 @@ interface ChangelogItem {
 interface MarkedTextSegment {
   highlighted: boolean
   text: string
+}
+
+interface NeighbourItem {
+  name: string
+  url: string
+  logo: string
+  description: string
 }
 
 const { locale, t, tm } = useI18n()
@@ -143,21 +149,9 @@ const hidePassionCrosshair = () => {
   passionCrosshairActive.value = false
 }
 
-const neighbors = ref([
-  {
-    name: 'DRRR情报屋',
-    url: 'https://DRRR.anuluca.com',
-    logo: 'https://assets.anuluca.com/Logo/drrrfavicon.svg',
-    description: '《无头骑士异闻录》关系网｜非官方档案站',
-  },
-  {
-    name: 'Poke Amice 宝可梦友会',
-    url: 'http://pokeamice.com',
-    logo: PokeAmice,
-    description:
-      '此处是由一位业余宝可梦爱好者Asimov创建的宝可梦全栈资料整理站点&个人研究据点。',
-  },
-])
+const neighbors = computed<NeighbourItem[]>(() => {
+  return tm('about.dynamic.neighbours') as NeighbourItem[]
+})
 
 const overflowingNeighborUrls = ref(new Set<string>())
 const neighborDescElements = new Map<string, HTMLElement>()

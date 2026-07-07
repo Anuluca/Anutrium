@@ -226,6 +226,7 @@ watch(locale, () => nextTick(updateMarqueeDuration))
       'scrolling-down': isScrollingDown,
       'motion-paused': isMotionPaused,
     }"
+    data-entry-footer-target
   >
     <div class="left">
       <button
@@ -268,7 +269,7 @@ watch(locale, () => nextTick(updateMarqueeDuration))
                 :is="isInternalHref(item.href) ? RouterLink : 'a'"
                 v-for="(item, key) in bottomLineData.recommand"
                 :key="key"
-                style="color: white"
+                class="recommend-link"
                 :to="isInternalHref(item.href) ? item.href : undefined"
                 :href="isInternalHref(item.href) ? undefined : item.href"
               >
@@ -283,7 +284,7 @@ watch(locale, () => nextTick(updateMarqueeDuration))
                   >{{ item.title }}{{ item.sort ? `/${item.sort}` : '' }}</span
                 >
                 」
-                <span style="color: #ffffff96">{{ item.date }}</span>
+                <span class="recommend-date">{{ item.date }}</span>
                 &nbsp;
               </component>
             </span>
@@ -295,7 +296,7 @@ watch(locale, () => nextTick(updateMarqueeDuration))
                 :is="isInternalHref(item.href) ? RouterLink : 'a'"
                 v-for="(item, key) in bottomLineData.recommand"
                 :key="key"
-                style="color: white"
+                class="recommend-link"
                 :to="isInternalHref(item.href) ? item.href : undefined"
                 :href="isInternalHref(item.href) ? undefined : item.href"
                 tabindex="-1"
@@ -311,7 +312,7 @@ watch(locale, () => nextTick(updateMarqueeDuration))
                   >{{ item.title }}{{ item.sort ? `/${item.sort}` : '' }}</span
                 >
                 」
-                <span style="color: #ffffff96">{{ item.date }}</span>
+                <span class="recommend-date">{{ item.date }}</span>
                 &nbsp;
               </component>
             </span>

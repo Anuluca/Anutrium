@@ -29,18 +29,6 @@
             'has-subject-filter': activeGroup.photoGroups?.length,
           }"
         >
-          <header class="library-toolbar">
-            <div class="library-context">
-              <span>PHOTOGRAPHY</span>
-              <i>/</i>
-              <strong>{{ activeGroup.title }}</strong>
-            </div>
-            <span class="library-total">
-              <span>{{ activePhotos.length }}</span>
-              <span>ITEMS</span>
-            </span>
-          </header>
-
           <FilterRail
             v-if="activeGroup.photoGroups?.length"
             :aria-label="t('island.subjectNavigation')"
@@ -132,8 +120,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
 import { Location } from '@element-plus/icons-vue'
 
 import CollectionTabs, {
@@ -176,17 +165,19 @@ interface PhotographyGroup {
 
 const PAGE_SIZE = 30
 const { locale, t, tm } = useI18n()
+const route = useRoute()
+const router = useRouter()
 const libraryRef = ref<HTMLElement | null>(null)
 const activeGroupId = ref<PhotographyGroup['id']>('outside')
 const activePhotoGroupId = ref('all')
 const currentPage = ref(1)
 
-const photographyGroups = computed<PhotographyGroup[]>(() => {
-  return tm('island.dynamic.photographyGroups') as PhotographyGroup[]
+const photoWorkGroups = computed<PhotographyGroup[]>(() => {
+  return tm('island.dynamic.photoWorks.groups') as PhotographyGroup[]
 })
 
 const activeGroup = computed(() =>
-  photographyGroups.value.find((group) => group.id === activeGroupId.value)
+  photoWorkGroups.value.find((group) => group.id === activeGroupId.value)
 )
 
 const getGroupPhotoCount = (group: PhotographyGroup) =>
@@ -195,7 +186,7 @@ const getGroupPhotoCount = (group: PhotographyGroup) =>
   0
 
 const collectionTabs = computed<CollectionTabItem[]>(() =>
-  photographyGroups.value.map((group) => ({
+  photoWorkGroups.value.map((group) => ({
     id: group.id,
     title: group.title,
     subtitle: locale.value !== 'en' ? group.titleEn : undefined,
@@ -255,19 +246,80 @@ const galleryRenderKey = computed(
     `${activeGroupId.value}:${activePhotoGroupId.value}:${currentPage.value}`
 )
 
-const selectGroup = (groupId: PhotographyGroup['id']) => {
-  activeGroupId.value = groupId
-  activePhotoGroupId.value = 'all'
-  currentPage.value = 1
+const getRouteQueryValue = (value: unknown) =>
+  Array.isArray(value) ? value[0] : value
+
+const normalizeGroupId = (value: unknown): PhotographyGroup['id'] =>
+  value === 'home' ? 'home' : 'outside'
+
+const normalizePhotoGroupId = (
+  value: unknown,
+  group: PhotographyGroup | undefined
+) => {
+  const photoGroups = group?.photoGroups || []
+  const subjectId = getRouteQueryValue(value)
+  const subjectIds = ['all', ...photoGroups.map((item) => item.id)]
+
+  return subjectIds.includes(String(subjectId)) ? String(subjectId) : 'all'
+}
+
+const updatePhotoRoute = (
+  groupId: PhotographyGroup['id'],
+  photoGroupId = 'all'
+) => {
+  const nextGroup = photoWorkGroups.value.find((group) => group.id === groupId)
+  const nextQuery = { ...route.query, type: groupId }
+
+  if (nextGroup?.photoGroups?.length) {
+    nextQuery.subject = normalizePhotoGroupId(photoGroupId, nextGroup)
+  } else {
+    delete nextQuery.subject
+  }
+
+  router.push({
+    path: route.path,
+    query: nextQuery,
+  })
+}
+
+const replaceCanonicalPhotoRoute = (
+  groupId: PhotographyGroup['id'],
+  photoGroupId: string,
+  group: PhotographyGroup | undefined
+) => {
+  const nextQuery = { ...route.query, type: groupId }
+  const shouldKeepSubject = Boolean(group?.photoGroups?.length)
+  const currentType = getRouteQueryValue(route.query.type)
+  const currentSubject = getRouteQueryValue(route.query.subject)
+
+  if (shouldKeepSubject) {
+    nextQuery.subject = photoGroupId
+  } else {
+    delete nextQuery.subject
+  }
+
+  const isCanonical =
+    currentType === groupId &&
+    (shouldKeepSubject
+      ? currentSubject === photoGroupId
+      : currentSubject === undefined)
+
+  if (isCanonical) return
+
+  router.replace({
+    path: route.path,
+    query: nextQuery,
+  })
 }
 
 const selectGroupTab = (groupId: string) => {
-  if (groupId === 'outside' || groupId === 'home') selectGroup(groupId)
+  if (groupId === 'outside' || groupId === 'home') {
+    updatePhotoRoute(groupId)
+  }
 }
 
 const selectPhotoGroup = (groupId: string) => {
-  activePhotoGroupId.value = groupId
-  currentPage.value = 1
+  updatePhotoRoute(activeGroupId.value, groupId)
 }
 
 const setPage = (page: number) => {
@@ -279,6 +331,29 @@ const setPage = (page: number) => {
 
 const getMediaLabel = (media: GalleryMedia) =>
   media.location || media.title || t('island.photoFallback')
+
+watch(
+  [() => route.query.type, () => route.query.subject, photoWorkGroups],
+  ([type, subject]) => {
+    const nextGroupId = normalizeGroupId(getRouteQueryValue(type))
+    const nextGroup = photoWorkGroups.value.find(
+      (group) => group.id === nextGroupId
+    )
+    const nextPhotoGroupId = normalizePhotoGroupId(subject, nextGroup)
+    const hasChanged =
+      activeGroupId.value !== nextGroupId ||
+      activePhotoGroupId.value !== nextPhotoGroupId
+
+    replaceCanonicalPhotoRoute(nextGroupId, nextPhotoGroupId, nextGroup)
+
+    if (!hasChanged) return
+
+    activeGroupId.value = nextGroupId
+    activePhotoGroupId.value = nextPhotoGroupId
+    currentPage.value = 1
+  },
+  { immediate: true }
+)
 </script>
 
 <style lang="less" scoped>
@@ -302,7 +377,7 @@ const getMediaLabel = (media: GalleryMedia) =>
 
   &.has-subject-filter {
     display: grid;
-    grid-template-columns: 172px minmax(0, 1fr);
+    grid-template-columns: 212px minmax(0, 1fr);
     align-items: start;
     column-gap: clamp(18px, 2.5vw, 34px);
 

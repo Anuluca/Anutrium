@@ -27,6 +27,7 @@ declare module '@vue/runtime-core' {
     ElSwitch: typeof import('element-plus/es')['ElSwitch']
     FilterRail: typeof import('./src/components/FilterRail/index.vue')['default']
     FooterCom: typeof import('./src/components/FooterCom/index.vue')['default']
+    ImageLogAlbumCard: typeof import('./src/components/ImageLogAlbumCard/index.vue')['default']
     IslandClock: typeof import('./src/components/IslandClock/index.vue')['default']
     JourneyVideoPlayer: typeof import('./src/components/JourneyVideoPlayer/index.vue')['default']
     Logo: typeof import('./src/components/Logo/index.vue')['default']

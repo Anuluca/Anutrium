@@ -2,6 +2,17 @@
 @white-bright: rgba(255, 255, 255, 0.84);
 @white-soft: rgba(255, 255, 255, 0.62);
 @white-faint: rgba(255, 255, 255, 0.3);
+@dark-surface: rgba(12, 4, 12, 0.62);
+@dark-border: rgba(255, 255, 255, 0.1);
+@dark-shadow: rgba(0, 0, 0, 0.42);
+@light-page-bg: #f5f1eb;
+@light-surface: rgba(255, 255, 255, 0.72);
+@light-surface-strong: rgba(255, 255, 255, 0.9);
+@light-text: #21161b;
+@light-muted: rgba(33, 22, 27, 0.58);
+@light-faint: rgba(33, 22, 27, 0.34);
+@light-border: rgba(33, 22, 27, 0.12);
+@light-shadow: rgba(45, 24, 30, 0.12);
 
 :global(body.island-pc-shell),
 :global(body.island-pc-shell-leaving) {
@@ -10,6 +21,12 @@
   margin: 0;
   padding: 0;
   overflow: hidden;
+  background: #050105;
+}
+
+:global(body.island-pc-shell #app),
+:global(body.island-pc-shell-leaving #app) {
+  background: #050105;
 }
 
 :global(body.island-pc-shell .router-container),
@@ -23,6 +40,7 @@
   min-height: 100vh;
   color: @white-bright;
   overflow: hidden;
+  background: transparent;
 }
 
 .harbor-stage {
@@ -44,17 +62,7 @@
     inset: 0;
     z-index: -2;
     opacity: 0;
-    background: radial-gradient(
-        circle at 52% 18%,
-        rgba(226, 52, 86, 0.12),
-        transparent 32%
-      ),
-      linear-gradient(
-        90deg,
-        rgba(0, 0, 0, 0.52),
-        rgba(0, 0, 0, 0.08) 26%,
-        rgba(0, 0, 0, 0.28)
-      );
+    background: transparent;
     pointer-events: none;
     animation: island-bg-in 1.25s ease 0.62s forwards;
   }
@@ -65,12 +73,12 @@
     inset: 0;
     z-index: -1;
     background-image: linear-gradient(
-        rgba(226, 52, 86, 0.035) 1px,
+        rgba(255, 255, 255, 0.04) 1px,
         transparent 1px
       ),
-      linear-gradient(90deg, rgba(226, 52, 86, 0.028) 1px, transparent 1px);
+      linear-gradient(90deg, rgba(226, 52, 86, 0.05) 1px, transparent 1px);
     background-size: 54px 54px;
-    opacity: 0.48;
+    opacity: 0.5;
     mask-image: linear-gradient(
       to right,
       transparent,
@@ -103,6 +111,14 @@
   padding-left: 22px;
   margin-left: -10px;
   overflow: hidden;
+  border: 1px solid @dark-border;
+  background: linear-gradient(
+      135deg,
+      rgba(226, 52, 86, 0.12),
+      transparent 48%
+    ),
+    @dark-surface;
+  box-shadow: 0 18px 44px @dark-shadow;
   opacity: 0;
   transform: translateY(16px);
   animation: harbor-block-enter 1.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -412,14 +428,11 @@
         transparent 264px,
         transparent 360px
       ),
-      repeating-linear-gradient(
-        90deg,
-        rgba(226, 52, 86, 0.1) 0 1px,
-        transparent 1px 7px
-      );
-    background-size: 520px 100%, 7px 100%;
-    background-position: 0 0, 0 0;
-    background-repeat: repeat-x, repeat;
+      linear-gradient(rgba(226, 52, 86, 0.12) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(226, 52, 86, 0.1) 1px, transparent 1px);
+    background-size: 520px 100%, 18px 10px, 18px 10px;
+    background-position: 0 0, 0 0, 0 0;
+    background-repeat: repeat-x, repeat, repeat;
     box-shadow: 0 0 20px rgba(226, 52, 86, 0.18);
     animation-duration: 3.1s;
   }
@@ -518,6 +531,390 @@
   100% {
     transform: translateY(100%);
   }
+}
+
+:global(html.light:has(body.island-pc-shell)),
+:global(html.light:has(body.island-pc-shell-leaving)),
+:global(body.light.island-pc-shell),
+:global(body.light.island-pc-shell-leaving) {
+  position: relative;
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+:global(body.light.island-pc-shell::before),
+:global(body.light.island-pc-shell-leaving::before),
+:global(body.light.island-pc-shell::after),
+:global(body.light.island-pc-shell-leaving::after) {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+}
+
+:global(body.light.island-pc-shell::before),
+:global(body.light.island-pc-shell-leaving::before) {
+  background: radial-gradient(
+      circle at 18% 14%,
+      rgba(226, 52, 86, 0.08),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 78% 28%,
+      rgba(255, 255, 255, 0.28),
+      transparent 38%
+    ),
+    rgba(232, 224, 214, 0.42);
+  animation: island-light-bg-fade-in 0.56s ease forwards;
+}
+
+:global(body.light.island-pc-shell::after),
+:global(body.light.island-pc-shell-leaving::after) {
+  z-index: 1;
+  background-image: linear-gradient(
+      rgba(33, 22, 27, 0.055) 1px,
+      transparent 1px
+    ),
+    linear-gradient(90deg, rgba(226, 52, 86, 0.055) 1px, transparent 1px);
+  background-size: 54px 54px;
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 10%,
+    #000 92%,
+    transparent
+  );
+  animation: island-light-grid-fade-in 0.56s ease forwards;
+}
+
+:global(body.light.island-pc-shell-leaving::before) {
+  animation: island-light-bg-fade-out 0.24s ease forwards;
+}
+
+:global(body.light.island-pc-shell-leaving::after) {
+  animation: island-light-grid-fade-out 0.24s ease forwards;
+}
+
+:global(body.light.island-pc-shell #app),
+:global(body.light.island-pc-shell-leaving #app) {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+:global(body.light.island-pc-shell .island-page),
+:global(body.light.island-pc-shell-leaving .island-page) {
+  color: @light-text;
+  background: transparent;
+}
+
+:global(body.light.island-pc-shell .harbor-stage::before),
+:global(body.light.island-pc-shell-leaving .harbor-stage::before) {
+  background: transparent;
+  animation: none;
+}
+
+:global(body.light.island-pc-shell .harbor-stage::after),
+:global(body.light.island-pc-shell-leaving .harbor-stage::after) {
+  background-image: none;
+  opacity: 0;
+}
+
+@keyframes island-light-bg-fade-in {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes island-light-grid-fade-in {
+  to {
+    opacity: 0.62;
+  }
+}
+
+@keyframes island-light-bg-fade-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes island-light-grid-fade-out {
+  from {
+    opacity: 0.62;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+:global(body.light.island-pc-shell .harbor-side),
+:global(body.light.island-pc-shell-leaving .harbor-side) {
+  border-right-color: @light-border;
+}
+
+:global(body.light.island-pc-shell .harbor-title),
+:global(body.light.island-pc-shell .harbor-player),
+:global(body.light.island-pc-shell-leaving .harbor-title),
+:global(body.light.island-pc-shell-leaving .harbor-player) {
+  border-color: @light-border;
+  background: linear-gradient(
+      135deg,
+      rgba(226, 52, 86, 0.055),
+      transparent 48%
+    ),
+    @light-surface;
+  box-shadow: 0 18px 44px @light-shadow;
+}
+
+:global(body.light.island-pc-shell .port-panel),
+:global(body.light.island-pc-shell-leaving .port-panel) {
+  border-right-color: rgba(33, 22, 27, 0.14);
+}
+
+:global(body.light.island-pc-shell .port-panel::before),
+:global(body.light.island-pc-shell-leaving .port-panel::before) {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(226, 52, 86, 0.54) 12%,
+    rgba(226, 52, 86, 0.78) 50%,
+    rgba(226, 52, 86, 0.54) 88%,
+    transparent
+  );
+  box-shadow: 0 -20px 38px rgba(226, 52, 86, 0.16);
+}
+
+:global(body.light.island-pc-shell .port-panel::after),
+:global(body.light.island-pc-shell-leaving .port-panel::after) {
+  background: linear-gradient(
+    180deg,
+    rgba(226, 52, 86, 0.18) 0%,
+    rgba(226, 52, 86, 0.08) 28%,
+    transparent 72%
+  );
+}
+
+:global(body.light.island-pc-shell .page-title .title-en),
+:global(body.light.island-pc-shell .latest-head strong),
+:global(body.light.island-pc-shell .port-head h2),
+:global(body.light.island-pc-shell .latest-item strong),
+:global(body.light.island-pc-shell .track-title strong),
+:global(body.light.island-pc-shell-leaving .page-title .title-en),
+:global(body.light.island-pc-shell-leaving .latest-head strong),
+:global(body.light.island-pc-shell-leaving .port-head h2),
+:global(body.light.island-pc-shell-leaving .latest-item strong),
+:global(body.light.island-pc-shell-leaving .track-title strong) {
+  color: @light-text;
+  text-shadow: none;
+  -webkit-text-fill-color: @light-text;
+}
+
+:global(body.light.island-pc-shell .header-meta span),
+:global(body.light.island-pc-shell .port-head p),
+:global(body.light.island-pc-shell .latest-item em),
+:global(body.light.island-pc-shell .track-status),
+:global(body.light.island-pc-shell .track-title em),
+:global(body.light.island-pc-shell .player-seal),
+:global(body.light.island-pc-shell-leaving .header-meta span),
+:global(body.light.island-pc-shell-leaving .port-head p),
+:global(body.light.island-pc-shell-leaving .latest-item em),
+:global(body.light.island-pc-shell-leaving .track-status),
+:global(body.light.island-pc-shell-leaving .track-title em),
+:global(body.light.island-pc-shell-leaving .player-seal) {
+  color: @light-muted;
+  text-shadow: none;
+  -webkit-text-fill-color: @light-muted;
+}
+
+:global(body.light.island-pc-shell .port-head h2),
+:global(body.light.island-pc-shell .port-head p),
+:global(body.light.island-pc-shell-leaving .port-head h2),
+:global(body.light.island-pc-shell-leaving .port-head p) {
+  background: none;
+  background-clip: border-box;
+  -webkit-background-clip: border-box;
+}
+
+:global(body.light.island-pc-shell .header-bg-icon),
+:global(body.light.island-pc-shell-leaving .header-bg-icon) {
+  opacity: 0.2;
+  filter: drop-shadow(0 0 12px rgba(226, 52, 86, 0.22));
+}
+
+:global(body.light.island-pc-shell .board-watermark),
+:global(body.light.island-pc-shell-leaving .board-watermark) {
+  background: linear-gradient(
+      110deg,
+      transparent 0,
+      transparent 2100px,
+      rgba(226, 52, 86, 0.06) 2280px,
+      rgba(226, 52, 86, 0.32) 2480px,
+      rgba(255, 255, 255, 0.74) 2600px,
+      rgba(226, 52, 86, 0.32) 2720px,
+      rgba(226, 52, 86, 0.06) 2920px,
+      transparent 3100px,
+      transparent 5200px
+    ),
+    linear-gradient(180deg, rgba(33, 22, 27, 0.22), rgba(226, 52, 86, 0.18));
+  background-clip: text;
+  filter: none;
+  -webkit-background-clip: text;
+  -webkit-text-stroke-color: rgba(226, 52, 86, 0.12);
+  opacity: 0.72;
+}
+
+:global(body.light.island-pc-shell .corner),
+:global(body.light.island-pc-shell-leaving .corner) {
+  border-color: rgba(33, 22, 27, 0.24);
+}
+
+:global(body.light.island-pc-shell .latest-item),
+:global(body.light.island-pc-shell-leaving .latest-item) {
+  border-top-color: rgba(33, 22, 27, 0.12);
+}
+
+:global(body.light.island-pc-shell .latest-item img),
+:global(body.light.island-pc-shell-leaving .latest-item img) {
+  border-color: rgba(226, 52, 86, 0.18);
+  filter: saturate(0.96) brightness(1.02) contrast(0.96);
+}
+
+:global(body.light.island-pc-shell .latest-item:hover strong),
+:global(body.light.island-pc-shell .latest-item:hover em),
+:global(body.light.island-pc-shell-leaving .latest-item:hover strong),
+:global(body.light.island-pc-shell-leaving .latest-item:hover em) {
+  color: #fff;
+  -webkit-text-fill-color: #fff;
+}
+
+:global(body.light.island-pc-shell .bay-card),
+:global(body.light.island-pc-shell-leaving .bay-card) {
+  border-color: rgba(226, 52, 86, 0.28);
+  background: rgba(7, 2, 8, 0.18);
+  box-shadow: none;
+}
+
+:global(body.light.island-pc-shell .bay-card .card-body),
+:global(body.light.island-pc-shell-leaving .bay-card .card-body) {
+  background: transparent;
+}
+
+:global(body.light.island-pc-shell .bay-card img),
+:global(body.light.island-pc-shell-leaving .bay-card img) {
+  opacity: 1;
+  filter: saturate(0.7) brightness(0.58);
+}
+
+:global(body.light.island-pc-shell .card-shade),
+:global(body.light.island-pc-shell-leaving .card-shade) {
+  background: linear-gradient(to top, rgba(4, 1, 4, 0.92), transparent 52%),
+    linear-gradient(90deg, rgba(226, 52, 86, 0.14), transparent 38%),
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.04) 0 1px,
+      transparent 1px 4px
+    );
+}
+
+:global(body.light.island-pc-shell .card-info strong),
+:global(body.light.island-pc-shell-leaving .card-info strong) {
+  color: @white-bright;
+  -webkit-text-fill-color: @white-bright;
+}
+
+:global(body.light.island-pc-shell .card-info em),
+:global(body.light.island-pc-shell-leaving .card-info em) {
+  color: @white-faint;
+  -webkit-text-fill-color: @white-faint;
+}
+
+:global(body.light.island-pc-shell .card-info b),
+:global(body.light.island-pc-shell-leaving .card-info b) {
+  color: @white-soft;
+  -webkit-text-fill-color: @white-soft;
+}
+
+:global(body.light.island-pc-shell .card-count-number),
+:global(body.light.island-pc-shell .card-count-unit),
+:global(body.light.island-pc-shell-leaving .card-count-number),
+:global(body.light.island-pc-shell-leaving .card-count-unit) {
+  color: @red;
+  -webkit-text-fill-color: @red;
+}
+
+:global(body.light.island-pc-shell .bay-card:hover .card-info strong),
+:global(body.light.island-pc-shell .bay-card:hover .card-info em),
+:global(body.light.island-pc-shell .bay-card:hover .card-info b),
+:global(body.light.island-pc-shell .bay-card:hover .card-count-number),
+:global(body.light.island-pc-shell .bay-card:hover .card-count-unit),
+:global(body.light.island-pc-shell-leaving .bay-card:hover .card-info strong),
+:global(body.light.island-pc-shell-leaving .bay-card:hover .card-info em),
+:global(body.light.island-pc-shell-leaving .bay-card:hover .card-info b),
+:global(body.light.island-pc-shell-leaving .bay-card:hover .card-count-number),
+:global(body.light.island-pc-shell-leaving .bay-card:hover .card-count-unit) {
+  color: #080307;
+  -webkit-text-fill-color: #080307;
+}
+
+:global(body.light.island-pc-shell .track-bar),
+:global(body.light.island-pc-shell-leaving .track-bar) {
+  background: rgba(33, 22, 27, 0.12);
+}
+
+:global(body.light.island-pc-shell .latest-pages),
+:global(body.light.island-pc-shell-leaving .latest-pages) {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
+:global(body.light.island-pc-shell .port-progress span),
+:global(body.light.island-pc-shell-leaving .port-progress span) {
+  color: @light-muted;
+}
+
+:global(body.light.island-pc-shell .port-progress div),
+:global(body.light.island-pc-shell-leaving .port-progress div) {
+  background: rgba(33, 22, 27, 0.18);
+}
+
+:global(body.light.island-pc-shell .port-progress i),
+:global(body.light.island-pc-shell-leaving .port-progress i) {
+  background: @light-text;
+  box-shadow: 0 0 10px rgba(33, 22, 27, 0.22);
+}
+
+:global(body.light.island-pc-shell .harbor-player),
+:global(body.light.island-pc-shell-leaving .harbor-player) {
+  border-top-color: rgba(33, 22, 27, 0.12);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.82), transparent);
+}
+
+:global(body.light.island-pc-shell .player-cover),
+:global(body.light.island-pc-shell-leaving .player-cover) {
+  filter: saturate(1.02) brightness(1);
+}
+
+:global(body.light.island-pc-shell .track-store-link:hover strong),
+:global(body.light.island-pc-shell-leaving .track-store-link:hover strong) {
+  color: @red;
+  -webkit-text-fill-color: @red;
+}
+
+:global(body.light.island-pc-shell .track-control:hover),
+:global(body.light.island-pc-shell-leaving .track-control:hover) {
+  --control-color: @light-text;
+}
+
+:global(body.light.island-pc-shell .player-seal i),
+:global(body.light.island-pc-shell-leaving .player-seal i) {
+  background-color: rgba(255, 255, 255, 0.48);
 }
 
 .latest-item {

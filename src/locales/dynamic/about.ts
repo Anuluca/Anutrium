@@ -1,8 +1,25 @@
+import PokeAmice from '@/assets/img/about/pokeAmice.png'
+
 const aboutDynamic = {
+  neighbours: [
+    {
+      name: 'DRRR情报屋',
+      url: 'https://DRRR.anuluca.com',
+      logo: 'https://assets.anuluca.com/Logo/drrrfavicon.svg',
+      description: '《无头骑士异闻录》关系网｜非官方档案站',
+    },
+    {
+      name: 'Poke Amice 宝可梦友会',
+      url: 'http://pokeamice.com',
+      logo: PokeAmice,
+      description:
+        '此处是由一位业余宝可梦爱好者Asimov创建的宝可梦全栈资料整理站点&个人研究据点。',
+    },
+  ],
   changelogs: [
     {
       version: 'v1.1',
-      date: '2026-07-01',
+      date: '2026-07-08',
       title: {
         zhCn: '内容更新：旅程、工具',
         en: 'CONTENT UPDATE: FLÂNERIE & TOOLS',
@@ -27,6 +44,10 @@ const aboutDynamic = {
         {
           zhCn: '新增__当前工作状态__模块',
           en: 'Added the __Current Work Status__ section.',
+        },
+        {
+          zhCn: '多项过渡动画效果重做',
+          en: 'Redesigned and reimplemented several transition animations.',
         },
         {
           zhCn: '移除无用样式变量和代码清理',

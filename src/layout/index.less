@@ -15,6 +15,14 @@
   &.layout-show {
     opacity: 1;
   }
+  &.entry-logo-ready {
+    .el-menu-layout-all {
+      .logo-box {
+        opacity: 1;
+        pointer-events: auto;
+      }
+    }
+  }
   &.no-menu {
     .el-menu-layout-all {
       display: none;
@@ -118,6 +126,8 @@
       border: 0;
       background: transparent;
       cursor: pointer;
+      opacity: 0;
+      pointer-events: none;
       transition: all 0.5s ease;
 
       &:hover {
@@ -778,16 +788,32 @@
   .layout-page {
     .el-menu-layout-all {
       &.scrolled {
-        background-color: #ededed60;
-        border: 0px solid rgba(66, 66, 66, 0.542);
+        background: linear-gradient(
+          to bottom,
+          rgba(255, 255, 255, 0.92) 0%,
+          rgba(255, 255, 255, 0.74) 62%,
+          rgba(255, 255, 255, 0) 100%
+        );
+        border: 0px solid rgba(0, 0, 0, 0.08);
         box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+
+        &:hover {
+          border-color: rgba(226, 52, 86, 0.24);
+          background: linear-gradient(
+              to bottom,
+              rgba(255, 255, 255, 0.94) 0%,
+              rgba(255, 255, 255, 0.78) 62%,
+              rgba(255, 255, 255, 0) 100%
+            ),
+            rgba(226, 52, 86, 0.06);
+        }
       }
     }
 
     .mobile-menu-icon {
       &.scrolled {
-        background-color: #ededed60;
-        border: 0px solid rgba(66, 66, 66, 0.542);
+        background: rgba(255, 255, 255, 0.78);
+        border: 0px solid rgba(0, 0, 0, 0.08);
         box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
       }
     }

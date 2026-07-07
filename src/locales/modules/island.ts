@@ -1,4 +1,4 @@
-import dynamic from '../dynamic/island'
+import dynamic from '../dynamic/island/index'
 
 const island = {
   ariaLabel: {
@@ -38,8 +38,8 @@ const island = {
     en: 'MERCH PHOTOGRAPHY',
   },
   merchPhotographyTagline: {
-    zhCn: '把热爱摆进镜头，也把细节留给时间。',
-    en: 'Framing what I love, preserving every detail in time.',
+    zhCn: '现在不怎么买了。',
+    en: 'Nothing to buy now.',
   },
   merchCollectionLabel: {
     zhCn: 'PICS',
@@ -48,6 +48,22 @@ const island = {
   merchEmpty: {
     zhCn: '这组影像仍在准备中',
     en: 'THIS COLLECTION IS IN DEVELOPMENT',
+  },
+  imageLogTitle: {
+    zhCn: '图像记录',
+    en: 'IMAGE LOG',
+  },
+  imageLogTagline: {
+    zhCn: '记录留档，等人考古。',
+    en: 'Archived for future excavation.',
+  },
+  imageLogAlbumLabel: {
+    zhCn: 'PICS',
+    en: 'PICS',
+  },
+  imageLogEmpty: {
+    zhCn: '图像记录仍在整理中',
+    en: 'IMAGE LOG IS IN DEVELOPMENT',
   },
   photoFallback: {
     zhCn: '摄影作品',

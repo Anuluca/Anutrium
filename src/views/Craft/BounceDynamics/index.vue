@@ -117,6 +117,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import ToolCrystalLogo from '@/components/ToolCrystalLogo/index.vue'
 import ToolPageLayout from '@/components/ToolPageLayout/index.vue'
+import { visualState } from '@/stores'
 
 interface BallState {
   contactTime: number
@@ -136,6 +137,7 @@ interface TrajectoryPoint {
 
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 const trackRef = ref<HTMLElement | null>(null)
+const visualStateStore = visualState()
 const isRunning = ref(true)
 const elasticity = ref(68)
 const weight = ref(1.7)
@@ -165,6 +167,7 @@ const elasticityLabel = computed(() => {
   if (elasticity.value < 76) return 'BALANCED'
   return 'HARD'
 })
+const isLightTheme = computed(() => visualStateStore.theme === 'light')
 
 let ctx: CanvasRenderingContext2D | null = null
 let rafId: number | null = null
@@ -344,10 +347,12 @@ const drawBackground = (context: CanvasRenderingContext2D) => {
   context.clearRect(0, 0, width, height)
   context.save()
   context.globalAlpha = 0.9
-  context.fillStyle = '#090406'
+  context.fillStyle = isLightTheme.value ? '#f7f4ef' : '#090406'
   context.fillRect(0, 0, width, height)
 
-  context.strokeStyle = 'rgba(255,255,255,0.045)'
+  context.strokeStyle = isLightTheme.value
+    ? 'rgba(0,0,0,0.055)'
+    : 'rgba(255,255,255,0.045)'
   context.lineWidth = 1
   for (let x = -40 + driftX; x <= width + 40; x += 40) {
     context.beginPath()
@@ -363,9 +368,18 @@ const drawBackground = (context: CanvasRenderingContext2D) => {
   }
 
   const glow = context.createLinearGradient(0, 0, 0, height)
-  glow.addColorStop(0, 'rgba(232,40,74,0.1)')
-  glow.addColorStop(0.45, 'rgba(232,40,74,0.015)')
-  glow.addColorStop(1, 'rgba(232,40,74,0.06)')
+  glow.addColorStop(
+    0,
+    isLightTheme.value ? 'rgba(232,40,74,0.08)' : 'rgba(232,40,74,0.1)'
+  )
+  glow.addColorStop(
+    0.45,
+    isLightTheme.value ? 'rgba(232,40,74,0.025)' : 'rgba(232,40,74,0.015)'
+  )
+  glow.addColorStop(
+    1,
+    isLightTheme.value ? 'rgba(232,40,74,0.045)' : 'rgba(232,40,74,0.06)'
+  )
   context.fillStyle = glow
   context.fillRect(0, 0, width, height)
   context.restore()
@@ -391,9 +405,13 @@ const drawShadow = (context: CanvasRenderingContext2D) => {
   const shadowH = ball.r * (0.12 + near * 0.12)
 
   context.save()
-  context.globalAlpha = 0.18 + near * 0.34
+  context.globalAlpha = isLightTheme.value
+    ? 0.12 + near * 0.24
+    : 0.18 + near * 0.34
   context.filter = 'blur(8px)'
-  context.fillStyle = 'rgba(0,0,0,0.8)'
+  context.fillStyle = isLightTheme.value
+    ? 'rgba(40,20,24,0.52)'
+    : 'rgba(0,0,0,0.8)'
   context.beginPath()
   context.ellipse(ball.x, floorY + 15, shadowW, shadowH, 0, 0, Math.PI * 2)
   context.fill()
@@ -542,6 +560,10 @@ const handleVisibilityChange = () => {
 
 watch([elasticity, weight], () => {
   restartSimulation()
+})
+
+watch(isLightTheme, () => {
+  drawFrame()
 })
 
 onMounted(async () => {

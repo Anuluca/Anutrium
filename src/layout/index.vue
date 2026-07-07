@@ -4,6 +4,7 @@
     :class="{
       'layout-page': true,
       'layout-show': layoutShow,
+      'entry-logo-ready': headerLogoReady,
       'no-menu': ifNoMenu,
     }"
   >
@@ -14,7 +15,7 @@
         :aria-label="locale === 'en' ? 'Return home' : '返回首页'"
         @click="returnHome"
       >
-        <Logo id="0" class="logo" :active="false" />
+        <Logo id="0" class="logo" :active="false" data-entry-logo-target />
         <div :class="['right', locale]">
           <p>
             <span>{{ $t('name[0]') }}</span>
@@ -254,6 +255,7 @@ const props = defineProps({
 })
 
 const logoActive = ref(true)
+const headerLogoReady = ref(false)
 
 const route = useRoute()
 const router = useRouter()
@@ -315,6 +317,8 @@ let islandGeometryUnlockTimer: number | null = null
 let hasPlayedEntryAnimation = false
 const ISLAND_ROUTE_NAME = 'TEST'
 const ISLAND_GEOMETRY_UNLOCK_DELAY = 260
+const ENTRY_LOGO_REVEAL_DELAY = 600
+const ENTRY_LOGO_REVEAL_DURATION = 300
 const islandShellClasses = ['island-pc-shell', 'island-mobile-shell'] as const
 const islandLeavingClasses = [
   'island-pc-shell-leaving',
@@ -338,12 +342,18 @@ const startEntryAnimation = () => {
 
   clearEntryAnimationTimers()
   logoActive.value = true
+  headerLogoReady.value = false
   layoutShow.value = false
 
   logoTimer = window.setTimeout(() => {
-    logoActive.value = false
-    logoTimer = null
-  }, 400)
+    headerLogoReady.value = true
+
+    logoTimer = window.setTimeout(() => {
+      logoActive.value = false
+      logoTimer = null
+    }, ENTRY_LOGO_REVEAL_DURATION)
+  }, ENTRY_LOGO_REVEAL_DELAY)
+
   layoutTimer = window.setTimeout(() => {
     layoutShow.value = true
     layoutTimer = null
@@ -455,6 +465,16 @@ const hasIslandShellClass = () =>
     document.body.classList.contains(className)
   )
 
+const markIslandRouteLeaving = () => {
+  if (document.body.classList.contains('island-pc-shell')) {
+    document.body.classList.add('island-pc-shell-leaving')
+  }
+
+  if (document.body.classList.contains('island-mobile-shell')) {
+    document.body.classList.add('island-mobile-shell-leaving')
+  }
+}
+
 const refreshScrollState = () => {
   if (scrollRafId !== null) {
     window.cancelAnimationFrame(scrollRafId)
@@ -465,6 +485,7 @@ const refreshScrollState = () => {
 
 const lockIslandRouteGeometry = (leavingElement: Element) => {
   clearIslandGeometryUnlockTimer()
+  markIslandRouteLeaving()
 
   if (leavingElement instanceof HTMLElement) {
     const bounds = leavingElement.getBoundingClientRect()
@@ -547,6 +568,13 @@ watch(
   () => route.fullPath,
   async () => {
     closeMobileMenu()
+    if (route.name !== ISLAND_ROUTE_NAME) {
+      clearIslandGeometryUnlockTimer()
+      document.body.classList.remove(
+        ...islandShellClasses,
+        ...islandLeavingClasses
+      )
+    }
     await nextTick()
     scheduleIslandGeometryUnlock()
     refreshScrollState()

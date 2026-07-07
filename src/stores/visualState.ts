@@ -24,11 +24,20 @@ export default defineStore('visualState', {
       localStorage.setItem('theme', theme)
 
       const bodyElement = document.body
+      const rootElement = document.documentElement
       if (theme === 'dark') {
         bodyElement.classList.remove('light')
+        bodyElement.classList.add('dark')
+        rootElement.classList.remove('light')
+        rootElement.classList.add('dark')
       } else {
         bodyElement.classList.add('light')
+        bodyElement.classList.remove('dark')
+        rootElement.classList.add('light')
+        rootElement.classList.remove('dark')
       }
+      rootElement.dataset.theme = theme
+      bodyElement.dataset.theme = theme
 
       this.theme = theme
     },

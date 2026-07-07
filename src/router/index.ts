@@ -111,6 +111,8 @@ const DESCRIPTION_ROUTE_GROUPS: Record<string, keyof typeof PAGE_DESCRIPTIONS> =
     BASE64CODEC: 'CRAFT',
     IMAGEBASE64: 'CRAFT',
     TEST: 'ISLAND',
+    ISLAND_IMAGE_LOG: 'ISLAND',
+    ISLAND_IMAGE_LOG_DETAIL: 'ISLAND',
   }
 
 interface RouteMeta {
@@ -240,6 +242,34 @@ export const routes: RouteConfig[] = [
       activeMenu: '/island',
       titleEn: 'MERCH PHOTOGRAPHY',
       titleCn: '周边摄影',
+      fullFooter: true,
+      ifShow: false,
+      noMenu: false,
+      starBackground: 'deep-black',
+    },
+  },
+  {
+    path: '/island/image-log',
+    name: 'ISLAND_IMAGE_LOG',
+    component: () => import('@/views/Island/ImageLog/index.vue'),
+    meta: {
+      activeMenu: '/island',
+      titleEn: 'IMAGE LOG',
+      titleCn: '图像记录',
+      fullFooter: true,
+      ifShow: false,
+      noMenu: false,
+      starBackground: 'deep-black',
+    },
+  },
+  {
+    path: '/island/image-log/:albumId',
+    name: 'ISLAND_IMAGE_LOG_DETAIL',
+    component: () => import('@/views/Island/ImageLog/Detail/index.vue'),
+    meta: {
+      activeMenu: '/island',
+      titleEn: 'IMAGE LOG',
+      titleCn: '图像记录',
       fullFooter: true,
       ifShow: false,
       noMenu: false,

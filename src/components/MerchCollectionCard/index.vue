@@ -10,6 +10,7 @@
     <span class="collection-card__media">
       <img
         class="collection-card__cover collection-card__cover--primary"
+        :style="coverStyle"
         :src="primaryCover"
         :alt="collection.title"
         loading="lazy"
@@ -25,7 +26,20 @@
     <span class="collection-card__index">#{{ index }}</span>
     <span class="collection-card__copy">
       <strong>{{ collection.title }}</strong>
-      <small>{{ collection.subtitle }}</small>
+      <small>
+        <template
+          v-for="(subtitlePart, partIndex) in subtitleDisplayParts"
+          :key="partIndex"
+        >
+          <span
+            v-if="subtitlePart.isSeparator"
+            class="collection-card__copy-separator"
+          >
+            ｜
+          </span>
+          <span v-else>{{ subtitlePart.text }}</span>
+        </template>
+      </small>
     </span>
   </button>
 </template>
@@ -38,6 +52,8 @@ export interface MerchCollectionCardData {
   title: string
   subtitle: string
   cover: string
+  coverOffsetX?: string | number
+  coverOffsetY?: string | number
   photos: Array<{
     url: string
     title?: string
@@ -56,10 +72,37 @@ const emit = defineEmits<{
 
 const isOpening = ref(false)
 const cardElement = ref<HTMLButtonElement>()
+const EXPAND_OVERSCAN = 1.08
 
 const primaryCover = computed(
   () => props.collection.photos[0]?.url || props.collection.cover
 )
+
+const subtitleDisplayParts = computed(() =>
+  props.collection.subtitle
+    .split(/([｜|])/)
+    .filter((part) => part.trim())
+    .map((part) => ({
+      isSeparator: part === '｜' || part === '|',
+      text: part.trim(),
+    }))
+)
+
+const formatCoverOffset = (value: string | number | undefined) => {
+  if (value === undefined) return '0%'
+  if (typeof value === 'number') return `${value}%`
+
+  return value
+}
+
+const coverStyle = computed(() => ({
+  '--cover-position-x': `calc(50% - ${formatCoverOffset(
+    props.collection.coverOffsetX
+  )})`,
+  '--cover-position-y': `calc(42% - ${formatCoverOffset(
+    props.collection.coverOffsetY
+  )})`,
+}))
 
 const handleSelect = () => {
   if (isOpening.value) return
@@ -75,7 +118,10 @@ const handleSelect = () => {
   if (sourceCard) {
     const bounds = sourceCard.getBoundingClientRect()
     const transitionCard = sourceCard.cloneNode(true) as HTMLButtonElement
-    const scale = (window.innerHeight * 4) / 3 / bounds.height
+    const isMobileViewport = window.matchMedia('(max-width: 900px)').matches
+    const scale = isMobileViewport
+      ? (window.innerHeight * EXPAND_OVERSCAN) / bounds.height
+      : (window.innerWidth * EXPAND_OVERSCAN) / bounds.width
     const translateX = window.innerWidth / 2 - (bounds.left + bounds.width / 2)
     const translateY = window.innerHeight / 2 - (bounds.top + bounds.height / 2)
 
@@ -89,6 +135,9 @@ const handleSelect = () => {
       left: `${bounds.left}px`,
       width: `${bounds.width}px`,
       height: `${bounds.height}px`,
+    })
+    transitionCard.querySelectorAll('img').forEach((image) => {
+      image.setAttribute('loading', 'eager')
     })
     transitionCard.style.setProperty('--expand-x', `${translateX}px`)
     transitionCard.style.setProperty('--expand-y', `${translateY}px`)
@@ -122,6 +171,7 @@ const handleSelect = () => {
   transform-origin: center bottom;
   transform-style: preserve-3d;
   opacity: 1;
+  overflow: hidden;
   transition: box-shadow 0.52s cubic-bezier(0.22, 1, 0.36, 1),
     opacity 0.52s cubic-bezier(0.22, 1, 0.36, 1),
     transform 0.52s cubic-bezier(0.22, 1, 0.36, 1);
@@ -152,33 +202,52 @@ const handleSelect = () => {
     right: 7px;
     bottom: 74px;
     left: 7px;
+    z-index: 1;
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.1);
     background: #08080a;
-    box-shadow: inset 0 0 22px rgba(0, 0, 0, 0.65);
+
+    &::after {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      content: '';
+      pointer-events: none;
+      box-shadow: inset 0 0 22px rgba(0, 0, 0, 0.96),
+        inset 0 -34px 28px -10px rgba(0, 0, 0, 0.98);
+      transition: box-shadow 0.32s ease;
+    }
   }
 
   &__cover {
     position: absolute;
     inset: 0;
+    z-index: 1;
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: var(--cover-position-x, 50%) var(--cover-position-y, 0%);
+    filter: brightness(0.88);
+    transform: scale(1);
+    transition: filter 0.32s ease, opacity 0.14s ease,
+      transform 0.48s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   &__shade {
     position: absolute;
     inset: 0;
+    z-index: 3;
     background: linear-gradient(
       to bottom,
       rgba(0, 0, 0, 0.02) 58%,
-      rgba(0, 0, 0, 0.56) 100%
+      rgba(0, 0, 0, 0.42) 84%,
+      rgba(0, 0, 0, 0.78) 100%
     );
   }
 
   &__scan {
     position: absolute;
     inset: 0;
+    z-index: 4;
     opacity: 0.08;
     background: repeating-linear-gradient(
       0deg,
@@ -191,7 +260,7 @@ const handleSelect = () => {
     position: absolute;
     right: 8px;
     bottom: 57px;
-    z-index: 4;
+    z-index: 6;
     display: inline-flex;
     align-items: baseline;
     gap: 4px;
@@ -214,12 +283,12 @@ const handleSelect = () => {
 
   &__index {
     position: absolute;
-    right: 12px;
-    bottom: 9px;
-    z-index: 4;
-    color: rgba(255, 255, 255, 0.38);
+    right: -1px;
+    bottom: -1px;
+    z-index: 6;
+    color: rgba(255, 255, 255, 0.089);
     font-family: 'Anton', sans-serif;
-    font-size: 1.08rem;
+    font-size: 1.5rem;
     font-weight: 400;
     letter-spacing: 0.02em;
     line-height: 1;
@@ -230,7 +299,7 @@ const handleSelect = () => {
     right: 0;
     bottom: 0;
     left: 0;
-    z-index: 3;
+    z-index: 5;
     display: flex;
     min-height: 68px;
     padding: 12px 58px 13px 14px;
@@ -245,7 +314,7 @@ const handleSelect = () => {
       overflow: hidden;
       font-family: 'alibaba-puhuiti', sans-serif;
       color: #fff;
-      font-size: 0.72rem;
+      font-size: 0.9rem;
       font-weight: 900;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -262,6 +331,10 @@ const handleSelect = () => {
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+
+    &-separator {
+      margin-right: -2px;
+    }
   }
 
   &:focus-visible {
@@ -277,6 +350,16 @@ const handleSelect = () => {
       z-index: 4;
       box-shadow: 8px 15px 22px rgba(0, 0, 0, 0.5);
       transform: translateY(-10px) translateZ(12px) scale(1.025);
+
+      .collection-card__cover {
+        filter: brightness(1);
+        transform: scale(1.045);
+      }
+
+      .collection-card__media::after {
+        box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.72),
+          inset 0 -32px 26px -10px rgba(0, 0, 0, 0.88);
+      }
     }
   }
 }
@@ -301,6 +384,10 @@ const handleSelect = () => {
   &.is-expanded {
     opacity: 0;
     box-shadow: none;
+
+    .collection-card__cover {
+      opacity: 0;
+    }
   }
 
   &.is-expanded,

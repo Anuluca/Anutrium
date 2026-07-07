@@ -258,7 +258,7 @@ interface PhotographyGroupSummary {
 
 const photographyPhotoCount = computed(() => {
   const groups = tm(
-    'island.dynamic.photographyGroups'
+    'island.dynamic.photoWorks.groups'
   ) as PhotographyGroupSummary[]
 
   return groups.reduce(
@@ -274,8 +274,8 @@ const photographyPhotoCount = computed(() => {
   )
 })
 
-const photographyCoverUrl = computed(
-  () => tm('island.dynamic.photographyCoverUrl') as unknown as string
+const photoWorksCoverUrl = computed(
+  () => tm('island.dynamic.photoWorks.coverUrl') as unknown as string
 )
 
 const placeholder = (label: string, width = 760, height = 480) =>
@@ -283,15 +283,33 @@ const placeholder = (label: string, width = 760, height = 480) =>
     label
   )}`
 const developingPlaceholder = placeholder('WIP')
-const merchCollections = computed(
-  () =>
-    tm('island.dynamic.merchPhotographyCollections') as Array<{
-      cover: string
-    }>
+const merchCollections = computed(() =>
+  Object.values(
+    tm('island.dynamic.merchPhotos') as Record<
+      string,
+      Array<{
+        cover?: string
+        photos?: Array<{ url: string }>
+      }>
+    >
+  ).flat()
 )
 const merchCollectionCount = computed(() => merchCollections.value.length)
 const merchCoverUrl = computed(
-  () => merchCollections.value[0]?.cover || developingPlaceholder
+  () =>
+    merchCollections.value[0]?.cover ||
+    merchCollections.value[0]?.photos?.[0]?.url ||
+    developingPlaceholder
+)
+const imageLogAlbums = computed(
+  () =>
+    tm('island.dynamic.imageLog') as Array<{
+      photos?: Array<{ url: string }>
+    }>
+)
+const imageLogAlbumCount = computed(() => imageLogAlbums.value.length)
+const imageLogCoverUrl = computed(
+  () => imageLogAlbums.value[0]?.photos?.[0]?.url || developingPlaceholder
 )
 
 const openHarborItem = (item: HarborItem) => {
@@ -312,7 +330,7 @@ const harborSections: HarborSection[] = [
           return `${photographyPhotoCount.value} PICS`
         },
         get img() {
-          return photographyCoverUrl.value
+          return photoWorksCoverUrl.value
         },
         path: '/island/photography',
       },
@@ -330,8 +348,13 @@ const harborSections: HarborSection[] = [
       {
         title: '图像记录',
         subtitle: 'IMAGE LOG',
-        count: '0 PICS',
-        img: developingPlaceholder,
+        get count() {
+          return `${imageLogAlbumCount.value} ALBUMS`
+        },
+        get img() {
+          return imageLogCoverUrl.value
+        },
+        path: '/island/image-log',
       },
     ],
   },
@@ -585,6 +608,10 @@ const updateLatestScrollState = () => {
 }
 
 onMounted(() => {
+  document.body.classList.remove(
+    'island-mobile-shell',
+    'island-mobile-shell-leaving'
+  )
   document.body.classList.add('island-pc-shell')
   nextTick(() => {
     updateLatestScrollState()
@@ -601,7 +628,6 @@ onUnmounted(() => {
   cancelVolumeFade()
   stopProgressAnimation()
   audioRef.value?.pause()
-  document.body.classList.remove('island-pc-shell')
   window.removeEventListener('resize', updateLatestScrollState)
 })
 
