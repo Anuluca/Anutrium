@@ -3,11 +3,15 @@
     <div class="hero-corners" aria-hidden="true" />
     <div class="hero-copy">
       <span class="hero-label">[Crying-Yet-Joyless]</span>
-      <h1>ISLAND</h1>
+      <h1>
+        <TypedText text="ISLAND" :delay="220" :speed="42" />
+      </h1>
       <div class="hero-cn">
         <span>个人海湾</span>
       </div>
-      <p>{{ t('island.headerMeta') }}</p>
+      <p>
+        <TypedText :text="t('island.headerMeta')" :delay="520" :speed="24" />
+      </p>
     </div>
     <div class="hero-watermark" aria-hidden="true">ANULUCA'S ISLAND</div>
     <div class="hero-route-icon" aria-hidden="true">
@@ -20,6 +24,8 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { Ship } from '@element-plus/icons-vue'
+
+import TypedText from '@/components/TypedText/index.vue'
 
 const { t } = useI18n()
 </script>
@@ -64,6 +70,9 @@ const { t } = useI18n()
   font-size: 12px;
   font-weight: 900;
   letter-spacing: 0.04em;
+  opacity: 0;
+  transform: translateY(8px);
+  animation: mobile-title-copy-in 0.42s ease-out 0.16s both;
 }
 
 h1 {
@@ -83,6 +92,9 @@ h1 {
   padding-top: 0;
   background: @red;
   box-shadow: 0 0 24px rgba(226, 52, 86, 0.34);
+  opacity: 0;
+  transform: translateY(8px);
+  animation: mobile-title-copy-in 0.42s ease-out 0.42s both;
 
   span {
     color: #fff;
@@ -98,6 +110,9 @@ h1 {
   color: rgba(255, 255, 255, 0.38);
   font-size: 14px;
   font-weight: 900;
+  opacity: 0;
+  transform: translateY(8px);
+  animation: mobile-title-copy-in 0.42s ease-out 0.5s both;
 }
 
 .hero-watermark {
@@ -124,9 +139,10 @@ h1 {
   padding: 14px;
   box-sizing: border-box;
   color: @red;
-  opacity: 0.3;
+  opacity: 0;
   pointer-events: none;
   filter: drop-shadow(0 0 14px rgba(226, 52, 86, 0.8));
+  animation: mobile-title-icon-in 0.58s ease-out 0.78s both;
 
   &::before {
     position: absolute;
@@ -172,5 +188,37 @@ h1 {
   height: 2px;
   background: linear-gradient(90deg, transparent, @red 28%, transparent);
   box-shadow: 0 0 16px rgba(226, 52, 86, 0.9);
+}
+
+@keyframes mobile-title-icon-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 0.3;
+  }
+}
+
+@keyframes mobile-title-copy-in {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-label,
+  .hero-cn,
+  .hero-copy p,
+  .hero-route-icon {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .hero-route-icon {
+    opacity: 0.3;
+  }
 }
 </style>

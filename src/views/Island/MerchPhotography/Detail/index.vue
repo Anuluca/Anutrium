@@ -36,7 +36,7 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute, useRouter } from 'vue-router'
+import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 
 import DetailPageHeader from '@/components/DetailPageHeader/index.vue'
 import MediaGallery, {
@@ -62,6 +62,9 @@ type MerchPhotoGroups = Record<string, MerchCollection[]>
 const route = useRoute()
 const router = useRouter()
 const { t, tm } = useI18n()
+const MERCH_RETURN_FLAG_KEY = 'anutrium:merch-photography:returning-from-detail'
+const MERCH_RETURN_COLLECTION_KEY =
+  'anutrium:merch-photography:selected-collection'
 const collectionId = computed(() => route.params.collectionId as string)
 const collection = computed(() => {
   const collections = Object.values(
@@ -74,6 +77,14 @@ const collection = computed(() => {
 const getMediaLabel = (media: GalleryMedia) =>
   media.title || t('island.merchPhotographyTitle')
 const showMediaInfo = (media: GalleryMedia) => Boolean(media.title)
+
+onBeforeRouteLeave((to) => {
+  if (typeof window === 'undefined') return
+  if (to.name !== 'ISLAND_MERCH_PHOTOGRAPHY') return
+
+  window.sessionStorage.setItem(MERCH_RETURN_FLAG_KEY, 'true')
+  window.sessionStorage.setItem(MERCH_RETURN_COLLECTION_KEY, collectionId.value)
+})
 
 watch(
   collection,
@@ -91,6 +102,21 @@ watch(
 .merch-detail-page {
   color: var(--text-color);
   overflow: hidden;
+  transform-origin: center center;
+
+  &.route-pre-leave,
+  &.route-leave-to {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  &.route-pre-leave,
+  &.route-leave-active {
+    transition: opacity 0.18s ease,
+      transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: 0s;
+    will-change: opacity, transform;
+  }
 
   :deep(.media-gallery) {
     grid-template-columns: repeat(2, minmax(0, 1fr));

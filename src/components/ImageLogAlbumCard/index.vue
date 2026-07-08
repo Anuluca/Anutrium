@@ -21,7 +21,9 @@
           loading="lazy"
           decoding="async"
         />
-        <span v-else class="image-log-album-card__color-panel" />
+        <span v-else class="image-log-album-card__color-panel">
+          <span>MORE...</span>
+        </span>
       </span>
       <span class="image-log-album-card__blueprint" aria-hidden="true" />
     </span>
@@ -29,11 +31,6 @@
     <span class="image-log-album-card__info">
       <strong>{{ album.title }}</strong>
       <small>{{ album.subtitle }}</small>
-    </span>
-
-    <span class="image-log-album-card__count">
-      {{ album.photos.length }}
-      <small>{{ countLabel }}</small>
     </span>
   </button>
 </template>
@@ -54,10 +51,15 @@ export interface ImageLogAlbumCardData {
   photos: ImageLogAlbumCardPhoto[]
 }
 
-const props = defineProps<{
-  album: ImageLogAlbumCardData
-  countLabel: string
-}>()
+const props = withDefaults(
+  defineProps<{
+    album: ImageLogAlbumCardData
+    entranceIndex?: number
+  }>(),
+  {
+    entranceIndex: 0,
+  }
+)
 
 const emit = defineEmits<{
   (event: 'select', albumId: string): void
@@ -71,6 +73,7 @@ const previewPhotos = computed(() => [
 
 const cardStyle = computed(() => ({
   '--album-accent-color': '#7f5cff',
+  '--album-entry-delay': `${Math.max(0, props.entranceIndex) * 130}ms`,
 }))
 </script>
 
@@ -266,23 +269,23 @@ const cardStyle = computed(() => ({
   &--1 {
     z-index: 3;
     transform: translateX(-84%) translateY(16px) rotate(-5deg);
-    animation: imageLogFanLeft 0.78s cubic-bezier(0.2, 0.84, 0.22, 1) 0.24s
-      backwards;
+    animation: imageLogFanLeft 0.78s cubic-bezier(0.2, 0.84, 0.22, 1)
+      calc(var(--album-entry-delay) + 240ms) backwards;
   }
 
   &--2 {
     z-index: 2;
     transform: translateX(-50%) translateY(0) rotate(0deg);
-    animation: imageLogFanRight 0.78s cubic-bezier(0.2, 0.84, 0.22, 1) 0.3s
-      backwards;
+    animation: imageLogFanRight 0.78s cubic-bezier(0.2, 0.84, 0.22, 1)
+      calc(var(--album-entry-delay) + 300ms) backwards;
   }
 
   &--3 {
     z-index: 1;
     border: 0;
     transform: translateX(-16%) translateY(16px) rotate(5deg);
-    animation: imageLogFanFront 0.7s cubic-bezier(0.2, 0.84, 0.22, 1) 0.18s
-      backwards;
+    animation: imageLogFanFront 0.7s cubic-bezier(0.2, 0.84, 0.22, 1)
+      calc(var(--album-entry-delay) + 180ms) backwards;
 
     &::after {
       opacity: 0.1;
@@ -291,6 +294,8 @@ const cardStyle = computed(() => ({
 }
 
 .image-log-album-card__color-panel {
+  display: grid !important;
+  place-items: center;
   background: linear-gradient(
       90deg,
       rgba(76, 13, 27, 0.02) 0%,
@@ -304,6 +309,15 @@ const cardStyle = computed(() => ({
       transparent 30%,
       rgba(0, 0, 0, 0.34)
     );
+
+  span {
+    color: rgba(255, 255, 255, 0.42);
+    font-family: @mono;
+    font-size: clamp(0.7rem, 1.4vw, 1rem);
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-shadow: 0 0 12px rgba(127, 92, 255, 0.48);
+  }
 }
 
 .image-log-album-card__blueprint {
@@ -396,30 +410,6 @@ const cardStyle = computed(() => ({
   }
 }
 
-.image-log-album-card__count {
-  position: absolute;
-  top: 26px;
-  right: 12%;
-  z-index: 7;
-  display: inline-flex;
-  align-items: baseline;
-  gap: 4px;
-  padding: 5px 8px 6px;
-  color: #fff;
-  background: var(--album-accent-color);
-  box-shadow: 4px 6px 12px rgba(0, 0, 0, 0.44);
-  font-family: @mono;
-  font-size: 0.6rem;
-  font-weight: 900;
-  transform: rotate(3deg);
-  transform-origin: right top;
-
-  small {
-    font-family: inherit;
-    font-size: 0.34rem;
-  }
-}
-
 @keyframes imageLogSpectralDrift {
   0%,
   100% {
@@ -493,17 +483,6 @@ const cardStyle = computed(() => ({
       overflow: hidden;
       font-size: 0.5rem;
       text-overflow: ellipsis;
-    }
-  }
-
-  .image-log-album-card__count {
-    top: 18px;
-    right: 8%;
-    padding: 3px 5px 4px;
-    font-size: 0.44rem;
-
-    small {
-      font-size: 0.3rem;
     }
   }
 }

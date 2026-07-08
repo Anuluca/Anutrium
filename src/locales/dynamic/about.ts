@@ -1,6 +1,20 @@
 import PokeAmice from '@/assets/img/about/pokeAmice.png'
 
 const aboutDynamic = {
+  roadmap: [
+    {
+      zhCn: '__「个人海湾」__大模块',
+      en: '__"ISLAND"__ page',
+    },
+    {
+      zhCn: '__「花花观察日记」__大模块 + 右下角小花花点击进入',
+      en: '__"Flora Observation Diary"__ page',
+    },
+    {
+      zhCn: '__「宝可后院」__大模块',
+      en: '__"POKEYARD"__ page',
+    },
+  ],
   neighbours: [
     {
       name: 'DRRR情报屋',

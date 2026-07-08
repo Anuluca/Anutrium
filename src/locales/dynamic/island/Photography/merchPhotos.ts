@@ -136,6 +136,206 @@ const merchPhotos = {
         },
       ],
     },
+    {
+      id: '',
+      title: {
+        zhCn: '',
+        en: '',
+      },
+      subtitle: {
+        zhCn: '',
+        en: '',
+      },
+      photos: [
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+      ],
+    },
+    {
+      id: '',
+      title: {
+        zhCn: '',
+        en: '',
+      },
+      subtitle: {
+        zhCn: '',
+        en: '',
+      },
+      photos: [
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+      ],
+    },
+    {
+      id: '',
+      title: {
+        zhCn: '',
+        en: '',
+      },
+      subtitle: {
+        zhCn: '',
+        en: '',
+      },
+      photos: [
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+      ],
+    },
+    {
+      id: '',
+      title: {
+        zhCn: '',
+        en: '',
+      },
+      subtitle: {
+        zhCn: '',
+        en: '',
+      },
+      photos: [
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+      ],
+    },
+    {
+      id: '',
+      title: {
+        zhCn: '',
+        en: '',
+      },
+      subtitle: {
+        zhCn: '',
+        en: '',
+      },
+      photos: [
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+      ],
+    },
+    {
+      id: '',
+      title: {
+        zhCn: '',
+        en: '',
+      },
+      subtitle: {
+        zhCn: '',
+        en: '',
+      },
+      photos: [
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+      ],
+    },
+    {
+      id: '',
+      title: {
+        zhCn: '',
+        en: '',
+      },
+      subtitle: {
+        zhCn: '',
+        en: '',
+      },
+      photos: [
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+      ],
+    },
+    {
+      id: '',
+      title: {
+        zhCn: '',
+        en: '',
+      },
+      subtitle: {
+        zhCn: '',
+        en: '',
+      },
+      photos: [
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+      ],
+    },
+    {
+      id: '',
+      title: {
+        zhCn: '',
+        en: '',
+      },
+      subtitle: {
+        zhCn: '',
+        en: '',
+      },
+      photos: [
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+      ],
+    },
+    {
+      id: '',
+      title: {
+        zhCn: '',
+        en: '',
+      },
+      subtitle: {
+        zhCn: '',
+        en: '',
+      },
+      photos: [
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+      ],
+    },
   ],
   tokusatsu: [
     {
@@ -145,8 +345,8 @@ const merchPhotos = {
         en: 'Masked Rider Black',
       },
       subtitle: {
-        zhCn: '万代SHF系列 2.0',
-        en: 'Bandai SHF Series 2.0',
+        zhCn: '万代SHF系列 2.0 | 《假面骑士Black》',
+        en: 'Bandai SHF Series 2.0 ｜ "Masked Rider Black"',
       },
       photos: [
         {
@@ -165,7 +365,7 @@ const merchPhotos = {
         en: 'Masked Rider Black Sun',
       },
       subtitle: {
-        zhCn: '万代SHF系列',
+        zhCn: '万代SHF系列 | 《假面骑士Black Sun》',
         en: 'Bandai SHF Series',
       },
       photos: [
@@ -198,6 +398,206 @@ const merchPhotos = {
         },
       ],
     },
+    {
+      id: '',
+      title: {
+        zhCn: '',
+        en: '',
+      },
+      subtitle: {
+        zhCn: '',
+        en: '',
+      },
+      photos: [
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+      ],
+    },
+    {
+      id: '',
+      title: {
+        zhCn: '',
+        en: '',
+      },
+      subtitle: {
+        zhCn: '',
+        en: '',
+      },
+      photos: [
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+      ],
+    },
+    {
+      id: '',
+      title: {
+        zhCn: '',
+        en: '',
+      },
+      subtitle: {
+        zhCn: '',
+        en: '',
+      },
+      photos: [
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+      ],
+    },
+    {
+      id: '',
+      title: {
+        zhCn: '',
+        en: '',
+      },
+      subtitle: {
+        zhCn: '',
+        en: '',
+      },
+      photos: [
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+      ],
+    },
+    {
+      id: '',
+      title: {
+        zhCn: '',
+        en: '',
+      },
+      subtitle: {
+        zhCn: '',
+        en: '',
+      },
+      photos: [
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+      ],
+    },
+    {
+      id: '',
+      title: {
+        zhCn: '',
+        en: '',
+      },
+      subtitle: {
+        zhCn: '',
+        en: '',
+      },
+      photos: [
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+      ],
+    },
+    {
+      id: '',
+      title: {
+        zhCn: '',
+        en: '',
+      },
+      subtitle: {
+        zhCn: '',
+        en: '',
+      },
+      photos: [
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+      ],
+    },
+    {
+      id: '',
+      title: {
+        zhCn: '',
+        en: '',
+      },
+      subtitle: {
+        zhCn: '',
+        en: '',
+      },
+      photos: [
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+      ],
+    },
+    {
+      id: '',
+      title: {
+        zhCn: '',
+        en: '',
+      },
+      subtitle: {
+        zhCn: '',
+        en: '',
+      },
+      photos: [
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+      ],
+    },
+    {
+      id: '',
+      title: {
+        zhCn: '',
+        en: '',
+      },
+      subtitle: {
+        zhCn: '',
+        en: '',
+      },
+      photos: [
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+      ],
+    },
   ],
   other: [
     {
@@ -214,6 +614,20 @@ const merchPhotos = {
       photos: [
         {
           url: 'https://assets.anuluca.com/Island/picMerch/akemihomura/dbZtWn.jpg',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/akemihomura/e8870e67gy1gb2933xj74j227u2ygqv5.jpg',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/akemihomura/e8870e67gy1gb2936ewp3j21zn2nje81.jpg',
           title: {
             zhCn: '',
             en: '',
@@ -283,6 +697,233 @@ const merchPhotos = {
       photos: [
         {
           url: 'https://assets.anuluca.com/Island/picMerch/Imperialdramon/DSC01719.JPG',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/Imperialdramon/00068 IMG_3763.jpg',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+      ],
+    },
+    {
+      id: 'KK',
+      title: {
+        zhCn: 'K.K.',
+        en: 'K.K.',
+      },
+      subtitle: {
+        zhCn: 'amiibo | 《动物森友会》',
+        en: 'amiibo ｜ "Animal Crossing"',
+      },
+      photos: [
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/kk/DSC00393.jpg',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+      ],
+    },
+    {
+      id: '',
+      title: {
+        zhCn: '',
+        en: '',
+      },
+      subtitle: {
+        zhCn: '',
+        en: '',
+      },
+      photos: [
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+      ],
+    },
+    {
+      id: '',
+      title: {
+        zhCn: '',
+        en: '',
+      },
+      subtitle: {
+        zhCn: '',
+        en: '',
+      },
+      photos: [
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+      ],
+    },
+    {
+      id: '',
+      title: {
+        zhCn: '',
+        en: '',
+      },
+      subtitle: {
+        zhCn: '',
+        en: '',
+      },
+      photos: [
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+      ],
+    },
+    {
+      id: '',
+      title: {
+        zhCn: '',
+        en: '',
+      },
+      subtitle: {
+        zhCn: '',
+        en: '',
+      },
+      photos: [
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+      ],
+    },
+    {
+      id: '',
+      title: {
+        zhCn: '',
+        en: '',
+      },
+      subtitle: {
+        zhCn: '',
+        en: '',
+      },
+      photos: [
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+      ],
+    },
+    {
+      id: '',
+      title: {
+        zhCn: '',
+        en: '',
+      },
+      subtitle: {
+        zhCn: '',
+        en: '',
+      },
+      photos: [
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+      ],
+    },
+    {
+      id: '',
+      title: {
+        zhCn: '',
+        en: '',
+      },
+      subtitle: {
+        zhCn: '',
+        en: '',
+      },
+      photos: [
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+      ],
+    },
+    {
+      id: '',
+      title: {
+        zhCn: '',
+        en: '',
+      },
+      subtitle: {
+        zhCn: '',
+        en: '',
+      },
+      photos: [
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+      ],
+    },
+    {
+      id: '',
+      title: {
+        zhCn: '',
+        en: '',
+      },
+      subtitle: {
+        zhCn: '',
+        en: '',
+      },
+      photos: [
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+      ],
+    },
+    {
+      id: '',
+      title: {
+        zhCn: '',
+        en: '',
+      },
+      subtitle: {
+        zhCn: '',
+        en: '',
+      },
+      photos: [
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/',
           title: {
             zhCn: '',
             en: '',

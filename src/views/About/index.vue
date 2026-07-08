@@ -153,6 +153,10 @@ const neighbors = computed<NeighbourItem[]>(() => {
   return tm('about.dynamic.neighbours') as NeighbourItem[]
 })
 
+const roadmapItems = computed<string[]>(() => {
+  return tm('about.dynamic.roadmap') as string[]
+})
+
 const overflowingNeighborUrls = ref(new Set<string>())
 const neighborDescElements = new Map<string, HTMLElement>()
 let descMeasureRafId: number | null = null
@@ -230,7 +234,7 @@ watch(locale, scheduleNeighborDescriptionMeasure)
       <section class="block changelog-block">
         <div class="section-header">
           <h3 class="section-title">
-            <span class="changelog">&lt; CHANGELOG &gt;</span>
+            <span class="changelog">&lt; CHANGELOG /&gt;</span>
             <span class="cn">{{ t('about.changelogLabel') }}</span>
           </h3>
           <div class="section-line" />
@@ -430,6 +434,40 @@ watch(locale, scheduleNeighborDescriptionMeasure)
         <div class="passion-crosshair" aria-hidden="true" />
       </section>
     </div>
+
+    <section class="block roadmap-block">
+      <div class="section-header">
+        <h3 class="section-title">
+          <span class="changelog">&lt; ROADMAP /&gt;</span>
+          <span class="cn">未来更新计划</span>
+        </h3>
+        <div class="section-line" />
+      </div>
+
+      <div class="roadmap-tags">
+        <div
+          v-for="(item, roadmapIndex) in roadmapItems"
+          :key="item"
+          class="roadmap-tag"
+          :style="{
+            '--roadmap-enter-delay': `${0.62 + roadmapIndex * 0.1}s`,
+          }"
+        >
+          <span class="roadmap-tag__index" aria-hidden="true">
+            {{ String(roadmapIndex + 1).padStart(2, '0') }}
+          </span>
+          <span class="roadmap-tag__text">
+            <span
+              v-for="(segment, segmentIndex) in parseMarkedText(item)"
+              :key="segmentIndex"
+              :class="{ 'roadmap-highlight': segment.highlighted }"
+            >
+              {{ segment.text }}
+            </span>
+          </span>
+        </div>
+      </div>
+    </section>
 
     <section class="block neighbors-block">
       <div class="section-header">
@@ -909,6 +947,7 @@ watch(locale, scheduleNeighborDescriptionMeasure)
   align-items: center;
   flex-wrap: wrap;
   gap: 16px;
+  height: 50px;
   margin-bottom: 10px;
   margin-top: 20px;
 }
@@ -920,12 +959,11 @@ watch(locale, scheduleNeighborDescriptionMeasure)
   font-family: 'anton', 'alibaba-puhuiti';
   font-size: 1.5rem;
   font-weight: 900;
-  letter-spacing: 2px;
   line-height: 1;
   white-space: nowrap;
   .changelog {
     font-family: 'anton', 'alibaba-puhuiti';
-    margin-top: -10px;
+    margin-top: -12px;
   }
 
   .cn {
@@ -1431,9 +1469,130 @@ watch(locale, scheduleNeighborDescriptionMeasure)
   }
 }
 
+.roadmap-block {
+  opacity: 0;
+  animation: roadmapBlockIn 0.58s cubic-bezier(0.16, 1, 0.3, 1) 0.82s both;
+
+  .section-header {
+    animation: changelogHeaderIn 0.46s cubic-bezier(0.2, 0.8, 0.2, 1) 0.32s both;
+  }
+}
+
+.roadmap-tags {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+  gap: 10px;
+  margin-top: 24px;
+  perspective: 1000px;
+}
+
+.roadmap-tag {
+  --roadmap-accent: rgba(226, 52, 86, 0.72);
+
+  position: relative;
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  align-items: center;
+  min-width: 0;
+  min-height: 78px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  background: linear-gradient(90deg, rgba(226, 52, 86, 0.12), transparent 34%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.038), transparent 46%),
+    rgba(8, 2, 8, 0.68);
+  box-shadow: inset 0 0 0 1px rgba(226, 52, 86, 0.035),
+    inset 0 -28px 42px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  transform-origin: center top;
+  animation: roadmapTagIn 0.5s cubic-bezier(0.16, 1, 0.3, 1)
+    var(--roadmap-enter-delay, 0.62s) both;
+  transition: border-color 0.24s ease, background 0.24s ease,
+    box-shadow 0.24s ease, transform 0.24s ease;
+
+  &::before,
+  &::after {
+    position: absolute;
+    content: '';
+    pointer-events: none;
+  }
+
+  &::before {
+    top: 0;
+    bottom: 0;
+    left: 72px;
+    width: 1px;
+    background: linear-gradient(
+      to bottom,
+      transparent,
+      rgba(226, 52, 86, 0.42) 76%,
+      transparent
+    );
+  }
+
+  &:hover {
+    border-color: rgba(226, 52, 86, 0.38);
+    background: linear-gradient(90deg, rgba(226, 52, 86, 0.17), transparent 38%);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.26);
+    transform: translateY(-2px);
+  }
+}
+
+.roadmap-tag__index {
+  display: grid;
+  align-self: stretch;
+  place-items: center;
+  color: rgba(226, 52, 86, 0.78);
+  font-family: 'anton', sans-serif;
+  font-size: clamp(30px, 2.8vw, 46px);
+  line-height: 1;
+  margin-top: -8px;
+  text-shadow: 0 0 18px rgba(226, 52, 86, 0.18);
+}
+
+.roadmap-tag__text {
+  min-width: 0;
+  padding: 18px 20px;
+  color: rgba(255, 255, 255, 0.54);
+  font-family: 'alibaba-puhuiti', sans-serif;
+  font-size: clamp(16px, 1.15vw, 21px);
+  font-weight: 800;
+  line-height: 1.32;
+}
+
+.roadmap-highlight {
+  color: #fff;
+  background: none;
+  text-shadow: 0 0 18px rgba(226, 52, 86, 0.36);
+}
+
+@keyframes roadmapBlockIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes roadmapTagIn {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0) rotateX(-8deg);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) rotateX(0);
+  }
+}
+
 .neighbors-block {
   opacity: 0;
-  animation: neighborsBlockIn 0.56s cubic-bezier(0.16, 1, 0.3, 1) 1.04s both;
+  animation: neighborsBlockIn 0.56s cubic-bezier(0.16, 1, 0.3, 1) 1.16s both;
 }
 
 @keyframes neighborsBlockIn {
@@ -2120,6 +2279,9 @@ watch(locale, scheduleNeighborDescriptionMeasure)
 
 @media (prefers-reduced-motion: reduce) {
   .changelog-block .section-header,
+  .roadmap-block,
+  .roadmap-block .section-header,
+  .roadmap-tag,
   .timeline::before,
   .timeline-item,
   .changelog-list-toggle {

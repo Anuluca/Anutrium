@@ -1,47 +1,53 @@
 <template>
-  <button
+  <span
     ref="cardElement"
-    class="collection-card"
+    class="collection-card-entry"
     :class="{ 'is-opening': isOpening }"
-    :aria-busy="isOpening"
-    type="button"
-    @click="handleSelect"
   >
-    <span class="collection-card__media">
-      <img
-        class="collection-card__cover collection-card__cover--primary"
-        :style="coverStyle"
-        :src="primaryCover"
-        :alt="collection.title"
-        loading="lazy"
-        decoding="async"
-      />
-      <span class="collection-card__shade" />
-      <span class="collection-card__scan" />
+    <span class="collection-card-shell">
+      <button
+        class="collection-card"
+        :aria-busy="isOpening"
+        type="button"
+        @click="handleSelect"
+      >
+        <span class="collection-card__media">
+          <img
+            class="collection-card__cover collection-card__cover--primary"
+            :style="coverStyle"
+            :src="primaryCover"
+            :alt="collection.title"
+            loading="lazy"
+            decoding="async"
+          />
+          <span class="collection-card__shade" />
+          <span class="collection-card__scan" />
+        </span>
+        <span class="collection-card__count">
+          {{ collection.photos.length }}
+          <small>{{ countLabel }}</small>
+        </span>
+        <span class="collection-card__index">#{{ index }}</span>
+        <span class="collection-card__copy">
+          <strong>{{ collection.title }}</strong>
+          <small>
+            <template
+              v-for="(subtitlePart, partIndex) in subtitleDisplayParts"
+              :key="partIndex"
+            >
+              <span
+                v-if="subtitlePart.isSeparator"
+                class="collection-card__copy-separator"
+              >
+                ｜
+              </span>
+              <span v-else>{{ subtitlePart.text }}</span>
+            </template>
+          </small>
+        </span>
+      </button>
     </span>
-    <span class="collection-card__count">
-      {{ collection.photos.length }}
-      <small>{{ countLabel }}</small>
-    </span>
-    <span class="collection-card__index">#{{ index }}</span>
-    <span class="collection-card__copy">
-      <strong>{{ collection.title }}</strong>
-      <small>
-        <template
-          v-for="(subtitlePart, partIndex) in subtitleDisplayParts"
-          :key="partIndex"
-        >
-          <span
-            v-if="subtitlePart.isSeparator"
-            class="collection-card__copy-separator"
-          >
-            ｜
-          </span>
-          <span v-else>{{ subtitlePart.text }}</span>
-        </template>
-      </small>
-    </span>
-  </button>
+  </span>
 </template>
 
 <script setup lang="ts">
@@ -71,7 +77,7 @@ const emit = defineEmits<{
 }>()
 
 const isOpening = ref(false)
-const cardElement = ref<HTMLButtonElement>()
+const cardElement = ref<HTMLElement>()
 const EXPAND_OVERSCAN = 1.08
 
 const primaryCover = computed(
@@ -117,7 +123,7 @@ const handleSelect = () => {
 
   if (sourceCard) {
     const bounds = sourceCard.getBoundingClientRect()
-    const transitionCard = sourceCard.cloneNode(true) as HTMLButtonElement
+    const transitionCard = sourceCard.cloneNode(true) as HTMLElement
     const isMobileViewport = window.matchMedia('(max-width: 900px)').matches
     const scale = isMobileViewport
       ? (window.innerHeight * EXPAND_OVERSCAN) / bounds.height
@@ -127,9 +133,7 @@ const handleSelect = () => {
 
     transitionCard.classList.remove('is-opening')
     transitionCard.classList.add('collection-card--expanding')
-    transitionCard.removeAttribute('aria-busy')
     transitionCard.setAttribute('aria-hidden', 'true')
-    transitionCard.tabIndex = -1
     Object.assign(transitionCard.style, {
       top: `${bounds.top}px`,
       left: `${bounds.left}px`,
@@ -154,32 +158,56 @@ const handleSelect = () => {
 </script>
 
 <style lang="less" scoped>
-.collection-card {
+.collection-card-entry {
   position: relative;
   display: block;
   min-width: 0;
   aspect-ratio: 3 / 4;
-  padding: 0;
+  transform-style: preserve-3d;
+}
+
+.collection-card-shell {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
   overflow: visible;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #fff;
-  background: linear-gradient(145deg, #29272d, #101014 56%, #1d1015);
-  text-align: left;
-  cursor: pointer;
   box-shadow: 8px 15px 22px rgba(0, 0, 0, 0.5);
   transform: translateZ(12px);
   transform-origin: center bottom;
   transform-style: preserve-3d;
   opacity: 1;
-  overflow: hidden;
   transition: box-shadow 0.52s cubic-bezier(0.22, 1, 0.36, 1),
     opacity 0.52s cubic-bezier(0.22, 1, 0.36, 1),
     transform 0.52s cubic-bezier(0.22, 1, 0.36, 1);
 
+  &::before,
   &::after {
     position: absolute;
     content: '';
     pointer-events: none;
+  }
+
+  &::before {
+    inset: -72px -86px -82px;
+    z-index: -1;
+    opacity: 0;
+    background: radial-gradient(
+        ellipse at 50% 38%,
+        rgba(226, 52, 86, 0.46),
+        rgba(226, 52, 86, 0.2) 34%,
+        transparent 72%
+      ),
+      radial-gradient(
+        ellipse at 50% 100%,
+        rgba(118, 72, 255, 0.22),
+        transparent 64%
+      );
+    filter: blur(32px);
+    transform: scale(0.82);
+    transition: opacity 0.52s ease,
+      transform 0.52s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   &::after {
@@ -187,14 +215,30 @@ const handleSelect = () => {
     right: -1px;
     left: -1px;
     height: 24px;
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    background: linear-gradient(to bottom, #4a434b, #272229 48%, #121216);
+    border: 1px solid #37373c;
+    background: linear-gradient(to bottom, #34343a, #222228 52%, #101014);
     clip-path: polygon(18px 0, calc(100% - 18px) 0, 100% 100%, 0 100%);
-    box-shadow: inset 0 1px rgba(255, 255, 255, 0.2);
+    box-shadow: inset 0 1px #4a4a50;
     transition: top 0.52s cubic-bezier(0.22, 1, 0.36, 1),
       height 0.52s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.42s ease,
       clip-path 0.52s cubic-bezier(0.22, 1, 0.36, 1);
   }
+}
+
+.collection-card {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #444448;
+  color: #fff;
+  background: linear-gradient(145deg, #29272d, #101014 56%, #1d1015);
+  text-align: left;
+  cursor: pointer;
+  transform-style: preserve-3d;
 
   &__media {
     position: absolute;
@@ -228,6 +272,7 @@ const handleSelect = () => {
     object-position: var(--cover-position-x, 50%) var(--cover-position-y, 0%);
     filter: brightness(0.88);
     transform: scale(1);
+    transform-origin: center center;
     transition: filter 0.32s ease, opacity 0.14s ease,
       transform 0.48s cubic-bezier(0.22, 1, 0.36, 1);
   }
@@ -345,15 +390,21 @@ const handleSelect = () => {
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .collection-card {
+  .collection-card-shell {
     &:hover {
       z-index: 4;
-      box-shadow: 8px 15px 22px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 0 84px rgba(226, 52, 86, 0.34),
+        0 32px 76px rgba(0, 0, 0, 0.66);
       transform: translateY(-10px) translateZ(12px) scale(1.025);
+
+      &::before {
+        opacity: 1;
+        transform: scale(1.18);
+      }
 
       .collection-card__cover {
         filter: brightness(1);
-        transform: scale(1.045);
+        transform: translateY(3.5%) scale(1.08);
       }
 
       .collection-card__media::after {
@@ -364,14 +415,13 @@ const handleSelect = () => {
   }
 }
 
-.collection-card.is-opening {
+.collection-card-entry.is-opening {
   z-index: 5;
   opacity: 0;
   pointer-events: none;
-  transform: translateZ(12px);
 }
 
-.collection-card--expanding {
+.collection-card-entry.collection-card--expanding {
   position: fixed;
   z-index: 9999;
   margin: 0;
@@ -383,7 +433,6 @@ const handleSelect = () => {
 
   &.is-expanded {
     opacity: 0;
-    box-shadow: none;
 
     .collection-card__cover {
       opacity: 0;
@@ -397,7 +446,7 @@ const handleSelect = () => {
   }
 
   &.is-expanded {
-    &::after {
+    .collection-card-shell::after {
       top: 0;
       height: 0;
       opacity: 0;
@@ -406,8 +455,8 @@ const handleSelect = () => {
   }
 }
 
-.collection-card.is-opening {
-  &::after {
+.collection-card-entry.is-opening {
+  .collection-card-shell::after {
     top: -1px;
     height: 0;
     opacity: 0;
@@ -416,7 +465,7 @@ const handleSelect = () => {
 }
 
 @media (max-width: 900px) {
-  .collection-card {
+  .collection-card-shell {
     transform: none;
 
     &::after {
@@ -426,7 +475,9 @@ const handleSelect = () => {
       height: 20px;
       clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 100%, 0 100%);
     }
+  }
 
+  .collection-card {
     &__count {
       right: 7px;
       bottom: 53px;

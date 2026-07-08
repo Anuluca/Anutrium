@@ -135,9 +135,10 @@
   padding: 13px;
   box-sizing: border-box;
   color: @red;
-  opacity: 0.3;
+  opacity: 0;
   pointer-events: none;
   filter: drop-shadow(0 0 14px rgba(226, 52, 86, 0.8));
+  animation: harbor-title-icon-in 0.58s ease-out 0.78s both;
 
   &::before {
     position: absolute;
@@ -194,6 +195,9 @@
   color: @red;
   font-size: 0.38rem;
   letter-spacing: 0.08em;
+  opacity: 0;
+  transform: translateY(8px);
+  animation: harbor-title-copy-in 0.42s ease-out 0.16s both;
 }
 
 .page-title {
@@ -222,6 +226,9 @@
   font-size: clamp(12px, 0.72vw, 16px);
   font-weight: 900;
   letter-spacing: 0.08em;
+  opacity: 0;
+  transform: translateY(8px);
+  animation: harbor-title-copy-in 0.42s ease-out 0.42s both;
 }
 
 .header-meta {
@@ -232,11 +239,18 @@
   gap: 10px;
   margin-top: 5px;
 
-  span {
+  span,
+  .meta-item {
     color: rgba(255, 255, 255, 0.38);
     font-family: 'alibaba-puhuiti', sans-serif;
     font-size: 0.38rem;
     font-weight: 700;
+  }
+
+  .meta-item {
+    opacity: 0;
+    transform: translateY(8px);
+    animation: harbor-title-copy-in 0.42s ease-out 0.5s both;
   }
 
   i {
@@ -347,6 +361,38 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes harbor-title-icon-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 0.3;
+  }
+}
+
+@keyframes harbor-title-copy-in {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header-bg-icon,
+  .header-label,
+  .title-cn,
+  .header-meta .meta-item {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .header-bg-icon {
+    opacity: 0.3;
   }
 }
 

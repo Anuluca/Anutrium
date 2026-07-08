@@ -48,6 +48,22 @@ const photoWorks = {
         },
         {
           location: {
+            zhCn: '青阳县',
+            en: 'Qingyang County',
+          },
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Island/picWork/normal/004g0TgHgy1gun7tzcr9rj641v2hse8402.jpg',
+        },
+        {
+          location: {
+            zhCn: '青阳县',
+            en: 'Qingyang County',
+          },
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Island/picWork/normal/004g0TgHgy1gun7tz8igij63z02ohe8302.jpg',
+        },
+        {
+          location: {
             zhCn: '过年。',
             en: '',
           },
@@ -355,6 +371,14 @@ const photoWorks = {
             },
             {
               location: {
+                zhCn: '妈妈与外婆',
+                en: 'Mom and Grandmother',
+              },
+              device: 'Sony RX100M6',
+              url: 'https://assets.anuluca.com/Island/picWork/people/familyMember/e8870e67ly1gjfge9htmyj218w0u0wu1.jpg',
+            },
+            {
+              location: {
                 zhCn: '外公爷爷',
                 en: 'Grandfather',
               },
@@ -414,6 +438,42 @@ const photoWorks = {
           avatarUrl:
             'https://assets.anuluca.com/Island/picWork/people/hei/DSC00208.JPG',
           photos: [
+            {
+              location: {
+                zhCn: '大小黑的玩具',
+                en: 'Home',
+              },
+              time: '',
+              device: 'iPhone 12 mini',
+              url: 'https://assets.anuluca.com/Island/picWork/people/hei/IMG_20201002_132244.jpg',
+            },
+            {
+              location: {
+                zhCn: '大小黑',
+                en: 'Home',
+              },
+              time: '',
+              device: 'Sony RX100M6',
+              url: 'https://assets.anuluca.com/Island/picWork/people/hei/e8870e67ly1gjfge13l8lj218w0u0h5t.jpg',
+            },
+            {
+              location: {
+                zhCn: '大小黑',
+                en: 'Home',
+              },
+              time: '',
+              device: 'iPhone 12 mini',
+              url: 'https://assets.anuluca.com/Island/picWork/people/hei/IMG_20201002_130943.jpg',
+            },
+            {
+              location: {
+                zhCn: '大小黑',
+                en: 'Home',
+              },
+              time: '',
+              device: 'Sony RX100M6',
+              url: 'https://assets.anuluca.com/Island/picWork/people/hei/IMG_20201006_144112.jpg',
+            },
             {
               location: {
                 zhCn: '大小黑',

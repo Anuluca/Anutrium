@@ -8,11 +8,21 @@
           </div>
           <div class="header-label">[Crying_Yet_Joyless]</div>
           <h1 class="page-title">
-            <span class="title-en">ISLAND</span>
+            <TypedText
+              class="title-en"
+              text="ISLAND"
+              :delay="220"
+              :speed="42"
+            />
           </h1>
           <span class="title-cn">个人海湾</span>
           <div class="header-meta">
-            <span>{{ t('island.headerMeta') }}</span>
+            <TypedText
+              class="meta-item"
+              :text="t('island.headerMeta')"
+              :delay="520"
+              :speed="24"
+            />
           </div>
           <span class="corner corner-tl" />
           <span class="corner corner-tr" />
@@ -215,6 +225,7 @@ import { useRouter } from 'vue-router'
 import { Ship } from '@element-plus/icons-vue'
 
 import IslandClock from '@/components/IslandClock/index.vue'
+import TypedText from '@/components/TypedText/index.vue'
 
 const { t, tm } = useI18n()
 const router = useRouter()

@@ -14,10 +14,10 @@
     <main class="image-log-index">
       <div v-if="albums.length" class="image-log-grid">
         <ImageLogAlbumCard
-          v-for="album in albums"
+          v-for="(album, albumIndex) in albums"
           :key="album.id"
           :album="album"
-          :count-label="t('island.imageLogAlbumLabel')"
+          :entrance-index="albumIndex"
           @select="openAlbum"
         />
       </div>
@@ -67,9 +67,11 @@ const openAlbum = (albumId: string) => {
 
 .image-log-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 580px));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   justify-content: space-between;
-  gap: 18px 10px;
+  gap: 18px clamp(28px, 4vw, 72px);
+  padding: 0 clamp(34px, 5vw, 82px);
+  box-sizing: border-box;
   content-visibility: auto;
   contain-intrinsic-size: 760px;
 }
@@ -99,13 +101,15 @@ const openAlbum = (albumId: string) => {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     justify-content: stretch;
     gap: 28px 10px;
+    padding: 0 clamp(20px, 5vw, 34px);
   }
 }
 
 @media (min-width: 769px) and (max-width: 1180px) {
   .image-log-grid {
-    grid-template-columns: repeat(2, minmax(0, 540px));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     justify-content: space-between;
+    padding: 0 clamp(28px, 4vw, 58px);
   }
 }
 </style>
