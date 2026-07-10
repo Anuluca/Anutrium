@@ -66,12 +66,23 @@ export const addPageScrollListener = (listener: EventListener) => {
     passive: true,
     capture: true,
   }
+  let frameId: number | null = null
 
-  window.addEventListener('scroll', listener, options)
-  document.addEventListener('scroll', listener, options)
+  const scheduleListener = (event: Event) => {
+    if (frameId !== null) return
+
+    frameId = window.requestAnimationFrame(() => {
+      frameId = null
+      listener(event)
+    })
+  }
+
+  window.addEventListener('scroll', scheduleListener, options)
+  document.addEventListener('scroll', scheduleListener, options)
 
   return () => {
-    window.removeEventListener('scroll', listener, true)
-    document.removeEventListener('scroll', listener, true)
+    if (frameId !== null) window.cancelAnimationFrame(frameId)
+    window.removeEventListener('scroll', scheduleListener, true)
+    document.removeEventListener('scroll', scheduleListener, true)
   }
 }

@@ -36,7 +36,22 @@
               <span>M</span>
             </span>
             <span class="site-subtitle-text site-subtitle-text--long">
-              ANULUCA'S ATRIUM
+              <span>A</span>
+              <span>N</span>
+              <span>U</span>
+              <span>L</span>
+              <span>U</span>
+              <span>C</span>
+              <span>A</span>
+              <span>'</span>
+              <span>S</span>
+              <span class="site-subtitle-space" aria-hidden="true" />
+              <span>A</span>
+              <span>T</span>
+              <span>R</span>
+              <span>I</span>
+              <span>U</span>
+              <span>M</span>
             </span>
           </span>
         </div>
@@ -311,6 +326,8 @@ const isFullscreen = ref(false)
 const scrollProgress = ref(0)
 const isPageScrollable = ref(false)
 let scrollRafId: number | null = null
+let hasInitializedHeaderScrollState = false
+let headerScrollAnimations: Animation[] = []
 let logoTimer: number | null = null
 let layoutTimer: number | null = null
 let islandGeometryUnlockTimer: number | null = null
@@ -319,6 +336,8 @@ const ISLAND_ROUTE_NAME = 'TEST'
 const ISLAND_GEOMETRY_UNLOCK_DELAY = 260
 const ENTRY_LOGO_REVEAL_DELAY = 600
 const ENTRY_LOGO_REVEAL_DURATION = 300
+const HEADER_SCROLL_ENTER_THRESHOLD = 50
+const HEADER_SCROLL_EXIT_THRESHOLD = 32
 const islandShellClasses = ['island-pc-shell', 'island-mobile-shell'] as const
 const islandLeavingClasses = [
   'island-pc-shell-leaving',
@@ -419,6 +438,90 @@ const unlockMobilePageScroll = () => {
   scrollPageTo({ top: scrollY })
 }
 
+const getHeaderAnimationTargets = () => {
+  const header = document.querySelector<HTMLElement>('.el-menu-layout-all')
+  if (!header) return []
+
+  const logo = header.querySelector<HTMLElement>('.logo-box > .logo')
+  const logoText = header.querySelector<HTMLElement>('.logo-box > .right')
+  const menu = Array.from(header.children).find(
+    (element): element is HTMLElement =>
+      element instanceof HTMLElement && element.classList.contains('el-menu')
+  )
+
+  return [logo, logoText, menu].filter(
+    (element): element is HTMLElement => element instanceof HTMLElement
+  )
+}
+
+const cancelHeaderScrollAnimations = () => {
+  headerScrollAnimations.forEach((animation) => animation.cancel())
+  headerScrollAnimations = []
+}
+
+const setHeaderScrolledState = (nextValue: boolean) => {
+  if (isScrolled.value === nextValue) return
+
+  // 首次同步滚动位置时不播放，避免路由恢复位置后出现无意义的入场动画。
+  if (!hasInitializedHeaderScrollState) {
+    hasInitializedHeaderScrollState = true
+    isScrolled.value = nextValue
+    return
+  }
+
+  const targets = getHeaderAnimationTargets()
+  const previousBounds = new Map(
+    targets.map((element) => [element, element.getBoundingClientRect()])
+  )
+
+  cancelHeaderScrollAnimations()
+  isScrolled.value = nextValue
+
+  void nextTick(() => {
+    headerScrollAnimations = targets.flatMap((element) => {
+      const previous = previousBounds.get(element)
+      if (!previous) return []
+
+      const current = element.getBoundingClientRect()
+      const offsetX = previous.left - current.left
+      const offsetY = previous.top - current.top
+      const scaleX = current.width > 0.5 ? previous.width / current.width : 1
+      const scaleY = current.height > 0.5 ? previous.height / current.height : 1
+      if (
+        Math.abs(offsetX) < 0.5 &&
+        Math.abs(offsetY) < 0.5 &&
+        Math.abs(scaleX - 1) < 0.01 &&
+        Math.abs(scaleY - 1) < 0.01
+      ) {
+        return []
+      }
+
+      const animation = element.animate(
+        [
+          {
+            transform: `translate(${offsetX}px, ${offsetY}px) scale(${scaleX}, ${scaleY})`,
+            transformOrigin: 'top left',
+          },
+          {
+            transform: 'translate(0, 0) scale(1)',
+            transformOrigin: 'top left',
+          },
+        ],
+        {
+          duration: 500,
+          easing: 'ease',
+        }
+      )
+      animation.onfinish = () => {
+        headerScrollAnimations = headerScrollAnimations.filter(
+          (item) => item !== animation
+        )
+      }
+      return [animation]
+    })
+  })
+}
+
 const handleScroll = () => {
   if (scrollRafId !== null) return
 
@@ -430,10 +533,11 @@ const handleScroll = () => {
       : 0
     isPageScrollable.value = maxScroll > 1
 
-    const nextValue = scrollTop > 50
-    if (isScrolled.value !== nextValue) {
-      isScrolled.value = nextValue
-    }
+    // 使用滞回区间，避免在临界位置来回滚动时重复触发菜单动画与模糊层。
+    const nextValue = isScrolled.value
+      ? scrollTop > HEADER_SCROLL_EXIT_THRESHOLD
+      : scrollTop > HEADER_SCROLL_ENTER_THRESHOLD
+    setHeaderScrolledState(nextValue)
     scrollRafId = null
   })
 }
@@ -532,6 +636,8 @@ const scheduleIslandGeometryUnlock = () => {
 
 onMounted(() => {
   if (props.entryActive) startEntryAnimation()
+  isScrolled.value = getPageScrollTop() > HEADER_SCROLL_ENTER_THRESHOLD
+  hasInitializedHeaderScrollState = true
   handleScroll()
   removePageScrollListener = addPageScrollListener(handleScroll)
   window.addEventListener('resize', handleScroll, { passive: true })
@@ -545,6 +651,7 @@ onUnmounted(() => {
   removePageScrollListener = null
   window.removeEventListener('resize', handleScroll)
   if (scrollRafId !== null) window.cancelAnimationFrame(scrollRafId)
+  cancelHeaderScrollAnimations()
   clearEntryAnimationTimers()
 })
 
@@ -586,9 +693,10 @@ watch(
 @import './index.less';
 
 .route-enter-active {
-  transition: opacity 0.12s ease, transform 0.6s ease, filter 0.6s ease;
+  transition: opacity 0.12s ease, transform 0.6s ease;
   transition-delay: 0.12s;
   transform-origin: top center;
+  will-change: opacity, transform;
 }
 
 .route-leave-active {

@@ -79,6 +79,7 @@ const emit = defineEmits<{
 const isOpening = ref(false)
 const cardElement = ref<HTMLElement>()
 const EXPAND_OVERSCAN = 1.08
+const EXPAND_ANIMATION_DURATION = 1440
 
 const primaryCover = computed(
   () => props.collection.photos[0]?.url || props.collection.cover
@@ -150,7 +151,10 @@ const handleSelect = () => {
     transitionCard.getBoundingClientRect()
     transitionCard.classList.add('is-expanded')
 
-    setTimeout(() => transitionCard.remove(), 780)
+    window.setTimeout(
+      () => transitionCard.remove(),
+      EXPAND_ANIMATION_DURATION + 80
+    )
   }
 
   emit('select', props.collection.id)
@@ -167,6 +171,9 @@ const handleSelect = () => {
 }
 
 .collection-card-shell {
+  --box-top-offset: -25px;
+  --box-top-height: 24px;
+
   position: relative;
   display: block;
   width: 100%;
@@ -211,10 +218,10 @@ const handleSelect = () => {
   }
 
   &::after {
-    top: -25px;
+    top: var(--box-top-offset);
     right: -1px;
     left: -1px;
-    height: 24px;
+    height: var(--box-top-height);
     border: 1px solid #37373c;
     background: linear-gradient(to bottom, #34343a, #222228 52%, #101014);
     clip-path: polygon(18px 0, calc(100% - 18px) 0, 100% 100%, 0 100%);
@@ -239,6 +246,7 @@ const handleSelect = () => {
   text-align: left;
   cursor: pointer;
   transform-style: preserve-3d;
+  border: 1px solid rgb(77, 77, 77);
 
   &__media {
     position: absolute;
@@ -428,8 +436,8 @@ const handleSelect = () => {
   pointer-events: none;
   transform: none;
   transform-origin: center;
-  transition: transform 0.72s cubic-bezier(0.2, 0.82, 0.2, 1),
-    box-shadow 0.72s cubic-bezier(0.2, 0.82, 0.2, 1), opacity 0.58s ease 0.08s;
+  transition: transform 1.44s cubic-bezier(0.2, 0.82, 0.2, 1),
+    box-shadow 1.44s cubic-bezier(0.2, 0.82, 0.2, 1), opacity 1.16s ease 0.16s;
 
   &.is-expanded {
     opacity: 0;
@@ -466,13 +474,14 @@ const handleSelect = () => {
 
 @media (max-width: 900px) {
   .collection-card-shell {
+    --box-top-offset: -21px;
+    --box-top-height: 20px;
+
     transform: none;
 
     &::after {
-      top: -21px;
       right: -1px;
       left: -1px;
-      height: 20px;
       clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 100%, 0 100%);
     }
   }

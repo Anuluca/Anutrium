@@ -142,6 +142,10 @@ const { locale } = useI18n()
       color: var(--card-accent);
     }
 
+    .tl-card__status-dot {
+      animation: pulse 2s ease-in-out infinite;
+    }
+
     .tl-card__scan {
       animation: scan 1.2s linear infinite;
     }
@@ -346,8 +350,11 @@ const { locale } = useI18n()
     border-radius: 50%;
     background: #4ade80;
     box-shadow: 0 0 6px #4ade80;
-    animation: pulse 2s ease-in-out infinite;
   }
+}
+
+.shared-tool-card:focus-within .tl-card__status-dot {
+  animation: pulse 2s ease-in-out infinite;
 }
 
 .tl-card__cta {

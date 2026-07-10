@@ -1,7 +1,12 @@
 <script lang="ts" setup>
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ArrowDown, DArrowRight, StarFilled } from '@element-plus/icons-vue'
+import {
+  ArrowDown,
+  DArrowRight,
+  Setting,
+  StarFilled,
+} from '@element-plus/icons-vue'
 
 import LogoRotating3D from '@/components/Logo_rotating3D/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
@@ -465,6 +470,7 @@ watch(locale, scheduleNeighborDescriptionMeasure)
               {{ segment.text }}
             </span>
           </span>
+          <Setting class="roadmap-tag__gear" aria-hidden="true" />
         </div>
       </div>
     </section>
@@ -1532,13 +1538,19 @@ watch(locale, scheduleNeighborDescriptionMeasure)
 
   &:hover {
     border-color: rgba(226, 52, 86, 0.38);
-    background: linear-gradient(90deg, rgba(226, 52, 86, 0.17), transparent 38%);
+    background: linear-gradient(
+      90deg,
+      rgba(226, 52, 86, 0.17),
+      transparent 38%
+    );
     box-shadow: 0 16px 36px rgba(0, 0, 0, 0.26);
     transform: translateY(-2px);
   }
 }
 
 .roadmap-tag__index {
+  position: relative;
+  z-index: 1;
   display: grid;
   align-self: stretch;
   place-items: center;
@@ -1551,6 +1563,8 @@ watch(locale, scheduleNeighborDescriptionMeasure)
 }
 
 .roadmap-tag__text {
+  position: relative;
+  z-index: 1;
   min-width: 0;
   padding: 18px 20px;
   color: rgba(255, 255, 255, 0.54);
@@ -1558,6 +1572,23 @@ watch(locale, scheduleNeighborDescriptionMeasure)
   font-size: clamp(16px, 1.15vw, 21px);
   font-weight: 800;
   line-height: 1.32;
+}
+
+.roadmap-tag__gear {
+  position: absolute;
+  right: -22px;
+  bottom: -30px;
+  width: 104px;
+  height: 104px;
+  color: rgba(255, 255, 255, 0.12);
+  pointer-events: none;
+  transform: rotate(-16deg);
+  transition: color 0.24s ease, transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.roadmap-tag:hover .roadmap-tag__gear {
+  color: rgba(255, 255, 255, 0.2);
+  transform: rotate(2deg) scale(1.04);
 }
 
 .roadmap-highlight {

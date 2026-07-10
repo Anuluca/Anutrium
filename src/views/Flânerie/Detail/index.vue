@@ -111,7 +111,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute, useRouter } from 'vue-router'
+import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { Location } from '@element-plus/icons-vue'
 
 import DetailPageHeader from '@/components/DetailPageHeader/index.vue'
@@ -125,6 +125,8 @@ import PageFooter from '@/components/PageFooter/index.vue'
 const router = useRouter()
 const route = useRoute()
 const { t, tm } = useI18n()
+const JOURNEY_RETURN_FLAG_KEY = 'anutrium:flanerie:returning-from-detail'
+const JOURNEY_RETURN_VLOG_KEY = 'anutrium:flanerie:selected-vlog'
 
 interface VideoItem {
   title: string
@@ -203,6 +205,13 @@ const setPage = (page: number) => {
   currentPage.value = page
   galleryRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
+
+onBeforeRouteLeave((to) => {
+  if (to.name !== 'FLANERIE' || typeof window === 'undefined') return
+
+  window.sessionStorage.setItem(JOURNEY_RETURN_FLAG_KEY, 'true')
+  window.sessionStorage.setItem(JOURNEY_RETURN_VLOG_KEY, vlogId.value)
+})
 
 watch(
   vlog,

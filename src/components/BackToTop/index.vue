@@ -96,7 +96,7 @@ onUnmounted(() => {
   border-top: 1px solid #e23456;
   border-left: 1px solid #e23456;
   border-right: 1px solid #e23456;
-  background-color: transparent;
+  background-color: rgba(0, 0, 0, 0.32);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.28);
   cursor: pointer;
   transition: color 0.25s ease, border-color 0.25s ease, background 0.25s ease,

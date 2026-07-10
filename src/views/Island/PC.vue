@@ -42,7 +42,6 @@
               <span>RECENT PAGES</span>
               <strong>{{ t('island.latestTitle') }}</strong>
             </div>
-            <i class="latest-head-projection" aria-hidden="true" />
           </div>
           <div
             ref="latestScrollRef"

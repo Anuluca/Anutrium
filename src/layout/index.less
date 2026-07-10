@@ -66,43 +66,61 @@
     left: 0;
     right: 0;
     justify-content: space-between;
-    transition: all 0.5s ease;
     background-color: transparent;
     backface-visibility: hidden !important;
     -webkit-backface-visibility: hidden !important;
     transform: translateZ(0) !important;
     border: 0px solid #00000000;
+    isolation: isolate;
+
+    &::before {
+      content: '';
+      position: absolute;
+      z-index: 0;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0;
+      border-bottom: 1px solid transparent;
+      background: transparent;
+      box-shadow: none;
+      transition: opacity 0.24s ease, background-color 0.24s ease,
+        border-color 0.24s ease, box-shadow 0.24s ease;
+    }
 
     &.scrolled {
+      // 恢复滚动后的实际盒模型，避免保留初始顶部留白。
       padding-top: 1.5rem;
 
-      background: linear-gradient(
-        to bottom,
-        rgba(0, 0, 0, 0.88) 0%,
-        rgba(0, 0, 0, 0.58) 48%,
-        transparent 100%
-      );
-      backdrop-filter: blur(4px);
-      border-bottom: 1px solid rgba(66, 66, 66, 0.542);
-      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.7);
-      &:hover {
-        border-color: #f9446862;
+      &::before {
+        opacity: 1;
+        border-bottom-color: rgba(66, 66, 66, 0.542);
         background: linear-gradient(
-            to bottom,
-            rgba(0, 0, 0, 0.88) 0%,
-            rgba(0, 0, 0, 0.58) 48%,
-            transparent 100%
-          ),
-          rgba(226, 52, 87, 0.141);
+          to bottom,
+          rgba(0, 0, 0, 0.88) 0%,
+          rgba(0, 0, 0, 0.58) 48%,
+          transparent 100%
+        );
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.7);
+        -webkit-backdrop-filter: blur(8px);
+        backdrop-filter: blur(8px);
+      }
+
+      &:hover {
+        &::before {
+          border-bottom-color: #f9446862;
+          background: linear-gradient(
+              to bottom,
+              rgba(0, 0, 0, 0.88) 0%,
+              rgba(0, 0, 0, 0.58) 48%,
+              transparent 100%
+            ),
+            rgba(226, 52, 87, 0.141);
+        }
       }
 
       .logo-box {
         margin-top: -1px;
         padding-left: 0.5rem !important;
-
-        .logo {
-          height: 1.66667rem;
-        }
         .right {
           margin-top: 0px;
         }
@@ -111,6 +129,12 @@
       .el-menu {
         margin-top: 1px;
       }
+    }
+
+    > .logo-box,
+    > .el-menu {
+      position: relative;
+      z-index: 1;
     }
 
     .logo-box {
@@ -128,7 +152,7 @@
       cursor: pointer;
       opacity: 0;
       pointer-events: none;
-      transition: all 0.5s ease;
+      transition: transform 0.5s ease, opacity 0.5s ease;
 
       &:hover {
         .zhCn .name-center {
@@ -156,8 +180,9 @@
 
       .logo {
         width: 1.83333rem;
-        height: 1.83333rem;
-        transition: all 0.5s ease;
+        height: 1.66667rem;
+        transform-origin: left center;
+        transition: transform 0.5s ease, opacity 0.5s ease;
         margin-right: 0.16667rem;
         color: var(--text-color);
         opacity: 1;
@@ -249,10 +274,16 @@
         }
 
         .site-subtitle-text--long {
-          width: max-content;
-          letter-spacing: 0.08em;
+          display: flex;
+          justify-content: space-between;
+          width: 100%;
+          letter-spacing: 0;
           opacity: 0;
           transform: translateY(calc(-50% - 0.1rem));
+
+          .site-subtitle-space {
+            flex: 0 0 0.3em;
+          }
         }
 
         &.en {
@@ -447,7 +478,7 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.5s ease;
+    transition: background-color 0.5s ease, box-shadow 0.5s ease;
     border: 0px solid #00000000;
     z-index: 4000;
     padding: 0;
@@ -788,24 +819,28 @@
   .layout-page {
     .el-menu-layout-all {
       &.scrolled {
-        background: linear-gradient(
-          to bottom,
-          rgba(255, 255, 255, 0.92) 0%,
-          rgba(255, 255, 255, 0.74) 62%,
-          rgba(255, 255, 255, 0) 100%
-        );
-        border: 0px solid rgba(0, 0, 0, 0.08);
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+        &::before {
+          border-bottom-color: rgba(0, 0, 0, 0.08);
+          background: linear-gradient(
+            to bottom,
+            rgba(255, 255, 255, 0.92) 0%,
+            rgba(255, 255, 255, 0.74) 62%,
+            rgba(255, 255, 255, 0) 100%
+          );
+          box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+        }
 
         &:hover {
-          border-color: rgba(226, 52, 86, 0.24);
-          background: linear-gradient(
-              to bottom,
-              rgba(255, 255, 255, 0.94) 0%,
-              rgba(255, 255, 255, 0.78) 62%,
-              rgba(255, 255, 255, 0) 100%
-            ),
-            rgba(226, 52, 86, 0.06);
+          &::before {
+            border-bottom-color: rgba(226, 52, 86, 0.24);
+            background: linear-gradient(
+                to bottom,
+                rgba(255, 255, 255, 0.94) 0%,
+                rgba(255, 255, 255, 0.78) 62%,
+                rgba(255, 255, 255, 0) 100%
+              ),
+              rgba(226, 52, 86, 0.06);
+          }
         }
       }
     }
@@ -866,6 +901,7 @@
       }
 
       .logo-box {
+        transform: none;
         min-width: auto;
         width: 100%;
         margin-left: -0.33333rem;

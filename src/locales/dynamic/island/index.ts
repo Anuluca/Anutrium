@@ -4,9 +4,9 @@ import studyNotes from './Notes/studyNotes'
 import imageLog from './Photography/imageLog'
 import merchPhotos from './Photography/merchPhotos'
 import photoWorks from './Photography/photoWorks'
-import Illuctration from './Works/Illuctration'
 import designGoods from './Works/designGoods'
 import experiments from './Works/experiments'
+import Illuctration from './Works/Illuctration'
 import trainerCard from './Works/trainerCard'
 
 const latestPages = {

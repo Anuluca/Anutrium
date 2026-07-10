@@ -28,12 +28,11 @@
   position: absolute;
   inset: 0;
   z-index: 1;
-  background-color: #000000c0;
-  backdrop-filter: blur(4px);
+  background-color: #000000d1;
   border-radius: 0;
   transform-origin: top left;
   transition: transform 1.26s @entry-bg-ease, opacity 1s ease-out,
-    border-radius 1.26s @entry-bg-ease, backdrop-filter 1s ease-out;
+    border-radius 1.26s @entry-bg-ease;
   will-change: transform, opacity, border-radius;
 }
 
@@ -47,7 +46,6 @@
         0
       )
       scale(var(--entry-bg-target-scale-x), var(--entry-bg-target-scale-y));
-    backdrop-filter: blur(0);
   }
 }
 
@@ -55,7 +53,7 @@
   .entry-background {
     opacity: 0;
     transition: transform 1.26s @entry-bg-ease, opacity 0.76s ease,
-      border-radius 1.26s @entry-bg-ease, backdrop-filter 0.76s ease;
+      border-radius 1.26s @entry-bg-ease;
   }
 }
 

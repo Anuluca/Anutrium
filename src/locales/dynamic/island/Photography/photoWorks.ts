@@ -64,6 +64,14 @@ const photoWorks = {
         },
         {
           location: {
+            zhCn: '青阳县',
+            en: 'Qingyang County',
+          },
+          device: 'Sony RX100M6',
+          url: 'https://assets.anuluca.com/Island/picWork/normal/004g0TgHgy1gun7tyiubvj61vj2tbqv502.jpg',
+        },
+        {
+          location: {
             zhCn: '过年。',
             en: '',
           },

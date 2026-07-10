@@ -1,5 +1,5 @@
 
-@rotate-duration: 80s;
+@rotate-duration: 120s;
 
 .star-container {
   position: fixed;
@@ -58,7 +58,7 @@
 
   &.menu-hidden {
     .star-field {
-      perspective: 600px;
+      opacity: 0.78;
     }
   }
 
@@ -96,47 +96,62 @@
       );
   }
 
-  .star-container .star {
-    width: 0.95vw;
-    height: 0.95vw;
+  .star-field {
+    top: -72vmax;
+    left: -72vmax;
+    width: 244vmax;
+    height: 244vmax;
   }
 }
 
 .star-field {
   position: absolute;
-  bottom: 0;
-  left: 56%;
-  top: 25%;
-  width: 0;
-  height: 0;
-  transition: all 0.7s;
-  zoom: 2;
-  perspective: 1200px;
-  perspective-origin: -200% -200%;
+  top: -48vmax;
+  left: -48vmax;
+  width: 196vmax;
+  height: 196vmax;
+  pointer-events: none;
+  transform: translate3d(0, 0, 0) rotate(0deg);
+  transform-origin: center;
   transform-style: preserve-3d;
   will-change: transform;
   animation: rotate-sky @rotate-duration infinite linear;
-  z-index: 3;
-}
+  contain: paint;
 
-.star {
-  width: 3px;
-  height: 3px;
-  overflow: hidden;
-  position: absolute;
-  top: 0;
-  left: 0;
-  backface-visibility: hidden;
-  background-color: var(--star-color);
-  pointer-events: none;
+  &::before,
+  &::after {
+    position: absolute;
+    inset: 0;
+    content: '';
+    background-image:
+      radial-gradient(circle, var(--star-color) 0 1px, transparent 1.4px),
+      radial-gradient(
+        circle,
+        color-mix(in srgb, var(--star-color) 62%, transparent) 0 0.8px,
+        transparent 1.2px
+      ),
+      radial-gradient(
+        circle,
+        color-mix(in srgb, var(--star-color) 38%, transparent) 0 0.65px,
+        transparent 1px
+      );
+    background-position: 0 0, 56px 88px, 132px 24px;
+    background-size: 280px 280px, 420px 420px, 210px 210px;
+  }
+
+  &::after {
+    opacity: 0.58;
+    transform: translateZ(84px) scale(1.18) rotate(17deg);
+    background-position: 32px 12px, 104px 68px, 14px 92px;
+    background-size: 320px 320px, 496px 496px, 248px 248px;
+  }
 }
 
 @keyframes rotate-sky {
   from {
-    transform: perspective(400px) rotateZ(20deg) rotateX(-40deg) rotateY(0);
+    transform: perspective(900px) rotateX(-52deg) rotateZ(20deg);
   }
   to {
-    transform: perspective(400px) rotateZ(20deg) rotateX(-40deg)
-      rotateY(-360deg);
+    transform: perspective(900px) rotateX(-52deg) rotateZ(-340deg);
   }
 }

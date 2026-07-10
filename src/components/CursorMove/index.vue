@@ -67,32 +67,22 @@ const onMouseMove = (e) => {
   mouse.y = e.clientY
   hasPointerPosition = true
 
-  shouldHideCursor.value = checkShouldHideCursor(e.target)
+  const nextShouldHideCursor = checkShouldHideCursor(e.target)
+  if (shouldHideCursor.value !== nextShouldHideCursor) {
+    shouldHideCursor.value = nextShouldHideCursor
+  }
+
+  const nextIsHovering =
+    !nextShouldHideCursor && !!e.target.closest?.(INTERACTIVE_CURSOR_SELECTOR)
+  if (isHovering.value !== nextIsHovering) {
+    isHovering.value = nextIsHovering
+  }
+
   startRender()
 }
 
 const onMouseDown = () => (isClicked.value = true)
 const onMouseUp = () => (isClicked.value = false)
-
-const onMouseOver = (e) => {
-  if (!shouldAnimateCursor.value) return
-
-  if (checkShouldHideCursor(e.target)) {
-    return
-  }
-
-  if (e.target.closest(INTERACTIVE_CURSOR_SELECTOR)) {
-    isHovering.value = true
-  }
-}
-
-const onMouseOut = (e) => {
-  if (!shouldAnimateCursor.value) return
-
-  if (e.target.closest(INTERACTIVE_CURSOR_SELECTOR)) {
-    isHovering.value = false
-  }
-}
 
 const startRender = () => {
   if (!shouldAnimateCursor.value || animationFrameId) return
@@ -145,8 +135,6 @@ const addPointerListeners = () => {
   window.addEventListener('mousemove', onMouseMove)
   window.addEventListener('mousedown', onMouseDown)
   window.addEventListener('mouseup', onMouseUp)
-  window.addEventListener('mouseover', onMouseOver)
-  window.addEventListener('mouseout', onMouseOut)
   hasPointerListeners = true
 }
 
@@ -156,8 +144,6 @@ const removePointerListeners = () => {
   window.removeEventListener('mousemove', onMouseMove)
   window.removeEventListener('mousedown', onMouseDown)
   window.removeEventListener('mouseup', onMouseUp)
-  window.removeEventListener('mouseover', onMouseOver)
-  window.removeEventListener('mouseout', onMouseOut)
   hasPointerListeners = false
   isHovering.value = false
   isClicked.value = false

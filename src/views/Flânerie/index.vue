@@ -85,6 +85,11 @@ import PageHeader from '@/components/PageHeader/index.vue'
 import VlogCard from '@/components/VlogCard/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
 import { visualState } from '@/stores'
+import {
+  getPageMaxScrollTop,
+  getPageScrollTop,
+  scrollPageTo,
+} from '@/utils/pageScroll'
 
 type VlogCategory = 'visited' | 'resident' | 'activity'
 
@@ -117,6 +122,14 @@ interface VlogItem {
 const router = useRouter()
 const { locale, t, tm } = useI18n()
 const visualStateStore = visualState()
+const JOURNEY_RETURN_FLAG_KEY = 'anutrium:flanerie:returning-from-detail'
+const JOURNEY_RETURN_VLOG_KEY = 'anutrium:flanerie:selected-vlog'
+const JOURNEY_RETURN_SCROLL_KEY = 'anutrium:flanerie:scroll-top'
+
+interface JourneyReturnState {
+  vlogId: string
+  scrollTop: number | null
+}
 
 const vlogs = computed<VlogItem[]>(() => {
   return tm('flanerie.dynamic.vlogs') as VlogItem[]
@@ -134,6 +147,14 @@ const vlogGroups = computed(() => {
 })
 
 const openVlog = (vlog: VlogItem) => {
+  if (typeof window !== 'undefined') {
+    window.sessionStorage.setItem(JOURNEY_RETURN_VLOG_KEY, vlog.id)
+    window.sessionStorage.setItem(
+      JOURNEY_RETURN_SCROLL_KEY,
+      String(getPageScrollTop())
+    )
+  }
+
   router.push(`/flanerie/${vlog.id}`)
 }
 
@@ -143,6 +164,71 @@ const activeVlogId = ref<string | null>(null)
 let mapInstance: any = null
 let activeVlogTimer: number | undefined
 let mapRevealRefreshTimer: number | undefined
+let isJourneyPageUnmounted = false
+
+const consumeJourneyReturnState = (): JourneyReturnState | null => {
+  if (typeof window === 'undefined') return null
+
+  const isReturn =
+    window.sessionStorage.getItem(JOURNEY_RETURN_FLAG_KEY) === 'true'
+  const vlogId = window.sessionStorage.getItem(JOURNEY_RETURN_VLOG_KEY)
+  const rawScrollTop = window.sessionStorage.getItem(JOURNEY_RETURN_SCROLL_KEY)
+  const parsedScrollTop = rawScrollTop === null ? NaN : Number(rawScrollTop)
+
+  window.sessionStorage.removeItem(JOURNEY_RETURN_FLAG_KEY)
+  window.sessionStorage.removeItem(JOURNEY_RETURN_VLOG_KEY)
+  window.sessionStorage.removeItem(JOURNEY_RETURN_SCROLL_KEY)
+
+  if (!isReturn || !vlogId) return null
+
+  return {
+    vlogId,
+    scrollTop: Number.isFinite(parsedScrollTop) ? parsedScrollTop : null,
+  }
+}
+
+const waitForAnimationFrames = (count: number) =>
+  new Promise<void>((resolve) => {
+    const wait = (remaining: number) => {
+      if (remaining <= 0) {
+        resolve()
+        return
+      }
+
+      window.requestAnimationFrame(() => wait(remaining - 1))
+    }
+
+    wait(count)
+  })
+
+const restoreJourneyReturnState = async (returnState: JourneyReturnState) => {
+  activeVlogId.value = returnState.vlogId
+  await nextTick()
+
+  // Run after the router's delayed history restoration so this route owns the
+  // final scroll position regardless of which page returned immediately before it.
+  await waitForAnimationFrames(3)
+  if (isJourneyPageUnmounted) return
+
+  const target = document.getElementById(`vlog-${returnState.vlogId}`)
+  const targetBounds = target?.getBoundingClientRect()
+  const targetScrollTop = targetBounds
+    ? getPageScrollTop() +
+      targetBounds.top -
+      (window.innerHeight - targetBounds.height) / 2
+    : 0
+  const restoredScrollTop = Math.min(
+    Math.max(0, returnState.scrollTop ?? targetScrollTop),
+    getPageMaxScrollTop()
+  )
+
+  scrollPageTo({ top: restoredScrollTop })
+  clearActiveVlogTimer()
+  activeVlogTimer = window.setTimeout(() => {
+    activeVlogId.value = null
+    activeVlogTimer = undefined
+  }, 1000)
+}
 
 interface MapPlaceGroup extends VlogLocation {
   targets: Array<{
@@ -415,6 +501,10 @@ const initMap = async () => {
 }
 
 onMounted(async () => {
+  isJourneyPageUnmounted = false
+  const returnState = consumeJourneyReturnState()
+  if (returnState) restoreJourneyReturnState(returnState)
+
   if (!document.getElementById('leaflet-css')) {
     const link = document.createElement('link')
     link.id = 'leaflet-css'
@@ -459,6 +549,7 @@ watch(
 )
 
 onUnmounted(() => {
+  isJourneyPageUnmounted = true
   clearActiveVlogTimer()
   window.clearTimeout(mapRevealRefreshTimer)
 

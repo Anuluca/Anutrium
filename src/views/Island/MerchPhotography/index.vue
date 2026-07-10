@@ -5,6 +5,7 @@
       'is-returning-from-detail': isReturnEntryActive,
       'has-returned-from-detail': hasReturnedFromDetail,
     }"
+    :style="returnEntryStyle"
     @animationend="handleReturnEntryEnd"
   >
     <DetailPageHeader
@@ -67,6 +68,7 @@
               :class="
                 getRowShelfClasses(collectionIndex, group.collections.length)
               "
+              :style="getRowShelfStyle(collectionIndex)"
               aria-hidden="true"
             >
               <span class="collection-grid__row-shelf-surface" />
@@ -102,6 +104,11 @@ import MerchCollectionCard, {
   type MerchCollectionCardData,
 } from '@/components/MerchCollectionCard/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
+import {
+  getPageMaxScrollTop,
+  getPageScrollTop,
+  scrollPageTo,
+} from '@/utils/pageScroll'
 
 type MerchCategoryId = 'pokemon' | 'tokusatsu' | 'other'
 
@@ -144,11 +151,25 @@ const router = useRouter()
 const isReturnEntryActive = ref(false)
 const hasReturnedFromDetail = ref(false)
 const activeReturnedCollectionId = ref<string | null>(null)
+const returnTransformOriginY = ref('50%')
 const MERCH_RETURN_FLAG_KEY = 'anutrium:merch-photography:returning-from-detail'
 const MERCH_RETURN_COLLECTION_KEY =
   'anutrium:merch-photography:selected-collection'
+const MERCH_RETURN_SCROLL_KEY = 'anutrium:merch-photography:scroll-top'
 const RETURN_TARGET_HIGHLIGHT_DURATION = 1200
+const TARGET_SHELF_DISTANCE_ROW_INDEX = 2
+const SHELF_DISTANCE_ROW_STEP = 2.82
 let returnTargetTimer: number | undefined
+let isPageUnmounted = false
+
+interface MerchReturnState {
+  collectionId: string
+  scrollTop: number
+}
+
+const returnEntryStyle = computed(() => ({
+  '--merch-return-origin-y': returnTransformOriginY.value,
+}))
 
 const merchPhotos = computed<MerchPhotoGroups>(() => {
   return tm('island.dynamic.merchPhotos') as MerchPhotoGroups
@@ -176,44 +197,66 @@ const getCollectionIndex = (collectionId: string) =>
 const getCollectionElementId = (collectionId: string) =>
   `merch-collection-${collectionId}`
 
-const getStoredReturnCollectionId = () => {
-  if (typeof window === 'undefined') return null
-
-  return window.sessionStorage.getItem(MERCH_RETURN_COLLECTION_KEY)
-}
-
 const consumeReturnState = () => {
   if (typeof window === 'undefined') return null
 
   const isReturn =
     window.sessionStorage.getItem(MERCH_RETURN_FLAG_KEY) === 'true'
-  const collectionId = getStoredReturnCollectionId()
+  const collectionId = window.sessionStorage.getItem(
+    MERCH_RETURN_COLLECTION_KEY
+  )
+  const storedScrollTop = Number(
+    window.sessionStorage.getItem(MERCH_RETURN_SCROLL_KEY)
+  )
 
   window.sessionStorage.removeItem(MERCH_RETURN_FLAG_KEY)
   window.sessionStorage.removeItem(MERCH_RETURN_COLLECTION_KEY)
+  window.sessionStorage.removeItem(MERCH_RETURN_SCROLL_KEY)
 
-  return isReturn ? collectionId : null
+  if (!isReturn || !collectionId) return null
+
+  return {
+    collectionId,
+    scrollTop: Number.isFinite(storedScrollTop) ? storedScrollTop : 0,
+  } as MerchReturnState
 }
 
-const scrollToCollection = (collectionId: string) => {
-  const target = document.getElementById(getCollectionElementId(collectionId))
-  if (!target) return
+const waitForAnimationFrames = (count: number) =>
+  new Promise<void>((resolve) => {
+    const wait = (remaining: number) => {
+      if (remaining <= 0) {
+        resolve()
+        return
+      }
 
-  target.scrollIntoView({
-    behavior: 'auto',
-    block: 'center',
+      window.requestAnimationFrame(() => wait(remaining - 1))
+    }
+
+    wait(count)
   })
-}
 
-const scheduleReturnTargetRestore = async (collectionId: string) => {
-  activeReturnedCollectionId.value = collectionId
+const restoreReturnState = async (returnState: MerchReturnState) => {
+  activeReturnedCollectionId.value = returnState.collectionId
   await nextTick()
 
-  window.requestAnimationFrame(() => {
-    window.requestAnimationFrame(() => {
-      scrollToCollection(collectionId)
-    })
-  })
+  // Router history restores after two frames. Apply the captured position once
+  // more afterwards, before transform geometry can affect scroll calculations.
+  await waitForAnimationFrames(3)
+  if (isPageUnmounted) return
+
+  const restoredScrollTop = Math.min(
+    Math.max(0, returnState.scrollTop),
+    getPageMaxScrollTop()
+  )
+  scrollPageTo({ top: restoredScrollTop })
+  returnTransformOriginY.value = `${
+    restoredScrollTop + window.innerHeight / 2
+  }px`
+
+  await waitForAnimationFrames(1)
+  if (isPageUnmounted) return
+
+  isReturnEntryActive.value = true
 
   returnTargetTimer = window.setTimeout(() => {
     activeReturnedCollectionId.value = null
@@ -246,6 +289,20 @@ const shouldRenderRowShelf = (
     isRowEnd(collectionIndex, collectionCount, columnCount)
   )
 
+const getRowShelfTranslate = (collectionIndex: number, columnCount: number) => {
+  const rowIndex = Math.floor(collectionIndex / columnCount)
+
+  return `${
+    (rowIndex - TARGET_SHELF_DISTANCE_ROW_INDEX) * SHELF_DISTANCE_ROW_STEP
+  }px`
+}
+
+const getRowShelfStyle = (collectionIndex: number) => ({
+  '--row-shelf-translate-desktop': getRowShelfTranslate(collectionIndex, 5),
+  '--row-shelf-translate-tablet': getRowShelfTranslate(collectionIndex, 3),
+  '--row-shelf-translate-mobile': getRowShelfTranslate(collectionIndex, 2),
+})
+
 const getSectionEntryStyle = (groupIndex: number) => ({
   '--section-entry-delay': `${groupIndex * 240}ms`,
 })
@@ -261,6 +318,10 @@ const openCollection = (collectionId: string) => {
 
   if (typeof window !== 'undefined') {
     window.sessionStorage.setItem(MERCH_RETURN_COLLECTION_KEY, collectionId)
+    window.sessionStorage.setItem(
+      MERCH_RETURN_SCROLL_KEY,
+      String(getPageScrollTop())
+    )
   }
 
   router.push(`/island/merch-photography/${collectionId}`)
@@ -278,15 +339,20 @@ const handleReturnEntryEnd = (event: AnimationEvent) => {
 }
 
 onMounted(() => {
-  const returnCollectionId = consumeReturnState()
-  if (!returnCollectionId) return
+  isPageUnmounted = false
+  document
+    .querySelectorAll<HTMLElement>('.collection-card--expanding')
+    .forEach((element) => element.remove())
 
-  isReturnEntryActive.value = true
+  const returnState = consumeReturnState()
+  if (!returnState) return
+
   hasReturnedFromDetail.value = true
-  scheduleReturnTargetRestore(returnCollectionId)
+  restoreReturnState(returnState)
 })
 
 onUnmounted(() => {
+  isPageUnmounted = true
   if (returnTargetTimer) window.clearTimeout(returnTargetTimer)
 })
 </script>
@@ -299,7 +365,7 @@ onUnmounted(() => {
 .merch-page {
   color: var(--text-color);
   overflow: hidden;
-  transform-origin: center center;
+  transform-origin: center var(--merch-return-origin-y, 50%);
 
   &.is-returning-from-detail {
     animation: merch-return-overflow-entry 0.92s
@@ -435,10 +501,15 @@ onUnmounted(() => {
   transform-style: preserve-3d;
 
   :deep(.collection-card-entry) {
-    z-index: 2;
-    animation: merch-card-drop-entry 1.08s cubic-bezier(0.17, 0.84, 0.24, 1)
-      backwards;
+    z-index: 4;
+    animation: merch-card-drop-entry 0.86s cubic-bezier(0.22, 0.61, 0.36, 1)
+      both;
     animation-delay: var(--card-entry-delay);
+  }
+
+  :deep(.collection-card-entry .collection-card-shell::after) {
+    animation: merch-card-top-entry 0.52s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+    animation-delay: calc(var(--card-entry-delay) + 120ms);
   }
 
   &__pegboard {
@@ -502,10 +573,12 @@ onUnmounted(() => {
     z-index: 3;
     display: none;
     grid-column: 1 / -1;
+    --row-shelf-translate: var(--row-shelf-translate-desktop, 0px);
     height: 90px;
     margin-right: calc(0px - var(--grid-side-padding));
     margin-left: calc(0px - var(--grid-side-padding));
     pointer-events: none;
+    transform: translateY(var(--row-shelf-translate));
 
     &.is-desktop {
       display: block;
@@ -516,9 +589,9 @@ onUnmounted(() => {
   &__row-shelf {
     transform-origin: top center;
     transform-style: preserve-3d;
-    animation: merch-shelf-flip-entry 0.98s cubic-bezier(0.16, 0.84, 0.26, 1)
-      backwards;
-    animation-delay: calc(var(--section-entry-delay) + 500ms);
+    animation: merch-shelf-flip-entry 0.58s cubic-bezier(0.22, 0.61, 0.36, 1)
+      both;
+    animation-delay: calc(var(--section-entry-delay) + 180ms);
   }
 
   &__shelf-surface,
@@ -546,6 +619,7 @@ onUnmounted(() => {
 
   &__row-shelf-surface {
     top: -6px;
+    box-shadow: none;
   }
 
   &__shelf-base,
@@ -620,51 +694,57 @@ onUnmounted(() => {
 @keyframes merch-shelf-flip-entry {
   0% {
     opacity: 0;
-    transform: translateY(-32px) rotateX(-72deg);
+    transform: translateY(calc(-32px + var(--row-shelf-translate, 0px)))
+      rotateX(-72deg);
   }
 
   58% {
     opacity: 1;
-    transform: translateY(4px) rotateX(8deg);
+    transform: translateY(calc(4px + var(--row-shelf-translate, 0px)))
+      rotateX(8deg);
   }
 
   100% {
     opacity: 1;
-    transform: translateY(0) rotateX(0deg);
+    transform: translateY(var(--row-shelf-translate, 0px)) rotateX(0deg);
   }
 }
 
 @keyframes merch-card-drop-entry {
   0% {
     opacity: 0;
-    transform: translateY(-54px) translateZ(12px) rotateX(12deg);
-  }
-
-  58% {
-    opacity: 1;
-    transform: translateY(10px) translateZ(12px) rotateX(-2deg);
-  }
-
-  78% {
-    opacity: 1;
-    transform: translateY(-3px) translateZ(12px) rotateX(1deg);
+    transform: translateY(-64px);
   }
 
   100% {
     opacity: 1;
-    transform: translateY(0) translateZ(12px) rotateX(0deg);
+    transform: translateY(0);
+  }
+}
+
+@keyframes merch-card-top-entry {
+  0% {
+    opacity: 0;
+    top: -1px;
+    height: 0;
+  }
+
+  100% {
+    opacity: 1;
+    top: var(--box-top-offset);
+    height: var(--box-top-height);
   }
 }
 
 @keyframes merch-return-overflow-entry {
   0% {
     opacity: 0;
-    transform: scale(2.35);
+    transform: scale(1.75);
   }
 
   62% {
     opacity: 0.92;
-    transform: scale(1.08);
+    transform: scale(1.04);
   }
 
   100% {
@@ -707,6 +787,8 @@ onUnmounted(() => {
     grid-template-columns: repeat(3, minmax(0, 1fr));
 
     &__row-shelf {
+      --row-shelf-translate: var(--row-shelf-translate-tablet, 0px);
+
       &.is-desktop {
         display: none;
       }
@@ -729,7 +811,7 @@ onUnmounted(() => {
 
   .collection-grid {
     --card-shelf-gutter: 16px;
-    --grid-side-padding: 40px;
+    --grid-side-padding: clamp(48px, 14vw, 64px);
 
     grid-template-columns: repeat(2, minmax(0, 1fr));
     column-gap: var(--card-shelf-gutter);
@@ -755,6 +837,7 @@ onUnmounted(() => {
 
     &__row-shelf {
       z-index: 1;
+      --row-shelf-translate: var(--row-shelf-translate-mobile, 0px);
       height: 72px;
 
       &.is-desktop,

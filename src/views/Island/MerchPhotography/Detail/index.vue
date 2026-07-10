@@ -149,7 +149,7 @@ watch(
   padding: 4px 12px 5px;
   box-sizing: border-box;
   color: @red;
-  font-family: @mono;
+  font-family: 'alibaba-puhuiti', sans-serif;
   font-size: 0.48rem;
   font-weight: 800;
   text-align: center;
