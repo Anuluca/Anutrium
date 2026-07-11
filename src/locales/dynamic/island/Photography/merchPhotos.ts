@@ -7,8 +7,8 @@ const merchPhotos = {
         en: 'Lucario',
       },
       subtitle: {
-        zhCn: '万代掌动系列',
-        en: 'Bandai shodo Series',
+        zhCn: '万代掌动系列 & LookUp系列',
+        en: 'Bandai shodo Series & LookUp Series',
       },
       photos: [
         {
@@ -25,8 +25,145 @@ const merchPhotos = {
             en: '',
           },
         },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/lucarioonearm/IMG_3538.jpg',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
       ],
     },
+    {
+      id: 'Koraidon&Miraidon',
+      title: {
+        zhCn: '故勒顿 & 密勒顿',
+        en: 'Koraidon & Miraidon',
+      },
+      subtitle: {
+        zhCn: '万代可动扭蛋',
+        en: 'Bandai Articulated Gashapon',
+      },
+      photos: [
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/Koraidon&Miraidon/IMG_2048.jpg',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/Koraidon&Miraidon/DSC05113.jpg',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/Koraidon&Miraidon/IMG_1779.jpg',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+      ],
+    },
+    {
+      id: 'Ceruledge&Charcadet',
+      title: {
+        zhCn: '小炭仔 & 苍炎刃鬼',
+        en: 'Ceruledge & Charcadet',
+      },
+      subtitle: {
+        zhCn: '布鲁可经典版',
+        en: 'Blokees Classic',
+      },
+      photos: [
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/Ceruledge&Charcadet/DSC05345.jpg',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/Ceruledge&Charcadet/IMG_2838.jpg',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/Ceruledge&Charcadet/IMG_2857.jpg',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/Ceruledge&Charcadet/IMG_2869.jpg',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/Ceruledge&Charcadet/IMG_2879.jpg',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/Ceruledge&Charcadet/IMG_2880.jpg',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/Ceruledge&Charcadet/IMG_2881.jpg',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/Ceruledge&Charcadet/IMG_2882.jpg',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/Ceruledge&Charcadet/DSC06275.jpg',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+      ],
+    },
+    // {
+    //   id: '',
+    //   title: {
+    //     zhCn: '',
+    //     en: '',
+    //   },
+    //   subtitle: {
+    //     zhCn: '',
+    //     en: '',
+    //   },
+    //   photos: [
+    //     {
+    //       url: 'https://assets.anuluca.com/Island/picMerch/',
+    //       title: {
+    //         zhCn: '',
+    //         en: '',
+    //       },
+    //     },
+    //   ],
+    // },
     {
       id: 'aceburn',
       title: {
@@ -170,14 +307,77 @@ const merchPhotos = {
         en: 'Metagross',
       },
       subtitle: {
-        zhCn: '万代掌动系列',
-        en: 'Bandai shodo Series',
+        zhCn: '万代掌动系列 & 万代宝可梦拼装',
+        en: 'Bandai shodo Series & Bandai Pokemon Assembly',
       },
       photos: [
         {
+          url: 'https://assets.anuluca.com/Island/picMerch/metagross/IMG_1727.jpg',
+          title: {
+            zhCn: '拼装（金属漆重涂）',
+            en: '',
+          },
+        },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/metagross/IMG_1731.jpg',
+          title: {
+            zhCn: '拼装（金属漆重涂）',
+            en: '',
+          },
+        },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/metagross/IMG_1722.jpg',
+          title: {
+            zhCn: '拼装（金属漆重涂）',
+            en: '',
+          },
+        },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/metagross/IMG_1702.jpg',
+          title: {
+            zhCn: '拼装（金属漆重涂）',
+            en: '',
+          },
+        },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/metagross/IMG_1703.jpg',
+          title: {
+            zhCn: '拼装（金属漆重涂）',
+            en: '',
+          },
+        },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/metagross/IMG_1678.jpg',
+          title: {
+            zhCn: '拼装（金属漆重涂）',
+            en: '',
+          },
+        },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/metagross/IMG_1704.jpg',
+          title: {
+            zhCn: '拼装（金属漆重涂）',
+            en: '',
+          },
+        },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/metagross/IMG_1714.jpg',
+          title: {
+            zhCn: '拼装（金属漆重涂）',
+            en: '',
+          },
+        },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/metagross/IMG_1651.jpg',
+          title: {
+            zhCn: '拼装',
+            en: '',
+          },
+        },
+        {
           url: 'https://assets.anuluca.com/Island/picMerch/metacross/deXAXt.jpg',
           title: {
-            zhCn: '',
+            zhCn: '掌动',
             en: '',
           },
         },
@@ -417,26 +617,6 @@ const merchPhotos = {
         },
       ],
     },
-    // {
-    //   id: '',
-    //   title: {
-    //     zhCn: '',
-    //     en: '',
-    //   },
-    //   subtitle: {
-    //     zhCn: '',
-    //     en: '',
-    //   },
-    //   photos: [
-    //     {
-    //       url: 'https://assets.anuluca.com/Island/picMerch/',
-    //       title: {
-    //         zhCn: '',
-    //         en: '',
-    //       },
-    //     },
-    //   ],
-    // },
   ],
   tokusatsu: [
     {
@@ -928,6 +1108,55 @@ const merchPhotos = {
             en: '',
           },
         },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/wargraymon/IMG_4607.jpg',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/wargraymonIMG_4608.jpg',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/wargraymon/IMG_4609.jpg',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/wargraymon/IMG_4610.jpg',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/wargraymon/IMG_4611.jpg',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/wargraymon/IMG_4612.jpg',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/wargraymon/IMG_4613.jpg',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
       ],
     },
     {
@@ -977,6 +1206,13 @@ const merchPhotos = {
         },
         {
           url: 'https://assets.anuluca.com/Island/picMerch/Imperialdramon/00068 IMG_3763.jpg',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/Imperialdramon/ChatGPT Image 2026年7月11日 14_24_14.png',
           title: {
             zhCn: '',
             en: '',
