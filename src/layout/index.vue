@@ -508,8 +508,8 @@ const setHeaderScrolledState = (nextValue: boolean) => {
           },
         ],
         {
-          duration: 500,
-          easing: 'ease',
+          duration: 260,
+          easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
         }
       )
       animation.onfinish = () => {
@@ -693,16 +693,14 @@ watch(
 @import './index.less';
 
 .route-enter-active {
+  transform-origin: top center;
   transition: opacity 0.12s ease, transform 0.6s ease;
   transition-delay: 0.12s;
-  transform-origin: top center;
   will-change: opacity, transform;
 }
 
 .route-leave-active {
-  transition: opacity 0.12s ease;
-  transition-delay: 0.12s;
-  will-change: opacity;
+  transition: opacity 0.12s ease-in;
   pointer-events: none;
 }
 
@@ -713,13 +711,5 @@ watch(
 
 .route-leave-to {
   opacity: 0;
-}
-
-:global(.route-pre-leave) {
-  opacity: 0;
-  transition: opacity 0.12s ease;
-  transition-delay: 0.12s;
-  will-change: opacity;
-  pointer-events: none;
 }
 </style>

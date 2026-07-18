@@ -1,5 +1,9 @@
 <template>
-  <div class="marquee-wrapper">
+  <div
+    ref="marqueeElement"
+    class="marquee-wrapper"
+    :class="{ 'motion-paused': isMotionPaused }"
+  >
     <div class="marquee-3d-container">
       <div class="marquee-track">
         <div v-for="group in 2" :key="group" class="marquee-content">
@@ -14,6 +18,48 @@
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+import { onMounted, onUnmounted, ref } from 'vue'
+
+const marqueeElement = ref<HTMLElement | null>(null)
+const isMotionPaused = ref(false)
+let isVisible = true
+let observer: IntersectionObserver | null = null
+let reducedMotionQuery: MediaQueryList | null = null
+
+const updateMotionState = () => {
+  isMotionPaused.value =
+    !isVisible ||
+    document.visibilityState === 'hidden' ||
+    !!reducedMotionQuery?.matches
+}
+
+onMounted(() => {
+  reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+  reducedMotionQuery.addEventListener('change', updateMotionState)
+  document.addEventListener('visibilitychange', updateMotionState)
+
+  if ('IntersectionObserver' in window && marqueeElement.value) {
+    observer = new IntersectionObserver(
+      ([entry]) => {
+        isVisible = entry.isIntersecting
+        updateMotionState()
+      },
+      { threshold: 0.01 }
+    )
+    observer.observe(marqueeElement.value)
+  }
+
+  updateMotionState()
+})
+
+onUnmounted(() => {
+  observer?.disconnect()
+  document.removeEventListener('visibilitychange', updateMotionState)
+  reducedMotionQuery?.removeEventListener('change', updateMotionState)
+})
+</script>
 
 <style lang="less" scoped>
 .marquee-wrapper {
@@ -50,6 +96,10 @@
   );
 
   &:hover .marquee-track {
+    animation-play-state: paused;
+  }
+
+  &.motion-paused .marquee-track {
     animation-play-state: paused;
   }
 }

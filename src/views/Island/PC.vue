@@ -314,12 +314,16 @@ const merchCoverUrl = computed(
 const imageLogAlbums = computed(
   () =>
     tm('island.dynamic.imageLog') as Array<{
-      photos?: Array<{ url: string }>
+      groups?: Array<{
+        photos?: Array<{ url: string }>
+      }>
     }>
 )
 const imageLogAlbumCount = computed(() => imageLogAlbums.value.length)
 const imageLogCoverUrl = computed(
-  () => imageLogAlbums.value[0]?.photos?.[0]?.url || developingPlaceholder
+  () =>
+    imageLogAlbums.value[0]?.groups?.[0]?.photos?.[0]?.url ||
+    developingPlaceholder
 )
 
 const openHarborItem = (item: HarborItem) => {
@@ -618,11 +622,6 @@ const updateLatestScrollState = () => {
 }
 
 onMounted(() => {
-  document.body.classList.remove(
-    'island-mobile-shell',
-    'island-mobile-shell-leaving'
-  )
-  document.body.classList.add('island-pc-shell')
   nextTick(() => {
     updateLatestScrollState()
     if (audioRef.value) {

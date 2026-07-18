@@ -4,7 +4,20 @@ import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 import Components from 'unplugin-vue-components/vite'
 import { defineConfig } from 'vite'
 
+import imageLog from './src/locales/dynamic/island/Photography/imageLog'
+import merchPhotos from './src/locales/dynamic/island/Photography/merchPhotos'
+
 const path = require('path')
+
+const merchPhotographyDetailRoutes = Object.values(merchPhotos).flatMap(
+  (collections) =>
+    collections.map(
+      (collection) => `/island/merch-photography/${collection.id}`
+    )
+)
+const imageLogDetailRoutes = imageLog.map(
+  (album) => `/island/image-log/${album.id}`
+)
 
 export default defineConfig({
   plugins: [
@@ -117,16 +130,9 @@ export default defineConfig({
       '/island',
       '/island/photography',
       '/island/merch-photography',
-      '/island/merch-photography/pokemon-plush',
-      '/island/merch-photography/shodo-arceus',
-      '/island/merch-photography/shodo-dragapult',
-      '/island/merch-photography/shodo-cinderace',
-      '/island/merch-photography/ultraman-belial',
-      '/island/merch-photography/pokemon-battle-chess',
+      ...merchPhotographyDetailRoutes,
       '/island/image-log',
-      '/island/image-log/daily-fragments',
-      '/island/image-log/travel-proof',
-      '/island/image-log/home-archive',
+      ...imageLogDetailRoutes,
     ],
   },
   base: '/',

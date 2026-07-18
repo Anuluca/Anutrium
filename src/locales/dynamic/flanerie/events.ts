@@ -222,6 +222,24 @@ const events = [
       },
       {
         location: {
+          zhCn: '活动现场',
+          en: 'Event Venue',
+        },
+        time: '2020',
+        device: 'iPhone 12 mini',
+        url: 'https://assets.anuluca.com/Flanerie/events/poke_event1/00020 IMG_0456.JPEG',
+      },
+      {
+        location: {
+          zhCn: '皮卡丘人偶服',
+          en: 'Pikachu Mascot Costume',
+        },
+        time: '2020',
+        device: 'Sony RX100M6',
+        url: 'https://assets.anuluca.com/Flanerie/events/poke_event1/00019 IMG_0450.JPEG',
+      },
+      {
+        location: {
           zhCn: '皮卡丘人偶服',
           en: 'Pikachu Mascot Costume',
         },
@@ -246,6 +264,15 @@ const events = [
         time: '2020',
         device: 'Sony RX100M6',
         url: 'https://assets.anuluca.com/Flanerie/events/poke_event1/DSC01074.jpg',
+      },
+      {
+        location: {
+          zhCn: '皮卡丘人偶服',
+          en: 'Pikachu Mascot Costume',
+        },
+        time: '2020',
+        device: 'iPhone 12 mini',
+        url: 'https://assets.anuluca.com/Flanerie/events/poke_event1/00018 IMG_0446.JPEG',
       },
       {
         location: {

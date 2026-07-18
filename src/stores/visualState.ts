@@ -4,10 +4,17 @@ export type Theme = 'light' | 'dark'
 
 export type DeviceType = 'mobile' | 'tablet' | 'desktop'
 
+export type ZodiacLayout = 'hero' | 'content'
+
 export default defineStore('visualState', {
-  state: (): { theme: Theme; deviceType: DeviceType } => ({
+  state: (): {
+    theme: Theme
+    deviceType: DeviceType
+    zodiacLayout: ZodiacLayout
+  } => ({
     theme: 'dark',
     deviceType: 'desktop',
+    zodiacLayout: 'hero',
   }),
 
   actions: {
@@ -65,6 +72,11 @@ export default defineStore('visualState', {
       localStorage.setItem('deviceType', deviceType)
 
       this.deviceType = deviceType
+    },
+
+    setZodiacLayout(layout: ZodiacLayout): void {
+      if (this.zodiacLayout === layout) return
+      this.zodiacLayout = layout
     },
   },
 })

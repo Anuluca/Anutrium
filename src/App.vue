@@ -33,9 +33,6 @@ let removeExternalLinkTracking: (() => void) | null = null
 let resizeRafId: number | null = null
 let entryAnimationTimer: number | null = null
 const entryAnimationReady = ref(false)
-const entryAnimationRenderKey = computed(() =>
-  entryAnimationReady.value ? 'entry-ready' : 'entry-pending'
-)
 
 interface VlogSeoItem {
   id: string
@@ -165,20 +162,14 @@ onUnmounted(() => {
 <template>
   <CursorMove />
   <StartAnimation @finished="startAnimationFinished" />
-  <layout
-    :key="`layout-${entryAnimationRenderKey}`"
-    :entry-active="entryAnimationReady"
-  />
+  <layout :entry-active="entryAnimationReady" />
   <div
     class="footer-bottom-gradient"
     :class="{ 'footer-bottom-gradient--ready': entryAnimationReady }"
     aria-hidden="true"
   />
-  <FooterCom
-    :key="`footer-${entryAnimationRenderKey}`"
-    :entry-active="entryAnimationReady"
-  />
-  <BackController />
+  <FooterCom :entry-active="entryAnimationReady" />
+  <BackController :entry-active="entryAnimationReady" />
 </template>
 
 <style scoped lang="less">

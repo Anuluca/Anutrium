@@ -155,11 +155,18 @@ const updateActiveSection = () => {
   }
 
   const activationTop = scrollTop + headerOffset + window.innerHeight * 0.16
+  let low = 0
+  let high = navigationItems.value.length - 1
   let activeIndex = 0
 
-  for (let index = 1; index < navigationItems.value.length; index += 1) {
-    if (navigationItems.value[index].top > activationTop) break
-    activeIndex = index
+  while (low <= high) {
+    const middle = (low + high) >> 1
+    if (navigationItems.value[middle].top <= activationTop) {
+      activeIndex = middle
+      low = middle + 1
+    } else {
+      high = middle - 1
+    }
   }
 
   const nextAnchorId = navigationItems.value[activeIndex].anchorId

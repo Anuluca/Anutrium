@@ -462,6 +462,20 @@ const merchPhotos = {
             en: '',
           },
         },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/pokemonCard/IMG_4784.jpg',
+          title: {
+            zhCn: '玛俐的决心礼盒',
+            en: '',
+          },
+        },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/pokemonCard/IMG_4809.jpg',
+          title: {
+            zhCn: '玛俐',
+            en: '',
+          },
+        },
       ],
     },
     {
@@ -490,9 +504,72 @@ const merchPhotos = {
           },
         },
         {
+          url: 'https://assets.anuluca.com/Island/picMerch/pokemondoll/IMG_7811.jpg',
+          title: {
+            zhCn: '彩粉蝶',
+            en: '',
+          },
+        },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/pokemondoll/IMG_6857.jpg',
+          title: {
+            zhCn: '',
+            en: '',
+          },
+        },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/pokemondoll/IMG_6532.jpg',
+          title: {
+            zhCn: '妙喵',
+            en: '',
+          },
+        },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/pokemondoll/IMG_4605.jpg',
+          title: {
+            zhCn: '皮卡丘（方可梦）',
+            en: '',
+          },
+        },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/pokemondoll/IMG_4604.jpg',
+          title: {
+            zhCn: '皮卡丘（方可梦）',
+            en: '',
+          },
+        },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/pokemondoll/IMG_4586.jpg',
+          title: {
+            zhCn: '蕾冠王',
+            en: '',
+          },
+        },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/pokemondoll/IMG_0459.jpg',
+          title: {
+            zhCn: '利欧路扭蛋',
+            en: '',
+          },
+        },
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/pokemondoll/DSC05406.jpg',
+          title: {
+            zhCn: '利欧路',
+            en: '',
+          },
+        },
+        {
           url: 'https://assets.anuluca.com/Flanerie/cities/shanghai/IMG_3288.jpg',
           title: {
             zhCn: '和网友的本命面基',
+            en: '',
+          },
+        },
+        {
+          url: 'https://assets.anuluca.com/Flanerie/cities/nanchang/IMG_3487.jpg',
+          title: {
+            zhCn: '草裙舞皮卡丘',
             en: '',
           },
         },
@@ -504,9 +581,9 @@ const merchPhotos = {
           },
         },
         {
-          url: 'https://assets.anuluca.com/Flanerie/cities/nanchang/IMG_3487.jpg',
+          url: 'https://assets.anuluca.com/Island/picMerch/pokemondoll/IMG_4272.jpg',
           title: {
-            zhCn: '草裙舞皮卡丘',
+            zhCn: '呆火鳄 in 南昌艾溪湖公园',
             en: '',
           },
         },
@@ -1371,6 +1448,26 @@ const merchPhotos = {
           url: 'https://assets.anuluca.com/Island/picMerch/tomica/DSC00474.JPG',
           title: {
             zhCn: '',
+            en: '',
+          },
+        },
+      ],
+    },
+    {
+      id: 'other',
+      title: {
+        zhCn: '其他',
+        en: 'other',
+      },
+      subtitle: {
+        zhCn: '未分类',
+        en: 'Uncategorized',
+      },
+      photos: [
+        {
+          url: 'https://assets.anuluca.com/Island/picMerch/other/IMG_3539.jpg',
+          title: {
+            zhCn: '暧昧酱',
             en: '',
           },
         },

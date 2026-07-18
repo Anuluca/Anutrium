@@ -4,7 +4,7 @@
       back-label="IMAGE LOG"
       back-path="/island/image-log"
       :counter="{
-        value: String(album.photos.length).padStart(2, '0'),
+        value: String(photoCount).padStart(2, '0'),
         label: 'ITEMS',
       }"
       :subtitle="album.subtitle"
@@ -12,20 +12,36 @@
     />
 
     <main class="image-log-gallery">
-      <MediaGallery
-        v-if="album.photos.length"
-        :entrance-step-ms="90"
-        :items="album.photos"
-        :get-media-label="getMediaLabel"
-        :show-media-info="showMediaInfo"
-        staggered-entrance
+      <section
+        v-for="(group, groupIndex) in photoGroups"
+        :key="`${albumId}-${groupIndex}`"
+        class="image-log-gallery__group"
       >
-        <template #info="{ item: photo }">
-          <div class="image-log-photo-title">{{ photo.title }}</div>
-        </template>
-      </MediaGallery>
+        <DetailSectionHeader>
+          <template #number>
+            {{ String(groupIndex + 1).padStart(2, '0') }}
+          </template>
+          <template #title>{{ group.title }}</template>
+          <template #meta>
+            <span>{{ group.photos.length }}</span>
+            <span>ITEMS</span>
+          </template>
+        </DetailSectionHeader>
 
-      <div v-else class="image-log-gallery__empty">
+        <MediaGallery
+          :entrance-step-ms="90"
+          :items="group.photos"
+          :get-media-label="getMediaLabel"
+          :show-media-info="showMediaInfo"
+          staggered-entrance
+        >
+          <template #info="{ item: photo }">
+            <div class="image-log-photo-title">{{ photo.title }}</div>
+          </template>
+        </MediaGallery>
+      </section>
+
+      <div v-if="!photoGroups.length" class="image-log-gallery__empty">
         {{ t('island.imageLogEmpty') }}
       </div>
     </main>
@@ -40,6 +56,7 @@ import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 
 import DetailPageHeader from '@/components/DetailPageHeader/index.vue'
+import DetailSectionHeader from '@/components/DetailSectionHeader/index.vue'
 import MediaGallery, {
   type GalleryMedia,
 } from '@/components/MediaGallery/index.vue'
@@ -55,6 +72,11 @@ interface ImageLogAlbum {
   title: string
   subtitle: string
   accentColor?: string
+  groups: ImageLogPhotoGroup[]
+}
+
+interface ImageLogPhotoGroup {
+  title: string
   photos: ImageLogPhoto[]
 }
 
@@ -65,6 +87,12 @@ const albumId = computed(() => route.params.albumId as string)
 const albums = computed(() => tm('island.dynamic.imageLog') as ImageLogAlbum[])
 const album = computed(() =>
   albums.value.find((item) => item.id === albumId.value)
+)
+const photoGroups = computed<ImageLogPhotoGroup[]>(
+  () => album.value?.groups.filter((group) => group.photos.length) ?? []
+)
+const photoCount = computed(() =>
+  photoGroups.value.reduce((count, group) => count + group.photos.length, 0)
 )
 
 const getMediaLabel = (media: GalleryMedia) =>
@@ -97,6 +125,18 @@ watch(
   padding: 54px 0 36px;
 }
 
+.image-log-gallery__group {
+  padding: 0 clamp(34px, 5vw, 82px);
+
+  & + & {
+    margin-top: 54px;
+  }
+
+  :deep(.media-gallery) {
+    padding: 0;
+  }
+}
+
 .image-log-photo-title {
   display: grid;
   min-height: 28px;
@@ -127,6 +167,10 @@ watch(
 
   .image-log-gallery {
     padding-top: 38px;
+  }
+
+  .image-log-gallery__group {
+    padding: 0 clamp(20px, 5vw, 34px);
   }
 
   .image-log-photo-title {

@@ -45,9 +45,20 @@ import PageFooter from '@/components/PageFooter/index.vue'
 const { t, tm } = useI18n()
 const router = useRouter()
 
-const albums = computed<ImageLogAlbumCardData[]>(() => {
-  return tm('island.dynamic.imageLog') as ImageLogAlbumCardData[]
-})
+type ImageLogAlbumData = Omit<ImageLogAlbumCardData, 'photos'> & {
+  groups: Array<{
+    photos: ImageLogAlbumCardData['photos']
+  }>
+}
+
+const albums = computed<ImageLogAlbumCardData[]>(() =>
+  (tm('island.dynamic.imageLog') as ImageLogAlbumData[]).map(
+    ({ groups, ...album }) => ({
+      ...album,
+      photos: groups.flatMap((group) => group.photos),
+    })
+  )
+)
 
 const openAlbum = (albumId: string) => {
   router.push(`/island/image-log/${albumId}`)

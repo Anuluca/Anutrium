@@ -250,6 +250,8 @@ const VISITED_REGION_GEOJSON_URLS: Record<string, string> = {
   fujian: '/geo/visited-regions/fujian.geojson',
   singapore: '/geo/visited-regions/singapore.geojson',
 }
+const geoJsonBoundaryCache = new Map<string, Promise<any | null>>()
+let leafletLoadPromise: Promise<void> | null = null
 
 const mapPlaces = computed<MapPlaceGroup[]>(() => {
   const places = new Map<string, MapPlaceGroup>()
@@ -322,21 +324,33 @@ const getMapTileUrl = () =>
     : 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.jpg'
 
 const loadGeoJsonBoundary = async (url: string) => {
-  const response = await fetch(url)
-  if (!response.ok) return null
+  const cachedBoundary = geoJsonBoundaryCache.get(url)
+  if (cachedBoundary) return cachedBoundary
 
-  const data = await response.json()
-  return data?.type === 'FeatureCollection' || data?.type === 'Feature'
-    ? data
-    : null
+  const boundaryLoad = fetch(url)
+    .then(async (response) => {
+      if (!response.ok) return null
+
+      const data = await response.json()
+      return data?.type === 'FeatureCollection' || data?.type === 'Feature'
+        ? data
+        : null
+    })
+    .catch((error) => {
+      geoJsonBoundaryCache.delete(url)
+      throw error
+    })
+
+  geoJsonBoundaryCache.set(url, boundaryLoad)
+  return boundaryLoad
 }
 
-const addVisitedRegionHighlights = async (L: any) => {
+const addVisitedRegionHighlights = async (L: any, map: any) => {
   const visitedRegionIds = new Set(mapPlaces.value.map((place) => place.id))
   const paneName = 'visited-region-pane'
 
-  mapInstance.createPane(paneName)
-  const pane = mapInstance.getPane(paneName)
+  map.createPane(paneName)
+  const pane = map.getPane(paneName)
   if (pane) {
     pane.style.zIndex = '350'
     pane.style.pointerEvents = 'none'
@@ -349,7 +363,7 @@ const addVisitedRegionHighlights = async (L: any) => {
 
       try {
         const geoJson = await loadGeoJsonBoundary(geoJsonUrl)
-        if (!geoJson) return
+        if (!geoJson || mapInstance !== map) return
 
         L.geoJSON(geoJson, {
           pane: paneName,
@@ -362,7 +376,7 @@ const addVisitedRegionHighlights = async (L: any) => {
             fillColor: '#e23456',
             fillOpacity: visualStateStore.theme === 'light' ? 0.07 : 0.13,
           },
-        }).addTo(mapInstance)
+        }).addTo(map)
       } catch {
         // Region highlights are decorative; keep the map usable if a boundary API is unavailable.
       }
@@ -417,7 +431,7 @@ const initMap = async () => {
   const L = (window as any).L
   if (!L) return
 
-  mapInstance = L.map(mapRef.value, {
+  const map = L.map(mapRef.value, {
     center: [25, 105],
     zoom: 4,
     minZoom: 2,
@@ -426,17 +440,16 @@ const initMap = async () => {
     attributionControl: false,
     scrollWheelZoom: false,
   })
+  mapInstance = map
 
-  L.tileLayer(getMapTileUrl(), { subdomains: 'abcd', maxZoom: 8 }).addTo(
-    mapInstance
-  )
+  L.tileLayer(getMapTileUrl(), { subdomains: 'abcd', maxZoom: 8 }).addTo(map)
 
-  L.control.zoom({ position: 'bottomright' }).addTo(mapInstance)
+  L.control.zoom({ position: 'bottomright' }).addTo(map)
   renderZoomControlIcons()
   refreshMapSize()
   scheduleMapSizeRefresh(900)
 
-  await addVisitedRegionHighlights(L)
+  void addVisitedRegionHighlights(L, map)
 
   mapPlaces.value.forEach((place) => {
     const icon = L.divIcon({
@@ -449,7 +462,7 @@ const initMap = async () => {
       iconAnchor: [10, 10],
     })
 
-    const marker = L.marker([place.lat, place.lng], { icon }).addTo(mapInstance)
+    const marker = L.marker([place.lat, place.lng], { icon }).addTo(map)
     let closeTimer: number | undefined
 
     const scheduleClose = () => {
@@ -473,7 +486,7 @@ const initMap = async () => {
 
     marker.on('mouseover', () => {
       cancelClose()
-      mapInstance.closePopup()
+      map.closePopup()
       marker.openPopup()
     })
 
@@ -500,6 +513,54 @@ const initMap = async () => {
   })
 }
 
+const loadLeaflet = () => {
+  if ((window as any).L) return Promise.resolve()
+  if (leafletLoadPromise) return leafletLoadPromise
+
+  leafletLoadPromise = new Promise<void>((resolve, reject) => {
+    let script = document.querySelector<HTMLScriptElement>(
+      'script[data-leaflet-runtime]'
+    )
+
+    if (script?.dataset.leafletRuntimeState === 'failed') {
+      script.remove()
+      script = null
+    }
+
+    const handleError = () => {
+      if (script) {
+        script.dataset.leafletRuntimeState = 'failed'
+        script.remove()
+      }
+      leafletLoadPromise = null
+      reject(new Error('Failed to load Leaflet runtime'))
+    }
+
+    const handleLoad = () => {
+      if (!(window as any).L) {
+        handleError()
+        return
+      }
+
+      if (script) script.dataset.leafletRuntimeState = 'loaded'
+      resolve()
+    }
+
+    if (!script) {
+      script = document.createElement('script')
+      script.dataset.leafletRuntime = 'true'
+      script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
+    }
+
+    script.dataset.leafletRuntimeState = 'loading'
+    script.addEventListener('load', handleLoad, { once: true })
+    script.addEventListener('error', handleError, { once: true })
+    if (!script.isConnected) document.head.appendChild(script)
+  })
+
+  return leafletLoadPromise
+}
+
 onMounted(async () => {
   isJourneyPageUnmounted = false
   const returnState = consumeJourneyReturnState()
@@ -513,15 +574,14 @@ onMounted(async () => {
     document.head.appendChild(link)
   }
 
-  if (!(window as any).L) {
-    await new Promise<void>((resolve) => {
-      const script = document.createElement('script')
-      script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
-      script.onload = () => resolve()
-      document.head.appendChild(script)
-    })
+  try {
+    await loadLeaflet()
+  } catch {
+    return
   }
+  if (isJourneyPageUnmounted) return
   await nextTick()
+  if (isJourneyPageUnmounted) return
   initMap()
 })
 

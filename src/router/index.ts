@@ -1,5 +1,5 @@
 /* eslint-disable simple-import-sort/imports */
-import { type RouteLocationNormalizedLoaded, type Router } from 'vue-router'
+import type { RouteLocationNormalizedLoaded, Router } from 'vue-router'
 import NProgress from 'nprogress'
 
 import i18n from '../locales'
@@ -11,65 +11,59 @@ const ROUTE_CONFIG = {
   NOT_FOUND_PATH: '/404',
   SITE_URL: 'https://anutrium.com',
 } as const
-const ROUTE_LEAVE_LEAD_TIME = 140
-const ROUTE_PRE_LEAVE_CLASS = 'route-pre-leave'
-
-let pendingRouteLeaveElement: HTMLElement | null = null
-
-const cancelPendingRouteLeave = () => {
-  pendingRouteLeaveElement?.classList.remove(ROUTE_PRE_LEAVE_CLASS)
-  pendingRouteLeaveElement = null
-}
-
-const beginRouteLeave = () => {
-  cancelPendingRouteLeave()
-
-  const routeContainer = document.querySelector('.router-container')
-  const routeElements = routeContainer
-    ? Array.from(routeContainer.children).filter(
-        (element): element is HTMLElement => element instanceof HTMLElement
-      )
-    : []
-  const routeElement =
-    [...routeElements]
-      .reverse()
-      .find((element) => !element.classList.contains('route-leave-active')) ||
-    null
-
-  if (!routeElement) return null
-
-  routeElement.classList.add(ROUTE_PRE_LEAVE_CLASS)
-  pendingRouteLeaveElement = routeElement
-  return routeElement
-}
-
-const waitForRouteLeaveLead = () =>
-  new Promise<void>((resolve) => {
-    window.setTimeout(resolve, ROUTE_LEAVE_LEAD_TIME)
-  })
+const routeComponentLoads = new Map<string, Promise<unknown>>()
 
 const preloadRouteComponent = async (routeName: unknown) => {
-  const targetRoute = routes.find((item) => item.name === routeName)
-  if (typeof targetRoute?.component === 'function') {
-    await targetRoute.component()
-  }
+  if (typeof routeName !== 'string') return
+
+  const targetRoute = routeByName.get(routeName)
+  if (typeof targetRoute?.component !== 'function') return
+
+  const cacheKey = targetRoute.name
+  const cachedLoad = routeComponentLoads.get(cacheKey)
+  if (cachedLoad) return cachedLoad
+
+  const componentLoad = Promise.resolve(targetRoute.component()).catch(
+    (error) => {
+      routeComponentLoads.delete(cacheKey)
+      throw error
+    }
+  )
+  routeComponentLoads.set(cacheKey, componentLoad)
+  return componentLoad
 }
 
-const settlePendingRouteLeave = () => {
-  const leavingElement = pendingRouteLeaveElement
-  if (!leavingElement) return
+const installRouteIntentPreload = (router: Router) => {
+  const preloadFromEvent = (event: Event) => {
+    const target = event.target
+    if (!(target instanceof Element)) return
 
-  window.requestAnimationFrame(() => {
+    const anchor = target.closest<HTMLAnchorElement>('a[href]')
     if (
-      leavingElement.isConnected &&
-      !leavingElement.classList.contains('route-leave-active')
+      !anchor ||
+      anchor.target === '_blank' ||
+      anchor.hasAttribute('download')
     ) {
-      leavingElement.classList.remove(ROUTE_PRE_LEAVE_CLASS)
+      return
     }
 
-    if (pendingRouteLeaveElement === leavingElement) {
-      pendingRouteLeaveElement = null
-    }
+    const url = new URL(anchor.href, window.location.href)
+    if (url.origin !== window.location.origin) return
+
+    const resolvedRoute = router.resolve(
+      `${url.pathname}${url.search}${url.hash}`
+    )
+    void preloadRouteComponent(resolvedRoute.name).catch(() => undefined)
+  }
+
+  document.addEventListener('pointerover', preloadFromEvent, {
+    passive: true,
+    capture: true,
+  })
+  document.addEventListener('focusin', preloadFromEvent, true)
+  document.addEventListener('touchstart', preloadFromEvent, {
+    passive: true,
+    capture: true,
   })
 }
 
@@ -410,11 +404,13 @@ export const routes: RouteConfig[] = [
   },
 ]
 
+const routeByName = new Map(routes.map((route) => [route.name, route]))
+
 NProgress.configure({
   easing: 'ease',
-  speed: 500,
+  speed: 220,
   showSpinner: false,
-  trickleSpeed: 200,
+  trickleSpeed: 120,
   minimum: 0.3,
 })
 
@@ -484,7 +480,9 @@ export const syncSeoMeta = (to: RouteLocationNormalizedLoaded) => {
 }
 
 export const installRouterGuards = (router: Router) => {
-  router.beforeEach(async (to) => {
+  if (typeof document !== 'undefined') installRouteIntentPreload(router)
+
+  router.beforeEach((to) => {
     if (!router.hasRoute(to.name)) {
       if (to.path !== ROUTE_CONFIG.NOT_FOUND_PATH) {
         return { path: ROUTE_CONFIG.NOT_FOUND_PATH }
@@ -493,14 +491,7 @@ export const installRouterGuards = (router: Router) => {
 
     if (typeof document !== 'undefined') {
       NProgress.start()
-      const leavingElement = beginRouteLeave()
-
-      if (leavingElement) {
-        await Promise.all([
-          preloadRouteComponent(to.name),
-          waitForRouteLeaveLead(),
-        ])
-      }
+      void preloadRouteComponent(to.name).catch(() => undefined)
     }
 
     return true
@@ -510,12 +501,8 @@ export const installRouterGuards = (router: Router) => {
     if (typeof window === 'undefined') return
 
     NProgress.done()
-    if (failure) {
-      cancelPendingRouteLeave()
-      return
-    }
+    if (failure) return
 
-    settlePendingRouteLeave()
     syncSeoMeta(to)
   })
 
@@ -523,6 +510,5 @@ export const installRouterGuards = (router: Router) => {
     if (typeof window === 'undefined') return
 
     NProgress.done()
-    cancelPendingRouteLeave()
   })
 }

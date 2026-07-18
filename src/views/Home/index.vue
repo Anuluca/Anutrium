@@ -3,8 +3,8 @@
     <section ref="heroSection" class="hero-section">
       <div class="hero-content">
         <div
+          ref="recommendElement"
           class="recommend"
-          :style="recommendStyle"
           @mouseenter="pauseAuto"
           @mouseleave="resumeAuto"
         >
@@ -44,8 +44,8 @@
                   <img
                     :src="item.img"
                     :alt="item.title"
-                    :loading="i === activeIndex ? 'eager' : 'lazy'"
-                    :fetchpriority="i === activeIndex ? 'high' : 'low'"
+                    :loading="i === 0 ? 'eager' : 'lazy'"
+                    :fetchpriority="i === 0 ? 'high' : 'low'"
                     decoding="async"
                   />
                   <div class="card-img-overlay" />
@@ -96,7 +96,7 @@
           </div>
         </div>
 
-        <div class="main-slogan" :style="mainSloganStyle">
+        <div ref="mainSloganElement" class="main-slogan">
           <div class="moto" :class="{ 'hide-cursor': isPassionHovering }">
             <p>DRIVEN</p>
             <p>BY</p>
@@ -252,6 +252,7 @@
               :key="vlog.id"
               :vlog="vlog"
               :interactive="true"
+              defer-hover-image
               @select="openVlog(vlog.id)"
             />
           </div>
@@ -298,15 +299,22 @@
 
     <PageFooter />
     <WorkDetailModal
+      v-if="selectedWork"
       :work="selectedWork"
-      :visible="!!selectedWork"
+      :visible="true"
       @close="selectedWork = null"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import {
+  computed,
+  defineAsyncComponent,
+  onMounted,
+  onUnmounted,
+  ref,
+} from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { Ship } from '@element-plus/icons-vue'
@@ -321,9 +329,10 @@ import Sections from '@/components/Sections/index.vue'
 import ToolCard from '@/components/ToolCard/index.vue'
 import VlogCard from '@/components/VlogCard/index.vue'
 import WorkCard from '@/components/WorkCard/index.vue'
-import WorkDetailModal from '@/components/WorkDetailModal/index.vue'
+import { visualState } from '@/stores'
 import { trackProjectClick, trackToolClick } from '@/utils/analytics'
 import {
+  addPageScrollListener,
   getPageMaxScrollTop,
   getPageScrollTop,
   scrollPageTo,
@@ -331,8 +340,13 @@ import {
 
 import 'swiper/css'
 
+const WorkDetailModal = defineAsyncComponent(
+  () => import('@/components/WorkDetailModal/index.vue')
+)
+
 const { locale, tm } = useI18n()
 const router = useRouter()
+const visualStateStore = visualState()
 
 interface NewsItem {
   id: number
@@ -359,6 +373,7 @@ const isCarouselAutoplay = ref(false)
 let rotationTimer: ReturnType<typeof setInterval> | null = null
 let rotationResetTimer: ReturnType<typeof setTimeout> | null = null
 let sectionObserver: IntersectionObserver | null = null
+let removeHomeScrollListener: (() => void) | null = null
 let isPageVisible = true
 let isHeroVisible = true
 let isManifestoVisible = false
@@ -366,24 +381,26 @@ let isManifestoVisible = false
 const heroSection = ref<HTMLElement | null>(null)
 const manifestoSection = ref<HTMLElement | null>(null)
 const passionLine = ref<HTMLElement | null>(null)
+const recommendElement = ref<HTMLElement | null>(null)
+const mainSloganElement = ref<HTMLElement | null>(null)
 const swiperModules = [Autoplay, Mousewheel]
-const sloganRotateX = ref(0)
-const sloganRotateY = ref(0)
-const sloganMoveX = ref(0)
-const sloganMoveY = ref(0)
 const isPassionHovering = ref(false)
 
-const sloganTargetRotateX = ref(0)
-const sloganTargetRotateY = ref(0)
-const sloganTargetMoveX = ref(0)
-const sloganTargetMoveY = ref(0)
+let sloganRotateX = 0
+let sloganRotateY = 0
+let sloganTargetRotateX = 0
+let sloganTargetRotateY = 0
 
 let sloganRafId: number | null = null
+let heroResizeRafId: number | null = null
 let reducedMotionQuery: MediaQueryList | null = null
 let heroMotionQuery: MediaQueryList | null = null
 let lastMotionSampleTime = 0
 let isHeroMotionListenerActive = false
+let isFirstScreenInputActive = false
+let isHeroMotionEnabled = false
 let isFirstScreenAutoScrolling = false
+let firstScreenScrollTimer: number | null = null
 let firstScreenTouchStartY = 0
 let heroMetrics = {
   centerX: 0,
@@ -405,7 +422,6 @@ const PASSION_HOVER_PADDING = 32
 const FIRST_SCREEN_SCROLL_LOCK_MS = 900
 const SECOND_SCREEN_SCROLL_BUFFER = 120
 const SECOND_SCREEN_RETURN_ZONE = 120
-const isHeroMotionEnabled = ref(false)
 const isMobileCarousel = ref(false)
 
 const carouselDirection = computed(() =>
@@ -430,32 +446,21 @@ const carouselMousewheelOptions = computed(() =>
       }
 )
 
-const mainSloganRotation = computed(
-  () => `rotateX(${sloganRotateX.value}deg) rotateY(${-sloganRotateY.value}deg)`
-)
+const applySloganTransform = () => {
+  if (mainSloganElement.value) {
+    mainSloganElement.value.style.transform = isHeroMotionEnabled
+      ? `perspective(1000px) translate3d(0, 0, 0) rotateX(${
+          sloganRotateX * 0.72
+        }deg) rotateY(${sloganRotateY * 0.72}deg)`
+      : ''
+  }
 
-const recommendRotation = computed(
-  () =>
-    `rotateX(${sloganRotateX.value * 0.72}deg) rotateY(${
-      sloganRotateY.value * 0.72
-    }deg)`
-)
-
-const mainSloganStyle = computed(() =>
-  isHeroMotionEnabled.value
-    ? {
-        transform: `perspective(1000px) translate3d(0px, 0px, 0) ${recommendRotation.value}`,
-      }
-    : {}
-)
-
-const recommendStyle = computed(() =>
-  isHeroMotionEnabled.value
-    ? {
-        transform: `perspective(1000px) translate3d(0px, 0px, 0) ${mainSloganRotation.value}`,
-      }
-    : {}
-)
+  if (recommendElement.value) {
+    recommendElement.value.style.transform = isHeroMotionEnabled
+      ? `perspective(1000px) translate3d(0, 0, 0) rotateX(${sloganRotateX}deg) rotateY(${-sloganRotateY}deg)`
+      : ''
+  }
+}
 
 const stopSloganMotion = () => {
   if (!sloganRafId) return
@@ -464,24 +469,18 @@ const stopSloganMotion = () => {
 }
 
 const updateSloganMotion = () => {
-  sloganRotateX.value +=
-    (sloganTargetRotateX.value - sloganRotateX.value) * 0.12
-  sloganRotateY.value +=
-    (sloganTargetRotateY.value - sloganRotateY.value) * 0.12
-  sloganMoveX.value += (sloganTargetMoveX.value - sloganMoveX.value) * 0.12
-  sloganMoveY.value += (sloganTargetMoveY.value - sloganMoveY.value) * 0.12
+  sloganRotateX += (sloganTargetRotateX - sloganRotateX) * 0.12
+  sloganRotateY += (sloganTargetRotateY - sloganRotateY) * 0.12
+  applySloganTransform()
 
   const isSettled =
-    Math.abs(sloganTargetRotateX.value - sloganRotateX.value) < 0.01 &&
-    Math.abs(sloganTargetRotateY.value - sloganRotateY.value) < 0.01 &&
-    Math.abs(sloganTargetMoveX.value - sloganMoveX.value) < 0.01 &&
-    Math.abs(sloganTargetMoveY.value - sloganMoveY.value) < 0.01
+    Math.abs(sloganTargetRotateX - sloganRotateX) < 0.01 &&
+    Math.abs(sloganTargetRotateY - sloganRotateY) < 0.01
 
   if (isSettled) {
-    sloganRotateX.value = sloganTargetRotateX.value
-    sloganRotateY.value = sloganTargetRotateY.value
-    sloganMoveX.value = sloganTargetMoveX.value
-    sloganMoveY.value = sloganTargetMoveY.value
+    sloganRotateX = sloganTargetRotateX
+    sloganRotateY = sloganTargetRotateY
+    applySloganTransform()
     sloganRafId = null
     return
   }
@@ -496,10 +495,8 @@ const startSloganMotion = () => {
 }
 
 const resetHeroSloganMotion = () => {
-  sloganTargetRotateX.value = 0
-  sloganTargetRotateY.value = 0
-  sloganTargetMoveX.value = 0
-  sloganTargetMoveY.value = 0
+  sloganTargetRotateX = 0
+  sloganTargetRotateY = 0
   isPassionHovering.value = false
   startSloganMotion()
 }
@@ -525,6 +522,20 @@ const refreshHeroInteractionMetrics = () => {
     right: rect.right + PASSION_HOVER_PADDING,
     top: rect.top - PASSION_HOVER_PADDING,
     bottom: rect.bottom + PASSION_HOVER_PADDING,
+  }
+}
+
+const syncZodiacLayout = () => {
+  const secondScreenTop =
+    heroMetrics.nextSectionTop || manifestoSection.value?.offsetTop || 0
+  const transitionPoint = Math.max(
+    120,
+    secondScreenTop - window.innerHeight * 0.55
+  )
+
+  const nextLayout = getPageScrollTop() >= transitionPoint ? 'content' : 'hero'
+  if (visualStateStore.zodiacLayout !== nextLayout) {
+    visualStateStore.setZodiacLayout(nextLayout)
   }
 }
 
@@ -575,8 +586,12 @@ const scrollToNextScreenFromHero = () => {
     behavior: reducedMotionQuery?.matches ? 'auto' : 'smooth',
   })
 
-  window.setTimeout(() => {
+  if (firstScreenScrollTimer !== null) {
+    window.clearTimeout(firstScreenScrollTimer)
+  }
+  firstScreenScrollTimer = window.setTimeout(() => {
     isFirstScreenAutoScrolling = false
+    firstScreenScrollTimer = null
     refreshHeroInteractionMetrics()
   }, FIRST_SCREEN_SCROLL_LOCK_MS)
 }
@@ -590,8 +605,12 @@ const scrollToFirstScreen = () => {
     behavior: reducedMotionQuery?.matches ? 'auto' : 'smooth',
   })
 
-  window.setTimeout(() => {
+  if (firstScreenScrollTimer !== null) {
+    window.clearTimeout(firstScreenScrollTimer)
+  }
+  firstScreenScrollTimer = window.setTimeout(() => {
     isFirstScreenAutoScrolling = false
+    firstScreenScrollTimer = null
     refreshHeroInteractionMetrics()
   }, FIRST_SCREEN_SCROLL_LOCK_MS)
 }
@@ -630,6 +649,47 @@ const handleFirstScreenTouchMove = (event: TouchEvent) => {
   scrollToNextScreenFromHero()
 }
 
+const setFirstScreenInputActive = (shouldListen: boolean) => {
+  if (shouldListen === isFirstScreenInputActive) return
+  isFirstScreenInputActive = shouldListen
+
+  if (shouldListen) {
+    window.addEventListener('wheel', handleFirstScreenWheel, {
+      passive: false,
+      capture: true,
+    })
+    window.addEventListener('touchstart', handleFirstScreenTouchStart, {
+      passive: true,
+      capture: true,
+    })
+    window.addEventListener('touchmove', handleFirstScreenTouchMove, {
+      passive: false,
+      capture: true,
+    })
+    return
+  }
+
+  window.removeEventListener('wheel', handleFirstScreenWheel, true)
+  window.removeEventListener('touchstart', handleFirstScreenTouchStart, true)
+  window.removeEventListener('touchmove', handleFirstScreenTouchMove, true)
+}
+
+const syncFirstScreenInputRuntime = () => {
+  const secondScreenTop =
+    heroMetrics.nextSectionTop || manifestoSection.value?.offsetTop || 0
+  const interactionEnd =
+    secondScreenTop + SECOND_SCREEN_SCROLL_BUFFER + SECOND_SCREEN_RETURN_ZONE
+
+  setFirstScreenInputActive(
+    !isMobileCarousel.value && getPageScrollTop() <= interactionEnd
+  )
+}
+
+const syncHomeScrollRuntime = () => {
+  syncZodiacLayout()
+  syncFirstScreenInputRuntime()
+}
+
 const canUseHeroMotion = () => {
   return (
     window.innerWidth >= 768 &&
@@ -641,8 +701,8 @@ const canUseHeroMotion = () => {
 const syncHeroMotionListener = () => {
   isMobileCarousel.value = window.innerWidth < 768
   refreshHeroInteractionMetrics()
-  const shouldListen = canUseHeroMotion()
-  isHeroMotionEnabled.value = shouldListen
+  const shouldListen = canUseHeroMotion() && isPageVisible && isHeroVisible
+  isHeroMotionEnabled = shouldListen
 
   if (shouldListen && !isHeroMotionListenerActive) {
     window.addEventListener('mousemove', handleHeroMouseMove, {
@@ -662,7 +722,13 @@ const syncHeroMotionListener = () => {
 }
 
 const handleHeroResize = () => {
-  syncHeroMotionListener()
+  if (heroResizeRafId !== null) return
+
+  heroResizeRafId = window.requestAnimationFrame(() => {
+    heroResizeRafId = null
+    syncHeroMotionListener()
+    syncHomeScrollRuntime()
+  })
 }
 
 const handleHeroMouseMove = (event: MouseEvent) => {
@@ -673,7 +739,7 @@ const handleHeroMouseMove = (event: MouseEvent) => {
   if (
     !isPageVisible ||
     !isHeroVisible ||
-    !isHeroMotionEnabled.value ||
+    !isHeroMotionEnabled ||
     !heroSection.value
   ) {
     isPassionHovering.value = false
@@ -691,10 +757,8 @@ const handleHeroMouseMove = (event: MouseEvent) => {
   const clampedX = Math.max(-1, Math.min(1, offsetX))
   const clampedY = Math.max(-1, Math.min(1, offsetY))
 
-  sloganTargetRotateY.value = clampedX * 10
-  sloganTargetRotateX.value = clampedY * -8
-  sloganTargetMoveX.value = clampedX * 18
-  sloganTargetMoveY.value = clampedY * 14
+  sloganTargetRotateY = clampedX * 10
+  sloganTargetRotateX = clampedY * -8
   startSloganMotion()
 }
 
@@ -828,9 +892,10 @@ const startRandomRotation = () => {
 }
 
 const stopRandomRotation = () => {
-  if (!rotationTimer) return
-  clearInterval(rotationTimer)
-  rotationTimer = null
+  if (rotationTimer) {
+    clearInterval(rotationTimer)
+    rotationTimer = null
+  }
   if (rotationResetTimer) {
     clearTimeout(rotationResetTimer)
     rotationResetTimer = null
@@ -840,6 +905,7 @@ const stopRandomRotation = () => {
 
 const handleVisibilityChange = () => {
   isPageVisible = document.visibilityState !== 'hidden'
+  syncHeroMotionListener()
 
   if (!isPageVisible) {
     pauseAuto()
@@ -865,6 +931,7 @@ const observeAnimatedSections = () => {
       entries.forEach((entry) => {
         if (entry.target === heroSection.value) {
           isHeroVisible = entry.isIntersecting
+          syncHeroMotionListener()
           if (isHeroVisible) startAuto()
           else {
             pauseAuto()
@@ -879,7 +946,7 @@ const observeAnimatedSections = () => {
         }
       })
     },
-    { rootMargin: '180px 0px', threshold: 0.01 }
+    { rootMargin: '0px', threshold: 0.15 }
   )
 
   if (heroSection.value) sectionObserver.observe(heroSection.value)
@@ -895,37 +962,26 @@ onMounted(() => {
   generateBackgroundImages()
   observeAnimatedSections()
   syncHeroMotionListener()
-  refreshHeroInteractionMetrics()
-  window.addEventListener('wheel', handleFirstScreenWheel, {
-    passive: false,
-    capture: true,
-  })
-  window.addEventListener('touchstart', handleFirstScreenTouchStart, {
-    passive: true,
-    capture: true,
-  })
-  window.addEventListener('touchmove', handleFirstScreenTouchMove, {
-    passive: false,
-    capture: true,
-  })
+  syncHomeScrollRuntime()
+  removeHomeScrollListener = addPageScrollListener(syncHomeScrollRuntime)
   window.addEventListener('resize', handleHeroResize, { passive: true })
   window.addEventListener('blur', resetHeroSloganMotion)
   document.addEventListener('visibilitychange', handleVisibilityChange)
 })
 onUnmounted(() => {
+  visualStateStore.setZodiacLayout('hero')
   if (dragResetTimer) clearTimeout(dragResetTimer)
   stopSloganMotion()
+  stopRandomRotation()
   sectionObserver?.disconnect()
+  removeHomeScrollListener?.()
+  removeHomeScrollListener = null
+  setFirstScreenInputActive(false)
+  if (heroResizeRafId !== null) window.cancelAnimationFrame(heroResizeRafId)
+  if (firstScreenScrollTimer !== null) {
+    window.clearTimeout(firstScreenScrollTimer)
+  }
   window.removeEventListener('mousemove', handleHeroMouseMove)
-  window.removeEventListener('wheel', handleFirstScreenWheel, {
-    capture: true,
-  })
-  window.removeEventListener('touchstart', handleFirstScreenTouchStart, {
-    capture: true,
-  })
-  window.removeEventListener('touchmove', handleFirstScreenTouchMove, {
-    capture: true,
-  })
   window.removeEventListener('resize', handleHeroResize)
   window.removeEventListener('blur', resetHeroSloganMotion)
   document.removeEventListener('visibilitychange', handleVisibilityChange)
@@ -950,16 +1006,30 @@ interface WorkItem {
   confidential?: boolean
 }
 
+const selectByIds = <T extends { id: string }>(
+  ids: readonly string[],
+  ...collections: T[][]
+) => {
+  const itemsById = new Map<string, T>()
+  for (const collection of collections) {
+    for (const item of collection) {
+      if (!itemsById.has(item.id)) itemsById.set(item.id, item)
+    }
+  }
+
+  return ids.flatMap((id) => {
+    const item = itemsById.get(id)
+    return item ? [item] : []
+  })
+}
+
 const selectedWorkIds = ['W001', 'W003', 'W005', 'W002', 'W006', 'P003']
 
 const works = computed<WorkItem[]>(() => {
   const webArchives = tm('archive.dynamic.WebArchives') as WorkItem[]
   const personalArchives = tm('archive.dynamic.PersonalArchives') as WorkItem[]
-  const archives = [...webArchives, ...personalArchives]
 
-  return selectedWorkIds
-    .map((id) => archives.find((work) => work.id === id))
-    .filter((work): work is WorkItem => Boolean(work))
+  return selectByIds(selectedWorkIds, webArchives, personalArchives)
 })
 
 const selectedWork = ref<WorkItem | null>(null)
@@ -985,9 +1055,7 @@ const journeyVlogIds = ['jiujiang', 'nanjing', 'singapore']
 
 const journeyVlogs = computed<JourneyVlog[]>(() => {
   const vlogs = tm('flanerie.dynamic.vlogs') as JourneyVlog[]
-  return journeyVlogIds
-    .map((id) => vlogs.find((vlog) => vlog.id === id))
-    .filter((vlog): vlog is JourneyVlog => Boolean(vlog))
+  return selectByIds(journeyVlogIds, vlogs)
 })
 
 const openVlog = (vlogId: string) => {
@@ -1010,9 +1078,7 @@ const homeToolIds = ['bounce-dynamics', 'metronome', 'palette', 'image-base64']
 
 const homeTools = computed<HomeTool[]>(() => {
   const tools = tm('craft.dynamic.tools') as HomeTool[]
-  return homeToolIds
-    .map((id) => tools.find((tool) => tool.id === id))
-    .filter((tool): tool is HomeTool => Boolean(tool))
+  return selectByIds(homeToolIds, tools)
 })
 
 const openTool = (tool: HomeTool) => {

@@ -23,30 +23,52 @@ const isLocalizedValue = (
   )
 }
 
-const resolveLocaleValue = (value: unknown, locale: LocaleCode): unknown => {
+type LocalePair = [zhCn: unknown, en: unknown]
+
+const resolveLocalePair = (value: unknown): LocalePair => {
   if (isLocalizedValue(value)) {
-    return resolveLocaleValue(value[locale], locale)
+    const zhCnValue = resolveLocalePair(value.zhCn)[0]
+    const enValue = resolveLocalePair(value.en)[1]
+    const resolvedEnValue =
+      typeof enValue === 'string' && !enValue.trim() ? zhCnValue : enValue
+
+    return [zhCnValue, resolvedEnValue]
   }
 
   if (Array.isArray(value)) {
-    return value.map((item) => resolveLocaleValue(item, locale))
+    const zhCn: unknown[] = []
+    const en: unknown[] = []
+
+    value.forEach((item) => {
+      const [zhCnItem, enItem] = resolveLocalePair(item)
+      zhCn.push(zhCnItem)
+      en.push(enItem)
+    })
+
+    return [zhCn, en]
   }
 
   if (isRecord(value)) {
-    return Object.fromEntries(
-      Object.entries(value).map(([key, item]) => [
-        key,
-        resolveLocaleValue(item, locale),
-      ])
-    )
+    const zhCn: Record<string, unknown> = {}
+    const en: Record<string, unknown> = {}
+
+    Object.entries(value).forEach(([key, item]) => {
+      const [zhCnItem, enItem] = resolveLocalePair(item)
+      zhCn[key] = zhCnItem
+      en[key] = enItem
+    })
+
+    return [zhCn, en]
   }
 
-  return value
+  return [value, value]
 }
 
-const messages = Object.fromEntries(
-  localeCodes.map((locale) => [locale, resolveLocaleValue(source, locale)])
-) as Record<LocaleCode, unknown>
+const [zhCnMessages, enMessages] = resolveLocalePair(source)
+const messages = {
+  zhCn: zhCnMessages,
+  en: enMessages,
+} as Record<LocaleCode, Record<string, any>>
 
 const i18n = createI18n({
   legacy: false,

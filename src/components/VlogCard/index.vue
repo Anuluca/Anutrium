@@ -11,6 +11,8 @@
     :role="interactive ? 'button' : undefined"
     :tabindex="interactive ? 0 : undefined"
     @click="selectVlog"
+    @focusin="requestHoverImage"
+    @pointerenter="requestHoverImage"
     @keydown.enter.prevent="selectVlog"
     @keydown.space.prevent="selectVlog"
   >
@@ -29,6 +31,7 @@
         @load="isBaseLoaded = true"
       />
       <img
+        v-if="shouldLoadHoverImage"
         class="vlog-img vlog-img--hover"
         :src="vlog.img2 || vlog.img"
         alt=""
@@ -63,10 +66,12 @@ const props = withDefaults(
     vlog: VlogCardItem
     active?: boolean
     interactive?: boolean
+    deferHoverImage?: boolean
   }>(),
   {
     active: false,
     interactive: false,
+    deferHoverImage: false,
   }
 )
 
@@ -77,6 +82,11 @@ const emit = defineEmits<{
 const { locale } = useI18n()
 const isBaseLoaded = ref(false)
 const isHoverLoaded = ref(false)
+const shouldLoadHoverImage = ref(!props.deferHoverImage)
+
+const requestHoverImage = () => {
+  shouldLoadHoverImage.value = true
+}
 
 const selectVlog = () => {
   if (!props.interactive) return
@@ -84,10 +94,11 @@ const selectVlog = () => {
 }
 
 watch(
-  () => [props.vlog.img, props.vlog.img2],
+  () => [props.vlog.img, props.vlog.img2, props.deferHoverImage],
   () => {
     isBaseLoaded.value = false
     isHoverLoaded.value = false
+    shouldLoadHoverImage.value = !props.deferHoverImage
   }
 )
 </script>

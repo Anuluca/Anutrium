@@ -1,19 +1,40 @@
-
-@rotate-duration: 120s;
-
 .star-container {
+  --chart-primary: rgba(226, 194, 138, 0.76);
+  --chart-strong: rgba(255, 225, 168, 0.94);
+  --chart-faint: rgba(226, 194, 138, 0.24);
+  --stage-offset-y: calc(-50% + 2vh);
+  --stage-offset-y: calc(-50% + 2dvh);
+  --stage-opacity: 0.18;
+  --triangle-stage-opacity: 0.16;
+  --triangle-overreach: 12vh;
+  --triangle-overreach: 12dvh;
+  --triangle-base-apex-y: 87.25vh;
+  --triangle-base-apex-y: 87.25dvh;
+  --triangle-base-half-width: 26.6vh;
+  --triangle-base-half-width: 26.6dvh;
+  --triangle-geometry-scale-x: 0.6447368421;
+  --triangle-geometry-scale-y: 0.644836272;
+  --triangle-fade-start: 17.05859375vh;
+  --triangle-fade-start: 17.05859375dvh;
+  --triangle-fade-mid: 18.609375vh;
+  --triangle-fade-mid: 18.609375dvh;
+  --triangle-fade-end: 26.36328125vh;
+  --triangle-fade-end: 26.36328125dvh;
+  --triangle-entry-delay: 1s;
   position: fixed;
   inset: 0;
   z-index: 0;
-  overflow: hidden;
-  contain: layout paint style;
-  transition: background 1s ease;
   box-sizing: border-box;
-  background-color: var(--bg-color);
+  overflow: hidden;
+  pointer-events: none;
+  background: transparent;
+  contain: layout paint style;
+  isolation: isolate;
+
   &::before {
-    content: '';
-    position: fixed;
+    position: absolute;
     inset: 0;
+    z-index: 0;
     pointer-events: none;
     background: linear-gradient(
         120deg,
@@ -24,9 +45,10 @@
       ),
       repeating-linear-gradient(
         0deg,
-        rgba(255, 255, 255, 0.025) 0 1px,
+        rgba(255, 225, 235, 0.0085) 0 1px,
         transparent 1px 4px
       );
+    content: '';
   }
 
   &.dark {
@@ -35,7 +57,7 @@
       #000 10%,
       #310917 55%,
       #310917 65%,
-      #000
+      #000 100%
     );
   }
 
@@ -48,110 +70,400 @@
   }
 
   &.light {
+    --chart-primary: rgba(126, 91, 38, 0.68);
+    --chart-strong: rgba(103, 69, 24, 0.88);
+    --chart-faint: rgba(126, 91, 38, 0.2);
     background: radial-gradient(
       220% 105% at top center,
       #d1c6db 10%,
       #fafff9 30%,
-      #fff
+      #fff 100%
     );
   }
 
   &.menu-hidden {
+    --stage-opacity: 0.15;
+  }
+
+  &.is-content-layout {
+    --stage-offset-y: calc(-50% + 37.25vh);
+    --stage-offset-y: calc(-50% + 37.25dvh);
+    --stage-opacity: 0.1;
+    --triangle-stage-opacity: 0.11;
+    --stage-scale: 0.88;
+    --triangle-geometry-scale-x: 1;
+    --triangle-geometry-scale-y: 1;
+    --triangle-fade-start: 3vh;
+    --triangle-fade-start: 3dvh;
+    --triangle-fade-mid: 9vh;
+    --triangle-fade-mid: 9dvh;
+    --triangle-fade-end: 21vh;
+    --triangle-fade-end: 21dvh;
+
     .star-field {
-      opacity: 0.78;
+      opacity: 0.64;
     }
   }
 
-  &.is-paused {
-    .star-field {
-      animation-play-state: paused;
-      will-change: auto;
+  &:not(.is-entry-ready) .zodiac-stage,
+  &:not(.is-entry-ready) .zodiac-triangle-stage {
+    opacity: 0;
+  }
+
+  &:not(.is-entry-ready) .zodiac-stage {
+    transform: translate3d(-50%, var(--stage-offset-y), 0) scale(0.01)
+      rotate(-125deg);
+  }
+
+  &.is-entry-ready .zodiac-stage {
+    animation: zodiac-stage-enter 1s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  &.is-entry-ready .zodiac-triangle-stage {
+    animation: zodiac-triangle-stage-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1)
+      1s both;
+  }
+
+  &.is-entry-complete {
+    --triangle-entry-delay: 0s;
+
+    .zodiac-stage,
+    .zodiac-triangle-stage {
+      animation: none;
     }
   }
 }
 
-@media screen and (max-width: 768px) {
-  .star-container.dark::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    z-index: 2;
-    pointer-events: none;
-    background:
-      linear-gradient(
-        to bottom,
-        #000 0,
-        rgba(0, 0, 0, 0.9) 8%,
-        rgba(0, 0, 0, 0.54) 20%,
-        rgba(0, 0, 0, 0.18) 34%,
-        transparent 48%
-      ),
-      linear-gradient(
-        to top,
-        #000 0,
-        rgba(0, 0, 0, 0.92) 9%,
-        rgba(0, 0, 0, 0.58) 22%,
-        rgba(0, 0, 0, 0.2) 38%,
-        transparent 54%
-      );
-  }
-
-  .star-field {
-    top: -72vmax;
-    left: -72vmax;
-    width: 244vmax;
-    height: 244vmax;
-  }
+.star-viewport {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+  contain: paint;
 }
 
 .star-field {
   position: absolute;
-  top: -48vmax;
-  left: -48vmax;
-  width: 196vmax;
-  height: 196vmax;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
-  transform: translate3d(0, 0, 0) rotate(0deg);
+}
+
+.zodiac-stage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100vw;
+  height: 100vw;
+  opacity: 1;
+  transform: translate3d(-50%, var(--stage-offset-y), 0)
+    scale(var(--stage-scale, var(--hero-scale, 0.6)));
   transform-origin: center;
-  transform-style: preserve-3d;
-  will-change: transform;
-  animation: rotate-sky @rotate-duration infinite linear;
-  contain: paint;
+}
+
+.zodiac-triangle-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  opacity: var(--triangle-stage-opacity);
+  pointer-events: none;
+  transition: opacity 0.7s ease;
+}
+
+.zodiac-stage {
+  z-index: 3;
+  color: var(--chart-primary);
+  transition: transform 1.16s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.zodiac-static-art {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: var(--stage-opacity);
+  user-select: none;
+}
+
+.zodiac-html-wheel {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: 50%;
+  transform: rotate(var(--route-rotation));
+  transform-origin: center;
+  transition: transform 1.24s cubic-bezier(0.22, 1, 0.36, 1);
 
   &::before,
   &::after {
     position: absolute;
-    inset: 0;
+    border: 1px solid var(--chart-primary);
+    border-radius: 50%;
+    opacity: var(--stage-opacity);
     content: '';
-    background-image:
-      radial-gradient(circle, var(--star-color) 0 1px, transparent 1.4px),
-      radial-gradient(
-        circle,
-        color-mix(in srgb, var(--star-color) 62%, transparent) 0 0.8px,
-        transparent 1.2px
-      ),
-      radial-gradient(
-        circle,
-        color-mix(in srgb, var(--star-color) 38%, transparent) 0 0.65px,
-        transparent 1px
-      );
-    background-position: 0 0, 56px 88px, 132px 24px;
-    background-size: 280px 280px, 420px 420px, 210px 210px;
+  }
+
+  &::before {
+    inset: 5.2%;
   }
 
   &::after {
-    opacity: 0.58;
-    transform: translateZ(84px) scale(1.18) rotate(17deg);
-    background-position: 32px 12px, 104px 68px, 14px 92px;
-    background-size: 320px 320px, 496px 496px, 248px 248px;
+    inset: 16.8%;
+    border-color: var(--chart-strong);
   }
 }
 
-@keyframes rotate-sky {
-  from {
-    transform: perspective(900px) rotateX(-52deg) rotateZ(20deg);
+.zodiac-triangle-geometry {
+  position: absolute;
+  top: calc(0px - var(--triangle-overreach));
+  left: 0;
+  z-index: 1;
+  width: 100%;
+  height: calc(var(--triangle-base-apex-y) + var(--triangle-overreach));
+  pointer-events: none;
+  clip-path: polygon(
+    calc(50% - var(--triangle-base-half-width)) 0,
+    calc(50% + var(--triangle-base-half-width)) 0,
+    50% 100%
+  );
+  transform: scaleX(var(--triangle-geometry-scale-x))
+    scaleY(var(--triangle-geometry-scale-y));
+  transform-origin: 50% 0;
+  transition: transform 1.15s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.zodiac-active-triangle {
+  position: absolute;
+  inset: 0;
+  display: block;
+  background: linear-gradient(
+    to bottom,
+    rgba(230, 186, 104, 0) 0%,
+    rgba(230, 186, 104, 0) var(--triangle-fade-start),
+    rgba(230, 186, 104, 0.03) var(--triangle-fade-mid),
+    rgba(230, 186, 104, 0.18) var(--triangle-fade-end),
+    rgba(230, 186, 104, 0.14) 72%,
+    rgba(230, 186, 104, 0.04) 90%,
+    rgba(230, 186, 104, 0) 100%
+  );
+  opacity: 0;
+  transform: scaleY(0);
+  transform-origin: 50% 0;
+}
+
+.zodiac-sector-line {
+  position: absolute;
+  top: 4%;
+  left: 50%;
+  width: 1px;
+  height: 46%;
+  background: linear-gradient(
+    to bottom,
+    var(--chart-faint) 0,
+    var(--chart-faint) 27.8%,
+    transparent 27.8%,
+    transparent 100%
+  );
+  opacity: var(--stage-opacity);
+  transform-origin: 50% 100%;
+}
+
+.zodiac-sign-position,
+.zodiac-degree-position {
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+
+.zodiac-sign-face {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--chart-primary);
+  font-family: 'Times New Roman', 'Noto Serif Symbols', 'Noto Sans Symbols 2',
+    serif;
+  line-height: 1;
+  opacity: var(--stage-opacity);
+  transform-origin: center;
+  white-space: nowrap;
+}
+
+.zodiac-glyph {
+  color: var(--chart-strong);
+  font-family: 'Noto Sans Symbols 2', 'Segoe UI Symbol', 'Apple Symbols',
+    'Arial Unicode MS', serif;
+  font-size: 4.2vw;
+  font-variant-emoji: text;
+  transition: color 0.18s ease-out;
+}
+
+.zodiac-name {
+  margin-top: 0.5vw;
+  font-size: 1.2vw;
+  letter-spacing: 0.3vw;
+  transition: color 0.18s ease-out;
+}
+
+.zodiac-code {
+  margin-top: 0.45vw;
+  color: var(--chart-faint);
+  font-size: 0.8vw;
+  letter-spacing: 0.2vw;
+  transition: color 0.18s ease-out;
+}
+
+.star-container.is-entry-ready.is-content-layout:not(.is-route-transitioning) {
+  .zodiac-active-triangle {
+    animation: zodiac-triangle-unfold 0.9s cubic-bezier(0.22, 1, 0.36, 1)
+      var(--triangle-entry-delay) both;
   }
+
+  .zodiac-sign-face.is-active .zodiac-glyph,
+  .zodiac-sign-face.is-active .zodiac-name,
+  .zodiac-sign-face.is-active .zodiac-code {
+    color: rgba(230, 196, 132, 0.68);
+    transition-delay: var(--triangle-entry-delay);
+  }
+
+  .zodiac-sign-face.is-active {
+    opacity: 0.38;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.48);
+    transition: opacity 0.18s ease var(--triangle-entry-delay);
+  }
+}
+
+.star-container.is-entry-ready.is-content-layout.is-highlight-settled:not(
+    .is-route-transitioning
+  )
+  .zodiac-active-triangle {
+  animation: none;
+  opacity: 1;
+  transform: scaleY(1);
+}
+
+.zodiac-degree {
+  display: block;
+  color: var(--chart-faint);
+  font-family: 'anton', monospace;
+  font-size: 0.8vw;
+  letter-spacing: 0.1vw;
+  opacity: var(--stage-opacity);
+  transform-origin: center;
+  white-space: nowrap;
+}
+
+.zodiac-diamond-frame {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  box-sizing: border-box;
+  border: 1px solid var(--chart-strong);
+  opacity: var(--stage-opacity);
+  transform: rotate(45deg);
+  transform-origin: center;
+
+  &::before {
+    position: absolute;
+    inset: 3%;
+    border: 1px dashed var(--chart-primary);
+    opacity: 0.72;
+    content: '';
+  }
+}
+
+@keyframes zodiac-stage-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(-50%, var(--stage-offset-y), 0) scale(0.01)
+      rotate(-125deg);
+  }
+
   to {
-    transform: perspective(900px) rotateX(-52deg) rotateZ(-340deg);
+    opacity: 1;
+    transform: translate3d(-50%, var(--stage-offset-y), 0)
+      scale(var(--stage-scale, var(--hero-scale, 0.6))) rotate(0deg);
+  }
+}
+
+@keyframes zodiac-triangle-stage-enter {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: var(--triangle-stage-opacity);
+  }
+}
+
+@keyframes zodiac-triangle-unfold {
+  from {
+    opacity: 0;
+    transform: scaleY(0);
+  }
+
+  24% {
+    opacity: 0.92;
+  }
+
+  to {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .star-container {
+    --stage-opacity: 0.16;
+    --triangle-stage-opacity: 0.14;
+    --stage-offset-y: -50%;
+  }
+
+  .star-container.menu-hidden,
+  .star-container.is-content-layout {
+    --stage-opacity: 0.1;
+    --triangle-stage-opacity: 0.11;
+  }
+
+  .star-container.is-content-layout {
+    --stage-offset-y: calc(-50% + 37.25vh);
+    --stage-offset-y: calc(-50% + 37.25dvh);
+    --stage-scale: 1.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .star-container {
+    --triangle-entry-delay: 0s;
+  }
+
+  .zodiac-static-art {
+    animation: none;
+  }
+
+  .zodiac-stage,
+  .zodiac-triangle-stage,
+  .zodiac-html-wheel,
+  .zodiac-sign-face,
+  .zodiac-glyph,
+  .zodiac-name,
+  .zodiac-code {
+    transition: none;
+  }
+
+  .zodiac-stage,
+  .zodiac-triangle-stage {
+    animation: none;
+  }
+
+  .star-container.is-entry-ready.is-content-layout:not(.is-route-transitioning)
+    .zodiac-active-triangle {
+    animation: none;
+    opacity: 1;
+    transform: scaleY(1);
   }
 }

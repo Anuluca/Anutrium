@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1000" viewBox="0 0 1000 1000" fill="none">
+  <defs>
+    <style>
+      .p{stroke:#e2c28a;stroke-opacity:.72}.s{stroke:#ffe1a8;stroke-opacity:.9}.f{stroke:#e2c28a;stroke-opacity:.2}.d{stroke:#f2d18f;stroke-opacity:.78}.a{stroke:#f2d18f}.v{vector-effect:non-scaling-stroke}.r{stroke-linecap:round}
+    </style>
+    <line id="spoke" x1="500" y1="250" x2="500" y2="310" class="f v" stroke-width=".8"/>
+    <line id="ray" x1="500" y1="444" x2="500" y2="424" class="p v r" stroke-width=".9"/>
+  </defs>
+  <g class="v">
+    <circle cx="500" cy="500" r="486" class="p" stroke-width="1" stroke-dasharray="4 8"/>
+    <circle cx="500" cy="500" r="478" class="p" stroke-width=".9"/>
+    <circle cx="500" cy="500" r="468" class="f" stroke-width=".8" stroke-dasharray="1 7"/>
+    <circle cx="500" cy="500" r="460" class="f" pathLength="360" stroke-width=".75" stroke-dasharray="1 4"/>
+    <path d="M48 500A452 452 0 0 1 500 48M952 500A452 452 0 0 1 500 952" class="f r" stroke-width="1"/>
+    <circle cx="500" cy="14" r="4" fill="#f2d18f"/>
+    <circle cx="986" cy="500" r="3" fill="#e2c28a"/>
+    <circle cx="500" cy="986" r="4" fill="#f2d18f"/>
+    <circle cx="14" cy="500" r="3" fill="#e2c28a"/>
+  </g>
+  <g>
+    <circle cx="500" cy="500" r="310" class="f v" stroke-width=".8"/>
+    <circle cx="500" cy="500" r="286" class="d v" stroke-width="1" stroke-dasharray="3 9"/>
+    <circle cx="500" cy="500" r="250" class="f v" stroke-width=".8" stroke-dasharray="1 7"/>
+    <use href="#spoke"/><use href="#spoke" transform="rotate(30 500 500)"/><use href="#spoke" transform="rotate(60 500 500)"/><use href="#spoke" transform="rotate(90 500 500)"/><use href="#spoke" transform="rotate(120 500 500)"/><use href="#spoke" transform="rotate(150 500 500)"/><use href="#spoke" transform="rotate(180 500 500)"/><use href="#spoke" transform="rotate(210 500 500)"/><use href="#spoke" transform="rotate(240 500 500)"/><use href="#spoke" transform="rotate(270 500 500)"/><use href="#spoke" transform="rotate(300 500 500)"/><use href="#spoke" transform="rotate(330 500 500)"/>
+    <path d="M500 215 747 642.5 253 642.5ZM500 785 253 357.5 747 357.5Z" class="d v" stroke-width="1" stroke-dasharray="2 7"/>
+  </g>
+  <g>
+    <circle cx="500" cy="500" r="184" class="d v" stroke-width="1.1" stroke-dasharray="3 9"/>
+    <circle cx="500" cy="500" r="156" class="f v" stroke-width=".8" stroke-dasharray="1 7"/>
+    <path d="M500 316 684 500 500 684 316 500Z" class="p v" stroke-width=".9"/>
+    <circle cx="500" cy="316" r="5" fill="#f2d18f"/><circle cx="684" cy="500" r="3.5" fill="#e2c28a"/><circle cx="500" cy="684" r="5" fill="#f2d18f"/><circle cx="316" cy="500" r="3.5" fill="#e2c28a"/>
+  </g>
+  <g>
+    <circle cx="500" cy="500" r="92" fill="#f2d18f" fill-opacity=".035" class="f v" stroke-width=".8"/>
+    <circle cx="500" cy="500" r="76" class="s v" stroke-width="1.2"/>
+    <use href="#ray"/><use href="#ray" transform="rotate(30 500 500)"/><use href="#ray" transform="rotate(60 500 500)"/><use href="#ray" transform="rotate(90 500 500)"/><use href="#ray" transform="rotate(120 500 500)"/><use href="#ray" transform="rotate(150 500 500)"/><use href="#ray" transform="rotate(180 500 500)"/><use href="#ray" transform="rotate(210 500 500)"/><use href="#ray" transform="rotate(240 500 500)"/><use href="#ray" transform="rotate(270 500 500)"/><use href="#ray" transform="rotate(300 500 500)"/><use href="#ray" transform="rotate(330 500 500)"/>
+    <circle cx="500" cy="500" r="36" class="s v" stroke-width="1.2"/>
+    <circle cx="500" cy="500" r="7" fill="#f2d18f"/>
+    <path d="M500 402v18M500 580v18M402 500h18M580 500h18" class="a v r" stroke-width="1.3"/>
+  </g>
+</svg>

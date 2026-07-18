@@ -41,6 +41,49 @@ test.describe('top-level pages', () => {
   }
 })
 
+test('home entry animation does not remount hydrated content', async ({
+  page,
+}) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  const homePage = page.locator('.home-page')
+  await expect(homePage).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
+
+  await homePage.evaluate((element) => {
+    element.setAttribute('data-mount-probe', 'stable')
+  })
+  await expect(page.locator('.layout-page')).toHaveClass(/\blayout-show\b/, {
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+
+  await expect(homePage).toHaveAttribute('data-mount-probe', 'stable')
+})
+
+test('home defers secondary journey images until interaction', async ({
+  page,
+}) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  const firstJourneyCard = page
+    .locator('.journey-grid .shared-vlog-card')
+    .first()
+
+  await expect(firstJourneyCard).toBeAttached({ timeout: PAGE_LOAD_TIMEOUT })
+  await expect(firstJourneyCard.locator('.vlog-img--hover')).toHaveCount(0)
+  await firstJourneyCard.hover()
+  await expect(firstJourneyCard.locator('.vlog-img--hover')).toHaveCount(1)
+})
+
+test('home loads the work detail modal on demand', async ({ page }) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  const firstWorkCard = page.locator('.works-grid .shared-work-card').first()
+
+  await expect(firstWorkCard).toBeAttached({ timeout: PAGE_LOAD_TIMEOUT })
+  await expect(page.locator('.modal-wrapper-dialog')).toHaveCount(0)
+  await firstWorkCard.click()
+  await expect(page.locator('.modal-wrapper-dialog')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+})
+
 test('personal bay menu entry redirects to 404', async ({ page }, testInfo) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.home-page')).toBeVisible({
@@ -137,17 +180,13 @@ test('mobile menu locks background scrolling', async ({ page }, testInfo) => {
   await page.locator('.mobile-menu-icon').click()
   await expect(page.locator('.mobile-menu-panel')).toHaveClass(/\bactive\b/)
   await expect(page.locator('html')).toHaveClass(/mobile-menu-scroll-locked/)
-  const lockedScrollPosition = await page.evaluate(() =>
-    Math.abs(Number.parseFloat(document.body.style.top))
-  )
+  const lockedScrollPosition = await page.evaluate(() => window.scrollY)
 
   await page.mouse.wheel(0, 900)
   await page.waitForTimeout(100)
 
   await expect
-    .poll(() =>
-      page.evaluate(() => Math.abs(Number.parseFloat(document.body.style.top)))
-    )
+    .poll(() => page.evaluate(() => window.scrollY))
     .toBe(lockedScrollPosition)
 
   await page.locator('.mobile-menu-icon').click()
@@ -157,6 +196,95 @@ test('mobile menu locks background scrolling', async ({ page }, testInfo) => {
   await expect
     .poll(() => page.evaluate(() => window.scrollY))
     .toBe(lockedScrollPosition)
+})
+
+test('background motion resumes when navigation interrupts scrolling', async ({
+  page,
+}, testInfo) => {
+  await page.goto('/about', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.about-page')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+  await expect(page.locator('.layout-page')).toHaveClass(/\blayout-show\b/, {
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+
+  await page.evaluate(() => window.dispatchEvent(new Event('scroll')))
+  await expect(page.locator('.star-container')).toHaveClass(
+    /\bis-motion-paused\b/
+  )
+
+  if (testInfo.project.name.includes('mobile')) {
+    await page.locator('.mobile-menu-icon').click()
+    await page.locator('.mobile-menu-items a[href="/craft"]').click()
+  } else {
+    await page.locator('.menu-box a[href="/craft"]').click()
+  }
+
+  await expect(page.locator('.craft-page')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+  await expect(page.locator('.star-container')).not.toHaveClass(
+    /\bis-motion-paused\b/
+  )
+  await expect
+    .poll(() =>
+      page
+        .locator('.star-container')
+        .evaluate((container) => [
+          getComputedStyle(
+            container.querySelector('.zodiac-static-art') as Element
+          ).animationName,
+          (container.querySelector('.star-field') as HTMLCanvasElement).dataset
+            .motionState,
+        ])
+    )
+    .toEqual(['none', 'running'])
+})
+
+test('WebGL star field stays bounded and uses one GPU point buffer', async ({
+  page,
+}) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  const starField = page.locator('.star-field')
+  await expect(starField).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
+  await expect(page.locator('.layout-page')).toHaveClass(/\blayout-show\b/, {
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+  await expect(starField).toHaveAttribute('data-motion-state', 'running')
+
+  const metrics = await starField.evaluate((canvas: HTMLCanvasElement) => {
+    const gl = canvas.getContext('webgl')
+    const rect = canvas.getBoundingClientRect()
+    const container = canvas.closest('.star-container') as HTMLElement
+    const haloStyle = getComputedStyle(container, '::before')
+
+    return {
+      contextAvailable: !!gl,
+      renderer: canvas.dataset.renderer,
+      starCount: Number(canvas.dataset.starCount),
+      targetFps: Number(canvas.dataset.targetFps),
+      backingWidth: canvas.width,
+      backingHeight: canvas.height,
+      maxBackingWidth: Math.ceil(rect.width * 1.5),
+      maxBackingHeight: Math.ceil(rect.height * 1.5),
+      haloBackground: haloStyle.backgroundImage,
+      haloAnimation: haloStyle.animationName,
+      haloFilter: haloStyle.filter,
+    }
+  })
+
+  expect(metrics.contextAvailable).toBe(true)
+  expect(metrics.renderer).toBe('webgl')
+  expect(metrics.starCount).toBe(140)
+  expect(metrics.targetFps).toBeLessThanOrEqual(30)
+  expect(metrics.backingWidth).toBeLessThanOrEqual(metrics.maxBackingWidth)
+  expect(metrics.backingHeight).toBeLessThanOrEqual(metrics.maxBackingHeight)
+  expect(metrics.haloBackground).toContain('rgba(0, 216, 143, 0.06)')
+  expect(metrics.haloBackground).toContain('rgba(154, 118, 255, 0.08)')
+  expect(metrics.haloAnimation).toBe('none')
+  expect(metrics.haloFilter).toBe('none')
+  await expect(page.locator('.star-vector-layer')).toHaveCount(0)
 })
 
 test('leaving personal bay restores document scrolling', async ({
@@ -189,6 +317,24 @@ test('leaving personal bay restores document scrolling', async ({
   await expect
     .poll(() => page.evaluate(() => getComputedStyle(document.body).overflowY))
     .not.toBe('hidden')
+
+  await page.evaluate(() => {
+    window.scrollTo(0, 0)
+    document.documentElement.scrollTop = 0
+    document.body.scrollTop = 0
+  })
+  await page.mouse.wheel(0, 900)
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        Math.max(
+          window.scrollY,
+          document.documentElement.scrollTop,
+          document.body.scrollTop
+        )
+      )
+    )
+    .toBeGreaterThan(50)
 
   await page.evaluate(() => {
     window.scrollTo(0, 700)
@@ -318,7 +464,7 @@ test('detail back navigation restores the previous scroll position', async ({
 })
 
 test('merch photography detail page renders', async ({ page }) => {
-  await page.goto('/island/merch-photography/pokemon-plush', {
+  await page.goto('/island/merch-photography/pokemondoll', {
     waitUntil: 'domcontentloaded',
   })
 
@@ -328,9 +474,28 @@ test('merch photography detail page renders', async ({ page }) => {
   await expect(page).toHaveTitle(/MERCH PHOTOGRAPHY|周边摄影/)
 })
 
+test('image log groups fall back when English labels are missing', async ({
+  page,
+}) => {
+  await page.goto('/island/image-log/million', {
+    waitUntil: 'domcontentloaded',
+  })
+
+  await expect(page.locator('.image-log-detail-page')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+  await page
+    .getByRole('button', { name: 'Switch to English' })
+    .evaluate((button: HTMLButtonElement) => button.click())
+
+  await expect
+    .poll(() => page.locator('.detail-section-header__label').allTextContents())
+    .toEqual(['老房子', '文档', '旧照片'])
+})
+
 for (const galleryRoute of [
   '/island/photography',
-  '/island/merch-photography/pokemon-plush',
+  '/island/merch-photography/pokemondoll',
 ]) {
   test(`${galleryRoute} uses the journey detail shutter entrance`, async ({
     page,
