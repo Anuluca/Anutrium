@@ -15,33 +15,38 @@ const activeShellClass = computed(() =>
     ? 'island-pc-shell'
     : 'island-mobile-shell'
 )
-const islandBodyClasses = [
+const islandActiveShellClasses = [
   'island-pc-shell',
   'island-mobile-shell',
+] as const
+const islandLeavingShellClasses = [
   'island-pc-shell-leaving',
   'island-mobile-shell-leaving',
 ] as const
 let stopShellClassWatch: (() => void) | null = null
 
-const clearIslandBodyClasses = () => {
-  document.body.classList.remove(...islandBodyClasses)
+const clearIslandActiveShellClasses = () => {
+  document.body.classList.remove(...islandActiveShellClasses)
+}
+
+const activateIslandShellClass = (shellClass: string) => {
+  document.body.classList.remove(
+    ...islandActiveShellClasses,
+    ...islandLeavingShellClasses
+  )
+  document.body.classList.add(shellClass)
 }
 
 onMounted(() => {
-  stopShellClassWatch = watch(
-    activeShellClass,
-    (shellClass) => {
-      clearIslandBodyClasses()
-      document.body.classList.add(shellClass)
-    },
-    { immediate: true }
-  )
+  stopShellClassWatch = watch(activeShellClass, activateIslandShellClass, {
+    immediate: true,
+  })
 })
 
 onUnmounted(() => {
   stopShellClassWatch?.()
   stopShellClassWatch = null
-  clearIslandBodyClasses()
+  clearIslandActiveShellClasses()
 })
 </script>
 

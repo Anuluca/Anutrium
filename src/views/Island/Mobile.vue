@@ -1,5 +1,9 @@
 <template>
-  <main class="island-mobile-page" :aria-label="t('island.ariaLabel')">
+  <main
+    class="island-mobile-page"
+    data-route-shell="island-mobile"
+    :aria-label="t('island.ariaLabel')"
+  >
     <MobileHero />
 
     <section
@@ -10,9 +14,10 @@
       }"
     >
       <header class="section-heading">
-        <span />
+        <span class="heading-marker" />
         <strong>{{ t('island.latestTitle') }}</strong>
         <em>RECENT PAGES</em>
+        <PageUpdatedStamp class="mobile-updated" />
       </header>
 
       <div
@@ -154,6 +159,7 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
 import IslandClock from '@/components/IslandClock/index.vue'
+import PageUpdatedStamp from '@/components/PageUpdatedStamp/index.vue'
 
 import MobileHero from './MobileHero.vue'
 

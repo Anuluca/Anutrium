@@ -10,6 +10,7 @@
     <div class="header-bg-icon" aria-hidden="true">
       <component :is="headerIcon" />
     </div>
+    <PageUpdatedStamp class="header-updated" />
     <div class="header-content">
       <div class="header-label">{{ headerLabel }}</div>
       <div class="page-title-wrapper">
@@ -53,6 +54,7 @@ import {
   UserFilled,
 } from '@element-plus/icons-vue'
 
+import PageUpdatedStamp from '@/components/PageUpdatedStamp/index.vue'
 import TypedText from '@/components/TypedText/index.vue'
 import type { HeaderIconName } from '@/router'
 
@@ -72,7 +74,6 @@ const headerIcon = computed(
       (route.meta.headerIcon as HeaderIconName | undefined) || 'HomeFilled'
     ]
 )
-
 defineProps({
   headerLabel: {
     type: String,
@@ -171,6 +172,15 @@ defineProps({
   .header-content {
     position: relative;
     z-index: 1;
+  }
+
+  .header-updated {
+    position: absolute;
+    right: 30px;
+    bottom: 26px;
+    --updated-enter-transform: translateX(8px);
+    --updated-font-size: clamp(1.08rem, 1.62vw, 1.62rem);
+    --updated-transform: none;
   }
 
   .header-label {
@@ -302,6 +312,10 @@ defineProps({
   .page-header {
     padding: 20px 40px;
     padding-left: 20px;
+
+    .header-updated {
+      --updated-font-size: 0.72rem;
+    }
   }
 
   .page-header--mobile-tall {

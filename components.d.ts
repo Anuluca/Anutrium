@@ -39,6 +39,7 @@ declare module '@vue/runtime-core' {
     ModalWrapper: typeof import('./src/components/ModalWrapper/index.vue')['default']
     PageFooter: typeof import('./src/components/PageFooter/index.vue')['default']
     PageHeader: typeof import('./src/components/PageHeader/index.vue')['default']
+    PageUpdatedStamp: typeof import('./src/components/PageUpdatedStamp/index.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     Sections: typeof import('./src/components/Sections/index.vue')['default']

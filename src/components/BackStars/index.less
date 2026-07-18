@@ -2,6 +2,10 @@
   --chart-primary: rgba(226, 194, 138, 0.76);
   --chart-strong: rgba(255, 225, 168, 0.94);
   --chart-faint: rgba(226, 194, 138, 0.24);
+  --layer-backdrop: 0;
+  --layer-zodiac: 1;
+  --layer-triangle: 2;
+  --layer-stars: 3;
   --stage-offset-y: calc(-50% + 2vh);
   --stage-offset-y: calc(-50% + 2dvh);
   --stage-opacity: 0.18;
@@ -34,7 +38,7 @@
   &::before {
     position: absolute;
     inset: 0;
-    z-index: 0;
+    z-index: var(--layer-backdrop);
     pointer-events: none;
     background: linear-gradient(
         120deg,
@@ -137,7 +141,7 @@
 .star-viewport {
   position: fixed;
   inset: 0;
-  z-index: 1;
+  z-index: var(--layer-stars);
   overflow: hidden;
   pointer-events: none;
   contain: paint;
@@ -167,14 +171,14 @@
 .zodiac-triangle-stage {
   position: fixed;
   inset: 0;
-  z-index: 2;
+  z-index: var(--layer-triangle);
   opacity: var(--triangle-stage-opacity);
   pointer-events: none;
   transition: opacity 0.7s ease;
 }
 
 .zodiac-stage {
-  z-index: 3;
+  z-index: var(--layer-zodiac);
   color: var(--chart-primary);
   transition: transform 1.16s cubic-bezier(0.22, 1, 0.36, 1);
 }

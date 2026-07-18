@@ -36,6 +36,7 @@
 :global(body.island-mobile-shell .router-container),
 :global(body.island-mobile-shell-leaving .router-container) {
   width: 100% !important;
+  margin-top: 0 !important;
   padding-right: 0 !important;
   padding-left: 0 !important;
 }
@@ -52,7 +53,7 @@
   width: 100vw;
   height: 100svh;
   box-sizing: border-box;
-  margin-top: -120px;
+  margin-top: 0;
   padding: clamp(76px, 10.8svh, 92px) 0 max(12px, env(safe-area-inset-bottom));
   color: #fff;
   overflow-x: hidden;
@@ -196,11 +197,11 @@
 
 .section-heading {
   display: grid;
-  grid-template-columns: 12px auto auto minmax(42px, 1fr) auto;
+  grid-template-columns: 12px auto auto minmax(0, 1fr);
   gap: 10px;
   align-items: center;
 
-  > span {
+  > .heading-marker {
     width: 12px;
     height: 12px;
     background: @red;
@@ -234,6 +235,15 @@
     font-weight: 300;
     line-height: 1;
   }
+}
+
+.mobile-updated {
+  justify-self: end;
+  --updated-color: @red;
+  --updated-enter-transform: translateX(8px);
+  --updated-font-size: clamp(0.66rem, 2.8vw, 0.8rem);
+  --updated-opacity: 0.12;
+  --updated-transform: none;
 }
 
 .latest-strip {
@@ -940,16 +950,11 @@
   opacity: 0.36;
   background: linear-gradient(rgba(33, 22, 27, 0.46) 0 0) left top / 16px 1px
       no-repeat,
-    linear-gradient(rgba(33, 22, 27, 0.46) 0 0) left top / 1px 16px
-      no-repeat,
-    linear-gradient(rgba(33, 22, 27, 0.46) 0 0) left bottom / 16px 1px
-      no-repeat,
-    linear-gradient(rgba(33, 22, 27, 0.46) 0 0) left bottom / 1px 16px
-      no-repeat,
-    linear-gradient(rgba(33, 22, 27, 0.46) 0 0) right top / 16px 1px
-      no-repeat,
-    linear-gradient(rgba(33, 22, 27, 0.46) 0 0) right top / 1px 16px
-      no-repeat,
+    linear-gradient(rgba(33, 22, 27, 0.46) 0 0) left top / 1px 16px no-repeat,
+    linear-gradient(rgba(33, 22, 27, 0.46) 0 0) left bottom / 16px 1px no-repeat,
+    linear-gradient(rgba(33, 22, 27, 0.46) 0 0) left bottom / 1px 16px no-repeat,
+    linear-gradient(rgba(33, 22, 27, 0.46) 0 0) right top / 16px 1px no-repeat,
+    linear-gradient(rgba(33, 22, 27, 0.46) 0 0) right top / 1px 16px no-repeat,
     linear-gradient(rgba(33, 22, 27, 0.46) 0 0) right bottom / 16px 1px
       no-repeat,
     linear-gradient(rgba(33, 22, 27, 0.46) 0 0) right bottom / 1px 16px
@@ -994,11 +999,7 @@
 :global(body.light.island-mobile-shell-leaving .latest-card),
 :global(body.light.island-mobile-shell-leaving .player-cover-btn) {
   border-color: @light-border;
-  background: linear-gradient(
-      135deg,
-      rgba(226, 52, 86, 0.055),
-      transparent 48%
-    ),
+  background: linear-gradient(135deg, rgba(226, 52, 86, 0.055), transparent 48%),
     @light-surface;
   color: @light-text;
   box-shadow: 0 18px 44px @light-shadow;
@@ -1065,7 +1066,9 @@
 :global(body.light.island-mobile-shell .mobile-bay-card:hover img),
 :global(body.light.island-mobile-shell .mobile-bay-card:focus-visible img),
 :global(body.light.island-mobile-shell-leaving .mobile-bay-card:hover img),
-:global(body.light.island-mobile-shell-leaving .mobile-bay-card:focus-visible img) {
+:global(
+    body.light.island-mobile-shell-leaving .mobile-bay-card:focus-visible img
+  ) {
   filter: none;
 }
 

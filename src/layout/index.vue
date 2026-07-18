@@ -275,15 +275,22 @@ const headerLogoReady = ref(false)
 const route = useRoute()
 const router = useRouter()
 const visualStateStore = visualState()
+
+const normalizeMenuPath = (path: string) =>
+  path === '/' ? path : path.replace(/\/+$/, '')
+
 const currentRouter = computed(() => {
-  return typeof route.meta.activeMenu === 'string'
-    ? route.meta.activeMenu
-    : route.path
+  const activePath =
+    typeof route.meta.activeMenu === 'string'
+      ? route.meta.activeMenu
+      : route.path
+
+  return normalizeMenuPath(activePath)
 })
 const isInnerMenuRoute = computed(
   () =>
     typeof route.meta.activeMenu === 'string' &&
-    route.path !== route.meta.activeMenu
+    normalizeMenuPath(route.path) !== currentRouter.value
 )
 const routeIconMap: Record<HeaderIconName, typeof HomeFilled> = {
   Collection,
@@ -331,6 +338,15 @@ let headerScrollAnimations: Animation[] = []
 let logoTimer: number | null = null
 let layoutTimer: number | null = null
 let islandGeometryUnlockTimer: number | null = null
+let lockedIslandRouteGeometry: {
+  element: HTMLElement
+  position: string
+  top: string
+  left: string
+  width: string
+  height: string
+  margin: string
+} | null = null
 let hasPlayedEntryAnimation = false
 const ISLAND_ROUTE_NAME = 'TEST'
 const ISLAND_GEOMETRY_UNLOCK_DELAY = 260
@@ -343,6 +359,10 @@ const islandLeavingClasses = [
   'island-pc-shell-leaving',
   'island-mobile-shell-leaving',
 ] as const
+const islandLeavingClassByRouteShell = {
+  'island-pc': 'island-pc-shell-leaving',
+  'island-mobile': 'island-mobile-shell-leaving',
+} as const
 
 const clearEntryAnimationTimers = () => {
   if (logoTimer !== null) {
@@ -569,14 +589,17 @@ const hasIslandShellClass = () =>
     document.body.classList.contains(className)
   )
 
-const markIslandRouteLeaving = () => {
-  if (document.body.classList.contains('island-pc-shell')) {
-    document.body.classList.add('island-pc-shell-leaving')
-  }
+const markIslandRouteLeaving = (leavingElement: Element) => {
+  const routeShell = leavingElement.getAttribute('data-route-shell')
+  const leavingClass =
+    islandLeavingClassByRouteShell[
+      routeShell as keyof typeof islandLeavingClassByRouteShell
+    ]
 
-  if (document.body.classList.contains('island-mobile-shell')) {
-    document.body.classList.add('island-mobile-shell-leaving')
-  }
+  if (!leavingClass) return false
+
+  document.body.classList.add(leavingClass)
+  return true
 }
 
 const refreshScrollState = () => {
@@ -587,12 +610,39 @@ const refreshScrollState = () => {
   handleScroll()
 }
 
+const restoreIslandRouteGeometry = () => {
+  if (!lockedIslandRouteGeometry) return
+
+  const { element, position, top, left, width, height, margin } =
+    lockedIslandRouteGeometry
+  Object.assign(element.style, {
+    position,
+    top,
+    left,
+    width,
+    height,
+    margin,
+  })
+  lockedIslandRouteGeometry = null
+}
+
 const lockIslandRouteGeometry = (leavingElement: Element) => {
   clearIslandGeometryUnlockTimer()
-  markIslandRouteLeaving()
+  restoreIslandRouteGeometry()
+  const isIslandRoute = markIslandRouteLeaving(leavingElement)
+  if (!isIslandRoute) return
 
   if (leavingElement instanceof HTMLElement) {
     const bounds = leavingElement.getBoundingClientRect()
+    lockedIslandRouteGeometry = {
+      element: leavingElement,
+      position: leavingElement.style.position,
+      top: leavingElement.style.top,
+      left: leavingElement.style.left,
+      width: leavingElement.style.width,
+      height: leavingElement.style.height,
+      margin: leavingElement.style.margin,
+    }
     Object.assign(leavingElement.style, {
       position: 'fixed',
       top: `${bounds.top}px`,
@@ -603,13 +653,12 @@ const lockIslandRouteGeometry = (leavingElement: Element) => {
     })
   }
 
-  if (hasIslandShellClass() && route.name !== ISLAND_ROUTE_NAME) {
-    unlockIslandRouteGeometry()
-  }
+  scheduleIslandGeometryUnlock()
 }
 
 const unlockIslandRouteGeometry = () => {
   clearIslandGeometryUnlockTimer()
+  restoreIslandRouteGeometry()
   document.body.classList.remove(...islandLeavingClasses)
 
   if (route.name !== ISLAND_ROUTE_NAME) {
@@ -645,6 +694,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   clearIslandGeometryUnlockTimer()
+  restoreIslandRouteGeometry()
   document.body.classList.remove(...islandShellClasses, ...islandLeavingClasses)
   unlockMobilePageScroll()
   removePageScrollListener?.()
@@ -675,13 +725,6 @@ watch(
   () => route.fullPath,
   async () => {
     closeMobileMenu()
-    if (route.name !== ISLAND_ROUTE_NAME) {
-      clearIslandGeometryUnlockTimer()
-      document.body.classList.remove(
-        ...islandShellClasses,
-        ...islandLeavingClasses
-      )
-    }
     await nextTick()
     scheduleIslandGeometryUnlock()
     refreshScrollState()

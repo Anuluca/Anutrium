@@ -1,6 +1,21 @@
 import { expect, test } from '@playwright/test'
 
 const PAGE_LOAD_TIMEOUT = 20_000
+const ISLAND_EXIT_MAX_GEOMETRY_SHIFT = 1
+
+interface IslandExitGeometrySample {
+  bodyClass: string
+  pageLeft: number
+  pageTop: number
+  routerLeft: number
+  routerTop: number
+}
+
+interface IslandExitGeometryProbe {
+  done: boolean
+  initial: IslandExitGeometrySample
+  samples: IslandExitGeometrySample[]
+}
 
 const pageRoutes = [
   { path: '/', selector: '.home-page', title: /HOME|Anutrium/ },
@@ -180,6 +195,10 @@ test('mobile menu locks background scrolling', async ({ page }, testInfo) => {
   await page.locator('.mobile-menu-icon').click()
   await expect(page.locator('.mobile-menu-panel')).toHaveClass(/\bactive\b/)
   await expect(page.locator('html')).toHaveClass(/mobile-menu-scroll-locked/)
+  await expect(page.locator('.router-container')).not.toHaveCSS(
+    'filter',
+    'none'
+  )
   const lockedScrollPosition = await page.evaluate(() => window.scrollY)
 
   await page.mouse.wheel(0, 900)
@@ -193,9 +212,40 @@ test('mobile menu locks background scrolling', async ({ page }, testInfo) => {
   await expect(page.locator('html')).not.toHaveClass(
     /mobile-menu-scroll-locked/
   )
+  await expect(page.locator('.router-container')).toHaveCSS('filter', 'none')
   await expect
     .poll(() => page.evaluate(() => window.scrollY))
     .toBe(lockedScrollPosition)
+})
+
+test('mobile menu stays above fixed page navigation', async ({
+  page,
+}, testInfo) => {
+  test.skip(!testInfo.project.name.includes('mobile'))
+
+  await page.goto('/flanerie/changsha', { waitUntil: 'domcontentloaded' })
+  const pageNavigation = page.locator('.detail-sections-nav')
+  await expect(pageNavigation).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
+
+  await page.locator('.mobile-menu-icon').click()
+  await expect(page.locator('.mobile-menu-panel')).toHaveClass(/\bactive\b/)
+  await expect(pageNavigation).toHaveCSS('visibility', 'hidden')
+
+  const menuOwnsNavigationPoint = await pageNavigation.evaluate((nav) => {
+    const navBounds = nav.getBoundingClientRect()
+    const menuBounds = document
+      .querySelector('.mobile-menu-panel')!
+      .getBoundingClientRect()
+    const topElement = document.elementFromPoint(
+      navBounds.left + navBounds.width / 2,
+      Math.min(navBounds.bottom, menuBounds.bottom) - 1
+    )
+    return Boolean(topElement?.closest('.mobile-menu-panel'))
+  })
+  expect(menuOwnsNavigationPoint).toBe(true)
+
+  await page.locator('.mobile-menu-icon').click()
+  await expect(pageNavigation).toBeVisible()
 })
 
 test('background motion resumes when navigation interrupts scrolling', async ({
@@ -257,6 +307,11 @@ test('WebGL star field stays bounded and uses one GPU point buffer', async ({
     const gl = canvas.getContext('webgl')
     const rect = canvas.getBoundingClientRect()
     const container = canvas.closest('.star-container') as HTMLElement
+    const starViewport = canvas.closest('.star-viewport') as HTMLElement
+    const zodiacStage = container.querySelector('.zodiac-stage') as HTMLElement
+    const triangleStage = container.querySelector(
+      '.zodiac-triangle-stage'
+    ) as HTMLElement
     const haloStyle = getComputedStyle(container, '::before')
 
     return {
@@ -268,6 +323,9 @@ test('WebGL star field stays bounded and uses one GPU point buffer', async ({
       backingHeight: canvas.height,
       maxBackingWidth: Math.ceil(rect.width * 1.5),
       maxBackingHeight: Math.ceil(rect.height * 1.5),
+      starLayer: Number(getComputedStyle(starViewport).zIndex),
+      zodiacLayer: Number(getComputedStyle(zodiacStage).zIndex),
+      triangleLayer: Number(getComputedStyle(triangleStage).zIndex),
       haloBackground: haloStyle.backgroundImage,
       haloAnimation: haloStyle.animationName,
       haloFilter: haloStyle.filter,
@@ -276,10 +334,12 @@ test('WebGL star field stays bounded and uses one GPU point buffer', async ({
 
   expect(metrics.contextAvailable).toBe(true)
   expect(metrics.renderer).toBe('webgl')
-  expect(metrics.starCount).toBe(140)
+  expect(metrics.starCount).toBe(120)
   expect(metrics.targetFps).toBeLessThanOrEqual(30)
   expect(metrics.backingWidth).toBeLessThanOrEqual(metrics.maxBackingWidth)
   expect(metrics.backingHeight).toBeLessThanOrEqual(metrics.maxBackingHeight)
+  expect(metrics.starLayer).toBeGreaterThan(metrics.zodiacLayer)
+  expect(metrics.starLayer).toBeGreaterThan(metrics.triangleLayer)
   expect(metrics.haloBackground).toContain('rgba(0, 216, 143, 0.06)')
   expect(metrics.haloBackground).toContain('rgba(154, 118, 255, 0.08)')
   expect(metrics.haloAnimation).toBe('none')
@@ -375,6 +435,146 @@ test('leaving personal bay restores document scrolling', async ({
       )
     )
     .toBeGreaterThan(50)
+})
+
+test('personal bay keeps its geometry stable throughout route leave', async ({
+  page,
+}, testInfo) => {
+  const isMobileProject = testInfo.project.name.includes('mobile')
+  const islandSelector = isMobileProject
+    ? '.island-mobile-page'
+    : '.island-page'
+
+  await page.goto('/test', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator(islandSelector)).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+
+  if (isMobileProject) {
+    await page.locator('.mobile-menu-icon').click()
+    await expect(page.locator('.mobile-menu-panel')).toHaveClass(/\bactive\b/)
+  }
+
+  await page.evaluate((selector) => {
+    const probeWindow = window as typeof window & {
+      __islandExitGeometryProbe?: IslandExitGeometryProbe
+    }
+    const readGeometry = (): IslandExitGeometrySample | null => {
+      const islandPage = document.querySelector(selector)
+      const routerContainer = document.querySelector('.router-container')
+      if (!islandPage || !routerContainer) return null
+
+      const pageBounds = islandPage.getBoundingClientRect()
+      const routerBounds = routerContainer.getBoundingClientRect()
+      return {
+        bodyClass: document.body.className,
+        pageLeft: pageBounds.left,
+        pageTop: pageBounds.top,
+        routerLeft: routerBounds.left,
+        routerTop: routerBounds.top,
+      }
+    }
+
+    const initial = readGeometry()
+    if (!initial) throw new Error('Personal bay geometry probe is unavailable')
+
+    const probe: IslandExitGeometryProbe = {
+      done: false,
+      initial,
+      samples: [],
+    }
+    probeWindow.__islandExitGeometryProbe = probe
+
+    let missingFrames = 0
+    let sampledFrames = 0
+    const sampleFrame = () => {
+      const geometry = readGeometry()
+      sampledFrames += 1
+
+      if (geometry) {
+        probe.samples.push(geometry)
+        missingFrames = 0
+      } else {
+        missingFrames += 1
+      }
+
+      if (missingFrames >= 3 || sampledFrames >= 120) {
+        probe.done = true
+        return
+      }
+
+      window.requestAnimationFrame(sampleFrame)
+    }
+
+    sampleFrame()
+  }, islandSelector)
+
+  const destinationLink = isMobileProject
+    ? page.locator('.mobile-menu-items a[href="/craft"]')
+    : page.locator('.menu-box a[href="/craft"]')
+  await destinationLink.click()
+  await expect(page.locator('.craft-page')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const probeWindow = window as typeof window & {
+          __islandExitGeometryProbe?: IslandExitGeometryProbe
+        }
+        return probeWindow.__islandExitGeometryProbe?.done ?? false
+      })
+    )
+    .toBe(true)
+
+  const probe = await page.evaluate(() => {
+    const probeWindow = window as typeof window & {
+      __islandExitGeometryProbe?: IslandExitGeometryProbe
+    }
+    return probeWindow.__islandExitGeometryProbe
+  })
+  expect(probe).toBeDefined()
+  expect(probe!.samples.length).toBeGreaterThan(1)
+  expect(
+    probe!.samples.some((sample) =>
+      sample.bodyClass.includes(
+        isMobileProject
+          ? 'island-mobile-shell-leaving'
+          : 'island-pc-shell-leaving'
+      )
+    )
+  ).toBe(true)
+
+  const maxShifts = probe!.samples.reduce(
+    (currentMax, sample) => ({
+      pageLeft: Math.max(
+        currentMax.pageLeft,
+        Math.abs(sample.pageLeft - probe!.initial.pageLeft)
+      ),
+      pageTop: Math.max(
+        currentMax.pageTop,
+        Math.abs(sample.pageTop - probe!.initial.pageTop)
+      ),
+      routerLeft: Math.max(
+        currentMax.routerLeft,
+        Math.abs(sample.routerLeft - probe!.initial.routerLeft)
+      ),
+      routerTop: Math.max(
+        currentMax.routerTop,
+        Math.abs(sample.routerTop - probe!.initial.routerTop)
+      ),
+    }),
+    { pageLeft: 0, pageTop: 0, routerLeft: 0, routerTop: 0 }
+  )
+  expect(maxShifts.pageLeft).toBeLessThanOrEqual(ISLAND_EXIT_MAX_GEOMETRY_SHIFT)
+  expect(maxShifts.pageTop).toBeLessThanOrEqual(ISLAND_EXIT_MAX_GEOMETRY_SHIFT)
+  expect(maxShifts.routerLeft).toBeLessThanOrEqual(
+    ISLAND_EXIT_MAX_GEOMETRY_SHIFT
+  )
+  expect(maxShifts.routerTop).toBeLessThanOrEqual(
+    ISLAND_EXIT_MAX_GEOMETRY_SHIFT
+  )
 })
 
 test('flanerie detail page renders', async ({ page }) => {

@@ -1,5 +1,9 @@
 <template>
-  <main class="island-page" :aria-label="t('island.ariaLabel')">
+  <main
+    class="island-page"
+    data-route-shell="island-pc"
+    :aria-label="t('island.ariaLabel')"
+  >
     <section class="harbor-stage">
       <aside class="harbor-side">
         <header class="harbor-title">
@@ -64,6 +68,7 @@
           <div class="latest-scroll-hint" aria-hidden="true">
             <div class="scroll-line" />
           </div>
+          <PageUpdatedStamp class="harbor-updated" />
         </section>
       </aside>
 
@@ -224,6 +229,7 @@ import { useRouter } from 'vue-router'
 import { Ship } from '@element-plus/icons-vue'
 
 import IslandClock from '@/components/IslandClock/index.vue'
+import PageUpdatedStamp from '@/components/PageUpdatedStamp/index.vue'
 import TypedText from '@/components/TypedText/index.vue'
 
 const { t, tm } = useI18n()

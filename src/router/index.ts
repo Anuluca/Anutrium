@@ -111,6 +111,7 @@ const DESCRIPTION_ROUTE_GROUPS: Record<string, keyof typeof PAGE_DESCRIPTIONS> =
 
 interface RouteMeta {
   activeMenu?: string
+  updatedAt?: string
   titleEn: string
   titleCn: string
   fullFooter: boolean
@@ -154,6 +155,7 @@ export const routes: RouteConfig[] = [
     name: 'ARCHIVE',
     component: () => import('@/views/Archive/index.vue'),
     meta: {
+      updatedAt: '2026-07-06',
       titleEn: 'ARCHIVE',
       titleCn: '作品集',
       fullFooter: true,
@@ -166,6 +168,7 @@ export const routes: RouteConfig[] = [
     name: 'FLANERIE',
     component: () => import('@/views/Flânerie/index.vue'),
     meta: {
+      updatedAt: '2026-07-18',
       titleEn: 'FLÂNERIE',
       titleCn: '旅程',
       fullFooter: true,
@@ -193,6 +196,7 @@ export const routes: RouteConfig[] = [
     name: 'ISLAND',
     redirect: ROUTE_CONFIG.NOT_FOUND_PATH,
     meta: {
+      updatedAt: '2026-07-18',
       titleEn: 'ISLAND',
       titleCn: '个人海湾',
       fullFooter: true,
@@ -275,6 +279,7 @@ export const routes: RouteConfig[] = [
     name: 'CRAFT',
     component: () => import('@/views/Craft/index.vue'),
     meta: {
+      updatedAt: '2026-07-08',
       titleEn: 'CRAFT',
       titleCn: '工具',
       fullFooter: true,
@@ -287,6 +292,7 @@ export const routes: RouteConfig[] = [
     name: 'ABOUT',
     component: () => import('@/views/About/index.vue'),
     meta: {
+      updatedAt: '2026-07-11',
       titleEn: 'ABOUT',
       titleCn: '关于',
       fullFooter: false,
@@ -395,6 +401,7 @@ export const routes: RouteConfig[] = [
     component: () => import('@/views/Island/index.vue'),
     meta: {
       activeMenu: '/island',
+      updatedAt: '2026-07-18',
       titleEn: 'ISLAND',
       titleCn: '个人海湾',
       fullFooter: true,
