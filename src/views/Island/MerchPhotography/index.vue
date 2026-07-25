@@ -15,8 +15,8 @@
         value: String(collections.length).padStart(2, '0'),
         label: 'COLLECTIONS',
       }"
-      :subtitle="t('island.merchPhotographyTagline')"
-      :title="t('island.merchPhotographyTitle')"
+      :subtitle="t('island.modules.photography.merchPhotos.tagline')"
+      :title="t('island.modules.photography.merchPhotos.title')"
     />
 
     <main class="collection-index">
@@ -55,7 +55,9 @@
                   activeReturnedCollectionId === collection.id,
               }"
               :collection="collection"
-              :count-label="t('island.merchCollectionLabel')"
+              :count-label="
+                t('island.modules.photography.merchPhotos.collectionLabel')
+              "
               :index="getCollectionIndex(collection.id)"
               :style="getCollectionEntryStyle(collectionIndex)"
               @select="openCollection"
@@ -172,7 +174,7 @@ const returnEntryStyle = computed(() => ({
 }))
 
 const merchPhotos = computed<MerchPhotoGroups>(() => {
-  return tm('island.dynamic.merchPhotos') as MerchPhotoGroups
+  return tm('island.modules.photography.merchPhotos.data') as MerchPhotoGroups
 })
 
 const collections = computed<MerchCollectionCardData[]>(() =>

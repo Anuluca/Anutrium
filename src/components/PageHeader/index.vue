@@ -178,9 +178,6 @@ defineProps({
     position: absolute;
     right: 30px;
     bottom: 26px;
-    --updated-enter-transform: translateX(8px);
-    --updated-font-size: clamp(1.08rem, 1.62vw, 1.62rem);
-    --updated-transform: none;
   }
 
   .header-label {
@@ -253,6 +250,16 @@ defineProps({
   }
 }
 
+@media screen and (min-aspect-ratio: @ratio-threshold) {
+  .page-header .header-updated {
+    position: fixed;
+    right: auto;
+    bottom: clamp(26px, 4vh, 42px);
+    left: clamp(10px, 1.7vw, 28px);
+    z-index: 89;
+  }
+}
+
 .corner {
   position: absolute;
   width: 10px;
@@ -314,7 +321,9 @@ defineProps({
     padding-left: 20px;
 
     .header-updated {
+      --updated-enter-transform: translateX(8px);
       --updated-font-size: 0.72rem;
+      --updated-transform: none;
     }
   }
 

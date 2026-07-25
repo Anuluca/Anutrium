@@ -1,42 +1,42 @@
 <template>
-  <div v-if="collection" class="merch-detail-page main-container">
+  <div class="works-gallery-page main-container">
     <DetailPageHeader
-      back-label="MERCH"
-      back-path="/island/merch-photography"
+      back-label="ISLAND"
+      back-path="/test"
       :counter="{
-        value: String(collection.photos.length).padStart(2, '0'),
+        value: String(work.photos.length).padStart(2, '0'),
         label: 'ITEMS',
       }"
-      :subtitle="collection.subtitle"
-      :title="collection.title"
+      :subtitle="work.subtitle"
+      :title="work.title"
     />
 
-    <main class="merch-gallery">
+    <main class="works-gallery">
       <MediaGallery
-        v-if="collection.photos.length"
+        v-if="work.photos.length"
         :entrance-step-ms="90"
-        :items="collection.photos"
+        :items="work.photos"
         :get-media-label="getMediaLabel"
         :show-media-info="showMediaInfo"
         staggered-entrance
       >
         <template #info="{ item: photo }">
-          <div class="merch-photo-title">{{ photo.title }}</div>
+          <div class="works-photo-title">{{ photo.title }}</div>
         </template>
       </MediaGallery>
-      <div v-else class="merch-gallery__empty">
-        {{ t('island.modules.photography.merchPhotos.empty') }}
+      <div v-else class="works-gallery__empty">
+        {{ t(`island.modules.works.${moduleKey}.empty`) }}
       </div>
     </main>
 
-    <PageFooter cn-title="周边摄影" en-title="MERCH PHOTOGRAPHY" />
+    <PageFooter :cn-title="footerTitle.cn" :en-title="footerTitle.en" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 
 import DetailPageHeader from '@/components/DetailPageHeader/index.vue'
 import MediaGallery, {
@@ -44,62 +44,66 @@ import MediaGallery, {
 } from '@/components/MediaGallery/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
 
-interface MerchPhoto extends GalleryMedia {
+type WorkModuleKey = 'illustration' | 'trainerCard'
+
+interface WorkPhoto extends GalleryMedia {
   url: string
   title?: string
 }
 
-interface MerchCollection {
+interface WorkGalleryData {
   id: string
   title: string
   subtitle: string
-  cover?: string
-  photos: MerchPhoto[]
+  photos: WorkPhoto[]
 }
 
-type MerchPhotoGroups = Record<string, MerchCollection[]>
+interface WorkPageConfig {
+  footerTitle: {
+    cn: string
+    en: string
+  }
+  moduleKey: WorkModuleKey
+}
+
+const WORK_PAGE_CONFIG: Record<string, WorkPageConfig> = {
+  ISLAND_ILLUSTRATION: {
+    moduleKey: 'illustration',
+    footerTitle: {
+      cn: '绘画',
+      en: 'ILLUSTRATION',
+    },
+  },
+  ISLAND_TRAINER_CARD: {
+    moduleKey: 'trainerCard',
+    footerTitle: {
+      cn: '训练家卡',
+      en: 'TRAINER CARD',
+    },
+  },
+}
 
 const route = useRoute()
-const router = useRouter()
 const { t, tm } = useI18n()
-const MERCH_RETURN_FLAG_KEY = 'anutrium:merch-photography:returning-from-detail'
-const MERCH_RETURN_COLLECTION_KEY =
-  'anutrium:merch-photography:selected-collection'
-const collectionId = computed(() => route.params.collectionId as string)
-const collection = computed(() => {
-  const collections = Object.values(
-    tm('island.modules.photography.merchPhotos.data') as MerchPhotoGroups
-  ).flat()
-
-  return collections.find((item) => item.id === collectionId.value)
-})
-
-const getMediaLabel = (media: GalleryMedia) =>
-  media.title || t('island.modules.photography.merchPhotos.title')
-const showMediaInfo = (media: GalleryMedia) => Boolean(media.title)
-
-onBeforeRouteLeave((to) => {
-  if (typeof window === 'undefined') return
-  if (to.name !== 'ISLAND_MERCH_PHOTOGRAPHY') return
-
-  window.sessionStorage.setItem(MERCH_RETURN_FLAG_KEY, 'true')
-  window.sessionStorage.setItem(MERCH_RETURN_COLLECTION_KEY, collectionId.value)
-})
-
-watch(
-  collection,
-  (currentCollection) => {
-    if (!currentCollection) router.replace('/404')
-  },
-  { immediate: true }
+const pageConfig = computed(
+  () =>
+    WORK_PAGE_CONFIG[String(route.name)] || WORK_PAGE_CONFIG.ISLAND_ILLUSTRATION
 )
+const moduleKey = computed(() => pageConfig.value.moduleKey)
+const footerTitle = computed(() => pageConfig.value.footerTitle)
+const work = computed(
+  () => tm(`island.modules.works.${moduleKey.value}.data`) as WorkGalleryData
+)
+
+const getMediaLabel = (media: GalleryMedia) => media.title || work.value.title
+const showMediaInfo = (media: GalleryMedia) => Boolean(media.title)
 </script>
 
 <style lang="less" scoped>
 @red: #e23456;
 @mono: 'cn-custom', 'Courier New', monospace;
 
-.merch-detail-page {
+.works-gallery-page {
   color: var(--text-color);
   overflow: hidden;
   transform-origin: center center;
@@ -138,11 +142,11 @@ watch(
   }
 }
 
-.merch-gallery {
+.works-gallery {
   padding: 54px 0 36px;
 }
 
-.merch-photo-title {
+.works-photo-title {
   display: grid;
   place-items: center;
   min-height: 28px;
@@ -155,7 +159,7 @@ watch(
   text-align: center;
 }
 
-.merch-gallery__empty {
+.works-gallery__empty {
   display: grid;
   place-items: center;
   min-height: 320px;
@@ -166,15 +170,15 @@ watch(
 }
 
 @media (max-width: 900px) {
-  .merch-detail-page {
+  .works-gallery-page {
     padding-top: 88px;
   }
 
-  .merch-gallery {
+  .works-gallery {
     padding-top: 38px;
   }
 
-  .merch-photo-title {
+  .works-photo-title {
     min-height: 26px;
     padding: 3px 6px 4px;
     font-size: 0.4rem;

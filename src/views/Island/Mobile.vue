@@ -2,7 +2,7 @@
   <main
     class="island-mobile-page"
     data-route-shell="island-mobile"
-    :aria-label="t('island.ariaLabel')"
+    :aria-label="t('island.page.ariaLabel')"
   >
     <MobileHero />
 
@@ -15,7 +15,7 @@
     >
       <header class="section-heading">
         <span class="heading-marker" />
-        <strong>{{ t('island.latestTitle') }}</strong>
+        <strong>{{ t('island.latest.title') }}</strong>
         <em>RECENT PAGES</em>
         <PageUpdatedStamp class="mobile-updated" />
       </header>
@@ -90,7 +90,7 @@
       </article>
     </section>
 
-    <section class="mobile-player" :aria-label="t('island.playerAria')">
+    <section class="mobile-player" :aria-label="t('island.player.ariaLabel')">
       <audio
         ref="audioRef"
         :src="track.src"
@@ -117,12 +117,12 @@
         <strong v-else>{{ track.title }}</strong>
         <em>{{ track.artist }}</em>
       </div>
-      <span class="player-status">{{ t('island.nowPlaying') }}</span>
+      <span class="player-status">{{ t('island.player.nowPlaying') }}</span>
       <div class="player-controls">
         <button
           class="player-control player-control--prev"
           type="button"
-          :aria-label="t('island.prevTrack')"
+          :aria-label="t('island.player.prevTrack')"
           @click="playPreviousTrack"
         >
           <i />
@@ -132,7 +132,9 @@
           :class="{ 'is-paused': !isPlaying }"
           type="button"
           :aria-label="
-            isPlaying ? t('island.pauseTrack') : t('island.playTrack')
+            isPlaying
+              ? t('island.player.pauseTrack')
+              : t('island.player.playTrack')
           "
           @click="togglePlayback"
         >
@@ -141,7 +143,7 @@
         <button
           class="player-control player-control--next"
           type="button"
-          :aria-label="t('island.nextTrack')"
+          :aria-label="t('island.player.nextTrack')"
           @click="playNextTrack"
         >
           <i />
@@ -205,7 +207,7 @@ interface PhotographyGroupSummary {
 
 const photographyPhotoCount = computed(() => {
   const groups = tm(
-    'island.dynamic.photoWorks.groups'
+    'island.modules.photography.photoWorks.data.groups'
   ) as PhotographyGroupSummary[]
 
   return groups.reduce(
@@ -221,10 +223,6 @@ const photographyPhotoCount = computed(() => {
   )
 })
 
-const photoWorksCoverUrl = computed(
-  () => tm('island.dynamic.photoWorks.coverUrl') as unknown as string
-)
-
 const placeholder = (label: string, width = 760, height = 480) =>
   `https://placehold.co/${width}x${height}/14070c/e23456?text=${encodeURIComponent(
     label
@@ -232,35 +230,23 @@ const placeholder = (label: string, width = 760, height = 480) =>
 const developingPlaceholder = placeholder('WIP')
 const merchCollections = computed(() =>
   Object.values(
-    tm('island.dynamic.merchPhotos') as Record<
+    tm('island.modules.photography.merchPhotos.data') as Record<
       string,
-      Array<{
-        cover?: string
-        photos?: Array<{ url: string }>
-      }>
+      unknown[]
     >
   ).flat()
 )
 const merchCollectionCount = computed(() => merchCollections.value.length)
-const merchCoverUrl = computed(
-  () =>
-    merchCollections.value[0]?.cover ||
-    merchCollections.value[0]?.photos?.[0]?.url ||
-    developingPlaceholder
-)
 const imageLogAlbums = computed(
-  () =>
-    tm('island.dynamic.imageLog') as Array<{
-      groups?: Array<{
-        photos?: Array<{ url: string }>
-      }>
-    }>
+  () => tm('island.modules.photography.imageLog.data') as unknown[]
 )
 const imageLogAlbumCount = computed(() => imageLogAlbums.value.length)
-const imageLogCoverUrl = computed(
+const illustrationItemCount = computed(
   () =>
-    imageLogAlbums.value[0]?.groups?.[0]?.photos?.[0]?.url ||
-    developingPlaceholder
+    (tm('island.modules.works.illustration.data.photos') as unknown[]).length
+)
+const trainerCardItemCount = computed(
+  () => (tm('island.modules.works.trainerCard.data.photos') as unknown[]).length
 )
 
 const openHarborItem = (item: HarborItem) => {
@@ -281,7 +267,7 @@ const harborSections: HarborSection[] = [
           return `${photographyPhotoCount.value} PICS`
         },
         get img() {
-          return photoWorksCoverUrl.value
+          return t('island.modules.photography.photoWorks.img')
         },
         path: '/island/photography',
       },
@@ -292,7 +278,7 @@ const harborSections: HarborSection[] = [
           return `${merchCollectionCount.value} COLLECTIONS`
         },
         get img() {
-          return merchCoverUrl.value
+          return t('island.modules.photography.merchPhotos.img')
         },
         path: '/island/merch-photography',
       },
@@ -303,7 +289,7 @@ const harborSections: HarborSection[] = [
           return `${imageLogAlbumCount.value} ALBUMS`
         },
         get img() {
-          return imageLogCoverUrl.value
+          return t('island.modules.photography.imageLog.img')
         },
         path: '/island/image-log',
       },
@@ -318,14 +304,24 @@ const harborSections: HarborSection[] = [
       {
         title: '绘画',
         subtitle: 'ILLUSTRATION',
-        count: '0 ITEMS',
-        img: developingPlaceholder,
+        get count() {
+          return `${illustrationItemCount.value} ITEMS`
+        },
+        get img() {
+          return t('island.modules.works.illustration.img')
+        },
+        path: '/island/illustration',
       },
       {
         title: '训练家卡',
         subtitle: 'TRAINER CARD',
-        count: '0 ITEMS',
-        img: developingPlaceholder,
+        get count() {
+          return `${trainerCardItemCount.value} ITEMS`
+        },
+        get img() {
+          return t('island.modules.works.trainerCard.img')
+        },
+        path: '/island/trainer-card',
       },
       {
         title: '实验',
@@ -378,11 +374,11 @@ const harborSections: HarborSection[] = [
 ]
 
 const latestPages = computed<LatestPage[]>(
-  () => tm('island.dynamic.latestPages') as LatestPage[]
+  () => tm('island.latest.pages') as LatestPage[]
 )
 
 const tracks = computed<TrackItem[]>(
-  () => tm('island.dynamic.tracks') as TrackItem[]
+  () => tm('island.player.tracks') as TrackItem[]
 )
 
 const fallbackTrack: TrackItem = {

@@ -107,6 +107,8 @@ const DESCRIPTION_ROUTE_GROUPS: Record<string, keyof typeof PAGE_DESCRIPTIONS> =
     TEST: 'ISLAND',
     ISLAND_IMAGE_LOG: 'ISLAND',
     ISLAND_IMAGE_LOG_DETAIL: 'ISLAND',
+    ISLAND_ILLUSTRATION: 'ISLAND',
+    ISLAND_TRAINER_CARD: 'ISLAND',
   }
 
 interface RouteMeta {
@@ -275,6 +277,34 @@ export const routes: RouteConfig[] = [
     },
   },
   {
+    path: '/island/illustration',
+    name: 'ISLAND_ILLUSTRATION',
+    component: () => import('@/views/Island/WorksGallery/index.vue'),
+    meta: {
+      activeMenu: '/island',
+      titleEn: 'ILLUSTRATION',
+      titleCn: '绘画',
+      fullFooter: true,
+      ifShow: false,
+      noMenu: false,
+      starBackground: 'deep-black',
+    },
+  },
+  {
+    path: '/island/trainer-card',
+    name: 'ISLAND_TRAINER_CARD',
+    component: () => import('@/views/Island/WorksGallery/index.vue'),
+    meta: {
+      activeMenu: '/island',
+      titleEn: 'TRAINER CARD',
+      titleCn: '训练家卡',
+      fullFooter: true,
+      ifShow: false,
+      noMenu: false,
+      starBackground: 'deep-black',
+    },
+  },
+  {
     path: '/craft',
     name: 'CRAFT',
     component: () => import('@/views/Craft/index.vue'),
@@ -303,6 +333,17 @@ export const routes: RouteConfig[] = [
   {
     path: '/404',
     name: '404',
+    component: () => import('@/views/404/index.vue'),
+    meta: {
+      titleEn: '404',
+      titleCn: '404',
+      fullFooter: false,
+      ifShow: false,
+    },
+  },
+  {
+    path: '/pet',
+    name: 'PET',
     component: () => import('@/views/404/index.vue'),
     meta: {
       titleEn: '404',

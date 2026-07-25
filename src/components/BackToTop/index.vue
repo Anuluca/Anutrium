@@ -100,7 +100,7 @@ onUnmounted(() => {
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.28);
   cursor: pointer;
   transition: color 0.25s ease, border-color 0.25s ease, background 0.25s ease,
-    box-shadow 0.25s ease, transform 0.25s ease;
+    box-shadow 0.25s ease, transform 0.25s ease, right 0.35s ease;
 
   &:hover,
   &:focus-visible {

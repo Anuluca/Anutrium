@@ -6,7 +6,7 @@ import merchPhotos from './Photography/merchPhotos'
 import photoWorks from './Photography/photoWorks'
 import designGoods from './Works/designGoods'
 import experiments from './Works/experiments'
-import Illuctration from './Works/Illuctration'
+import illustration from './Works/illustration'
 import trainerCard from './Works/trainerCard'
 
 const latestPages = {
@@ -279,7 +279,7 @@ const islandDynamic = {
   merchPhotos,
   imageLog,
   works: {
-    Illuctration,
+    illustration,
     trainerCard,
     experiments,
     designGoods,

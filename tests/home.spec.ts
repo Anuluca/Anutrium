@@ -38,6 +38,16 @@ const pageRoutes = [
     selector: '.merch-page',
     title: /MERCH PHOTOGRAPHY|周边摄影/,
   },
+  {
+    path: '/island/illustration',
+    selector: '.works-gallery-page',
+    title: /ILLUSTRATION|绘画/,
+  },
+  {
+    path: '/island/trainer-card',
+    selector: '.works-gallery-page',
+    title: /TRAINER CARD|训练家卡/,
+  },
 ]
 
 test.describe('top-level pages', () => {
@@ -71,6 +81,125 @@ test('home entry animation does not remount hydrated content', async ({
   })
 
   await expect(homePage).toHaveAttribute('data-mount-probe', 'stable')
+})
+
+test('archive and craft use their exchanged representative zodiac signs', async ({
+  page,
+}) => {
+  const routeSigns = [
+    { path: '/archive', sign: 'AQUARIUS' },
+    { path: '/craft', sign: 'GEMINI' },
+  ]
+
+  for (const routeSign of routeSigns) {
+    await page.goto(routeSign.path, { waitUntil: 'domcontentloaded' })
+    await expect(
+      page.locator('.zodiac-sign-face.is-active .zodiac-name')
+    ).toHaveText(routeSign.sign, { timeout: PAGE_LOAD_TIMEOUT })
+  }
+})
+
+test('archive section headings show their dynamic project totals', async ({
+  page,
+}) => {
+  await page.goto('/archive', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.archives-page')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+
+  const sectionCounts = await page.evaluate(() =>
+    Array.from(
+      document.querySelectorAll<HTMLElement>(
+        '.archives-page .home-section-layout'
+      )
+    ).map((section) => {
+      const count = section.querySelector<HTMLElement>(
+        '.archive-section-count strong'
+      )
+
+      return {
+        displayed: Number(count?.textContent),
+        actual: section.querySelectorAll('.shared-work-card, .misc-card')
+          .length,
+        fontFamily: count ? window.getComputedStyle(count).fontFamily : '',
+      }
+    })
+  )
+
+  expect(sectionCounts).toHaveLength(3)
+  for (const sectionCount of sectionCounts) {
+    expect(sectionCount.displayed).toBe(sectionCount.actual)
+    expect(sectionCount.fontFamily.toLowerCase()).toContain('anton')
+  }
+})
+
+test('updated stamp follows the desktop nav rail and keeps its mobile header placement', async ({
+  page,
+}, testInfo) => {
+  await page.goto('/archive', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.archives-page')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+
+  const metrics = await page.evaluate(() => {
+    const stamp = document.querySelector<HTMLElement>('.header-updated')
+    const header = document.querySelector<HTMLElement>('.page-header')
+    const navigation = document.querySelector<HTMLElement>(
+      '.sections-fixed-nav'
+    )
+
+    if (!stamp || !header) throw new Error('Updated stamp is unavailable')
+
+    const stampBounds = stamp.getBoundingClientRect()
+    const headerBounds = header.getBoundingClientRect()
+    const navigationBounds = navigation?.getBoundingClientRect()
+    const stampStyle = window.getComputedStyle(stamp)
+
+    return {
+      color: stampStyle.color,
+      headerBottom: headerBounds.bottom,
+      headerTop: headerBounds.top,
+      navigationBottom: navigationBounds?.bottom ?? 0,
+      opacityTarget: stampStyle.getPropertyValue('--updated-opacity').trim(),
+      position: stampStyle.position,
+      stampBottom: stampBounds.bottom,
+      stampLeft: stampBounds.left,
+      stampTop: stampBounds.top,
+    }
+  })
+
+  expect(metrics.color).toBe('rgb(226, 52, 86)')
+
+  if (testInfo.project.name.includes('mobile')) {
+    expect(metrics.position).toBe('absolute')
+    expect(metrics.stampTop).toBeGreaterThanOrEqual(metrics.headerTop)
+    expect(metrics.stampBottom).toBeLessThanOrEqual(metrics.headerBottom)
+    return
+  }
+
+  expect(metrics.position).toBe('fixed')
+  expect(metrics.opacityTarget).toBe('0.16')
+  expect(metrics.stampLeft).toBeLessThan(40)
+  expect(metrics.stampTop).toBeGreaterThan(metrics.navigationBottom)
+})
+
+test('home view-all labels show totals from locale collections', async ({
+  page,
+}) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.home-page')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+
+  await expect(
+    page.locator('.archive-entry[href="/archive"] .archive-entry__text')
+  ).toHaveText('全部项目（16）')
+  await expect(
+    page.locator('.archive-entry[href="/flanerie"] .archive-entry__text')
+  ).toHaveText('全部旅程（29）')
+  await expect(
+    page.locator('.archive-entry[href="/craft"] .archive-entry__text')
+  ).toHaveText('全部工具（7）')
 })
 
 test('home defers secondary journey images until interaction', async ({
@@ -128,6 +257,37 @@ test('hidden footer debug entry opens the personal bay test route', async ({
   await expect(
     page.locator('.island-page, .island-mobile-page').first()
   ).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
+})
+
+test('mobile personal bay works use a taller two-by-two grid', async ({
+  page,
+}, testInfo) => {
+  test.skip(!testInfo.project.name.includes('mobile'))
+
+  await page.goto('/test', { waitUntil: 'domcontentloaded' })
+  const worksGrid = page.locator('.mobile-port--works .mobile-card-row')
+  await expect(worksGrid).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
+
+  const gridTracks = await worksGrid.evaluate((element) => {
+    const style = window.getComputedStyle(element)
+    return {
+      columns: style.gridTemplateColumns.split(' ').length,
+      rows: style.gridTemplateRows.split(' ').length,
+    }
+  })
+
+  expect(gridTracks).toEqual({ columns: 2, rows: 2 })
+
+  const moduleHeights = await page.evaluate(() => ({
+    works:
+      document.querySelector('.mobile-port--works')?.getBoundingClientRect()
+        .height ?? 0,
+    notes:
+      document.querySelector('.mobile-port--notes')?.getBoundingClientRect()
+        .height ?? 0,
+  }))
+
+  expect(moduleHeights.works - moduleHeights.notes).toBeGreaterThanOrEqual(12)
 })
 
 test('cards and harbor panels use the changelog flip entrance', async ({
@@ -672,6 +832,37 @@ test('merch photography detail page renders', async ({ page }) => {
     timeout: PAGE_LOAD_TIMEOUT,
   })
   await expect(page).toHaveTitle(/MERCH PHOTOGRAPHY|周边摄影/)
+})
+
+test('personal bay work cards match their gallery item counts', async ({
+  page,
+}) => {
+  const workModules = [
+    { title: '绘画', path: '/island/illustration' },
+    { title: '训练家卡', path: '/island/trainer-card' },
+  ]
+
+  await page.goto('/test', { waitUntil: 'domcontentloaded' })
+
+  for (const workModule of workModules) {
+    const card = page
+      .locator('.bay-card:visible, .mobile-bay-card:visible')
+      .filter({ hasText: workModule.title })
+    await expect(card).toHaveCount(1)
+    const cardCount = Number(
+      await card
+        .locator('.card-count-number, .mobile-card-info b > span')
+        .innerText()
+    )
+
+    await page.goto(workModule.path, { waitUntil: 'domcontentloaded' })
+    const galleryCount = Number(
+      await page.locator('.detail-page-header__counter strong').innerText()
+    )
+
+    expect(cardCount).toBe(galleryCount)
+    await page.goto('/test', { waitUntil: 'domcontentloaded' })
+  }
 })
 
 test('image log groups fall back when English labels are missing', async ({

@@ -47,7 +47,7 @@ const activeSign = computed<ZodiacSignId>(() => {
   const routeName = String(route.name || '')
   const redirectedPath = route.redirectedFrom?.path || ''
 
-  if (routeName === 'ARCHIVE') return 'gemini'
+  if (routeName === 'ARCHIVE') return 'aquarius'
   if (routeName.startsWith('FLANERIE')) return 'sagittarius'
   if (
     routeName.startsWith('ISLAND') ||
@@ -56,7 +56,7 @@ const activeSign = computed<ZodiacSignId>(() => {
   ) {
     return 'pisces'
   }
-  if (craftRouteNames.has(routeName)) return 'aquarius'
+  if (craftRouteNames.has(routeName)) return 'gemini'
   if (routeName === 'ABOUT') return 'virgo'
   return 'leo'
 })

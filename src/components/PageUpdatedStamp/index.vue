@@ -17,7 +17,7 @@ const updatedAt = computed(() =>
 <style lang="less" scoped>
 .page-updated-stamp {
   z-index: 0;
-  color: var(--updated-color, var(--primary-color, #e23456));
+  color: var(--updated-color, #e23456);
   font-family: 'anton', sans-serif;
   font-size: var(--updated-font-size, clamp(1.8rem, 2.7vw, 2.7rem));
   letter-spacing: 0;
@@ -28,6 +28,15 @@ const updatedAt = computed(() =>
   user-select: none;
   white-space: nowrap;
   animation: pageUpdatedStampIn 0.52s ease-out 0.68s both;
+}
+
+@media screen and (min-aspect-ratio: @ratio-threshold) {
+  .page-updated-stamp {
+    --updated-enter-transform: translateX(8px);
+    --updated-font-size: clamp(18px, 1vw, 22px);
+    --updated-opacity: 0.16;
+    --updated-transform: none;
+  }
 }
 
 @keyframes pageUpdatedStampIn {

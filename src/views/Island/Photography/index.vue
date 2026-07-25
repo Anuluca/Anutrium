@@ -7,13 +7,15 @@
         value: String(activePhotos.length).padStart(2, '0'),
         label: 'PHOTOES',
       }"
-      :subtitle="t('island.photographyTagline')"
-      :title="t('island.photographyTitle')"
+      :subtitle="t('island.modules.photography.photoWorks.tagline')"
+      :title="t('island.modules.photography.photoWorks.title')"
     />
 
     <main ref="libraryRef" class="photo-library">
       <CollectionTabs
-        :aria-label="t('island.collectionNavigation')"
+        :aria-label="
+          t('island.modules.photography.photoWorks.collectionNavigation')
+        "
         :items="collectionTabs"
         :model-value="activeGroupId"
         size="big"
@@ -31,7 +33,9 @@
         >
           <FilterRail
             v-if="activeGroup.photoGroups?.length"
-            :aria-label="t('island.subjectNavigation')"
+            :aria-label="
+              t('island.modules.photography.photoWorks.subjectNavigation')
+            "
             :items="photoGroupFilters"
             :model-value="activePhotoGroupId"
             @update:model-value="selectPhotoGroup"
@@ -77,7 +81,7 @@
               :key="`${galleryRenderKey}:empty`"
               class="photography-empty"
             >
-              {{ t('island.emptyPhotos') }}
+              {{ t('island.modules.photography.photoWorks.empty') }}
             </div>
           </Transition>
 
@@ -173,7 +177,9 @@ const activePhotoGroupId = ref('all')
 const currentPage = ref(1)
 
 const photoWorkGroups = computed<PhotographyGroup[]>(() => {
-  return tm('island.dynamic.photoWorks.groups') as PhotographyGroup[]
+  return tm(
+    'island.modules.photography.photoWorks.data.groups'
+  ) as PhotographyGroup[]
 })
 
 const activeGroup = computed(() =>
@@ -201,7 +207,7 @@ const photoGroupFilters = computed<FilterRailItem[]>(() => {
   return [
     {
       id: 'all',
-      title: t('island.allPhotos'),
+      title: t('island.modules.photography.photoWorks.allPhotos'),
       count: photoGroups.reduce(
         (total, group) => total + group.photos.length,
         0
@@ -330,7 +336,9 @@ const setPage = (page: number) => {
 }
 
 const getMediaLabel = (media: GalleryMedia) =>
-  media.location || media.title || t('island.photoFallback')
+  media.location ||
+  media.title ||
+  t('island.modules.photography.photoWorks.photoFallback')
 
 watch(
   [() => route.query.type, () => route.query.subject, photoWorkGroups],

@@ -92,6 +92,12 @@
         :title="$t('archive.title01')"
         title-en="MAIN PROJECTS"
       >
+        <template #actions>
+          <span class="archive-section-count">
+            <strong>{{ formatSectionCount(mainWorks.length) }}</strong>
+            <small>PROJECTS</small>
+          </span>
+        </template>
         <div class="works-grid">
           <WorkCard
             v-for="(work, index) in mainWorks"
@@ -111,6 +117,12 @@
         :title="$t('archive.title02')"
         title-en="PERSONAL PROJECTS"
       >
+        <template #actions>
+          <span class="archive-section-count">
+            <strong>{{ formatSectionCount(personalWorks.length) }}</strong>
+            <small>PROJECTS</small>
+          </span>
+        </template>
         <div class="works-grid">
           <WorkCard
             v-for="(work, index) in personalWorks"
@@ -130,6 +142,12 @@
         :title="$t('archive.title03')"
         title-en="OTHER PROJECTS"
       >
+        <template #actions>
+          <span class="archive-section-count">
+            <strong>{{ formatSectionCount(miscWorks.length) }}</strong>
+            <small>PROJECTS</small>
+          </span>
+        </template>
         <div class="misc-grid">
           <div
             v-for="(item, index) in miscWorks"
@@ -239,6 +257,8 @@ const personalWorks = computed<WorkItem[]>(
 const miscWorks = computed<MiscWork[]>(
   () => tm('archive.dynamic.MiscWorks') as MiscWork[]
 )
+
+const formatSectionCount = (count: number) => String(count).padStart(2, '0')
 
 const availabilityItems = computed(() => [
   {
@@ -673,6 +693,30 @@ onBeforeUnmount(() => {
   contain-intrinsic-size: 980px;
 }
 
+.archive-section-count {
+  display: inline-flex;
+  flex: none;
+  gap: 6px;
+  align-items: baseline;
+  color: @red;
+  font-family: 'Anton', sans-serif;
+  line-height: 1;
+
+  strong {
+    color: rgba(226, 52, 86, 0.58);
+    font-family: inherit;
+    font-size: clamp(1.35rem, 2.2vw, 2rem);
+    font-weight: 400;
+  }
+
+  small {
+    color: rgba(255, 255, 255, 0.3);
+    font-family: inherit;
+    font-size: 0.42rem;
+    letter-spacing: 0.04em;
+  }
+}
+
 .works-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1079,6 +1123,18 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 768px) {
+  .archive-section-count {
+    gap: 4px;
+
+    strong {
+      font-size: 1.25rem;
+    }
+
+    small {
+      font-size: 0.34rem;
+    }
+  }
+
   .availability-panel {
     grid-template-columns: 1fr;
     margin: 18px 0;

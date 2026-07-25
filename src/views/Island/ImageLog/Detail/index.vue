@@ -42,7 +42,7 @@
       </section>
 
       <div v-if="!photoGroups.length" class="image-log-gallery__empty">
-        {{ t('island.imageLogEmpty') }}
+        {{ t('island.modules.photography.imageLog.empty') }}
       </div>
     </main>
 
@@ -84,7 +84,9 @@ const route = useRoute()
 const router = useRouter()
 const { t, tm } = useI18n()
 const albumId = computed(() => route.params.albumId as string)
-const albums = computed(() => tm('island.dynamic.imageLog') as ImageLogAlbum[])
+const albums = computed(
+  () => tm('island.modules.photography.imageLog.data') as ImageLogAlbum[]
+)
 const album = computed(() =>
   albums.value.find((item) => item.id === albumId.value)
 )
@@ -96,7 +98,7 @@ const photoCount = computed(() =>
 )
 
 const getMediaLabel = (media: GalleryMedia) =>
-  media.title || t('island.imageLogTitle')
+  media.title || t('island.modules.photography.imageLog.title')
 const showMediaInfo = (media: GalleryMedia) => Boolean(media.title)
 
 watch(

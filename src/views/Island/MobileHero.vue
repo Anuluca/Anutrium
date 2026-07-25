@@ -10,7 +10,11 @@
         <span>个人海湾</span>
       </div>
       <p>
-        <TypedText :text="t('island.headerMeta')" :delay="520" :speed="24" />
+        <TypedText
+          :text="t('island.page.headerMeta')"
+          :delay="520"
+          :speed="24"
+        />
       </p>
     </div>
     <div class="hero-watermark" aria-hidden="true">ANULUCA'S ISLAND</div>

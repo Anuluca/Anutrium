@@ -7,8 +7,8 @@
         value: String(albums.length).padStart(2, '0'),
         label: 'ALBUMS',
       }"
-      :subtitle="t('island.imageLogTagline')"
-      :title="t('island.imageLogTitle')"
+      :subtitle="t('island.modules.photography.imageLog.tagline')"
+      :title="t('island.modules.photography.imageLog.title')"
     />
 
     <main class="image-log-index">
@@ -23,7 +23,7 @@
       </div>
 
       <div v-else class="image-log-empty">
-        {{ t('island.imageLogEmpty') }}
+        {{ t('island.modules.photography.imageLog.empty') }}
       </div>
     </main>
 
@@ -52,7 +52,7 @@ type ImageLogAlbumData = Omit<ImageLogAlbumCardData, 'photos'> & {
 }
 
 const albums = computed<ImageLogAlbumCardData[]>(() =>
-  (tm('island.dynamic.imageLog') as ImageLogAlbumData[]).map(
+  (tm('island.modules.photography.imageLog.data') as ImageLogAlbumData[]).map(
     ({ groups, ...album }) => ({
       ...album,
       photos: groups.flatMap((group) => group.photos),

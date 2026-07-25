@@ -4,6 +4,7 @@ html {
   scrollbar-gutter: auto;
   height: 100%;
   min-height: 100%;
+  overflow-x: hidden;
   background-color: var(--bg-color);
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -33,10 +34,14 @@ body.mobile-menu-scroll-locked {
 }
 
 body {
+  --pet-teaser-size: clamp(7.5rem, 12vw, 10.5rem);
+  --pet-teaser-visual-width: clamp(4.75rem, 7vw, 6.5rem);
+
   width: calc(100% - 120px);
   height: 100%;
   min-height: 100%;
   overflow: auto;
+  overflow-x: hidden;
   position: relative;
   background-color: var(--bg-color);
   color: var(--text-color);
@@ -75,6 +80,10 @@ body {
   .el-menu {
     background-color: transparent !important;
   }
+}
+
+body:has(.pet-teaser) .back-to-top-button.no-rem {
+  right: calc(var(--pet-teaser-visual-width) + 36px);
 }
 
 body.light {
@@ -1740,11 +1749,18 @@ body .el-message-box {
   }
 
   body {
+    --pet-teaser-size: clamp(6.5rem, 29vw, 8.5rem);
+    --pet-teaser-visual-width: clamp(4.5rem, 20.5vw, 6rem);
+
     width: 100%;
     box-sizing: border-box;
     padding: 0;
     overflow-x: hidden;
     overflow-y: auto;
+  }
+
+  body:has(.pet-teaser) .back-to-top-button.no-rem {
+    right: calc(var(--pet-teaser-visual-width) + 34px);
   }
 
   .main-container {

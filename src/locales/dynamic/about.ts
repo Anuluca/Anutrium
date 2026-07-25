@@ -7,12 +7,12 @@ const aboutDynamic = {
       en: '__"ISLAND"__ page',
     },
     {
-      zhCn: '__「花花观察日记」__大模块 + 右下角小花花点击进入',
-      en: '__"Flora Observation Diary"__ page',
-    },
-    {
       zhCn: '__「宝可后院」__大模块',
       en: '__"POKEYARD"__ page',
+    },
+    {
+      zhCn: '__「花花小窝」__大模块',
+      en: '__"Flora\'s Place"__ page',
     },
   ],
   neighbours: [
@@ -31,6 +31,24 @@ const aboutDynamic = {
     },
   ],
   changelogs: [
+    // {
+    //   version: 'v1.2',
+    //   date: '2026-07-20',
+    //   title: {
+    //     zhCn: '十二星宿星盘背景',
+    //     en: '',
+    //   },
+    //   details: [
+    //     {
+    //       zhCn: '',
+    //       en: '',
+    //     },
+    //     {
+    //       zhCn: '诸多bug修复、细节增补、整体性能优化',
+    //       en: 'Numerous bug fixes, detail refinements, and overall performance improvements.',
+    //     },
+    //   ],
+    // },
     {
       version: 'v1.1',
       date: '2026-07-08',

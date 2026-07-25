@@ -22,6 +22,9 @@ const BackController = defineAsyncComponent(
 const CursorMove = defineAsyncComponent(
   () => import('@/components/CursorMove/index.vue')
 )
+const PetTeaserLink = defineAsyncComponent(
+  () => import('@/components/PetTeaserLink.vue')
+)
 const StartAnimation = defineAsyncComponent(
   () => import('@/components/StartAnimation/index.vue')
 )
@@ -163,6 +166,10 @@ onUnmounted(() => {
   <CursorMove />
   <StartAnimation @finished="startAnimationFinished" />
   <layout :entry-active="entryAnimationReady" />
+  <PetTeaserLink
+    v-if="route.path !== '/pet' && route.path !== '/404'"
+    :entry-active="entryAnimationReady"
+  />
   <div
     class="footer-bottom-gradient"
     :class="{ 'footer-bottom-gradient--ready': entryAnimationReady }"

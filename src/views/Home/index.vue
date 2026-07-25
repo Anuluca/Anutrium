@@ -206,7 +206,10 @@
         <template #actions>
           <RouterLink class="archive-entry" to="/archive">
             <span class="archive-entry__text">
-              {{ locale === 'en' ? 'VIEW ALL' : '全部项目' }}
+              {{
+                $t('home.projectViewAll') +
+                $t('home.viewAllCount', { count: totalProjectCount })
+              }}
             </span>
             <span class="archive-entry__arrow">→</span>
           </RouterLink>
@@ -239,7 +242,10 @@
         <template #actions>
           <RouterLink class="archive-entry" to="/flanerie">
             <span class="archive-entry__text">
-              {{ $t('home.journeyViewAll') }}
+              {{
+                $t('home.journeyViewAll') +
+                $t('home.viewAllCount', { count: totalJourneyCount })
+              }}
             </span>
             <span class="archive-entry__arrow">→</span>
           </RouterLink>
@@ -273,7 +279,10 @@
         <template #actions>
           <RouterLink class="archive-entry" to="/craft">
             <span class="archive-entry__text">
-              {{ $t('home.craftViewAll') }}
+              {{
+                $t('home.craftViewAll') +
+                $t('home.viewAllCount', { count: totalToolCount })
+              }}
             </span>
             <span class="archive-entry__arrow">→</span>
           </RouterLink>
@@ -1024,6 +1033,26 @@ const selectByIds = <T extends { id: string }>(
 }
 
 const selectedWorkIds = ['W001', 'W003', 'W005', 'W002', 'W006', 'P003']
+
+const getLocaleCollectionLength = (path: string) => {
+  const collection = tm(path)
+  return Array.isArray(collection) ? collection.length : 0
+}
+
+const totalProjectCount = computed(
+  () =>
+    getLocaleCollectionLength('archive.dynamic.WebArchives') +
+    getLocaleCollectionLength('archive.dynamic.PersonalArchives') +
+    getLocaleCollectionLength('archive.dynamic.MiscWorks')
+)
+
+const totalJourneyCount = computed(() =>
+  getLocaleCollectionLength('flanerie.dynamic.vlogs')
+)
+
+const totalToolCount = computed(() =>
+  getLocaleCollectionLength('craft.dynamic.tools')
+)
 
 const works = computed<WorkItem[]>(() => {
   const webArchives = tm('archive.dynamic.WebArchives') as WorkItem[]

@@ -29,6 +29,10 @@ const home = {
     zhCn: '精选工具',
     en: 'UTILITY CRAFTS',
   },
+  projectViewAll: {
+    zhCn: '全部项目',
+    en: 'VIEW ALL',
+  },
   journeyViewAll: {
     zhCn: '全部旅程',
     en: 'VIEW ALL',
@@ -36,6 +40,10 @@ const home = {
   craftViewAll: {
     zhCn: '全部工具',
     en: 'VIEW ALL',
+  },
+  viewAllCount: {
+    zhCn: '（{count}）',
+    en: ' ({count})',
   },
   dynamic,
 } as const

@@ -5,6 +5,7 @@ import { ViteSSG } from 'vite-ssg'
 import App from './App.vue'
 import i18n from './locales'
 import { installRouterGuards, routes } from './router'
+import { scrollPageTo } from './utils/pageScroll'
 
 import 'reset-css'
 import 'element-plus/theme-chalk/dark/css-vars.css'
@@ -13,7 +14,14 @@ import '@/assets/style/global.less'
 const restoreScrollAfterLayout = (position: ScrollToOptions) =>
   new Promise<ScrollToOptions>((resolve) => {
     window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(() => resolve(position))
+      window.requestAnimationFrame(() => {
+        scrollPageTo({
+          top: position.top ?? 0,
+          left: position.left ?? 0,
+          behavior: position.behavior,
+        })
+        resolve(position)
+      })
     })
   })
 
@@ -23,8 +31,7 @@ export const createApp = ViteSSG(
     base: import.meta.env.BASE_URL,
     routes,
     scrollBehavior: (_to, _from, savedPosition) => {
-      if (!savedPosition) return { left: 0, top: 0 }
-      return restoreScrollAfterLayout(savedPosition)
+      return restoreScrollAfterLayout(savedPosition || { left: 0, top: 0 })
     },
   },
   ({ app, router }) => {
