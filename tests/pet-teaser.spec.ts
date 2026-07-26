@@ -26,6 +26,7 @@ test('pet teaser plays its state sequence before opening the pet 404 route', asy
   )
   const ears = teaser.locator('.pet-teaser__ears-window')
   const interactionZone = teaser.locator('.pet-teaser__interaction-zone')
+  const wand = teaser.locator('.pet-teaser__wand')
   const rod = teaser.locator('.pet-teaser__wand .wand-rod')
   const feather = teaser.locator('.pet-teaser__wand .wand-feather path')
   await expect(ears).toHaveCSS('pointer-events', 'none')
@@ -52,6 +53,7 @@ test('pet teaser plays its state sequence before opening the pet 404 route', asy
     teaser.locator('.pet-teaser__wand circle, .pet-teaser__wand line')
   ).toHaveCount(0)
 
+  let hoverAnimationStartTime: number | null = null
   if (!testInfo.project.name.includes('mobile')) {
     await interactionZone.hover()
     await expect(teaser).toHaveClass(/\bpet-teaser--hovering\b/)
@@ -104,6 +106,15 @@ test('pet teaser plays its state sequence before opening the pet 404 route', asy
         })
     )
     expect(maxConnectionGap).toBeLessThanOrEqual(0.5)
+    hoverAnimationStartTime = await wand.evaluate((element) => {
+      const animation = element
+        .getAnimations()
+        .find((item) =>
+          (item as CSSAnimation).animationName?.includes('pet-wand-hover')
+        )
+      if (!animation) throw new Error('Wand hover animation is unavailable')
+      return Number(animation.startTime)
+    })
   }
 
   await interactionZone.click()
@@ -114,6 +125,24 @@ test('pet teaser plays its state sequence before opening the pet 404 route', asy
     'animation-delay',
     '0s'
   )
+  expect(
+    await wand.evaluate((element) => getComputedStyle(element).animationName)
+  ).toContain('pet-wand-hover')
+  await expect(wand).toHaveCSS('animation-duration', '0.65s')
+  if (hoverAnimationStartTime !== null) {
+    const activationStartTime = await wand.evaluate((element) => {
+      const animation = element
+        .getAnimations()
+        .find((item) =>
+          (item as CSSAnimation).animationName?.includes('pet-wand-hover')
+        )
+      if (!animation) {
+        throw new Error('Wand activation animation is unavailable')
+      }
+      return Number(animation.startTime)
+    })
+    expect(activationStartTime).toBeCloseTo(hoverAnimationStartTime, 1)
+  }
   await expect(ears).toHaveCSS('animation-delay', '0s')
   await expect(teaser.locator('.pet-teaser__cat')).toHaveCSS(
     'animation-duration',
@@ -391,6 +420,47 @@ test('pet teaser stays inside the viewport and avoids fixed controls', async ({
   }
   if (metrics.footerGap !== null) {
     expect(Math.abs(metrics.footerGap)).toBeLessThanOrEqual(1)
+
+    const maxTransitionGap = await page.evaluate(
+      () =>
+        new Promise<number>((resolve) => {
+          const ears = document.querySelector<HTMLElement>(
+            '.pet-teaser__ears-window'
+          )
+          const footer = document.querySelector<HTMLElement>('.footer-com')
+          if (!ears || !footer) {
+            throw new Error('Footer transition geometry is unavailable')
+          }
+
+          const originalBottom = footer.style.bottom
+          const currentBottom = Number.parseFloat(
+            window.getComputedStyle(footer).bottom
+          )
+          footer.style.bottom = currentBottom > 5 ? '0px' : '10px'
+
+          const startedAt = performance.now()
+          let maximumGap = 0
+          const sample = (time: number) => {
+            maximumGap = Math.max(
+              maximumGap,
+              Math.abs(
+                ears.getBoundingClientRect().bottom -
+                  footer.getBoundingClientRect().top
+              )
+            )
+
+            if (time - startedAt < 620) {
+              requestAnimationFrame(sample)
+            } else {
+              footer.style.bottom = originalBottom
+              resolve(maximumGap)
+            }
+          }
+
+          requestAnimationFrame(sample)
+        })
+    )
+    expect(maxTransitionGap).toBeLessThanOrEqual(1)
   }
 })
 

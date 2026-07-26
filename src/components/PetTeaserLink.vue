@@ -2,8 +2,8 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
-import catEarsImage from '@/assets/img/cat_ear.png'
-import catImage from '@/assets/img/cat_full.png'
+const catEarsImage = 'https://assets.anuluca.com/other/cat_ear.png'
+const catImage = 'https://assets.anuluca.com/other/cat_full.png'
 
 type InteractionState = 'idle' | 'hovering' | 'activating'
 
@@ -76,7 +76,7 @@ const scheduleIdleMotion = () => {
 }
 
 const handleMouseEnter = () => {
-  if (state.value === 'activating') return
+  if (!props.entryActive || state.value === 'activating') return
   clearIdleMotionTimer()
   isIdleMotion.value = false
   state.value = 'hovering'
@@ -106,7 +106,7 @@ const navigateToPet = async () => {
 }
 
 const handleActivate = () => {
-  if (state.value === 'activating' || hasNavigated) return
+  if (!props.entryActive || state.value === 'activating' || hasNavigated) return
 
   state.value = 'activating'
   isIdleMotion.value = false
@@ -207,6 +207,7 @@ watch(
     } else {
       clearIdleMotionTimer()
       isIdleMotion.value = false
+      state.value = 'idle'
     }
   }
 )
@@ -250,12 +251,14 @@ onUnmounted(() => {
       `pet-teaser--${state}`,
       {
         'pet-teaser--idle-motion': isIdleMotion,
+        'pet-teaser--engaged': state !== 'idle',
         'pet-teaser--ready': props.entryActive,
       },
     ]"
     :style="animationStyle"
     aria-label="前往花花的宠物页面"
-    :aria-disabled="state === 'activating'"
+    :aria-disabled="!props.entryActive || state === 'activating'"
+    :tabindex="props.entryActive ? 0 : -1"
     @mouseenter="handleMouseEnter"
     @mouseleave="handleMouseLeave"
     @click="handleActivate"
@@ -315,7 +318,6 @@ onUnmounted(() => {
 .pet-teaser {
   --pet-entry-opacity: 0.5;
   --pet-wand-color: @primary-color;
-  --pet-wand-activation-duration: 0.86s;
 
   position: fixed;
   right: 0;
@@ -332,7 +334,7 @@ onUnmounted(() => {
   pointer-events: none;
   cursor: pointer;
   isolation: isolate;
-  transition: bottom 0.45s ease, opacity 0.45s ease;
+  transition: opacity 0.45s ease;
   -webkit-tap-highlight-color: transparent;
 
   &--ready {
@@ -349,7 +351,7 @@ onUnmounted(() => {
 
   &--activating {
     opacity: 0.8;
-    transition: bottom 0.45s ease;
+    transition: none;
 
     .pet-teaser__interaction-zone {
       pointer-events: none;
@@ -476,6 +478,23 @@ onUnmounted(() => {
   }
 }
 
+.pet-teaser--engaged {
+  .pet-teaser__wand {
+    animation: pet-wand-hover var(--pet-activation-duration) ease-in-out
+      forwards;
+
+    .wand-rod {
+      animation: pet-rod-flex-hover var(--pet-activation-duration) ease-in-out
+        forwards;
+    }
+
+    .wand-feather path {
+      animation: pet-feather-hover calc(var(--pet-activation-duration) - 0.08s)
+        ease-in-out 0.08s forwards;
+    }
+  }
+}
+
 .pet-teaser--hovering {
   .pet-teaser__ears-window {
     opacity: 0.96;
@@ -489,15 +508,6 @@ onUnmounted(() => {
 
   .pet-teaser__wand {
     filter: drop-shadow(0 0 0.48em rgba(226, 52, 86, 0.54));
-    animation: pet-wand-hover 0.74s ease-in-out forwards;
-
-    .wand-rod {
-      animation: pet-rod-flex-hover 0.74s ease-in-out forwards;
-    }
-
-    .wand-feather path {
-      animation: pet-feather-hover 0.64s ease-in-out 0.08s forwards;
-    }
   }
 }
 
@@ -518,17 +528,6 @@ onUnmounted(() => {
 .pet-teaser--activating {
   .pet-teaser__wand {
     filter: drop-shadow(0 0 0.56em rgba(226, 52, 86, 0.66));
-    animation: pet-wand-activate var(--pet-wand-activation-duration) ease-in-out
-      forwards;
-
-    .wand-rod {
-      animation: pet-rod-flex-activate var(--pet-wand-activation-duration)
-        ease-in-out forwards;
-    }
-
-    .wand-feather path {
-      animation: pet-feather-activate 0.78s ease-in-out 0.07s forwards;
-    }
   }
 
   .pet-teaser__ears-window {
@@ -651,96 +650,7 @@ onUnmounted(() => {
   }
 }
 
-@keyframes pet-wand-activate {
-  0% {
-    transform: rotate(0);
-  }
-
-  14% {
-    transform: rotate(2.4deg);
-  }
-
-  29% {
-    transform: rotate(-1.9deg);
-  }
-
-  44% {
-    transform: rotate(1.4deg);
-  }
-
-  59% {
-    transform: rotate(-1deg);
-  }
-
-  74% {
-    transform: rotate(0.65deg);
-  }
-
-  88% {
-    transform: rotate(-0.15deg);
-  }
-
-  100% {
-    transform: rotate(-0.15deg);
-  }
-}
-
-@keyframes pet-rod-flex-activate {
-  0%,
-  100% {
-    d: path('M240 5 C213 6 178 26 150 48');
-  }
-
-  18% {
-    d: path('M240 5 C213 6 178 36 150 48');
-  }
-
-  38% {
-    d: path('M240 5 C213 6 178 20 150 48');
-  }
-
-  58% {
-    d: path('M240 5 C213 6 178 31 150 48');
-  }
-
-  78% {
-    d: path('M240 5 C213 6 178 26 150 48');
-  }
-}
-
-@keyframes pet-feather-activate {
-  0%,
-  100% {
-    transform: rotate(0);
-  }
-
-  18% {
-    transform: rotate(-8deg);
-  }
-
-  37% {
-    transform: rotate(6deg);
-  }
-
-  56% {
-    transform: rotate(-4deg);
-  }
-
-  75% {
-    transform: rotate(2.5deg);
-  }
-
-  90% {
-    transform: rotate(0);
-  }
-}
-
 @keyframes pet-ears-exit {
-  from {
-    opacity: 0.82;
-    transform: translateY(0) scale(1);
-  }
-
   to {
     opacity: 0;
     transform: translateY(0) scale(0.96);
@@ -783,9 +693,9 @@ onUnmounted(() => {
   .pet-teaser--idle-motion .pet-teaser__wand,
   .pet-teaser--idle-motion .wand-rod,
   .pet-teaser--idle-motion .wand-feather path,
-  .pet-teaser--hovering .pet-teaser__wand,
-  .pet-teaser--hovering .wand-rod,
-  .pet-teaser--hovering .wand-feather path {
+  .pet-teaser--engaged .pet-teaser__wand,
+  .pet-teaser--engaged .wand-rod,
+  .pet-teaser--engaged .wand-feather path {
     animation: none;
   }
 
@@ -797,12 +707,6 @@ onUnmounted(() => {
   }
 
   .pet-teaser--activating {
-    .pet-teaser__wand,
-    .wand-rod,
-    .wand-feather path {
-      animation: none;
-    }
-
     .pet-teaser__ears-window {
       animation: pet-ears-exit 0.16s ease forwards;
     }
