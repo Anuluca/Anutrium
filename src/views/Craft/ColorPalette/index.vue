@@ -1,9 +1,7 @@
 <template>
   <ToolPageLayout
     page-class="palette-tool"
-    tool-id="palette"
     title="配色提取器"
-    description="上传图片以进行高频像素特征提取，自动输出标准前端调色盘。"
     :recommended-tools="recommendedTools"
   >
     <div class="pt-grid">

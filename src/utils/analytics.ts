@@ -4,7 +4,6 @@ type AnalyticsEventName =
   | 'resume_click'
   | 'share'
   | 'tool_click'
-  | 'tool_use'
 
 type AnalyticsValue = boolean | number | string | null | undefined
 
@@ -90,13 +89,6 @@ export const trackToolClick = (tool: {
     tool_id: tool.id,
     tool_title: tool.title,
     source: tool.source,
-  })
-}
-
-export const trackToolUse = (tool: { id?: string; title?: string }) => {
-  trackEvent('tool_use', {
-    tool_id: tool.id,
-    tool_title: tool.title,
   })
 }
 

@@ -92,6 +92,10 @@ const PAGE_DESCRIPTIONS: Record<string, { zhCn: string; en: string }> = {
     zhCn: 'Anuluca 的个人内容与兴趣空间。',
     en: 'A personal space for Anuluca’s interests and collected fragments.',
   },
+  PET: {
+    zhCn: '花花庭院：花花的沉浸式宠物角色档案。',
+    en: 'Floratrium, an immersive character profile for Huahua.',
+  },
 }
 
 const DESCRIPTION_ROUTE_GROUPS: Record<string, keyof typeof PAGE_DESCRIPTIONS> =
@@ -108,6 +112,7 @@ const DESCRIPTION_ROUTE_GROUPS: Record<string, keyof typeof PAGE_DESCRIPTIONS> =
     ISLAND_IMAGE_LOG: 'ISLAND',
     ISLAND_IMAGE_LOG_DETAIL: 'ISLAND',
     ISLAND_ILLUSTRATION: 'ISLAND',
+    ISLAND_STUDY_NOTES: 'ISLAND',
     ISLAND_TRAINER_CARD: 'ISLAND',
   }
 
@@ -305,6 +310,20 @@ export const routes: RouteConfig[] = [
     },
   },
   {
+    path: '/island/study-notes',
+    name: 'ISLAND_STUDY_NOTES',
+    component: () => import('@/views/Island/StudyNotes/index.vue'),
+    meta: {
+      activeMenu: '/island',
+      titleEn: 'STUDY NOTES',
+      titleCn: '学习笔记',
+      fullFooter: true,
+      ifShow: false,
+      noMenu: false,
+      starBackground: 'deep-black',
+    },
+  },
+  {
     path: '/craft',
     name: 'CRAFT',
     component: () => import('@/views/Craft/index.vue'),
@@ -344,10 +363,10 @@ export const routes: RouteConfig[] = [
   {
     path: '/pet',
     name: 'PET',
-    component: () => import('@/views/404/index.vue'),
+    component: () => import('@/views/Flora/index.vue'),
     meta: {
-      titleEn: '404',
-      titleCn: '404',
+      titleEn: 'Floratrium',
+      titleCn: '花花庭院',
       fullFooter: false,
       ifShow: false,
     },

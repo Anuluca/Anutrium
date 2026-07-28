@@ -3,23 +3,8 @@
     <DetailPageHeader
       back-label="FLANERIE"
       back-path="/flanerie"
-      :counter="{
-        value: String(videos.length + photos.length).padStart(2, '0'),
-        label: 'MEDIAS',
-      }"
-      :subtitle="vlog.tagline"
       :title="vlog.title"
-    >
-      <template #title-extra>
-        <span v-if="vlog.date" class="flr-sub-date">{{ vlog.date }}</span>
-      </template>
-      <div v-if="devices.length" class="flr-devices">
-        <span class="flr-device-label">{{ t('flanerie.deviceLabel') }}:</span>
-        <span v-for="device in devices" :key="device" class="flr-device">
-          {{ device }}
-        </span>
-      </div>
-    </DetailPageHeader>
+    />
 
     <DetailSections
       v-if="videos.length"
@@ -183,13 +168,6 @@ const videos = computed<VideoItem[]>(() => {
 })
 
 const photos = computed<PhotoItem[]>(() => vlog.value?.photos || [])
-const devices = computed(() => [
-  ...new Set(
-    photos.value
-      .map((photo) => photo.device?.trim())
-      .filter((device): device is string => Boolean(device))
-  ),
-])
 const totalPages = computed(() => Math.ceil(photos.value.length / PAGE_SIZE))
 const paginatedPhotos = computed(() => {
   const start = (currentPage.value - 1) * PAGE_SIZE
@@ -236,49 +214,6 @@ watch(
 .flr-page {
   color: #fff;
   overflow: hidden;
-}
-
-.flr-sub-date {
-  letter-spacing: 0;
-  font-size: 0.6rem;
-  font-weight: 900;
-  font-family: @mono;
-  background-color: #e23456;
-  color: #000;
-  padding: 3px 10px;
-  margin-bottom: 5px;
-  margin-left: 20px;
-}
-
-.flr-devices {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 7px;
-  margin-top: 12px;
-}
-
-.flr-device-label,
-.flr-device {
-  font-family: @mono;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-}
-
-.flr-device-label {
-  margin-right: 2px;
-  color: rgb(226, 52, 87);
-  font-weight: 100;
-}
-
-.flr-device {
-  padding: 4px 8px;
-  font-size: 15px;
-  letter-spacing: 0;
-  border: 1px solid rgba(226, 52, 86, 0.22);
-  color: rgba(255, 255, 255, 0.58);
-  background: rgba(226, 52, 86, 0.06);
 }
 
 .flr-video-panel,

@@ -14,8 +14,6 @@
       <div class="scanlines" />
     </div>
 
-    <div class="work-red-plate" />
-
     <div class="work-content">
       <div class="work-top-info">
         <div class="company-row">
@@ -102,8 +100,7 @@ const referenceNumber = computed(() => `${props.index + 1}A`)
   transition: transform 0.46s cubic-bezier(0.16, 1, 0.3, 1),
     border-color 0.28s ease, box-shadow 0.46s ease;
 
-  &::before,
-  &::after {
+  &::before {
     position: absolute;
     z-index: 4;
     content: '';
@@ -117,18 +114,6 @@ const referenceNumber = computed(() => `${props.index + 1}A`)
     transform: scale(0.965);
     transition: opacity 0.25s ease, border-color 0.25s ease,
       transform 0.46s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  &::after {
-    top: 0;
-    left: -42%;
-    width: 36%;
-    height: 2px;
-    opacity: 0;
-    background: linear-gradient(90deg, transparent, #fff 35%, #e23456 75%);
-    box-shadow: 0 0 18px rgba(226, 52, 86, 0.8);
-    transition: opacity 0.15s ease,
-      transform 0.62s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 
   &:focus-visible {
@@ -149,11 +134,6 @@ const referenceNumber = computed(() => `${props.index + 1}A`)
       transform: scale(1);
     }
 
-    &::after {
-      opacity: 1;
-      transform: translateX(410%);
-    }
-
     .work-base img {
       filter: brightness(0.76) saturate(0.88) contrast(1.08);
     }
@@ -165,16 +145,10 @@ const referenceNumber = computed(() => `${props.index + 1}A`)
 
     .scanlines {
       opacity: 0.86;
-      animation: work-scanline-drift 0.36s linear infinite;
-    }
-
-    .work-red-plate {
-      transform: translateX(0) skewX(0);
     }
 
     .work-name {
       color: #fff;
-      letter-spacing: 0.015em;
       text-shadow: 0 0 24px rgba(226, 52, 86, 0.32);
     }
 
@@ -288,24 +262,6 @@ const referenceNumber = computed(() => `${props.index + 1}A`)
   z-index: 2;
 }
 
-.work-red-plate {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    112deg,
-    rgba(226, 52, 86, 0.06) 0 28%,
-    rgba(226, 52, 86, 0.58) 66%,
-    rgba(39, 7, 17, 0.82) 100%
-  );
-  transform: translateX(-106%) skewX(-9deg);
-  transform-origin: left;
-  transition: transform 0.52s cubic-bezier(0.16, 1, 0.3, 1);
-  z-index: 1;
-}
-
 .work-content {
   position: relative;
   width: 100%;
@@ -417,7 +373,7 @@ const referenceNumber = computed(() => `${props.index + 1}A`)
   font-size: 40px;
   line-height: 1.1;
   overflow-wrap: anywhere;
-  transition: color 0.25s ease, letter-spacing 0.42s ease, text-shadow 0.3s ease;
+  transition: color 0.25s ease, text-shadow 0.3s ease;
 }
 
 .project-ref-id {
@@ -484,16 +440,6 @@ const referenceNumber = computed(() => `${props.index + 1}A`)
   pointer-events: none;
   transition: color 0.25s ease;
   z-index: 3;
-}
-
-@keyframes work-scanline-drift {
-  from {
-    background-position-y: 0;
-  }
-
-  to {
-    background-position-y: 4px;
-  }
 }
 
 @media (max-width: 768px) {

@@ -1,9 +1,7 @@
 <template>
   <ToolPageLayout
     page-class="entity-tool"
-    tool-id="html-entities"
     title="HTML常用转义字符"
-    description="搜索常用 HTML 实体，点击字符、实体名或编号即可复制。"
     :recommended-tools="recommendedTools"
   >
     <div class="pt-grid">

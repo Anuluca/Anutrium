@@ -3,11 +3,6 @@
     <DetailPageHeader
       back-label="ISLAND"
       back-path="/test"
-      :counter="{
-        value: String(albums.length).padStart(2, '0'),
-        label: 'ALBUMS',
-      }"
-      :subtitle="t('island.modules.photography.imageLog.tagline')"
       :title="t('island.modules.photography.imageLog.title')"
     />
 

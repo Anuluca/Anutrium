@@ -3,11 +3,6 @@
     <DetailPageHeader
       back-label="IMAGE LOG"
       back-path="/island/image-log"
-      :counter="{
-        value: String(photoCount).padStart(2, '0'),
-        label: 'ITEMS',
-      }"
-      :subtitle="album.subtitle"
       :title="album.title"
     />
 
@@ -70,7 +65,6 @@ interface ImageLogPhoto extends GalleryMedia {
 interface ImageLogAlbum {
   id: string
   title: string
-  subtitle: string
   accentColor?: string
   groups: ImageLogPhotoGroup[]
 }
@@ -93,10 +87,6 @@ const album = computed(() =>
 const photoGroups = computed<ImageLogPhotoGroup[]>(
   () => album.value?.groups.filter((group) => group.photos.length) ?? []
 )
-const photoCount = computed(() =>
-  photoGroups.value.reduce((count, group) => count + group.photos.length, 0)
-)
-
 const getMediaLabel = (media: GalleryMedia) =>
   media.title || t('island.modules.photography.imageLog.title')
 const showMediaInfo = (media: GalleryMedia) => Boolean(media.title)

@@ -1,5 +1,6 @@
 <template>
   <div class="craft-page main-container">
+    <!--
     <PageHeader
       header-label="[MENTOR_NV42]"
       title-en="CRAFT"
@@ -8,6 +9,8 @@
       primary-color="#3B69F4"
       mobile-tall
     />
+    -->
+
     <div class="craft-filter craft-enter craft-enter--filter">
       <CollectionTabs
         aria-label="Craft categories"
@@ -66,11 +69,11 @@ import FilterRail, {
   type FilterRailItem,
 } from '@/components/FilterRail/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
-import PageHeader from '@/components/PageHeader/index.vue'
+// import PageHeader from '@/components/PageHeader/index.vue'
 import ToolCard from '@/components/ToolCard/index.vue'
 import { trackToolClick } from '@/utils/analytics'
 
-const { locale, t, tm } = useI18n()
+const { locale, tm } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const activeCategory = ref<ToolCategory>('work')

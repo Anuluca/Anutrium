@@ -136,6 +136,7 @@ export default defineConfig({
       ...imageLogDetailRoutes,
       '/island/illustration',
       '/island/trainer-card',
+      '/island/study-notes',
     ],
   },
   base: '/',

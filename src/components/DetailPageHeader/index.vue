@@ -1,114 +1,74 @@
 <template>
   <header
-    ref="headerRef"
-    class="detail-page-header"
-    :class="{ 'has-divider': divider }"
+    class="detail-page-header no-cursor"
+    @mouseenter="startCrosshairTracking"
+    @mousemove="queueCrosshairUpdate"
+    @mouseleave="stopCrosshairTracking"
   >
     <button class="detail-page-header__back" type="button" @click="goBack">
       <span>{{ backLabel }}</span>
     </button>
-
-    <div class="detail-page-header__title-block">
-      <div class="detail-page-header__title-row">
-        <h1>{{ title }}</h1>
-        <slot name="title-extra" />
-        <div v-if="$slots.actions" class="detail-page-header__actions">
-          <slot name="actions" />
-        </div>
-      </div>
-
-      <div
-        v-if="subtitle || $slots['subtitle-extra'] || counter"
-        class="detail-page-header__subtitle-row"
-        :class="{ 'has-counter': counter }"
-      >
-        <p v-if="subtitle">{{ subtitle }}</p>
-        <slot name="subtitle-extra" />
-        <span v-if="counter" class="detail-page-header__counter">
-          <strong>{{ counter.value }}</strong>
-          <span>{{ counter.label }}</span>
-        </span>
-      </div>
-
-      <slot />
-    </div>
+    <h1>{{ title }}</h1>
+    <div class="detail-page-header__crosshair" aria-hidden="true" />
   </header>
-
-  <Teleport v-if="isClient" to="body">
-    <Transition name="detail-fixed-nav">
-      <nav
-        v-if="isFixedNavigationVisible"
-        class="detail-fixed-navigation"
-        :style="{ top: `${menuBottom}px` }"
-        :aria-label="`${backLabel} / ${title}`"
-      >
-        <button
-          class="detail-fixed-navigation__back"
-          type="button"
-          @click="goBack"
-        >
-          <span>{{ backLabel }}</span>
-        </button>
-        <strong class="detail-fixed-navigation__title">{{ title }}</strong>
-      </nav>
-    </Transition>
-  </Teleport>
 </template>
 
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 
-import { addPageScrollListener } from '@/utils/pageScroll'
-
-export interface DetailPageHeaderCounter {
-  value: number | string
-  label: string
-}
-
-const props = withDefaults(
-  defineProps<{
-    backLabel: string
-    backPath: string
-    counter?: DetailPageHeaderCounter
-    divider?: boolean
-    subtitle?: string
-    title: string
-  }>(),
-  {
-    counter: undefined,
-    divider: false,
-    subtitle: '',
-  }
-)
+const props = defineProps<{
+  backLabel: string
+  backPath: string
+  title: string
+}>()
 
 const router = useRouter()
-const headerRef = ref<HTMLElement | null>(null)
-const isClient = ref(false)
-const isFixedNavigationVisible = ref(false)
-const menuBottom = ref(0)
-let removeScrollListener: (() => void) | null = null
-let navigationFrame = 0
-let navigationResizeObserver: ResizeObserver | null = null
+let crosshairFrame: number | null = null
+let crosshairTarget: HTMLElement | null = null
+let crosshairClientX = 0
+let crosshairClientY = 0
 
-const updateFixedNavigation = () => {
-  navigationFrame = 0
+const renderCrosshair = () => {
+  crosshairFrame = null
+  if (!crosshairTarget) return
 
-  const menu = document.querySelector<HTMLElement>('.el-menu-layout-all')
-  const currentMenuBottom =
-    menu && getComputedStyle(menu).display !== 'none'
-      ? Math.max(0, menu.getBoundingClientRect().bottom)
-      : 0
-
-  menuBottom.value = currentMenuBottom
-  isFixedNavigationVisible.value =
-    Boolean(headerRef.value) &&
-    headerRef.value!.getBoundingClientRect().bottom <= currentMenuBottom + 12
+  const bounds = crosshairTarget.getBoundingClientRect()
+  crosshairTarget.style.setProperty(
+    '--detail-header-cross-x',
+    `${crosshairClientX - bounds.left}px`
+  )
+  crosshairTarget.style.setProperty(
+    '--detail-header-cross-y',
+    `${crosshairClientY - bounds.top}px`
+  )
 }
 
-const scheduleFixedNavigationUpdate = () => {
-  if (navigationFrame) return
-  navigationFrame = window.requestAnimationFrame(updateFixedNavigation)
+const queueCrosshairUpdate = (event: MouseEvent) => {
+  crosshairTarget = event.currentTarget as HTMLElement
+  crosshairClientX = event.clientX
+  crosshairClientY = event.clientY
+
+  if (crosshairFrame === null) {
+    crosshairFrame = window.requestAnimationFrame(renderCrosshair)
+  }
+}
+
+const startCrosshairTracking = (event: MouseEvent) => {
+  const target = event.currentTarget as HTMLElement
+  target.classList.add('is-crosshair-active')
+  queueCrosshairUpdate(event)
+}
+
+const stopCrosshairTracking = (event: MouseEvent) => {
+  const target = event.currentTarget as HTMLElement
+  target.classList.remove('is-crosshair-active')
+  crosshairTarget = null
+
+  if (crosshairFrame !== null) {
+    window.cancelAnimationFrame(crosshairFrame)
+    crosshairFrame = null
+  }
 }
 
 const goBack = () => {
@@ -126,49 +86,77 @@ const goBack = () => {
   router.push(props.backPath)
 }
 
-onMounted(async () => {
-  isClient.value = true
-  await nextTick()
-
-  removeScrollListener = addPageScrollListener(scheduleFixedNavigationUpdate)
-  window.addEventListener('resize', scheduleFixedNavigationUpdate, {
-    passive: true,
-  })
-
-  const menu = document.querySelector<HTMLElement>('.el-menu-layout-all')
-  if ('ResizeObserver' in window) {
-    navigationResizeObserver = new ResizeObserver(scheduleFixedNavigationUpdate)
-    if (menu) navigationResizeObserver.observe(menu)
-    if (headerRef.value) navigationResizeObserver.observe(headerRef.value)
-  }
-
-  scheduleFixedNavigationUpdate()
-})
-
 onBeforeUnmount(() => {
-  removeScrollListener?.()
-  window.removeEventListener('resize', scheduleFixedNavigationUpdate)
-  navigationResizeObserver?.disconnect()
-  if (navigationFrame) window.cancelAnimationFrame(navigationFrame)
+  if (crosshairFrame !== null) {
+    window.cancelAnimationFrame(crosshairFrame)
+  }
 })
 </script>
 
 <style lang="less" scoped>
 .detail-page-header {
-  margin-bottom: 0;
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  min-height: clamp(64px, 7vw, 108px);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 8px;
+  overflow: hidden;
+  margin: 30px 0 0;
+  padding: clamp(10px, 1.2vw, 16px) clamp(14px, 2.5vw, 32px);
+  border-radius: 2px;
+  background-color: #000;
+  box-shadow: inset 0 0 0 1px rgba(226, 52, 86, 0.12);
   opacity: 0;
-  animation: detailPageHeaderFadeIn 0.42s ease-out 0.08s both;
+  animation: detailHeaderCrtOn 0.58s cubic-bezier(0.19, 1, 0.22, 1) 0.44s both;
 
-  &.has-divider {
-    margin-bottom: 20px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--border-color);
+  &::before,
+  &::after {
+    position: absolute;
+    inset: 0;
+    content: '';
+    pointer-events: none;
+  }
+
+  &::before {
+    z-index: 0;
+    background: linear-gradient(
+        rgba(226, 52, 86, 0.08),
+        rgba(226, 52, 86, 0.02)
+      ),
+      repeating-linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.16) 0,
+        rgba(255, 255, 255, 0.16) 1px,
+        transparent 1px,
+        transparent 5px
+      );
+    mix-blend-mode: screen;
+    opacity: 0.42;
+  }
+
+  &::after {
+    z-index: 8;
+    background: linear-gradient(
+      to bottom,
+      transparent 47%,
+      rgba(255, 255, 255, 0.92) 50%,
+      transparent 53%
+    );
+    opacity: 0;
+    mix-blend-mode: screen;
+    animation: detailHeaderCrtFlash 0.58s linear 0.44s both;
   }
 
   &__back {
     position: relative;
+    z-index: 6;
     display: inline-block;
-    margin: 0 0 12px;
+    margin: 0;
     padding: 0;
     border: 0;
     color: #3276fe;
@@ -179,17 +167,16 @@ onBeforeUnmount(() => {
     transform: scaleX(0.9);
     transform-origin: left;
     cursor: pointer;
-    transition: color 0.2s ease, margin 0.2s ease;
+    transition: color 0.2s ease, transform 0.2s ease;
     user-select: none;
-    animation: detailPageHeaderBackIn 0.34s ease-out 0.14s both;
 
     &::before {
       content: '// ';
     }
 
     &:hover {
-      margin-left: -4px;
       color: #e8284a;
+      transform: translateX(-4px) scaleX(0.9);
 
       &::before {
         color: #e8284a;
@@ -198,229 +185,129 @@ onBeforeUnmount(() => {
     }
   }
 
-  &__title-block {
-    padding-left: 18px;
-    border-left: 8px solid #e23456;
-    animation: detailPageHeaderTitleIn 0.46s cubic-bezier(0.2, 0.8, 0.2, 1)
-      0.22s both;
-  }
-
-  &__title-row {
-    display: flex;
-    align-items: flex-end;
-    gap: 12px;
-
-    h1 {
-      min-width: 0;
-      margin: 0 0 6px;
-      color: var(--text-color);
-      font-family: 'cn-custom', 'Courier New', monospace;
-      font-size: clamp(1.35rem, 2.6vw, 2rem);
-      font-weight: 900;
-      line-height: 1;
-    }
-  }
-
-  &__actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-left: auto;
-  }
-
-  &__counter {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    display: inline-flex;
-    align-items: baseline;
-    gap: 5px;
-    color: var(--text-faint);
-    font-family: 'cn-custom', 'Courier New', monospace;
-    font-size: 20px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    white-space: nowrap;
-
-    strong {
-      color: #e23456;
-      font-family: 'Anton', 'cn-custom', 'Courier New', monospace;
-      font-size: 32px;
-      line-height: 1;
-    }
-  }
-
-  &__subtitle-row {
+  h1 {
     position: relative;
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 16px;
-    animation: detailPageHeaderMetaIn 0.34s ease-out 0.44s both;
+    z-index: 3;
+    margin: 0;
+    color: #e23456;
+    font-family: 'alibaba-puhuiti', sans-serif;
+    font-size: clamp(1.1rem, 2.6vw, 2.3rem);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    overflow-wrap: anywhere;
+    text-shadow: 0 0 18px rgba(226, 52, 86, 0.2);
+    transition: text-shadow 0.25s ease;
+  }
 
-    p {
-      margin: 0;
-      color: var(--text-faint);
-      font-family: 'alibaba-puhuiti', sans-serif;
-      font-size: 13px;
+  &:hover h1 {
+    text-shadow: 0 0 24px rgba(226, 52, 86, 0.43),
+      0 0 60px rgba(226, 52, 86, 0.36);
+  }
+
+  &__crosshair {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    opacity: 0;
+    pointer-events: none;
+
+    &::before,
+    &::after {
+      position: absolute;
+      content: '';
+      background: #e23456;
     }
-  }
-
-  &__title-block > :not(&__title-row):not(&__subtitle-row) {
-    animation: detailPageHeaderMetaIn 0.34s ease-out 0.5s both;
-  }
-}
-
-.detail-fixed-navigation {
-  position: fixed;
-  right: 0;
-  left: 0;
-  z-index: 90;
-  display: flex;
-  align-items: center;
-  box-shadow: inset 0 -1px 0 rgb(255 255 255 / 8%);
-  gap: clamp(14px, 2vw, 28px);
-  min-height: 28px;
-  padding: 8px 8.5vw;
-
-  &__back {
-    flex: 0 0 auto;
-    padding: 0;
-    border: 0;
-    color: #3276fe;
-    background: transparent;
-    font-family: 'cn-custom', 'Courier New', monospace;
-    font-size: 14px;
-    letter-spacing: 0.08em;
-    cursor: pointer;
-    white-space: nowrap;
 
     &::before {
-      content: '// ';
+      top: 0;
+      bottom: 0;
+      left: var(--detail-header-cross-x);
+      width: 1px;
+      transform: translateX(-0.5px);
     }
 
-    &:hover {
-      color: #e23456;
-
-      &::before {
-        content: '<< ';
-      }
+    &::after {
+      top: var(--detail-header-cross-y);
+      right: 0;
+      left: 0;
+      height: 1px;
+      transform: translateY(-0.5px);
     }
   }
 
-  &__title {
-    min-width: 0;
-    overflow: hidden;
-    color: var(--text-color);
-    font-family: 'cn-custom', 'Courier New', monospace;
-    font-size: clamp(15px, 1.35vw, 20px);
-    font-weight: 900;
-    line-height: 1;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-}
-
-.detail-fixed-nav-enter-active,
-.detail-fixed-nav-leave-active {
-  transition: opacity 0.2s ease, transform 0.24s ease;
-}
-
-.detail-fixed-nav-enter-from,
-.detail-fixed-nav-leave-to {
-  opacity: 0;
-  transform: translateY(-10px);
-}
-
-@keyframes detailPageHeaderFadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
+  &.is-crosshair-active &__crosshair {
     opacity: 1;
   }
 }
 
-@keyframes detailPageHeaderBackIn {
-  from {
+@keyframes detailHeaderCrtOn {
+  0% {
     opacity: 0;
-    clip-path: inset(0 100% 0 0);
+    clip-path: inset(49.7% 50%);
+    filter: brightness(7) contrast(2);
   }
 
-  to {
+  44% {
+    opacity: 1;
+    clip-path: inset(49.7% 0);
+    filter: brightness(4) contrast(1.5);
+  }
+
+  58% {
+    clip-path: inset(45% 0);
+    filter: brightness(1.8) contrast(1.25);
+  }
+
+  100% {
     opacity: 1;
     clip-path: inset(0);
+    filter: brightness(1) contrast(1);
   }
 }
 
-@keyframes detailPageHeaderTitleIn {
-  from {
+@keyframes detailHeaderCrtFlash {
+  0%,
+  37% {
     opacity: 0;
-    transform: translateY(14px);
   }
 
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  44% {
+    opacity: 0.95;
   }
-}
 
-@keyframes detailPageHeaderMetaIn {
-  from {
+  58% {
+    opacity: 0.28;
+  }
+
+  100% {
     opacity: 0;
-    transform: translateY(8px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
   }
 }
 
-@media (max-width: 900px) {
-  .detail-page-header__subtitle-row {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 8px;
-
-    &.has-counter {
-      align-items: flex-end;
-      flex-direction: row;
-    }
-  }
-
-  .detail-fixed-navigation {
-    min-height: 24px;
-    padding: 7px 4vw;
+@media (max-width: 768px) {
+  .detail-page-header {
+    aspect-ratio: 6 / 1;
+    min-height: 0;
+    margin: 0;
+    padding: clamp(10px, 3vw, 16px) clamp(20px, 6vw, 32px);
 
     &__back {
-      font-size: 12px;
-    }
-
-    &__title {
-      font-size: 15px;
+      font-size: 13px;
     }
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .detail-page-header,
-  .detail-page-header__back,
-  .detail-page-header__title-block,
-  .detail-page-header__subtitle-row,
-  .detail-page-header__title-block
-    > :not(.detail-page-header__title-row):not(
-      .detail-page-header__subtitle-row
-    ) {
+  .detail-page-header {
     opacity: 1;
-    animation: none !important;
-    transform: none;
-  }
+    clip-path: none;
+    filter: none;
+    animation: none;
 
-  .detail-fixed-nav-enter-active,
-  .detail-fixed-nav-leave-active {
-    transition: none;
+    &::after {
+      animation: none;
+    }
   }
 }
 </style>

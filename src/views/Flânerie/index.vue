@@ -3,6 +3,7 @@
     class="flanerie-page main-container"
     :class="{ 'is-en': locale === 'en' }"
   >
+    <!--
     <PageHeader
       header-label="[241001_ACCIDENT]"
       title-en="FLÂNERIE"
@@ -11,6 +12,7 @@
       primary-color="#e7492d"
       mobile-tall
     />
+    -->
 
     <section class="vlog-section">
       <div
@@ -81,7 +83,7 @@ import { Minus, Plus } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import Sections from '@/components/Sections/index.vue'
-import PageHeader from '@/components/PageHeader/index.vue'
+// import PageHeader from '@/components/PageHeader/index.vue'
 import VlogCard from '@/components/VlogCard/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
 import { visualState } from '@/stores'
@@ -120,7 +122,7 @@ interface VlogItem {
 }
 
 const router = useRouter()
-const { locale, t, tm } = useI18n()
+const { locale, tm } = useI18n()
 const visualStateStore = visualState()
 const JOURNEY_RETURN_FLAG_KEY = 'anutrium:flanerie:returning-from-detail'
 const JOURNEY_RETURN_VLOG_KEY = 'anutrium:flanerie:selected-vlog'

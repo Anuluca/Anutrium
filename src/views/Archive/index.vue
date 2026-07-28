@@ -1,5 +1,6 @@
 <template>
   <div class="archives-page main-container">
+    <!--
     <PageHeader
       header-label="[MENTOR_NV42]"
       title-en="ARCHIVE"
@@ -12,6 +13,7 @@
       primary-color="#5AD480"
       mobile-tall
     />
+    -->
 
     <section
       class="availability-panel"
@@ -211,7 +213,7 @@ import { ElMessageBox } from 'element-plus'
 import Sections from '@/components/Sections/index.vue'
 import WorkCard from '@/components/WorkCard/index.vue'
 import WorkDetailModal from '@/components/WorkDetailModal/index.vue'
-import PageHeader from '@/components/PageHeader/index.vue'
+// import PageHeader from '@/components/PageHeader/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
 import TypedText from '@/components/TypedText/index.vue'
 import { trackEvent, trackProjectClick } from '@/utils/analytics'

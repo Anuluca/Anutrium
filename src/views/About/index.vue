@@ -10,7 +10,7 @@ import {
 
 import LogoRotating3D from '@/components/Logo_rotating3D/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
-import PageHeader from '@/components/PageHeader/index.vue'
+// import PageHeader from '@/components/PageHeader/index.vue'
 
 interface ChangelogItem {
   version: string
@@ -227,6 +227,7 @@ watch(locale, scheduleNeighborDescriptionMeasure)
 
 <template>
   <div class="about-page main-container">
+    <!--
     <PageHeader
       header-label="[HUAHUA_THE_CAT]"
       title-en="ABOUT"
@@ -234,6 +235,7 @@ watch(locale, scheduleNeighborDescriptionMeasure)
       meta-item="LEARN MORE ABOUT THIS PROJECT"
       primary-color="#5D3ABA"
     />
+    -->
 
     <div class="about-top-grid">
       <section class="block changelog-block">

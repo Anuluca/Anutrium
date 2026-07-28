@@ -1,10 +1,7 @@
 <template>
   <ToolPageLayout
     page-class="ease-tool"
-    tool-id="ease-studio"
     title="可视化贝塞尔曲线调整"
-    description="拖动左侧两个红点，或直接调整下方数值，实时修改缓动曲线。右侧会同步预览动画，确认效果后直接复制 CSS。"
-    share-description="拖动控制点或调整数值，实时修改并复制 CSS 缓动曲线。"
     :recommended-tools="recommendedTools"
   >
     <div class="pt-grid">

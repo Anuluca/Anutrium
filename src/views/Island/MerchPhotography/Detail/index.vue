@@ -3,11 +3,6 @@
     <DetailPageHeader
       back-label="MERCH"
       back-path="/island/merch-photography"
-      :counter="{
-        value: String(collection.photos.length).padStart(2, '0'),
-        label: 'ITEMS',
-      }"
-      :subtitle="collection.subtitle"
       :title="collection.title"
     />
 
@@ -52,7 +47,6 @@ interface MerchPhoto extends GalleryMedia {
 interface MerchCollection {
   id: string
   title: string
-  subtitle: string
   cover?: string
   photos: MerchPhoto[]
 }

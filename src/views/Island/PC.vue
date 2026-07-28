@@ -319,6 +319,18 @@ const illustrationItemCount = computed(
 const trainerCardItemCount = computed(
   () => (tm('island.modules.works.trainerCard.data.photos') as unknown[]).length
 )
+const studyNoteList = computed(
+  () =>
+    tm('island.modules.notes.studyNotes.data') as Array<{
+      image?: string
+    }>
+)
+const studyNoteCount = computed(() => studyNoteList.value.length)
+const studyNoteCover = computed(
+  () =>
+    studyNoteList.value.find((note) => note.image)?.image ||
+    placeholder('STUDY NOTES')
+)
 
 const openHarborItem = (item: HarborItem) => {
   router.push(item.path || '/404')
@@ -417,8 +429,13 @@ const harborSections: HarborSection[] = [
       {
         title: '学习笔记',
         subtitle: 'STUDY NOTES',
-        count: '0 NOTES',
-        img: developingPlaceholder,
+        get count() {
+          return `${studyNoteCount.value} NOTES`
+        },
+        get img() {
+          return studyNoteCover.value
+        },
+        path: '/island/study-notes',
       },
       {
         title: '文章杂谈',

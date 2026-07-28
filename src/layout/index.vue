@@ -8,7 +8,13 @@
       'no-menu': ifNoMenu,
     }"
   >
-    <el-header class="el-menu-layout-all" :class="{ scrolled: isScrolled }">
+    <el-header
+      class="el-menu-layout-all"
+      :class="{
+        scrolled: isScrolled,
+        'content-aligned': headerPresentation.contentAligned,
+      }"
+    >
       <button
         class="logo-box"
         type="button"
@@ -55,6 +61,19 @@
             </span>
           </span>
         </div>
+        <Transition name="module-name">
+          <span
+            v-if="headerPresentation.moduleName"
+            :class="[
+              'current-module-name',
+              { 'current-module-name--zh': locale === 'zhCn' },
+              headerPresentation.moduleTheme &&
+                `current-module-name--${headerPresentation.moduleTheme}`,
+            ]"
+          >
+            {{ headerPresentation.moduleName }}
+          </span>
+        </Transition>
       </button>
 
       <el-menu
@@ -287,6 +306,43 @@ const currentRouter = computed(() => {
 
   return normalizeMenuPath(activePath)
 })
+
+type ModuleHeaderTheme =
+  | 'about'
+  | 'archive'
+  | 'craft'
+  | 'flanerie'
+  | 'flora'
+  | 'island'
+
+const moduleThemeByPath: Readonly<Record<string, ModuleHeaderTheme>> = {
+  '/archive': 'archive',
+  '/flanerie': 'flanerie',
+  '/island': 'island',
+  '/craft': 'craft',
+  '/about': 'about',
+  '/pet': 'flora',
+}
+const moduleRouteByPath = new Map(
+  routes.map((item) => [normalizeMenuPath(item.path), item])
+)
+const hiddenModuleTitleRoutes = new Set(['HOME', '404', 'TEST'])
+const expandedHeaderRoutes = new Set([...hiddenModuleTitleRoutes, 'PET'])
+const headerPresentation = computed(() => {
+  const routeName = String(route.name || '')
+  const modulePath = currentRouter.value
+  const moduleMeta = moduleRouteByPath.get(modulePath)?.meta || route.meta
+
+  return {
+    contentAligned: !expandedHeaderRoutes.has(routeName),
+    moduleName: hiddenModuleTitleRoutes.has(routeName)
+      ? ''
+      : String(
+          locale.value === 'en' ? moduleMeta.titleEn : moduleMeta.titleCn
+        ),
+    moduleTheme: moduleThemeByPath[modulePath] || '',
+  }
+})
 const isInnerMenuRoute = computed(
   () =>
     typeof route.meta.activeMenu === 'string' &&
@@ -359,9 +415,12 @@ const islandLeavingClasses = [
   'island-pc-shell-leaving',
   'island-mobile-shell-leaving',
 ] as const
+const floraShellClasses = ['flora-shell'] as const
+const floraLeavingClasses = ['flora-shell-leaving'] as const
 const islandLeavingClassByRouteShell = {
   'island-pc': 'island-pc-shell-leaving',
   'island-mobile': 'island-mobile-shell-leaving',
+  flora: 'flora-shell-leaving',
 } as const
 
 const clearEntryAnimationTimers = () => {
@@ -464,12 +523,15 @@ const getHeaderAnimationTargets = () => {
 
   const logo = header.querySelector<HTMLElement>('.logo-box > .logo')
   const logoText = header.querySelector<HTMLElement>('.logo-box > .right')
+  const moduleName = header.querySelector<HTMLElement>(
+    '.logo-box > .current-module-name'
+  )
   const menu = Array.from(header.children).find(
     (element): element is HTMLElement =>
       element instanceof HTMLElement && element.classList.contains('el-menu')
   )
 
-  return [logo, logoText, menu].filter(
+  return [logo, logoText, moduleName, menu].filter(
     (element): element is HTMLElement => element instanceof HTMLElement
   )
 }
@@ -585,9 +647,12 @@ const clearIslandGeometryUnlockTimer = () => {
 }
 
 const hasIslandShellClass = () =>
-  [...islandShellClasses, ...islandLeavingClasses].some((className) =>
-    document.body.classList.contains(className)
-  )
+  [
+    ...islandShellClasses,
+    ...islandLeavingClasses,
+    ...floraShellClasses,
+    ...floraLeavingClasses,
+  ].some((className) => document.body.classList.contains(className))
 
 const markIslandRouteLeaving = (leavingElement: Element) => {
   const routeShell = leavingElement.getAttribute('data-route-shell')
@@ -659,10 +724,16 @@ const lockIslandRouteGeometry = (leavingElement: Element) => {
 const unlockIslandRouteGeometry = () => {
   clearIslandGeometryUnlockTimer()
   restoreIslandRouteGeometry()
-  document.body.classList.remove(...islandLeavingClasses)
+  document.body.classList.remove(
+    ...islandLeavingClasses,
+    ...floraLeavingClasses
+  )
 
   if (route.name !== ISLAND_ROUTE_NAME) {
     document.body.classList.remove(...islandShellClasses)
+  }
+  if (route.name !== 'PET') {
+    document.body.classList.remove(...floraShellClasses)
   }
 
   nextTick(refreshScrollState)
@@ -695,7 +766,12 @@ onMounted(() => {
 onUnmounted(() => {
   clearIslandGeometryUnlockTimer()
   restoreIslandRouteGeometry()
-  document.body.classList.remove(...islandShellClasses, ...islandLeavingClasses)
+  document.body.classList.remove(
+    ...islandShellClasses,
+    ...islandLeavingClasses,
+    ...floraShellClasses,
+    ...floraLeavingClasses
+  )
   unlockMobilePageScroll()
   removePageScrollListener?.()
   removePageScrollListener = null

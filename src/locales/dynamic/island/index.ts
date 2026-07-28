@@ -232,7 +232,7 @@ const latestPages = {
     {
       title: 'Study Notes',
       module: 'ISLAND / NOTES',
-      path: '/test',
+      path: '/island/study-notes',
       img: 'https://placehold.co/260x180/14070c/e23456?text=NOTES',
     },
     {

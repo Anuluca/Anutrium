@@ -2,11 +2,7 @@
   <ToolPageLayout
     back-path="/craft?type=work"
     page-class="bounce-tool"
-    tool-id="bounce-dynamics"
     title="弹力球"
-    description="调节弹性与重量，生成一颗弹力球自然落体、撞击地面并向右弹跳的实时物理动画。"
-    share-description="调节弹性与重量，生成弹力球自然落体与弹跳动画。"
-    motto="BOUNCING_BALL"
     :recommended-tools="recommendedTools"
   >
     <div class="pt-grid">

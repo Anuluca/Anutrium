@@ -111,7 +111,26 @@ const island = {
       designGoods: dynamic.works.designGoods,
     },
     notes: {
-      studyNotes: dynamic.notes.studyNotes,
+      studyNotes: {
+        title: {
+          zhCn: '学习笔记',
+          en: 'STUDY NOTES',
+        },
+        subtitle: {
+          zhCn: '日常学习备份',
+          en: 'Daily learning archive.',
+        },
+        counterLabel: {
+          zhCn: '篇笔记',
+          en: 'NOTES',
+        },
+        empty: {
+          zhCn: '学习笔记仍在整理中',
+          en: 'STUDY NOTES ARE BEING ORGANIZED',
+        },
+        typeMap: dynamic.notes.studyNotes.typeMap,
+        data: dynamic.notes.studyNotes.list,
+      },
       essaysTalks: dynamic.notes.essaysTalks,
     },
     games: {

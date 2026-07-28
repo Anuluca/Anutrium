@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 const PAGE_LOAD_TIMEOUT = 20_000
 
-test('pet teaser plays its state sequence before opening the pet 404 route', async ({
+test('pet teaser plays its state sequence before opening Flora', async ({
   page,
 }, testInfo) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' })
@@ -178,13 +178,13 @@ test('pet teaser plays its state sequence before opening the pet 404 route', asy
   )
 
   await expect(page).toHaveURL(/\/pet$/, { timeout: 1_300 })
-  await expect(page.locator('.not-found-page')).toBeVisible({
+  await expect(page.locator('.flora-page')).toBeVisible({
     timeout: PAGE_LOAD_TIMEOUT,
   })
   await expect(page.locator('.pet-teaser')).toHaveCount(0)
 })
 
-test('pet 404 clears the previous page scroll state and geometry', async ({
+test('Flora clears the previous page scroll state and geometry', async ({
   page,
 }, testInfo) => {
   await page.goto('/archive', { waitUntil: 'domcontentloaded' })
@@ -203,7 +203,7 @@ test('pet 404 clears the previous page scroll state and geometry', async ({
   })
   await teaser.locator('.pet-teaser__interaction-zone').click()
   await expect(page).toHaveURL(/\/pet$/, { timeout: 5_000 })
-  await expect(page.locator('.not-found-page')).toBeVisible({
+  await expect(page.locator('.flora-page')).toBeVisible({
     timeout: PAGE_LOAD_TIMEOUT,
   })
   await expect(page.locator('.el-menu-layout-all')).not.toHaveClass(
@@ -482,7 +482,7 @@ test('pet teaser keeps navigation functional with reduced motion', async ({
 
   await teaser.locator('.pet-teaser__interaction-zone').click()
   await expect(page).toHaveURL(/\/pet$/, { timeout: 5_000 })
-  await expect(page.locator('.not-found-page')).toBeVisible({
+  await expect(page.locator('.flora-page')).toBeVisible({
     timeout: PAGE_LOAD_TIMEOUT,
   })
 })

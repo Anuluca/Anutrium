@@ -3,11 +3,6 @@
     <DetailPageHeader
       back-label="ISLAND"
       back-path="/test"
-      :counter="{
-        value: String(work.photos.length).padStart(2, '0'),
-        label: 'ITEMS',
-      }"
-      :subtitle="work.subtitle"
       :title="work.title"
     />
 
@@ -54,7 +49,6 @@ interface WorkPhoto extends GalleryMedia {
 interface WorkGalleryData {
   id: string
   title: string
-  subtitle: string
   photos: WorkPhoto[]
 }
 

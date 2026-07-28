@@ -1,10 +1,7 @@
 <template>
   <ToolPageLayout
     page-class="metronome-tool"
-    tool-id="metronome"
     title="节拍器"
-    description="设置速度和每小节拍数，点击开始后跟着红色指针和提示音练习。不确定速度时连续点击 TAP，系统会按你的敲击间隔估算 BPM。"
-    share-description="设置速度和每小节拍数，跟随红色指针和提示音练习。"
     :recommended-tools="recommendedTools"
   >
     <div class="pt-grid">

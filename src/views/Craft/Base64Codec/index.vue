@@ -1,9 +1,7 @@
 <template>
   <ToolPageLayout
     page-class="codec-tool"
-    tool-id="base64-codec"
     title="Base64加解密"
-    description="输入文本后选择编码或解码，支持中文和常见 Unicode 内容。"
     :recommended-tools="recommendedTools"
   >
     <div class="pt-grid">

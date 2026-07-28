@@ -11,11 +11,6 @@
     <DetailPageHeader
       back-label="ISLAND"
       back-path="/test"
-      :counter="{
-        value: String(collections.length).padStart(2, '0'),
-        label: 'COLLECTIONS',
-      }"
-      :subtitle="t('island.modules.photography.merchPhotos.tagline')"
       :title="t('island.modules.photography.merchPhotos.title')"
     />
 

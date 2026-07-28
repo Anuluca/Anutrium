@@ -1,9 +1,7 @@
 <template>
   <ToolPageLayout
     page-class="image64-tool"
-    tool-id="image-base64"
     title="图片转Base64"
-    description="上传图片生成 Base64 Data URL，可预览并一键复制完整内容。"
     :recommended-tools="recommendedTools"
   >
     <div class="pt-grid">
