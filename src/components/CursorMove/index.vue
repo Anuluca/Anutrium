@@ -1,9 +1,11 @@
 <template>
   <div
-    v-if="!isMobile"
+    v-if="shouldTrackCursor"
     ref="cursorElement"
     class="cursor-position"
-    :class="{ 'is-hidden': shouldHideCursor }"
+    :class="{
+      'is-hidden': shouldHideCursor || !hasPointerPosition || !isPointerInside,
+    }"
   >
     <div class="cursor-scale" :class="{ 'is-clicked': isClicked }">
       <div class="cursor-shape" :class="{ 'is-active': isHovering }" />
@@ -13,15 +15,17 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
-import { visualState } from '@/stores'
-
-const visualStateStore = visualState()
-
-const isMobile = computed(() => visualStateStore.deviceType !== 'desktop')
+const props = defineProps({
+  enabled: {
+    type: Boolean,
+    default: true,
+  },
+})
 
 const HIDDEN_CURSOR_CLASSNAMES = ['no-cursor', 'hide-cursor', 'cursor-none']
 const INTERACTIVE_CURSOR_SELECTOR =
   'a, button, [role="button"], [data-magnetic], .is-clickable'
+const FINE_POINTER_MEDIA = '(hover: hover) and (pointer: fine)'
 
 const cursorElement = ref(null)
 const mouse = { x: 0, y: 0 }
@@ -31,20 +35,34 @@ const isHovering = ref(false)
 const isClicked = ref(false)
 const shouldHideCursor = ref(false)
 const isPageVisible = ref(true)
+const hasPointerPosition = ref(false)
+const hasFinePointer = ref(false)
+const isPointerInside = ref(false)
 
 const ease = 0.1
 const settleThreshold = 0.35
 let animationFrameId = null
-let hasPointerPosition = false
 let hasPointerListeners = false
+let finePointerQuery = null
 
 const shouldTrackCursor = computed(() => {
-  return !isMobile.value
+  return props.enabled && hasFinePointer.value
 })
 
 const shouldAnimateCursor = computed(
   () => shouldTrackCursor.value && isPageVisible.value
 )
+const isCustomCursorReady = computed(
+  () =>
+    shouldTrackCursor.value && hasPointerPosition.value && isPointerInside.value
+)
+
+const syncNativeCursor = () => {
+  document.documentElement.classList.toggle(
+    'custom-cursor-enabled',
+    isCustomCursorReady.value
+  )
+}
 
 const checkShouldHideCursor = (target) => {
   if (!target || !target.classList) return false
@@ -65,7 +83,15 @@ const onMouseMove = (e) => {
 
   mouse.x = e.clientX
   mouse.y = e.clientY
-  hasPointerPosition = true
+  const isReenteringViewport = !isPointerInside.value
+  isPointerInside.value = true
+  if (!hasPointerPosition.value || isReenteringViewport) {
+    follower.x = mouse.x
+    follower.y = mouse.y
+    hasPointerPosition.value = true
+    syncCursorPosition()
+  }
+  syncNativeCursor()
 
   const nextShouldHideCursor = checkShouldHideCursor(e.target)
   if (shouldHideCursor.value !== nextShouldHideCursor) {
@@ -81,22 +107,42 @@ const onMouseMove = (e) => {
   startRender()
 }
 
+const onPointerLeaveViewport = () => {
+  isPointerInside.value = false
+  syncNativeCursor()
+}
+
+const onWindowBlur = () => {
+  isPointerInside.value = false
+  syncNativeCursor()
+}
+
+const onWindowMouseOut = (event) => {
+  if (event.relatedTarget || event.toElement) return
+  onPointerLeaveViewport()
+}
+
 const onMouseDown = () => (isClicked.value = true)
 const onMouseUp = () => (isClicked.value = false)
 
+const syncCursorPosition = () => {
+  if (!cursorElement.value) return
+  cursorElement.value.style.transform = `translate3d(${follower.x}px, ${follower.y}px, 0)`
+}
+
 const startRender = () => {
-  if (!shouldAnimateCursor.value || animationFrameId) return
+  if (!shouldAnimateCursor.value || animationFrameId !== null) return
   animationFrameId = requestAnimationFrame(render)
 }
 
 const stopRender = () => {
-  if (!animationFrameId) return
+  if (animationFrameId === null) return
   cancelAnimationFrame(animationFrameId)
   animationFrameId = null
 }
 
 const render = () => {
-  if (!shouldAnimateCursor.value || !hasPointerPosition) {
+  if (!shouldAnimateCursor.value || !hasPointerPosition.value) {
     stopRender()
     return
   }
@@ -106,16 +152,12 @@ const render = () => {
 
   follower.x += (mouse.x - follower.x) * ease
   follower.y += (mouse.y - follower.y) * ease
-  if (cursorElement.value) {
-    cursorElement.value.style.transform = `translate3d(${follower.x}px, ${follower.y}px, 0)`
-  }
+  syncCursorPosition()
 
   if (Math.abs(dx) < settleThreshold && Math.abs(dy) < settleThreshold) {
     follower.x = mouse.x
     follower.y = mouse.y
-    if (cursorElement.value) {
-      cursorElement.value.style.transform = `translate3d(${follower.x}px, ${follower.y}px, 0)`
-    }
+    syncCursorPosition()
     stopRender()
     return
   }
@@ -125,8 +167,13 @@ const render = () => {
 
 const handleVisibilityChange = () => {
   isPageVisible.value = document.visibilityState !== 'hidden'
-  if (!isPageVisible.value) stopRender()
-  else startRender()
+  if (!isPageVisible.value) {
+    onPointerLeaveViewport()
+    stopRender()
+    return
+  }
+
+  startRender()
 }
 
 const addPointerListeners = () => {
@@ -135,6 +182,12 @@ const addPointerListeners = () => {
   window.addEventListener('mousemove', onMouseMove)
   window.addEventListener('mousedown', onMouseDown)
   window.addEventListener('mouseup', onMouseUp)
+  document.documentElement.addEventListener(
+    'mouseleave',
+    onPointerLeaveViewport
+  )
+  window.addEventListener('mouseout', onWindowMouseOut)
+  window.addEventListener('blur', onWindowBlur)
   hasPointerListeners = true
 }
 
@@ -144,10 +197,19 @@ const removePointerListeners = () => {
   window.removeEventListener('mousemove', onMouseMove)
   window.removeEventListener('mousedown', onMouseDown)
   window.removeEventListener('mouseup', onMouseUp)
+  document.documentElement.removeEventListener(
+    'mouseleave',
+    onPointerLeaveViewport
+  )
+  window.removeEventListener('mouseout', onWindowMouseOut)
+  window.removeEventListener('blur', onWindowBlur)
   hasPointerListeners = false
   isHovering.value = false
   isClicked.value = false
   shouldHideCursor.value = false
+  hasPointerPosition.value = false
+  isPointerInside.value = false
+  syncNativeCursor()
 }
 
 const syncPointerListeners = () => {
@@ -160,19 +222,32 @@ const syncPointerListeners = () => {
   stopRender()
 }
 
+const syncFinePointer = () => {
+  hasFinePointer.value = !!finePointerQuery?.matches
+}
+
 onMounted(() => {
+  finePointerQuery = window.matchMedia(FINE_POINTER_MEDIA)
+  syncFinePointer()
+  finePointerQuery.addEventListener('change', syncFinePointer)
   handleVisibilityChange()
   syncPointerListeners()
+  syncNativeCursor()
   document.addEventListener('visibilitychange', handleVisibilityChange)
 })
 
 onUnmounted(() => {
+  finePointerQuery?.removeEventListener('change', syncFinePointer)
   document.removeEventListener('visibilitychange', handleVisibilityChange)
   removePointerListeners()
   stopRender()
+  document.documentElement.classList.remove('custom-cursor-enabled')
 })
 
-watch(shouldTrackCursor, syncPointerListeners)
+watch(shouldTrackCursor, () => {
+  syncPointerListeners()
+  syncNativeCursor()
+})
 
 watch(shouldAnimateCursor, (canAnimate) => {
   if (canAnimate) startRender()
@@ -182,7 +257,8 @@ watch(shouldAnimateCursor, (canAnimate) => {
 
 <style>
 @media (hover: hover) and (pointer: fine) {
-  * {
+  html.custom-cursor-enabled,
+  html.custom-cursor-enabled * {
     cursor: none !important;
   }
 }

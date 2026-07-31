@@ -121,7 +121,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute, useRouter } from 'vue-router'
+import { type LocationQueryRaw, useRoute, useRouter } from 'vue-router'
 import { Location } from '@element-plus/icons-vue'
 
 import CollectionTabs, {
@@ -269,7 +269,7 @@ const updatePhotoRoute = (
   photoGroupId = 'all'
 ) => {
   const nextGroup = photoWorkGroups.value.find((group) => group.id === groupId)
-  const nextQuery = { ...route.query, type: groupId }
+  const nextQuery: LocationQueryRaw = { ...route.query, type: groupId }
 
   if (nextGroup?.photoGroups?.length) {
     nextQuery.subject = normalizePhotoGroupId(photoGroupId, nextGroup)
@@ -288,7 +288,7 @@ const replaceCanonicalPhotoRoute = (
   photoGroupId: string,
   group: PhotographyGroup | undefined
 ) => {
-  const nextQuery = { ...route.query, type: groupId }
+  const nextQuery: LocationQueryRaw = { ...route.query, type: groupId }
   const shouldKeepSubject = Boolean(group?.photoGroups?.length)
   const currentType = getRouteQueryValue(route.query.type)
   const currentSubject = getRouteQueryValue(route.query.subject)

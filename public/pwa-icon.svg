@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <title>Anutrium</title>
+  <rect width="512" height="512" fill="#000" />
+  <defs>
+    <mask id="logo-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="200" height="250">
+      <rect width="200" height="250" fill="#fff" />
+      <polyline points="53,158 53,94" fill="none" stroke="#000" stroke-width="26" />
+      <path d="M65 93.8 136 132 135.5 158 65 120Z" fill="#000" />
+      <polyline points="148,158 148,94" fill="none" stroke="#000" stroke-width="26" />
+    </mask>
+  </defs>
+  <g transform="translate(96 56) scale(1.6)" fill="#e23456" stroke="#e23456">
+    <polyline
+      points="68,78 68,55 100,3 133,55 133,78"
+      fill="none"
+      stroke-width="14"
+      stroke-linejoin="miter"
+    />
+    <polyline points="68,60 133,60" fill="none" stroke-width="14" />
+    <rect
+      x="28"
+      y="86"
+      width="145"
+      height="79"
+      stroke="none"
+      mask="url(#logo-mask)"
+    />
+    <polyline
+      points="133,174 133,198 100,248 68,198 68,174"
+      fill="none"
+      stroke-width="14"
+      stroke-linejoin="miter"
+    />
+  </g>
+</svg>

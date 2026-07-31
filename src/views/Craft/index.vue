@@ -1,5 +1,7 @@
 <template>
   <div class="craft-page main-container">
+    <PageHeroTitle />
+
     <!--
     <PageHeader
       header-label="[MENTOR_NV42]"
@@ -69,6 +71,7 @@ import FilterRail, {
   type FilterRailItem,
 } from '@/components/FilterRail/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
+import PageHeroTitle from '@/components/PageHeroTitle/index.vue'
 // import PageHeader from '@/components/PageHeader/index.vue'
 import ToolCard from '@/components/ToolCard/index.vue'
 import { trackToolClick } from '@/utils/analytics'
@@ -217,7 +220,7 @@ watch(
 }
 
 .craft-filter {
-  margin: 18px 0 15px;
+  margin: 0 0 15px;
 }
 
 .craft-enter {

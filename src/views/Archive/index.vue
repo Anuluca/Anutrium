@@ -1,5 +1,7 @@
 <template>
   <div class="archives-page main-container">
+    <PageHeroTitle />
+
     <!--
     <PageHeader
       header-label="[MENTOR_NV42]"
@@ -95,10 +97,7 @@
         title-en="MAIN PROJECTS"
       >
         <template #actions>
-          <span class="archive-section-count">
-            <strong>{{ formatSectionCount(mainWorks.length) }}</strong>
-            <small>PROJECTS</small>
-          </span>
+          <SectionCount :count="mainWorks.length" label="PROJECTS" />
         </template>
         <div class="works-grid">
           <WorkCard
@@ -120,10 +119,7 @@
         title-en="PERSONAL PROJECTS"
       >
         <template #actions>
-          <span class="archive-section-count">
-            <strong>{{ formatSectionCount(personalWorks.length) }}</strong>
-            <small>PROJECTS</small>
-          </span>
+          <SectionCount :count="personalWorks.length" label="PROJECTS" />
         </template>
         <div class="works-grid">
           <WorkCard
@@ -145,10 +141,7 @@
         title-en="OTHER PROJECTS"
       >
         <template #actions>
-          <span class="archive-section-count">
-            <strong>{{ formatSectionCount(miscWorks.length) }}</strong>
-            <small>PROJECTS</small>
-          </span>
+          <SectionCount :count="miscWorks.length" label="PROJECTS" />
         </template>
         <div class="misc-grid">
           <div
@@ -166,11 +159,10 @@
             @keydown.space.prevent="openMiscDetail(item)"
           >
             <div class="misc-card-frame" aria-hidden="true" />
-            <div class="misc-card-sweep" aria-hidden="true" />
             <div class="misc-card-content">
               <div class="misc-card-head">
                 <div class="misc-card-index">
-                  {{ index + 1 }}
+                  {{ formatIndex(index + 1) }}
                 </div>
                 <div v-if="item.logo" class="misc-card-logo" aria-hidden="true">
                   <img
@@ -210,9 +202,11 @@
 import { computed, onBeforeUnmount, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessageBox } from 'element-plus'
+import SectionCount from '@/components/SectionCount/index.vue'
 import Sections from '@/components/Sections/index.vue'
 import WorkCard from '@/components/WorkCard/index.vue'
 import WorkDetailModal from '@/components/WorkDetailModal/index.vue'
+import PageHeroTitle from '@/components/PageHeroTitle/index.vue'
 // import PageHeader from '@/components/PageHeader/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
 import TypedText from '@/components/TypedText/index.vue'
@@ -260,7 +254,7 @@ const miscWorks = computed<MiscWork[]>(
   () => tm('archive.dynamic.MiscWorks') as MiscWork[]
 )
 
-const formatSectionCount = (count: number) => String(count).padStart(2, '0')
+const formatIndex = (index: number) => String(index).padStart(2, '0')
 
 const availabilityItems = computed(() => [
   {
@@ -388,7 +382,7 @@ onBeforeUnmount(() => {
   grid-template-columns: minmax(360px, 1.2fr) minmax(420px, 1fr) 178px;
   align-items: stretch;
   gap: 0;
-  margin: 24px 0;
+  margin: 0 0 24px;
   overflow: hidden;
   border: 1px solid rgba(90, 212, 128, 0.34);
   background: linear-gradient(90deg, rgba(90, 212, 128, 0.09), transparent 34%),
@@ -695,30 +689,6 @@ onBeforeUnmount(() => {
   contain-intrinsic-size: 980px;
 }
 
-.archive-section-count {
-  display: inline-flex;
-  flex: none;
-  gap: 6px;
-  align-items: baseline;
-  color: @red;
-  font-family: 'Anton', sans-serif;
-  line-height: 1;
-
-  strong {
-    color: rgba(226, 52, 86, 0.58);
-    font-family: inherit;
-    font-size: clamp(1.35rem, 2.2vw, 2rem);
-    font-weight: 400;
-  }
-
-  small {
-    color: rgba(255, 255, 255, 0.3);
-    font-family: inherit;
-    font-size: 0.42rem;
-    letter-spacing: 0.04em;
-  }
-}
-
 .works-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -823,7 +793,6 @@ onBeforeUnmount(() => {
     align-items: stretch;
     justify-content: space-between;
     padding: 18px;
-    transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .misc-card-head {
@@ -875,8 +844,7 @@ onBeforeUnmount(() => {
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     line-clamp: 2;
-    transition: color 0.25s ease, letter-spacing 0.42s ease,
-      text-shadow 0.3s ease;
+    transition: color 0.25s ease, text-shadow 0.3s ease;
   }
 
   .misc-card-footer {
@@ -928,8 +896,7 @@ onBeforeUnmount(() => {
   }
 }
 
-.misc-card-frame,
-.misc-card-sweep {
+.misc-card-frame {
   position: absolute;
   z-index: 4;
   pointer-events: none;
@@ -944,17 +911,6 @@ onBeforeUnmount(() => {
     transform 0.46s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.misc-card-sweep {
-  top: 0;
-  left: -42%;
-  width: 36%;
-  height: 2px;
-  opacity: 0;
-  background: linear-gradient(90deg, transparent, #fff 35%, #e23456 75%);
-  box-shadow: 0 0 18px rgba(226, 52, 86, 0.8);
-  transition: opacity 0.15s ease, transform 0.62s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
 @media (hover: hover) and (pointer: fine) {
   .misc-card:hover {
     border-color: rgba(226, 52, 86, 0.84);
@@ -962,11 +918,6 @@ onBeforeUnmount(() => {
 
     &::before {
       opacity: 0.86;
-      animation: misc-card-grid-drift 0.36s linear infinite;
-    }
-
-    &::after {
-      transform: translateX(0) skewX(0);
     }
 
     .misc-card-frame {
@@ -975,22 +926,12 @@ onBeforeUnmount(() => {
       transform: scale(1);
     }
 
-    .misc-card-sweep {
-      opacity: 1;
-      transform: translateX(410%);
-    }
-
-    .misc-card-content {
-      transform: translateY(-3px);
-    }
-
     .misc-card-index {
       color: rgba(255, 255, 255, 0.78);
     }
 
     .misc-card-title {
       color: #fff;
-      letter-spacing: 0.015em;
       text-shadow: 0 0 24px rgba(226, 52, 86, 0.32);
     }
 
@@ -1028,16 +969,6 @@ onBeforeUnmount(() => {
     .corner-br {
       transform: translate(4px, 4px);
     }
-  }
-}
-
-@keyframes misc-card-grid-drift {
-  from {
-    background-position: 0 0;
-  }
-
-  to {
-    background-position: 0 4px;
   }
 }
 
@@ -1125,21 +1056,9 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 768px) {
-  .archive-section-count {
-    gap: 4px;
-
-    strong {
-      font-size: 1.25rem;
-    }
-
-    small {
-      font-size: 0.34rem;
-    }
-  }
-
   .availability-panel {
     grid-template-columns: 1fr;
-    margin: 18px 0;
+    margin: 0 0 18px;
   }
 
   .availability-copy {

@@ -55,6 +55,8 @@ const emitReady = () => {
 }
 
 const hideIntro = () => {
+  if (!isAnimating.value) return
+
   isAnimating.value = false
 }
 

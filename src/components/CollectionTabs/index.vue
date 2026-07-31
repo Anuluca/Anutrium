@@ -4,7 +4,6 @@
     :class="`collection-tabs--${size}`"
     :style="{ '--collection-tab-count': items.length }"
     role="tablist"
-    :aria-label="ariaLabel"
   >
     <button
       v-for="(item, index) in items"
@@ -46,7 +45,6 @@ export interface CollectionTabItem {
 
 withDefaults(
   defineProps<{
-    ariaLabel: string
     items: CollectionTabItem[]
     modelValue: string
     size?: 'small' | 'middle' | 'big'

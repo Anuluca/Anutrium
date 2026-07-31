@@ -76,6 +76,7 @@
           </div>
           <pre
             class="pt-code-block"
+            data-lenis-nested-scroll
           ><code>{{ dataUrl || '// NO DATA\n// 请先上传图片...' }}</code></pre>
         </div>
 

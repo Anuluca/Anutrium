@@ -2,6 +2,19 @@ export interface PageScrollOptions {
   top: number
   left?: number
   behavior?: ScrollBehavior
+  duration?: number
+  fixedDuration?: boolean
+  onComplete?: () => void
+}
+
+type SmoothPageScrollHandler = (options: Required<PageScrollOptions>) => void
+
+let smoothPageScrollHandler: SmoothPageScrollHandler | null = null
+
+export const setSmoothPageScrollHandler = (
+  handler: SmoothPageScrollHandler | null
+) => {
+  smoothPageScrollHandler = handler
 }
 
 const getScrollElements = () => {
@@ -50,8 +63,23 @@ export const scrollPageTo = ({
   top,
   left = 0,
   behavior = 'auto',
+  duration = 800,
+  fixedDuration = false,
+  onComplete = () => undefined,
 }: PageScrollOptions) => {
   if (typeof window === 'undefined') return
+
+  if (smoothPageScrollHandler) {
+    smoothPageScrollHandler({
+      top,
+      left,
+      behavior,
+      duration,
+      fixedDuration,
+      onComplete,
+    })
+    return
+  }
 
   const options: ScrollToOptions = { top, left, behavior }
   window.scrollTo(options)
@@ -64,6 +92,8 @@ export const scrollPageTo = ({
       element.scrollTo(options)
     }
   }
+
+  if (behavior !== 'smooth') onComplete()
 }
 
 const pageScrollListeners = new Map<EventListener, number>()

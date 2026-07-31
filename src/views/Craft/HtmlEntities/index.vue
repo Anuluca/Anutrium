@@ -15,7 +15,7 @@
           />
         </label>
 
-        <div class="entity-grid">
+        <div class="entity-grid" data-lenis-nested-scroll>
           <button
             v-for="entity in filteredEntities"
             :key="entity.name"
@@ -43,7 +43,7 @@
           <span>[ 快速复制 ]</span>
         </div>
 
-        <div class="quick-list">
+        <div class="quick-list" data-lenis-nested-scroll>
           <div
             v-for="entity in filteredEntities"
             :key="entity.name"

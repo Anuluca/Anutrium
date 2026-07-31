@@ -1,5 +1,5 @@
 <template>
-  <nav class="filter-rail" :aria-label="ariaLabel">
+  <nav class="filter-rail" data-lenis-nested-scroll>
     <button
       v-for="item in items"
       :key="item.id"
@@ -48,7 +48,6 @@ export interface FilterRailItem {
 withDefaults(
   defineProps<{
     accentColor?: string
-    ariaLabel: string
     items: FilterRailItem[]
     modelValue: string
     showAvatar?: boolean

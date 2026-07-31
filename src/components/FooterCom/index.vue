@@ -7,6 +7,8 @@ import { ElLoading } from 'element-plus'
 
 import githubImg from '@/assets/img/github_profile.png'
 import twitterImg from '@/assets/img/twitter_profile.png'
+import TextRoll from '@/components/TextRoll/index.vue'
+import ThemeToggle from '@/components/ThemeToggle/index.vue'
 import type { ContactLink, ContactType } from '@/locales/modules/contactLinks'
 import { visualState } from '@/stores'
 import { persistLocale, type SiteLocale } from '@/utils/locale'
@@ -92,10 +94,7 @@ const weiboProfileUrl = computed(() => getContactLink('WEIBO')!.href)
 const isInternalHref = (href: string) =>
   href.startsWith('/') && !href.startsWith('//')
 
-const fullFooter = computed(() => router.currentRoute.value.meta.fullFooter)
-const currentRouter = computed(() => route.path)
-const theme = ref(false)
-const isScrollingDown = ref<boolean>(false)
+const fullFooter = computed(() => route.meta.fullFooter)
 const isMotionPaused = ref(false)
 const footerExpanded = ref(false)
 const weiboSrc = ref('')
@@ -167,7 +166,6 @@ const initFooterAnimation = () => {
 
   footerAnimationTimer = window.setTimeout(() => {
     footerExpanded.value = true
-    theme.value = localStorage.getItem('theme') === 'dark'
   }, 400)
 }
 
@@ -176,27 +174,29 @@ const changeLanguage = (lang: SiteLocale) => {
   locale.value = lang
 }
 
-const changeTheme = () => {
-  const newTheme = theme.value ? 'dark' : 'light'
+const changeTheme = (isDark: boolean) => {
+  const newTheme = isDark ? 'dark' : 'light'
 
-  if (currentRouter.value === '/') {
+  if (route.path === '/') {
     const loadingInstance = ElLoading.service({
       fullscreen: true,
       background: 'rgba(0, 0, 0, 0.2)',
       spinner: '1',
     })
 
-    setTimeout(() => {
+    window.setTimeout(() => {
       visualStateStore.setTheme(newTheme)
-    }, 150)
-
-    setTimeout(() => {
       loadingInstance.close()
     }, 150)
   } else {
     visualStateStore.setTheme(newTheme)
   }
 }
+
+const isDarkTheme = computed({
+  get: () => visualStateStore.theme === 'dark',
+  set: changeTheme,
+})
 
 const loadWeiboWidget = () => {
   if (!weiboSrc.value) {
@@ -223,7 +223,6 @@ watch(locale, () => nextTick(updateMarqueeDuration))
       'full-footer': fullFooter,
       'footer-ready': props.entryActive,
       'footer-expanded': footerExpanded,
-      'scrolling-down': isScrollingDown,
       'motion-paused': isMotionPaused,
     }"
     data-entry-footer-target
@@ -353,7 +352,7 @@ watch(locale, () => nextTick(updateMarqueeDuration))
             :rel="social.type === 'MAIL' ? undefined : 'noopener noreferrer'"
             @click="dismissSocialPreview($event, social.type)"
           >
-            {{ social.label }}
+            <TextRoll center :text="social.label" />
           </a>
         </span>
         <span
@@ -382,7 +381,7 @@ watch(locale, () => nextTick(updateMarqueeDuration))
             rel="noopener noreferrer"
             @click="dismissSocialPreview($event, 'WEIBO')"
           >
-            WEIBO
+            <TextRoll center text="WEIBO" />
           </a>
         </span>
         <span
@@ -416,7 +415,7 @@ watch(locale, () => nextTick(updateMarqueeDuration))
             rel="noopener noreferrer"
             @click="dismissSocialPreview($event, social.type)"
           >
-            {{ social.label }}
+            <TextRoll center :text="social.label" />
           </a>
         </span>
         <span
@@ -442,21 +441,20 @@ watch(locale, () => nextTick(updateMarqueeDuration))
             :href="mailItem.href"
             @click="dismissSocialPreview($event, 'MAIL')"
           >
-            MAIL
+            <TextRoll center text="MAIL" />
           </a>
         </span>
       </div>
       <button class="mark" type="button" @click="router.push('/')">
         LAST UPDATE： {{ bottomLineData.lastUpdate }}
       </button>
-      <el-switch
-        v-model="theme"
-        class="is-clickable"
-        style="
-          --el-switch-on-color: #1a1a1aa8;
-          --el-switch-off-color: #ffffff1f;
+      <ThemeToggle
+        v-model="isDarkTheme"
+        :aria-label="
+          isDarkTheme
+            ? '切换为浅色主题 / Switch to light theme'
+            : '切换为深色主题 / Switch to dark theme'
         "
-        @change="changeTheme()"
       />
     </div>
   </div>

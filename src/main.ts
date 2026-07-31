@@ -9,6 +9,7 @@ import { scrollPageTo } from './utils/pageScroll'
 
 import 'reset-css'
 import 'element-plus/theme-chalk/dark/css-vars.css'
+import 'lenis/dist/lenis.css'
 import '@/assets/style/global.less'
 
 const restoreScrollAfterLayout = (position: ScrollToOptions) =>

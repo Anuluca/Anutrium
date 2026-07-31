@@ -1,5 +1,12 @@
 <script lang="ts" setup>
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import {
+  computed,
+  type CSSProperties,
+  onMounted,
+  onUnmounted,
+  ref,
+  watch,
+} from 'vue'
 
 import {
   addPageScrollEndListener,
@@ -32,19 +39,14 @@ interface Props {
   entryActive?: boolean
 }
 
-interface PositionStyle {
-  left: string
-  top: string
-}
-
 interface ZodiacSign {
   id: ZodiacSignId
   glyph: string
   name: string
   code: string
-  positionStyle: PositionStyle
+  positionStyle: CSSProperties
   faceStyle: { transform: string }
-  degreePositionStyle: PositionStyle
+  degreePositionStyle: CSSProperties
   degreeFaceStyle: { transform: string }
 }
 
@@ -111,7 +113,7 @@ void main() {
 
   gl_Position = vec4(clipPosition.x, -clipPosition.y, 0.0, 1.0);
   gl_PointSize = a_size * u_pixel_ratio;
-  float boundaryFade = 1.0 - smoothstep(0.72, 0.82, length(a_position));
+  float boundaryFade = 1.0 - smoothstep(0.72, 0.88, length(a_position));
   v_opacity = a_opacity * boundaryFade;
   v_radial_direction = normalize(vec2(position.x, -position.y * 0.5));
 }
@@ -173,7 +175,7 @@ STAR_LAYERS.forEach((layer) => {
   }
 })
 
-const polarPercent = (radius: number, angle: number): PositionStyle => {
+const polarPercent = (radius: number, angle: number): CSSProperties => {
   const radians = (angle * Math.PI) / 180
   return {
     left: `${50 + Math.cos(radians) * radius}%`,

@@ -2,6 +2,8 @@
   --chart-primary: rgba(226, 194, 138, 0.76);
   --chart-strong: rgba(255, 225, 168, 0.94);
   --chart-faint: rgba(226, 194, 138, 0.24);
+  --triangle-highlight-rgb: 230 186 104;
+  --triangle-highlight-opacity: 0.68;
   --layer-backdrop: 0;
   --layer-zodiac: 1;
   --layer-triangle: 2;
@@ -40,29 +42,28 @@
     inset: 0;
     z-index: var(--layer-backdrop);
     pointer-events: none;
-    background: linear-gradient(
-        120deg,
-        rgba(0, 216, 143, 0.06),
-        transparent 28%,
-        rgba(154, 118, 255, 0.08) 58%,
-        transparent 74%
-      ),
-      repeating-linear-gradient(
-        0deg,
-        rgba(255, 225, 235, 0.0085) 0 1px,
-        transparent 1px 4px
-      );
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(255, 225, 235, 0.0085) 0 1px,
+      transparent 1px 4px
+    );
     content: '';
   }
 
   &.dark {
-    background: radial-gradient(
-      320% 105% at top center,
-      #000 10%,
-      #310917 55%,
-      #310917 65%,
-      #000 100%
-    );
+    background: linear-gradient(
+        to bottom,
+        transparent 95%,
+        rgba(96, 84, 132, 0.22) 100%
+      ),
+      radial-gradient(
+        ellipse 90% 105% at 50% -10%,
+        #000 0%,
+        #000 58%,
+        #490d24 94%,
+        #490d24 100%
+      ),
+      #000;
   }
 
   &.dark.is-deep-black {
@@ -77,6 +78,7 @@
     --chart-primary: rgba(126, 91, 38, 0.68);
     --chart-strong: rgba(103, 69, 24, 0.88);
     --chart-faint: rgba(126, 91, 38, 0.2);
+    --triangle-highlight-rgb: 137 82 28;
     background: radial-gradient(
       220% 105% at top center,
       #d1c6db 10%,
@@ -93,7 +95,7 @@
     --stage-offset-y: calc(-50% + 37.25vh);
     --stage-offset-y: calc(-50% + 37.25dvh);
     --stage-opacity: 0.1;
-    --triangle-stage-opacity: 0.11;
+    --triangle-stage-opacity: 0.17;
     --stage-scale: 0.88;
     --triangle-geometry-scale-x: 1;
     --triangle-geometry-scale-y: 1;
@@ -248,13 +250,13 @@
   display: block;
   background: linear-gradient(
     to bottom,
-    rgba(230, 186, 104, 0) 0%,
-    rgba(230, 186, 104, 0) var(--triangle-fade-start),
-    rgba(230, 186, 104, 0.03) var(--triangle-fade-mid),
-    rgba(230, 186, 104, 0.18) var(--triangle-fade-end),
-    rgba(230, 186, 104, 0.14) 72%,
-    rgba(230, 186, 104, 0.04) 90%,
-    rgba(230, 186, 104, 0) 100%
+    rgb(var(--triangle-highlight-rgb) / 0%) 0%,
+    rgb(var(--triangle-highlight-rgb) / 0%) var(--triangle-fade-start),
+    rgb(var(--triangle-highlight-rgb) / 6%) var(--triangle-fade-mid),
+    rgb(var(--triangle-highlight-rgb) / 30%) var(--triangle-fade-end),
+    rgb(var(--triangle-highlight-rgb) / 24%) 72%,
+    rgb(var(--triangle-highlight-rgb) / 8%) 90%,
+    rgb(var(--triangle-highlight-rgb) / 0%) 100%
   );
   opacity: 0;
   transform: scaleY(0);
@@ -309,7 +311,9 @@
 .zodiac-name {
   margin-top: 0.5vw;
   font-size: 1.2vw;
-  letter-spacing: 0.3vw;
+  letter-spacing: 0;
+  transform: scaleX(1.3);
+  transform-origin: center;
   transition: color 0.18s ease-out;
 }
 
@@ -317,7 +321,9 @@
   margin-top: 0.45vw;
   color: var(--chart-faint);
   font-size: 0.8vw;
-  letter-spacing: 0.2vw;
+  letter-spacing: 0;
+  transform: scaleX(1.3);
+  transform-origin: center;
   transition: color 0.18s ease-out;
 }
 
@@ -330,13 +336,13 @@
   .zodiac-sign-face.is-active .zodiac-glyph,
   .zodiac-sign-face.is-active .zodiac-name,
   .zodiac-sign-face.is-active .zodiac-code {
-    color: rgba(230, 196, 132, 0.68);
+    color: rgba(230, 196, 132, 0.34);
     transition-delay: var(--triangle-entry-delay);
   }
 
   .zodiac-sign-face.is-active {
     opacity: 0.38;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.48);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.24);
     transition: opacity 0.18s ease var(--triangle-entry-delay);
   }
 }
@@ -346,7 +352,7 @@
   )
   .zodiac-active-triangle {
   animation: none;
-  opacity: 1;
+  opacity: var(--triangle-highlight-opacity);
   transform: scaleY(1);
 }
 
@@ -355,7 +361,7 @@
   color: var(--chart-faint);
   font-family: 'anton', monospace;
   font-size: 0.8vw;
-  letter-spacing: 0.1vw;
+  letter-spacing: 0;
   opacity: var(--stage-opacity);
   transform-origin: center;
   white-space: nowrap;
@@ -411,11 +417,11 @@
   }
 
   24% {
-    opacity: 0.92;
+    opacity: 0.6;
   }
 
   to {
-    opacity: 1;
+    opacity: var(--triangle-highlight-opacity);
     transform: scaleY(1);
   }
 }
@@ -430,7 +436,6 @@
   .star-container.menu-hidden,
   .star-container.is-content-layout {
     --stage-opacity: 0.1;
-    --triangle-stage-opacity: 0.11;
   }
 
   .star-container.is-content-layout {
@@ -467,7 +472,7 @@
   .star-container.is-entry-ready.is-content-layout:not(.is-route-transitioning)
     .zodiac-active-triangle {
     animation: none;
-    opacity: 1;
+    opacity: var(--triangle-highlight-opacity);
     transform: scaleY(1);
   }
 }

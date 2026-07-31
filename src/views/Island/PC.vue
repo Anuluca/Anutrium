@@ -50,6 +50,7 @@
           <div
             ref="latestScrollRef"
             class="latest-scroll"
+            data-lenis-nested-scroll
             @scroll="updateLatestScrollState"
           >
             <RouterLink

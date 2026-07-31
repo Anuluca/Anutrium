@@ -10,6 +10,8 @@ import {
 
 import LogoRotating3D from '@/components/Logo_rotating3D/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
+import PageHeroTitle from '@/components/PageHeroTitle/index.vue'
+import { getPageScrollTop, scrollPageTo } from '@/utils/pageScroll'
 // import PageHeader from '@/components/PageHeader/index.vue'
 
 interface ChangelogItem {
@@ -36,6 +38,68 @@ const { locale, t, tm } = useI18n()
 const activeLogKey = ref<string | null>(null)
 const majorOnly = ref(false)
 const showAllChangelogs = ref(false)
+const aboutHeroSection = ref<HTMLElement | null>(null)
+const aboutUpdatesGrid = ref<HTMLElement | null>(null)
+let aboutScrollTimer: number | null = null
+let aboutReducedMotionQuery: MediaQueryList | null = null
+let isAboutAutoScrolling = false
+
+const getAboutUpdatesTop = () => {
+  if (!aboutUpdatesGrid.value) return 0
+
+  return getPageScrollTop() + aboutUpdatesGrid.value.getBoundingClientRect().top
+}
+
+const finishAboutAutoScroll = () => {
+  isAboutAutoScrolling = false
+  aboutScrollTimer = null
+}
+
+const scrollAboutTo = (top: number) => {
+  if (isAboutAutoScrolling) return
+
+  isAboutAutoScrolling = true
+  scrollPageTo({
+    top,
+    behavior: aboutReducedMotionQuery?.matches ? 'auto' : 'smooth',
+  })
+
+  if (aboutScrollTimer !== null) window.clearTimeout(aboutScrollTimer)
+  aboutScrollTimer = window.setTimeout(finishAboutAutoScroll, 900)
+}
+
+const scrollToAboutUpdates = () => {
+  scrollAboutTo(getAboutUpdatesTop())
+}
+
+const scrollToAboutHero = () => {
+  scrollAboutTo(0)
+}
+
+const handleAboutFirstScreenWheel = (event: WheelEvent) => {
+  if (
+    window.innerWidth <= 768 ||
+    event.ctrlKey ||
+    !aboutHeroSection.value ||
+    !aboutUpdatesGrid.value
+  ) {
+    return
+  }
+
+  const scrollTop = getPageScrollTop()
+  const updatesTop = getAboutUpdatesTop()
+
+  if (event.deltaY > 0 && scrollTop < updatesTop - 80) {
+    event.preventDefault()
+    scrollAboutTo(updatesTop)
+    return
+  }
+
+  if (event.deltaY < 0 && scrollTop > 0 && scrollTop <= updatesTop + 120) {
+    event.preventDefault()
+    scrollAboutTo(0)
+  }
+}
 
 const getNeighborHost = (url: string) => {
   try {
@@ -57,7 +121,7 @@ const filteredChangelogs = computed(() => {
     : changelogs.value
 })
 
-const maxVisibleChangelogs = 4
+const maxVisibleChangelogs = 3
 const displayedChangelogs = computed(() =>
   showAllChangelogs.value
     ? filteredChangelogs.value
@@ -166,7 +230,7 @@ const overflowingNeighborUrls = ref(new Set<string>())
 const neighborDescElements = new Map<string, HTMLElement>()
 let descMeasureRafId: number | null = null
 
-const setNeighborDescRef = (url: string, element: Element | null) => {
+const setNeighborDescRef = (url: string, element: unknown) => {
   if (element instanceof HTMLElement) {
     neighborDescElements.set(url, element)
   } else {
@@ -211,15 +275,24 @@ const scheduleNeighborDescriptionMeasure = async () => {
 }
 
 onMounted(() => {
+  aboutReducedMotionQuery = window.matchMedia(
+    '(prefers-reduced-motion: reduce)'
+  )
   scheduleNeighborDescriptionMeasure()
   window.addEventListener('resize', scheduleNeighborDescriptionMeasure, {
     passive: true,
+  })
+  window.addEventListener('wheel', handleAboutFirstScreenWheel, {
+    passive: false,
+    capture: true,
   })
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', scheduleNeighborDescriptionMeasure)
+  window.removeEventListener('wheel', handleAboutFirstScreenWheel, true)
   if (descMeasureRafId !== null) window.cancelAnimationFrame(descMeasureRafId)
+  if (aboutScrollTimer !== null) window.clearTimeout(aboutScrollTimer)
 })
 
 watch(locale, scheduleNeighborDescriptionMeasure)
@@ -227,6 +300,57 @@ watch(locale, scheduleNeighborDescriptionMeasure)
 
 <template>
   <div class="about-page main-container">
+    <section ref="aboutHeroSection" class="about-hero-section">
+      <PageHeroTitle />
+
+      <section
+        class="passion-section no-cursor"
+        :class="{ 'is-crosshair-active': passionCrosshairActive }"
+        :style="passionCrosshairStyle"
+        :aria-label="t('about.brandColorName')"
+        @mouseenter="updatePassionCrosshair"
+        @mousemove="updatePassionCrosshair"
+        @mouseleave="hidePassionCrosshair"
+      >
+        <div class="passion-back" />
+        <LogoRotating3D
+          class="passion-logo-bg"
+          low-power
+          transparent
+          :interactive="false"
+          aria-hidden="true"
+        />
+        <div class="passion-color-field">
+          <div class="passion-content">
+            <div class="passion-brand">
+              <div class="passion-field-name">
+                <strong>PASSION RED</strong>
+                <span v-if="locale !== 'en'">
+                  {{ t('about.brandColorName') }}
+                </span>
+              </div>
+              <div class="passion-color-code"><span>#</span>E23456</div>
+
+              <div class="passion-field-meta">
+                <span>RGB / 226 · 52 · 86</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="passion-crosshair" aria-hidden="true" />
+      </section>
+
+      <button
+        class="about-scroll-indicator about-screen-jump"
+        type="button"
+        :aria-label="t('scroll')"
+        @click="scrollToAboutUpdates"
+      >
+        <span class="about-scroll-text">{{ t('scroll') }}</span>
+        <span class="about-scroll-line" aria-hidden="true" />
+      </button>
+    </section>
+
     <!--
     <PageHeader
       header-label="[HUAHUA_THE_CAT]"
@@ -237,12 +361,28 @@ watch(locale, scheduleNeighborDescriptionMeasure)
     />
     -->
 
-    <div class="about-top-grid">
+    <div ref="aboutUpdatesGrid" class="about-updates-grid">
+      <button
+        class="about-back-first-screen about-screen-jump"
+        type="button"
+        aria-label="返回第一屏"
+        @click="scrollToAboutHero"
+      >
+        <span
+          class="about-scroll-line about-scroll-line--up"
+          aria-hidden="true"
+        />
+        <span class="about-scroll-text about-scroll-text--below">
+          返回第一屏
+        </span>
+      </button>
+
       <section class="block changelog-block">
         <div class="section-header">
           <h3 class="section-title">
-            <span class="changelog">&lt; CHANGELOG /&gt;</span>
-            <span class="cn">{{ t('about.changelogLabel') }}</span>
+            <span class="changelog">
+              &lt; {{ t('about.changelogTagLabel') }} /&gt;
+            </span>
           </h3>
           <div class="section-line" />
           <button
@@ -388,94 +528,42 @@ watch(locale, scheduleNeighborDescriptionMeasure)
         </button>
       </section>
 
-      <section
-        class="passion-section no-cursor"
-        :class="{ 'is-crosshair-active': passionCrosshairActive }"
-        :style="passionCrosshairStyle"
-        aria-labelledby="passion-title"
-        @mouseenter="updatePassionCrosshair"
-        @mousemove="updatePassionCrosshair"
-        @mouseleave="hidePassionCrosshair"
-      >
-        <div class="passion-back">
-          <LogoRotating3D
-            class="passion-logo-bg"
-            low-power
-            transparent
-            :interactive="false"
-            aria-hidden="true"
-          />
+      <section class="block roadmap-block">
+        <div class="section-header">
+          <h3 class="section-title">
+            <span class="changelog">
+              &lt; {{ t('about.roadmapTagLabel') }} /&gt;
+            </span>
+          </h3>
+          <div class="section-line" />
         </div>
-        <div class="passion-color-field">
-          <div class="passion-content">
-            <div class="passion-brand">
-              <div class="passion-field-name">
-                <strong>PASSION RED</strong>
-                <span v-if="locale !== 'en'">
-                  {{ t('about.brandColorName') }}
-                </span>
-              </div>
-              <div class="passion-color-code"><span>#</span>E23456</div>
 
-              <div class="passion-field-meta">
-                <span>RGB / 226 · 52 · 86</span>
-              </div>
-            </div>
-
-            <div class="passion-divider" aria-hidden="true" />
-
-            <div class="passion-copy">
-              <p class="passion-kicker">
-                <span>ANUTRIUM / </span>{{ t('about.brandColorKicker') }}
-              </p>
-              <h2
-                id="passion-title"
-                class="passion-title"
-                :class="{ 'is-en': locale === 'en' }"
+        <div class="roadmap-tags">
+          <div
+            v-for="(item, roadmapIndex) in roadmapItems"
+            :key="item"
+            class="roadmap-tag"
+            :style="{
+              '--roadmap-enter-delay': `${0.62 + roadmapIndex * 0.1}s`,
+            }"
+          >
+            <span class="roadmap-tag__index" aria-hidden="true">
+              {{ String(roadmapIndex + 1).padStart(2, '0') }}
+            </span>
+            <span class="roadmap-tag__text">
+              <span
+                v-for="(segment, segmentIndex) in parseMarkedText(item)"
+                :key="segmentIndex"
+                :class="{ 'roadmap-highlight': segment.highlighted }"
               >
-                <span>{{ t('about.brandColorTitleLead') }}</span>
-              </h2>
-            </div>
+                {{ segment.text }}
+              </span>
+            </span>
+            <Setting class="roadmap-tag__gear" aria-hidden="true" />
           </div>
         </div>
-        <div class="passion-crosshair" aria-hidden="true" />
       </section>
     </div>
-
-    <section class="block roadmap-block">
-      <div class="section-header">
-        <h3 class="section-title">
-          <span class="changelog">&lt; ROADMAP /&gt;</span>
-          <span class="cn">未来更新计划</span>
-        </h3>
-        <div class="section-line" />
-      </div>
-
-      <div class="roadmap-tags">
-        <div
-          v-for="(item, roadmapIndex) in roadmapItems"
-          :key="item"
-          class="roadmap-tag"
-          :style="{
-            '--roadmap-enter-delay': `${0.62 + roadmapIndex * 0.1}s`,
-          }"
-        >
-          <span class="roadmap-tag__index" aria-hidden="true">
-            {{ String(roadmapIndex + 1).padStart(2, '0') }}
-          </span>
-          <span class="roadmap-tag__text">
-            <span
-              v-for="(segment, segmentIndex) in parseMarkedText(item)"
-              :key="segmentIndex"
-              :class="{ 'roadmap-highlight': segment.highlighted }"
-            >
-              {{ segment.text }}
-            </span>
-          </span>
-          <Setting class="roadmap-tag__gear" aria-hidden="true" />
-        </div>
-      </div>
-    </section>
 
     <section class="block neighbors-block">
       <div class="section-header">
@@ -559,30 +647,159 @@ watch(locale, scheduleNeighborDescriptionMeasure)
   color: #fff;
 }
 
+.about-hero-section {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  height: calc(100vh - 120px);
+  height: calc(100dvh - 120px);
+
+  &::after {
+    display: block;
+    flex: 0 0 clamp(120px, 15.5vh, 145px);
+    content: '';
+  }
+
+  > .passion-section {
+    flex: 1 1 auto;
+    width: 100%;
+    height: auto;
+    margin: 0;
+    aspect-ratio: 2.7 / 1;
+  }
+}
+
 .block {
   margin-bottom: 50px;
   content-visibility: auto;
   contain-intrinsic-size: 760px;
 }
 
-.about-top-grid {
+.about-updates-grid {
+  position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
   align-items: stretch;
   gap: 28px;
+  box-sizing: border-box;
+  padding-top: 270px;
   margin-bottom: 20px;
 
-  > .block,
-  > .passion-section {
+  > .block {
     align-self: stretch;
     min-height: 0;
     height: auto;
     margin: 0;
-  }
-
-  > .block {
     content-visibility: visible;
     contain-intrinsic-size: auto;
+  }
+
+  > .block > .section-header {
+    height: 50px;
+    margin-top: 0;
+  }
+}
+
+.about-screen-jump {
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.25s ease, filter 0.25s ease, color 0.25s ease;
+
+  &:hover,
+  &:focus-visible {
+    opacity: 0.9;
+    color: @red;
+    filter: drop-shadow(0 0 12px rgba(226, 52, 86, 0.42));
+  }
+
+  &:focus-visible {
+    outline: 1px solid rgba(226, 52, 86, 0.8);
+    outline-offset: 8px;
+  }
+}
+
+.about-scroll-text {
+  margin-bottom: 10px;
+  font-family: 'anton', 'alibaba-puhuiti';
+  font-size: 12px;
+  letter-spacing: 2px;
+  transition: color 0.25s ease;
+
+  &--below {
+    margin-top: 10px;
+    margin-bottom: 0;
+  }
+}
+
+.about-scroll-line {
+  position: relative;
+  width: 1px;
+  height: 40px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.2);
+
+  &::after {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    content: '';
+    background: @red;
+    animation: aboutScrollDrop 1.5s cubic-bezier(0.77, 0, 0.175, 1) infinite;
+  }
+
+  &--up::after {
+    animation-direction: reverse;
+  }
+}
+
+.about-scroll-indicator,
+.about-back-first-screen {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.about-scroll-indicator {
+  bottom: 60px;
+  opacity: 0;
+  animation: aboutScrollIndicatorIn 0.7s cubic-bezier(0.23, 1, 0.32, 1) 1.5s
+    forwards;
+}
+
+.about-back-first-screen {
+  top: 155px;
+}
+
+@keyframes aboutScrollIndicatorIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(16px);
+  }
+
+  to {
+    opacity: 0.6;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes aboutScrollDrop {
+  from {
+    transform: translateY(-100%);
+  }
+
+  to {
+    transform: translateY(100%);
   }
 }
 
@@ -590,7 +807,6 @@ watch(locale, scheduleNeighborDescriptionMeasure)
   min-width: 0;
 
   .section-header {
-    margin-top: 0;
     animation: changelogHeaderIn 0.46s cubic-bezier(0.2, 0.8, 0.2, 1) 0.32s both;
   }
 }
@@ -599,13 +815,9 @@ watch(locale, scheduleNeighborDescriptionMeasure)
   position: relative;
   min-height: 0;
   isolation: isolate;
-  overflow: hidden;
   margin: 30px 0 68px;
   border-radius: 2px;
-  box-shadow: inset 0 0 0 1px rgba(226, 52, 86, 0.12);
-  opacity: 0;
-  animation: passionCrtOn 0.58s cubic-bezier(0.19, 1, 0.22, 1) 0.44s both;
-  will-change: clip-path, filter, opacity;
+  overflow: visible;
 
   &::after {
     position: absolute;
@@ -630,6 +842,13 @@ watch(locale, scheduleNeighborDescriptionMeasure)
       color: #000;
     }
   }
+}
+
+.passion-back,
+.passion-color-field {
+  opacity: 0;
+  animation: passionCrtOn 0.58s cubic-bezier(0.19, 1, 0.22, 1) 0.44s both;
+  will-change: clip-path, filter, opacity;
 }
 
 @keyframes passionCrtOn {
@@ -682,6 +901,20 @@ watch(locale, scheduleNeighborDescriptionMeasure)
   z-index: 5;
   pointer-events: none;
   opacity: 0;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 0, 0, 0.28) 22%,
+    #000 52%,
+    #000 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 0, 0, 0.28) 22%,
+    #000 52%,
+    #000 100%
+  );
 
   &::before,
   &::after {
@@ -711,49 +944,6 @@ watch(locale, scheduleNeighborDescriptionMeasure)
   opacity: 1;
 }
 
-.passion-copy {
-  position: relative;
-  z-index: 3;
-  text-align: left;
-  margin-left: 40px;
-  min-width: 0;
-  padding: 0;
-}
-
-.passion-kicker {
-  color: @red;
-  font-family: 'cn-custom', 'alibaba-puhuiti', sans-serif;
-  font-size: 18px;
-  margin-top: 10px;
-  text-transform: uppercase;
-
-  span {
-    font-family: 'cn-custom', 'alibaba-puhuiti', sans-serif;
-    font-size: 15px;
-  }
-}
-
-.passion-title {
-  margin: 0;
-  color: @red;
-  font-family: 'alibaba-puhuiti', sans-serif;
-  font-size: 38px;
-  font-weight: 900;
-  letter-spacing: -0.02em;
-  line-height: 1.05;
-  white-space: normal;
-  text-shadow: 0 0 18px rgba(226, 52, 86, 0.2);
-
-  span {
-    font-family: inherit;
-  }
-
-  &.is-en {
-    font-size: clamp(23px, 2vw, 32px);
-    letter-spacing: 0;
-  }
-}
-
 .passion-color-field {
   position: absolute;
   inset: 0;
@@ -763,9 +953,9 @@ watch(locale, scheduleNeighborDescriptionMeasure)
 
 .passion-content {
   position: absolute;
-  left: 28px;
-  right: 28px;
-  bottom: clamp(18px, 5%, 34px);
+  left: 40px;
+  right: 40px;
+  bottom: clamp(46px, 10.5%, 74px);
   z-index: 3;
   display: flex;
   flex-direction: column;
@@ -785,6 +975,20 @@ watch(locale, scheduleNeighborDescriptionMeasure)
   background-color: #000;
   filter: saturate(0) sepia(1) saturate(3.2) hue-rotate(310deg) brightness(0.95)
     contrast(1.02);
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 0, 0, 0.28) 22%,
+    #000 52%,
+    #000 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 0, 0, 0.28) 22%,
+    #000 52%,
+    #000 100%
+  );
 
   &::before {
     position: absolute;
@@ -831,18 +1035,29 @@ watch(locale, scheduleNeighborDescriptionMeasure)
   }
 }
 .passion-logo-bg {
+  --passion-logo-base-size: clamp(660px, 60vw, 880px);
+  --passion-logo-shrink: clamp(24px, 2.4vw, 34px);
+  --passion-logo-base-top: clamp(-270px, -15vw, -160px);
+
   position: absolute;
-  top: clamp(-34px, 1.4vw, 18px);
+  top: calc(var(--passion-logo-base-top) + var(--passion-logo-shrink));
   left: 50%;
   z-index: 1;
-  width: clamp(360px, 36vw, 480px) !important;
-  height: clamp(360px, 36vw, 480px) !important;
+  width: calc(
+    var(--passion-logo-base-size) - var(--passion-logo-shrink)
+  ) !important;
+  height: calc(
+    var(--passion-logo-base-size) - var(--passion-logo-shrink)
+  ) !important;
   overflow: visible;
   transform: translateX(-50%) scaleX(1.2);
   opacity: 1;
   pointer-events: none;
   user-select: none;
-  filter: brightness(0.95) contrast(1.1);
+  filter: saturate(0) sepia(1) saturate(3.2) hue-rotate(310deg) brightness(0.95)
+    contrast(1.1);
+  animation: passionLogoDropIn 1.9s cubic-bezier(0.16, 1, 0.3, 1) 1.04s both;
+  will-change: transform, opacity;
 
   &::before,
   &::after {
@@ -873,16 +1088,22 @@ watch(locale, scheduleNeighborDescriptionMeasure)
   }
 }
 
+@keyframes passionLogoDropIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-130px) scaleX(1.2);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scaleX(1.2);
+  }
+}
+
 .passion-brand {
   position: relative;
   z-index: 2;
   min-width: 0;
-}
-
-.passion-divider {
-  position: relative;
-  z-index: 2;
-  display: none;
 }
 
 .passion-field-meta {
@@ -890,14 +1111,14 @@ watch(locale, scheduleNeighborDescriptionMeasure)
   z-index: 3;
   display: flex;
   justify-content: center;
-  margin-top: 10px;
-  gap: 13px;
+  margin-top: 14px;
+  gap: 16px;
   min-width: 0;
   color: @red;
 
   span {
     font-family: 'cn-custom', 'anton', monospace;
-    font-size: 10px;
+    font-size: 15px;
     font-weight: 900;
     letter-spacing: 0.14em;
     white-space: nowrap;
@@ -908,7 +1129,7 @@ watch(locale, scheduleNeighborDescriptionMeasure)
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 14px;
   color: @red;
 
   span,
@@ -920,20 +1141,20 @@ watch(locale, scheduleNeighborDescriptionMeasure)
 
   span {
     font-family: 'alibaba-puhuiti', sans-serif;
-    font-size: 11px;
+    font-size: 16px;
     font-weight: 900;
   }
 
   strong {
     font-family: 'cn-custom', 'anton', sans-serif;
-    font-size: 11px;
+    font-size: 19px;
     color: @red;
   }
 }
 
 .passion-color-code {
   font-family: 'anton', 'cn-custom', sans-serif;
-  font-size: clamp(46px, 4.2vw, 68px);
+  font-size: clamp(90px, 8vw, 132px);
   font-weight: 900;
   letter-spacing: -0.055em;
   margin-left: -12px;
@@ -963,21 +1184,27 @@ watch(locale, scheduleNeighborDescriptionMeasure)
 .section-title {
   display: inline-flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
+  min-height: 32px;
+  margin: 0;
   font-family: 'anton', 'alibaba-puhuiti';
-  font-size: 1.5rem;
+  font-size: 1rem;
   font-weight: 900;
   line-height: 1;
   white-space: nowrap;
+
   .changelog {
-    font-family: 'anton', 'alibaba-puhuiti';
-    margin-top: -12px;
+    font-family: 'alibaba-puhuiti', sans-serif;
+    margin-top: 0;
+    font-size: inherit;
+    line-height: inherit;
   }
 
   .cn {
     font-family: 'alibaba-puhuiti';
-    font-size: 1rem;
+    font-size: inherit;
     font-weight: 800;
+    line-height: inherit;
     opacity: 0.35;
     letter-spacing: 1px;
   }
@@ -1488,7 +1715,7 @@ watch(locale, scheduleNeighborDescriptionMeasure)
 
 .roadmap-tags {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 10px;
   margin-top: 24px;
   perspective: 1000px;
@@ -2014,24 +2241,23 @@ watch(locale, scheduleNeighborDescriptionMeasure)
 }
 
 @media (max-width: 768px) {
-  .about-top-grid {
+  .about-hero-section {
+    height: calc(100dvh - 120px);
+
+    > .passion-section {
+      width: 100%;
+      aspect-ratio: 7 / 3;
+    }
+  }
+
+  .about-updates-grid {
     display: flex;
     flex-direction: column;
     gap: 48px;
-    margin: 32px 0 50px;
+    margin: 0 0 50px;
 
     > .block {
       height: auto;
-    }
-
-    > .passion-section {
-      order: -1;
-      display: block;
-      width: 100%;
-      aspect-ratio: 7 / 3;
-      height: auto;
-      min-height: 0;
-      flex: 0 0 auto;
     }
   }
 
@@ -2055,16 +2281,17 @@ watch(locale, scheduleNeighborDescriptionMeasure)
 
   .passion-content {
     gap: 12px;
-    left: 16px;
-    right: 16px;
-    bottom: 22px;
+    left: 12px;
+    right: 12px;
+    bottom: 24px;
   }
 
   .passion-logo-bg {
+    --passion-logo-base-size: 260px;
+    --passion-logo-shrink: 10px;
+    --passion-logo-base-top: -48px;
+
     left: 50%;
-    top: 14px;
-    width: 128px !important;
-    height: 128px !important;
     transform: translateX(-50%) scaleX(1.2);
     opacity: 0.95;
 
@@ -2078,22 +2305,8 @@ watch(locale, scheduleNeighborDescriptionMeasure)
     }
   }
 
-  .passion-divider {
-    display: none;
-  }
-
-  .passion-kicker {
-    margin-bottom: 0;
-    font-size: 17px;
-    margin-top: -5px;
-
-    span {
-      font-size: 15px;
-    }
-  }
-
   .passion-color-code {
-    font-size: clamp(38px, 11.8vw, 54px);
+    font-size: clamp(56px, 16.5vw, 74px);
   }
 
   .passion-field-name {
@@ -2102,12 +2315,8 @@ watch(locale, scheduleNeighborDescriptionMeasure)
     margin-top: 8px;
     * {
       letter-spacing: 0 !important;
+      font-size: 14px;
     }
-  }
-
-  .passion-title {
-    font-size: clamp(28px, 7vw, 38px);
-    line-height: 1.12;
   }
 
   .passion-field-meta {
@@ -2116,13 +2325,9 @@ watch(locale, scheduleNeighborDescriptionMeasure)
     margin-top: 5px;
 
     span {
-      font-size: 10px;
+      font-size: 12px;
       line-height: 1.5;
     }
-  }
-
-  .section-title {
-    font-size: 1.8rem;
   }
 
   .major-filter {
@@ -2311,6 +2516,15 @@ watch(locale, scheduleNeighborDescriptionMeasure)
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .about-scroll-indicator {
+    opacity: 0.6;
+    animation: none;
+  }
+
+  .about-scroll-line::after {
+    animation: none;
+  }
+
   .changelog-block .section-header,
   .roadmap-block,
   .roadmap-block .section-header,
@@ -2333,6 +2547,20 @@ watch(locale, scheduleNeighborDescriptionMeasure)
     &::after {
       animation: none;
     }
+  }
+
+  .passion-back,
+  .passion-color-field {
+    opacity: 1;
+    animation: none;
+    clip-path: none;
+    filter: none;
+  }
+
+  .passion-logo-bg {
+    opacity: 1;
+    animation: none;
+    transform: translateX(-50%) scaleX(1.2);
   }
 
   .neighbors-block {

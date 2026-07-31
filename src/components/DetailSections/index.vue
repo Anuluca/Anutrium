@@ -104,7 +104,7 @@ const isClient = ref(false)
 const isNavigationHost = ref(false)
 let removeScrollListener: (() => void) | null = null
 let navigationResizeObserver: ResizeObserver | null = null
-let activeUpdateTimer: ReturnType<typeof window.setTimeout> | null = null
+let activeUpdateTimer: number | null = null
 let measurementFrame = 0
 let headerOffset = 72
 let maxScrollTop = 0

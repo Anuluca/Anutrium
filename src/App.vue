@@ -15,6 +15,7 @@ import { useRoute } from 'vue-router'
 import { visualState } from './stores'
 import { getSeoMeta, syncSeoMeta, type SeoLocale } from '@/router'
 import { installExternalLinkTracking } from '@/utils/analytics'
+import { startSmoothScroll, stopSmoothScroll } from '@/utils/smoothScroll'
 
 const BackController = defineAsyncComponent(
   () => import('@/components/BackController/index.vue')
@@ -149,9 +150,11 @@ onMounted(() => {
   window.addEventListener('resize', scheduleRootFontSizeUpdate, {
     passive: true,
   })
-  visualStateStore.setTheme(localStorage.getItem('theme') || 'dark')
+  const savedTheme = localStorage.getItem('theme')
+  visualStateStore.setTheme(savedTheme === 'light' ? 'light' : 'dark')
   syncSeoMeta(route)
   removeExternalLinkTracking = installExternalLinkTracking()
+  startSmoothScroll()
 })
 
 onUnmounted(() => {
@@ -159,6 +162,7 @@ onUnmounted(() => {
   if (resizeRafId !== null) window.cancelAnimationFrame(resizeRafId)
   if (entryAnimationTimer !== null) window.clearTimeout(entryAnimationTimer)
   removeExternalLinkTracking?.()
+  stopSmoothScroll()
 })
 </script>
 

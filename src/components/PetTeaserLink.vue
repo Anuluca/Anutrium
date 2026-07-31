@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 
 const catEarsImage = 'https://assets.anuluca.com/other/cat_ear.png'
 const catImage = 'https://assets.anuluca.com/other/cat_full.png'
@@ -20,6 +21,7 @@ const IDLE_MOTION_DELAY_RANGE = 5_000
 const ACTIVATION_DURATION = 650
 const ACTIVATION_FALLBACK_BUFFER = 360
 
+const router = useRouter()
 const state = ref<InteractionState>('idle')
 const isIdleMotion = ref(false)
 const footerOffset = ref('0px')
@@ -38,6 +40,7 @@ let footerElement: HTMLElement | null = null
 let footerResizeObserver: ResizeObserver | null = null
 let footerMutationObserver: MutationObserver | null = null
 let reducedMotionQuery: MediaQueryList | null = null
+let hasNavigated = false
 let isTrackingFooterTransition = false
 
 const clearIdleMotionTimer = () => {
@@ -85,23 +88,32 @@ const handleMouseLeave = () => {
   scheduleIdleMotion()
 }
 
-const finishActivation = () => {
-  if (state.value !== 'activating') return
-
+const navigateToPet = async () => {
+  if (hasNavigated) return
+  hasNavigated = true
   clearActivationFallback()
+
+  try {
+    const failure = await router.push('/pet')
+    if (!failure) return
+  } catch {
+    // Restore the entry when route loading fails so the user can retry.
+  }
+
+  hasNavigated = false
   state.value = 'idle'
   scheduleIdleMotion()
 }
 
 const handleActivate = () => {
-  if (!props.entryActive || state.value === 'activating') return
+  if (!props.entryActive || state.value === 'activating' || hasNavigated) return
 
   state.value = 'activating'
   isIdleMotion.value = false
   clearIdleMotionTimer()
 
   activationFallbackTimer = window.setTimeout(() => {
-    finishActivation()
+    void navigateToPet()
   }, ACTIVATION_DURATION + ACTIVATION_FALLBACK_BUFFER)
 }
 
@@ -110,7 +122,7 @@ const handleCatAnimationEnd = (event: AnimationEvent) => {
     state.value === 'activating' &&
     event.animationName.includes('pet-cat-enter')
   ) {
-    finishActivation()
+    void navigateToPet()
   }
 }
 
@@ -244,7 +256,7 @@ onUnmounted(() => {
       },
     ]"
     :style="animationStyle"
-    aria-label="播放花花互动动画"
+    aria-label="前往花花的宠物页面"
     :aria-disabled="!props.entryActive || state === 'activating'"
     :tabindex="props.entryActive ? 0 : -1"
     @mouseenter="handleMouseEnter"

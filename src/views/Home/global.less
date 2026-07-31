@@ -28,7 +28,15 @@
           margin-left: auto;
           overflow: visible;
           touch-action: pan-y;
-          transform: translateX(-2px);
+          transform: perspective(1000px)
+            translate3d(
+              calc(var(--hero-exit-x, 0px) - 2px),
+              var(--hero-exit-y, 0px),
+              0
+            )
+            scale(var(--hero-exit-scale, 1))
+            rotateX(var(--hero-rotate-x, 0deg))
+            rotateY(var(--hero-rotate-y, 0deg));
 
           &::before {
             display: none;
@@ -101,9 +109,6 @@
     .card-title {
       text-overflow: ellipsis;
       overflow-wrap: anywhere;
-    }
-
-    .card-title {
       font-size: clamp(0.9rem, 4.3vw, 1.08rem);
       -webkit-line-clamp: 1;
     }
@@ -220,24 +225,6 @@
       display: none;
     }
 
-    .archive-entry {
-      min-width: 112px;
-      height: 30px;
-      grid-template-columns: auto auto;
-      padding: 0 10px;
-
-      &__code {
-        display: none;
-      }
-
-      &__text {
-        font-size: 0.5rem;
-      }
-    }
-
-    .manifesto-visual .square-image {
-      zoom: 0.65;
-    }
     .works-grid {
       grid-template-columns: 1fr !important;
       gap: 15px;

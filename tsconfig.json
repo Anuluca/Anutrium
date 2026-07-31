@@ -2,25 +2,21 @@
   "extends": "@vue/tsconfig/tsconfig.web.json",
   "include": [
     "env.d.ts",
-    "src/**/*",
-    "src/**/*.vue",
-    "*.ts",
-    "*.tsx",
-    "src/**/*.md", // md文件
     "src/**/*.ts",
-    "src/*.ts"
+    "src/**/*.tsx",
+    "src/**/*.vue",
+    "src/**/*.md"
   ],
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
     },
+    "allowJs": true,
     "verbatimModuleSyntax": true,
     "target": "esnext",
-    "module": "node16",
     "strict": false,
     "jsx": "preserve",
-    "moduleResolution": "node16",
     "types": ["node"]
   },
 

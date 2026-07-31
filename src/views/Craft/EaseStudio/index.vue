@@ -138,6 +138,7 @@
           </div>
           <pre
             class="pt-code-block"
+            data-lenis-nested-scroll
           ><code class="pt-code-inner">{{ cssCode }}</code></pre>
         </div>
 

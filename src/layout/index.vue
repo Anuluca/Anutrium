@@ -98,13 +98,8 @@
                 },
               ]"
             >
-              <component
-                :is="getRouteIcon(item.meta.headerIcon)"
-                class="menu-route-icon"
-                aria-hidden="true"
-              />
               <div class="title-box">
-                <div class="main-title">{{ item.meta.titleEn }}</div>
+                <TextRoll class="main-title" :text="item.meta.titleEn" />
                 <div class="second-title">
                   <div class="line" />
                   <span>{{ item.meta.titleCn }}</span>
@@ -256,21 +251,13 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
-import {
-  Collection,
-  HomeFilled,
-  MapLocation,
-  Moon,
-  Ship,
-  Sunny,
-  Tools,
-  UserFilled,
-} from '@element-plus/icons-vue'
+import { Moon, Sunny } from '@element-plus/icons-vue'
 
 import BackToTop from '@/components/BackToTop/index.vue'
 import Logo from '@/components/Logo/index.vue'
+import TextRoll from '@/components/TextRoll/index.vue'
 import type { ContactLink } from '@/locales/modules/contactLinks'
-import { type HeaderIconName, routes, syncSeoMeta } from '@/router'
+import { routes, syncSeoMeta } from '@/router'
 import { visualState } from '@/stores'
 import { persistLocale, type SiteLocale } from '@/utils/locale'
 import {
@@ -279,6 +266,7 @@ import {
   getPageScrollTop,
   scrollPageTo,
 } from '@/utils/pageScroll'
+import { setSmoothScrollLocked } from '@/utils/smoothScroll'
 
 const { locale, tm } = useI18n()
 const props = defineProps({
@@ -337,9 +325,7 @@ const headerPresentation = computed(() => {
     contentAligned: !expandedHeaderRoutes.has(routeName),
     moduleName: hiddenModuleTitleRoutes.has(routeName)
       ? ''
-      : String(
-          locale.value === 'en' ? moduleMeta.titleEn : moduleMeta.titleCn
-        ),
+      : String(locale.value === 'en' ? moduleMeta.titleEn : moduleMeta.titleCn),
     moduleTheme: moduleThemeByPath[modulePath] || '',
   }
 })
@@ -348,17 +334,6 @@ const isInnerMenuRoute = computed(
     typeof route.meta.activeMenu === 'string' &&
     normalizeMenuPath(route.path) !== currentRouter.value
 )
-const routeIconMap: Record<HeaderIconName, typeof HomeFilled> = {
-  Collection,
-  HomeFilled,
-  MapLocation,
-  Ship,
-  Tools,
-  UserFilled,
-}
-const getRouteIcon = (icon?: HeaderIconName) =>
-  routeIconMap[icon || 'HomeFilled']
-
 const layoutPage = ref<HTMLElement | null>(null)
 const isScrolled = ref(false)
 const layoutShow = ref(false)
@@ -499,6 +474,7 @@ const lockMobilePageScroll = () => {
 
   isMobileScrollLocked = true
   lockedMobileScrollY = getPageScrollTop()
+  setSmoothScrollLocked('mobile-menu', true)
   document.documentElement.classList.add('mobile-menu-scroll-locked')
   document.body.classList.add('mobile-menu-scroll-locked')
   document.addEventListener('touchmove', preventBackgroundTouchMove, {
@@ -511,6 +487,7 @@ const unlockMobilePageScroll = () => {
 
   isMobileScrollLocked = false
   const scrollY = lockedMobileScrollY
+  setSmoothScrollLocked('mobile-menu', false)
   document.documentElement.classList.remove('mobile-menu-scroll-locked')
   document.body.classList.remove('mobile-menu-scroll-locked')
   document.removeEventListener('touchmove', preventBackgroundTouchMove)

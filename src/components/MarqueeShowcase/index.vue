@@ -106,7 +106,6 @@ onUnmounted(() => {
 
 .marquee-3d-container {
   width: 100%;
-
   transform: rotateX(40deg);
   transform-style: preserve-3d;
 }

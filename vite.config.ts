@@ -3,6 +3,7 @@ import AutoImport from 'unplugin-auto-import/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 import Components from 'unplugin-vue-components/vite'
 import { defineConfig } from 'vite'
+import { VitePWA } from 'vite-plugin-pwa'
 
 import imageLog from './src/locales/dynamic/island/Photography/imageLog'
 import merchPhotos from './src/locales/dynamic/island/Photography/merchPhotos'
@@ -27,6 +28,26 @@ export default defineConfig({
     }),
     Components({
       resolvers: [ElementPlusResolver()],
+    }),
+    VitePWA({
+      manifest: false,
+      registerType: 'autoUpdate',
+      injectRegister: 'script-defer',
+      scope: '/',
+      workbox: {
+        globPatterns: [
+          'assets/**/*.{js,css}',
+          'pwa-*.png',
+          'apple-touch-icon.png',
+          'favicon.ico',
+        ],
+        dontCacheBustURLsMatching: /-[a-f0-9]{8}\.(?:js|css)$/,
+        navigateFallback: undefined,
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
+        runtimeCaching: [],
+      },
     }),
   ],
   resolve: {

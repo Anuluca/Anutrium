@@ -61,6 +61,7 @@
           </div>
           <pre
             class="pt-code-block"
+            data-lenis-nested-scroll
           ><code>{{ outputText || '// NO DATA' }}</code></pre>
         </div>
 

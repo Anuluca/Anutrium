@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 const PAGE_LOAD_TIMEOUT = 20_000
 
-test('pet teaser plays its state sequence without opening Flora', async ({
+test('pet teaser plays its state sequence before opening Flora', async ({
   page,
 }, testInfo) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' })
@@ -15,7 +15,7 @@ test('pet teaser plays its state sequence without opening Flora', async ({
   await expect(teaser).toHaveClass(/\bpet-teaser--ready\b/, {
     timeout: PAGE_LOAD_TIMEOUT,
   })
-  await expect(teaser).toHaveAttribute('aria-label', '播放花花互动动画')
+  await expect(teaser).toHaveAttribute('aria-label', '前往花花的宠物页面')
   await expect(teaser.locator('.pet-teaser__ears')).toHaveAttribute(
     'draggable',
     'false'
@@ -177,18 +177,16 @@ test('pet teaser plays its state sequence without opening Flora', async ({
     1
   )
 
-  await expect(teaser).not.toHaveClass(/\bpet-teaser--activating\b/, {
-    timeout: 1_300,
+  await expect(page).toHaveURL(/\/pet$/, { timeout: 1_300 })
+  await expect(page.locator('.flora-page')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
   })
-  await expect(teaser).toHaveAttribute('aria-disabled', 'false')
-  await expect(page).toHaveURL(/\/$/)
-  await expect(page.locator('.flora-page')).toHaveCount(0)
-  await expect(teaser).toBeVisible()
+  await expect(page.locator('.pet-teaser')).toHaveCount(0)
 })
 
-test('pet teaser activation preserves the current route and scroll state', async ({
+test('Flora clears the previous page scroll state and geometry', async ({
   page,
-}) => {
+}, testInfo) => {
   await page.goto('/archive', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.archives-page')).toBeVisible({
     timeout: PAGE_LOAD_TIMEOUT,
@@ -203,20 +201,36 @@ test('pet teaser activation preserves the current route and scroll state', async
   await expect(teaser).toHaveClass(/\bpet-teaser--ready\b/, {
     timeout: PAGE_LOAD_TIMEOUT,
   })
-  const scrollTopBefore = await page.evaluate(() => document.body.scrollTop)
   await teaser.locator('.pet-teaser__interaction-zone').click()
-  await expect(teaser).toHaveClass(/\bpet-teaser--activating\b/)
-  await expect(teaser).not.toHaveClass(/\bpet-teaser--activating\b/, {
-    timeout: 1_300,
+  await expect(page).toHaveURL(/\/pet$/, { timeout: 5_000 })
+  await expect(page.locator('.flora-page')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
   })
-  await expect(teaser).toHaveAttribute('aria-disabled', 'false')
-  await expect(page).toHaveURL(/\/archive$/)
-  await expect(page.locator('.archives-page')).toBeVisible()
-  await expect(page.locator('.flora-page')).toHaveCount(0)
-  expect(await page.evaluate(() => document.body.scrollTop)).toBeCloseTo(
-    scrollTopBefore,
-    0
+  await expect(page.locator('.el-menu-layout-all')).not.toHaveClass(
+    /\bscrolled\b/
   )
+  if (testInfo.project.name.includes('mobile')) {
+    await expect(page.locator('.mobile-menu-icon')).not.toHaveClass(
+      /\bscrolled\b/
+    )
+  }
+
+  const metrics = await page.evaluate(() => {
+    const routerContainer =
+      document.querySelector<HTMLElement>('.router-container')
+    if (!routerContainer) throw new Error('Router container is unavailable')
+
+    const bounds = routerContainer.getBoundingClientRect()
+    const styles = window.getComputedStyle(routerContainer)
+
+    return {
+      bodyScrollTop: document.body.scrollTop,
+      topOffset: Math.abs(bounds.top - Number.parseFloat(styles.marginTop)),
+    }
+  })
+
+  expect(metrics.bodyScrollTop).toBeLessThanOrEqual(1)
+  expect(metrics.topOffset).toBeLessThanOrEqual(1)
 })
 
 test('pet teaser stays inside the viewport and avoids fixed controls', async ({
@@ -450,7 +464,7 @@ test('pet teaser stays inside the viewport and avoids fixed controls', async ({
   }
 })
 
-test('pet teaser remains animation-only with reduced motion', async ({
+test('pet teaser keeps navigation functional with reduced motion', async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
@@ -467,11 +481,8 @@ test('pet teaser remains animation-only with reduced motion', async ({
   )
 
   await teaser.locator('.pet-teaser__interaction-zone').click()
-  await page.waitForTimeout(250)
-  await expect(teaser).not.toHaveClass(/\bpet-teaser--activating\b/, {
-    timeout: 1_300,
+  await expect(page).toHaveURL(/\/pet$/, { timeout: 5_000 })
+  await expect(page.locator('.flora-page')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
   })
-  await expect(teaser).toHaveAttribute('aria-disabled', 'false')
-  await expect(page).toHaveURL(/\/$/)
-  await expect(page.locator('.flora-page')).toHaveCount(0)
 })

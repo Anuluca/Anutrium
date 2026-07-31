@@ -108,6 +108,7 @@
           </div>
           <pre
             class="pt-code-block"
+            data-lenis-nested-scroll
           ><code class="pt-code-inner">{{ cssVariablesText || '// NO DATA\n// 请先上传图片...' }}</code></pre>
           <div class="crystal-container">
             <ToolCrystalLogo tool-id="palette" />
@@ -134,7 +135,7 @@ const extractedColors = ref<string[]>([])
 const isExtracting = ref(false)
 const copied = ref(false)
 const copiedColor = ref('')
-let copiedColorTimer: ReturnType<typeof window.setTimeout> | null = null
+let copiedColorTimer: number | null = null
 
 const recommendedTools = [
   { label: '配色提取器', path: '/colorPalette' },

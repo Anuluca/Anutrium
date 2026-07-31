@@ -3,6 +3,8 @@
     class="flanerie-page main-container"
     :class="{ 'is-en': locale === 'en' }"
   >
+    <PageHeroTitle />
+
     <!--
     <PageHeader
       header-label="[241001_ACCIDENT]"
@@ -47,6 +49,9 @@
             :title="group.title"
             :title-en="group.titleEn"
           >
+            <template #actions>
+              <SectionCount :count="group.items.length" />
+            </template>
             <div class="vlog-grid">
               <VlogCard
                 v-for="vlog in group.items"
@@ -82,16 +87,14 @@ import {
 import { Minus, Plus } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
+import PageHeroTitle from '@/components/PageHeroTitle/index.vue'
+import SectionCount from '@/components/SectionCount/index.vue'
 import Sections from '@/components/Sections/index.vue'
 // import PageHeader from '@/components/PageHeader/index.vue'
 import VlogCard from '@/components/VlogCard/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
 import { visualState } from '@/stores'
-import {
-  getPageMaxScrollTop,
-  getPageScrollTop,
-  scrollPageTo,
-} from '@/utils/pageScroll'
+import { getPageScrollTop, scrollPageTo } from '@/utils/pageScroll'
 
 type VlogCategory = 'visited' | 'resident' | 'activity'
 
@@ -219,9 +222,9 @@ const restoreJourneyReturnState = async (returnState: JourneyReturnState) => {
       targetBounds.top -
       (window.innerHeight - targetBounds.height) / 2
     : 0
-  const restoredScrollTop = Math.min(
-    Math.max(0, returnState.scrollTop ?? targetScrollTop),
-    getPageMaxScrollTop()
+  const restoredScrollTop = Math.max(
+    0,
+    returnState.scrollTop ?? targetScrollTop
   )
 
   scrollPageTo({ top: restoredScrollTop })
@@ -634,7 +637,7 @@ onUnmounted(() => {
 }
 
 .vlog-section {
-  padding: 30px 0;
+  padding: 0 0 30px;
   overflow-x: hidden;
   overflow-x: clip;
 }

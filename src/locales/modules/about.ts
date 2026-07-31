@@ -13,9 +13,9 @@ const about = {
     zhCn: '热情红',
     en: 'PASSION RED',
   },
-  changelogLabel: {
+  changelogTagLabel: {
     zhCn: '更新日志',
-    en: 'RELEASE HISTORY',
+    en: 'CHANGELOG',
   },
   majorOnlyLabel: {
     zhCn: '只看重大更新',
@@ -26,6 +26,10 @@ const about = {
     en: 'MAJOR UPDATE',
   },
   latestLabel: 'LATEST',
+  roadmapTagLabel: {
+    zhCn: '未来更新',
+    en: 'ROADMAP',
+  },
   dynamic,
 } as const
 

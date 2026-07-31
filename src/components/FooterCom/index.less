@@ -37,12 +37,6 @@
     bottom: 0;
   }
 
-  &.scrolling-down {
-    width: 2000px;
-    left: calc(50vw - 1000px);
-    bottom: 6px;
-  }
-
   &.motion-paused {
     .marquee-wrap {
       animation-play-state: paused !important;
@@ -149,9 +143,7 @@
         padding-top: 3px;
         opacity: 0.94;
         filter: brightness(0.93) saturate(0.86);
-        transition:
-          opacity 0.2s,
-          filter 0.2s;
+        transition: opacity 0.2s, filter 0.2s;
         white-space: nowrap;
         align-items: center;
         display: inline-flex;
@@ -296,6 +288,14 @@
 
           .social-trigger {
             color: #fff;
+
+            .text-roll__char--current {
+              transform: translateY(-105%);
+            }
+
+            .text-roll__char--incoming {
+              transform: translateY(0);
+            }
           }
         }
       }
@@ -318,50 +318,6 @@
       &:hover,
       &:focus-visible {
         color: @primary-color !important;
-      }
-    }
-
-    .el-switch {
-      margin: 0 18px 0 2px;
-      height: 20px;
-      border-radius: 1000px;
-
-      .el-switch__core {
-        height: 17px;
-        border-radius: 1000px;
-        min-width: 36px;
-        box-sizing: border-box !important;
-        box-shadow: 0px 0px 6px 0px #000000a3;
-
-        .el-switch__action {
-          width: 16px;
-          height: 16px;
-          box-shadow: 0px 0px 6px 0px #0000005c;
-        }
-      }
-    }
-
-    .el-switch.is-checked {
-      .el-switch__core {
-        border: 2px solid #6e40c9;
-
-        .el-switch__action {
-          left: calc(100% - 14px);
-          background-color: #6e40c9;
-          border: 2px solid #6e40c9;
-        }
-      }
-    }
-
-    .el-switch:not(.is-checked) {
-      .el-switch__core {
-        border: 2px solid #f4ea2a;
-
-        .el-switch__action {
-          background-color: #f4ea2a;
-          border: 2px solid #f4ea2a;
-          left: -4px;
-        }
       }
     }
   }
@@ -589,6 +545,23 @@ body.light {
 @media screen and (max-aspect-ratio: @ratio-threshold) {
   .footer-com {
     display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .footer-com .right .text-links > .social-link {
+    &:hover,
+    &:focus-within {
+      .social-trigger {
+        .text-roll__char--current {
+          transform: translateY(0);
+        }
+
+        .text-roll__char--incoming {
+          transform: translateY(105%);
+        }
+      }
+    }
   }
 }
 

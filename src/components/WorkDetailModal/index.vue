@@ -8,8 +8,8 @@
       />
     </div>
 
-    <div class="modal-body">
-      <aside v-if="work" class="modal-aside">
+    <div class="modal-body" data-lenis-nested-scroll>
+      <aside v-if="work" class="modal-aside" data-lenis-nested-scroll>
         <div class="aside-company">
           <div v-if="work.logo" class="aside-logo">
             <img
@@ -164,7 +164,7 @@
         </div>
       </aside>
 
-      <div v-if="work" class="modal-gallery">
+      <div v-if="work" class="modal-gallery" data-lenis-nested-scroll>
         <div
           v-if="work.images && work.images.length"
           :key="`${work.id}-${animationRun}`"

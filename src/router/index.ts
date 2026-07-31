@@ -1,5 +1,9 @@
 /* eslint-disable simple-import-sort/imports */
-import type { RouteLocationNormalizedLoaded, Router } from 'vue-router'
+import type {
+  RouteLocationNormalizedLoaded,
+  RouteRecordRaw,
+  Router,
+} from 'vue-router'
 import NProgress from 'nprogress'
 
 import i18n from '../locales'
@@ -17,18 +21,23 @@ const preloadRouteComponent = async (routeName: unknown) => {
   if (typeof routeName !== 'string') return
 
   const targetRoute = routeByName.get(routeName)
-  if (typeof targetRoute?.component !== 'function') return
+  if (
+    !targetRoute ||
+    !('component' in targetRoute) ||
+    typeof targetRoute.component !== 'function'
+  ) {
+    return
+  }
 
   const cacheKey = targetRoute.name
+  const componentLoader = targetRoute.component as () => Promise<unknown>
   const cachedLoad = routeComponentLoads.get(cacheKey)
   if (cachedLoad) return cachedLoad
 
-  const componentLoad = Promise.resolve(targetRoute.component()).catch(
-    (error) => {
-      routeComponentLoads.delete(cacheKey)
-      throw error
-    }
-  )
+  const componentLoad = Promise.resolve(componentLoader()).catch((error) => {
+    routeComponentLoads.delete(cacheKey)
+    throw error
+  })
   routeComponentLoads.set(cacheKey, componentLoad)
   return componentLoad
 }
@@ -136,11 +145,8 @@ export type HeaderIconName =
   | 'Tools'
   | 'UserFilled'
 
-interface RouteConfig {
-  path: string
+type RouteConfig = RouteRecordRaw & {
   name: string
-  component?: any
-  redirect?: string
   meta: RouteMeta
 }
 
@@ -531,7 +537,8 @@ export const syncSeoMeta = (to: RouteLocationNormalizedLoaded) => {
   if (typeof document === 'undefined') return
 
   const locale = i18n.global.locale.value === 'en' ? 'en' : 'zhCn'
-  const vlogs = i18n.global.tm('flanerie.dynamic.vlogs') as VlogSeoItem[]
+  const translateMessage = i18n.global.tm as (key: string) => unknown
+  const vlogs = translateMessage('flanerie.dynamic.vlogs') as VlogSeoItem[]
   const seoMeta = getSeoMeta(to, locale, vlogs)
 
   document.title = seoMeta.title

@@ -196,6 +196,16 @@ onBeforeUnmount(() => {
     letter-spacing: -0.02em;
     line-height: 1.05;
     overflow-wrap: anywhere;
+    -webkit-mask-image: repeating-linear-gradient(
+      to bottom,
+      #000 0 2px,
+      transparent 2px 3px
+    );
+    mask-image: repeating-linear-gradient(
+      to bottom,
+      #000 0 2px,
+      transparent 2px 3px
+    );
     text-shadow: 0 0 18px rgba(226, 52, 86, 0.2);
     transition: text-shadow 0.25s ease;
   }

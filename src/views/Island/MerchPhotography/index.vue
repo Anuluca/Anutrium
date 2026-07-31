@@ -101,11 +101,7 @@ import MerchCollectionCard, {
   type MerchCollectionCardData,
 } from '@/components/MerchCollectionCard/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
-import {
-  getPageMaxScrollTop,
-  getPageScrollTop,
-  scrollPageTo,
-} from '@/utils/pageScroll'
+import { getPageScrollTop, scrollPageTo } from '@/utils/pageScroll'
 
 type MerchCategoryId = 'pokemon' | 'tokusatsu' | 'other'
 
@@ -241,10 +237,7 @@ const restoreReturnState = async (returnState: MerchReturnState) => {
   await waitForAnimationFrames(3)
   if (isPageUnmounted) return
 
-  const restoredScrollTop = Math.min(
-    Math.max(0, returnState.scrollTop),
-    getPageMaxScrollTop()
-  )
+  const restoredScrollTop = Math.max(0, returnState.scrollTop)
   scrollPageTo({ top: restoredScrollTop })
   returnTransformOriginY.value = `${
     restoredScrollTop + window.innerHeight / 2
