@@ -286,10 +286,88 @@ const events = [
     ],
   },
   {
+    id: 'live_zhangxueyou60+',
+    category: 'activity',
+    title: {
+      zhCn: '南昌｜张学友“60+”演唱会',
+      en: '',
+    },
+    mapLabel: {
+      zhCn: '南昌',
+      en: 'Nanchang',
+    },
+    date: '2026',
+    tagline: {
+      zhCn: '',
+      en: '',
+    },
+    img: 'https://assets.anuluca.com/Flanerie/events/live_zhangxueyou60/d6aa504d9937ecc0f74f164444c60abf670f61c3.jpg',
+    videos: [
+      {
+        title: '不完整记录',
+        cover:
+          'https://assets.anuluca.com/other/videoCover/d6aa504d9937ecc0f74f164444c60abf670f61c3.jpg@672w_378h_1c.webp',
+        bvid: 'BV1S7ET6UEVZ',
+        url: 'https://www.bilibili.com/video/BV1S7ET6UEVZ',
+        orientation: 'landscape',
+      },
+    ],
+    photos: [
+      // {
+      //   location: {
+      //     zhCn: '城市活动',
+      //     en: 'City Event',
+      //   },
+      //   time: '2023',
+      //   device: 'iPhone 12 mini',
+      //   url: 'https://assets.anuluca.com/Flanerie/events/poke_event2/IMG_0704 (1).jpg',
+      // },
+    ],
+  },
+  {
+    id: 'live_jolinPleasure',
+    category: 'activity',
+    title: {
+      zhCn: '蔡依林PLEASURE LIVE',
+      en: '',
+    },
+    mapLabel: {
+      zhCn: '南昌',
+      en: 'Nanchang',
+    },
+    date: '2026',
+    tagline: {
+      zhCn: '',
+      en: '',
+    },
+    img: 'https://assets.anuluca.com/Flanerie/events/live_jolinPleasure/DSC07826.jpg',
+    videos: [
+      {
+        title: '不完整记录',
+        cover:
+          'https://assets.anuluca.com/other/videoCover/82018d8ac4ae3361aeaba536234be0cfdd750c78.jpg@672w_378h_1c.avif',
+        bvid: 'BV11QNU68ES2',
+        url: 'https://www.bilibili.com/video/BV11QNU68ES2',
+        orientation: 'landscape',
+      },
+    ],
+    photos: [
+      // {
+      //   location: {
+      //     zhCn: '城市活动',
+      //     en: 'City Event',
+      //   },
+      //   time: '2023',
+      //   device: 'iPhone 12 mini',
+      //   url: 'https://assets.anuluca.com/Flanerie/events/poke_event2/IMG_0704 (1).jpg',
+      // },
+    ],
+  },
+  {
     id: 'dyna_gaia',
     category: 'activity',
     title: {
-      zhCn: '武汉｜戴拿&盖亚奥特曼见面会',
+      zhCn: '武汉｜戴拿&盖亚见面会',
       en: 'WUHAN | ULTRAMAN DYNA & GAIA MEET-AND-GREET',
     },
     mapLabel: {

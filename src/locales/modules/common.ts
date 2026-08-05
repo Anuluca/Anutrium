@@ -17,6 +17,10 @@ const common = {
     zhCn: '继续探索',
     en: 'SCROLL TO EXPLORE',
   },
+  scrollDown: {
+    zhCn: '向下滚动',
+    en: 'SCROLL DOWN',
+  },
   notFound: {
     description: {
       zhCn: '这个页面可能还在开发中',

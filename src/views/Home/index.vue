@@ -166,7 +166,6 @@
       class="manifesto-section home-indexed-section scroll-reveal-section"
     >
       <button
-        v-if="!isMobileCarousel"
         class="back-first-screen screen-jump no-rem"
         type="button"
         aria-label="返回第一屏"
@@ -770,7 +769,7 @@ const syncPassionHoverState = (event: MouseEvent) => {
 }
 
 const isInFirstScreenScrollZone = () => {
-  if (isMobileCarousel.value || !manifestoSection.value) return false
+  if (!manifestoSection.value) return false
 
   return (
     getPageScrollTop() < heroMetrics.nextSectionTop - 80 &&
@@ -779,7 +778,7 @@ const isInFirstScreenScrollZone = () => {
 }
 
 const isInSecondScreenReturnZone = () => {
-  if (isMobileCarousel.value || !manifestoSection.value) return false
+  if (!manifestoSection.value) return false
 
   const scrollTop = getPageScrollTop()
 
@@ -880,11 +879,18 @@ const handleFirstScreenTouchMove = (event: TouchEvent) => {
 
   const currentY = event.touches[0]?.clientY ?? firstScreenTouchStartY
   const swipeUpDistance = firstScreenTouchStartY - currentY
+  const swipeDownDistance = currentY - firstScreenTouchStartY
 
-  if (swipeUpDistance <= 24 || !isInFirstScreenScrollZone()) return
+  if (swipeUpDistance > 24 && isInFirstScreenScrollZone()) {
+    event.preventDefault()
+    scrollToNextScreenFromHero()
+    return
+  }
 
-  event.preventDefault()
-  scrollToNextScreenFromHero()
+  if (swipeDownDistance > 24 && isInSecondScreenReturnZone()) {
+    event.preventDefault()
+    scrollToFirstScreen()
+  }
 }
 
 const setFirstScreenInputActive = (shouldListen: boolean) => {
@@ -916,9 +922,7 @@ const syncFirstScreenInputRuntime = () => {
   const secondScreenTop = heroMetrics.nextSectionTop || getManifestoSectionTop()
   const interactionEnd = secondScreenTop + SECOND_SCREEN_RETURN_ZONE
 
-  setFirstScreenInputActive(
-    !isMobileCarousel.value && getPageScrollTop() <= interactionEnd
-  )
+  setFirstScreenInputActive(getPageScrollTop() <= interactionEnd)
 }
 
 const setHeroExitVariables = (
@@ -1467,7 +1471,7 @@ interface JourneyVlog {
   img2?: string
 }
 
-const journeyVlogIds = ['jiujiang', 'nanjing', 'singapore']
+const journeyVlogIds = ['singapore', 'live_jolinPleasure', 'zero']
 
 const journeyVlogs = computed<JourneyVlog[]>(() => {
   const vlogs = tm('flanerie.dynamic.vlogs') as JourneyVlog[]

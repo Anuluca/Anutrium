@@ -809,28 +809,30 @@ const travelDestinations = [
       lat: 28.682,
       lng: 115.8582,
     },
-    // videos: [
-    //   {
-    //     title: {
-    //       zhCn: '人文篇',
-    //       en: '',
-    //     },
-    //     cover: 'https://assets.anuluca.com/other/videoCover/',
-    //     bvid: '',
-    //     url: 'https://www.bilibili.com/video/',
-    //     orientation: 'landscape',
-    //   },
-    //   {
-    //     title: {
-    //       zhCn: '山水篇',
-    //       en: '',
-    //     },
-    //     cover: 'https://assets.anuluca.com/other/videoCover/',
-    //     bvid: '',
-    //     url: 'https://www.bilibili.com/video/',
-    //     orientation: 'landscape',
-    //   },
-    // ],
+    videos: [
+      {
+        title: {
+          zhCn: '人文篇',
+          en: '',
+        },
+        cover:
+          'https://assets.anuluca.com/other/videoCover/a855f56b693b1a27062d28fbce711de22fd8c97c.jpg@672w_378h_1c.webp',
+        bvid: 'BV1197L6AEzS',
+        url: 'https://www.bilibili.com/video/BV1197L6AEzS',
+        orientation: 'landscape',
+      },
+      {
+        title: {
+          zhCn: '山水篇',
+          en: '',
+        },
+        cover:
+          'https://assets.anuluca.com/other/videoCover/a4749e8c506c19d787bc3f51eba338e2e27a0063.jpg@672w_378h_1c.avif',
+        bvid: 'BV1GRKJ6fE3v',
+        url: 'https://www.bilibili.com/video/BV1GRKJ6fE3v',
+        orientation: 'landscape',
+      },
+    ],
     photos: [
       {
         location: {
@@ -979,6 +981,16 @@ const travelDestinations = [
       lat: 28.682,
       lng: 115.8582,
     },
+    videos: [
+      {
+        title: 'VLOG',
+        bvid: 'BV1DEGP6fErS',
+        url: 'https://www.bilibili.com/video/BV1DEGP6fErS',
+        cover:
+          'https://assets.anuluca.com/other/videoCover/66b05db0247562830b9e58c361c7e9a39ca70efd.jpg@672w_378h_1c.webp',
+        orientation: 'landscape',
+      },
+    ],
     photos: [
       {
         location: {
@@ -986,7 +998,7 @@ const travelDestinations = [
           en: '',
         },
         time: '2026',
-        device: 'Passonic Lumix ZX99',
+        device: 'panasonic Lumix ZX99',
         url: 'https://assets.anuluca.com/Flanerie/cities/poyang-lake/P1011274.jpg',
       },
     ],

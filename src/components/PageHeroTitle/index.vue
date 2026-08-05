@@ -4,27 +4,35 @@
     class="page-hero-title"
     :style="{ '--page-hero-title-color': titleColor }"
   >
-    <h1>
-      <span ref="titleText" class="page-hero-title__text" :aria-label="title">
-        <span
-          v-for="(character, index) in titleCharacters"
-          :key="`${character}-${index}`"
-          class="page-hero-title__char"
-          :class="`is-moving-${characterDirections[index] || 'up'}`"
-          aria-hidden="true"
-          @pointerleave="randomizeCharacterDirection(index)"
-        >
-          <span class="page-hero-title__char-current">{{ character }}</span>
-          <span class="page-hero-title__char-incoming">{{ character }}</span>
+    <div ref="titleClip" class="page-hero-title__clip">
+      <h1 ref="titleHeading">
+        <span ref="titleText" class="page-hero-title__text" :aria-label="title">
+          <span
+            v-for="(character, index) in titleCharacters"
+            :key="`${character}-${index}`"
+            class="page-hero-title__char"
+            :class="`is-moving-${characterDirections[index] || 'up'}`"
+            aria-hidden="true"
+            @pointerleave="randomizeCharacterDirection(index)"
+          >
+            <span class="page-hero-title__char-current">
+              {{ character }}
+            </span>
+            <span class="page-hero-title__char-incoming">
+              {{ character }}
+            </span>
+          </span>
         </span>
-      </span>
-    </h1>
+      </h1>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+
+import { addPageScrollListener, getPageScrollTop } from '@/utils/pageScroll'
 
 const route = useRoute()
 const title = computed(() =>
@@ -48,8 +56,14 @@ const titleColor = computed(
   () => themeColors[String(route.name)] || 'var(--text-color)'
 )
 const titleContainer = ref<HTMLElement | null>(null)
+const titleClip = ref<HTMLElement | null>(null)
+const titleHeading = ref<HTMLElement | null>(null)
 const titleText = ref<HTMLElement | null>(null)
 let resizeObserver: ResizeObserver | null = null
+let removeScrollListener: (() => void) | null = null
+let geometryFrameId: number | null = null
+let titleFullHeight = 0
+let collapseDistance = 1
 
 const getRandomDirection = (
   currentDirection?: MoveDirection
@@ -89,39 +103,93 @@ const fitTitleToRow = () => {
   )
 }
 
+const syncScrollCollapse = () => {
+  if (!titleClip.value || !titleFullHeight) return
+
+  const progress = Math.min(1, getPageScrollTop() / collapseDistance)
+  const visibleHeight = titleFullHeight * (1 - progress)
+  titleClip.value.style.setProperty(
+    '--page-hero-title-visible-height',
+    `${visibleHeight.toFixed(2)}px`
+  )
+}
+
+const measureTitleGeometry = () => {
+  geometryFrameId = null
+  if (!titleContainer.value || !titleClip.value || !titleHeading.value) {
+    return
+  }
+
+  fitTitleToRow()
+  titleFullHeight = titleHeading.value.offsetHeight
+  collapseDistance = Math.max(140, Math.min(280, titleFullHeight * 1.35))
+  syncScrollCollapse()
+}
+
+const scheduleTitleGeometry = () => {
+  if (geometryFrameId !== null) return
+  geometryFrameId = window.requestAnimationFrame(measureTitleGeometry)
+}
+
 watch(title, () => {
   prepareCharacterDirections()
-  nextTick(fitTitleToRow)
+  nextTick(scheduleTitleGeometry)
 })
 
 onMounted(() => {
   prepareCharacterDirections()
-  resizeObserver = new ResizeObserver(fitTitleToRow)
+  resizeObserver = new ResizeObserver(scheduleTitleGeometry)
   if (titleContainer.value) resizeObserver.observe(titleContainer.value)
+  removeScrollListener = addPageScrollListener(syncScrollCollapse)
 
-  nextTick(fitTitleToRow)
-  document.fonts?.ready.then(fitTitleToRow)
+  nextTick(scheduleTitleGeometry)
+  document.fonts?.ready.then(scheduleTitleGeometry)
 })
 
 onBeforeUnmount(() => {
   resizeObserver?.disconnect()
+  removeScrollListener?.()
+  if (geometryFrameId !== null) {
+    window.cancelAnimationFrame(geometryFrameId)
+  }
 })
 </script>
 
 <style lang="less" scoped>
+:global(.main-container:has(.page-hero-title)) {
+  overflow-x: clip;
+}
+
 .page-hero-title {
+  --page-hero-title-font-size: clamp(3.25rem, 11vw, 14rem);
+
+  position: sticky;
+  top: 120px;
+  z-index: 3;
   width: 100%;
-  overflow: hidden;
+  height: calc(var(--page-hero-title-font-size) * 0.82);
   margin: 0 0 clamp(24px, 2.5vw, 40px);
   padding: 0;
   color: var(--page-hero-title-color);
   pointer-events: none;
 
+  .page-hero-title__clip {
+    width: 100%;
+    height: var(
+      --page-hero-title-visible-height,
+      calc(var(--page-hero-title-font-size) * 0.82)
+    );
+    overflow: hidden;
+    color: inherit;
+    contain: layout paint style;
+    will-change: height;
+  }
+
   h1 {
     width: 100%;
     margin: 0;
     font-family: 'cn-custom', sans-serif;
-    font-size: clamp(3.25rem, 11vw, 14rem);
+    font-size: var(--page-hero-title-font-size);
     font-weight: 900;
     letter-spacing: 0;
     line-height: 0.82;
@@ -230,8 +298,8 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 768px) {
-  .page-hero-title h1 {
-    font-size: 11vw;
+  .page-hero-title {
+    --page-hero-title-font-size: 11vw;
   }
 }
 </style>

@@ -10,7 +10,7 @@
 
     <div class="modal-body" data-lenis-nested-scroll>
       <aside v-if="work" class="modal-aside" data-lenis-nested-scroll>
-        <div class="aside-company">
+        <div class="aside-company no-rem">
           <div v-if="work.logo" class="aside-logo">
             <img
               :src="work.logo"
@@ -1044,9 +1044,56 @@ const closeImageViewer = () => {
   .modal-aside {
     border-right: none;
     border-bottom: 1px solid @border;
-    padding: 30px 20px;
+    padding: 16px 20px 30px;
     max-height: none;
     overflow: visible;
+  }
+
+  .aside-company.no-rem {
+    min-height: 50px;
+    align-items: center;
+    gap: 10px;
+
+    .aside-logo {
+      width: 44px;
+      height: 44px;
+    }
+
+    .aside-company-name {
+      font-size: 15px;
+      line-height: 1.25;
+    }
+
+    .aside-company-info {
+      align-self: stretch;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .project-share-button {
+      align-self: center;
+    }
+
+    .aside-id {
+      margin-top: 4px;
+      font-size: 11px;
+      line-height: 1.2;
+    }
+
+    :deep(.share-button--compact) {
+      min-height: 30px;
+      padding: 4px 7px;
+    }
+
+    :deep(.share-button__icon) {
+      width: 14px;
+      height: 14px;
+    }
+
+    :deep(.share-button__code) {
+      font-size: 8px;
+    }
   }
 
   .modal-gallery {

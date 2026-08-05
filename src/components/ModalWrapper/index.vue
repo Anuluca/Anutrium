@@ -8,14 +8,16 @@
     :align-center="true"
     :lock-scroll="false"
     transition="crt-effect"
-    class="modal-wrapper-dialog"
+    class="modal-wrapper-dialog no-rem"
     :style="{
       '--modal-width': typeof width === 'number' ? `${width}px` : width,
     }"
     @close="handleClose"
     @closed="handleClosed"
   >
-    <DiamondCloseBtn :title="closeTitle" @click="handleClose" />
+    <div class="modal-close-row">
+      <DiamondCloseBtn :title="closeTitle" @click="handleClose" />
+    </div>
 
     <div class="corner corner-tl" />
     <div class="corner corner-tr" />
@@ -300,19 +302,43 @@ onUnmounted(unlockBackgroundScroll)
   }
 }
 
+.modal-close-row {
+  display: contents;
+}
+
 .modal-wrapper-dialog .modal-aside,
 .modal-wrapper-dialog .modal-gallery {
   overscroll-behavior: contain;
 }
 
 @media (max-width: 768px) {
-  .modal-wrapper-dialog {
+  .modal-wrapper-dialog.no-rem {
     width: calc(100vw - 20px) !important;
-    height: calc(100dvh - 20px);
-    max-height: calc(100dvh - 20px) !important;
+    height: calc(100dvh - 192px);
+    max-height: calc(100dvh - 192px) !important;
 
     .el-dialog__body {
+      display: flex;
+      flex-direction: column;
       min-height: 0;
+    }
+
+    .modal-close-row {
+      min-height: 52px;
+      display: flex;
+      flex: 0 0 52px;
+      align-items: center;
+      justify-content: flex-end;
+      box-sizing: border-box;
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(226, 52, 86, 0.18);
+    }
+
+    .modal-close-row .diamond-close-btn {
+      position: relative;
+      top: auto;
+      right: auto;
+      flex: 0 0 36px;
     }
   }
 }

@@ -27,7 +27,7 @@ const aboutDynamic = {
       url: 'http://pokeamice.com',
       logo: PokeAmice,
       description:
-        '此处是由一位业余宝可梦爱好者Asimov创建的宝可梦全栈资料整理站点&个人研究据点。',
+        'Asimov创建的宝可梦全栈资料整理&个人研究据点。',
     },
   ],
   changelogs: [

@@ -92,6 +92,169 @@ test.describe('top-level pages', () => {
   }
 })
 
+test('page hero title stays fixed and collapses upward without resizing text', async ({
+  page,
+}) => {
+  await page.goto('/archive', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.archives-page')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+  await expect(page.locator('.layout-page')).toHaveClass(/\blayout-show\b/, {
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+  await page.waitForTimeout(800)
+
+  const titleViewport = page.locator('.page-hero-title__clip')
+  const readTitleMetrics = () =>
+    titleViewport.evaluate((viewport) => {
+      const bounds = viewport.getBoundingClientRect()
+      const heading = viewport.querySelector('h1')!
+      const text = viewport.querySelector('.page-hero-title__text')!
+
+      return {
+        bottom: bounds.bottom,
+        fontSize: getComputedStyle(heading).fontSize,
+        height: bounds.height,
+        overflow: getComputedStyle(viewport).overflow,
+        textTransform: getComputedStyle(text).transform,
+        top: bounds.top,
+      }
+    })
+
+  const initial = await readTitleMetrics()
+  expect(initial.height).toBeGreaterThan(20)
+  expect(initial.overflow).toBe('hidden')
+
+  await page.mouse.wheel(0, 100)
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() =>
+          Math.max(
+            window.scrollY,
+            document.scrollingElement?.scrollTop || 0,
+            document.documentElement.scrollTop,
+            document.body.scrollTop
+          )
+        ),
+      { timeout: 3_000 }
+    )
+    .toBeGreaterThan(20)
+  await expect
+    .poll(async () => (await readTitleMetrics()).height, { timeout: 3_000 })
+    .toBeLessThan(initial.height - 5)
+
+  const collapsed = await readTitleMetrics()
+  expect(Math.abs(collapsed.top - initial.top)).toBeLessThanOrEqual(1)
+  expect(collapsed.bottom).toBeLessThan(initial.bottom - 5)
+  expect(collapsed.fontSize).toBe(initial.fontSize)
+  expect(collapsed.textTransform).toBe(initial.textTransform)
+})
+
+test('page hero title stays fixed while switching between title pages', async ({
+  page,
+}, testInfo) => {
+  await page.goto('/archive', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.archives-page')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+  await page.evaluate(() => {
+    const initialTitle = document.querySelector('.page-hero-title__clip')
+    const probe = {
+      done: false,
+      initialTop: initialTitle?.getBoundingClientRect().top || 0,
+      samples: [] as number[],
+      startedAt: null as number | null,
+    }
+    ;(
+      window as typeof window & {
+        __pageHeroTitleTransitionProbe?: typeof probe
+      }
+    ).__pageHeroTitleTransitionProbe = probe
+
+    const sampleTitlePosition = () => {
+      if (location.pathname !== '/craft') {
+        requestAnimationFrame(sampleTitlePosition)
+        return
+      }
+
+      probe.startedAt ??= performance.now()
+      const clips = Array.from(
+        document.querySelectorAll('.page-hero-title__clip')
+      )
+      const visibleClip = clips
+        .map((clip) => ({
+          clip,
+          top: clip.getBoundingClientRect().top,
+        }))
+        .sort(
+          (first, second) =>
+            Math.abs(first.top - probe.initialTop) -
+            Math.abs(second.top - probe.initialTop)
+        )[0]
+      if (visibleClip) probe.samples.push(visibleClip.top)
+
+      if (performance.now() - probe.startedAt < 1_200) {
+        requestAnimationFrame(sampleTitlePosition)
+      } else {
+        probe.done = true
+      }
+    }
+
+    requestAnimationFrame(sampleTitlePosition)
+  })
+
+  if (testInfo.project.name.includes('mobile')) {
+    await page.locator('.mobile-menu-icon').click()
+    await page.locator('.mobile-menu-items a[href="/craft"]').click()
+  } else {
+    await page.locator('.menu-box a[href="/craft"]').click()
+  }
+
+  await expect(page.locator('.craft-page')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+  await expect(page.locator('.archives-page')).toHaveCount(0)
+  await expect
+    .poll(
+      () =>
+        page.evaluate(
+          () =>
+            (
+              window as typeof window & {
+                __pageHeroTitleTransitionProbe?: { done: boolean }
+              }
+            ).__pageHeroTitleTransitionProbe?.done || false
+        ),
+      { timeout: 3_000 }
+    )
+    .toBe(true)
+
+  const titleLayout = await page.evaluate(() => {
+    const placeholder = document.querySelector('.craft-page .page-hero-title')!
+    const viewport = placeholder.querySelector('.page-hero-title__clip')!
+    const placeholderBounds = placeholder.getBoundingClientRect()
+    const viewportBounds = viewport.getBoundingClientRect()
+    const samples =
+      (
+        window as typeof window & {
+          __pageHeroTitleTransitionProbe?: { samples: number[] }
+        }
+      ).__pageHeroTitleTransitionProbe?.samples || []
+
+    return {
+      height: viewportBounds.height,
+      positionRange: Math.max(...samples) - Math.min(...samples),
+      sampleCount: samples.length,
+      topDelta: Math.abs(viewportBounds.top - placeholderBounds.top),
+    }
+  })
+  expect(titleLayout.height).toBeGreaterThan(20)
+  expect(titleLayout.sampleCount).toBeGreaterThan(5)
+  expect(titleLayout.positionRange).toBeLessThanOrEqual(1)
+  expect(titleLayout.topDelta).toBeLessThanOrEqual(1)
+})
+
 test('home entry animation does not remount hydrated content', async ({
   page,
 }) => {
@@ -834,6 +997,87 @@ test('desktop first-screen wheel snap keeps both directions exact and unlocked',
     .toBeLessThan(-80)
 })
 
+test('mobile first-screen swipe snap supports return gesture and button', async ({
+  page,
+}, testInfo) => {
+  test.skip(!testInfo.project.name.includes('mobile'))
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.home-page')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+  await expect(page.locator('.layout-page')).toHaveClass(/\blayout-show\b/, {
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+
+  const secondScreen = page.locator('#home-section-about')
+  const backButton = secondScreen.locator('.back-first-screen')
+  const swipe = (startY: number, endY: number) =>
+    page.evaluate(
+      ({ startY: touchStartY, endY: touchEndY }) => {
+        const dispatchTouch = (type: string, clientY: number) => {
+          const event = new Event(type, { bubbles: true, cancelable: true })
+          Object.defineProperty(event, 'touches', {
+            value: [{ clientY }],
+          })
+          window.dispatchEvent(event)
+        }
+
+        dispatchTouch('touchstart', touchStartY)
+        dispatchTouch('touchmove', touchEndY)
+      },
+      { startY, endY }
+    )
+  const expectSecondScreenAligned = () =>
+    expect
+      .poll(
+        () =>
+          secondScreen.evaluate((section) =>
+            Math.abs(section.getBoundingClientRect().top)
+          ),
+        { timeout: 3_000 }
+      )
+      .toBeLessThanOrEqual(1)
+  const expectFirstScreenAligned = () =>
+    expect
+      .poll(() => page.evaluate(() => window.scrollY), { timeout: 3_000 })
+      .toBeLessThanOrEqual(1)
+
+  await swipe(560, 460)
+  await expectSecondScreenAligned()
+  await expect(backButton).toBeVisible()
+  await expect
+    .poll(
+      () =>
+        page.locator('.zodiac-stage').evaluate((stage) => {
+          const bounds = stage.getBoundingClientRect()
+          return Math.abs(
+            bounds.top + bounds.height / 2 - window.innerHeight / 2
+          )
+        }),
+      { timeout: 3_000 }
+    )
+    .toBeLessThanOrEqual(1)
+  await expect
+    .poll(
+      () =>
+        page.locator('.zodiac-stage').evaluate((stage) => {
+          const bounds = stage.getBoundingClientRect()
+          return bounds.width / window.innerWidth
+        }),
+      { timeout: 3_000 }
+    )
+    .toBeCloseTo(1.9, 2)
+
+  await backButton.click()
+  await expectFirstScreenAligned()
+  await page.waitForTimeout(950)
+
+  await swipe(560, 460)
+  await expectSecondScreenAligned()
+  await swipe(260, 360)
+  await expectFirstScreenAligned()
+})
+
 test('home reveal items fade out and replay whenever they re-enter the viewport', async ({
   page,
 }) => {
@@ -910,28 +1154,137 @@ test('home reveal items fade out and replay whenever they re-enter the viewport'
 
 test('home defers secondary journey images until interaction', async ({
   page,
-}) => {
+}, testInfo) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' })
-  const firstJourneyCard = page
-    .locator('.journey-grid .shared-vlog-card')
-    .first()
+  const journeyCards = page.locator('.journey-grid .shared-vlog-card')
+  const firstJourneyCard = journeyCards.first()
 
+  await expect(journeyCards).toHaveCount(3)
+  if (testInfo.project.name.includes('mobile')) {
+    await expect
+      .poll(() =>
+        journeyCards.first().evaluate((card) => {
+          const grid = card.closest('.journey-grid')!
+          return getComputedStyle(grid).gridTemplateColumns.split(' ').length
+        })
+      )
+      .toBe(1)
+    await expect
+      .poll(() =>
+        journeyCards.evaluateAll((cards) => {
+          const gridBounds = cards[0]
+            .closest('.journey-grid')!
+            .getBoundingClientRect()
+          const gridCenter = gridBounds.left + gridBounds.width / 2
+
+          return cards.every((card) => {
+            const cardBounds = card.getBoundingClientRect()
+            return (
+              Math.abs(cardBounds.left + cardBounds.width / 2 - gridCenter) <= 1
+            )
+          })
+        })
+      )
+      .toBe(true)
+  }
   await expect(firstJourneyCard).toBeAttached({ timeout: PAGE_LOAD_TIMEOUT })
+  await expect(firstJourneyCard.locator('.vlog-img--base')).toHaveAttribute(
+    'src',
+    /singapore/
+  )
+  await expect(journeyCards.nth(1).locator('.vlog-img--base')).toHaveAttribute(
+    'src',
+    /live_jolinPleasure/
+  )
+  await expect(journeyCards.nth(2).locator('.vlog-img--base')).toHaveAttribute(
+    'src',
+    /ultramanZero/
+  )
   await expect(firstJourneyCard.locator('.vlog-img--hover')).toHaveCount(0)
   await firstJourneyCard.hover()
   await expect(firstJourneyCard.locator('.vlog-img--hover')).toHaveCount(1)
 })
 
-test('home loads the work detail modal on demand', async ({ page }) => {
+test('home loads the work detail modal on demand', async ({
+  page,
+}, testInfo) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' })
   const firstWorkCard = page.locator('.works-grid .shared-work-card').first()
 
   await expect(firstWorkCard).toBeAttached({ timeout: PAGE_LOAD_TIMEOUT })
   await expect(page.locator('.modal-wrapper-dialog')).toHaveCount(0)
   await firstWorkCard.click()
-  await expect(page.locator('.modal-wrapper-dialog')).toBeVisible({
+  const dialog = page.locator('.modal-wrapper-dialog')
+  await expect(dialog).toBeVisible({
     timeout: PAGE_LOAD_TIMEOUT,
   })
+
+  if (testInfo.project.name.includes('mobile')) {
+    const mobileLayout = await dialog.evaluate((element) => {
+      const closeRow = element.querySelector('.modal-close-row')!
+      const modalBody = element.querySelector('.modal-body')!
+      const asideCompany = element.querySelector('.aside-company')!
+      const asideDivider = element.querySelector('.aside-divider')!
+      const asideLogo = element.querySelector('.aside-logo')!
+      const modalAside = element.querySelector('.modal-aside')!
+      const companyInfo = element.querySelector('.aside-company-info')!
+      const companyName = element.querySelector('.aside-company-name')!
+      const companyId = element.querySelector('.aside-id')!
+      const shareButton = element.querySelector('.project-share-button')!
+
+      return {
+        asideCompanyAlignItems: getComputedStyle(asideCompany).alignItems,
+        asideCompanyHeight: (asideCompany as HTMLElement).offsetHeight,
+        asideCompanyBottomGap:
+          (asideDivider as HTMLElement).offsetTop -
+          ((asideCompany as HTMLElement).offsetTop +
+            (asideCompany as HTMLElement).offsetHeight),
+        asideCompanyTopGap:
+          (asideCompany as HTMLElement).offsetTop -
+          (modalAside as HTMLElement).offsetTop,
+        asideLogoWidth: (asideLogo as HTMLElement).offsetWidth,
+        bodyStartsAfterCloseRow:
+          (modalBody as HTMLElement).offsetTop >=
+          (closeRow as HTMLElement).offsetTop +
+            (closeRow as HTMLElement).offsetHeight -
+            1,
+        closeRowHeight: (closeRow as HTMLElement).offsetHeight,
+        companyIdFontSize: Number.parseFloat(
+          getComputedStyle(companyId).fontSize
+        ),
+        companyInfoJustifyContent: getComputedStyle(companyInfo).justifyContent,
+        companyNameFontSize: Number.parseFloat(
+          getComputedStyle(companyName).fontSize
+        ),
+        dialogBottomGap:
+          window.innerHeight -
+          ((element as HTMLElement).offsetTop +
+            (element as HTMLElement).offsetHeight),
+        dialogTop: (element as HTMLElement).offsetTop,
+        shareButtonAlignSelf: getComputedStyle(shareButton).alignSelf,
+      }
+    })
+
+    expect(mobileLayout.bodyStartsAfterCloseRow).toBe(true)
+    expect(mobileLayout.closeRowHeight).toBeGreaterThanOrEqual(52)
+    expect(mobileLayout.asideCompanyHeight).toBeGreaterThanOrEqual(44)
+    expect(mobileLayout.asideCompanyAlignItems).toBe('center')
+    expect(
+      Math.abs(
+        mobileLayout.asideCompanyTopGap - mobileLayout.asideCompanyBottomGap
+      )
+    ).toBeLessThanOrEqual(1)
+    expect(mobileLayout.asideLogoWidth).toBeGreaterThanOrEqual(44)
+    expect(mobileLayout.companyNameFontSize).toBeGreaterThanOrEqual(15)
+    expect(mobileLayout.companyIdFontSize).toBeGreaterThanOrEqual(11)
+    expect(mobileLayout.companyInfoJustifyContent).toBe('center')
+    expect(mobileLayout.shareButtonAlignSelf).toBe('center')
+    expect(mobileLayout.dialogTop).toBeGreaterThanOrEqual(92)
+    expect(mobileLayout.dialogBottomGap).toBeGreaterThanOrEqual(92)
+    expect(
+      Math.abs(mobileLayout.dialogTop - mobileLayout.dialogBottomGap)
+    ).toBeLessThanOrEqual(1)
+  }
 })
 
 test('personal bay menu entry redirects to 404', async ({ page }, testInfo) => {
@@ -1767,7 +2120,196 @@ test('about modules use sequenced entrance animations', async ({ page }) => {
     .toBeGreaterThan(0)
 })
 
-test('about page uses a full-height hero above an aligned 2:1 updates grid', async ({
+test('about friend links use responsive rows and reveal complete descriptions on hover', async ({
+  page,
+}, testInfo) => {
+  const isMobile = testInfo.project.name.includes('mobile')
+  await page.goto('/about', { waitUntil: 'domcontentloaded' })
+  const grid = page.locator('.neighbors-grid')
+  const cards = grid.locator('.neighbor-card')
+
+  await expect(cards).toHaveCount(2, { timeout: PAGE_LOAD_TIMEOUT })
+  await cards.first().scrollIntoViewIfNeeded()
+
+  const metrics = await grid.evaluate((element) => {
+    const gridBounds = element.getBoundingClientRect()
+    const rows = [...element.querySelectorAll('.neighbor-card')].map((card) => {
+      const bounds = card.getBoundingClientRect()
+      const description = card.querySelector('.nb-desc') as HTMLElement
+      const logo = card.querySelector('.nb-logo img') as HTMLImageElement
+      const centeredContent = card
+        .querySelector('.nb-centered-content')!
+        .getBoundingClientRect()
+      const headingBounds = card
+        .querySelector('.nb-heading')!
+        .getBoundingClientRect()
+      const logoBounds = card.querySelector('.nb-logo')!.getBoundingClientRect()
+
+      return {
+        bottom: bounds.bottom,
+        centeredContentOffset:
+          centeredContent.left +
+          centeredContent.width / 2 -
+          (bounds.left + bounds.width / 2),
+        description: description.textContent?.trim() ?? '',
+        descriptionClipPath: getComputedStyle(description).clipPath,
+        descriptionOpacity: getComputedStyle(description).opacity,
+        descriptionWhiteSpace: getComputedStyle(description).whiteSpace,
+        dividerAfterHeight: Number.parseFloat(
+          getComputedStyle(card.parentElement!, '::after').height
+        ),
+        dividerBeforeWidth: Number.parseFloat(
+          getComputedStyle(card.parentElement!, '::before').width
+        ),
+        headingTextAlign: getComputedStyle(
+          card.querySelector('.nb-heading') as Element
+        ).textAlign,
+        host: card.querySelector('.nb-host')?.textContent?.trim() ?? '',
+        href: (card as HTMLAnchorElement).href,
+        headingCenterY: headingBounds.top + headingBounds.height / 2,
+        left: bounds.left,
+        logoAlt: logo.alt,
+        logoCenterY: logoBounds.top + logoBounds.height / 2,
+        name: card.querySelector('.nb-name')?.textContent?.trim() ?? '',
+        cardBorderBottomWidth: Number.parseFloat(
+          getComputedStyle(card).borderBottomWidth
+        ),
+        right: bounds.right,
+        top: bounds.top,
+        width: bounds.width,
+      }
+    })
+
+    return {
+      columnGap: Number.parseFloat(getComputedStyle(element).columnGap),
+      gridBorderTopWidth: Number.parseFloat(
+        getComputedStyle(element).borderTopWidth
+      ),
+      gridWidth: gridBounds.width,
+      rows,
+    }
+  })
+
+  expect(metrics.rows).toHaveLength(2)
+  expect(metrics.gridBorderTopWidth).toBe(0)
+  expect(
+    metrics.rows.every(
+      ({ cardBorderBottomWidth }) => cardBorderBottomWidth === 0
+    )
+  ).toBe(true)
+  if (isMobile) {
+    expect(
+      metrics.rows.every(({ width }) => Math.abs(width - metrics.gridWidth) < 1)
+    ).toBe(true)
+    expect(metrics.rows[1].top).toBeGreaterThanOrEqual(
+      metrics.rows[0].bottom - 1
+    )
+    expect(metrics.rows[1].dividerAfterHeight).toBeGreaterThan(0)
+  } else {
+    const expectedCardWidth = (metrics.gridWidth - metrics.columnGap * 2) / 3
+    expect(
+      metrics.rows.every(({ width }) => Math.abs(width - expectedCardWidth) < 1)
+    ).toBe(true)
+    expect(Math.abs(metrics.rows[1].top - metrics.rows[0].top)).toBeLessThan(1)
+    expect(metrics.rows[1].left).toBeGreaterThanOrEqual(metrics.rows[0].right)
+    expect(metrics.rows[1].dividerBeforeWidth).toBeGreaterThan(0)
+  }
+  expect(
+    metrics.rows.every(
+      ({
+        centeredContentOffset,
+        description,
+        descriptionClipPath,
+        descriptionOpacity,
+        descriptionWhiteSpace,
+        headingTextAlign,
+        host,
+        href,
+        logoAlt,
+        name,
+      }) =>
+        Boolean(description && host && href && logoAlt && name) &&
+        (isMobile || Math.abs(centeredContentOffset) < 1) &&
+        descriptionWhiteSpace === 'normal' &&
+        (isMobile
+          ? descriptionOpacity === '1' && descriptionClipPath === 'none'
+          : descriptionOpacity === '0' &&
+            descriptionClipPath.includes('100%')) &&
+        headingTextAlign === (isMobile ? 'left' : 'center')
+    )
+  ).toBe(true)
+
+  await cards.first().hover()
+  await expect(cards.first().locator('.nb-name')).toHaveCSS(
+    'color',
+    'rgb(5, 5, 5)'
+  )
+  await expect(cards.first().locator('.nb-host')).toHaveCSS(
+    'color',
+    'rgb(22, 56, 199)'
+  )
+  await expect(cards.first().locator('.nb-desc')).toHaveCSS('opacity', '1')
+  if (isMobile) {
+    await expect(cards.first().locator('.nb-desc')).toHaveCSS(
+      'clip-path',
+      'none'
+    )
+    await expect(cards.first().locator('.nb-logo')).toHaveCSS('opacity', '1')
+  } else {
+    await expect(cards.first().locator('.nb-desc')).toHaveCSS(
+      'clip-path',
+      'inset(0px)'
+    )
+    await expect(cards.first().locator('.nb-logo')).toHaveCSS('opacity', '0')
+    const swappedPositions = await cards.first().evaluate((card) => {
+      const heading = card.querySelector('.nb-heading')!.getBoundingClientRect()
+      const description = card
+        .querySelector('.nb-desc')!
+        .getBoundingClientRect()
+      return {
+        descriptionCenterY: description.top + description.height / 2,
+        headingCenterY: heading.top + heading.height / 2,
+      }
+    })
+    expect(
+      swappedPositions.headingCenterY - metrics.rows[0].logoCenterY
+    ).toBeGreaterThan(6)
+    expect(
+      swappedPositions.headingCenterY - metrics.rows[0].logoCenterY
+    ).toBeLessThan(10)
+    expect(swappedPositions.descriptionCenterY).toBeGreaterThan(
+      swappedPositions.headingCenterY
+    )
+  }
+  await expect
+    .poll(() =>
+      cards
+        .first()
+        .evaluate((card) => getComputedStyle(card, '::after').transform)
+    )
+    .toMatch(/^matrix\(1, 0, 0, 1, 0, 0\)$/)
+
+  for (const card of await cards.all()) {
+    await card.hover()
+    await expect(card.locator('.nb-desc')).toHaveCSS('opacity', '1')
+    expect(
+      await card.evaluate((element) => element.getBoundingClientRect().height)
+    ).toBeLessThan(220)
+    await expect
+      .poll(() =>
+        card.locator('.nb-desc').evaluate((description) => {
+          const element = description as HTMLElement
+          return (
+            element.scrollHeight <= element.clientHeight + 1 &&
+            element.scrollWidth <= element.clientWidth + 1
+          )
+        })
+      )
+      .toBe(true)
+  }
+})
+
+test('about page keeps a free-scrolling full-height hero above an aligned 2:1 updates grid', async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name.includes('mobile'))
@@ -1775,10 +2317,16 @@ test('about page uses a full-height hero above an aligned 2:1 updates grid', asy
   await expect(page.locator('.about-updates-grid')).toBeVisible({
     timeout: PAGE_LOAD_TIMEOUT,
   })
-  await page.waitForTimeout(2400)
-
   const metrics = await page.locator('.about-updates-grid').evaluate((grid) => {
     const aboutPage = grid.closest('.about-page')!
+    const animatedBlocks = grid.querySelectorAll(
+      '.changelog-block, .roadmap-block'
+    )
+    animatedBlocks.forEach((block) =>
+      block
+        .getAnimations({ subtree: true })
+        .forEach((animation) => animation.finish())
+    )
     const bounds = grid.getBoundingClientRect()
     const heroBounds = aboutPage
       .querySelector('.about-hero-section')!
@@ -1793,13 +2341,8 @@ test('about page uses a full-height hero above an aligned 2:1 updates grid', asy
       '.passion-logo-bg'
     ) as HTMLElement
     const passionLogoBounds = passionLogo.getBoundingClientRect()
-    const firstScreenHint = aboutPage.querySelector('.about-scroll-indicator')!
-    const firstScreenHintBounds = firstScreenHint.getBoundingClientRect()
-    const secondScreenHint = grid.querySelector('.about-back-first-screen')!
-    const secondScreenHintBounds = secondScreenHint.getBoundingClientRect()
-    const secondScreenLine = secondScreenHint.querySelector(
-      '.about-scroll-line--up'
-    )!
+    const scrollHint = aboutPage.querySelector('.about-scroll-hint')!
+    const scrollHintBounds = scrollHint.getBoundingClientRect()
     const passionCodeFontSize = Number.parseFloat(
       getComputedStyle(passionSection.querySelector('.passion-color-code')!)
         .fontSize
@@ -1841,9 +2384,7 @@ test('about page uses a full-height hero above an aligned 2:1 updates grid', asy
       heroBottom: heroBounds.bottom,
       heroHeight: heroBounds.height,
       heroTop: heroBounds.top,
-      firstScreenHintBottomGap:
-        heroBounds.bottom - firstScreenHintBounds.bottom,
-      firstScreenHintText: firstScreenHint.textContent?.trim() ?? '',
+      jumpControlCount: aboutPage.querySelectorAll('.about-screen-jump').length,
       passionBackMask,
       passionCodeFontSize,
       passionContentBottomGap:
@@ -1871,6 +2412,9 @@ test('about page uses a full-height hero above an aligned 2:1 updates grid', asy
           .querySelector('.section-title .changelog')
           ?.textContent?.trim() ?? '',
       roadmapTop: roadmapBounds.top,
+      scrollHintBottom: scrollHintBounds.bottom,
+      scrollHintText: scrollHint.textContent?.trim() ?? '',
+      scrollHintTop: scrollHintBounds.top,
       updatesDocumentTop: bounds.top + document.body.scrollTop,
       updatesTop: bounds.top,
       viewportHeight: window.innerHeight,
@@ -1879,12 +2423,6 @@ test('about page uses a full-height hero above an aligned 2:1 updates grid', asy
       previewChangelogCount: grid.querySelectorAll(
         '.timeline-item.is-changelog-preview'
       ).length,
-      secondScreenHintAnimationDirection: getComputedStyle(
-        secondScreenLine,
-        '::after'
-      ).animationDirection,
-      secondScreenHintText: secondScreenHint.textContent?.trim() ?? '',
-      secondScreenHintTopGap: secondScreenHintBounds.top - bounds.top,
     }
   })
 
@@ -1894,13 +2432,13 @@ test('about page uses a full-height hero above an aligned 2:1 updates grid', asy
   )
   expect(metrics.heroBottom).toBeCloseTo(metrics.viewportHeight, 0)
   expect(metrics.updatesTop).toBeCloseTo(metrics.heroBottom, 0)
-  expect(metrics.firstScreenHintBottomGap).toBeGreaterThan(20)
-  expect(metrics.firstScreenHintBottomGap).toBeLessThan(65)
-  expect(metrics.firstScreenHintText).toBe('继续探索')
-  expect(metrics.secondScreenHintTopGap).toBeGreaterThan(70)
-  expect(metrics.secondScreenHintTopGap).toBeLessThan(110)
-  expect(metrics.secondScreenHintText).toBe('返回第一屏')
-  expect(metrics.secondScreenHintAnimationDirection).toBe('reverse')
+  expect(metrics.jumpControlCount).toBe(0)
+  expect(metrics.scrollHintText).toBe('向下滚动')
+  expect(metrics.scrollHintTop).toBeGreaterThanOrEqual(
+    metrics.passionBottom - 1
+  )
+  expect(metrics.scrollHintBottom).toBeLessThan(metrics.heroBottom)
+  expect(metrics.heroBottom - metrics.scrollHintBottom).toBeGreaterThan(28)
   expect(metrics.defaultChangelogCount).toBe(3)
   expect(metrics.previewChangelogCount).toBe(1)
   expect(metrics.passionBackMask).toContain('linear-gradient')
@@ -1916,27 +2454,157 @@ test('about page uses a full-height hero above an aligned 2:1 updates grid', asy
   expect(
     Math.abs(metrics.changelogHeaderTop - metrics.roadmapHeaderTop)
   ).toBeLessThan(1)
-  expect(metrics.changelogHeaderTop - metrics.updatesTop).toBeGreaterThan(125)
+  expect(metrics.changelogHeaderTop - metrics.updatesTop).toBeCloseTo(0, 0)
   expect(metrics.changelogHeaderHeight).toBe(metrics.roadmapHeaderHeight)
   expect(metrics.changelogEnglishSize).toBe(metrics.roadmapEnglishSize)
   expect(metrics.secondaryTitleCount).toBe(0)
   expect(metrics.columnsRatio).toBeCloseTo(2, 1)
   expect(metrics.passionWidth).toBeCloseTo(metrics.width, 0)
-  expect(metrics.heroBottom - metrics.passionBottom).toBeGreaterThan(60)
-  expect(metrics.heroBottom - metrics.passionBottom).toBeLessThan(105)
+  expect(metrics.heroBottom - metrics.passionBottom).toBeGreaterThan(65)
+  expect(metrics.heroBottom - metrics.passionBottom).toBeLessThan(100)
   expect(metrics.passionHeight).toBeGreaterThan(metrics.width / 2.7)
   expect(new Set(metrics.roadmapTagLefts.map(Math.round)).size).toBe(1)
   expect(metrics.changelogTagTitle).toBe('< 更新日志 />')
   expect(metrics.roadmapTagTitle).toBe('< 未来更新 />')
 
-  await page.mouse.wheel(0, 300)
-  await expect
-    .poll(() => page.evaluate(() => document.body.scrollTop))
-    .toBeGreaterThanOrEqual(Math.floor(metrics.updatesDocumentTop) - 1)
+  const passionSection = page.locator('.passion-section')
+  await passionSection.hover({ position: { x: 100, y: 80 } })
+  await expect(passionSection).toHaveClass(/\bis-crosshair-active\b/)
+  const crosshairPosition = await passionSection.evaluate((section) => ({
+    x: Number.parseFloat(section.style.getPropertyValue('--passion-cross-x')),
+    y: Number.parseFloat(section.style.getPropertyValue('--passion-cross-y')),
+  }))
+  expect(Math.abs(crosshairPosition.x - 100)).toBeLessThanOrEqual(1)
+  expect(Math.abs(crosshairPosition.y - 80)).toBeLessThanOrEqual(1)
+  await page.mouse.move(0, 0)
+  await expect(passionSection).not.toHaveClass(/\bis-crosshair-active\b/)
 
-  await page.waitForTimeout(950)
-  await page.locator('.about-back-first-screen').click()
-  await expect.poll(() => page.evaluate(() => document.body.scrollTop)).toBe(0)
+  await page.mouse.wheel(0, 160)
+  await page.waitForTimeout(120)
+  const nativeScrollTop = await page.evaluate(() => document.body.scrollTop)
+  expect(nativeScrollTop).toBeGreaterThan(0)
+  expect(nativeScrollTop).toBeLessThan(metrics.updatesDocumentTop - 40)
+})
+
+test('about hero keeps its title, passion panel, and screen spacing across viewport sizes', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name.includes('mobile'))
+
+  for (const viewport of [
+    { width: 1280, height: 560 },
+    { width: 844, height: 390 },
+    { width: 390, height: 844 },
+  ]) {
+    await page.setViewportSize(viewport)
+    await page.goto('/about', { waitUntil: 'domcontentloaded' })
+    await expect(page.locator('.about-hero-section')).toBeVisible({
+      timeout: PAGE_LOAD_TIMEOUT,
+    })
+
+    const metrics = await page
+      .locator('.about-hero-section')
+      .evaluate((hero) => {
+        const heroBounds = hero.getBoundingClientRect()
+        const titleBounds = hero
+          .querySelector('.page-hero-title')!
+          .getBoundingClientRect()
+        const passionSection = hero.querySelector('.passion-section')!
+        const passionBounds = passionSection.getBoundingClientRect()
+        const passionLogo = passionSection.querySelector(
+          '.passion-logo-bg'
+        ) as HTMLElement
+        passionLogo.getAnimations().forEach((animation) => animation.finish())
+        const passionLogoBounds = passionLogo.getBoundingClientRect()
+        const passionLogoStyle = getComputedStyle(passionLogo)
+        const passionContent = passionSection.querySelector(
+          '.passion-content'
+        ) as HTMLElement
+        const passionCanvasTransform = getComputedStyle(
+          passionLogo.querySelector('canvas')!
+        ).transform
+        const passionCodeFontSize = Number.parseFloat(
+          getComputedStyle(passionSection.querySelector('.passion-color-code')!)
+            .fontSize
+        )
+        const passionNameStyle = getComputedStyle(
+          passionSection.querySelector('.passion-field-name')!
+        )
+        const passionNameFontSize = Number.parseFloat(
+          getComputedStyle(
+            passionSection.querySelector('.passion-field-name strong')!
+          ).fontSize
+        )
+        const passionMetaStyle = getComputedStyle(
+          passionSection.querySelector('.passion-field-meta')!
+        )
+        const updates = document.querySelector('.about-updates-grid')!
+        const updatesBounds = updates.getBoundingClientRect()
+        const scrollHintBounds = hero
+          .querySelector('.about-scroll-hint')!
+          .getBoundingClientRect()
+
+        return {
+          heroBottom: heroBounds.bottom,
+          heroTop: heroBounds.top,
+          passionBottom: passionBounds.bottom,
+          passionHeight: passionBounds.height,
+          passionCanvasScaleX: new DOMMatrixReadOnly(passionCanvasTransform).a,
+          passionCodeFontSize,
+          passionContentTransform: getComputedStyle(passionContent).transform,
+          passionLogoAnchorRatio:
+            Number.parseFloat(passionLogoStyle.top) / passionBounds.height,
+          passionLogoCenterLift:
+            passionBounds.top +
+            passionBounds.height / 2 -
+            (passionLogoBounds.top + passionLogoBounds.height / 2),
+          passionMetaAlignment: passionMetaStyle.justifyContent,
+          passionNameAlignment: passionNameStyle.justifyContent,
+          passionNameFontSize,
+          passionTop: passionBounds.top,
+          scrollHintBottom: scrollHintBounds.bottom,
+          scrollHintTop: scrollHintBounds.top,
+          secondScreenPaddingTop: Number.parseFloat(
+            getComputedStyle(updates).paddingTop
+          ),
+          titleBottom: titleBounds.bottom,
+          titleHeight: titleBounds.height,
+          titleTop: titleBounds.top,
+          updatesTop: updatesBounds.top,
+          viewportHeight: window.innerHeight,
+        }
+      })
+
+    expect(metrics.heroBottom).toBeCloseTo(metrics.viewportHeight, 0)
+    expect(metrics.updatesTop).toBeCloseTo(metrics.heroBottom, 0)
+    expect(metrics.titleTop).toBeGreaterThanOrEqual(metrics.heroTop - 1)
+    expect(metrics.titleHeight).toBeGreaterThan(0)
+    expect(metrics.passionTop).toBeGreaterThanOrEqual(metrics.titleBottom - 1)
+    expect(metrics.passionHeight).toBeGreaterThan(0)
+    expect(metrics.passionLogoAnchorRatio).toBeCloseTo(0.5, 2)
+    if (viewport.width <= 768) {
+      expect(metrics.passionLogoCenterLift).toBeCloseTo(0, 1)
+      expect(metrics.passionCanvasScaleX).toBeCloseTo(4, 2)
+      expect(metrics.passionContentTransform).toBe('none')
+      expect(metrics.passionNameAlignment).toBe('center')
+      expect(metrics.passionMetaAlignment).toBe('center')
+      expect(metrics.passionCodeFontSize).toBeGreaterThan(
+        metrics.passionNameFontSize * 4
+      )
+      expect(metrics.scrollHintTop - metrics.passionBottom).toBeGreaterThan(18)
+    } else {
+      expect(metrics.passionLogoCenterLift / viewport.width).toBeCloseTo(
+        0.0955,
+        2
+      )
+    }
+    expect(metrics.passionBottom).toBeLessThan(metrics.heroBottom - 25)
+    expect(metrics.scrollHintTop).toBeGreaterThanOrEqual(
+      metrics.passionBottom - 3
+    )
+    expect(metrics.scrollHintBottom).toBeLessThan(metrics.heroBottom)
+    expect(metrics.secondScreenPaddingTop).toBe(0)
+  }
 })
 
 const craftToolRoutes = [

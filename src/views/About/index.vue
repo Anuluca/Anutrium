@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowDown,
-  DArrowRight,
+  MoreFilled,
   Setting,
   StarFilled,
 } from '@element-plus/icons-vue'
@@ -11,7 +11,6 @@ import {
 import LogoRotating3D from '@/components/Logo_rotating3D/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
 import PageHeroTitle from '@/components/PageHeroTitle/index.vue'
-import { getPageScrollTop, scrollPageTo } from '@/utils/pageScroll'
 // import PageHeader from '@/components/PageHeader/index.vue'
 
 interface ChangelogItem {
@@ -38,68 +37,6 @@ const { locale, t, tm } = useI18n()
 const activeLogKey = ref<string | null>(null)
 const majorOnly = ref(false)
 const showAllChangelogs = ref(false)
-const aboutHeroSection = ref<HTMLElement | null>(null)
-const aboutUpdatesGrid = ref<HTMLElement | null>(null)
-let aboutScrollTimer: number | null = null
-let aboutReducedMotionQuery: MediaQueryList | null = null
-let isAboutAutoScrolling = false
-
-const getAboutUpdatesTop = () => {
-  if (!aboutUpdatesGrid.value) return 0
-
-  return getPageScrollTop() + aboutUpdatesGrid.value.getBoundingClientRect().top
-}
-
-const finishAboutAutoScroll = () => {
-  isAboutAutoScrolling = false
-  aboutScrollTimer = null
-}
-
-const scrollAboutTo = (top: number) => {
-  if (isAboutAutoScrolling) return
-
-  isAboutAutoScrolling = true
-  scrollPageTo({
-    top,
-    behavior: aboutReducedMotionQuery?.matches ? 'auto' : 'smooth',
-  })
-
-  if (aboutScrollTimer !== null) window.clearTimeout(aboutScrollTimer)
-  aboutScrollTimer = window.setTimeout(finishAboutAutoScroll, 900)
-}
-
-const scrollToAboutUpdates = () => {
-  scrollAboutTo(getAboutUpdatesTop())
-}
-
-const scrollToAboutHero = () => {
-  scrollAboutTo(0)
-}
-
-const handleAboutFirstScreenWheel = (event: WheelEvent) => {
-  if (
-    window.innerWidth <= 768 ||
-    event.ctrlKey ||
-    !aboutHeroSection.value ||
-    !aboutUpdatesGrid.value
-  ) {
-    return
-  }
-
-  const scrollTop = getPageScrollTop()
-  const updatesTop = getAboutUpdatesTop()
-
-  if (event.deltaY > 0 && scrollTop < updatesTop - 80) {
-    event.preventDefault()
-    scrollAboutTo(updatesTop)
-    return
-  }
-
-  if (event.deltaY < 0 && scrollTop > 0 && scrollTop <= updatesTop + 120) {
-    event.preventDefault()
-    scrollAboutTo(0)
-  }
-}
 
 const getNeighborHost = (url: string) => {
   try {
@@ -194,28 +131,28 @@ const toggleLogDetails = (log: ChangelogItem) => {
   if (hasHiddenDetails(log)) toggleLog(log.version)
 }
 
-const passionCrosshairActive = ref(false)
-const passionCrosshairPosition = ref({
-  x: 0,
-  y: 0,
-})
-
-const passionCrosshairStyle = computed(() => ({
-  '--passion-cross-x': `${passionCrosshairPosition.value.x}px`,
-  '--passion-cross-y': `${passionCrosshairPosition.value.y}px`,
-}))
-
 const updatePassionCrosshair = (event: MouseEvent) => {
-  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
-  passionCrosshairPosition.value = {
-    x: event.clientX - rect.left,
-    y: event.clientY - rect.top,
-  }
-  passionCrosshairActive.value = true
+  const section = event.currentTarget as HTMLElement
+  const rect = section.getBoundingClientRect()
+  section.style.setProperty(
+    '--passion-cross-x',
+    `${event.clientX - rect.left}px`
+  )
+  section.style.setProperty(
+    '--passion-cross-y',
+    `${event.clientY - rect.top}px`
+  )
 }
 
-const hidePassionCrosshair = () => {
-  passionCrosshairActive.value = false
+const showPassionCrosshair = (event: MouseEvent) => {
+  const section = event.currentTarget as HTMLElement
+  section.classList.add('is-crosshair-active')
+  updatePassionCrosshair(event)
+}
+
+const hidePassionCrosshair = (event: MouseEvent) => {
+  const section = event.currentTarget as HTMLElement
+  section.classList.remove('is-crosshair-active')
 }
 
 const neighbors = computed<NeighbourItem[]>(() => {
@@ -225,90 +162,17 @@ const neighbors = computed<NeighbourItem[]>(() => {
 const roadmapItems = computed<string[]>(() => {
   return tm('about.dynamic.roadmap') as string[]
 })
-
-const overflowingNeighborUrls = ref(new Set<string>())
-const neighborDescElements = new Map<string, HTMLElement>()
-let descMeasureRafId: number | null = null
-
-const setNeighborDescRef = (url: string, element: unknown) => {
-  if (element instanceof HTMLElement) {
-    neighborDescElements.set(url, element)
-  } else {
-    neighborDescElements.delete(url)
-  }
-}
-
-const measureNeighborDescriptions = () => {
-  const overflowingUrls = new Set<string>()
-
-  neighborDescElements.forEach((element, url) => {
-    const textElement = element.querySelector(
-      '.nb-desc-text'
-    ) as HTMLElement | null
-    if (!textElement) return
-
-    const overflowDistance = Math.ceil(
-      textElement.scrollWidth - element.clientWidth
-    )
-
-    if (overflowDistance > 2) {
-      overflowingUrls.add(url)
-      element.style.setProperty('--nb-desc-distance', `${overflowDistance}px`)
-    } else {
-      element.style.removeProperty('--nb-desc-distance')
-    }
-  })
-
-  overflowingNeighborUrls.value = overflowingUrls
-}
-
-const scheduleNeighborDescriptionMeasure = async () => {
-  await nextTick()
-  if (descMeasureRafId !== null) {
-    window.cancelAnimationFrame(descMeasureRafId)
-  }
-
-  descMeasureRafId = window.requestAnimationFrame(() => {
-    descMeasureRafId = null
-    measureNeighborDescriptions()
-  })
-}
-
-onMounted(() => {
-  aboutReducedMotionQuery = window.matchMedia(
-    '(prefers-reduced-motion: reduce)'
-  )
-  scheduleNeighborDescriptionMeasure()
-  window.addEventListener('resize', scheduleNeighborDescriptionMeasure, {
-    passive: true,
-  })
-  window.addEventListener('wheel', handleAboutFirstScreenWheel, {
-    passive: false,
-    capture: true,
-  })
-})
-
-onUnmounted(() => {
-  window.removeEventListener('resize', scheduleNeighborDescriptionMeasure)
-  window.removeEventListener('wheel', handleAboutFirstScreenWheel, true)
-  if (descMeasureRafId !== null) window.cancelAnimationFrame(descMeasureRafId)
-  if (aboutScrollTimer !== null) window.clearTimeout(aboutScrollTimer)
-})
-
-watch(locale, scheduleNeighborDescriptionMeasure)
 </script>
 
 <template>
   <div class="about-page main-container">
-    <section ref="aboutHeroSection" class="about-hero-section">
+    <section class="about-hero-section">
       <PageHeroTitle />
 
       <section
         class="passion-section no-cursor"
-        :class="{ 'is-crosshair-active': passionCrosshairActive }"
-        :style="passionCrosshairStyle"
         :aria-label="t('about.brandColorName')"
-        @mouseenter="updatePassionCrosshair"
+        @mouseenter="showPassionCrosshair"
         @mousemove="updatePassionCrosshair"
         @mouseleave="hidePassionCrosshair"
       >
@@ -340,15 +204,10 @@ watch(locale, scheduleNeighborDescriptionMeasure)
         <div class="passion-crosshair" aria-hidden="true" />
       </section>
 
-      <button
-        class="about-scroll-indicator about-screen-jump"
-        type="button"
-        :aria-label="t('scroll')"
-        @click="scrollToAboutUpdates"
-      >
-        <span class="about-scroll-text">{{ t('scroll') }}</span>
-        <span class="about-scroll-line" aria-hidden="true" />
-      </button>
+      <div class="about-scroll-hint">
+        <span class="about-scroll-hint__text">{{ t('scrollDown') }}</span>
+        <span class="about-scroll-hint__line" aria-hidden="true" />
+      </div>
     </section>
 
     <!--
@@ -361,22 +220,7 @@ watch(locale, scheduleNeighborDescriptionMeasure)
     />
     -->
 
-    <div ref="aboutUpdatesGrid" class="about-updates-grid">
-      <button
-        class="about-back-first-screen about-screen-jump"
-        type="button"
-        aria-label="返回第一屏"
-        @click="scrollToAboutHero"
-      >
-        <span
-          class="about-scroll-line about-scroll-line--up"
-          aria-hidden="true"
-        />
-        <span class="about-scroll-text about-scroll-text--below">
-          返回第一屏
-        </span>
-      </button>
-
+    <div class="about-updates-grid">
       <section class="block changelog-block">
         <div class="section-header">
           <h3 class="section-title">
@@ -565,7 +409,7 @@ watch(locale, scheduleNeighborDescriptionMeasure)
       </section>
     </div>
 
-    <section class="block neighbors-block">
+    <section id="about-neighbors" class="block neighbors-block">
       <div class="section-header">
         <h3 class="section-title">
           <span class="c-gear" aria-hidden="true">
@@ -595,35 +439,29 @@ watch(locale, scheduleNeighborDescriptionMeasure)
             rel="noopener noreferrer"
             class="neighbor-card"
           >
-            <span class="nb-node" aria-hidden="true" />
-            <span class="nb-hover-chevron" aria-hidden="true" />
+            <div class="nb-centered-content">
+              <div class="nb-media-slot">
+                <div class="nb-logo">
+                  <img
+                    :src="nb.logo"
+                    :alt="nb.name"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </div>
+              </div>
 
-            <div class="nb-logo">
-              <img
-                :src="nb.logo"
-                :alt="nb.name"
-                loading="lazy"
-                decoding="async"
-              />
-            </div>
-
-            <div class="nb-info">
-              <div class="nb-title-row">
+              <div class="nb-heading">
                 <h4 class="nb-name">{{ nb.name }}</h4>
                 <span class="nb-host">{{ getNeighborHost(nb.url) }}</span>
               </div>
-              <p
-                :ref="(element) => setNeighborDescRef(nb.url, element)"
-                class="nb-desc"
-                :class="{
-                  'is-overflowing': overflowingNeighborUrls.has(nb.url),
-                }"
-              >
-                <span class="nb-desc-text">{{ nb.description }}</span>
-              </p>
+
+              <p class="nb-desc">{{ nb.description }}</p>
             </div>
 
-            <DArrowRight class="nb-arrow" aria-hidden="true" />
+            <el-icon class="nb-arrow" aria-hidden="true">
+              <MoreFilled />
+            </el-icon>
           </a>
         </div>
       </div>
@@ -654,18 +492,13 @@ watch(locale, scheduleNeighborDescriptionMeasure)
   box-sizing: border-box;
   height: calc(100vh - 120px);
   height: calc(100dvh - 120px);
-
-  &::after {
-    display: block;
-    flex: 0 0 clamp(120px, 15.5vh, 145px);
-    content: '';
-  }
+  padding-bottom: clamp(92px, 15dvh, 132px);
 
   > .passion-section {
     flex: 1 1 auto;
     width: 100%;
     height: auto;
-    margin: 0;
+    margin: clamp(12px, 2dvh, 20px) 0 0;
     aspect-ratio: 2.7 / 1;
   }
 }
@@ -683,7 +516,6 @@ watch(locale, scheduleNeighborDescriptionMeasure)
   align-items: stretch;
   gap: 28px;
   box-sizing: border-box;
-  padding-top: 270px;
   margin-bottom: 20px;
 
   > .block {
@@ -701,99 +533,45 @@ watch(locale, scheduleNeighborDescriptionMeasure)
   }
 }
 
-.about-screen-jump {
+.about-scroll-hint {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(46px, 6dvh, 64px);
   z-index: 10;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0;
-  border: 0;
-  color: inherit;
-  background: transparent;
-  cursor: pointer;
-  opacity: 0.6;
-  transition: opacity 0.25s ease, filter 0.25s ease, color 0.25s ease;
-
-  &:hover,
-  &:focus-visible {
-    opacity: 0.9;
-    color: @red;
-    filter: drop-shadow(0 0 12px rgba(226, 52, 86, 0.42));
-  }
-
-  &:focus-visible {
-    outline: 1px solid rgba(226, 52, 86, 0.8);
-    outline-offset: 8px;
-  }
+  color: rgba(255, 255, 255, 0.56);
+  pointer-events: none;
+  transform: translateX(-50%);
 }
 
-.about-scroll-text {
+.about-scroll-hint__text {
   margin-bottom: 10px;
   font-family: 'anton', 'alibaba-puhuiti';
   font-size: 12px;
+  line-height: 12px;
   letter-spacing: 2px;
-  transition: color 0.25s ease;
-
-  &--below {
-    margin-top: 10px;
-    margin-bottom: 0;
-  }
+  white-space: nowrap;
 }
 
-.about-scroll-line {
+.about-scroll-hint__line {
   position: relative;
   width: 1px;
-  height: 40px;
+  height: 30px;
   overflow: hidden;
   background: rgba(255, 255, 255, 0.2);
 
   &::after {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    inset: 0;
     content: '';
     background: @red;
-    animation: aboutScrollDrop 1.5s cubic-bezier(0.77, 0, 0.175, 1) infinite;
-  }
-
-  &--up::after {
-    animation-direction: reverse;
+    animation: aboutScrollHintDrop 1.4s cubic-bezier(0.77, 0, 0.175, 1) infinite;
   }
 }
 
-.about-scroll-indicator,
-.about-back-first-screen {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.about-scroll-indicator {
-  bottom: 60px;
-  opacity: 0;
-  animation: aboutScrollIndicatorIn 0.7s cubic-bezier(0.23, 1, 0.32, 1) 1.5s
-    forwards;
-}
-
-.about-back-first-screen {
-  top: 155px;
-}
-
-@keyframes aboutScrollIndicatorIn {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(16px);
-  }
-
-  to {
-    opacity: 0.6;
-    transform: translateX(-50%) translateY(0);
-  }
-}
-
-@keyframes aboutScrollDrop {
+@keyframes aboutScrollHintDrop {
   from {
     transform: translateY(-100%);
   }
@@ -812,6 +590,14 @@ watch(locale, scheduleNeighborDescriptionMeasure)
 }
 
 .passion-section {
+  --passion-fade-mask: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 0, 0, 0.28) 50%,
+    #000 70%,
+    #000 100%
+  );
+
   position: relative;
   min-height: 0;
   isolation: isolate;
@@ -848,7 +634,6 @@ watch(locale, scheduleNeighborDescriptionMeasure)
 .passion-color-field {
   opacity: 0;
   animation: passionCrtOn 0.58s cubic-bezier(0.19, 1, 0.22, 1) 0.44s both;
-  will-change: clip-path, filter, opacity;
 }
 
 @keyframes passionCrtOn {
@@ -901,20 +686,8 @@ watch(locale, scheduleNeighborDescriptionMeasure)
   z-index: 5;
   pointer-events: none;
   opacity: 0;
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    rgba(0, 0, 0, 0.28) 22%,
-    #000 52%,
-    #000 100%
-  );
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    rgba(0, 0, 0, 0.28) 22%,
-    #000 52%,
-    #000 100%
-  );
+  -webkit-mask-image: var(--passion-fade-mask);
+  mask-image: var(--passion-fade-mask);
 
   &::before,
   &::after {
@@ -960,35 +733,18 @@ watch(locale, scheduleNeighborDescriptionMeasure)
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 18px;
   max-width: 100%;
   text-align: center;
 }
 
 .passion-back {
   position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  right: 0;
-  background-color: #000;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
   filter: saturate(0) sepia(1) saturate(3.2) hue-rotate(310deg) brightness(0.95)
     contrast(1.02);
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    rgba(0, 0, 0, 0.28) 22%,
-    #000 52%,
-    #000 100%
-  );
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    rgba(0, 0, 0, 0.28) 22%,
-    #000 52%,
-    #000 100%
-  );
+  -webkit-mask-image: var(--passion-fade-mask);
+  mask-image: var(--passion-fade-mask);
 
   &::before {
     position: absolute;
@@ -1035,80 +791,66 @@ watch(locale, scheduleNeighborDescriptionMeasure)
   }
 }
 .passion-logo-bg {
-  --passion-logo-base-size: clamp(660px, 60vw, 880px);
-  --passion-logo-shrink: clamp(24px, 2.4vw, 34px);
-  --passion-logo-base-top: clamp(-270px, -15vw, -160px);
+  --passion-logo-size: calc(
+    clamp(660px, 60vw, 880px) - clamp(24px, 2.4vw, 34px)
+  );
+  --passion-logo-center-lift: 9.55vw;
+  --passion-logo-canvas-scale: 1;
+  --passion-logo-rest-transform: translate(
+      -50%,
+      calc(-50% - var(--passion-logo-center-lift))
+    )
+    scaleX(1.2);
 
   position: absolute;
-  top: calc(var(--passion-logo-base-top) + var(--passion-logo-shrink));
+  top: 50%;
   left: 50%;
   z-index: 1;
-  width: calc(
-    var(--passion-logo-base-size) - var(--passion-logo-shrink)
-  ) !important;
-  height: calc(
-    var(--passion-logo-base-size) - var(--passion-logo-shrink)
-  ) !important;
+  width: var(--passion-logo-size) !important;
+  height: var(--passion-logo-size) !important;
   overflow: visible;
-  transform: translateX(-50%) scaleX(1.2);
-  opacity: 1;
+  transform: var(--passion-logo-rest-transform);
   pointer-events: none;
   user-select: none;
   filter: saturate(0) sepia(1) saturate(3.2) hue-rotate(310deg) brightness(0.95)
     contrast(1.1);
   animation: passionLogoDropIn 1.9s cubic-bezier(0.16, 1, 0.3, 1) 1.04s both;
-  will-change: transform, opacity;
 
-  &::before,
-  &::after {
-    display: none;
-  }
-
-  :deep(.scene-container) {
-    width: 100%;
-    height: 100%;
-    background: transparent;
-  }
-
+  :deep(.scene-container),
   :deep(.canvas-container) {
     width: 100%;
     height: 100%;
-    background: transparent;
   }
 
   :deep(canvas) {
     width: 100% !important;
     height: 100% !important;
-    background: transparent !important;
+    transform: scale(var(--passion-logo-canvas-scale));
     transform-origin: center;
-  }
-
-  :deep(.loading-text) {
-    display: none;
   }
 }
 
 @keyframes passionLogoDropIn {
   from {
     opacity: 0;
-    transform: translateX(-50%) translateY(-130px) scaleX(1.2);
+    transform: translate(
+        -50%,
+        calc(-50% - var(--passion-logo-center-lift) - 130px)
+      )
+      scaleX(1.2);
   }
 
   to {
     opacity: 1;
-    transform: translateX(-50%) translateY(0) scaleX(1.2);
+    transform: var(--passion-logo-rest-transform);
   }
 }
 
 .passion-brand {
-  position: relative;
-  z-index: 2;
   min-width: 0;
 }
 
 .passion-field-meta {
-  position: relative;
-  z-index: 3;
   display: flex;
   justify-content: center;
   margin-top: 14px;
@@ -1140,15 +882,12 @@ watch(locale, scheduleNeighborDescriptionMeasure)
   }
 
   span {
-    font-family: 'alibaba-puhuiti', sans-serif;
     font-size: 16px;
-    font-weight: 900;
   }
 
   strong {
     font-family: 'cn-custom', 'anton', sans-serif;
     font-size: 19px;
-    color: @red;
   }
 }
 
@@ -1870,12 +1609,35 @@ watch(locale, scheduleNeighborDescriptionMeasure)
 .neighbors-grid {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 5px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
 }
 
 .neighbor-item {
   position: relative;
+
+  &:not(:nth-child(3n + 1))::before,
+  &:nth-child(n + 4)::after {
+    position: absolute;
+    z-index: 3;
+    content: '';
+    pointer-events: none;
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  &:not(:nth-child(3n + 1))::before {
+    top: 14px;
+    bottom: 14px;
+    left: 0;
+    width: 1px;
+  }
+
+  &:nth-child(n + 4)::after {
+    top: 0;
+    left: 14px;
+    right: 14px;
+    height: 1px;
+  }
 }
 
 .c-gear {
@@ -1966,234 +1728,195 @@ watch(locale, scheduleNeighborDescriptionMeasure)
 }
 
 .neighbor-card {
-  --neighbor-corner-size: 18px;
-  --neighbor-corner-x: var(--neighbor-corner-size);
-  --neighbor-corner-y: var(--neighbor-corner-size);
-  --neighbor-frame-offset: calc(1px + 1px);
-  --neighbor-frame-stroke: 1px;
-  --neighbor-inner-bg: transparent;
-  --neighbor-frame-color: rgba(114, 36, 52, 0.82);
-  --neighbor-inner-bg: linear-gradient(
-      rgba(226, 52, 86, 0.05),
-      rgba(5, 5, 5, 0.08)
-    ),
-    repeating-linear-gradient(
-      0deg,
-      rgba(255, 255, 255, 0.055) 0,
-      rgba(255, 255, 255, 0.055) 1px,
-      transparent 1px,
-      transparent 5px
-    ),
-    rgba(5, 5, 5, 0.72);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   box-sizing: border-box;
   width: 100%;
-  min-height: 86px;
-  display: grid;
-  grid-template-columns: 50px minmax(0, 1fr) 46px;
-  align-items: center;
-  gap: 16px;
-  padding: 16px 52px 16px 46px;
-  text-decoration: none;
+  min-height: 84px;
+  padding: 14px 64px;
   color: #fff;
-  position: relative;
+  text-decoration: none;
+  isolation: isolate;
   overflow: hidden;
 
-  &:hover {
-    --neighbor-frame-color: rgba(226, 52, 86, 0.82);
-    --neighbor-inner-bg: linear-gradient(
-        rgba(226, 52, 86, 0.05),
-        rgba(5, 5, 5, 0.08)
-      ),
-      repeating-linear-gradient(
-        0deg,
-        rgba(255, 255, 255, 0.055) 0,
-        rgba(255, 255, 255, 0.055) 1px,
-        transparent 1px,
-        transparent 5px
-      ),
-      rgba(5, 5, 5, 0.72);
+  &::after {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    content: '';
+    background: @red;
+    transform: scaleY(0);
+    transform-origin: bottom center;
+    transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+  }
 
-    .nb-hover-chevron {
-      transform: translateX(26%);
+  > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: #050505;
+
+    &::after {
+      transform: scaleY(1);
+    }
+
+    .nb-name,
+    .nb-desc {
+      color: #050505;
+    }
+
+    .nb-desc {
       opacity: 1;
+      max-height: 120px;
+      clip-path: inset(0);
     }
 
     .nb-logo {
-      img {
-        filter: brightness(1.06) saturate(1.16);
-      }
+      opacity: 0;
     }
 
-    .nb-node {
-      background: @red;
-      box-shadow: 0 0 0 6px rgba(226, 52, 86, 0.12);
+    .nb-heading {
+      transform: translateY(calc(-22px - 50%));
+    }
+
+    .nb-host {
+      color: #1638c7;
     }
 
     .nb-arrow {
-      color: @red;
+      color: #050505;
     }
   }
 
-  &::before,
-  &::after {
-    position: absolute;
-    content: '';
-    pointer-events: none;
-    clip-path: polygon(
-      var(--neighbor-corner-x) 0,
-      calc(100% - var(--neighbor-corner-x)) 0,
-      100% var(--neighbor-corner-y),
-      100% calc(100% - var(--neighbor-corner-y)),
-      calc(100% - var(--neighbor-corner-x)) 100%,
-      var(--neighbor-corner-x) 100%,
-      0 calc(100% - var(--neighbor-corner-y)),
-      0 var(--neighbor-corner-y)
-    );
-  }
-
-  &::before {
-    inset: var(--neighbor-frame-offset);
-    z-index: 0;
-    background: var(--neighbor-frame-color);
-    transition: background 0.25s;
-  }
-
-  &::after {
-    inset: calc(var(--neighbor-frame-offset) + var(--neighbor-frame-stroke));
-    z-index: 1;
-    background: var(--neighbor-inner-bg);
-    transition: background 0.25s;
+  &:focus-visible {
+    outline: 1px solid rgba(226, 52, 86, 0.6);
+    outline-offset: 3px;
   }
 }
 
-.neighbor-card > :not(.nb-node):not(.nb-hover-chevron) {
+.nb-centered-content {
+  --nb-top-slot-size: 56px;
+  --nb-stack-gap: 8px;
+
+  display: grid;
+  grid-template-rows: var(--nb-top-slot-size) auto;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  justify-content: center;
+  gap: var(--nb-stack-gap);
+  max-width: 100%;
+}
+
+.nb-media-slot {
   position: relative;
-  z-index: 3;
-}
-
-.nb-hover-chevron {
-  position: absolute;
-  top: 3px;
-  bottom: 3px;
-  left: 0;
-  z-index: 2;
-  opacity: 0;
-  width: 64%;
-  pointer-events: none;
-  background: rgba(0, 0, 0, 0.36);
-  clip-path: polygon(0 0, 90% 0, 100% 50%, 90% 100%, 0 100%, 10% 50%);
-  transform: translateX(-12%);
-  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s;
-}
-
-.nb-node {
-  position: absolute;
-  left: -34px;
-  top: 50%;
-  z-index: 2;
-  width: 9px;
-  height: 9px;
-  border: 1px solid @red;
-  background: #050505;
-  transform: translateY(-50%) rotate(45deg);
-  transition: background 0.25s, box-shadow 0.25s;
+  grid-row: 1;
+  grid-column: 1;
+  justify-self: center;
+  width: 56px;
+  height: 56px;
+  min-width: 0;
 }
 
 .nb-logo {
-  width: 50px;
-  height: 50px;
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 56px;
+  height: 56px;
+  box-sizing: border-box;
   overflow: hidden;
+  opacity: 1;
+  transform: translateX(-50%);
+  transition: opacity 0.16s ease;
 
   img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    filter: brightness(0.86) saturate(0.86);
-    transition: filter 0.25s;
+    filter: brightness(0.9) saturate(0.84);
   }
 }
 
-.nb-info {
-  min-width: 0;
-}
-
-.nb-title-row {
+.nb-heading {
+  grid-row: 2;
+  grid-column: 1;
   display: flex;
-  align-items: baseline;
-  gap: 10px;
+  flex-direction: column;
+  align-items: center;
+  align-self: center;
+  justify-content: center;
+  gap: 2px;
   min-width: 0;
-}
-
-.nb-host {
-  flex-shrink: 0;
-  max-width: 45%;
-  text-overflow: ellipsis;
-  font-family: 'anton', monospace;
-  font-size: 0.58rem;
-  letter-spacing: 1.4px;
-  margin-bottom: 5px;
-  color: rgba(226, 52, 86, 0.72);
-  white-space: nowrap;
+  text-align: center;
+  transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .nb-name {
-  flex: 1 1 auto;
-  min-width: 0;
-  font-family: 'alibaba-puhuiti', monospace;
-  font-size: 0.8rem;
+  margin: 0;
+  font-family: 'alibaba-puhuiti', sans-serif;
+  font-size: clamp(20px, 1.35vw, 24px);
   font-weight: 900;
+  line-height: 1.2;
   color: #fff;
-  min-width: 0;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  transition: color 0.25s ease;
 }
 
 .nb-host {
-  color: rgba(255, 255, 255, 0.28);
+  display: block;
+  font-family: 'alibaba-puhuiti', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 1.2px;
+  color: rgba(226, 52, 86, 0.68);
+  text-transform: uppercase;
+  transform: scaleY(0.72);
+  transform-origin: center;
+  transition: color 0.25s ease;
 }
 
 .nb-desc {
-  display: block;
-  font-family: 'alibaba-puhuiti', monospace;
-  font-size: 0.54rem;
-  color: @text-dim;
-  line-height: 1.45;
+  grid-row: 2;
+  grid-column: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(280px, 46vw, 620px);
   max-width: 100%;
-  white-space: nowrap;
+  max-height: 0;
+  min-width: 0;
+  margin: 0;
+  font-family: 'alibaba-puhuiti', sans-serif;
+  font-size: clamp(15px, 1vw, 18px);
+  font-weight: 500;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.28);
+  text-align: center;
+  white-space: normal;
   overflow: hidden;
-  text-overflow: clip;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
-
-  &.is-overflowing {
-    .nb-desc-text {
-      padding-right: 1.2rem;
-      animation: nbDescScroll 7.2s ease-in-out 0.8s infinite alternate;
-    }
-  }
-}
-
-.nb-desc-text {
-  display: inline-block;
-  min-width: max-content;
-  font-size: 0.5rem;
-  font-weight: 700;
-  font-style: italic;
-  will-change: transform;
+  overflow-wrap: anywhere;
+  opacity: 0;
+  clip-path: inset(100% 0 0);
+  transition: color 0.25s ease, opacity 0.2s ease, max-height 0.42s ease,
+    clip-path 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: clip-path;
 }
 
 .nb-arrow {
-  justify-self: center;
-  align-self: center;
-  width: 28px;
-  height: 28px;
-  color: rgba(226, 52, 86, 0.45);
-  transition: color 0.25s;
+  position: absolute !important;
+  top: 50%;
+  right: 30px;
+  width: 22px;
+  height: 22px;
+  font-size: 22px;
+  color: rgba(255, 255, 255, 0.28);
+  transform: translateY(-50%);
+  transition: color 0.25s ease;
 }
 
 @keyframes gearDiamondBlink {
@@ -2214,18 +1937,6 @@ watch(locale, scheduleNeighborDescriptionMeasure)
   }
 }
 
-@keyframes nbDescScroll {
-  0%,
-  18% {
-    transform: translateX(0);
-  }
-
-  82%,
-  100% {
-    transform: translateX(calc(var(--nb-desc-distance, 0px) * -1));
-  }
-}
-
 .about-footer {
   text-align: center;
   border-top: 1px solid @border;
@@ -2242,10 +1953,9 @@ watch(locale, scheduleNeighborDescriptionMeasure)
 
 @media (max-width: 768px) {
   .about-hero-section {
-    height: calc(100dvh - 120px);
+    padding-bottom: calc(clamp(84px, 14dvh, 112px) + 2.5dvh);
 
     > .passion-section {
-      width: 100%;
       aspect-ratio: 7 / 3;
     }
   }
@@ -2275,57 +1985,46 @@ watch(locale, scheduleNeighborDescriptionMeasure)
     margin: 0;
   }
 
-  .passion-color-field {
-    inset: 0;
-  }
-
   .passion-content {
-    gap: 12px;
     left: 12px;
     right: 12px;
-    bottom: 24px;
+    bottom: 8dvh;
+  }
+
+  .passion-brand {
+    width: 100%;
   }
 
   .passion-logo-bg {
-    --passion-logo-base-size: 260px;
-    --passion-logo-shrink: 10px;
-    --passion-logo-base-top: -48px;
+    --passion-logo-size: 250px;
+    --passion-logo-center-lift: 0px;
+    --passion-logo-canvas-scale: 4;
 
-    left: 50%;
-    transform: translateX(-50%) scaleX(1.2);
     opacity: 0.95;
-
-    :deep(.scene-container) {
-      width: 100%;
-      height: 100%;
-    }
-
-    :deep(canvas) {
-      transform: scale(1.62);
-    }
   }
 
   .passion-color-code {
-    font-size: clamp(56px, 16.5vw, 74px);
+    margin-left: -22px;
+    font-size: clamp(115px, 34.2vw, 155px);
   }
 
   .passion-field-name {
-    flex-wrap: wrap;
-    gap: 3px;
-    margin-top: 8px;
+    width: 100%;
+    gap: 5px;
+    margin-top: 14px;
+
     * {
       letter-spacing: 0 !important;
-      font-size: 14px;
+      font-size: 25px;
     }
   }
 
   .passion-field-meta {
-    justify-self: start;
-    gap: 8px;
-    margin-top: 5px;
+    gap: 14px;
+    margin-top: 9px;
 
     span {
-      font-size: 12px;
+      font-size: 22px;
       line-height: 1.5;
     }
   }
@@ -2434,8 +2133,7 @@ watch(locale, scheduleNeighborDescriptionMeasure)
   }
 
   .neighbors-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 2px;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .c-gear {
@@ -2461,67 +2159,107 @@ watch(locale, scheduleNeighborDescriptionMeasure)
   }
 
   .neighbor-card {
-    --neighbor-corner-size: 14px;
     min-height: auto;
-    grid-template-columns: 32px minmax(0, 1fr) 22px;
-    gap: 8px;
-    padding: 20px 20px;
-  }
+    padding: 12px 38px 12px 12px;
 
-  .nb-node {
-    left: -27px;
-    width: 8px;
-    height: 8px;
-  }
+    &:hover,
+    &:focus-visible {
+      .nb-heading {
+        transform: none;
+      }
 
-  .nb-logo {
-    width: 32px;
-    height: 32px;
-  }
+      .nb-desc {
+        max-height: none;
+        clip-path: none;
+      }
 
-  .nb-name {
-    font-size: 0.78rem;
-  }
-
-  .nb-desc {
-    font-size: 0.66rem;
-    margin-top: -6px;
-
-    &.is-overflowing {
-      .nb-desc-text {
-        animation-duration: 8.8s;
+      .nb-logo {
+        opacity: 1;
       }
     }
   }
 
-  .nb-title-row {
-    flex-direction: column;
+  .neighbor-item {
+    &:not(:nth-child(3n + 1))::before,
+    &:nth-child(n + 4)::after {
+      display: none;
+    }
+
+    & + .neighbor-item::after {
+      position: absolute;
+      top: 0;
+      left: 10px;
+      right: 10px;
+      z-index: 3;
+      display: block;
+      height: 1px;
+      content: '';
+      pointer-events: none;
+      background: rgba(255, 255, 255, 0.1);
+    }
+  }
+
+  .nb-centered-content {
+    display: grid;
+    grid-template-columns: 44px minmax(76px, 0.72fr) minmax(0, 1.28fr);
+    grid-template-rows: auto;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .nb-media-slot {
+    grid-row: 1;
+    grid-column: 1;
+    width: 44px;
+    height: 44px;
+  }
+
+  .nb-logo {
+    top: 0;
+    width: 44px;
+    height: 44px;
+  }
+
+  .nb-name {
+    font-size: clamp(15px, 4vw, 17px);
+  }
+
+  .nb-heading {
+    grid-row: 1;
+    grid-column: 2;
     align-items: flex-start;
-    gap: 2px;
+    text-align: left;
+  }
+
+  .nb-desc {
+    grid-row: 1;
+    grid-column: 3;
+    align-self: center;
+    justify-content: flex-end;
+    width: auto;
+    max-height: none;
+    padding-right: 16px;
+    font-size: clamp(14px, 3.8vw, 16px);
+    line-height: 1.42;
+    opacity: 1;
+    text-align: right;
+    clip-path: none;
   }
 
   .nb-host {
-    display: block;
-    width: 100%;
-    max-width: 100%;
-    margin-bottom: 0;
-    font-size: 0.48rem;
-    letter-spacing: 0.8px;
+    font-size: 14px;
+    letter-spacing: 1px;
   }
 
   .nb-arrow {
+    right: 18px;
     width: 18px;
     height: 18px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .about-scroll-indicator {
-    opacity: 0.6;
-    animation: none;
-  }
-
-  .about-scroll-line::after {
+  .about-scroll-hint__line::after {
     animation: none;
   }
 
@@ -2560,21 +2298,13 @@ watch(locale, scheduleNeighborDescriptionMeasure)
   .passion-logo-bg {
     opacity: 1;
     animation: none;
-    transform: translateX(-50%) scaleX(1.2);
+    transform: var(--passion-logo-rest-transform);
   }
 
   .neighbors-block {
     opacity: 1;
     animation: none;
     transform: none;
-  }
-
-  .nb-desc.is-overflowing {
-    overflow-x: auto;
-
-    .nb-desc-text {
-      animation: none;
-    }
   }
 }
 </style>
