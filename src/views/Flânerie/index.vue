@@ -5,17 +5,6 @@
   >
     <PageHeroTitle />
 
-    <!--
-    <PageHeader
-      header-label="[241001_ACCIDENT]"
-      title-en="FLÂNERIE"
-      title-cn="旅程"
-      :meta-item="t('flanerie.metaItem')"
-      primary-color="#e7492d"
-      mobile-tall
-    />
-    -->
-
     <section class="vlog-section">
       <div
         ref="mapContainerRef"
@@ -67,7 +56,7 @@
         </section>
       </div>
     </section>
-    <PageFooter cn-title="旅程" en-title="FLÂNERIE" />
+    <PageFooter />
   </div>
 </template>
 
@@ -90,7 +79,6 @@ import { useRouter } from 'vue-router'
 import PageHeroTitle from '@/components/PageHeroTitle/index.vue'
 import SectionCount from '@/components/SectionCount/index.vue'
 import Sections from '@/components/Sections/index.vue'
-// import PageHeader from '@/components/PageHeader/index.vue'
 import VlogCard from '@/components/VlogCard/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
 import { visualState } from '@/stores'

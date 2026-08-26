@@ -16,15 +16,15 @@
     margin-left: 60px;
 
     .porygon {
-      width: 394px;
-      height: 369px;
       position: absolute;
       top: 0;
       right: 0;
+      width: 512px;
+      height: 478px;
+      opacity: 0;
       background-size: cover;
       background-image: url('https://assets.anuluca.com/other/porygon.png');
-      transition: all 1s ease, opacity 2s ease;
-      transform-origin: center;
+      transition: width 1s ease, height 1s ease, opacity 2s ease;
     }
 
     .show-text {
@@ -32,7 +32,6 @@
       bottom: 0;
       left: 0;
       font-family: 'cn-custom';
-      transition: text-shadow 0.2s ease, color 0.5s ease;
 
       p {
         font-size: 29px;
@@ -51,6 +50,7 @@
         }
 
         &:last-child {
+          width: 0;
           white-space: nowrap;
           background-color: var(--opacity-color);
           color: var(--bg-color);
@@ -59,7 +59,8 @@
           line-height: 30px;
           display: flex;
           align-items: center;
-          transition: all 0.3s ease, width 0.5s ease;
+          transition: width 0.5s ease 0.4s, color 0.3s ease,
+            background-color 0.3s ease, text-shadow 0.3s ease;
           text-shadow: none;
           cursor: pointer;
 
@@ -73,7 +74,19 @@
     }
   }
 
-@media screen and (max-aspect-ratio: 2/3) {
+  &.is-entered {
+    .porygon {
+      width: 394px;
+      height: 369px;
+      opacity: 1;
+    }
+
+    .show-text p.last-show-text {
+      width: 100%;
+    }
+  }
+
+  @media screen and (max-aspect-ratio: 2/3) {
     .porygon {
       right: 40px !important;
       width: 360px !important;
@@ -109,10 +122,15 @@
 
 html.not-found-no-scroll,
 body.not-found-no-scroll {
+  height: 100dvh !important;
+  min-height: 100dvh !important;
   overflow: hidden !important;
+  overscroll-behavior: none;
 }
 
 body.not-found-no-scroll {
+  touch-action: none;
+
   .page-scroll-progress.no-rem {
     display: none !important;
   }

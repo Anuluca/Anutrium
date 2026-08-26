@@ -11,12 +11,6 @@
 @mobile-gutter: 28px;
 @route-enter-delay: 0.62s;
 
-:global(html),
-:global(body),
-:global(#app) {
-  overflow-x: hidden;
-}
-
 :global(body.island-mobile-shell),
 :global(body.island-mobile-shell-leaving) {
   width: 100%;
@@ -30,6 +24,7 @@
 
 :global(body.island-mobile-shell #app),
 :global(body.island-mobile-shell-leaving #app) {
+  overflow-x: hidden;
   background: @page-bg;
 }
 

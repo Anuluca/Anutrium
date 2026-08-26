@@ -171,7 +171,7 @@ onUnmounted(() => {
   <StartAnimation @finished="startAnimationFinished" />
   <layout :entry-active="entryAnimationReady" />
   <PetTeaserLink
-    v-if="route.path !== '/pet' && route.path !== '/404'"
+    v-if="!['/pet', '/404', '/island', '/test'].includes(route.path)"
     :entry-active="entryAnimationReady"
   />
   <div

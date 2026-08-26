@@ -59,6 +59,14 @@ export const getPageScrollHeight = () => {
 export const getPageMaxScrollTop = () =>
   Math.max(0, getPageScrollHeight() - window.innerHeight)
 
+export const PAGE_END_VISIBILITY_THRESHOLD = 80
+
+export const isPageAtEnd = (
+  scrollTop: number,
+  maxScrollTop: number,
+  threshold = PAGE_END_VISIBILITY_THRESHOLD
+) => maxScrollTop > 0 && maxScrollTop - scrollTop <= threshold
+
 export const scrollPageTo = ({
   top,
   left = 0,

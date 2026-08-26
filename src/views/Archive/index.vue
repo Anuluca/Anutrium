@@ -2,21 +2,6 @@
   <div class="archives-page main-container">
     <PageHeroTitle />
 
-    <!--
-    <PageHeader
-      header-label="[MENTOR_NV42]"
-      title-en="ARCHIVE"
-      title-cn="作品集"
-      :meta-item="
-        'TOTAL — ' +
-        (mainWorks.length + personalWorks.length + miscWorks.length) +
-        ' PROJECTS'
-      "
-      primary-color="#5AD480"
-      mobile-tall
-    />
-    -->
-
     <section
       class="availability-panel"
       aria-labelledby="availability-title"
@@ -187,7 +172,7 @@
         </div>
       </Sections>
     </section>
-    <PageFooter cn-title="作品集" en-title="ARCHIVE" />
+    <PageFooter />
 
     <WorkDetailModal
       :work="selectedWork"
@@ -201,18 +186,15 @@
 /* eslint-disable simple-import-sort/imports */
 import { computed, onBeforeUnmount, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ElMessageBox } from 'element-plus'
 import SectionCount from '@/components/SectionCount/index.vue'
 import Sections from '@/components/Sections/index.vue'
 import WorkCard from '@/components/WorkCard/index.vue'
 import WorkDetailModal from '@/components/WorkDetailModal/index.vue'
 import PageHeroTitle from '@/components/PageHeroTitle/index.vue'
-// import PageHeader from '@/components/PageHeader/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
 import TypedText from '@/components/TypedText/index.vue'
 import { trackEvent, trackProjectClick } from '@/utils/analytics'
-
-import 'element-plus/es/components/message-box/style/css'
+import { confirmWithoutPageShift } from '@/utils/scrollSafeMessageBox'
 
 const { locale, t, tm } = useI18n()
 
@@ -305,7 +287,7 @@ const requestResume = async () => {
   const isEnglish = locale.value === 'en'
 
   try {
-    await ElMessageBox.confirm(
+    await confirmWithoutPageShift(
       isEnglish
         ? 'Would you like to email Anuluca to request a resume?'
         : '是否向 Anuluca 发送简历请求？',

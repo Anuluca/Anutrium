@@ -24,7 +24,7 @@
       </div>
     </main>
 
-    <PageFooter cn-title="周边摄影" en-title="MERCH PHOTOGRAPHY" />
+    <PageFooter />
   </div>
 </template>
 

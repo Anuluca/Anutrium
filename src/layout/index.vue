@@ -192,23 +192,8 @@
               </span>
             </button>
           </div>
-          <div class="contact-item">
-            <a
-              v-for="contact in socialContacts"
-              :key="contact.type"
-              class="mobile-contact-link"
-              :href="contact.href"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              &lt; {{ contact.label }} &gt;
-            </a>
-          </div>
-          <div class="contact-item">
-            <span>E-MAIL: </span>
-            <a class="mail-link" :href="mailContact.href">
-              tilucario@outlook.com
-            </a>
+          <div class="mobile-menu-social-links" @click.stop>
+            <FooterSocialLinks v-if="isMobileMenuOpen" />
           </div>
           <div class="about-me">© 2018-2026 ANULUCA</div>
           <div class="mobile-footer-left" />
@@ -230,6 +215,7 @@
           <component :is="Component" />
         </transition>
       </router-view>
+      <div id="page-footer-portal" class="page-footer-portal" />
     </div>
     <BackToTop :suppressed="isMobile && isMobileMenuOpen" />
     <span
@@ -254,9 +240,9 @@ import { useRoute, useRouter } from 'vue-router'
 import { Moon, Sunny } from '@element-plus/icons-vue'
 
 import BackToTop from '@/components/BackToTop/index.vue'
+import FooterSocialLinks from '@/components/FooterSocialLinks/index.vue'
 import Logo from '@/components/Logo/index.vue'
 import TextRoll from '@/components/TextRoll/index.vue'
-import type { ContactLink } from '@/locales/modules/contactLinks'
 import { routes, syncSeoMeta } from '@/router'
 import { visualState } from '@/stores'
 import { persistLocale, type SiteLocale } from '@/utils/locale'
@@ -268,7 +254,7 @@ import {
 } from '@/utils/pageScroll'
 import { setSmoothScrollLocked } from '@/utils/smoothScroll'
 
-const { locale, tm } = useI18n()
+const { locale } = useI18n()
 const props = defineProps({
   entryActive: {
     type: Boolean,
@@ -338,16 +324,6 @@ const layoutPage = ref<HTMLElement | null>(null)
 const isScrolled = ref(false)
 const layoutShow = ref(false)
 const theme = computed(() => visualStateStore.theme)
-const contactLinks = computed(
-  () => tm('contactLinks') as unknown as ContactLink[]
-)
-const socialContacts = computed(() =>
-  contactLinks.value.filter((item) => item.type !== 'MAIL')
-)
-const mailContact = computed(
-  () => contactLinks.value.find((item) => item.type === 'MAIL')!
-)
-
 const filterRoutes = routes.filter((item) => {
   return item?.meta?.ifShow
 })

@@ -114,7 +114,7 @@
       </Transition>
     </main>
 
-    <PageFooter cn-title="摄影作品" en-title="PHOTOGRAPHY" />
+    <PageFooter />
   </div>
 </template>
 

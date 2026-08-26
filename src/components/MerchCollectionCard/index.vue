@@ -32,8 +32,8 @@
           <strong>{{ collection.title }}</strong>
           <small>
             <template
-              v-for="(subtitlePart, partIndex) in subtitleDisplayParts"
-              :key="partIndex"
+              v-for="subtitlePart in subtitleDisplayParts"
+              :key="subtitlePart.id"
             >
               <span
                 v-if="subtitlePart.isSeparator"
@@ -89,7 +89,8 @@ const subtitleDisplayParts = computed(() =>
   props.collection.subtitle
     .split(/([｜|])/)
     .filter((part) => part.trim())
-    .map((part) => ({
+    .map((part, index) => ({
+      id: `${part}-${index}`,
       isSeparator: part === '｜' || part === '|',
       text: part.trim(),
     }))

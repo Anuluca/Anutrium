@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+
+import {
+  addPageScrollListener,
+  getPageMaxScrollTop,
+  getPageScrollTop,
+  isPageAtEnd,
+} from '@/utils/pageScroll'
 
 const catEarsImage = 'https://assets.anuluca.com/other/cat_ear.png'
 const catImage = 'https://assets.anuluca.com/other/cat_full.png'
@@ -20,16 +26,17 @@ const IDLE_MOTION_MIN_DELAY = 4_000
 const IDLE_MOTION_DELAY_RANGE = 5_000
 const ACTIVATION_DURATION = 650
 const ACTIVATION_FALLBACK_BUFFER = 360
+const PET_PAGE_URL = 'https://flora-vs-luca.anuluca.com'
 
-const router = useRouter()
 const state = ref<InteractionState>('idle')
 const isIdleMotion = ref(false)
+const isMobilePageEnd = ref(false)
 const footerOffset = ref('0px')
+const teaserElement = ref<HTMLElement | null>(null)
 const animationStyle = computed(
   () =>
     ({
       '--pet-activation-duration': `${ACTIVATION_DURATION}ms`,
-      '--pet-footer-offset': footerOffset.value,
     } as Record<string, string>)
 )
 
@@ -37,9 +44,10 @@ let idleMotionTimer: number | null = null
 let activationFallbackTimer: number | null = null
 let footerMeasureRaf: number | null = null
 let footerElement: HTMLElement | null = null
-let footerResizeObserver: ResizeObserver | null = null
+let layoutResizeObserver: ResizeObserver | null = null
 let footerMutationObserver: MutationObserver | null = null
 let reducedMotionQuery: MediaQueryList | null = null
+let removePageScrollListener: (() => void) | null = null
 let hasNavigated = false
 let isTrackingFooterTransition = false
 
@@ -60,6 +68,7 @@ const scheduleIdleMotion = () => {
   clearIdleMotionTimer()
   if (
     !props.entryActive ||
+    isMobilePageEnd.value ||
     state.value !== 'idle' ||
     reducedMotionQuery?.matches ||
     document.visibilityState === 'hidden'
@@ -76,7 +85,13 @@ const scheduleIdleMotion = () => {
 }
 
 const handleMouseEnter = () => {
-  if (!props.entryActive || state.value === 'activating') return
+  if (
+    !props.entryActive ||
+    isMobilePageEnd.value ||
+    state.value === 'activating'
+  ) {
+    return
+  }
   clearIdleMotionTimer()
   isIdleMotion.value = false
   state.value = 'hovering'
@@ -88,32 +103,33 @@ const handleMouseLeave = () => {
   scheduleIdleMotion()
 }
 
-const navigateToPet = async () => {
+const navigateToPet = () => {
   if (hasNavigated) return
   hasNavigated = true
   clearActivationFallback()
+  window.location.assign(PET_PAGE_URL)
+}
 
-  try {
-    const failure = await router.push('/pet')
-    if (!failure) return
-  } catch {
-    // Restore the entry when route loading fails so the user can retry.
-  }
-
-  hasNavigated = false
-  state.value = 'idle'
-  scheduleIdleMotion()
+const completeActivation = () => {
+  navigateToPet()
 }
 
 const handleActivate = () => {
-  if (!props.entryActive || state.value === 'activating' || hasNavigated) return
+  if (
+    !props.entryActive ||
+    isMobilePageEnd.value ||
+    state.value === 'activating' ||
+    hasNavigated
+  ) {
+    return
+  }
 
   state.value = 'activating'
   isIdleMotion.value = false
   clearIdleMotionTimer()
 
   activationFallbackTimer = window.setTimeout(() => {
-    void navigateToPet()
+    completeActivation()
   }, ACTIVATION_DURATION + ACTIVATION_FALLBACK_BUFFER)
 }
 
@@ -122,7 +138,7 @@ const handleCatAnimationEnd = (event: AnimationEvent) => {
     state.value === 'activating' &&
     event.animationName.includes('pet-cat-enter')
   ) {
-    void navigateToPet()
+    completeActivation()
   }
 }
 
@@ -147,6 +163,12 @@ const handleReducedMotionChange = () => {
   scheduleIdleMotion()
 }
 
+const updatePageEndState = () => {
+  isMobilePageEnd.value =
+    window.innerWidth <= window.innerHeight &&
+    isPageAtEnd(getPageScrollTop(), getPageMaxScrollTop())
+}
+
 const updateFooterOffset = () => {
   footerMeasureRaf = null
   if (
@@ -158,6 +180,13 @@ const updateFooterOffset = () => {
     const footerTop = footerElement.getBoundingClientRect().top
     footerOffset.value = `${Math.max(0, window.innerHeight - footerTop)}px`
   }
+  document.body.style.setProperty('--pet-footer-offset', footerOffset.value)
+  if (teaserElement.value) {
+    document.body.style.setProperty(
+      '--pet-teaser-height',
+      `${teaserElement.value.getBoundingClientRect().height}px`
+    )
+  }
 
   if (isTrackingFooterTransition) scheduleFooterOffsetUpdate()
 }
@@ -165,6 +194,11 @@ const updateFooterOffset = () => {
 const scheduleFooterOffsetUpdate = () => {
   if (footerMeasureRaf !== null) return
   footerMeasureRaf = window.requestAnimationFrame(updateFooterOffset)
+}
+
+const handleViewportResize = () => {
+  scheduleFooterOffsetUpdate()
+  updatePageEndState()
 }
 
 const isFooterBottomTransition = (event: TransitionEvent) =>
@@ -186,8 +220,14 @@ const observeFooter = () => {
   footerElement = document.querySelector<HTMLElement>('.footer-com')
   if (!footerElement) return
 
-  footerResizeObserver = new ResizeObserver(scheduleFooterOffsetUpdate)
-  footerResizeObserver.observe(footerElement)
+  layoutResizeObserver = new ResizeObserver(() => {
+    scheduleFooterOffsetUpdate()
+    updatePageEndState()
+  })
+  layoutResizeObserver.observe(footerElement)
+  const routerContainer =
+    document.querySelector<HTMLElement>('.router-container')
+  if (routerContainer) layoutResizeObserver.observe(routerContainer)
   footerMutationObserver = new MutationObserver(scheduleFooterOffsetUpdate)
   footerMutationObserver.observe(footerElement, {
     attributes: true,
@@ -212,14 +252,28 @@ watch(
   }
 )
 
+watch(isMobilePageEnd, (isPageEnd) => {
+  if (!isPageEnd) {
+    scheduleIdleMotion()
+    return
+  }
+
+  clearIdleMotionTimer()
+  clearActivationFallback()
+  isIdleMotion.value = false
+  state.value = 'idle'
+})
+
 onMounted(() => {
   reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
   reducedMotionQuery.addEventListener('change', handleReducedMotionChange)
   document.addEventListener('visibilitychange', handleVisibilityChange)
-  window.addEventListener('resize', scheduleFooterOffsetUpdate, {
+  window.addEventListener('resize', handleViewportResize, {
     passive: true,
   })
   observeFooter()
+  updatePageEndState()
+  removePageScrollListener = addPageScrollListener(updatePageEndState)
   scheduleIdleMotion()
 })
 
@@ -227,24 +281,29 @@ onUnmounted(() => {
   clearIdleMotionTimer()
   clearActivationFallback()
   document.removeEventListener('visibilitychange', handleVisibilityChange)
-  window.removeEventListener('resize', scheduleFooterOffsetUpdate)
+  window.removeEventListener('resize', handleViewportResize)
+  removePageScrollListener?.()
+  removePageScrollListener = null
   footerElement?.removeEventListener('transitionrun', handleFooterTransitionRun)
   footerElement?.removeEventListener('transitionend', handleFooterTransitionEnd)
   footerElement?.removeEventListener(
     'transitioncancel',
     handleFooterTransitionEnd
   )
-  footerResizeObserver?.disconnect()
+  layoutResizeObserver?.disconnect()
   footerMutationObserver?.disconnect()
   if (footerMeasureRaf !== null) {
     window.cancelAnimationFrame(footerMeasureRaf)
   }
+  document.body.style.removeProperty('--pet-footer-offset')
+  document.body.style.removeProperty('--pet-teaser-height')
   reducedMotionQuery?.removeEventListener('change', handleReducedMotionChange)
 })
 </script>
 
 <template>
   <button
+    ref="teaserElement"
     type="button"
     class="pet-teaser"
     :class="[
@@ -253,12 +312,15 @@ onUnmounted(() => {
         'pet-teaser--idle-motion': isIdleMotion,
         'pet-teaser--engaged': state !== 'idle',
         'pet-teaser--ready': props.entryActive,
+        'pet-teaser--page-end': isMobilePageEnd,
       },
     ]"
     :style="animationStyle"
-    aria-label="前往花花的宠物页面"
-    :aria-disabled="!props.entryActive || state === 'activating'"
-    :tabindex="props.entryActive ? 0 : -1"
+    aria-label="前往 Flora vs Luca"
+    :aria-disabled="
+      !props.entryActive || isMobilePageEnd || state === 'activating'
+    "
+    :tabindex="props.entryActive && !isMobilePageEnd ? 0 : -1"
     @mouseenter="handleMouseEnter"
     @mouseleave="handleMouseLeave"
     @click="handleActivate"
@@ -334,7 +396,7 @@ onUnmounted(() => {
   pointer-events: none;
   cursor: pointer;
   isolation: isolate;
-  transition: opacity 0.45s ease;
+  transition: opacity 0.45s ease, transform 0.2s ease, visibility 0s;
   -webkit-tap-highlight-color: transparent;
 
   &--ready {
@@ -352,6 +414,19 @@ onUnmounted(() => {
   &--activating {
     opacity: 0.8;
     transition: none;
+
+    .pet-teaser__interaction-zone {
+      pointer-events: none;
+    }
+  }
+
+  &--page-end {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(8px);
+    transition: opacity 0.2s ease, transform 0.2s ease,
+      visibility 0s linear 0.2s;
 
     .pet-teaser__interaction-zone {
       pointer-events: none;

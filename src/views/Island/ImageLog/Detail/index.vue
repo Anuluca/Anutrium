@@ -41,7 +41,7 @@
       </div>
     </main>
 
-    <PageFooter cn-title="图像记录" en-title="IMAGE LOG" />
+    <PageFooter />
   </div>
 </template>
 

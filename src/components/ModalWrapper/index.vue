@@ -9,14 +9,15 @@
     :lock-scroll="false"
     transition="crt-effect"
     class="modal-wrapper-dialog no-rem"
+    :class="`modal-close-placement--${closePlacement}`"
     :style="{
       '--modal-width': typeof width === 'number' ? `${width}px` : width,
     }"
-    @close="handleClose"
+    @close="handleDialogClose"
     @closed="handleClosed"
   >
     <div class="modal-close-row">
-      <DiamondCloseBtn :title="closeTitle" @click="handleClose" />
+      <DiamondCloseBtn :title="closeTitle" @click="requestClose" />
     </div>
 
     <div class="corner corner-tl" />
@@ -30,15 +31,18 @@
 
     <div class="modal-scanlines" />
 
-    <slot />
+    <div class="modal-scroll-region" data-lenis-nested-scroll>
+      <slot />
+    </div>
   </ElDialog>
 </template>
 
 <script setup lang="ts">
-import { onUnmounted, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { ElDialog } from 'element-plus'
 
 import DiamondCloseBtn from '@/components/DiamondCloseBtn/index.vue'
+import { useOverlayScrollLock } from '@/composables/useOverlayScrollLock'
 
 import 'element-plus/es/components/dialog/style/css'
 
@@ -50,6 +54,7 @@ const props = withDefaults(
     tacticalText?: string
     closeTitle?: string
     appendToBody?: boolean
+    closePlacement?: 'outside-bottom' | 'work-detail'
   }>(),
   {
     width: '1280px',
@@ -57,6 +62,7 @@ const props = withDefaults(
     tacticalText: '[PROJECT_DETAIL]',
     closeTitle: 'Close (ESC)',
     appendToBody: true,
+    closePlacement: 'outside-bottom',
   }
 )
 
@@ -64,117 +70,9 @@ const emit = defineEmits<{
   'update:modelValue': [value: boolean]
   close: []
   closed: []
-  opened: []
-  open: []
 }>()
 
 const dialogVisible = ref(false)
-let lockedScrollX = 0
-let lockedScrollY = 0
-let isScrollLocked = false
-let restoreScrollFrame: number | null = null
-let restoreScrollTimer: number | null = null
-
-const isInsideModal = (target: EventTarget | null) =>
-  target instanceof Element &&
-  Boolean(target.closest('.modal-wrapper-dialog, .el-image-viewer__wrapper'))
-
-const preventBackgroundScroll = (event: Event) => {
-  if (!isInsideModal(event.target)) event.preventDefault()
-}
-
-const preventBackgroundScrollKeys = (event: KeyboardEvent) => {
-  if (
-    ![
-      'ArrowUp',
-      'ArrowDown',
-      'PageUp',
-      'PageDown',
-      'Home',
-      'End',
-      ' ',
-    ].includes(event.key)
-  ) {
-    return
-  }
-
-  const target = event.target
-  if (
-    target instanceof HTMLElement &&
-    (target.matches('input, textarea, select') || target.isContentEditable)
-  ) {
-    return
-  }
-
-  event.preventDefault()
-}
-
-const restoreLockedScroll = () => {
-  if (
-    !isScrollLocked ||
-    (window.scrollX === lockedScrollX && window.scrollY === lockedScrollY)
-  ) {
-    return
-  }
-
-  window.scrollTo(lockedScrollX, lockedScrollY)
-}
-
-const scheduleLockedScrollRestore = () => {
-  if (restoreScrollFrame !== null) {
-    window.cancelAnimationFrame(restoreScrollFrame)
-  }
-  if (restoreScrollTimer !== null) {
-    window.clearTimeout(restoreScrollTimer)
-  }
-
-  restoreScrollFrame = window.requestAnimationFrame(() => {
-    restoreScrollFrame = null
-    restoreLockedScroll()
-  })
-
-  restoreScrollTimer = window.setTimeout(() => {
-    restoreScrollTimer = null
-    restoreLockedScroll()
-  }, 80)
-}
-
-const lockBackgroundScroll = () => {
-  if (isScrollLocked) return
-
-  lockedScrollX = window.scrollX
-  lockedScrollY = window.scrollY
-  isScrollLocked = true
-  document.addEventListener('wheel', preventBackgroundScroll, {
-    capture: true,
-    passive: false,
-  })
-  document.addEventListener('touchmove', preventBackgroundScroll, {
-    capture: true,
-    passive: false,
-  })
-  document.addEventListener('keydown', preventBackgroundScrollKeys, true)
-  window.addEventListener('scroll', restoreLockedScroll, { passive: true })
-  scheduleLockedScrollRestore()
-}
-
-const unlockBackgroundScroll = () => {
-  if (!isScrollLocked) return
-
-  isScrollLocked = false
-  if (restoreScrollFrame !== null) {
-    window.cancelAnimationFrame(restoreScrollFrame)
-    restoreScrollFrame = null
-  }
-  if (restoreScrollTimer !== null) {
-    window.clearTimeout(restoreScrollTimer)
-    restoreScrollTimer = null
-  }
-  document.removeEventListener('wheel', preventBackgroundScroll, true)
-  document.removeEventListener('touchmove', preventBackgroundScroll, true)
-  document.removeEventListener('keydown', preventBackgroundScrollKeys, true)
-  window.removeEventListener('scroll', restoreLockedScroll)
-}
 
 watch(
   () => props.modelValue,
@@ -188,25 +86,23 @@ watch(
   dialogVisible,
   (newVal) => {
     emit('update:modelValue', newVal)
-    if (newVal) {
-      lockBackgroundScroll()
-    } else {
-      unlockBackgroundScroll()
-    }
   },
   { immediate: true }
 )
 
-const handleClose = () => {
+useOverlayScrollLock('modal-wrapper', () => dialogVisible.value)
+
+const requestClose = () => {
   dialogVisible.value = false
+}
+
+const handleDialogClose = () => {
   emit('close')
 }
 
 const handleClosed = () => {
   emit('closed')
 }
-
-onUnmounted(unlockBackgroundScroll)
 </script>
 
 <style lang="less" scoped>
@@ -296,9 +192,34 @@ onUnmounted(unlockBackgroundScroll)
     display: none;
   }
   .el-dialog__body {
+    display: flex;
+    min-height: 0;
+    flex-direction: column;
     padding: 0;
-    flex: 1;
-    overflow: hidden;
+    flex: 1 1 auto;
+    overflow: visible;
+  }
+}
+
+.modal-scroll-region {
+  display: flex;
+  width: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.modal-wrapper-dialog.modal-close-placement--outside-bottom {
+  margin-bottom: 56px !important;
+  overflow: visible;
+
+  .modal-close-row .diamond-close-btn {
+    top: calc(100% + 14px);
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
   }
 }
 
@@ -323,7 +244,7 @@ onUnmounted(unlockBackgroundScroll)
       min-height: 0;
     }
 
-    .modal-close-row {
+    &.modal-close-placement--work-detail .modal-close-row {
       min-height: 52px;
       display: flex;
       flex: 0 0 52px;
@@ -334,7 +255,7 @@ onUnmounted(unlockBackgroundScroll)
       border-bottom: 1px solid rgba(226, 52, 86, 0.18);
     }
 
-    .modal-close-row .diamond-close-btn {
+    &.modal-close-placement--work-detail .modal-close-row .diamond-close-btn {
       position: relative;
       top: auto;
       right: auto;

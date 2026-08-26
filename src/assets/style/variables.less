@@ -1,6 +1,7 @@
 @primary-color: #e23456;
 
 :root {
+  --page-inline-gutter: 6vw;
   --text-color: #fffff4;
   --bg-color: #000;
   --opacity-color: #ffffff7a;
@@ -29,6 +30,12 @@
     ),
     linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
     #090406;
+}
+
+@media screen and (max-aspect-ratio: @ratio-threshold) {
+  :root {
+    --page-inline-gutter: clamp(1.8667rem, 8vw, 2.4rem);
+  }
 }
 
 [data-theme='light'],

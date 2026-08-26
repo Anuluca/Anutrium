@@ -100,7 +100,8 @@ onUnmounted(() => {
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.28);
   cursor: pointer;
   transition: color 0.25s ease, border-color 0.25s ease, background 0.25s ease,
-    box-shadow 0.25s ease, transform 0.25s ease, right 0.35s ease;
+    box-shadow 0.25s ease, transform 0.25s ease, right 0.35s ease,
+    bottom 0.25s ease;
 
   &:hover,
   &:focus-visible {
@@ -184,24 +185,24 @@ onUnmounted(() => {
 
 @media screen and (max-aspect-ratio: 1) {
   .back-to-top-button.no-rem {
-    right: 16px;
+    right: 17px;
     bottom: 20px;
-    width: 54px;
-    height: 54px;
+    width: 36px;
+    height: 36px;
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.32);
   }
 
   .button-arrow.no-rem {
-    top: 12px;
-    width: 9px;
-    height: 9px;
-    border-top-width: 2.5px;
-    border-left-width: 2.5px;
+    top: 7px;
+    width: 6px;
+    height: 6px;
+    border-top-width: 1.5px;
+    border-left-width: 1.5px;
   }
 
   .button-label.no-rem {
-    bottom: 13px;
-    font-size: 14px;
+    bottom: 8px;
+    font-size: 10px;
     letter-spacing: 0.06em;
   }
 }

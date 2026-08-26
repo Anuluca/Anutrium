@@ -29,12 +29,7 @@
           overflow: visible;
           touch-action: pan-y;
           transform: perspective(1000px)
-            translate3d(
-              calc(var(--hero-exit-x, 0px) - 2px),
-              var(--hero-exit-y, 0px),
-              0
-            )
-            scale(var(--hero-exit-scale, 1))
+            translateX(-2px)
             rotateX(var(--hero-rotate-x, 0deg))
             rotateY(var(--hero-rotate-y, 0deg));
 
@@ -79,13 +74,15 @@
     }
 
     .card-content {
+      --card-content-hover-bottom-padding: 8px;
+
       left: 0;
       right: 0;
       width: 100%;
       max-width: 100%;
       box-sizing: border-box;
       overflow: hidden;
-      padding: 12px 32px 12px;
+      padding: 10px 32px 24px;
     }
 
     .card-top {
@@ -221,32 +218,5 @@
       right: 10px;
     }
 
-    .card-watermark {
-      display: none;
-    }
-
-    .works-grid {
-      grid-template-columns: 1fr !important;
-      gap: 15px;
-    }
-
-    .journey-grid {
-      width: 100%;
-      grid-template-columns: 1fr !important;
-      justify-content: stretch;
-      justify-items: center;
-      gap: 10px;
-
-      .shared-vlog-card {
-        width: 100%;
-        margin-right: auto;
-        margin-left: auto;
-      }
-    }
-
-    .home-craft-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
-    }
   }
 }

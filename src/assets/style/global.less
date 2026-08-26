@@ -35,6 +35,7 @@ body.mobile-menu-scroll-locked {
 body {
   --pet-teaser-size: clamp(7.5rem, 12vw, 10.5rem);
   --pet-teaser-visual-width: clamp(4.75rem, 7vw, 6.5rem);
+  --pet-footer-offset: 0px;
 
   width: calc(100% - 120px);
   height: 100%;
@@ -44,8 +45,7 @@ body {
   position: relative;
   background-color: var(--bg-color);
   color: var(--text-color);
-  padding: 0 40px;
-  padding-left: 60px;
+  padding: 0 60px;
   scrollbar-width: none;
   -ms-overflow-style: none;
 
@@ -73,12 +73,22 @@ body {
     margin: 0 auto;
     user-select: text;
     overflow-x: hidden;
-    padding: 0 6vw;
+    padding: 0 var(--page-inline-gutter);
     padding-bottom: 60px;
   }
   .el-menu {
     background-color: transparent !important;
   }
+}
+
+body.lenis:not(.lenis-autoToggle).lenis-stopped {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+body.el-image-viewer-parent--hidden {
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 body:has(.pet-teaser) .back-to-top-button.no-rem {
@@ -463,7 +473,6 @@ body.light {
     }
 
     .center .expand .marquee-wrap {
-      .recommend a,
       .recommend .recommend-link {
         color: rgba(0, 0, 0, 0.74) !important;
       }
@@ -486,12 +495,6 @@ body.light {
     .right .text-links > .social-link:hover .social-trigger,
     .right .text-links > .social-link:focus-within .social-trigger {
       color: rgba(0, 0, 0, 0.72) !important;
-    }
-
-    .social-preview {
-      background: rgba(255, 255, 255, 0.96) !important;
-      border-color: rgba(0, 0, 0, 0.14) !important;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18) !important;
     }
 
     .el-switch .el-switch__core {
@@ -641,7 +644,6 @@ body.light {
   .home-section-rail__label,
   .tactical-text,
   .modal-tactical-text,
-  .card-watermark,
   .map-hud-label__cn,
   .collection-section__count,
   .collection-card__index,
@@ -1716,6 +1718,11 @@ body .el-message-box {
 }
 
 @media screen and (max-aspect-ratio: @ratio-threshold) {
+  .el-message:not(.is-bottom).el-message-fade-enter-from,
+  .el-message:not(.is-bottom).el-message-fade-leave-to {
+    transform: none !important;
+  }
+
   html,
   body,
   #app {
@@ -1734,8 +1741,9 @@ body .el-message-box {
   }
 
   body {
-    --pet-teaser-size: clamp(6.5rem, 29vw, 8.5rem);
-    --pet-teaser-visual-width: clamp(4.5rem, 20.5vw, 6rem);
+    --pet-teaser-size: clamp(5.5rem, 24vw, 7.25rem);
+    --pet-teaser-height: clamp(3.4375rem, 15vw, 4.53125rem);
+    --pet-teaser-visual-width: clamp(3.75rem, 17vw, 5rem);
 
     width: 100%;
     box-sizing: border-box;
@@ -1745,7 +1753,20 @@ body .el-message-box {
   }
 
   body:has(.pet-teaser) .back-to-top-button.no-rem {
-    right: calc(var(--pet-teaser-visual-width) + 34px);
+    right: 17px;
+    bottom: calc(
+      env(safe-area-inset-bottom) + var(--pet-footer-offset) +
+        var(--pet-teaser-height) + 32px
+    );
+  }
+
+  body:has(.pet-teaser--page-end) .back-to-top-button.no-rem {
+    bottom: calc(env(safe-area-inset-bottom) + 25px);
+  }
+
+  body:has(.pet-teaser) .back-to-top-enter-from,
+  body:has(.pet-teaser) .back-to-top-leave-to {
+    transform: translateY(-18px);
   }
 
   .main-container {

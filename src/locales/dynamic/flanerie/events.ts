@@ -352,15 +352,15 @@ const events = [
       },
     ],
     photos: [
-      // {
-      //   location: {
-      //     zhCn: '城市活动',
-      //     en: 'City Event',
-      //   },
-      //   time: '2023',
-      //   device: 'iPhone 12 mini',
-      //   url: 'https://assets.anuluca.com/Flanerie/events/poke_event2/IMG_0704 (1).jpg',
-      // },
+      {
+        location: {
+          zhCn: '蔡依林PLEASURE LIVE',
+          en: 'JOLIN TSAI PLEASURE LIVE',
+        },
+        time: '2026',
+        device: 'Sony RX100M6',
+        url: 'https://assets.anuluca.com/Flanerie/events/live_jolinPleasure/DSC07826.jpg',
+      },
     ],
   },
   {

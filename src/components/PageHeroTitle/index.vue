@@ -11,9 +11,11 @@
             v-for="(character, index) in titleCharacters"
             :key="`${character}-${index}`"
             class="page-hero-title__char"
-            :class="`is-moving-${characterDirections[index] || 'up'}`"
+            :class="[
+              `is-moving-${characterDirections[index] || 'up'}`,
+              { 'is-animating': activeCharacterIndex === index },
+            ]"
             aria-hidden="true"
-            @pointerleave="randomizeCharacterDirection(index)"
           >
             <span class="page-hero-title__char-current">
               {{ character }}
@@ -43,9 +45,21 @@ const titleCharacters = computed(() =>
     character === ' ' ? '\u00a0' : character
   )
 )
+const animatableCharacterIndexes = computed(() =>
+  titleCharacters.value.reduce<number[]>((indexes, character, index) => {
+    if (character !== '\u00a0') indexes.push(index)
+    return indexes
+  }, [])
+)
 const moveDirections = ['up', 'down', 'left', 'right'] as const
 type MoveDirection = (typeof moveDirections)[number]
 const characterDirections = ref<MoveDirection[]>([])
+const activeCharacterIndex = ref<number | null>(null)
+const characterAnimationDuration = 300
+const characterAnimationDelay = {
+  min: 500,
+  max: 1400,
+}
 const themeColors: Record<string, string> = {
   ARCHIVE: '#2f7548',
   FLANERIE: '#8a2c1b',
@@ -62,6 +76,11 @@ const titleText = ref<HTMLElement | null>(null)
 let resizeObserver: ResizeObserver | null = null
 let removeScrollListener: (() => void) | null = null
 let geometryFrameId: number | null = null
+let characterAnimationTimer: number | null = null
+let characterAnimationFrameId: number | null = null
+let reducedMotionQuery: MediaQueryList | null = null
+let lastAnimatedCharacterIndex: number | null = null
+let isMounted = false
 let titleFullHeight = 0
 let collapseDistance = 1
 
@@ -88,6 +107,72 @@ const prepareCharacterDirections = () => {
   characterDirections.value = titleCharacters.value.map(() =>
     getRandomDirection()
   )
+}
+
+const clearCharacterAnimationSchedule = () => {
+  if (characterAnimationTimer !== null) {
+    window.clearTimeout(characterAnimationTimer)
+    characterAnimationTimer = null
+  }
+
+  if (characterAnimationFrameId !== null) {
+    window.cancelAnimationFrame(characterAnimationFrameId)
+    characterAnimationFrameId = null
+  }
+}
+
+const getNextCharacterIndex = () => {
+  const indexes = animatableCharacterIndexes.value
+  if (indexes.length === 0) return null
+  if (indexes.length === 1 || lastAnimatedCharacterIndex === null) {
+    return indexes[Math.floor(Math.random() * indexes.length)]
+  }
+
+  const lastPosition = indexes.indexOf(lastAnimatedCharacterIndex)
+  if (lastPosition === -1) {
+    return indexes[Math.floor(Math.random() * indexes.length)]
+  }
+
+  const offset = 1 + Math.floor(Math.random() * (indexes.length - 1))
+  return indexes[(lastPosition + offset) % indexes.length]
+}
+
+const scheduleCharacterAnimation = () => {
+  clearCharacterAnimationSchedule()
+  if (!reducedMotionQuery || reducedMotionQuery.matches) return
+
+  const delay =
+    characterAnimationDelay.min +
+    Math.random() * (characterAnimationDelay.max - characterAnimationDelay.min)
+
+  characterAnimationTimer = window.setTimeout(() => {
+    characterAnimationTimer = null
+    const nextCharacterIndex = getNextCharacterIndex()
+    if (nextCharacterIndex === null) return
+
+    lastAnimatedCharacterIndex = nextCharacterIndex
+    randomizeCharacterDirection(nextCharacterIndex)
+
+    void nextTick(() => {
+      if (!isMounted || reducedMotionQuery?.matches) return
+
+      characterAnimationFrameId = window.requestAnimationFrame(() => {
+        characterAnimationFrameId = null
+        if (!isMounted || reducedMotionQuery?.matches) return
+
+        activeCharacterIndex.value = nextCharacterIndex
+        characterAnimationTimer = window.setTimeout(() => {
+          activeCharacterIndex.value = null
+          scheduleCharacterAnimation()
+        }, characterAnimationDuration)
+      })
+    })
+  }, delay)
+}
+
+const handleReducedMotionChange = () => {
+  activeCharacterIndex.value = null
+  scheduleCharacterAnimation()
 }
 
 const fitTitleToRow = () => {
@@ -132,21 +217,33 @@ const scheduleTitleGeometry = () => {
 }
 
 watch(title, () => {
+  activeCharacterIndex.value = null
+  lastAnimatedCharacterIndex = null
   prepareCharacterDirections()
+  scheduleCharacterAnimation()
   nextTick(scheduleTitleGeometry)
 })
 
 onMounted(() => {
+  isMounted = true
   prepareCharacterDirections()
+  reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+  reducedMotionQuery.addEventListener('change', handleReducedMotionChange)
+  scheduleCharacterAnimation()
   resizeObserver = new ResizeObserver(scheduleTitleGeometry)
   if (titleContainer.value) resizeObserver.observe(titleContainer.value)
   removeScrollListener = addPageScrollListener(syncScrollCollapse)
 
   nextTick(scheduleTitleGeometry)
-  document.fonts?.ready.then(scheduleTitleGeometry)
+  document.fonts?.ready.then(() => {
+    if (isMounted) scheduleTitleGeometry()
+  })
 })
 
 onBeforeUnmount(() => {
+  isMounted = false
+  clearCharacterAnimationSchedule()
+  reducedMotionQuery?.removeEventListener('change', handleReducedMotionChange)
   resizeObserver?.disconnect()
   removeScrollListener?.()
   if (geometryFrameId !== null) {
@@ -235,12 +332,18 @@ onBeforeUnmount(() => {
     display: inline-block;
     overflow: hidden;
     pointer-events: auto;
+    transition: filter 0.2s ease, text-shadow 0.2s ease;
+
+    &:hover {
+      filter: brightness(1.8);
+      text-shadow: 0 0 0.08em currentcolor;
+    }
 
     > span {
       display: block;
     }
 
-    &:hover > span {
+    &.is-animating > span {
       transition: transform 0.3s ease-in-out;
       will-change: transform;
     }
@@ -275,18 +378,18 @@ onBeforeUnmount(() => {
       --enter-x: -105%;
     }
 
-    &:hover .page-hero-title__char-current {
+    &.is-animating .page-hero-title__char-current {
       transform: translate(var(--exit-x), var(--exit-y));
     }
 
-    &:hover .page-hero-title__char-incoming {
+    &.is-animating .page-hero-title__char-incoming {
       transform: translate(0);
     }
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .page-hero-title .page-hero-title__char:hover {
+  .page-hero-title .page-hero-title__char.is-animating {
     .page-hero-title__char-current {
       transform: translate(0);
     }

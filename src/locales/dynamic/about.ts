@@ -26,25 +26,24 @@ const aboutDynamic = {
       name: 'Poke Amice 宝可梦友会',
       url: 'http://pokeamice.com',
       logo: PokeAmice,
-      description:
-        'Asimov创建的宝可梦全栈资料整理&个人研究据点。',
+      description: 'Asimov的宝可梦资料整理&个人研究据点。',
     },
   ],
   changelogs: [
     // {
     //   version: 'v1.2',
-    //   date: '2026-07-20',
+    //   date: '2026-08-13',
     //   title: {
-    //     zhCn: '交互设计优化',
+    //     zhCn: '数据更新、交互设计优化',
     //     en: '',
     //   },
     //   details: [
     //     {
-    //       zhCn: '新增十二星宿轮盘背景、重做首页、页面标题、子页面标题、关于页设计',
+    //       zhCn: '新增十二星宿轮盘背景、重做首页、关于页、主要标题组件、次要标题组件、通用页脚组件设计',
     //       en: '',
     //     },
     //     {
-    //       zhCn: '',
+    //       zhCn: '新增旅程：__"蔡依林PLEASURE TOUR"__、__"张学友60+演唱会"__',
     //       en: '',
     //     },
     //     {

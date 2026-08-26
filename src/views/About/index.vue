@@ -11,7 +11,6 @@ import {
 import LogoRotating3D from '@/components/Logo_rotating3D/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
 import PageHeroTitle from '@/components/PageHeroTitle/index.vue'
-// import PageHeader from '@/components/PageHeader/index.vue'
 
 interface ChangelogItem {
   version: string
@@ -180,6 +179,7 @@ const roadmapItems = computed<string[]>(() => {
         <LogoRotating3D
           class="passion-logo-bg"
           low-power
+          mobile-high-resolution
           transparent
           :interactive="false"
           aria-hidden="true"
@@ -205,20 +205,10 @@ const roadmapItems = computed<string[]>(() => {
       </section>
 
       <div class="about-scroll-hint">
-        <span class="about-scroll-hint__text">{{ t('scrollDown') }}</span>
+        <span class="about-scroll-hint__text">{{ t('scroll') }}</span>
         <span class="about-scroll-hint__line" aria-hidden="true" />
       </div>
     </section>
-
-    <!--
-    <PageHeader
-      header-label="[HUAHUA_THE_CAT]"
-      title-en="ABOUT"
-      title-cn="关于"
-      meta-item="LEARN MORE ABOUT THIS PROJECT"
-      primary-color="#5D3ABA"
-    />
-    -->
 
     <div class="about-updates-grid">
       <section class="block changelog-block">
@@ -363,12 +353,12 @@ const roadmapItems = computed<string[]>(() => {
           :class="{ 'is-expanded': showAllChangelogs }"
           type="button"
           :aria-expanded="showAllChangelogs"
+          :aria-label="
+            showAllChangelogs ? 'Collapse changelog' : 'Expand changelog'
+          "
           @click="toggleChangelogList"
         >
-          <span>
-            {{ showAllChangelogs ? 'CLICK TO CLOSE' : 'CLICK TO EXPLORE' }}
-          </span>
-          <ArrowDown class="changelog-list-toggle__icon" aria-hidden="true" />
+          <span class="changelog-list-toggle__triangle" aria-hidden="true" />
         </button>
       </section>
 
@@ -467,10 +457,7 @@ const roadmapItems = computed<string[]>(() => {
       </div>
     </section>
 
-    <!-- <footer class="about-footer">
-      <span class="footer-text">&lt; DRIVEN BY PASSION. &gt;</span>
-    </footer> -->
-    <PageFooter cn-title="关于" en-title="ABOUT" />
+    <PageFooter />
   </div>
 </template>
 
@@ -541,17 +528,17 @@ const roadmapItems = computed<string[]>(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  color: rgba(255, 255, 255, 0.56);
+  color: rgba(255, 255, 255, 0.6);
   pointer-events: none;
   transform: translateX(-50%);
 }
 
 .about-scroll-hint__text {
-  margin-bottom: 10px;
-  font-family: 'anton', 'alibaba-puhuiti';
+  margin-bottom: 7px;
+  font-family: 'alibaba-puhuiti', sans-serif;
   font-size: 12px;
   line-height: 12px;
-  letter-spacing: 2px;
+  letter-spacing: 0.1em;
   white-space: nowrap;
 }
 
@@ -1050,6 +1037,18 @@ const roadmapItems = computed<string[]>(() => {
     overflow: hidden;
     pointer-events: none;
     user-select: none;
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      #000 0%,
+      rgba(0, 0, 0, 0.82) 58%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      #000 0%,
+      rgba(0, 0, 0, 0.82) 58%,
+      transparent 100%
+    );
   }
 }
 
@@ -1233,7 +1232,7 @@ const roadmapItems = computed<string[]>(() => {
   font-family: 'alibaba-puhuiti';
   font-size: clamp(18px, 1.55vw, 28px);
   font-weight: 900;
-  letter-spacing: 1px;
+  letter-spacing: 0;
   color: #fff;
   min-width: 0;
   line-height: 1.2;
@@ -1344,52 +1343,45 @@ const roadmapItems = computed<string[]>(() => {
 .changelog-list-toggle {
   position: relative;
   z-index: 3;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  width: calc(100% + 10px);
-  min-height: 58px;
-  margin: -58px 0 0;
-  padding: 8px 16px;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 40px;
+  margin: -20px auto;
+  padding: 0;
   border: 0;
-  color: #e23456;
-  background: linear-gradient(
-    to top,
-    rgba(5, 2, 6, 0.96) 0%,
-    rgba(5, 2, 6, 0) 100%
-  );
-  box-shadow: inset 0 0 24px rgba(226, 52, 86, 0.045);
-  font-family: 'anton', monospace;
-  font-size: 0.64rem;
-  letter-spacing: 0.14em;
+  background: transparent;
   cursor: pointer;
-  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
-  animation: changelogToggleIn 0.42s ease-out 1.08s both;
+  transform: translateY(0);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 
-  &:hover {
-    background: linear-gradient(
-        to top,
-        rgba(5, 2, 6, 0.96) 0%,
-        rgba(5, 2, 6, 0) 100%
-      ),
-      rgba(226, 52, 87, 0.141);
-    box-shadow: inset 0 0 28px rgba(226, 52, 86, 0.08);
+  &__triangle {
+    width: 32px;
+    height: 22px;
+    background: #e23456;
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
+    pointer-events: none;
+    rotate: 0deg;
+    transform: scale(1);
+    transform-origin: center;
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+      rotate 0.52s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  &.is-expanded {
-    margin-top: 12px;
-    padding: 12px 16px;
+  &:hover {
+    transform: translateY(6px);
 
-    .changelog-list-toggle__icon {
-      transform: rotate(180deg);
+    .changelog-list-toggle__triangle {
+      transform: scale(1.35);
     }
   }
 
-  &__icon {
-    width: 18px;
-    height: 18px;
-    transition: transform 0.25s ease;
+  &.is-expanded {
+    margin: 12px auto 0;
+
+    .changelog-list-toggle__triangle {
+      rotate: 180deg;
+    }
   }
 }
 
@@ -1428,18 +1420,6 @@ const roadmapItems = computed<string[]>(() => {
   to {
     opacity: 1;
     transform: translate3d(0, 0, 0) rotateX(0);
-  }
-}
-
-@keyframes changelogToggleIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
   }
 }
 
@@ -1937,20 +1917,6 @@ const roadmapItems = computed<string[]>(() => {
   }
 }
 
-.about-footer {
-  text-align: center;
-  border-top: 1px solid @border;
-}
-
-.footer-text {
-  font-family: 'anton', monospace;
-  font-size: 1.2rem;
-  letter-spacing: 4px;
-  line-height: 2rem;
-  color: @red;
-  filter: drop-shadow(0 0 10px @red);
-}
-
 @media (max-width: 768px) {
   .about-hero-section {
     padding-bottom: calc(clamp(84px, 14dvh, 112px) + 2.5dvh);
@@ -2036,7 +2002,9 @@ const roadmapItems = computed<string[]>(() => {
   }
 
   .timeline {
-    min-width: 680px;
+    min-width: 100%;
+    box-sizing: border-box;
+    padding-right: 1px;
     padding-left: 8px;
 
     &::before {
@@ -2049,7 +2017,8 @@ const roadmapItems = computed<string[]>(() => {
     gap: 20px;
 
     &.is-major {
-      grid-template-columns: 20px 156px minmax(0, 1fr);
+      grid-template-columns: 30px 112px minmax(0, 1fr);
+      gap: 10px;
       min-height: 150px;
     }
   }
@@ -2072,11 +2041,12 @@ const roadmapItems = computed<string[]>(() => {
     min-height: 150px;
 
     strong {
-      font-size: clamp(42px, 4.8vw, 64px);
+      font-size: clamp(30px, 3.6vw, 46px);
     }
 
     small {
       margin-top: 12px;
+      font-size: 0.56rem;
     }
   }
 
@@ -2090,7 +2060,7 @@ const roadmapItems = computed<string[]>(() => {
     }
 
     &.is-regular-card {
-      grid-template-columns: 154px minmax(0, 1fr);
+      grid-template-columns: 80px minmax(0, 1fr);
       padding-right: 28px;
       column-gap: 22px;
     }
@@ -2101,7 +2071,17 @@ const roadmapItems = computed<string[]>(() => {
   }
 
   .log-inline-version {
-    font-size: 1rem;
+    font-size: 0.76rem;
+
+    &.is-simple-version {
+      font-size: 0.84rem;
+    }
+  }
+
+  .log-latest {
+    padding: 2px 6px 3px;
+    font-size: 0.42rem;
+    letter-spacing: 1px;
   }
 
   .log-expand-icon {
@@ -2130,6 +2110,14 @@ const roadmapItems = computed<string[]>(() => {
 
   .log-details li {
     font-size: 15px;
+  }
+
+  .roadmap-tag__index {
+    font-size: 1.3333rem;
+  }
+
+  .roadmap-tag__text {
+    font-size: 0.72rem;
   }
 
   .neighbors-grid {
@@ -2201,7 +2189,7 @@ const roadmapItems = computed<string[]>(() => {
 
   .nb-centered-content {
     display: grid;
-    grid-template-columns: 44px minmax(76px, 0.72fr) minmax(0, 1.28fr);
+    grid-template-columns: 44px max-content minmax(0, 1fr);
     grid-template-rows: auto;
     gap: 8px;
     width: 100%;
@@ -2221,7 +2209,8 @@ const roadmapItems = computed<string[]>(() => {
   }
 
   .nb-name {
-    font-size: clamp(15px, 4vw, 17px);
+    font-size: 0.76rem;
+    white-space: nowrap;
   }
 
   .nb-heading {
@@ -2239,10 +2228,12 @@ const roadmapItems = computed<string[]>(() => {
     width: auto;
     max-height: none;
     padding-right: 16px;
-    font-size: clamp(14px, 3.8vw, 16px);
+    font-size: 0.48rem;
     line-height: 1.42;
     opacity: 1;
     text-align: right;
+    white-space: normal;
+    overflow-wrap: anywhere;
     clip-path: none;
   }
 
@@ -2268,11 +2259,18 @@ const roadmapItems = computed<string[]>(() => {
   .roadmap-block .section-header,
   .roadmap-tag,
   .timeline::before,
-  .timeline-item,
-  .changelog-list-toggle {
+  .timeline-item {
     opacity: 1;
     animation: none;
     transform: none;
+  }
+
+  .changelog-list-toggle__triangle {
+    transition: none;
+  }
+
+  .changelog-list-toggle {
+    transition: none;
   }
 
   .passion-section {

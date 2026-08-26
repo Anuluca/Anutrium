@@ -59,12 +59,10 @@
       </div>
     </article>
 
-    <ElImageViewer
+    <SafeImageViewer
       v-if="showViewer"
       :url-list="imageUrls"
       :initial-index="currentImageIndex"
-      hide-on-click-modal
-      teleported
       @close="showViewer = false"
     />
   </div>
@@ -72,9 +70,8 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { ElImageViewer } from 'element-plus'
 
-import 'element-plus/es/components/image-viewer/style/css'
+import SafeImageViewer from '@/components/SafeImageViewer/index.vue'
 
 export interface GalleryMedia {
   url: string

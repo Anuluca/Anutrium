@@ -69,12 +69,10 @@
         </nav>
       </div>
 
-      <ElImageViewer
+      <SafeImageViewer
         v-if="showImageViewer && normalizedImage"
         :url-list="[normalizedImage]"
         :z-index="7000"
-        hide-on-click-modal
-        teleported
         @close="handleImageViewerClose"
       />
     </Teleport>
@@ -83,9 +81,8 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
-import { ElImageViewer } from 'element-plus'
 
-import 'element-plus/es/components/image-viewer/style/css'
+import SafeImageViewer from '@/components/SafeImageViewer/index.vue'
 
 interface CrystalLink {
   href: string

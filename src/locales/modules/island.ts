@@ -139,7 +139,7 @@ const island = {
   },
   latest: {
     title: {
-      zhCn: '最新更新',
+      zhCn: '最近更新',
       en: 'LATEST',
     },
     pages: dynamic.latestPages,

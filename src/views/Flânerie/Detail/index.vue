@@ -89,7 +89,7 @@
         </button>
       </nav>
     </DetailSections>
-    <PageFooter cn-title="旅程" en-title="FLÂNERIE" />
+    <PageFooter />
   </div>
 </template>
 

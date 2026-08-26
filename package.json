@@ -12,7 +12,9 @@
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:install": "playwright install",
-    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
+    "check:overlay-scroll": "node scripts/check-overlay-scroll-lock.mjs",
+    "test:overlay-scroll": "playwright test tests/modal-scroll-lock.spec.ts tests/page-footer.spec.ts --grep preserves",
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore && node scripts/check-overlay-scroll-lock.mjs",
     "format": "prettier --write src/"
   },
   "engines": {

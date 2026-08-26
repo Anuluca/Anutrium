@@ -24,7 +24,7 @@
       </div>
     </main>
 
-    <PageFooter :cn-title="footerTitle.cn" :en-title="footerTitle.en" />
+    <PageFooter />
   </div>
 </template>
 
@@ -53,27 +53,15 @@ interface WorkGalleryData {
 }
 
 interface WorkPageConfig {
-  footerTitle: {
-    cn: string
-    en: string
-  }
   moduleKey: WorkModuleKey
 }
 
 const WORK_PAGE_CONFIG: Record<string, WorkPageConfig> = {
   ISLAND_ILLUSTRATION: {
     moduleKey: 'illustration',
-    footerTitle: {
-      cn: '绘画',
-      en: 'ILLUSTRATION',
-    },
   },
   ISLAND_TRAINER_CARD: {
     moduleKey: 'trainerCard',
-    footerTitle: {
-      cn: '训练家卡',
-      en: 'TRAINER CARD',
-    },
   },
 }
 
@@ -84,7 +72,6 @@ const pageConfig = computed(
     WORK_PAGE_CONFIG[String(route.name)] || WORK_PAGE_CONFIG.ISLAND_ILLUSTRATION
 )
 const moduleKey = computed(() => pageConfig.value.moduleKey)
-const footerTitle = computed(() => pageConfig.value.footerTitle)
 const work = computed(
   () => tm(`island.modules.works.${moduleKey.value}.data`) as WorkGalleryData
 )

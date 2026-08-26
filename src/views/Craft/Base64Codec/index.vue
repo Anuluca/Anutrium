@@ -90,10 +90,10 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { ElMessage } from 'element-plus'
 
 import ToolCrystalLogo from '@/components/ToolCrystalLogo/index.vue'
 import ToolPageLayout from '@/components/ToolPageLayout/index.vue'
+import { showErrorMessage, showSuccessMessage } from '@/utils/elementMessage'
 
 import 'element-plus/es/components/message/style/css'
 
@@ -177,12 +177,12 @@ const copyOutput = async () => {
   try {
     await navigator.clipboard.writeText(outputText.value)
     copied.value = true
-    ElMessage.success('复制成功')
+    showSuccessMessage('复制成功')
     setTimeout(() => {
       copied.value = false
     }, 1800)
   } catch (err) {
-    ElMessage.error('复制失败，请手动复制')
+    showErrorMessage('复制失败，请手动复制')
     console.error('Copy failed', err)
   }
 }

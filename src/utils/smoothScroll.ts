@@ -20,6 +20,138 @@ let pendingImmediateScroll:
     }
   | undefined
 const scrollLocks = new Set<string>()
+const SCROLL_KEYS = new Set([
+  'ArrowDown',
+  'ArrowUp',
+  'End',
+  'Home',
+  'PageDown',
+  'PageUp',
+  ' ',
+])
+
+interface PageScrollSnapshot {
+  elements: Array<{
+    element: HTMLElement
+    left: number
+    top: number
+  }>
+  windowX: number
+  windowY: number
+}
+
+let pageScrollSnapshot: PageScrollSnapshot | null = null
+let pageScrollRestoreFrame: number | null = null
+
+const isNestedScrollTarget = (target: EventTarget | null) =>
+  target instanceof Element &&
+  Boolean(target.closest('[data-lenis-nested-scroll]'))
+
+const preventLockedPageScroll = (event: Event) => {
+  if (!isNestedScrollTarget(event.target)) event.preventDefault()
+}
+
+const preventLockedPageScrollKeys = (event: KeyboardEvent) => {
+  if (!SCROLL_KEYS.has(event.key) || isNestedScrollTarget(event.target)) return
+
+  const target = event.target
+  if (
+    target instanceof HTMLElement &&
+    (target.matches('input, textarea, select') || target.isContentEditable)
+  ) {
+    return
+  }
+
+  event.preventDefault()
+}
+
+const restorePageScroll = (snapshot: PageScrollSnapshot) => {
+  if (
+    window.scrollX !== snapshot.windowX ||
+    window.scrollY !== snapshot.windowY
+  ) {
+    window.scrollTo(snapshot.windowX, snapshot.windowY)
+  }
+  for (const { element, left, top } of snapshot.elements) {
+    if (element.scrollLeft !== left) element.scrollLeft = left
+    if (element.scrollTop !== top) element.scrollTop = top
+  }
+}
+
+const cancelPageScrollRestore = () => {
+  if (pageScrollRestoreFrame === null) return
+  window.cancelAnimationFrame(pageScrollRestoreFrame)
+  pageScrollRestoreFrame = null
+}
+
+const scheduleLockedPageScrollRestore = () => {
+  if (pageScrollRestoreFrame !== null || !pageScrollSnapshot) return
+
+  pageScrollRestoreFrame = window.requestAnimationFrame(() => {
+    pageScrollRestoreFrame = null
+    if (pageScrollSnapshot) restorePageScroll(pageScrollSnapshot)
+  })
+}
+
+const handleLockedPageScroll = (event: Event) => {
+  if (!isNestedScrollTarget(event.target)) scheduleLockedPageScrollRestore()
+}
+
+const lockPageScrollPosition = () => {
+  if (typeof window === 'undefined' || pageScrollSnapshot) return
+
+  cancelPageScrollRestore()
+
+  const elements = [
+    document.scrollingElement,
+    document.documentElement,
+    document.body,
+  ].filter(
+    (element, index, list): element is HTMLElement =>
+      element instanceof HTMLElement && list.indexOf(element) === index
+  )
+
+  pageScrollSnapshot = {
+    elements: elements.map((element) => ({
+      element,
+      left: element.scrollLeft,
+      top: element.scrollTop,
+    })),
+    windowX: window.scrollX,
+    windowY: window.scrollY,
+  }
+
+  document.addEventListener('wheel', preventLockedPageScroll, {
+    capture: true,
+    passive: false,
+  })
+  document.addEventListener('touchmove', preventLockedPageScroll, {
+    capture: true,
+    passive: false,
+  })
+  document.addEventListener('keydown', preventLockedPageScrollKeys, true)
+  document.addEventListener('scroll', handleLockedPageScroll, true)
+  scheduleLockedPageScrollRestore()
+}
+
+const unlockPageScrollPosition = () => {
+  if (!pageScrollSnapshot) return
+
+  const snapshot = pageScrollSnapshot
+  cancelPageScrollRestore()
+  document.removeEventListener('wheel', preventLockedPageScroll, true)
+  document.removeEventListener('touchmove', preventLockedPageScroll, true)
+  document.removeEventListener('keydown', preventLockedPageScrollKeys, true)
+  document.removeEventListener('scroll', handleLockedPageScroll, true)
+  restorePageScroll(snapshot)
+  pageScrollSnapshot = null
+  pageScrollRestoreFrame = window.requestAnimationFrame(() => {
+    pageScrollRestoreFrame = null
+    if (scrollLocks.size === 0 && !pageScrollSnapshot) {
+      restorePageScroll(snapshot)
+    }
+  })
+}
 
 const syncScrollLock = () => {
   if (!lenis) return
@@ -88,14 +220,14 @@ const createLenis = async () => {
     wrapper: document.body,
     content,
     autoRaf: true,
+    autoToggle: false,
     smoothWheel: true,
     syncTouch: false,
     lerp: 0.16,
     wheelMultiplier: 1,
     prevent: (node) =>
-      node.classList.contains('el-image-viewer__wrapper') ||
-      (node.hasAttribute('data-lenis-nested-scroll') &&
-        node.scrollHeight > node.clientHeight),
+      node.hasAttribute('data-lenis-nested-scroll') &&
+      node.scrollHeight > node.clientHeight,
     anchors: true,
     stopInertiaOnNavigate: true,
     virtualScroll: ({ event }) => {
@@ -177,11 +309,17 @@ export const stopSmoothScroll = () => {
 }
 
 export const setSmoothScrollLocked = (key: string, locked: boolean) => {
+  const wasLocked = scrollLocks.size > 0
+
   if (locked) {
     scrollLocks.add(key)
   } else {
     scrollLocks.delete(key)
   }
+
+  const isLocked = scrollLocks.size > 0
+  if (!wasLocked && isLocked) lockPageScrollPosition()
+  if (wasLocked && !isLocked) unlockPageScrollPosition()
 
   syncScrollLock()
 }

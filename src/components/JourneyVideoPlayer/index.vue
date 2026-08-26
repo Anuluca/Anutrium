@@ -69,6 +69,7 @@
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import DiamondCloseBtn from '@/components/DiamondCloseBtn/index.vue'
+import { useOverlayScrollLock } from '@/composables/useOverlayScrollLock'
 
 interface VideoItem {
   title: string
@@ -94,14 +95,10 @@ let hasEmittedEntranceHandoff = false
 
 const openVideo = (video: VideoItem) => {
   activeVideo.value = video
-  document.body.classList.add('video-modal-open')
 }
 
 const closeVideo = () => {
   activeVideo.value = null
-  if (typeof document !== 'undefined') {
-    document.body.classList.remove('video-modal-open')
-  }
 }
 
 const handleKeydown = (event: KeyboardEvent) => {
@@ -143,6 +140,8 @@ watch(
   }
 )
 
+useOverlayScrollLock('journey-video', () => Boolean(activeVideo.value))
+
 onMounted(() => {
   window.addEventListener('keydown', handleKeydown)
 
@@ -180,7 +179,6 @@ onMounted(() => {
 onBeforeUnmount(() => {
   videoListObserver?.disconnect()
   window.removeEventListener('keydown', handleKeydown)
-  document.body.classList.remove('video-modal-open')
 })
 </script>
 
@@ -297,10 +295,6 @@ onBeforeUnmount(() => {
     padding-top: 3px;
     padding-left: 5px;
   }
-}
-
-:global(body.video-modal-open) {
-  overflow: hidden;
 }
 
 .video-modal {

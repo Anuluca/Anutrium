@@ -1,6 +1,5 @@
 <template>
   <div class="scene-container" :class="{ 'is-transparent': transparent }">
-    <!-- <div class="loading-text">{{ currentText }}</div> -->
     <div ref="container" class="canvas-container" />
   </div>
 </template>
@@ -47,10 +46,13 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  mobileHighResolution: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const container = ref(null)
-const currentText = ref('LOADING')
 let isStopping = false
 let renderer, scene, camera, composer, controls, animationId
 let environmentMap = null
@@ -60,6 +62,18 @@ let lastFrameTime = null
 let animateFrame = null
 const ROTATION_SPEED = 0.6
 const STOP_DURATION = 700
+const MOBILE_BREAKPOINT = 768
+
+const shouldUseMobileHighResolution = () =>
+  props.mobileHighResolution && window.innerWidth <= MOBILE_BREAKPOINT
+
+const getRendererPixelRatio = () => {
+  if (!props.lowPower) return Math.min(window.devicePixelRatio || 1, 1.5)
+
+  return shouldUseMobileHighResolution()
+    ? Math.min(window.devicePixelRatio || 1, 3)
+    : 0.75
+}
 
 const getSceneSize = () => {
   const rect = container.value?.getBoundingClientRect()
@@ -85,12 +99,10 @@ const initThree = () => {
 
   renderer = new WebGLRenderer({
     alpha: props.transparent,
-    antialias: !props.lowPower,
+    antialias: !props.lowPower || props.mobileHighResolution,
     powerPreference: props.lowPower ? 'low-power' : 'high-performance',
   })
-  renderer.setPixelRatio(
-    props.lowPower ? 0.75 : Math.min(window.devicePixelRatio || 1, 1.5)
-  )
+  renderer.setPixelRatio(getRendererPixelRatio())
   renderer.setSize(width, height)
 
   renderer.shadowMap.enabled = !props.lowPower
@@ -272,8 +284,6 @@ const initThree = () => {
     lastFrameTime = frameTime
 
     if (isStopping) {
-      currentText.value = 'COMPLETE.'
-
       if (stopStartTime === null) {
         const frontRotationOffset = Math.PI / 4
         const frontRotationInterval = Math.PI / 2
@@ -338,9 +348,7 @@ const handleResize = () => {
 
   camera.aspect = width / height
   camera.updateProjectionMatrix()
-  renderer.setPixelRatio(
-    props.lowPower ? 0.75 : Math.min(window.devicePixelRatio || 1, 1.5)
-  )
+  renderer.setPixelRatio(getRendererPixelRatio())
   renderer.setSize(width, height)
   composer?.setSize(width, height)
 }
@@ -472,15 +480,5 @@ defineExpose({
     background-color: #050505;
     zoom: 0.5;
   }
-}
-.loading-text {
-  position: absolute;
-  margin: 0 auto;
-  top: calc(50% + 200px);
-  color: #fff;
-
-  font-weight: 800;
-  font-size: 30px;
-  font-family: 'Avenir', 'Segoe UI Semibold', 'Microsoft YaHei UI', sans-serif;
 }
 </style>

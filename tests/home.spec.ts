@@ -151,6 +151,93 @@ test('page hero title stays fixed and collapses upward without resizing text', a
   expect(collapsed.textTransform).toBe(initial.textTransform)
 })
 
+test('page hero title stages a random direction before animating', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await page.goto('/archive', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.archives-page')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+
+  const animatedCharacterIndex = await page.evaluate(
+    () =>
+      new Promise<number>((resolve) => {
+        const title = document.querySelector('.page-hero-title')
+        if (!title) {
+          resolve(-1)
+          return
+        }
+
+        let preparedCharacter: Element | null = null
+
+        const observer = new MutationObserver((records) => {
+          records.forEach((record) => {
+            const character = record.target as Element
+            const previousDirection =
+              record.oldValue?.match(/is-moving-\w+/)?.[0]
+            const currentDirection =
+              character.className.match(/is-moving-\w+/)?.[0]
+
+            if (
+              previousDirection !== currentDirection &&
+              !character.classList.contains('is-animating')
+            ) {
+              preparedCharacter = character
+              return
+            }
+
+            if (
+              preparedCharacter !== character ||
+              !character.classList.contains('is-animating')
+            ) {
+              return
+            }
+
+            window.clearTimeout(timeoutId)
+            observer.disconnect()
+            resolve(
+              Array.from(
+                title.querySelectorAll('.page-hero-title__char')
+              ).indexOf(character)
+            )
+          })
+        })
+        const timeoutId = window.setTimeout(() => {
+          observer.disconnect()
+          resolve(-1)
+        }, 7_000)
+
+        observer.observe(title, {
+          attributeFilter: ['class'],
+          attributeOldValue: true,
+          attributes: true,
+          subtree: true,
+        })
+      })
+  )
+
+  expect(animatedCharacterIndex).toBeGreaterThanOrEqual(0)
+})
+
+test('page hero title only highlights the hovered character', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await page.goto('/archive', { waitUntil: 'domcontentloaded' })
+
+  const title = page.locator('.page-hero-title')
+  const characters = title.locator('.page-hero-title__char')
+  await expect(title).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
+  await characters.first().hover()
+
+  const characterFilters = await characters.evaluateAll((elements) =>
+    elements.map((element) => getComputedStyle(element).filter)
+  )
+  expect(characterFilters[0]).not.toBe('none')
+  expect(characterFilters[1]).toBe('none')
+})
+
 test('page hero title stays fixed while switching between title pages', async ({
   page,
 }, testInfo) => {
@@ -1304,6 +1391,32 @@ test('personal bay menu entry redirects to 404', async ({ page }, testInfo) => {
   await expect(page.locator('.not-found-page')).toBeVisible()
 })
 
+test('404 page remains locked at the top', async ({ page }) => {
+  await page.goto('/404', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.not-found-page')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+  await expect(page.locator('html')).toHaveClass(/\bnot-found-no-scroll\b/)
+  await expect(page.locator('body')).toHaveClass(/\bnot-found-no-scroll\b/)
+
+  await page.mouse.wheel(0, 600)
+  await page.waitForTimeout(300)
+
+  const scrollTop = await page.evaluate(() =>
+    Math.max(
+      window.scrollY,
+      document.documentElement.scrollTop,
+      document.body.scrollTop
+    )
+  )
+  expect(scrollTop).toBe(0)
+
+  await page.locator('.last-show-text').click()
+  await expect(page).toHaveURL(/\/$/)
+  await expect(page.locator('html')).not.toHaveClass(/\bnot-found-no-scroll\b/)
+  await expect(page.locator('body')).not.toHaveClass(/\bnot-found-no-scroll\b/)
+})
+
 test('hidden footer debug entry opens the personal bay test route', async ({
   page,
 }) => {
@@ -1401,9 +1514,47 @@ test('cards and harbor panels use the changelog flip entrance', async ({
   )
 })
 
+test('desktop personal bay releases temporary compositor layers after entrance', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name.includes('mobile'))
+
+  await page.setViewportSize({ width: 1920, height: 900 })
+  await page.goto('/test', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.port-panel')).toHaveCount(4, {
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+  await page.waitForTimeout(1_600)
+
+  const renderingState = await page.evaluate(() => ({
+    cursorBlendMode: getComputedStyle(
+      document.querySelector('.cursor-position') as Element
+    ).mixBlendMode,
+    latestClipPath: getComputedStyle(
+      document.querySelector('.latest-pages') as Element
+    ).clipPath,
+    panelClipPaths: Array.from(document.querySelectorAll('.port-panel')).map(
+      (panel) => getComputedStyle(panel).clipPath
+    ),
+    panelTransforms: Array.from(document.querySelectorAll('.port-panel')).map(
+      (panel) => getComputedStyle(panel).transform
+    ),
+    portLineFilters: Array.from(document.querySelectorAll('.port-panel')).map(
+      (panel) => getComputedStyle(panel, '::before').filter
+    ),
+  }))
+
+  expect(renderingState.cursorBlendMode).toBe('normal')
+  expect(renderingState.latestClipPath).toBe('none')
+  expect(renderingState.panelClipPaths).toEqual(Array(4).fill('none'))
+  expect(renderingState.panelTransforms).toEqual(Array(4).fill('none'))
+  expect(renderingState.portLineFilters).toEqual(Array(4).fill('none'))
+})
+
 test('mobile menu locks background scrolling', async ({ page }, testInfo) => {
   test.skip(!testInfo.project.name.includes('mobile'))
 
+  await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/about', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.about-page')).toBeVisible({
     timeout: PAGE_LOAD_TIMEOUT,
@@ -1412,7 +1563,12 @@ test('mobile menu locks background scrolling', async ({ page }, testInfo) => {
   await page.evaluate(() => window.scrollTo(0, 500))
 
   await page.locator('.mobile-menu-icon').click()
-  await expect(page.locator('.mobile-menu-panel')).toHaveClass(/\bactive\b/)
+  const mobileMenu = page.locator('.mobile-menu-panel')
+  await expect(mobileMenu).toHaveClass(/\bactive\b/)
+  await expect(mobileMenu).toHaveCSS(
+    'background-image',
+    /rgba\(0, 0, 0, 0\.22\)/
+  )
   await expect(page.locator('html')).toHaveClass(/mobile-menu-scroll-locked/)
   await expect(page.locator('.router-container')).not.toHaveCSS(
     'filter',
@@ -1435,6 +1591,434 @@ test('mobile menu locks background scrolling', async ({ page }, testInfo) => {
   await expect
     .poll(() => page.evaluate(() => window.scrollY))
     .toBe(lockedScrollPosition)
+})
+
+test('mobile menu reuses the footer social link bar', async ({
+  page,
+}, testInfo) => {
+  test.skip(!testInfo.project.name.includes('mobile'))
+
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.locator('.mobile-menu-icon').click()
+
+  const menu = page.locator('.mobile-menu-panel')
+  const linkBar = menu.locator('.mobile-menu-social-links')
+  await expect(menu).toHaveClass(/\bactive\b/)
+  await expect(linkBar.locator('.footer-social-links')).toBeVisible()
+  await expect(linkBar.locator('.footer-social-links__item')).toHaveCount(7)
+  await expect(menu.locator('.contact-item')).toHaveCount(0)
+
+  const followsSwitches = await linkBar.evaluate((element) =>
+    element.previousElementSibling?.classList.contains('switches')
+  )
+  expect(followsSwitches).toBe(true)
+
+  await linkBar
+    .locator('.footer-social-links__item[aria-label="SWITCH"]')
+    .click()
+  const switchPanel = linkBar.locator('.switch-friend-panel')
+  await expect(switchPanel).toBeVisible()
+  const centerDelta = await switchPanel.evaluate((element) => {
+    const bounds = element.getBoundingClientRect()
+    return Math.abs(bounds.left + bounds.width / 2 - window.innerWidth / 2)
+  })
+  expect(centerDelta).toBeLessThanOrEqual(1)
+})
+
+test('mobile home content uses tripled spacing between modules', async ({
+  page,
+}, testInfo) => {
+  test.skip(!testInfo.project.name.includes('mobile'))
+
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.home-page')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+
+  const spacing = await page.evaluate(() => {
+    const rootFontSize = Number.parseFloat(
+      getComputedStyle(document.documentElement).fontSize
+    )
+    const originalSpacing = Math.max(
+      (72 / 30) * rootFontSize,
+      Math.min(window.innerWidth * 0.07, (112 / 30) * rootFontSize)
+    )
+    const sectionPadding = [
+      '.works-section',
+      '.journey-section',
+      '.craft-section',
+    ].map((selector) =>
+      Number.parseFloat(
+        getComputedStyle(document.querySelector<HTMLElement>(selector)!)
+          .paddingTop
+      )
+    )
+
+    return { originalSpacing, sectionPadding }
+  })
+
+  for (const paddingTop of spacing.sectionPadding) {
+    expect(paddingTop).toBeCloseTo(spacing.originalSpacing * 3, 0)
+  }
+})
+
+test('mobile tool grids use one taller card per row', async ({
+  page,
+}, testInfo) => {
+  test.skip(!testInfo.project.name.includes('mobile'))
+
+  const samples = [
+    { grid: '.home-craft-grid', path: '/' },
+    { grid: '.tl-grid', path: '/craft' },
+  ]
+
+  for (const sample of samples) {
+    await page.goto(sample.path, { waitUntil: 'domcontentloaded' })
+    const grid = page.locator(sample.grid)
+    await expect(grid).toBeAttached({ timeout: PAGE_LOAD_TIMEOUT })
+    await grid.scrollIntoViewIfNeeded()
+
+    const cards = grid.locator('.shared-tool-card')
+    await expect.poll(() => cards.count()).toBeGreaterThan(1)
+
+    const geometry = await grid.evaluate((element) => {
+      const cards = element.querySelectorAll<HTMLElement>('.shared-tool-card')
+      const firstCard = cards[0].getBoundingClientRect()
+      const secondCard = cards[1].getBoundingClientRect()
+      const image = cards[0].querySelector<HTMLElement>('.tl-card__img-wrap')!
+      const imageHeight = Number.parseFloat(getComputedStyle(image).height)
+      const rootFontSize = Number.parseFloat(
+        getComputedStyle(document.documentElement).fontSize
+      )
+      const fontSizes = Object.fromEntries(
+        [
+          ['.tl-card__index-num', 29.3333],
+          ['.tl-card__index-slash', 23.4667],
+          ['.tl-card__index-total', 23.4667],
+          ['.tl-card__tag', 13.2],
+          ['.tl-card__title', 24.9333],
+          ['.tl-card__sub', 17.6],
+          ['.tl-card__status', 13.2],
+          ['.tl-card__cta', 14.6667],
+        ].map(([selector, sourceSize]) => [
+          selector,
+          {
+            actual: Number.parseFloat(
+              getComputedStyle(cards[0].querySelector<HTMLElement>(selector)!)
+                .fontSize
+            ),
+            expected: (Number(sourceSize) / 30) * rootFontSize,
+          },
+        ])
+      )
+      const bodyStyle = getComputedStyle(
+        cards[0].querySelector<HTMLElement>('.tl-card__body')!
+      )
+      const footerStyle = getComputedStyle(
+        cards[0].querySelector<HTMLElement>('.tl-card__footer')!
+      )
+
+      return {
+        bodySpacing: {
+          gap: Number.parseFloat(bodyStyle.gap),
+          paddingLeft: Number.parseFloat(bodyStyle.paddingLeft),
+          paddingTop: Number.parseFloat(bodyStyle.paddingTop),
+        },
+        expectedImageHeight: (280 / 30) * rootFontSize,
+        expectedSpacing: {
+          bodyGap: (10.6667 / 30) * rootFontSize,
+          bodyPaddingLeft: (26.6667 / 30) * rootFontSize,
+          bodyPaddingTop: (24 / 30) * rootFontSize,
+          footerMarginTop: (10.6667 / 30) * rootFontSize,
+          footerPaddingTop: (16 / 30) * rootFontSize,
+        },
+        fontSizes,
+        footerSpacing: {
+          marginTop: Number.parseFloat(footerStyle.marginTop),
+          paddingTop: Number.parseFloat(footerStyle.paddingTop),
+        },
+        imageHeight,
+        leftDelta: Math.abs(firstCard.left - secondCard.left),
+        rowGap: secondCard.top - firstCard.bottom,
+      }
+    })
+
+    expect(geometry.leftDelta).toBeLessThanOrEqual(1)
+    expect(geometry.rowGap).toBeGreaterThanOrEqual(0)
+    expect(geometry.imageHeight).toBeCloseTo(geometry.expectedImageHeight, 0)
+    for (const fontSize of Object.values(geometry.fontSizes)) {
+      expect(fontSize.actual).toBeCloseTo(fontSize.expected, 0)
+    }
+    expect(geometry.bodySpacing.gap).toBeCloseTo(
+      geometry.expectedSpacing.bodyGap,
+      0
+    )
+    expect(geometry.bodySpacing.paddingLeft).toBeCloseTo(
+      geometry.expectedSpacing.bodyPaddingLeft,
+      0
+    )
+    expect(geometry.bodySpacing.paddingTop).toBeCloseTo(
+      geometry.expectedSpacing.bodyPaddingTop,
+      0
+    )
+    expect(geometry.footerSpacing.marginTop).toBeCloseTo(
+      geometry.expectedSpacing.footerMarginTop,
+      0
+    )
+    expect(geometry.footerSpacing.paddingTop).toBeCloseTo(
+      geometry.expectedSpacing.footerPaddingTop,
+      0
+    )
+  }
+})
+
+test('mobile pages share wider gutters without clipping home overflow', async ({
+  page,
+}, testInfo) => {
+  test.skip(!testInfo.project.name.includes('mobile'))
+
+  for (const path of ['/', '/archive', '/craft', '/about', '/flanerie']) {
+    await page.goto(path, { waitUntil: 'domcontentloaded' })
+    await expect(page.locator('.main-container')).toBeAttached({
+      timeout: PAGE_LOAD_TIMEOUT,
+    })
+
+    const gutter = await page
+      .locator('.router-container')
+      .evaluate((element) => {
+        const style = getComputedStyle(element)
+
+        return {
+          left: Number.parseFloat(style.paddingLeft),
+          minimumExpected: window.innerWidth * 0.06,
+          right: Number.parseFloat(style.paddingRight),
+        }
+      })
+
+    expect(gutter.left).toBeGreaterThan(gutter.minimumExpected)
+    expect(gutter.right).toBeCloseTo(gutter.left, 1)
+  }
+
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  const overflow = await page.locator('.home-page').evaluate((element) => ({
+    home: getComputedStyle(element).overflowX,
+    router: getComputedStyle(element.parentElement!).overflowX,
+  }))
+
+  expect(overflow).toEqual({ home: 'visible', router: 'visible' })
+})
+
+test('mobile collection tabs double all shared text sizes', async ({
+  page,
+}, testInfo) => {
+  test.skip(!testInfo.project.name.includes('mobile'))
+
+  const samples = [
+    {
+      indexSize: 0.8,
+      minHeight: 96,
+      paddingTop: 12,
+      path: '/craft',
+      subtitleSize: 0.56,
+      titleSize: 1.12,
+    },
+    {
+      indexSize: 1.24,
+      minHeight: 180,
+      paddingTop: 32,
+      path: '/island/photography',
+      subtitleSize: 0.76,
+      titleSize: 1.6,
+    },
+  ]
+
+  for (const sample of samples) {
+    await page.goto(sample.path, { waitUntil: 'domcontentloaded' })
+    const tabs = page.locator('.collection-tabs')
+    await expect(tabs).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
+
+    const typography = await tabs.evaluate((element) => {
+      const tab = element.querySelector<HTMLElement>('.collection-tab')!
+      const tabStyle = getComputedStyle(tab)
+      const readFontSize = (selector: string) =>
+        Number.parseFloat(
+          getComputedStyle(element.querySelector<HTMLElement>(selector)!)
+            .fontSize
+        )
+
+      return {
+        gap: Number.parseFloat(tabStyle.columnGap),
+        index: readFontSize('.collection-tab__index'),
+        minHeight: Number.parseFloat(tabStyle.minHeight),
+        paddingLeft: Number.parseFloat(tabStyle.paddingLeft),
+        paddingTop: Number.parseFloat(tabStyle.paddingTop),
+        root: Number.parseFloat(
+          getComputedStyle(document.documentElement).fontSize
+        ),
+        subtitle: readFontSize('.collection-tab__copy small'),
+        title: readFontSize('.collection-tab__copy strong'),
+      }
+    })
+
+    expect(typography.index).toBeCloseTo(typography.root * sample.indexSize, 0)
+    expect(typography.gap).toBeCloseTo((20 / 30) * typography.root, 0)
+    expect(typography.minHeight).toBeCloseTo(
+      (sample.minHeight / 30) * typography.root,
+      0
+    )
+    expect(typography.paddingLeft).toBeCloseTo((24 / 30) * typography.root, 0)
+    expect(typography.paddingTop).toBeCloseTo(
+      (sample.paddingTop / 30) * typography.root,
+      0
+    )
+    expect(typography.subtitle).toBeCloseTo(
+      typography.root * sample.subtitleSize,
+      0
+    )
+    expect(typography.title).toBeCloseTo(typography.root * sample.titleSize, 0)
+  }
+})
+
+test('mobile changelog gives more width to update content', async ({
+  page,
+}, testInfo) => {
+  test.skip(!testInfo.project.name.includes('mobile'))
+
+  await page.goto('/about', { waitUntil: 'domcontentloaded' })
+  const majorItem = page.locator('.timeline-item.is-major')
+  const regularCard = page.locator('.log-card.is-regular-card').first()
+  await expect(majorItem).toBeAttached({ timeout: PAGE_LOAD_TIMEOUT })
+  await expect(regularCard).toBeAttached({ timeout: PAGE_LOAD_TIMEOUT })
+
+  const geometry = await page.evaluate(() => {
+    const changelog = document.querySelector<HTMLElement>('.changelog-block')!
+    const major = document.querySelector<HTMLElement>(
+      '.timeline-item.is-major'
+    )!
+    const majorSide = major.querySelector<HTMLElement>('.log-side.is-major')!
+    const majorVersion = majorSide.querySelector<HTMLElement>('strong')!
+    const majorLabel = majorSide.querySelector<HTMLElement>('small')!
+    const regular = document.querySelector<HTMLElement>(
+      '.log-card.is-regular-card'
+    )!
+    const regularVersion = regular.querySelector<HTMLElement>(
+      '.log-inline-version'
+    )!
+    const latestLabel = regular.querySelector<HTMLElement>('.log-latest')!
+    const rootFontSize = Number.parseFloat(
+      getComputedStyle(document.documentElement).fontSize
+    )
+    const changelogBounds = changelog.getBoundingClientRect()
+    const cardRightEdges = Array.from(
+      changelog.querySelectorAll<HTMLElement>('.log-card')
+    ).map((card) => card.getBoundingClientRect().right)
+
+    return {
+      cardRightEdges,
+      changelogRight: changelogBounds.right,
+      expectedMajorSideWidth: (112 / 30) * rootFontSize,
+      expectedRegularColumnWidth: (80 / 30) * rootFontSize,
+      latestLabelSize: Number.parseFloat(
+        getComputedStyle(latestLabel).fontSize
+      ),
+      majorGap: Number.parseFloat(getComputedStyle(major).columnGap),
+      majorLabelSize: Number.parseFloat(getComputedStyle(majorLabel).fontSize),
+      majorSideWidth: Number.parseFloat(
+        getComputedStyle(major).gridTemplateColumns.split(' ')[1]
+      ),
+      majorVersionSize: Number.parseFloat(
+        getComputedStyle(majorVersion).fontSize
+      ),
+      regularColumnWidth: Number.parseFloat(
+        getComputedStyle(regular).gridTemplateColumns.split(' ')[0]
+      ),
+      regularVersionSize: Number.parseFloat(
+        getComputedStyle(regularVersion).fontSize
+      ),
+      rootFontSize,
+    }
+  })
+
+  expect(geometry.majorSideWidth).toBeCloseTo(
+    geometry.expectedMajorSideWidth,
+    0
+  )
+  expect(geometry.regularColumnWidth).toBeCloseTo(
+    geometry.expectedRegularColumnWidth,
+    0
+  )
+  expect(geometry.majorGap).toBeCloseTo((10 / 30) * geometry.rootFontSize, 0)
+  expect(geometry.majorVersionSize).toBeCloseTo(geometry.rootFontSize, 0)
+  expect(geometry.majorLabelSize).toBeCloseTo(geometry.rootFontSize * 0.56, 0)
+  expect(geometry.regularVersionSize).toBeCloseTo(
+    geometry.rootFontSize * 0.84,
+    0
+  )
+  expect(geometry.latestLabelSize).toBeCloseTo(geometry.rootFontSize * 0.42, 0)
+  for (const rightEdge of geometry.cardRightEdges) {
+    expect(rightEdge).toBeLessThan(geometry.changelogRight)
+  }
+})
+
+test('mobile roadmap and neighbour cards use revised typography', async ({
+  page,
+}, testInfo) => {
+  test.skip(!testInfo.project.name.includes('mobile'))
+
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/about', { waitUntil: 'domcontentloaded' })
+  const roadmapCard = page.locator('.roadmap-tag').first()
+  const neighbourCard = page.locator('.neighbor-card').first()
+  await expect(roadmapCard).toBeAttached({ timeout: PAGE_LOAD_TIMEOUT })
+  await expect(neighbourCard).toBeAttached({ timeout: PAGE_LOAD_TIMEOUT })
+
+  const typography = await page.evaluate(() => {
+    const roadmap = document.querySelector<HTMLElement>('.roadmap-tag')!
+    const neighbourDescription =
+      document.querySelector<HTMLElement>('.nb-desc')!
+    const neighbourTitle = document.querySelector<HTMLElement>('.nb-name')!
+    const rootFontSize = Number.parseFloat(
+      getComputedStyle(document.documentElement).fontSize
+    )
+    const readFontSize = (selector: string) =>
+      Number.parseFloat(
+        getComputedStyle(document.querySelector<HTMLElement>(selector)!)
+          .fontSize
+      )
+
+    return {
+      neighbourDescription: readFontSize('.nb-desc'),
+      neighbourDescriptionWhiteSpace:
+        getComputedStyle(neighbourDescription).whiteSpace,
+      neighbourTitle: readFontSize('.nb-name'),
+      neighbourTitleWhiteSpace: getComputedStyle(neighbourTitle).whiteSpace,
+      roadmapHeight: roadmap.getBoundingClientRect().height,
+      roadmapIndex: readFontSize('.roadmap-tag__index'),
+      roadmapMinHeight: Number.parseFloat(getComputedStyle(roadmap).minHeight),
+      roadmapText: readFontSize('.roadmap-tag__text'),
+      rootFontSize,
+    }
+  })
+
+  expect(typography.roadmapIndex).toBeCloseTo(
+    typography.rootFontSize * 1.3333,
+    0
+  )
+  expect(typography.roadmapText).toBeCloseTo(typography.rootFontSize * 0.72, 0)
+  expect(typography.roadmapHeight).toBeCloseTo(
+    typography.roadmapMinHeight + 2,
+    0
+  )
+  expect(typography.neighbourTitle).toBeCloseTo(
+    typography.rootFontSize * 0.76,
+    0
+  )
+  expect(typography.neighbourDescription).toBeCloseTo(
+    typography.rootFontSize * 0.48,
+    0
+  )
+  expect(typography.neighbourTitleWhiteSpace).toBe('nowrap')
+  expect(typography.neighbourDescriptionWhiteSpace).toBe('normal')
 })
 
 test('mobile menu stays above fixed page navigation', async ({
@@ -1465,6 +2049,69 @@ test('mobile menu stays above fixed page navigation', async ({
 
   await page.locator('.mobile-menu-icon').click()
   await expect(pageNavigation).toBeVisible()
+})
+
+test('mobile fixed page navigation hides at the page bottom', async ({
+  page,
+}, testInfo) => {
+  test.skip(!testInfo.project.name.includes('mobile'))
+
+  const routeSamples = [
+    { path: '/', selector: '.home-sections-nav' },
+    {
+      path: '/archive',
+      selector: '.sections-fixed-nav:not(.home-sections-nav)',
+    },
+    { path: '/flanerie/changsha', selector: '.detail-sections-nav' },
+  ]
+
+  for (const sample of routeSamples) {
+    await page.goto(sample.path, { waitUntil: 'domcontentloaded' })
+    const pageNavigation = page.locator(sample.selector)
+    await expect(pageNavigation).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
+
+    await expect
+      .poll(async () => {
+        await page.evaluate(() => {
+          const scrollTop =
+            Math.max(
+              document.body.scrollHeight,
+              document.documentElement.scrollHeight
+            ) -
+            window.innerHeight -
+            60
+          window.scrollTo(0, scrollTop)
+          document.scrollingElement?.scrollTo(0, scrollTop)
+          document.documentElement.scrollTop = scrollTop
+          document.body.scrollTop = scrollTop
+        })
+        return pageNavigation.evaluate((element) => ({
+          isPageEnd: element.classList.contains('is-page-end'),
+          pointerEvents: getComputedStyle(element).pointerEvents,
+          visibility: getComputedStyle(element).visibility,
+        }))
+      })
+      .toEqual({
+        isPageEnd: true,
+        pointerEvents: 'none',
+        visibility: 'hidden',
+      })
+
+    await page.evaluate(() => {
+      const scrollTop = Math.max(
+        window.scrollY,
+        document.scrollingElement?.scrollTop || 0,
+        document.documentElement.scrollTop,
+        document.body.scrollTop
+      )
+      window.scrollTo(0, scrollTop - 100)
+      document.scrollingElement?.scrollTo(0, scrollTop - 100)
+      document.documentElement.scrollTop = scrollTop - 100
+      document.body.scrollTop = scrollTop - 100
+    })
+    await expect(pageNavigation).not.toHaveClass(/\bis-page-end\b/)
+    await expect(pageNavigation).toBeVisible()
+  }
 })
 
 test('background motion resumes when navigation interrupts scrolling', async ({

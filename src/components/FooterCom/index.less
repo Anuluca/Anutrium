@@ -10,7 +10,7 @@
   display: flex;
   justify-content: space-evenly;
   align-items: center;
-  transition: all 0.5s ease;
+  transition: left 0.5s ease, bottom 0.5s ease, width 0.5s ease;
   opacity: 0;
 
   &.footer-ready {
@@ -72,13 +72,12 @@
     }
 
     .language {
-      transition: all 0.2s;
       display: flex;
       align-items: center;
       justify-content: center;
 
       .el-button {
-        margin-left: 0px !important;
+        margin-left: 0 !important;
         color: @primary-color;
         margin-bottom: 1px;
 
@@ -105,7 +104,6 @@
     font-size: 13px;
     letter-spacing: 0.8px;
     display: inline-block;
-    transition: all 0.2s;
     overflow: hidden;
 
     .expand {
@@ -145,7 +143,6 @@
         filter: brightness(0.93) saturate(0.86);
         transition: opacity 0.2s, filter 0.2s;
         white-space: nowrap;
-        align-items: center;
         display: inline-flex;
         align-items: center;
         will-change: transform;
@@ -176,29 +173,25 @@
           color: @primary-color;
           font-family: 'cn-custom';
           font-size: 12px;
-          padding: 1px 13px;
+          padding: 1px 13px 2px;
           opacity: 0.7;
           margin-right: 10px;
           display: inline-block;
-          padding-bottom: 2px;
           margin-bottom: 3px;
           margin-left: 20px;
           background: var(--text-color);
         }
         .recommend {
-          // font-weight: 400 !important;
           display: flex;
           align-items: center;
 
-          a,
           .recommend-link {
             padding: 10px;
-            // font-weight: 800 !important;
             display: flex;
             align-items: center;
             cursor: pointer;
             margin-bottom: 3px;
-            transition: all 0.2s;
+            transition: color 0.2s, background-color 0.2s;
             text-shadow: 0 0 0.5px rgba(0, 0, 0, 0.527);
             color: #fff;
 
@@ -248,19 +241,9 @@
       flex-wrap: nowrap;
 
       > .social-link {
-        position: relative;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-
-        &::before {
-          position: absolute;
-          bottom: 100%;
-          left: 0;
-          width: 100%;
-          height: 12px;
-          content: '';
-        }
 
         .social-trigger {
           display: inline-flex;
@@ -277,15 +260,8 @@
           transition: color 0.2s;
         }
 
-        &:not(.is-preview-dismissed):hover,
-        &:not(.is-preview-dismissed):focus-within {
-          .social-preview {
-            visibility: visible;
-            opacity: 1;
-            transform: translate(-50%, 0);
-            pointer-events: auto;
-          }
-
+        &:hover,
+        &:focus-within {
           .social-trigger {
             color: #fff;
 
@@ -319,139 +295,6 @@
       &:focus-visible {
         color: @primary-color !important;
       }
-    }
-  }
-
-  .social-preview {
-    position: absolute;
-    left: 50%;
-    bottom: calc(100% + 12px);
-    z-index: 4;
-    display: block;
-    box-sizing: border-box;
-    overflow: hidden;
-    visibility: hidden;
-    opacity: 0;
-    padding: 6px;
-    cursor: pointer;
-    transform: translate(-50%, 8px);
-    transform-origin: bottom center;
-    pointer-events: none;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 18px;
-    background: rgba(12, 11, 17, 0.97);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.56);
-    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease,
-      border-color 0.2s ease, box-shadow 0.25s ease, background-color 0.2s ease;
-
-    img {
-      display: block;
-      width: 100%;
-      height: auto;
-      max-height: 520px;
-      border-radius: 12px;
-      background: #fff;
-      object-fit: contain;
-      transition: filter 0.25s ease;
-    }
-  }
-
-  .social-link--twitter,
-  .social-link--weibo,
-  .social-link--bilibili,
-  .social-link--github,
-  .social-link--mail {
-    .social-preview:hover {
-      border-color: rgba(255, 255, 255, 0.5);
-      background-color: rgba(23, 19, 29, 0.98);
-      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.62);
-
-      img {
-        filter: brightness(1.06) saturate(1.04);
-      }
-
-      iframe {
-        filter: brightness(1.04) saturate(1.02);
-      }
-    }
-  }
-
-  .social-link--twitter .social-preview,
-  .social-link--bilibili .social-preview {
-    width: 248px;
-  }
-
-  .social-link--twitter .social-preview,
-  .social-link--github .social-preview,
-  .social-link--mail .social-preview {
-    border-radius: 999px;
-  }
-
-  .social-link--twitter .social-preview img,
-  .social-link--github .social-preview img {
-    border-radius: 999px;
-  }
-
-  .social-link--github .social-preview {
-    width: 180px;
-  }
-
-  .social-preview--weibo {
-    width: 346px;
-    height: 500px;
-
-    iframe {
-      display: block;
-      width: 100%;
-      height: 100%;
-      border-radius: 12px;
-      background: #fff;
-      transition: filter 0.25s ease;
-    }
-  }
-
-  .social-link--mail .social-preview {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 248px;
-    min-height: 44px;
-    padding: 8px 10px;
-  }
-
-  .mail-preview__icon {
-    display: flex;
-    flex: 0 0 26px;
-    align-items: center;
-    justify-content: center;
-    width: 26px;
-    height: 26px;
-    border-radius: 50%;
-    background: #e23456;
-    color: #fff;
-    font-size: 14px;
-    transition: background-color 0.2s ease, transform 0.25s ease;
-  }
-
-  .mail-preview__content {
-    min-width: 0;
-    color: #fff;
-    font-family: monospace;
-    font-size: 12px;
-    font-weight: 700;
-    line-height: 1;
-    white-space: nowrap;
-    transition: color 0.2s ease;
-  }
-
-  .social-link--mail .social-preview:hover {
-    .mail-preview__icon {
-      background: #f04464;
-      transform: scale(1.08);
-    }
-
-    .mail-preview__content {
-      color: #ff8fa5;
     }
   }
 }
@@ -511,33 +354,11 @@ body.light {
       }
     }
 
-    .right .text-links > .social-link:not(.is-preview-dismissed):hover,
-    .right .text-links > .social-link:not(.is-preview-dismissed):focus-within {
+    .right .text-links > .social-link:hover,
+    .right .text-links > .social-link:focus-within {
       .social-trigger {
         color: rgba(0, 0, 0, 0.72);
       }
-    }
-
-    .social-preview {
-      border-color: rgba(0, 0, 0, 0.14);
-      background: rgba(255, 255, 255, 0.96);
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
-    }
-
-    .social-link--twitter,
-    .social-link--weibo,
-    .social-link--bilibili,
-    .social-link--github,
-    .social-link--mail {
-      .social-preview:hover {
-        border-color: rgba(226, 52, 86, 0.4);
-        background-color: rgba(255, 255, 255, 0.98);
-        box-shadow: 0 14px 36px rgba(0, 0, 0, 0.2);
-      }
-    }
-
-    .mail-preview__content {
-      color: rgba(0, 0, 0, 0.74);
     }
   }
 }

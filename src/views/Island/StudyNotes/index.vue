@@ -89,7 +89,7 @@
       </nav>
     </main>
 
-    <PageFooter cn-title="学习笔记" en-title="STUDY NOTES" />
+    <PageFooter />
   </div>
 </template>
 

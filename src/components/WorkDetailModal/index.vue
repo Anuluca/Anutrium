@@ -1,5 +1,10 @@
 <template>
-  <ModalWrapper v-model="dialogVisible" width="1480px" @close="handleClose">
+  <ModalWrapper
+    v-model="dialogVisible"
+    width="1480px"
+    close-placement="work-detail"
+    @close="handleClose"
+  >
     <div v-if="work?.crystal" class="modal-crystal-logo">
       <CrystalLogo
         :image="work.crystal.image"
@@ -267,12 +272,10 @@
           />
         </div>
 
-        <ElImageViewer
+        <SafeImageViewer
           v-if="showImageViewer && work.images"
           :url-list="work.images"
           :initial-index="currentImageIndex"
-          hide-on-click-modal
-          teleported
           @close="closeImageViewer"
         />
 
@@ -314,7 +317,7 @@
 <script setup lang="ts">
 /* eslint-disable simple-import-sort/imports */
 import { computed, ref, watch, type Component } from 'vue'
-import { ElIcon, ElImageViewer } from 'element-plus'
+import { ElIcon } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import {
   Link as LinkIcon,
@@ -324,11 +327,11 @@ import {
 } from '@element-plus/icons-vue'
 import ModalWrapper from '@/components/ModalWrapper/index.vue'
 import CrystalLogo from '@/components/CrystalLogo/index.vue'
+import SafeImageViewer from '@/components/SafeImageViewer/index.vue'
 import ShareButton from '@/components/ShareButton/index.vue'
 import TypedText from '@/components/TypedText/index.vue'
 
 import 'element-plus/es/components/icon/style/css'
-import 'element-plus/es/components/image-viewer/style/css'
 
 interface WorkItem {
   id: string

@@ -433,4 +433,62 @@ const { locale } = useI18n()
     opacity: 0.4;
   }
 }
+
+@media screen and (max-aspect-ratio: 1) {
+  .tl-card__index {
+    top: -26px;
+
+    &-num {
+      font-size: 29.3333px;
+    }
+
+    &-slash,
+    &-total {
+      font-size: 23.4667px;
+    }
+  }
+
+  .tl-card__img-wrap {
+    height: 280px;
+  }
+
+  .tl-card__placeholder-icon {
+    font-size: 82.1333px;
+  }
+
+  .tl-card__body {
+    gap: 10.6667px;
+    padding: 24px 26.6667px 26.6667px;
+  }
+
+  .tl-card__tags {
+    gap: 8px;
+  }
+
+  .tl-card__tag {
+    font-size: 13.2px;
+  }
+
+  .tl-card__title {
+    font-size: 24.9333px;
+  }
+
+  .tl-card__sub {
+    height: 58.6667px;
+    font-size: 17.6px;
+  }
+
+  .tl-card__footer {
+    margin-top: 10.6667px;
+    padding-top: 16px;
+  }
+
+  .tl-card__status {
+    font-size: 13.2px;
+  }
+
+  .tl-card__cta {
+    font-size: 14.6667px;
+  }
+}
 </style>

@@ -1,23 +1,33 @@
 <template>
-  <div :class="[pageClass, 'main-container']">
-    <DetailPageHeader back-label="CRAFT" :back-path="backPath" :title="title" />
+  <div :class="[pageClass, 'main-container', 'tool-page-layout']">
+    <section class="tool-page-stage">
+      <DetailPageHeader
+        back-label="CRAFT"
+        :back-path="backPath"
+        :title="title"
+      />
 
-    <slot />
+      <main class="tool-page-content">
+        <slot />
+      </main>
+    </section>
 
-    <div class="footer-wrap">
-      <PageFooter third-party :recommended-tools="recommendedTools" />
-    </div>
+    <ToolRecommendationRow
+      class="tool-recommendation-row"
+      :recommended-tools="recommendedTools"
+    />
+    <PageFooter class="tool-page-footer" />
   </div>
 </template>
 
 <script setup lang="ts">
 import DetailPageHeader from '@/components/DetailPageHeader/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
+import ToolRecommendationRow, {
+  type RecommendedTool,
+} from '@/components/ToolRecommendationRow/index.vue'
 
-export interface RecommendedTool {
-  label: string
-  path: string
-}
+export type { RecommendedTool }
 
 withDefaults(
   defineProps<{
@@ -34,19 +44,40 @@ withDefaults(
 </script>
 
 <style lang="less" scoped>
-.footer-wrap {
-  animation: tool-section-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) 0.25s both;
+.tool-page-layout {
+  min-height: calc(100dvh - 60px);
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 0 !important;
 }
 
-@keyframes tool-section-in {
-  0% {
-    opacity: 0;
-    transform: translateY(15px);
-  }
+.tool-page-stage {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+  justify-content: safe center;
+  width: 100%;
+  min-height: 0;
+  transform: translateY(clamp(-36px, -3dvh, -20px));
+}
 
-  100% {
-    opacity: 1;
-    transform: translateY(0);
+.tool-page-content {
+  width: 100%;
+}
+
+.tool-page-footer {
+  flex-shrink: 0;
+  margin-top: auto;
+}
+
+.tool-recommendation-row {
+  flex-shrink: 0;
+}
+
+@media (min-width: 769px) {
+  .tool-page-layout :deep(.detail-page-header) {
+    margin-top: 20px;
   }
 }
 </style>

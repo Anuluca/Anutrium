@@ -1,0 +1,25 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "anutrium-steam-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-10",
+  "workers_dev": true,
+  "routes": [
+    {
+      "pattern": "steam-api.anuluca.com",
+      "custom_domain": true
+    }
+  ],
+  "vars": {
+    "STEAM_ID": "76561198287023366",
+    "STEAM_VANITY": "anuluca",
+    "ALLOWED_ORIGINS": "https://anuluca.com,https://www.anuluca.com,http://localhost:3000,http://127.0.0.1:3000",
+    "CACHE_TTL_SECONDS": "900"
+  },
+  "secrets": {
+    "required": ["STEAM_API_KEY"]
+  },
+  "observability": {
+    "enabled": true
+  }
+}

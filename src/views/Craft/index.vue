@@ -2,17 +2,6 @@
   <div class="craft-page main-container">
     <PageHeroTitle />
 
-    <!--
-    <PageHeader
-      header-label="[MENTOR_NV42]"
-      title-en="CRAFT"
-      title-cn="工具"
-      :meta-item="t('craft.metaItem')"
-      primary-color="#3B69F4"
-      mobile-tall
-    />
-    -->
-
     <div class="craft-filter craft-enter craft-enter--filter">
       <CollectionTabs
         aria-label="Craft categories"
@@ -54,7 +43,7 @@
     </div>
 
     <div class="craft-page-footer craft-enter craft-enter--footer">
-      <PageFooter cn-title="工具" en-title="CRAFT" />
+      <PageFooter />
     </div>
   </div>
 </template>
@@ -72,7 +61,6 @@ import FilterRail, {
 } from '@/components/FilterRail/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
 import PageHeroTitle from '@/components/PageHeroTitle/index.vue'
-// import PageHeader from '@/components/PageHeader/index.vue'
 import ToolCard from '@/components/ToolCard/index.vue'
 import { trackToolClick } from '@/utils/analytics'
 
@@ -84,6 +72,10 @@ const activeTag = ref<string | null>(null)
 
 type ToolCategory = 'work' | 'general'
 const toolCategories: ToolCategory[] = ['work', 'general']
+const toolCategorySet = new Set<ToolCategory>(toolCategories)
+
+const normalizeCategory = (value: unknown): ToolCategory =>
+  toolCategorySet.has(value as ToolCategory) ? (value as ToolCategory) : 'work'
 
 interface Tool {
   id: string
@@ -103,44 +95,74 @@ interface NormalizedTool extends Omit<Tool, 'category' | 'tags'> {
   tags: string[]
 }
 
+interface ToolCategoryBucket {
+  coverUrl?: string
+  tagCounts: Map<string, number>
+  tools: NormalizedTool[]
+}
+
 const tools = computed<NormalizedTool[]>(() => {
   return (tm('craft.dynamic.tools') as Tool[]).map((tool) => ({
     ...tool,
-    category: tool.category || 'work',
+    category: normalizeCategory(tool.category),
     tags: tool.tags?.length ? tool.tags : tool.tag ? [tool.tag] : [],
   }))
 })
 
+const categoryBuckets = computed(() => {
+  const buckets = new Map<ToolCategory, ToolCategoryBucket>(
+    toolCategories.map((category) => [
+      category,
+      { tools: [], tagCounts: new Map<string, number>() },
+    ])
+  )
+
+  for (const tool of tools.value) {
+    const bucket = buckets.get(tool.category)
+    if (!bucket) continue
+
+    bucket.tools.push(tool)
+    bucket.coverUrl ||= tool.img
+    for (const tag of tool.tags) {
+      bucket.tagCounts.set(tag, (bucket.tagCounts.get(tag) ?? 0) + 1)
+    }
+  }
+
+  return buckets
+})
+
 const categoryTabs = computed<CollectionTabItem[]>(() =>
-  toolCategories.map((category) => ({
-    id: category,
-    title:
-      category === 'work'
-        ? locale.value === 'zhCn'
-          ? '工作'
-          : 'WORK'
-        : locale.value === 'zhCn'
-        ? '生活'
-        : 'GENERAL',
-    subtitle:
-      locale.value === 'zhCn'
-        ? category === 'work'
-          ? 'WORK'
-          : 'GENERAL'
-        : undefined,
-    count: tools.value.filter((tool) => tool.category === category).length,
-    accentColor: category === 'work' ? '#3c5de8' : '#e8284a',
-    coverUrl: tools.value.find((tool) => tool.category === category)?.img,
-  }))
+  toolCategories.map((category) => {
+    const bucket = categoryBuckets.value.get(category)
+
+    return {
+      id: category,
+      title:
+        category === 'work'
+          ? locale.value === 'zhCn'
+            ? '工作'
+            : 'WORK'
+          : locale.value === 'zhCn'
+          ? '生活'
+          : 'GENERAL',
+      subtitle:
+        locale.value === 'zhCn'
+          ? category === 'work'
+            ? 'WORK'
+            : 'GENERAL'
+          : undefined,
+      count: bucket?.tools.length ?? 0,
+      accentColor: category === 'work' ? '#3c5de8' : '#e8284a',
+      coverUrl: bucket?.coverUrl,
+    }
+  })
 )
 
-const categoryTools = computed(() => {
-  return tools.value.filter((tool) => tool.category === activeCategory.value)
-})
+const activeCategoryBucket = computed(
+  () => categoryBuckets.value.get(activeCategory.value)!
+)
 
-const availableTags = computed(() => {
-  return Array.from(new Set(categoryTools.value.flatMap((tool) => tool.tags)))
-})
+const categoryTools = computed(() => activeCategoryBucket.value.tools)
 
 const toolFilterItems = computed<FilterRailItem[]>(() => [
   {
@@ -148,10 +170,10 @@ const toolFilterItems = computed<FilterRailItem[]>(() => [
     title: 'ALL',
     count: categoryTools.value.length,
   },
-  ...availableTags.value.map((tag) => ({
+  ...Array.from(activeCategoryBucket.value.tagCounts, ([tag, count]) => ({
     id: tag,
     title: tag,
-    count: categoryTools.value.filter((tool) => tool.tags.includes(tag)).length,
+    count,
   })),
 ])
 
@@ -161,12 +183,6 @@ const filteredTools = computed(() => {
     tool.tags.includes(activeTag.value as string)
   )
 })
-
-const normalizeCategory = (value: unknown): ToolCategory => {
-  return toolCategories.includes(value as ToolCategory)
-    ? (value as ToolCategory)
-    : 'work'
-}
 
 const selectCategory = (category: ToolCategory) => {
   if (route.query.type === category) return
@@ -317,6 +333,12 @@ watch(
 @media (max-width: 600px) {
   .tl-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media screen and (max-aspect-ratio: 1) {
+  .tl-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 </style>

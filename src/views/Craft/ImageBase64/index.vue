@@ -91,9 +91,9 @@
 
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
-import { ElMessage } from 'element-plus'
 
 import ToolPageLayout from '@/components/ToolPageLayout/index.vue'
+import { showErrorMessage, showSuccessMessage } from '@/utils/elementMessage'
 
 import 'element-plus/es/components/message/style/css'
 
@@ -142,12 +142,12 @@ const copyDataUrl = async () => {
   try {
     await navigator.clipboard.writeText(dataUrl.value)
     copied.value = true
-    ElMessage.success('复制成功')
+    showSuccessMessage('复制成功')
     setTimeout(() => {
       copied.value = false
     }, 1800)
   } catch (err) {
-    ElMessage.error('复制失败，请手动复制')
+    showErrorMessage('复制失败，请手动复制')
     console.error('Copy failed', err)
   }
 }

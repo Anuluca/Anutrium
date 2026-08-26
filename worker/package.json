@@ -1,0 +1,14 @@
+{
+  "name": "anutrium-steam-worker",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "deploy:first": "bash scripts/deploy-first.sh",
+    "typegen": "wrangler types"
+  },
+  "devDependencies": {
+    "wrangler": "latest"
+  }
+}

@@ -1,105 +1,115 @@
 <template>
-  <footer
-    ref="footerRef"
-    class="bottom-text"
-    :class="{ 'third-party': thirdParty, 'motion-paused': isMotionPaused }"
-    @mousemove="handleLogoMouseMove"
-    @mouseleave="handleLogoMouseLeave"
-  >
-    <div class="tl-marquee" aria-hidden="true">
-      <div class="tl-marquee__inner">
-        <span v-for="n in 36" :key="n">
-          {{ enTitle }} &nbsp;&nbsp; {{ cnTitle }} &nbsp;&nbsp;
-        </span>
+  <div v-bind="attrs" class="page-footer-anchor" aria-hidden="true" />
+  <Teleport v-if="isFooterPortalReady" to="#page-footer-portal">
+    <footer
+      ref="footerRef"
+      class="bottom-text"
+      :class="{ 'motion-paused': isMotionPaused }"
+      :style="footerStyle"
+      @mouseenter="handleLogoMouseEnter"
+      @mousemove="handleLogoMouseMove"
+      @mouseleave="handleLogoMouseLeave"
+    >
+      <div class="tl-marquee" aria-hidden="true">
+        <div class="tl-marquee__inner">
+          <span v-for="n in 36" :key="n">
+            ANUTRIUM &nbsp;&nbsp; 路卡庭院 &nbsp;&nbsp;
+          </span>
+        </div>
       </div>
-    </div>
-    <div class="footer-logo-container">
-      <footer class="about-footer">
-        <span class="footer-text"
-          >&lt; DRIVEN &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;BY PASSION.
-          &gt;</span
-        >
-      </footer>
-      <button
-        class="footer-logo-link"
-        type="button"
-        aria-label="返回首页"
-        @click="toPage('/')"
-      >
-        <Logo
-          id="footer-logo"
-          :active="true"
-          class="footer-logo"
-          :class="{ 'logo-hovered': isLogoHovered }"
-          :style="logoStyle"
-          @mouseenter="isLogoHovered = true"
-          @mouseleave="isLogoHovered = false"
-        />
-      </button>
-    </div>
-    <div v-if="thirdParty" class="third-party-recommend">
-      <a target="_blank" @click="toPage('craft')"> 工具集 </a> |
-      &nbsp;&nbsp;&nbsp;热门工具:
-      <a
-        v-for="tool in displayedRecommendedTools"
-        :key="tool.path"
-        target="_blank"
-        @click="toPage(tool.path)"
-      >
-        {{ tool.label }}
-      </a>
-    </div>
-    <p>
-      The copyright statement for articles and pictures: free to reprint,
-      non-commercial, non-derivative, with attribution (
-      <span class="lisence" data-magnetic @click="clickLisence">
-        Creative Commons 3.0 lisence
-      </span>
-      ).
-    </p>
-    <p>Designed & Engineered by Anuluca. © 2026 All rights reserved.</p>
-  </footer>
+      <div class="page-footer-sticky-clip">
+        <div class="page-footer-sticky-layer">
+          <div ref="footerPanelRef" class="page-footer-panel">
+            <div class="page-footer-content">
+              <span
+                class="page-footer-content__edge page-footer-content__edge--left"
+                aria-hidden="true"
+              />
+              <span
+                class="page-footer-content__edge page-footer-content__edge--right"
+                aria-hidden="true"
+              />
+              <div class="footer-logo-container">
+                <footer class="about-footer">
+                  <span class="footer-text"
+                    >&lt; DRIVEN
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;BY PASSION.
+                    &gt;</span
+                  >
+                </footer>
+                <button
+                  class="footer-logo-link"
+                  type="button"
+                  aria-label="返回首页"
+                  @click="toHome"
+                >
+                  <Logo
+                    id="footer-logo"
+                    :active="true"
+                    class="footer-logo"
+                    :class="{ 'logo-hovered': isLogoHovered }"
+                    :style="logoStyle"
+                  />
+                </button>
+              </div>
+              <p class="footer-license">
+                The copyright statement for articles and pictures: free to
+                reprint, non-commercial, non-derivative, with attribution (
+                <a
+                  class="license"
+                  data-magnetic
+                  href="https://creativecommons.org/licenses/by-nc-nd/3.0/cn/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Creative Commons 3.0 license
+                </a>
+                ).
+              </p>
+              <FooterSocialLinks />
+              <p class="footer-copyright">
+                Designed & Engineered by Anuluca. © 2018-2026 Anuluca. All
+                rights reserved.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, useAttrs } from 'vue'
 import { useRouter } from 'vue-router'
 
+import FooterSocialLinks from '@/components/FooterSocialLinks/index.vue'
 import Logo from '@/components/Logo/index.vue'
 
 const router = useRouter()
+const attrs = useAttrs()
 
-interface RecommendedTool {
-  label: string
-  path: string
-}
+defineOptions({ inheritAttrs: false })
 
-interface Props {
-  thirdParty?: boolean
-  cnTitle?: string
-  enTitle?: string
-  recommendedTools?: RecommendedTool[]
-}
-
-const {
-  thirdParty = false,
-  cnTitle = '路卡庭院',
-  enTitle = 'ANUTRIUM',
-  recommendedTools,
-} = defineProps<Props>()
 const isLogoHovered = ref(false)
-
-const defaultRecommendedTools: RecommendedTool[] = [
-  { label: '配色提取器', path: '/colorPalette' },
-  { label: 'EASE STUDIO', path: '/easeStudio' },
-]
-
-const displayedRecommendedTools = computed(() => {
-  return recommendedTools?.length ? recommendedTools : defaultRecommendedTools
-})
+const isFooterPortalReady = ref(false)
 const footerRef = ref<HTMLElement | null>(null)
+const footerPanelRef = ref<HTMLElement | null>(null)
+const footerPanelHeight = ref(0)
+const footerWidth = ref(0)
+const footerComOffset = ref(0)
 const isMotionPaused = ref(true)
 const isFooterVisible = ref(false)
+
+const footerStyle = computed(() => ({
+  '--footer-com-offset': `${footerComOffset.value}px`,
+  ...(footerPanelHeight.value > 0 && {
+    '--page-footer-height': `${footerPanelHeight.value}px`,
+  }),
+  ...(footerWidth.value > 0 && {
+    '--page-footer-width': `${footerWidth.value}px`,
+  }),
+}))
 
 const currentX = ref(0)
 const currentY = ref(0)
@@ -107,9 +117,54 @@ const targetX = ref(0)
 const targetY = ref(0)
 
 let rafId: number | null = null
+let sizeSyncFrame: number | null = null
 let cachedRect: DOMRect | null = null
+let footerComElement: HTMLElement | null = null
 let observer: IntersectionObserver | null = null
+let resizeObserver: ResizeObserver | null = null
+let footerComObserver: MutationObserver | null = null
 let reducedMotionQuery: MediaQueryList | null = null
+
+const syncStickyFooterSize = () => {
+  if (footerPanelRef.value) {
+    // scrollHeight 不受路由入场 transform 缩放影响。
+    const computedHeight = Number.parseFloat(
+      window.getComputedStyle(footerPanelRef.value).height
+    )
+    footerPanelHeight.value = Math.max(
+      footerPanelRef.value.scrollHeight,
+      Math.ceil(Number.isFinite(computedHeight) ? computedHeight : 0)
+    )
+  }
+
+  if (footerRef.value) {
+    footerWidth.value = Number.parseFloat(
+      window.getComputedStyle(footerRef.value).width
+    )
+  }
+
+  if (
+    !footerComElement ||
+    window.getComputedStyle(footerComElement).display === 'none'
+  ) {
+    footerComOffset.value = 0
+    return
+  }
+
+  const footerComRect = footerComElement.getBoundingClientRect()
+  footerComOffset.value =
+    footerComRect.height +
+    Math.max(0, window.innerHeight - footerComRect.bottom)
+}
+
+const scheduleStickyFooterSizeSync = () => {
+  if (sizeSyncFrame !== null) return
+
+  sizeSyncFrame = window.requestAnimationFrame(() => {
+    sizeSyncFrame = null
+    syncStickyFooterSize()
+  })
+}
 
 const updateMotionState = () => {
   isMotionPaused.value =
@@ -121,11 +176,17 @@ const updateMotionState = () => {
     cancelAnimationFrame(rafId)
     rafId = null
   }
+
+  if (isMotionPaused.value) {
+    currentX.value = 0
+    currentY.value = 0
+    targetX.value = 0
+    targetY.value = 0
+  }
 }
 
 const logoStyle = computed(() => ({
   transform: `perspective(1000px) rotateX(${currentX.value}deg) rotateY(${currentY.value}deg)`,
-  transition: 'color 0.3s ease, filter 0.3s ease',
 }))
 
 const updateRotation = () => {
@@ -173,6 +234,11 @@ const handleLogoMouseMove = (e: MouseEvent) => {
   }
 }
 
+const handleLogoMouseEnter = (e: MouseEvent) => {
+  isLogoHovered.value = true
+  cachedRect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+}
+
 const handleLogoMouseLeave = () => {
   isLogoHovered.value = false
   cachedRect = null
@@ -186,43 +252,75 @@ const handleLogoMouseLeave = () => {
   }
 }
 
-const clickLisence = () => {
-  window.open('https://creativecommons.org/licenses/by-nc-nd/3.0/cn/')
-}
-
-const toPage = (page: string) => {
-  router.push(page.startsWith('/') ? page : `/${page}`)
-}
+const toHome = () => router.push('/')
 
 onMounted(() => {
+  isFooterPortalReady.value = true
   reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
   reducedMotionQuery.addEventListener('change', updateMotionState)
   document.addEventListener('visibilitychange', updateMotionState)
+  window.addEventListener('resize', scheduleStickyFooterSizeSync, {
+    passive: true,
+  })
 
-  if ('IntersectionObserver' in window && footerRef.value) {
-    observer = new IntersectionObserver(
-      ([entry]) => {
-        isFooterVisible.value = entry.isIntersecting
-        updateMotionState()
-      },
-      { rootMargin: '220px 0px' }
-    )
-    observer.observe(footerRef.value)
-  } else {
-    isFooterVisible.value = true
-    updateMotionState()
-  }
+  nextTick(() => {
+    footerComElement = document.querySelector<HTMLElement>('.footer-com')
+
+    if (footerComElement) {
+      footerComObserver = new MutationObserver(scheduleStickyFooterSizeSync)
+      footerComObserver.observe(footerComElement, {
+        attributes: true,
+        attributeFilter: ['class', 'style'],
+      })
+    }
+
+    if ('ResizeObserver' in window) {
+      resizeObserver = new ResizeObserver(scheduleStickyFooterSizeSync)
+      if (footerRef.value) resizeObserver.observe(footerRef.value)
+      if (footerPanelRef.value) resizeObserver.observe(footerPanelRef.value)
+      if (footerComElement) resizeObserver.observe(footerComElement)
+    }
+
+    if ('IntersectionObserver' in window && footerRef.value) {
+      observer = new IntersectionObserver(
+        ([entry]) => {
+          isFooterVisible.value = entry.isIntersecting
+          updateMotionState()
+        },
+        { threshold: 0.08 }
+      )
+      observer.observe(footerRef.value)
+    } else {
+      isFooterVisible.value = true
+      updateMotionState()
+    }
+
+    scheduleStickyFooterSizeSync()
+  })
 })
 
 onUnmounted(() => {
   if (rafId) cancelAnimationFrame(rafId)
+  if (sizeSyncFrame !== null) cancelAnimationFrame(sizeSyncFrame)
   observer?.disconnect()
+  resizeObserver?.disconnect()
+  footerComObserver?.disconnect()
   document.removeEventListener('visibilitychange', updateMotionState)
+  window.removeEventListener('resize', scheduleStickyFooterSizeSync)
   reducedMotionQuery?.removeEventListener('change', updateMotionState)
 })
 </script>
 
 <style lang="less" scoped>
+:global(.main-container:has(.page-footer-anchor)) {
+  overflow-x: visible;
+  padding-bottom: 0 !important;
+}
+
+:global(#page-footer-portal > .bottom-text:not(:last-child)) {
+  display: none;
+}
+
 @keyframes marquee {
   from {
     transform: translate3d(0, 0, 0);
@@ -232,11 +330,21 @@ onUnmounted(() => {
   }
 }
 
+.page-footer-anchor {
+  display: block;
+  flex: 0 0 auto;
+  width: 100%;
+  height: 0;
+  min-height: 0;
+}
+
 .footer-logo-container {
   display: flex;
   justify-content: center;
   align-items: center;
+  margin-bottom: -8px;
   perspective: 1000px;
+  transform: translateY(-7px);
 
   .about-footer {
     text-align: center;
@@ -246,23 +354,25 @@ onUnmounted(() => {
 
   .footer-text {
     font-family: 'anton', monospace;
-    font-size: 1.23rem;
-    letter-spacing: 4px;
-    line-height: 2rem;
+    font-size: 1.107rem;
+    letter-spacing: 0;
+    line-height: 1.8rem;
     color: #e23456;
     filter: drop-shadow(0 0 10px #e23456);
   }
 }
 
 .footer-logo {
-  width: 80px;
-  height: 100px;
-  margin-left: -95px;
+  position: relative;
+  left: 12px;
+  width: 72px;
+  height: 90px;
+  margin-left: -85.5px;
   color: var(--text-color);
   transition: color 0.3s ease, filter 0.3s ease;
   cursor: pointer;
-  padding: 40px 100px;
-  margin-bottom: -10px;
+  padding: 36px 90px;
+  margin-bottom: -9px;
 
   &.logo-hovered {
     color: #000;
@@ -288,92 +398,175 @@ onUnmounted(() => {
 }
 
 .bottom-text {
-  padding: 10px 0;
-  padding-bottom: 40px;
+  --footer-com-offset: 26px;
+  --page-footer-marquee-gap: 48px;
+  --page-footer-surface-background: radial-gradient(
+      35% 80% at 30% 0%,
+      rgba(255, 255, 255, 0.08),
+      transparent 100%
+    ),
+    rgba(0, 0, 0, 0.62);
+
+  position: relative;
+  isolation: isolate;
+  height: auto;
+  padding: var(--page-footer-marquee-gap) 0 0;
+  clip-path: inset(0 -100vw);
   color: #e23456;
   font-size: 13px;
   line-height: 20px;
   text-align: center;
   letter-spacing: 0.2px;
 
+  > .page-footer-sticky-clip {
+    position: relative;
+    height: calc(var(--page-footer-height, 156px) + var(--footer-com-offset));
+    clip-path: inset(0 -100vw);
+  }
+
+  .page-footer-sticky-layer {
+    position: fixed;
+    right: 50%;
+    bottom: var(--footer-com-offset);
+    z-index: 1;
+    isolation: isolate;
+    width: var(--page-footer-width, 100vw);
+    height: var(--page-footer-height, 156px);
+    transform: translateX(50%);
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0 auto 0 50%;
+      z-index: 0;
+      width: 100vw;
+      background: var(--page-footer-surface-background);
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+  }
+
+  .page-footer-panel {
+    position: sticky;
+    top: calc(100dvh - var(--page-footer-height, 156px));
+    z-index: 1;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    box-sizing: border-box;
+    overflow: visible;
+    background: transparent;
+  }
+
   .tl-marquee {
-    margin-top: 20px;
+    position: relative;
+    z-index: 2;
+    width: 100vw;
+    margin-top: 0;
+    margin-left: calc(50% - 50vw);
+    box-sizing: border-box;
     overflow: hidden;
-    border-top: 1px solid rgba(255, 255, 255, 0.159);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.159);
-    padding: 0 0;
+    border-top: 1px solid rgba(128, 128, 128, 0.26);
+    border-bottom: 1px solid rgba(128, 128, 128, 0.26);
+    background: var(--page-footer-surface-background);
+    box-shadow: 0 14px 24px rgba(0, 0, 0, 0.72);
+    padding: 0;
     pointer-events: none;
 
     &__inner {
       display: flex;
+      min-width: 121vw;
       white-space: nowrap;
       animation: marquee 32s linear infinite reverse;
       will-change: transform;
       font-size: 10px;
       line-height: 12px;
       padding-bottom: 2px;
-      color: rgb(88, 88, 88);
-      * {
+      color: #606060;
+
+      span {
+        flex: 1 0 auto;
         font-family: 'cn-custom', monospace;
       }
+    }
+  }
+
+  .page-footer-content {
+    position: relative;
+    isolation: isolate;
+    box-sizing: border-box;
+    padding-bottom: 0;
+    color: #a52b43;
+    background: transparent;
+  }
+
+  .page-footer-content__edge {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 2;
+    width: 1px;
+    background: rgba(128, 128, 128, 0.4);
+    pointer-events: none;
+
+    &--left {
+      left: 0;
+    }
+
+    &--right {
+      right: 0;
+    }
+  }
+
+  .footer-copyright {
+    position: relative;
+    margin: 0;
+    padding: 13px 16px 17px;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 50%;
+      width: 100vw;
+      height: 1px;
+      background: rgba(128, 128, 128, 0.26);
+      transform: translateX(50%);
+      pointer-events: none;
     }
   }
 
   &.motion-paused {
     .tl-marquee__inner {
       animation-play-state: paused;
+      will-change: auto;
     }
   }
-  &.third-party {
-    zoom: 0.8;
-    padding-bottom: 0;
-  }
-  .third-party-recommend {
-    font-family: 'alibaba-puhuiti' !important;
-    font-weight: 600;
-    * {
-      font-family: 'alibaba-puhuiti' !important;
-      font-weight: 600;
-    }
-    a {
-      text-decoration: underline;
-      transition: all 0.2s;
-      padding: 0 2px;
-      padding-bottom: 2px;
-      &:before {
-        content: '[ ';
-        opacity: 0;
-      }
-      &:after {
-        content: ' ]';
-        opacity: 0;
-      }
-      &:hover {
-        background-color: #e23456;
-        color: #000;
-        &::before {
-          opacity: 1;
-        }
-        &::after {
-          opacity: 1;
-        }
-      }
-    }
+  .footer-license {
+    margin: 0;
+    padding-bottom: 12px;
   }
 
   * {
     font-family: 'anton', sans-serif;
   }
 
-  .lisence {
+  .license {
+    color: inherit;
     text-decoration: underline;
     cursor: pointer;
-    transition: all 0.1s;
+    transition: color 0.1s, background-color 0.1s;
 
     &:hover {
       color: #000;
       background-color: #e23456;
     }
+  }
+}
+
+@media screen and (max-aspect-ratio: 1) {
+  .bottom-text {
+    --footer-com-offset: 0px;
   }
 }
 </style>

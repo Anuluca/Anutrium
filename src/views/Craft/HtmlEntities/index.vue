@@ -37,55 +37,15 @@
         <div class="corner-img corner--bl" />
         <div class="corner-img corner--br" />
       </div>
-
-      <div class="right-panel entity-detail">
-        <div class="pt-panel-title">
-          <span>[ 快速复制 ]</span>
-        </div>
-
-        <div class="quick-list" data-lenis-nested-scroll>
-          <div
-            v-for="entity in filteredEntities"
-            :key="entity.name"
-            class="quick-row"
-          >
-            <div>
-              <strong>{{ entity.label }}</strong>
-              <span>{{ entity.desc }}</span>
-            </div>
-            <button class="pt-btn glyph-btn" @click="copyText(entity.char)">
-              <span>{{ visibleChar(entity.char) }}</span>
-            </button>
-            <button class="pt-btn" @click="copyText(entity.name)">
-              <span>{{ entity.name }}</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="copy-status">
-          <span>{{
-            copiedText ? `已复制：${copiedText}` : '点击任意按钮复制对应内容'
-          }}</span>
-        </div>
-
-        <div class="corner corner--tl" />
-        <div class="corner corner--tr" />
-        <div class="corner corner--bl" />
-        <div class="corner corner--br" />
-        <div class="crystal-container">
-          <ToolCrystalLogo tool-id="html-entities" />
-        </div>
-      </div>
     </div>
   </ToolPageLayout>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { ElMessage } from 'element-plus'
 
-import ToolCrystalLogo from '@/components/ToolCrystalLogo/index.vue'
 import ToolPageLayout from '@/components/ToolPageLayout/index.vue'
+import { showErrorMessage, showSuccessMessage } from '@/utils/elementMessage'
 
 import 'element-plus/es/components/message/style/css'
 
@@ -98,7 +58,6 @@ interface HtmlEntity {
 }
 
 const keyword = ref('')
-const copiedText = ref('')
 
 const recommendedTools = [
   { label: 'HTML常用转义字符', path: '/htmlEntities' },
@@ -291,13 +250,9 @@ const filteredEntities = computed(() => {
 const copyText = async (text: string) => {
   try {
     await navigator.clipboard.writeText(text)
-    copiedText.value = text
-    ElMessage.success('复制成功')
-    setTimeout(() => {
-      if (copiedText.value === text) copiedText.value = ''
-    }, 1800)
+    showSuccessMessage('复制成功')
   } catch (err) {
-    ElMessage.error('复制失败，请手动复制')
+    showErrorMessage('复制失败，请手动复制')
     console.error('Copy failed', err)
   }
 }
@@ -310,7 +265,6 @@ const visibleChar = (char: string) => {
 <style lang="less" scoped>
 @red: #e8284a;
 @red-dim: rgba(232, 40, 74, 0.15);
-@surface: #140a0c;
 @border: rgba(255, 255, 255, 0.07);
 @text: #ffffff;
 @muted: rgba(255, 255, 255, 0.45);
@@ -339,30 +293,20 @@ const visibleChar = (char: string) => {
   font-family: 'cn-custom', system-ui, sans-serif;
 }
 
-.entity-stage,
-.entity-detail {
-  animation: tacticalIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-
 .entity-stage {
+  animation: tacticalIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   animation-delay: 0.1s;
-}
-
-.entity-detail {
-  animation-delay: 0.15s;
 }
 
 .pt-grid {
   display: grid;
-  grid-template-columns: 5fr 2fr;
-  gap: 30px 0;
+  grid-template-columns: 1fr;
   align-items: stretch;
 }
 
-.pt-panel,
-.right-panel {
+.pt-panel {
   position: relative;
-  min-height: 600px;
+  min-height: 520px;
   display: flex;
   flex-direction: column;
 }
@@ -373,13 +317,6 @@ const visibleChar = (char: string) => {
   overflow: hidden;
 }
 
-.right-panel {
-  background: @surface;
-  border: 1px solid @border;
-  padding: 30px;
-}
-
-.corner,
 .corner-img {
   position: absolute;
   width: 12px;
@@ -387,59 +324,35 @@ const visibleChar = (char: string) => {
   pointer-events: none;
   z-index: 5;
 
-  &--tl {
-    top: -1px;
-    left: -1px;
+  &.corner--tl {
+    top: 10px;
+    left: 10px;
     border-top: 2px solid @red;
     border-left: 2px solid @red;
   }
 
-  &--tr {
-    top: -1px;
-    right: -1px;
+  &.corner--tr {
+    top: 10px;
+    right: 10px;
     border-top: 2px solid @red;
     border-right: 2px solid @red;
   }
 
-  &--bl {
-    bottom: -1px;
-    left: -1px;
+  &.corner--bl {
+    bottom: 10px;
+    left: 10px;
     border-bottom: 2px solid @red;
     border-left: 2px solid @red;
   }
 
-  &--br {
-    bottom: -1px;
-    right: -1px;
+  &.corner--br {
+    right: 10px;
+    bottom: 10px;
     border-bottom: 2px solid @red;
     border-right: 2px solid @red;
   }
 
-  &.corner-img {
-    &.corner--tl {
-      top: 10px;
-      left: 10px;
-      border-color: #50505076;
-    }
-
-    &.corner--tr {
-      top: 10px;
-      right: 10px;
-      border-color: #50505076;
-    }
-
-    &.corner--bl {
-      bottom: 10px;
-      left: 10px;
-      border-color: #50505076;
-    }
-
-    &.corner--br {
-      bottom: 10px;
-      right: 10px;
-      border-color: #50505076;
-    }
-  }
+  border-color: #50505076;
 }
 
 .entity-stage {
@@ -483,7 +396,7 @@ const visibleChar = (char: string) => {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 12px;
-  height: 750px;
+  height: 520px;
   padding-top: 10px;
   overflow-y: auto;
 }
@@ -525,80 +438,6 @@ const visibleChar = (char: string) => {
   }
 }
 
-.pt-panel-title {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  color: @muted;
-  margin-bottom: 24px;
-
-  span {
-    .font-squish(left);
-    font-size: 14px;
-  }
-}
-
-.quick-list {
-  display: grid;
-  gap: 10px;
-  max-height: 740px;
-  margin-bottom: 10px;
-  overflow-y: auto;
-  padding-right: 4px;
-}
-
-.quick-row {
-  border: 1px solid @border;
-  background: rgba(9, 4, 6, 0.64);
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 44px auto auto;
-  gap: 8px;
-  align-items: center;
-  padding: 10px;
-
-  strong,
-  span {
-    .font-squish(left);
-    display: block;
-  }
-
-  strong {
-    font-size: 13px;
-    color: @text;
-  }
-
-  span {
-    color: @muted;
-    font-size: 12px;
-    margin-top: 4px;
-  }
-}
-
-.pt-btn {
-  background: transparent;
-  border: 1px solid @border;
-  color: @text;
-  cursor: pointer;
-  padding: 8px 10px;
-  transition: all 0.2s ease;
-
-  span {
-    .font-squish(center);
-    font-size: 12px;
-  }
-
-  &:hover {
-    border-color: @red;
-    color: @red;
-    background: @red-dim;
-  }
-}
-
-.glyph-btn span {
-  transform: none;
-}
-
-.copy-status,
 .empty-state {
   margin-top: auto;
   border: 1px solid @border;
@@ -612,13 +451,6 @@ const visibleChar = (char: string) => {
   }
 }
 
-.crystal-container {
-  position: absolute;
-  top: 15px;
-  right: 32px;
-  z-index: 1;
-}
-
 @media (max-width: 1100px) {
   .entity-grid {
     grid-template-columns: repeat(3, 1fr);
@@ -626,12 +458,7 @@ const visibleChar = (char: string) => {
 }
 
 @media (max-width: 900px) {
-  .pt-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .pt-panel,
-  .right-panel {
+  .pt-panel {
     min-height: 480px;
   }
 }

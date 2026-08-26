@@ -129,7 +129,7 @@ onBeforeUnmount(() => {
 .island-clock-trigger {
   display: grid;
   justify-items: end;
-  min-width: 104px;
+  min-width: 90px;
   padding: 0;
   border: 0;
   color: inherit;
@@ -144,7 +144,7 @@ onBeforeUnmount(() => {
     width: 100%;
     color: rgba(255, 255, 255, 0.3);
     font-family: 'cn-custom', monospace;
-    font-size: 0.46rem;
+    font-size: 0.4rem;
     font-weight: 800;
     line-height: 1;
     white-space: nowrap;
@@ -159,10 +159,10 @@ onBeforeUnmount(() => {
     display: flex;
     justify-content: flex-end;
     width: 100%;
-    margin-top: 5px;
+    margin-top: 0;
     color: rgba(255, 255, 255, 0.84);
     font-family: 'cn-custom', monospace;
-    font-size: clamp(1.1rem, 1.2vw, 1.5rem);
+    font-size: clamp(0.95rem, 1vw, 1.3rem);
     font-weight: 900;
     line-height: 1;
     white-space: nowrap;
@@ -284,7 +284,7 @@ onBeforeUnmount(() => {
 :global(body.island-mobile-shell .cursor-position),
 :global(body.island-pc-shell .harbor-side),
 :global(body.island-pc-shell .harbor-board),
-:global(body.island-pc-shell .harbor-player),
+:global(body.island-pc-shell .harbor-status),
 :global(body.island-mobile-shell .mobile-hero),
 :global(body.island-mobile-shell .mobile-latest),
 :global(body.island-mobile-shell .mobile-ports),
@@ -298,7 +298,7 @@ onBeforeUnmount(() => {
 :global(body.island-clock-focus-mode .cursor-position),
 :global(body.island-clock-focus-mode .harbor-side),
 :global(body.island-clock-focus-mode .harbor-board),
-:global(body.island-clock-focus-mode .harbor-player),
+:global(body.island-clock-focus-mode .harbor-status),
 :global(body.island-clock-focus-mode .mobile-hero),
 :global(body.island-clock-focus-mode .mobile-latest),
 :global(body.island-clock-focus-mode .mobile-ports),

@@ -58,4 +58,28 @@ module.exports = {
     parser: '@typescript-eslint/parser',
     sourceType: 'module',
   },
+  overrides: [
+    {
+      files: ['src/**/*.{js,jsx,ts,tsx,vue}'],
+      excludedFiles: [
+        'src/components/ModalWrapper/index.vue',
+        'src/components/SafeImageViewer/index.vue',
+        'src/utils/scrollSafeMessageBox.ts',
+      ],
+      rules: {
+        'no-restricted-imports': [
+          'error',
+          {
+            paths: [
+              {
+                name: 'element-plus',
+                importNames: ['ElDialog', 'ElImageViewer', 'ElMessageBox'],
+                message: '请使用项目内的滚动安全适配层。',
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
 }

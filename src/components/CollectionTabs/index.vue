@@ -223,34 +223,52 @@ defineEmits<{
 
 @media (max-width: 900px) {
   .collection-tabs {
-    --collection-tab-min-height: 76px;
-    --collection-tab-padding-y: 14px;
-    --collection-tab-margin-y: 8px;
-    --collection-tab-title-size: 0.72rem;
-    --collection-tab-subtitle-size: 0.36rem;
+    --collection-tab-min-height: 152px;
+    --collection-tab-padding-y: 28px;
+    --collection-tab-margin-y: 16px;
+    --collection-tab-title-size: 1.44rem;
+    --collection-tab-subtitle-size: 0.72rem;
+    --collection-tab-index-size: 1.12rem;
+    --collection-tab-count-size: clamp(2.9rem, 5.6vw, 5.3rem);
 
     &--big {
-      --collection-tab-min-height: 90px;
-      --collection-tab-padding-y: 16px;
+      --collection-tab-min-height: 180px;
+      --collection-tab-padding-y: 32px;
       --collection-tab-margin-y: 0;
-      --collection-tab-title-size: 0.8rem;
-      --collection-tab-subtitle-size: 0.38rem;
+      --collection-tab-title-size: 1.6rem;
+      --collection-tab-subtitle-size: 0.76rem;
+      --collection-tab-index-size: 1.24rem;
+      --collection-tab-count-size: clamp(3.4rem, 6.8vw, 6.4rem);
     }
 
     &--small {
-      --collection-tab-min-height: 48px;
-      --collection-tab-padding-y: 6px;
+      --collection-tab-min-height: 96px;
+      --collection-tab-padding-y: 12px;
       --collection-tab-margin-y: 0;
-      --collection-tab-title-size: 0.56rem;
-      --collection-tab-subtitle-size: 0.28rem;
+      --collection-tab-title-size: 1.12rem;
+      --collection-tab-subtitle-size: 0.56rem;
+      --collection-tab-index-size: 0.8rem;
+      --collection-tab-count-size: clamp(1.9rem, 3.6vw, 3.1rem);
     }
   }
 
   .collection-tab {
     grid-template-columns: auto minmax(0, 1fr);
-    gap: 10px;
-    padding-right: 12px;
-    padding-left: 12px;
+    gap: 20px;
+    padding-right: 24px;
+    padding-left: 24px;
+
+    .collection-tab__copy small {
+      margin-top: 10px;
+    }
+
+    .collection-tabs--small & .collection-tab__copy {
+      gap: 16px;
+
+      small {
+        margin-top: 0;
+      }
+    }
 
     &__count {
       display: none;

@@ -12,6 +12,7 @@
     <Teleport v-if="isClient && isNavigationHost" to="body">
       <nav
         class="sections-fixed-nav"
+        :class="{ 'is-page-end': isNavigationAtPageEnd }"
         :aria-label="
           locale === 'en' ? 'Page section navigation' : '页面模块导航'
         "
@@ -76,24 +77,14 @@
 </template>
 
 <script setup lang="ts">
-import {
-  computed,
-  nextTick,
-  onBeforeUnmount,
-  onMounted,
-  ref,
-  shallowRef,
-  watch,
-} from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { useScrollReveal } from '@/composables/useScrollReveal'
 import {
-  addPageScrollListener,
-  getPageMaxScrollTop,
-  getPageScrollTop,
-  scrollPageTo,
-} from '@/utils/pageScroll'
+  toSectionAnchorSlug,
+  useSectionNavigation,
+} from '@/composables/useSectionNavigation'
 
 const props = defineProps<{
   sectionNumber: string | number
@@ -117,203 +108,28 @@ const formattedSectionNumber = computed(() =>
   String(props.sectionNumber).padStart(2, '0')
 )
 
-interface NavigationItem {
-  anchorId: string
-  number: string
-  title: string
-  target: HTMLElement
-  top: number
-}
-
-const NAVIGATION_REFRESH_EVENT = 'sections-navigation:refresh'
-const ACTIVE_UPDATE_INTERVAL = 300
-const navigationItems = shallowRef<NavigationItem[]>([])
-const activeAnchorId = ref('')
-const isClient = ref(false)
-const isNavigationHost = ref(false)
-let removeScrollListener: (() => void) | null = null
-let navigationResizeObserver: ResizeObserver | null = null
-let activeUpdateTimer: number | null = null
-let measurementFrame = 0
-let headerOffset = 72
-let maxScrollTop = 0
-
-const toAnchorSlug = (value: string | number) => {
-  const slug = String(value)
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9_-]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-
-  return slug || 'section'
-}
-
 const sectionAnchorId = computed(
   () =>
-    `section-${toAnchorSlug(props.sectionNumber)}-${toAnchorSlug(
+    `section-${toSectionAnchorSlug(props.sectionNumber)}-${toSectionAnchorSlug(
       props.railLabel
     )}`
 )
 
-const getNavigationRoot = () =>
-  sectionRef.value?.closest<HTMLElement>('.main-container') ??
-  sectionRef.value?.parentElement ??
-  null
-
-const getHeaderOffset = () => {
-  const header = document.querySelector<HTMLElement>('.el-menu-layout-all')
-
-  return Math.max(72, (header?.getBoundingClientRect().bottom ?? 0) + 14)
-}
-
-const updateActiveSection = () => {
-  activeUpdateTimer = null
-  if (!isNavigationHost.value || navigationItems.value.length === 0) return
-
-  const scrollTop = getPageScrollTop()
-  if (maxScrollTop > 0 && maxScrollTop - scrollTop <= 4) {
-    const lastAnchorId =
-      navigationItems.value[navigationItems.value.length - 1].anchorId
-    if (activeAnchorId.value !== lastAnchorId) {
-      activeAnchorId.value = lastAnchorId
-    }
-    return
-  }
-
-  const activationTop = scrollTop + headerOffset + window.innerHeight * 0.16
-  let low = 0
-  let high = navigationItems.value.length - 1
-  let activeIndex = 0
-
-  while (low <= high) {
-    const middle = (low + high) >> 1
-    if (navigationItems.value[middle].top <= activationTop) {
-      activeIndex = middle
-      low = middle + 1
-    } else {
-      high = middle - 1
-    }
-  }
-
-  const nextAnchorId = navigationItems.value[activeIndex].anchorId
-  if (activeAnchorId.value !== nextAnchorId) {
-    activeAnchorId.value = nextAnchorId
-  }
-}
-
-const scheduleActiveSectionUpdate = () => {
-  if (activeUpdateTimer !== null) return
-  activeUpdateTimer = window.setTimeout(
-    updateActiveSection,
-    ACTIVE_UPDATE_INTERVAL
-  )
-}
-
-const measureNavigation = () => {
-  measurementFrame = 0
-  if (!isNavigationHost.value) return
-
-  const scrollTop = getPageScrollTop()
-  headerOffset = getHeaderOffset()
-  maxScrollTop = getPageMaxScrollTop()
-
-  for (const item of navigationItems.value) {
-    item.top = scrollTop + item.target.getBoundingClientRect().top
-  }
-
-  scheduleActiveSectionUpdate()
-}
-
-const scheduleNavigationMeasurement = () => {
-  if (measurementFrame) return
-  measurementFrame = window.requestAnimationFrame(measureNavigation)
-}
-
-const stopNavigationRuntime = () => {
-  removeScrollListener?.()
-  removeScrollListener = null
-  navigationResizeObserver?.disconnect()
-  navigationResizeObserver = null
-  window.removeEventListener('resize', scheduleNavigationMeasurement)
-}
-
-const syncNavigationRuntime = (root: HTMLElement) => {
-  if (!isNavigationHost.value) {
-    stopNavigationRuntime()
-    return
-  }
-
-  if (!removeScrollListener) {
-    removeScrollListener = addPageScrollListener(scheduleActiveSectionUpdate)
-    window.addEventListener('resize', scheduleNavigationMeasurement, {
-      passive: true,
-    })
-
-    if (typeof ResizeObserver !== 'undefined') {
-      navigationResizeObserver = new ResizeObserver(
-        scheduleNavigationMeasurement
-      )
-      navigationResizeObserver.observe(root)
-    }
-  }
-}
-
-const refreshNavigation = () => {
-  const root = getNavigationRoot()
-  if (!root || !sectionRef.value) return
-
-  const sectionElements = Array.from(
-    root.querySelectorAll<HTMLElement>('[data-sections-nav-item="true"]')
-  )
-  isNavigationHost.value = sectionElements[0] === sectionRef.value
-
-  navigationItems.value = sectionElements.flatMap((element) => {
-    const anchorId = element.dataset.sectionAnchor
-    const target = anchorId
-      ? element.querySelector<HTMLElement>(`#${anchorId}`)
-      : null
-
-    if (!anchorId || !target) return []
-
-    return [
-      {
-        anchorId,
-        number: element.dataset.sectionNumber ?? '',
-        title: element.dataset.sectionTitle ?? '',
-        target,
-        top: Number.NaN,
-      },
-    ]
-  })
-
-  syncNavigationRuntime(root)
-  if (isNavigationHost.value) {
-    scheduleNavigationMeasurement()
-  }
-}
-
-const announceNavigationRefresh = () => {
-  window.dispatchEvent(new CustomEvent(NAVIGATION_REFRESH_EVENT))
-}
-
-const scrollToSection = (item: NavigationItem, event: MouseEvent) => {
-  activeAnchorId.value = item.anchorId
-  const measuredTop = Number.isNaN(item.top)
-    ? getPageScrollTop() + item.target.getBoundingClientRect().top
-    : item.top
-  const targetTop = measuredTop - headerOffset
-  const reduceMotion = window.matchMedia(
-    '(prefers-reduced-motion: reduce)'
-  ).matches
-
-  scrollPageTo({
-    top: Math.max(0, targetTop),
-    behavior: reduceMotion ? 'auto' : 'smooth',
-  })
-
-  const trigger = event.currentTarget as HTMLButtonElement | null
-  trigger?.blur()
-}
+const {
+  activeAnchorId,
+  announceNavigationRefresh,
+  isClient,
+  isNavigationAtPageEnd,
+  isNavigationHost,
+  navigationItems,
+  scrollToSection,
+} = useSectionNavigation({
+  eventName: 'sections-navigation:refresh',
+  itemSelector: '[data-sections-nav-item="true"]',
+  sectionRef,
+  resolveTarget: (element, anchorId) =>
+    element.querySelector<HTMLElement>(`#${anchorId}`),
+})
 
 watch(
   () => [
@@ -323,22 +139,8 @@ watch(
     props.titleEn,
     locale.value,
   ],
-  () => nextTick(announceNavigationRefresh)
+  announceNavigationRefresh
 )
-
-onMounted(() => {
-  isClient.value = true
-  window.addEventListener(NAVIGATION_REFRESH_EVENT, refreshNavigation)
-  nextTick(announceNavigationRefresh)
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener(NAVIGATION_REFRESH_EVENT, refreshNavigation)
-  stopNavigationRuntime()
-  if (activeUpdateTimer !== null) window.clearTimeout(activeUpdateTimer)
-  if (measurementFrame) window.cancelAnimationFrame(measurementFrame)
-  nextTick(announceNavigationRefresh)
-})
 </script>
 
 <style lang="less" scoped>
@@ -771,6 +573,16 @@ onBeforeUnmount(() => {
     background: color-mix(in srgb, var(--bg-color) 12%, transparent);
     opacity: 1;
     border-radius: 10px;
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s;
+
+    &.is-page-end {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transform: translateY(8px);
+      transition: opacity 0.2s ease, transform 0.2s ease,
+        visibility 0s linear 0.2s;
+    }
   }
 
   .sections-fixed-nav__line {

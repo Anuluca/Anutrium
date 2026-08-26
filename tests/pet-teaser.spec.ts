@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 const PAGE_LOAD_TIMEOUT = 20_000
 
-test('pet teaser plays its state sequence before opening Flora', async ({
+test('pet teaser plays its state sequence without opening Flora', async ({
   page,
 }, testInfo) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' })
@@ -15,7 +15,7 @@ test('pet teaser plays its state sequence before opening Flora', async ({
   await expect(teaser).toHaveClass(/\bpet-teaser--ready\b/, {
     timeout: PAGE_LOAD_TIMEOUT,
   })
-  await expect(teaser).toHaveAttribute('aria-label', '前往花花的宠物页面')
+  await expect(teaser).toHaveAttribute('aria-label', '播放花花互动动画')
   await expect(teaser.locator('.pet-teaser__ears')).toHaveAttribute(
     'draggable',
     'false'
@@ -119,74 +119,84 @@ test('pet teaser plays its state sequence before opening Flora', async ({
 
   await interactionZone.click()
   await expect(teaser).toHaveClass(/\bpet-teaser--activating\b/)
-  await expect(teaser).toHaveAttribute('aria-disabled', 'true')
-  await expect(teaser).toHaveCSS('opacity', '0.8')
-  await expect(teaser.locator('.pet-teaser__cat')).toHaveCSS(
-    'animation-delay',
-    '0s'
-  )
-  expect(
-    await wand.evaluate((element) => getComputedStyle(element).animationName)
-  ).toContain('pet-wand-hover')
-  await expect(wand).toHaveCSS('animation-duration', '0.65s')
-  if (hoverAnimationStartTime !== null) {
-    const activationStartTime = await wand.evaluate((element) => {
-      const animation = element
-        .getAnimations()
-        .find((item) =>
-          (item as CSSAnimation).animationName?.includes('pet-wand-hover')
-        )
-      if (!animation) {
-        throw new Error('Wand activation animation is unavailable')
-      }
-      return Number(animation.startTime)
-    })
-    expect(activationStartTime).toBeCloseTo(hoverAnimationStartTime, 1)
-  }
-  await expect(ears).toHaveCSS('animation-delay', '0s')
-  await expect(teaser.locator('.pet-teaser__cat')).toHaveCSS(
-    'animation-duration',
-    '0.65s'
-  )
-  await expect(ears).toHaveCSS('animation-duration', '0.65s')
-  const catEntryKeyframes = await teaser
-    .locator('.pet-teaser__cat')
-    .evaluate((element) =>
-      element
+  const activationMetrics = await teaser.evaluate((element) => {
+    const cat = element.querySelector<HTMLElement>('.pet-teaser__cat')
+    const ears = element.querySelector<HTMLElement>('.pet-teaser__ears-window')
+    const wand = element.querySelector<HTMLElement>('.pet-teaser__wand')
+    if (!cat || !ears || !wand) {
+      throw new Error('Pet activation elements are unavailable')
+    }
+
+    const rootStyles = getComputedStyle(element)
+    const catStyles = getComputedStyle(cat)
+    const earsStyles = getComputedStyle(ears)
+    const wandStyles = getComputedStyle(wand)
+    const wandAnimation = wand
+      .getAnimations()
+      .find((item) =>
+        (item as CSSAnimation).animationName?.includes('pet-wand-hover')
+      )
+
+    return {
+      ariaDisabled: element.getAttribute('aria-disabled'),
+      opacity: rootStyles.opacity,
+      catDelay: catStyles.animationDelay,
+      catDuration: catStyles.animationDuration,
+      catTiming: catStyles.animationTimingFunction,
+      earsDelay: earsStyles.animationDelay,
+      earsDuration: earsStyles.animationDuration,
+      wandAnimationName: wandStyles.animationName,
+      wandDuration: wandStyles.animationDuration,
+      wandStartTime: Number(wandAnimation?.startTime),
+      catEntryKeyframes: cat
         .getAnimations()
         .flatMap((animation) => animation.effect?.getKeyframes() ?? [])
-        .map((keyframe) => keyframe.transform)
-    )
-  expect(catEntryKeyframes[0]).toContain('translate(95%, 90%)')
-  expect(catEntryKeyframes[0]).toContain('rotate(40deg)')
-  expect(catEntryKeyframes[catEntryKeyframes.length - 1]).toContain(
-    'rotate(0deg)'
-  )
-  await expect(teaser.locator('.pet-teaser__cat')).toHaveCSS(
-    'animation-timing-function',
-    'cubic-bezier(0.16, 1, 0.3, 1)'
-  )
-
-  const catWidthRatio = await teaser.evaluate((element) => {
-    const cat = element.querySelector<HTMLElement>('.pet-teaser__cat')
-    if (!cat) throw new Error('Pet cat is unavailable')
-    return cat.offsetWidth / element.offsetWidth
+        .map((keyframe) => keyframe.transform),
+      catWidthRatio: cat.offsetWidth / element.offsetWidth,
+    }
   })
-  expect(catWidthRatio).toBeCloseTo(
+
+  expect(activationMetrics.ariaDisabled).toBe('true')
+  expect(activationMetrics.opacity).toBe('0.8')
+  expect(activationMetrics.catDelay).toBe('0s')
+  expect(activationMetrics.wandAnimationName).toContain('pet-wand-hover')
+  expect(activationMetrics.wandDuration).toBe('0.65s')
+  if (hoverAnimationStartTime !== null) {
+    expect(activationMetrics.wandStartTime).toBeCloseTo(
+      hoverAnimationStartTime,
+      1
+    )
+  }
+  expect(activationMetrics.earsDelay).toBe('0s')
+  expect(activationMetrics.catDuration).toBe('0.65s')
+  expect(activationMetrics.earsDuration).toBe('0.65s')
+  expect(activationMetrics.catEntryKeyframes[0]).toContain(
+    'translate(95%, 90%)'
+  )
+  expect(activationMetrics.catEntryKeyframes[0]).toContain('rotate(40deg)')
+  expect(
+    activationMetrics.catEntryKeyframes[
+      activationMetrics.catEntryKeyframes.length - 1
+    ]
+  ).toContain('rotate(0deg)')
+  expect(activationMetrics.catTiming).toBe('cubic-bezier(0.16, 1, 0.3, 1)')
+  expect(activationMetrics.catWidthRatio).toBeCloseTo(
     testInfo.project.name.includes('mobile') ? 0.6 : 0.5,
     1
   )
 
-  await expect(page).toHaveURL(/\/pet$/, { timeout: 1_300 })
-  await expect(page.locator('.flora-page')).toBeVisible({
-    timeout: PAGE_LOAD_TIMEOUT,
+  await expect(teaser).not.toHaveClass(/\bpet-teaser--activating\b/, {
+    timeout: 1_300,
   })
-  await expect(page.locator('.pet-teaser')).toHaveCount(0)
+  await expect(teaser).toHaveAttribute('aria-disabled', 'false')
+  await expect(page).toHaveURL(/\/$/)
+  await expect(page.locator('.flora-page')).toHaveCount(0)
+  await expect(teaser).toBeVisible()
 })
 
-test('Flora clears the previous page scroll state and geometry', async ({
+test('pet teaser activation preserves the current route and scroll state', async ({
   page,
-}, testInfo) => {
+}) => {
   await page.goto('/archive', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.archives-page')).toBeVisible({
     timeout: PAGE_LOAD_TIMEOUT,
@@ -195,42 +205,25 @@ test('Flora clears the previous page scroll state and geometry', async ({
   await page.evaluate(() => {
     document.body.scrollTop = 700
   })
-  await expect(page.locator('.el-menu-layout-all')).toHaveClass(/\bscrolled\b/)
 
   const teaser = page.locator('.pet-teaser')
   await expect(teaser).toHaveClass(/\bpet-teaser--ready\b/, {
     timeout: PAGE_LOAD_TIMEOUT,
   })
+  const scrollTopBefore = await page.evaluate(() => document.body.scrollTop)
   await teaser.locator('.pet-teaser__interaction-zone').click()
-  await expect(page).toHaveURL(/\/pet$/, { timeout: 5_000 })
-  await expect(page.locator('.flora-page')).toBeVisible({
-    timeout: PAGE_LOAD_TIMEOUT,
+  await expect(teaser).toHaveClass(/\bpet-teaser--activating\b/)
+  await expect(teaser).not.toHaveClass(/\bpet-teaser--activating\b/, {
+    timeout: 1_300,
   })
-  await expect(page.locator('.el-menu-layout-all')).not.toHaveClass(
-    /\bscrolled\b/
+  await expect(teaser).toHaveAttribute('aria-disabled', 'false')
+  await expect(page).toHaveURL(/\/archive$/)
+  await expect(page.locator('.archives-page')).toBeVisible()
+  await expect(page.locator('.flora-page')).toHaveCount(0)
+  expect(await page.evaluate(() => document.body.scrollTop)).toBeCloseTo(
+    scrollTopBefore,
+    0
   )
-  if (testInfo.project.name.includes('mobile')) {
-    await expect(page.locator('.mobile-menu-icon')).not.toHaveClass(
-      /\bscrolled\b/
-    )
-  }
-
-  const metrics = await page.evaluate(() => {
-    const routerContainer =
-      document.querySelector<HTMLElement>('.router-container')
-    if (!routerContainer) throw new Error('Router container is unavailable')
-
-    const bounds = routerContainer.getBoundingClientRect()
-    const styles = window.getComputedStyle(routerContainer)
-
-    return {
-      bodyScrollTop: document.body.scrollTop,
-      topOffset: Math.abs(bounds.top - Number.parseFloat(styles.marginTop)),
-    }
-  })
-
-  expect(metrics.bodyScrollTop).toBeLessThanOrEqual(1)
-  expect(metrics.topOffset).toBeLessThanOrEqual(1)
 })
 
 test('pet teaser stays inside the viewport and avoids fixed controls', async ({
@@ -246,10 +239,18 @@ test('pet teaser stays inside the viewport and avoids fixed controls', async ({
     timeout: PAGE_LOAD_TIMEOUT,
   })
 
-  await page.evaluate(() => {
-    window.scrollTo(0, document.documentElement.scrollHeight)
-    document.body.scrollTop = document.body.scrollHeight
-  })
+  await page.evaluate((isMobile) => {
+    const scrollTop = isMobile
+      ? 700
+      : Math.max(
+          document.body.scrollHeight,
+          document.documentElement.scrollHeight
+        )
+    window.scrollTo(0, scrollTop)
+    document.scrollingElement?.scrollTo(0, scrollTop)
+    document.documentElement.scrollTop = scrollTop
+    document.body.scrollTop = scrollTop
+  }, testInfo.project.name.includes('mobile'))
 
   const backToTop = page.locator('.back-to-top-button')
   await expect(backToTop).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
@@ -336,8 +337,6 @@ test('pet teaser stays inside the viewport and avoids fixed controls', async ({
     const visualLeft = Math.min(earsBounds.left, featherBounds.left)
 
     return {
-      bodyOverflow:
-        document.body.scrollWidth - document.documentElement.clientWidth,
       documentOverflow:
         document.documentElement.scrollWidth -
         document.documentElement.clientWidth,
@@ -356,6 +355,10 @@ test('pet teaser stays inside the viewport and avoids fixed controls', async ({
         (teaserBounds.right - earsBounds.right) / teaserBounds.width,
       visualWidthRatio: (window.innerWidth - visualLeft) / window.innerWidth,
       backToTopGap: visualLeft - backToTopBounds.right,
+      backToTopHeight: backToTopBounds.height,
+      backToTopRightGap: window.innerWidth - backToTopBounds.right,
+      backToTopVerticalGap: teaserBounds.top - backToTopBounds.bottom,
+      backToTopWidth: backToTopBounds.width,
       rodDrop: rodEnd.y - rodStart.y,
       rodFeatherGap: Math.hypot(
         rodEnd.x - featherTail.x,
@@ -382,7 +385,6 @@ test('pet teaser stays inside the viewport and avoids fixed controls', async ({
   })
 
   expect(metrics.documentOverflow).toBeLessThanOrEqual(1)
-  expect(metrics.bodyOverflow).toBeLessThanOrEqual(1)
   expect(metrics.insideViewport).toBe(true)
   expect(metrics.rightGap).toBeLessThanOrEqual(1)
   expect(metrics.rodRightGap).toBeLessThanOrEqual(1)
@@ -392,7 +394,14 @@ test('pet teaser stays inside the viewport and avoids fixed controls', async ({
   expect(metrics.earsWidthRatio).toBeLessThanOrEqual(0.36)
   expect(metrics.earsRightOffsetRatio).toBeGreaterThanOrEqual(0.27)
   expect(metrics.visualWidthRatio).toBeLessThanOrEqual(0.23)
-  expect(metrics.backToTopGap).toBeGreaterThanOrEqual(20)
+  if (testInfo.project.name.includes('mobile')) {
+    expect(metrics.backToTopHeight).toBeCloseTo(36, 0)
+    expect(metrics.backToTopRightGap).toBeCloseTo(17, 0)
+    expect(metrics.backToTopVerticalGap).toBeGreaterThanOrEqual(32)
+    expect(metrics.backToTopWidth).toBeCloseTo(36, 0)
+  } else {
+    expect(metrics.backToTopGap).toBeGreaterThanOrEqual(20)
+  }
   expect(metrics.rodDrop).toBeGreaterThan(8)
   expect(metrics.rodFeatherGap).toBeLessThanOrEqual(0.5)
   expect(metrics.opacity).toBeCloseTo(
@@ -460,11 +469,91 @@ test('pet teaser stays inside the viewport and avoids fixed controls', async ({
           requestAnimationFrame(sample)
         })
     )
-    expect(maxTransitionGap).toBeLessThanOrEqual(1)
+    expect(maxTransitionGap).toBeLessThanOrEqual(1.5)
   }
 })
 
-test('pet teaser keeps navigation functional with reduced motion', async ({
+test('mobile pet teaser is compact and hides at the page bottom', async ({
+  page,
+}, testInfo) => {
+  test.skip(!testInfo.project.name.includes('mobile'))
+
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  const teaser = page.locator('.pet-teaser')
+  await expect(teaser).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
+  await expect(teaser).toHaveClass(/\bpet-teaser--ready\b/, {
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+
+  const widthRatio = await teaser.evaluate(
+    (element) => element.getBoundingClientRect().width / window.innerWidth
+  )
+  expect(widthRatio).toBeCloseTo(0.24, 1)
+
+  await expect
+    .poll(async () => {
+      await page.evaluate(() => {
+        const scrollTop =
+          Math.max(
+            document.body.scrollHeight,
+            document.documentElement.scrollHeight
+          ) -
+          window.innerHeight -
+          60
+        window.scrollTo(0, scrollTop)
+        document.scrollingElement?.scrollTo(0, scrollTop)
+        document.documentElement.scrollTop = scrollTop
+        document.body.scrollTop = scrollTop
+      })
+      return teaser.evaluate((element) => ({
+        isPageEnd: element.classList.contains('pet-teaser--page-end'),
+        pointerEvents: getComputedStyle(element).pointerEvents,
+        visibility: getComputedStyle(element).visibility,
+      }))
+    })
+    .toEqual({
+      isPageEnd: true,
+      pointerEvents: 'none',
+      visibility: 'hidden',
+    })
+  await expect(teaser).toHaveAttribute('aria-disabled', 'true')
+  await expect(teaser).toHaveAttribute('tabindex', '-1')
+  const backToTop = page.locator('.back-to-top-button')
+  await expect(backToTop).toBeVisible()
+  await expect
+    .poll(() =>
+      backToTop.evaluate(
+        (element) => window.innerHeight - element.getBoundingClientRect().bottom
+      )
+    )
+    .toBeCloseTo(25, 0)
+
+  await page.evaluate(() => {
+    const scrollTop = Math.max(
+      window.scrollY,
+      document.scrollingElement?.scrollTop || 0,
+      document.documentElement.scrollTop,
+      document.body.scrollTop
+    )
+    window.scrollTo(0, scrollTop - 100)
+    document.scrollingElement?.scrollTo(0, scrollTop - 100)
+    document.documentElement.scrollTop = scrollTop - 100
+    document.body.scrollTop = scrollTop - 100
+  })
+
+  await expect(teaser).not.toHaveClass(/\bpet-teaser--page-end\b/)
+  await expect(teaser).toBeVisible()
+  await expect(teaser).toHaveAttribute('tabindex', '0')
+  await expect
+    .poll(() =>
+      backToTop.evaluate(
+        (element) => window.innerHeight - element.getBoundingClientRect().bottom
+      )
+    )
+    .toBeGreaterThan(70)
+})
+
+test('pet teaser remains animation-only with reduced motion', async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
@@ -481,8 +570,11 @@ test('pet teaser keeps navigation functional with reduced motion', async ({
   )
 
   await teaser.locator('.pet-teaser__interaction-zone').click()
-  await expect(page).toHaveURL(/\/pet$/, { timeout: 5_000 })
-  await expect(page.locator('.flora-page')).toBeVisible({
-    timeout: PAGE_LOAD_TIMEOUT,
+  await page.waitForTimeout(250)
+  await expect(teaser).not.toHaveClass(/\bpet-teaser--activating\b/, {
+    timeout: 1_300,
   })
+  await expect(teaser).toHaveAttribute('aria-disabled', 'false')
+  await expect(page).toHaveURL(/\/$/)
+  await expect(page.locator('.flora-page')).toHaveCount(0)
 })

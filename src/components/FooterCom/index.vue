@@ -2,14 +2,15 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import { Message } from '@element-plus/icons-vue'
 import { ElLoading } from 'element-plus'
 
-import githubImg from '@/assets/img/github_profile.png'
-import twitterImg from '@/assets/img/twitter_profile.png'
 import TextRoll from '@/components/TextRoll/index.vue'
 import ThemeToggle from '@/components/ThemeToggle/index.vue'
-import type { ContactLink, ContactType } from '@/locales/modules/contactLinks'
+import {
+  type ContactLink,
+  FOOTER_SOCIAL_ORDER,
+  type FooterSocialType,
+} from '@/locales/modules/contactLinks'
 import { visualState } from '@/stores'
 import { persistLocale, type SiteLocale } from '@/utils/locale'
 
@@ -18,10 +19,9 @@ import './index.less'
 import 'element-plus/es/components/loading/style/css'
 
 interface SocialItem {
-  type: Extract<ContactType, 'TWITTER' | 'BILIBILI' | 'GITHUB' | 'MAIL'>
+  type: FooterSocialType
   label: string
   href: string
-  image?: string
 }
 
 interface BottomLineItem {
@@ -38,16 +38,9 @@ interface BottomLineData {
   recommand: BottomLineItem[]
 }
 
-const BILIBILI_IMG = 'https://assets.anuluca.com/other/bilibili_profile.jpg'
-const props = defineProps({
-  entryActive: {
-    type: Boolean,
-    default: false,
-  },
+const props = withDefaults(defineProps<{ entryActive?: boolean }>(), {
+  entryActive: false,
 })
-
-const WEIBO_WIDGET_URL =
-  'https://widget.weibo.com/weiboshow/index.php?language=&width=0&height=520&fansRow=1&ptype=1&speed=0&skin=10&isTitle=1&noborder=1&isWeibo=1&isFans=1&uid=7738638501&verifier=4838f435&dpc=1'
 
 const { locale, tm } = useI18n()
 const router = useRouter()
@@ -60,61 +53,44 @@ const bottomLineData = computed(
 const contactLinks = computed(
   () => tm('contactLinks') as unknown as ContactLink[]
 )
-const getContactLink = (type: ContactType) =>
-  contactLinks.value.find((item) => item.type === type)
-const socialItems = computed<SocialItem[]>(() => [
-  {
-    type: 'TWITTER',
-    label: 'X / TWITTER',
-    href: getContactLink('TWITTER')!.href,
-    image: twitterImg,
-  },
-  {
-    type: 'BILIBILI',
-    label: 'BILIBILI',
-    href: getContactLink('BILIBILI')!.href,
-    image: BILIBILI_IMG,
-  },
-  {
-    type: 'GITHUB',
-    label: 'GITHUB',
-    href: getContactLink('GITHUB')!.href,
-    image: githubImg,
-  },
-  {
-    type: 'MAIL',
-    label: 'MAIL',
-    href: getContactLink('MAIL')!.href,
-  },
-])
-const mailItem = computed(
-  () => socialItems.value.find((item) => item.type === 'MAIL')!
+const contactLinkMap = computed(
+  () => new Map(contactLinks.value.map((link) => [link.type, link]))
 )
-const weiboProfileUrl = computed(() => getContactLink('WEIBO')!.href)
+const socialItems = computed<SocialItem[]>(() =>
+  FOOTER_SOCIAL_ORDER.map((type) => {
+    const link = contactLinkMap.value.get(type)
+
+    if (!link) throw new Error(`Missing localized footer link: ${type}`)
+
+    return {
+      type,
+      label: type === 'TWITTER' ? 'X / TWITTER' : type,
+      href: link.href,
+    }
+  })
+)
 const isInternalHref = (href: string) =>
   href.startsWith('/') && !href.startsWith('//')
 
 const fullFooter = computed(() => route.meta.fullFooter)
 const isMotionPaused = ref(false)
 const footerExpanded = ref(false)
-const weiboSrc = ref('')
-const dismissedSocialPreview = ref<ContactType | null>(null)
-const marqueeContent = ref<HTMLElement | null>(null)
+const marqueeTrack = ref<HTMLElement | null>(null)
 const marqueeDuration = ref('24s')
 let footerAnimationTimer: number | null = null
+let marqueeFrame: number | null = null
 let reducedMotionQuery: MediaQueryList | null = null
 let hasPlayedEntryAnimation = false
+const isDev = import.meta.env.DEV
 
 onMounted(() => {
-  nextTick(updateMarqueeDuration)
+  nextTick(scheduleMarqueeUpdate)
   if (props.entryActive) {
     nextTick(initFooterAnimation)
   }
   reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
   updateMotionState()
-  window.addEventListener('resize', updateMarqueeDuration, { passive: true })
-  window.addEventListener('blur', clearActiveSocialFocus)
-  window.addEventListener('focus', clearActiveSocialFocus)
+  window.addEventListener('resize', scheduleMarqueeUpdate, { passive: true })
   document.addEventListener('visibilitychange', updateMotionState)
   reducedMotionQuery.addEventListener('change', updateMotionState)
 })
@@ -123,9 +99,8 @@ onUnmounted(() => {
   if (footerAnimationTimer !== null) {
     window.clearTimeout(footerAnimationTimer)
   }
-  window.removeEventListener('resize', updateMarqueeDuration)
-  window.removeEventListener('blur', clearActiveSocialFocus)
-  window.removeEventListener('focus', clearActiveSocialFocus)
+  if (marqueeFrame !== null) window.cancelAnimationFrame(marqueeFrame)
+  window.removeEventListener('resize', scheduleMarqueeUpdate)
   document.removeEventListener('visibilitychange', updateMotionState)
   reducedMotionQuery?.removeEventListener('change', updateMotionState)
 })
@@ -135,28 +110,21 @@ const updateMotionState = () => {
     document.visibilityState === 'hidden' || !!reducedMotionQuery?.matches
 }
 
-const clearActiveSocialFocus = () => {
-  const activeElement = document.activeElement
-  if (
-    activeElement instanceof HTMLElement &&
-    activeElement.closest('.social-link')
-  ) {
-    activeElement.blur()
-  }
-}
-
-const dismissSocialPreview = (event: MouseEvent, type: ContactType) => {
-  const target = event.currentTarget
-  if (target instanceof HTMLElement) target.blur()
-  dismissedSocialPreview.value = type
-}
-
 const updateMarqueeDuration = () => {
-  const contentWidth = marqueeContent.value?.scrollWidth ?? 0
+  const contentWidth = (marqueeTrack.value?.scrollWidth ?? 0) / 2
   if (!contentWidth) return
 
   const duration = Math.min(52, Math.max(12, contentWidth / 46))
   marqueeDuration.value = `${duration.toFixed(2)}s`
+}
+
+const scheduleMarqueeUpdate = () => {
+  if (marqueeFrame !== null) return
+
+  marqueeFrame = window.requestAnimationFrame(() => {
+    marqueeFrame = null
+    updateMarqueeDuration()
+  })
 }
 
 const initFooterAnimation = () => {
@@ -165,6 +133,7 @@ const initFooterAnimation = () => {
   footerExpanded.value = false
 
   footerAnimationTimer = window.setTimeout(() => {
+    footerAnimationTimer = null
     footerExpanded.value = true
   }, 400)
 }
@@ -198,12 +167,6 @@ const isDarkTheme = computed({
   set: changeTheme,
 })
 
-const loadWeiboWidget = () => {
-  if (!weiboSrc.value) {
-    weiboSrc.value = WEIBO_WIDGET_URL
-  }
-}
-
 watch(
   () => props.entryActive,
   (entryActive) => {
@@ -213,7 +176,7 @@ watch(
   }
 )
 
-watch(locale, () => nextTick(updateMarqueeDuration))
+watch(locale, () => nextTick(scheduleMarqueeUpdate))
 </script>
 
 <template>
@@ -229,6 +192,7 @@ watch(locale, () => nextTick(updateMarqueeDuration))
   >
     <div class="left">
       <button
+        v-if="isDev"
         class="footer-test-entry"
         type="button"
         aria-label="打开开发测试页"
@@ -259,55 +223,32 @@ watch(locale, () => nextTick(updateMarqueeDuration))
     <div class="center">
       <div class="expand">
         <div
+          ref="marqueeTrack"
           class="marquee-wrap"
           :style="{ '--footer-marquee-duration': marqueeDuration }"
         >
-          <div ref="marqueeContent" class="marquee-content">
+          <div
+            v-for="copy in 2"
+            :key="copy"
+            class="marquee-content"
+            :aria-hidden="copy === 2 ? 'true' : undefined"
+          >
             <span class="recommend">
               <component
                 :is="isInternalHref(item.href) ? RouterLink : 'a'"
                 v-for="(item, key) in bottomLineData.recommand"
-                :key="key"
+                :key="`${copy}-${item.href}-${key}`"
                 class="recommend-link"
                 :to="isInternalHref(item.href) ? item.href : undefined"
                 :href="isInternalHref(item.href) ? undefined : item.href"
+                :tabindex="copy === 2 ? -1 : undefined"
               >
                 「
                 <span
-                  :style="[
-                    {
-                      color: item.color || '#5F9DDD',
-                      fontWeight: 600,
-                    },
-                  ]"
-                  >{{ item.title }}{{ item.sort ? `/${item.sort}` : '' }}</span
-                >
-                」
-                <span class="recommend-date">{{ item.date }}</span>
-                &nbsp;
-              </component>
-            </span>
-            <b>{{ bottomLineData.intro }}</b>
-          </div>
-          <div class="marquee-content" aria-hidden="true">
-            <span class="recommend">
-              <component
-                :is="isInternalHref(item.href) ? RouterLink : 'a'"
-                v-for="(item, key) in bottomLineData.recommand"
-                :key="key"
-                class="recommend-link"
-                :to="isInternalHref(item.href) ? item.href : undefined"
-                :href="isInternalHref(item.href) ? undefined : item.href"
-                tabindex="-1"
-              >
-                「
-                <span
-                  :style="[
-                    {
-                      color: item.color || '#5F9DDD',
-                      fontWeight: 600,
-                    },
-                  ]"
+                  :style="{
+                    color: item.color || '#5F9DDD',
+                    fontWeight: 600,
+                  }"
                   >{{ item.title }}{{ item.sort ? `/${item.sort}` : '' }}</span
                 >
                 」
@@ -322,129 +263,23 @@ watch(locale, () => nextTick(updateMarqueeDuration))
     </div>
 
     <div class="right">
-      <div class="text-links">
+      <nav class="text-links" aria-label="页尾社交平台">
         <span
-          v-for="social in socialItems.slice(0, 1)"
+          v-for="social in socialItems"
           :key="social.type"
           class="social-link"
-          :class="[
-            `social-link--${social.type.toLowerCase()}`,
-            {
-              'is-preview-dismissed': dismissedSocialPreview === social.type,
-            },
-          ]"
-          @mouseleave="dismissedSocialPreview = null"
         >
-          <a
-            class="social-preview"
-            :href="social.href"
-            :target="social.type === 'MAIL' ? undefined : '_blank'"
-            :rel="social.type === 'MAIL' ? undefined : 'noopener noreferrer'"
-            :aria-label="`${social.label} profile`"
-            @click="dismissSocialPreview($event, social.type)"
-          >
-            <img :src="social.image" :alt="`${social.label} profile`" />
-          </a>
           <a
             class="social-trigger"
             :href="social.href"
+            :aria-label="social.label"
             :target="social.type === 'MAIL' ? undefined : '_blank'"
             :rel="social.type === 'MAIL' ? undefined : 'noopener noreferrer'"
-            @click="dismissSocialPreview($event, social.type)"
           >
             <TextRoll center :text="social.label" />
           </a>
         </span>
-        <span
-          class="social-link social-link--weibo no-cursor"
-          :class="{
-            'is-preview-dismissed': dismissedSocialPreview === 'WEIBO',
-          }"
-          @mouseenter="loadWeiboWidget"
-          @mouseleave="dismissedSocialPreview = null"
-          @focusin="loadWeiboWidget"
-        >
-          <div class="social-preview social-preview--weibo">
-            <iframe
-              v-if="weiboSrc"
-              title="Anuluca Weibo"
-              class="share_self"
-              frameborder="0"
-              scrolling="no"
-              :src="weiboSrc"
-            />
-          </div>
-          <a
-            class="social-trigger"
-            :href="weiboProfileUrl"
-            target="_blank"
-            rel="noopener noreferrer"
-            @click="dismissSocialPreview($event, 'WEIBO')"
-          >
-            <TextRoll center text="WEIBO" />
-          </a>
-        </span>
-        <span
-          v-for="social in socialItems.filter(
-            (item) => item.type !== 'TWITTER' && item.type !== 'MAIL'
-          )"
-          :key="social.type"
-          class="social-link"
-          :class="[
-            `social-link--${social.type.toLowerCase()}`,
-            {
-              'is-preview-dismissed': dismissedSocialPreview === social.type,
-            },
-          ]"
-          @mouseleave="dismissedSocialPreview = null"
-        >
-          <a
-            class="social-preview"
-            :href="social.href"
-            target="_blank"
-            rel="noopener noreferrer"
-            :aria-label="`${social.label} profile`"
-            @click="dismissSocialPreview($event, social.type)"
-          >
-            <img :src="social.image" :alt="`${social.label} profile`" />
-          </a>
-          <a
-            class="social-trigger"
-            :href="social.href"
-            target="_blank"
-            rel="noopener noreferrer"
-            @click="dismissSocialPreview($event, social.type)"
-          >
-            <TextRoll center :text="social.label" />
-          </a>
-        </span>
-        <span
-          class="social-link social-link--mail"
-          :class="{
-            'is-preview-dismissed': dismissedSocialPreview === 'MAIL',
-          }"
-          @mouseleave="dismissedSocialPreview = null"
-        >
-          <a
-            class="social-preview"
-            :href="mailItem.href"
-            aria-label="Open mail client"
-            @click="dismissSocialPreview($event, 'MAIL')"
-          >
-            <span class="mail-preview__icon" aria-hidden="true">
-              <el-icon><Message /></el-icon>
-            </span>
-            <span class="mail-preview__content">tilucario@outlook.com</span>
-          </a>
-          <a
-            class="social-trigger"
-            :href="mailItem.href"
-            @click="dismissSocialPreview($event, 'MAIL')"
-          >
-            <TextRoll center text="MAIL" />
-          </a>
-        </span>
-      </div>
+      </nav>
       <button class="mark" type="button" @click="router.push('/')">
         LAST UPDATE： {{ bottomLineData.lastUpdate }}
       </button>
