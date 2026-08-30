@@ -27,7 +27,7 @@ const homeDynamic = {
         zhCn: '作品',
         en: 'works',
       },
-      link: '/works',
+      link: '/archive',
     },
   ],
   highlight: {

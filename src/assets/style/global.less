@@ -1769,3 +1769,14 @@ body .el-message-box {
     transition-duration: 0.001ms !important;
   }
 }
+
+// Keep the body shell padding ahead of vendor reset rules in production builds.
+html body {
+  padding: 0 60px;
+}
+
+@media screen and (max-aspect-ratio: @ratio-threshold) {
+  html body {
+    padding: 0;
+  }
+}
