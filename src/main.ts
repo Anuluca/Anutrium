@@ -11,6 +11,7 @@ import 'reset-css'
 import 'element-plus/theme-chalk/dark/css-vars.css'
 import 'lenis/dist/lenis.css'
 import '@/assets/style/global.less'
+import '@/assets/style/inspira.css'
 
 const restoreScrollAfterLayout = (position: ScrollToOptions) =>
   new Promise<ScrollToOptions>((resolve) => {

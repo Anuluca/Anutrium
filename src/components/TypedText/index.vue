@@ -1,6 +1,11 @@
 <template>
   <span class="typed-text" :aria-label="text">
-    <span class="typed-text__ghost" aria-hidden="true">{{ text }}</span>
+    <span class="typed-text__ghost" aria-hidden="true">
+      {{ text
+      }}<span v-if="keepCursor" class="typed-text__cursor-reserve">{{
+        cursor
+      }}</span>
+    </span>
     <span class="typed-text__active" aria-hidden="true">
       <span>{{ visibleText }}</span>
       <span v-if="showCursor" class="typed-text__cursor">{{ cursor }}</span>
@@ -19,6 +24,7 @@ const props = withDefaults(
     cursor?: string
     keepCursor?: boolean
     start?: boolean
+    direction?: 'type' | 'delete'
   }>(),
   {
     delay: 0,
@@ -26,8 +32,10 @@ const props = withDefaults(
     cursor: '_',
     keepCursor: false,
     start: true,
+    direction: 'type',
   }
 )
+const emit = defineEmits<{ (event: 'complete'): void }>()
 
 const visibleText = ref('')
 const isComplete = ref(false)
@@ -59,16 +67,20 @@ const clearTimers = () => {
 const typeNext = (characters: string[], index: number) => {
   if (index >= characters.length) {
     isComplete.value = true
+    emit('complete')
     return
   }
 
-  visibleText.value += characters[index]
+  visibleText.value =
+    props.direction === 'delete'
+      ? characters.slice(0, characters.length - index - 1).join('')
+      : visibleText.value + characters[index]
   typeTimer = setTimeout(() => typeNext(characters, index + 1), props.speed)
 }
 
 const startTyping = () => {
   clearTimers()
-  visibleText.value = ''
+  visibleText.value = props.direction === 'delete' ? props.text : ''
   isComplete.value = false
   hasStarted.value = false
 
@@ -100,9 +112,11 @@ const startTyping = () => {
   }, props.delay)
 }
 
-watch(() => [props.text, props.delay, props.speed, props.start], startTyping, {
-  immediate: true,
-})
+watch(
+  () => [props.text, props.delay, props.speed, props.start, props.direction],
+  startTyping,
+  { immediate: true }
+)
 
 onBeforeUnmount(clearTimers)
 </script>
@@ -133,6 +147,10 @@ onBeforeUnmount(clearTimers)
 .typed-text__cursor {
   display: inline-block;
   animation: typedTextCursor 0.82s steps(1, end) infinite;
+}
+
+.typed-text__cursor-reserve {
+  visibility: hidden;
 }
 
 @keyframes typedTextCursor {

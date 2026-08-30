@@ -90,6 +90,22 @@ export default defineConfig({
           if (normalizedId.includes('/three/')) return 'vendor-three'
           if (normalizedId.includes('/swiper/')) return 'vendor-swiper'
           if (
+            normalizedId.includes('/motion-v/') ||
+            normalizedId.includes('/framer-motion/') ||
+            normalizedId.includes('/motion-dom/') ||
+            normalizedId.includes('/motion-utils/') ||
+            normalizedId.includes('/hey-listen/')
+          ) {
+            return 'vendor-motion'
+          }
+          if (
+            normalizedId.includes('/@inspira-ui/') ||
+            normalizedId.includes('/tailwind-merge/') ||
+            normalizedId.includes('/clsx/')
+          ) {
+            return 'vendor-inspira-ui'
+          }
+          if (
             normalizedId.includes('/element-plus/') ||
             normalizedId.includes('/@element-plus/')
           ) {

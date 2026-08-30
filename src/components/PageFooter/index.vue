@@ -6,6 +6,8 @@
       class="bottom-text"
       :class="{ 'motion-paused': isMotionPaused }"
       :style="footerStyle"
+      :aria-hidden="props.interactive ? undefined : 'true'"
+      :inert="!props.interactive"
       @mouseenter="handleLogoMouseEnter"
       @mousemove="handleLogoMouseMove"
       @mouseleave="handleLogoMouseLeave"
@@ -88,6 +90,14 @@ import Logo from '@/components/Logo/index.vue'
 
 const router = useRouter()
 const attrs = useAttrs()
+const props = withDefaults(
+  defineProps<{
+    interactive?: boolean
+  }>(),
+  {
+    interactive: true,
+  }
+)
 
 defineOptions({ inheritAttrs: false })
 

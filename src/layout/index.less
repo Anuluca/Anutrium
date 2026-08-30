@@ -34,27 +34,6 @@
     }
   }
 
-  .page-scroll-progress.no-rem {
-    position: fixed;
-    top: 3.37rem;
-    right: 0;
-    z-index: 1200;
-    width: 4px;
-    height: calc(100dvh - 3.37rem);
-    pointer-events: none;
-
-    &::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      right: 0;
-      width: 100%;
-      height: var(--scroll-progress, 0%);
-      background: @primary-pink;
-      opacity: 0.5;
-    }
-  }
-
   .el-menu-layout-all {
     height: 3.33333rem;
     padding: 1.33333rem;
@@ -82,20 +61,19 @@
       z-index: 0;
       inset: 0;
       pointer-events: none;
-      opacity: 0;
+      opacity: var(--header-scroll-progress, 0);
       border-bottom: 1px solid transparent;
       background: transparent;
       box-shadow: none;
-      transition: opacity 0.24s ease, background-color 0.24s ease,
-        border-color 0.24s ease, box-shadow 0.24s ease;
+      transition: background-color 0.24s ease, border-color 0.24s ease,
+        box-shadow 0.24s ease;
     }
 
-    &.scrolled {
+    &.scroll-layout-active {
       // 恢复滚动后的实际盒模型，避免保留初始顶部留白。
       padding-top: 1.5rem;
 
       &::before {
-        opacity: 1;
         border-bottom-color: rgba(66, 66, 66, 0.542);
         background: linear-gradient(
           to bottom,
@@ -103,22 +81,9 @@
           rgba(16, 5, 11, 0.78) 48%,
           transparent 100%
         );
-        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.7);
+        box-shadow: 0 7px 18px rgba(0, 0, 0, 0.5);
         -webkit-backdrop-filter: blur(4px);
         backdrop-filter: blur(4px);
-      }
-
-      &:hover {
-        &::before {
-          border-bottom-color: #f9446862;
-          background: linear-gradient(
-              to bottom,
-              rgba(0, 0, 0, 0.88) 0%,
-              rgba(0, 0, 0, 0.58) 48%,
-              transparent 100%
-            ),
-            rgba(226, 52, 87, 0.141);
-        }
       }
 
       .logo-box {
@@ -131,6 +96,19 @@
 
       .el-menu {
         margin-top: 1px;
+      }
+    }
+
+    &.scrolled:hover {
+      &::before {
+        border-bottom-color: #f9446862;
+        background: linear-gradient(
+            to bottom,
+            rgba(0, 0, 0, 0.88) 0%,
+            rgba(0, 0, 0, 0.58) 48%,
+            transparent 100%
+          ),
+          rgba(226, 52, 87, 0.141);
       }
     }
 
@@ -510,17 +488,27 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: background-color 0.5s ease, box-shadow 0.5s ease;
+    transition: none;
     border: 0px solid #00000000;
     z-index: 4000;
     padding: 0;
     color: inherit;
     background-color: transparent;
 
-    &.scrolled {
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background-color: rgba(27, 27, 27, 0.308);
+      box-shadow: none;
+      opacity: var(--header-scroll-progress, 0);
+      pointer-events: none;
+    }
+
+    &.scroll-layout-active {
       top: 0.6rem;
       right: 0.66667rem;
-      background-color: rgba(27, 27, 27, 0.308);
 
       .hamburger {
         zoom: 0.9;
@@ -531,6 +519,7 @@
       width: 30px;
       height: 22px;
       position: relative;
+      z-index: 1;
 
       span {
         display: block;
@@ -845,7 +834,7 @@
 .light {
   .layout-page {
     .el-menu-layout-all {
-      &.scrolled {
+      &.scroll-layout-active {
         &::before {
           border-bottom-color: rgba(0, 0, 0, 0.08);
           background: linear-gradient(
@@ -854,26 +843,26 @@
             rgba(255, 255, 255, 0.74) 62%,
             rgba(255, 255, 255, 0) 100%
           );
-          box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+          box-shadow: 0 3px 12px rgba(0, 0, 0, 0.16);
         }
+      }
 
-        &:hover {
-          &::before {
-            border-bottom-color: rgba(226, 52, 86, 0.24);
-            background: linear-gradient(
-                to bottom,
-                rgba(255, 255, 255, 0.94) 0%,
-                rgba(255, 255, 255, 0.78) 62%,
-                rgba(255, 255, 255, 0) 100%
-              ),
-              rgba(226, 52, 86, 0.06);
-          }
+      &.scrolled:hover {
+        &::before {
+          border-bottom-color: rgba(226, 52, 86, 0.24);
+          background: linear-gradient(
+              to bottom,
+              rgba(255, 255, 255, 0.94) 0%,
+              rgba(255, 255, 255, 0.78) 62%,
+              rgba(255, 255, 255, 0) 100%
+            ),
+            rgba(226, 52, 86, 0.06);
         }
       }
     }
 
     .mobile-menu-icon {
-      &.scrolled {
+      &::before {
         background: rgba(255, 255, 255, 0.78);
         border: 0px solid rgba(0, 0, 0, 0.08);
         box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
@@ -937,16 +926,11 @@
   }
 
   .layout-page {
-    .page-scroll-progress.no-rem {
-      top: 54px;
-      height: calc(100dvh - 54px);
-    }
-
     .el-menu-layout-all {
       padding: 0 0.33333rem;
       padding-top: max(0.46667rem, env(safe-area-inset-top));
 
-      &.scrolled {
+      &.scroll-layout-active {
         padding: 0.33333rem 0;
         padding-top: max(0.66667rem, env(safe-area-inset-top));
       }

@@ -5,6 +5,7 @@
     class="cursor-position"
     :class="{
       'is-hidden': shouldHideCursor || !hasPointerPosition || !isPointerInside,
+      'is-loading': isLoading,
     }"
   >
     <div class="cursor-scale" :class="{ 'is-clicked': isClicked }">
@@ -15,12 +16,16 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
+import { cursorState } from '@/stores'
+
 const props = defineProps({
   enabled: {
     type: Boolean,
     default: true,
   },
 })
+
+const cursorStateStore = cursorState()
 
 const HIDDEN_CURSOR_CLASSNAMES = ['no-cursor', 'hide-cursor', 'cursor-none']
 const INTERACTIVE_CURSOR_SELECTOR =
@@ -48,6 +53,7 @@ let finePointerQuery = null
 const shouldTrackCursor = computed(() => {
   return props.enabled && hasFinePointer.value
 })
+const isLoading = computed(() => cursorStateStore.isLoading)
 
 const shouldAnimateCursor = computed(
   () => shouldTrackCursor.value && isPageVisible.value
@@ -109,6 +115,7 @@ const onMouseMove = (e) => {
 
 const onPointerLeaveViewport = () => {
   isPointerInside.value = false
+  isClicked.value = false
   syncNativeCursor()
 }
 
@@ -122,8 +129,8 @@ const onWindowMouseOut = (event) => {
   onPointerLeaveViewport()
 }
 
-const onMouseDown = () => (isClicked.value = true)
-const onMouseUp = () => (isClicked.value = false)
+const onPointerDown = () => (isClicked.value = true)
+const onPointerUp = () => (isClicked.value = false)
 
 const syncCursorPosition = () => {
   if (!cursorElement.value) return
@@ -180,8 +187,9 @@ const addPointerListeners = () => {
   if (hasPointerListeners) return
 
   window.addEventListener('mousemove', onMouseMove)
-  window.addEventListener('mousedown', onMouseDown)
-  window.addEventListener('mouseup', onMouseUp)
+  window.addEventListener('pointerdown', onPointerDown, true)
+  window.addEventListener('pointerup', onPointerUp, true)
+  window.addEventListener('pointercancel', onPointerUp, true)
   document.documentElement.addEventListener(
     'mouseleave',
     onPointerLeaveViewport
@@ -195,8 +203,9 @@ const removePointerListeners = () => {
   if (!hasPointerListeners) return
 
   window.removeEventListener('mousemove', onMouseMove)
-  window.removeEventListener('mousedown', onMouseDown)
-  window.removeEventListener('mouseup', onMouseUp)
+  window.removeEventListener('pointerdown', onPointerDown, true)
+  window.removeEventListener('pointerup', onPointerUp, true)
+  window.removeEventListener('pointercancel', onPointerUp, true)
   document.documentElement.removeEventListener(
     'mouseleave',
     onPointerLeaveViewport
@@ -286,10 +295,10 @@ watch(shouldAnimateCursor, (canAnimate) => {
 }
 
 .cursor-scale {
-  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: transform 0.24s cubic-bezier(0.34, 1.56, 0.64, 1);
 
   &.is-clicked {
-    transform: scale(1.5);
+    transform: scale(1.3);
   }
 }
 
@@ -314,6 +323,52 @@ watch(shouldAnimateCursor, (canAnimate) => {
     clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
 
     animation: spin 2s linear infinite;
+  }
+}
+
+.cursor-position.is-loading {
+  .cursor-scale {
+    transform: none;
+    animation: cursor-loading-scale 1.2s ease-in-out infinite;
+  }
+
+  .cursor-shape,
+  .cursor-shape.is-active {
+    width: @follower-size;
+    height: @follower-size;
+    margin-top: -(@follower-size / 2);
+    margin-left: -(@follower-size / 2);
+    border-radius: 50%;
+    clip-path: none;
+    opacity: 0.5;
+    transition: none;
+    animation: cursor-loading-opacity 1.2s ease-in-out infinite;
+  }
+}
+
+@keyframes cursor-loading-scale {
+  0%,
+  50%,
+  100% {
+    transform: scale(0.65);
+  }
+
+  25%,
+  75% {
+    transform: scale(1.15);
+  }
+}
+
+@keyframes cursor-loading-opacity {
+  0%,
+  50%,
+  100% {
+    opacity: 0.5;
+  }
+
+  25%,
+  75% {
+    opacity: 0.9;
   }
 }
 

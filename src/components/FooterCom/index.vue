@@ -4,25 +4,13 @@ import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { ElLoading } from 'element-plus'
 
-import TextRoll from '@/components/TextRoll/index.vue'
 import ThemeToggle from '@/components/ThemeToggle/index.vue'
-import {
-  type ContactLink,
-  FOOTER_SOCIAL_ORDER,
-  type FooterSocialType,
-} from '@/locales/modules/contactLinks'
 import { visualState } from '@/stores'
 import { persistLocale, type SiteLocale } from '@/utils/locale'
 
 import './index.less'
 
 import 'element-plus/es/components/loading/style/css'
-
-interface SocialItem {
-  type: FooterSocialType
-  label: string
-  href: string
-}
 
 interface BottomLineItem {
   title: string
@@ -50,25 +38,6 @@ const visualStateStore = visualState()
 const bottomLineData = computed(
   () => tm('bottomLine') as unknown as BottomLineData
 )
-const contactLinks = computed(
-  () => tm('contactLinks') as unknown as ContactLink[]
-)
-const contactLinkMap = computed(
-  () => new Map(contactLinks.value.map((link) => [link.type, link]))
-)
-const socialItems = computed<SocialItem[]>(() =>
-  FOOTER_SOCIAL_ORDER.map((type) => {
-    const link = contactLinkMap.value.get(type)
-
-    if (!link) throw new Error(`Missing localized footer link: ${type}`)
-
-    return {
-      type,
-      label: type === 'TWITTER' ? 'X / TWITTER' : type,
-      href: link.href,
-    }
-  })
-)
 const isInternalHref = (href: string) =>
   href.startsWith('/') && !href.startsWith('//')
 
@@ -77,6 +46,7 @@ const isMotionPaused = ref(false)
 const footerExpanded = ref(false)
 const marqueeTrack = ref<HTMLElement | null>(null)
 const marqueeDuration = ref('24s')
+const marqueeDistance = ref('0px')
 let footerAnimationTimer: number | null = null
 let marqueeFrame: number | null = null
 let reducedMotionQuery: MediaQueryList | null = null
@@ -116,6 +86,7 @@ const updateMarqueeDuration = () => {
 
   const duration = Math.min(52, Math.max(12, contentWidth / 46))
   marqueeDuration.value = `${duration.toFixed(2)}s`
+  marqueeDistance.value = `${contentWidth}px`
 }
 
 const scheduleMarqueeUpdate = () => {
@@ -225,7 +196,10 @@ watch(locale, () => nextTick(scheduleMarqueeUpdate))
         <div
           ref="marqueeTrack"
           class="marquee-wrap"
-          :style="{ '--footer-marquee-duration': marqueeDuration }"
+          :style="{
+            '--footer-marquee-duration': marqueeDuration,
+            '--footer-marquee-distance': marqueeDistance,
+          }"
         >
           <div
             v-for="copy in 2"
@@ -263,23 +237,6 @@ watch(locale, () => nextTick(scheduleMarqueeUpdate))
     </div>
 
     <div class="right">
-      <nav class="text-links" aria-label="页尾社交平台">
-        <span
-          v-for="social in socialItems"
-          :key="social.type"
-          class="social-link"
-        >
-          <a
-            class="social-trigger"
-            :href="social.href"
-            :aria-label="social.label"
-            :target="social.type === 'MAIL' ? undefined : '_blank'"
-            :rel="social.type === 'MAIL' ? undefined : 'noopener noreferrer'"
-          >
-            <TextRoll center :text="social.label" />
-          </a>
-        </span>
-      </nav>
       <button class="mark" type="button" @click="router.push('/')">
         LAST UPDATE： {{ bottomLineData.lastUpdate }}
       </button>

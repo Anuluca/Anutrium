@@ -1,3 +1,4 @@
+import cursorState from './cursorState'
 import visualState from './visualState'
 
-export { visualState }
+export { cursorState, visualState }

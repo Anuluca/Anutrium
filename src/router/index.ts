@@ -7,6 +7,8 @@ import type {
 import NProgress from 'nprogress'
 
 import i18n from '../locales'
+import { cursorState } from '../stores'
+import { ROUTE_CURSOR_LOADING_SOURCE } from '../stores/cursorState'
 
 import 'nprogress/nprogress.css'
 
@@ -16,6 +18,15 @@ const ROUTE_CONFIG = {
   SITE_URL: 'https://anutrium.com',
 } as const
 const routeComponentLoads = new Map<string, Promise<unknown>>()
+let routeCursorFallbackTimer: number | null = null
+
+export const finishRouteCursorLoading = () => {
+  if (typeof window !== 'undefined' && routeCursorFallbackTimer !== null) {
+    window.clearTimeout(routeCursorFallbackTimer)
+    routeCursorFallbackTimer = null
+  }
+  cursorState().stopLoading(ROUTE_CURSOR_LOADING_SOURCE)
+}
 
 const preloadRouteComponent = async (routeName: unknown) => {
   if (typeof routeName !== 'string') return
@@ -582,7 +593,7 @@ export const syncSeoMeta = (to: RouteLocationNormalizedLoaded) => {
 export const installRouterGuards = (router: Router) => {
   if (typeof document !== 'undefined') installRouteIntentPreload(router)
 
-  router.beforeEach((to) => {
+  router.beforeEach((to, from) => {
     if (!router.hasRoute(to.name)) {
       if (to.path !== ROUTE_CONFIG.NOT_FOUND_PATH) {
         return { path: ROUTE_CONFIG.NOT_FOUND_PATH }
@@ -590,6 +601,10 @@ export const installRouterGuards = (router: Router) => {
     }
 
     if (typeof document !== 'undefined') {
+      if (from.matched.length > 0 && to.fullPath !== from.fullPath) {
+        finishRouteCursorLoading()
+        cursorState().startLoading(ROUTE_CURSOR_LOADING_SOURCE)
+      }
       NProgress.start()
       void preloadRouteComponent(to.name).catch(() => undefined)
     }
@@ -601,7 +616,12 @@ export const installRouterGuards = (router: Router) => {
     if (typeof window === 'undefined') return
 
     NProgress.done()
-    if (failure) return
+    if (failure) {
+      finishRouteCursorLoading()
+      return
+    }
+
+    routeCursorFallbackTimer = window.setTimeout(finishRouteCursorLoading, 1500)
 
     syncSeoMeta(to)
   })
@@ -610,5 +630,6 @@ export const installRouterGuards = (router: Router) => {
     if (typeof window === 'undefined') return
 
     NProgress.done()
+    finishRouteCursorLoading()
   })
 }

@@ -1,0 +1,14 @@
+@layer theme, utilities;
+
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities) source(none);
+@import 'tw-animate-css';
+
+@source '../../components/ui/**/*.{vue,ts}';
+
+@theme inline {
+  --color-background: var(--bg-color);
+  --color-foreground: var(--text-color);
+  --color-primary: #e23456;
+  --color-primary-foreground: #ffffff;
+}

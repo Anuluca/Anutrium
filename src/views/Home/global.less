@@ -1,4 +1,15 @@
+body:has(.home-page) {
+  .router-container {
+    margin-top: 0;
+  }
+}
+
 @media screen and (max-aspect-ratio: @ratio-threshold) {
+  body:has(.home-page) .router-container {
+    padding-right: 0;
+    padding-left: 0;
+  }
+
   .home-page {
     .hero-section {
       .hero-content {
@@ -28,8 +39,7 @@
           margin-left: auto;
           overflow: visible;
           touch-action: pan-y;
-          transform: perspective(1000px)
-            translateX(-2px)
+          transform: perspective(1000px) translateX(-2px)
             rotateX(var(--hero-rotate-x, 0deg))
             rotateY(var(--hero-rotate-y, 0deg));
 
@@ -217,6 +227,5 @@
       top: 8px;
       right: 10px;
     }
-
   }
 }

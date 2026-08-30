@@ -11,10 +11,14 @@ export default defineStore('visualState', {
     theme: Theme
     deviceType: DeviceType
     zodiacLayout: ZodiacLayout
+    homeHeaderScrollProgress: number
+    pageScrollProgressOverride: number | null
   } => ({
     theme: 'dark',
     deviceType: 'desktop',
     zodiacLayout: 'hero',
+    homeHeaderScrollProgress: 0,
+    pageScrollProgressOverride: null,
   }),
 
   actions: {
@@ -77,6 +81,21 @@ export default defineStore('visualState', {
     setZodiacLayout(layout: ZodiacLayout): void {
       if (this.zodiacLayout === layout) return
       this.zodiacLayout = layout
+    },
+
+    setHomeHeaderScrollProgress(progress: number): void {
+      const normalizedProgress = Math.min(1, Math.max(0, progress))
+      if (this.homeHeaderScrollProgress === normalizedProgress) return
+      this.homeHeaderScrollProgress = normalizedProgress
+    },
+
+    setPageScrollProgressOverride(progress: number | null): void {
+      const normalizedProgress =
+        progress === null
+          ? null
+          : Math.round(Math.min(100, Math.max(0, progress)) * 10_000) / 10_000
+      if (this.pageScrollProgressOverride === normalizedProgress) return
+      this.pageScrollProgressOverride = normalizedProgress
     },
   },
 })

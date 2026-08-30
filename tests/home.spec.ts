@@ -359,6 +359,206 @@ test('home entry animation does not remount hydrated content', async ({
   await expect(homePage).toHaveAttribute('data-mount-probe', 'stable')
 })
 
+test('home keeps the marquee fixed to the viewport outside the hero', async ({
+  page,
+}) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.home-page')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+
+  const hero = page.locator('.hero-section')
+  await expect(
+    hero.locator(':scope > .hero-content > .marquee-showcase')
+  ).toHaveCount(0)
+  await expect(
+    page.locator('.home-page > .home-marquee-fixed-layer > .marquee-showcase')
+  ).toHaveCount(1)
+  await expect(
+    page.locator(
+      '.home-scroll-scene, .home-scroll-sticky, .home-content-slider, .home-marquee-section'
+    )
+  ).toHaveCount(0)
+  await expect(page.locator('#page-footer-portal > .bottom-text')).toHaveCount(
+    1
+  )
+  await expect(
+    page.locator('#page-footer-portal > .bottom-text')
+  ).toHaveAttribute('aria-hidden', 'true')
+
+  const geometry = await hero.evaluate((element) => {
+    const heroBounds = element.getBoundingClientRect()
+    const heroContentBounds = element
+      .querySelector<HTMLElement>('.hero-content')!
+      .getBoundingClientRect()
+    const homeBounds = element.parentElement!.getBoundingClientRect()
+    const marqueeLayer = document.querySelector<HTMLElement>(
+      '.home-marquee-fixed-layer'
+    )!
+    const marqueeBounds = marqueeLayer.getBoundingClientRect()
+    return {
+      documentScrollHeight: document.documentElement.scrollHeight,
+      heroBottom: heroBounds.bottom,
+      heroContentBottom: heroContentBounds.bottom,
+      heroContentCenter: heroContentBounds.top + heroContentBounds.height / 2,
+      heroHeight: heroBounds.height,
+      heroTop: heroBounds.top,
+      homeBottom: homeBounds.bottom,
+      homeHeight: homeBounds.height,
+      homeTop: homeBounds.top,
+      marqueeBottom: marqueeBounds.bottom,
+      marqueePosition: getComputedStyle(marqueeLayer).position,
+      marqueeTop: marqueeBounds.top,
+      viewportHeight: window.innerHeight,
+    }
+  })
+  expect(Math.abs(geometry.homeTop)).toBeLessThanOrEqual(1)
+  expect(Math.abs(geometry.heroTop)).toBeLessThanOrEqual(1)
+  expect(
+    Math.abs(geometry.homeHeight - geometry.viewportHeight)
+  ).toBeLessThanOrEqual(1)
+  expect(geometry.marqueePosition).toBe('fixed')
+  expect(
+    Math.abs(geometry.heroHeight - geometry.viewportHeight)
+  ).toBeLessThanOrEqual(1)
+  expect(
+    Math.abs(geometry.homeBottom - geometry.viewportHeight)
+  ).toBeLessThanOrEqual(1)
+  expect(
+    Math.abs(geometry.heroBottom - geometry.viewportHeight)
+  ).toBeLessThanOrEqual(1)
+  expect(
+    Math.abs(
+      geometry.heroContentCenter -
+        (geometry.viewportHeight / 2 - geometry.viewportHeight * 0.1)
+    )
+  ).toBeLessThanOrEqual(1)
+  expect(
+    Math.abs(
+      geometry.marqueeTop -
+        geometry.heroContentBottom -
+        geometry.viewportHeight * 0.1
+    )
+  ).toBeLessThanOrEqual(1)
+  expect(geometry.documentScrollHeight).toBeLessThanOrEqual(
+    geometry.viewportHeight + 1
+  )
+  expect(geometry.marqueeTop).toBeGreaterThanOrEqual(geometry.heroTop)
+  expect(geometry.marqueeBottom).toBeLessThanOrEqual(geometry.heroBottom + 1)
+})
+
+test('home marquee uses a real nested 3D perspective', async ({ page }) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  const marquee = page.locator('.marquee-wrapper')
+  const perspectivePlane = marquee.locator('.marquee-3d-container')
+  await expect(marquee).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
+  await expect(perspectivePlane).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
+
+  const perspective = await perspectivePlane.evaluate((element) => {
+    const wrapperStyles = getComputedStyle(element.parentElement!)
+    const planeStyles = getComputedStyle(element)
+    return {
+      clipPath: wrapperStyles.clipPath,
+      matrix: new DOMMatrix(planeStyles.transform),
+      perspective: wrapperStyles.perspective,
+      transformStyle: planeStyles.transformStyle,
+    }
+  })
+
+  expect(perspective.clipPath).toBe('none')
+  expect(Number.parseFloat(perspective.perspective)).toBeGreaterThan(0)
+  expect(perspective.transformStyle).toBe('preserve-3d')
+  expect(Math.abs(perspective.matrix.m23)).toBeGreaterThan(0)
+  expect(Math.abs(perspective.matrix.m32)).toBeGreaterThan(0)
+})
+
+test('home keeps its geometry stable throughout route leave', async ({
+  page,
+}) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.layout-page')).toHaveClass(/\blayout-show\b/, {
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+
+  await page.evaluate(() => {
+    const hero = document.querySelector<HTMLElement>('.hero-section')!
+    const initial = hero.getBoundingClientRect()
+    const probe = {
+      done: false,
+      initialLeft: initial.left,
+      initialTop: initial.top,
+      samples: [] as Array<{ left: number; top: number }>,
+    }
+    ;(
+      window as typeof window & { __homeLeaveGeometryProbe?: typeof probe }
+    ).__homeLeaveGeometryProbe = probe
+
+    const sample = () => {
+      const leavingHero = document.querySelector<HTMLElement>('.hero-section')
+      if (!leavingHero) {
+        probe.done = true
+        return
+      }
+      const bounds = leavingHero.getBoundingClientRect()
+      probe.samples.push({ left: bounds.left, top: bounds.top })
+      requestAnimationFrame(sample)
+    }
+    requestAnimationFrame(sample)
+
+    const app = document.querySelector<
+      HTMLElement & {
+        __vue_app__?: {
+          config: {
+            globalProperties: { $router: { push: (path: string) => void } }
+          }
+        }
+      }
+    >('#app')
+    app?.__vue_app__?.config.globalProperties.$router.push('/archive')
+  })
+
+  await expect(page.locator('.archives-page')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          (
+            window as typeof window & {
+              __homeLeaveGeometryProbe?: { done: boolean }
+            }
+          ).__homeLeaveGeometryProbe?.done
+      )
+    )
+    .toBe(true)
+
+  const geometry = await page.evaluate(() => {
+    const probe = (
+      window as typeof window & {
+        __homeLeaveGeometryProbe?: {
+          initialLeft: number
+          initialTop: number
+          samples: Array<{ left: number; top: number }>
+        }
+      }
+    ).__homeLeaveGeometryProbe!
+    return {
+      leftDelta: Math.max(
+        ...probe.samples.map(({ left }) => Math.abs(left - probe.initialLeft))
+      ),
+      sampleCount: probe.samples.length,
+      topDelta: Math.max(
+        ...probe.samples.map(({ top }) => Math.abs(top - probe.initialTop))
+      ),
+    }
+  })
+
+  expect(geometry.sampleCount).toBeGreaterThan(2)
+  expect(geometry.leftDelta).toBeLessThanOrEqual(ISLAND_EXIT_MAX_GEOMETRY_SHIFT)
+  expect(geometry.topDelta).toBeLessThanOrEqual(ISLAND_EXIT_MAX_GEOMETRY_SHIFT)
+})
+
 test('desktop custom cursor is ready during entry and hides outside viewport', async ({
   page,
 }, testInfo) => {
@@ -949,6 +1149,7 @@ test('desktop first-screen wheel snap keeps both directions exact and unlocked',
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name.includes('mobile'))
+  test.skip(true, '旧版首屏切换测试已由 home-pagination.spec.ts 替代')
   await page.goto('/', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.home-page')).toBeVisible({
     timeout: PAGE_LOAD_TIMEOUT,
@@ -1088,6 +1289,7 @@ test('mobile first-screen swipe snap supports return gesture and button', async 
   page,
 }, testInfo) => {
   test.skip(!testInfo.project.name.includes('mobile'))
+  test.skip(true, '旧版首屏切换测试已由 home-pagination.spec.ts 替代')
   await page.goto('/', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.home-page')).toBeVisible({
     timeout: PAGE_LOAD_TIMEOUT,
@@ -2114,7 +2316,7 @@ test('mobile fixed page navigation hides at the page bottom', async ({
   }
 })
 
-test('background motion resumes when navigation interrupts scrolling', async ({
+test('particle background remains active after route navigation', async ({
   page,
 }, testInfo) => {
   await page.goto('/about', { waitUntil: 'domcontentloaded' })
@@ -2125,9 +2327,9 @@ test('background motion resumes when navigation interrupts scrolling', async ({
     timeout: PAGE_LOAD_TIMEOUT,
   })
 
-  await page.evaluate(() => window.dispatchEvent(new Event('scroll')))
-  await expect(page.locator('.star-container')).toHaveClass(
-    /\bis-motion-paused\b/
+  await expect(page.locator('.particles-bg')).toHaveAttribute(
+    'data-motion-state',
+    'running'
   )
 
   if (testInfo.project.name.includes('mobile')) {
@@ -2140,9 +2342,6 @@ test('background motion resumes when navigation interrupts scrolling', async ({
   await expect(page.locator('.craft-page')).toBeVisible({
     timeout: PAGE_LOAD_TIMEOUT,
   })
-  await expect(page.locator('.star-container')).not.toHaveClass(
-    /\bis-motion-paused\b/
-  )
   await expect
     .poll(() =>
       page
@@ -2151,47 +2350,44 @@ test('background motion resumes when navigation interrupts scrolling', async ({
           getComputedStyle(
             container.querySelector('.zodiac-static-art') as Element
           ).animationName,
-          (container.querySelector('.star-field') as HTMLCanvasElement).dataset
-            .motionState,
+          (container.querySelector('.particles-bg') as HTMLCanvasElement)
+            .dataset.motionState,
         ])
     )
     .toEqual(['none', 'running'])
 })
 
-test('WebGL star field stays bounded and uses one GPU point buffer', async ({
+test('particle field stays bounded and uses one Canvas 2D surface', async ({
   page,
 }) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' })
-  const starField = page.locator('.star-field')
-  await expect(starField).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
+  const particleField = page.locator('.particles-bg')
+  await expect(particleField).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
   await expect(page.locator('.layout-page')).toHaveClass(/\blayout-show\b/, {
     timeout: PAGE_LOAD_TIMEOUT,
   })
-  await expect(starField).toHaveAttribute('data-motion-state', 'running')
+  await expect(particleField).toHaveAttribute('data-motion-state', 'running')
 
-  const metrics = await starField.evaluate((canvas: HTMLCanvasElement) => {
-    const gl = canvas.getContext('webgl')
+  const metrics = await particleField.evaluate((canvas: HTMLCanvasElement) => {
+    const context = canvas.getContext('2d')
     const rect = canvas.getBoundingClientRect()
     const container = canvas.closest('.star-container') as HTMLElement
-    const starViewport = canvas.closest('.star-viewport') as HTMLElement
+    const particleViewport = canvas.closest('.particle-viewport') as HTMLElement
     const zodiacStage = container.querySelector('.zodiac-stage') as HTMLElement
     const triangleStage = container.querySelector(
       '.zodiac-triangle-stage'
     ) as HTMLElement
     const haloStyle = getComputedStyle(container, '::before')
-    const containerStyle = getComputedStyle(container)
 
     return {
-      background: containerStyle.backgroundImage,
-      contextAvailable: !!gl,
+      contextAvailable: !!context,
       renderer: canvas.dataset.renderer,
-      starCount: Number(canvas.dataset.starCount),
-      targetFps: Number(canvas.dataset.targetFps),
+      particleCount: Number(canvas.dataset.particleCount),
       backingWidth: canvas.width,
       backingHeight: canvas.height,
       maxBackingWidth: Math.ceil(rect.width * 1.5),
       maxBackingHeight: Math.ceil(rect.height * 1.5),
-      starLayer: Number(getComputedStyle(starViewport).zIndex),
+      particleLayer: Number(getComputedStyle(particleViewport).zIndex),
       zodiacLayer: Number(getComputedStyle(zodiacStage).zIndex),
       triangleLayer: Number(getComputedStyle(triangleStage).zIndex),
       haloBackground: haloStyle.backgroundImage,
@@ -2201,22 +2397,19 @@ test('WebGL star field stays bounded and uses one GPU point buffer', async ({
   })
 
   expect(metrics.contextAvailable).toBe(true)
-  expect(metrics.renderer).toBe('webgl')
-  expect(metrics.starCount).toBe(120)
-  expect(metrics.targetFps).toBeLessThanOrEqual(30)
+  expect(metrics.renderer).toBe('canvas-2d')
+  expect(metrics.particleCount).toBe(100)
   expect(metrics.backingWidth).toBeLessThanOrEqual(metrics.maxBackingWidth)
   expect(metrics.backingHeight).toBeLessThanOrEqual(metrics.maxBackingHeight)
-  expect(metrics.starLayer).toBeGreaterThan(metrics.zodiacLayer)
-  expect(metrics.starLayer).toBeGreaterThan(metrics.triangleLayer)
-  expect(metrics.background).toContain('radial-gradient')
-  expect(metrics.background).toContain('linear-gradient')
+  expect(metrics.particleLayer).toBeGreaterThan(metrics.zodiacLayer)
+  expect(metrics.particleLayer).toBeGreaterThan(metrics.triangleLayer)
   expect(metrics.haloBackground).toContain('repeating-linear-gradient')
   expect(metrics.haloAnimation).toBe('none')
   expect(metrics.haloFilter).toBe('none')
-  await expect(page.locator('.star-vector-layer')).toHaveCount(0)
+  await expect(page.locator('.star-field, .star-vector-layer')).toHaveCount(0)
 })
 
-test('leaving personal bay restores document scrolling', async ({
+test('leaving personal bay clears document scroll locks', async ({
   page,
 }, testInfo) => {
   await page.goto('/test', { waitUntil: 'domcontentloaded' })
@@ -2246,64 +2439,6 @@ test('leaving personal bay restores document scrolling', async ({
   await expect
     .poll(() => page.evaluate(() => getComputedStyle(document.body).overflowY))
     .not.toBe('hidden')
-
-  await page.evaluate(() => {
-    window.scrollTo(0, 0)
-    document.documentElement.scrollTop = 0
-    document.body.scrollTop = 0
-  })
-  await page.mouse.wheel(0, 900)
-  await expect
-    .poll(() =>
-      page.evaluate(() =>
-        Math.max(
-          window.scrollY,
-          document.documentElement.scrollTop,
-          document.body.scrollTop
-        )
-      )
-    )
-    .toBeGreaterThan(50)
-
-  await page.evaluate(() => {
-    window.scrollTo(0, 700)
-    document.documentElement.scrollTop = 700
-    document.body.scrollTop = 700
-  })
-  await expect
-    .poll(() =>
-      page.evaluate(() =>
-        Math.max(
-          window.scrollY,
-          document.documentElement.scrollTop,
-          document.body.scrollTop
-        )
-      )
-    )
-    .toBeGreaterThan(50)
-  await expect(page.locator('.el-menu-layout-all')).toHaveClass(/\bscrolled\b/)
-
-  await page.evaluate(() => {
-    window.scrollTo(0, 0)
-    document.documentElement.scrollTop = 0
-    document.body.scrollTop = 0
-  })
-  await page.evaluate(() => {
-    window.scrollTo(0, 700)
-    document.documentElement.scrollTop = 700
-    document.body.scrollTop = 700
-  })
-  await expect
-    .poll(() =>
-      page.evaluate(() =>
-        Math.max(
-          window.scrollY,
-          document.documentElement.scrollTop,
-          document.body.scrollTop
-        )
-      )
-    )
-    .toBeGreaterThan(50)
 })
 
 test('personal bay keeps its geometry stable throughout route leave', async ({

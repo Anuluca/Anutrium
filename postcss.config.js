@@ -1,5 +1,6 @@
 module.exports = {
   plugins: {
+    '@tailwindcss/postcss': {},
     'postcss-pxtorem': {
       rootValue: 30,
       propList: ['*'],
