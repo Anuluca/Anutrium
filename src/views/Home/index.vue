@@ -1033,12 +1033,17 @@ const retainActiveHomePage = (pageIndex: number) => {
   renderedHomePageIds.value = new Set(page ? [page.id] : ['hero'])
 }
 
+const syncHomeZodiacLayout = (pageIndex: number) => {
+  visualStateStore.setZodiacLayout(pageIndex === 0 ? 'hero' : 'content')
+}
+
 const syncActiveHomePage = (swiper: SwiperInstance) => {
   const activePage = swiper.activeIndex
   ensureHomePageRendered(activePage)
   activeHomePageIndex.value = activePage
   isHeroContentInactive.value = activePage !== 0
   swiper.allowSlideNext = activePage !== 0
+  syncHomeZodiacLayout(activePage)
 }
 
 const setHomeSwiper = (swiper: SwiperInstance) => {
