@@ -128,6 +128,7 @@ const DESCRIPTION_ROUTE_GROUPS: Record<string, keyof typeof PAGE_DESCRIPTIONS> =
     HTMLENTITIES: 'CRAFT',
     BASE64CODEC: 'CRAFT',
     IMAGEBASE64: 'CRAFT',
+    SLEEPING_DOGS_BULLS_AND_COWS: 'ISLAND',
     TEST: 'ISLAND',
     ISLAND_IMAGE_LOG: 'ISLAND',
     ISLAND_IMAGE_LOG_DETAIL: 'ISLAND',
@@ -495,6 +496,22 @@ export const routes: RouteConfig[] = [
       pageFooter: true,
       ifShow: false,
       noMenu: true,
+    },
+  },
+  {
+    path: '/games/sleepingdogs/bullsAndCows',
+    name: 'SLEEPING_DOGS_BULLS_AND_COWS',
+    component: () =>
+      import('@/views/Games/SleepingDogs/BullsAndCows/index.vue'),
+    meta: {
+      activeMenu: '/island',
+      titleEn: 'CAMERA HACK',
+      titleCn: '摄像头安全接入',
+      fullFooter: true,
+      pageFooter: true,
+      ifShow: false,
+      noMenu: true,
+      starBackground: 'deep-black',
     },
   },
   {

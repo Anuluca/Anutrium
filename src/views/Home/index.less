@@ -43,6 +43,11 @@
       homePageContentFadeOut 0.48s ease-out both;
     will-change: opacity, transform;
   }
+
+  &.home-placeholder-slide.is-page-content-fading .home-page-content {
+    animation: homePageContentFadeOut 0.2s ease-out both;
+    will-change: opacity;
+  }
 }
 
 .home-page-slide.home-placeholder-slide--about.swiper-slide-active {
@@ -51,8 +56,9 @@
   }
 
   .home-about-gallery {
-    animation: homeAboutGalleryEnter 0.65s cubic-bezier(0.2, 0.8, 0.2, 1)
-      0.42s backwards;
+    animation: homeAboutGalleryScaleEnter 1s
+        cubic-bezier(0.2, 0.8, 0.2, 1) 0.42s backwards,
+      homeAboutGalleryFadeEnter 0.65s ease-out 0.42s backwards;
   }
 
 }
@@ -335,7 +341,13 @@
   align-items: center;
   color: #fff;
   text-align: center;
+  transition: filter 320ms ease;
   pointer-events: none;
+}
+
+.home-placeholder-slide--about:has(.dome-gallery.is-preview-open)
+  .home-about-copy {
+  filter: brightness(0.45) blur(6px);
 }
 
 .home-placeholder-panel .home-section-title {
@@ -351,6 +363,7 @@
   font-weight: 400;
   line-height: 0.88;
   letter-spacing: 0;
+  text-shadow: 0 0.08em 0.24em rgba(0, 0, 0, 0.72);
   transform: translateX(-50%);
   white-space: nowrap;
 }
@@ -371,11 +384,42 @@
   width: fit-content;
   margin-inline: auto;
   padding: 0.08em 0.42em;
-  background: #000;
   font-size: clamp(1.8rem, 3.5vw, 3.4rem);
   font-weight: 900;
   line-height: 1.2;
+  text-shadow: 0 0.08em 0.24em rgba(0, 0, 0, 0.72);
   pointer-events: auto;
+}
+
+.home-about-intro__name {
+  --text-highlight-background: #e23456;
+
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+
+  :deep(.text-highlight__content) {
+    text-decoration: underline;
+    text-decoration-color: rgba(255, 255, 255, 0.2);
+    text-decoration-color: color-mix(
+      in srgb,
+      currentColor 20%,
+      transparent
+    );
+    text-decoration-thickness: 0.06em;
+    text-underline-offset: 0.16em;
+    transition: text-shadow 0.3s ease;
+  }
+
+  &:hover :deep(.text-highlight__content),
+  &:focus-visible :deep(.text-highlight__content) {
+    text-shadow: none;
+  }
+
+  &:focus-visible {
+    outline: 1px solid #e23456;
+    outline-offset: 3px;
+  }
 }
 
 .home-about-description {
@@ -408,7 +452,7 @@
 
 .home-about-gallery {
   position: absolute;
-  inset: clamp(4rem, 8dvh, 7rem) clamp(1rem, 3vw, 4rem) 1rem;
+  inset: clamp(3rem, 6dvh, 5rem) clamp(0.5rem, 2vw, 2.5rem) 0;
   transform-origin: center;
 
   :deep(.dome-gallery__stage) {
@@ -1092,7 +1136,7 @@
   }
 
   .home-about-gallery {
-    inset: clamp(4rem, 10dvh, 7rem) 0 1rem;
+    inset: clamp(3.5rem, 8dvh, 5.5rem) 0 0;
   }
 
   .home-about-copy {
@@ -1138,15 +1182,23 @@
   }
 }
 
-@keyframes homeAboutGalleryEnter {
+@keyframes homeAboutGalleryScaleEnter {
+  from {
+    transform: scale(0.52);
+  }
+
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes homeAboutGalleryFadeEnter {
   from {
     opacity: 0;
-    transform: scale(0.72);
   }
 
   to {
     opacity: 1;
-    transform: scale(1);
   }
 }
 

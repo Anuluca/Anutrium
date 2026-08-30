@@ -1,7 +1,17 @@
 const homeDynamic = {
   intro: {
-    zhCn: '你好，我是路卡。',
-    en: "Hi, I'm Luca.",
+    before: {
+      zhCn: '你好，我是',
+      en: "Hi, I'm ",
+    },
+    name: {
+      zhCn: '路卡',
+      en: 'Luca',
+    },
+    after: {
+      zhCn: '。',
+      en: '.',
+    },
   },
   aboutDescription: {
     zhCn: 'Anutrium记录着我的—，我想把它们留存在网络中。',

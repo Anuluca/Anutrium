@@ -253,6 +253,11 @@ test('home switches five full-screen pages vertically while marquee stays fixed'
 
   const scrollDownHint = page.locator('.scroll-down-hint')
   await expect(scrollDownHint).toContainText('EXPLORE')
+  await expect(scrollDownHint).toHaveCSS('position', 'fixed')
+  await expect(scrollDownHint.locator('.scroll-down-hint__label')).toHaveCSS(
+    'animation-name',
+    'none'
+  )
   await expect
     .poll(() =>
       scrollDownHint.evaluate((element) =>
@@ -318,11 +323,20 @@ test('home switches five full-screen pages vertically while marquee stays fixed'
   }
   await expect(page.locator('.home-about-gallery')).toHaveCount(1)
   await page.waitForTimeout(80)
+  await expect(scrollDownHint).toHaveClass(/is-page-transitioning/)
+  expect(
+    await scrollDownHint
+      .locator('.scroll-down-hint__label')
+      .evaluate((element) => getComputedStyle(element).animationName)
+  ).toContain('scrollDownHintPageTransition')
+  await expect(scrollDownHint.locator('.scroll-down-hint__rail')).toHaveCSS(
+    'animation-delay',
+    '0.13s'
+  )
   const hintExitOpacity = await scrollDownHint.evaluate((element) =>
     Number.parseFloat(getComputedStyle(element).opacity)
   )
-  expect(hintExitOpacity).toBeGreaterThan(0)
-  expect(hintExitOpacity).toBeLessThan(1)
+  expect(hintExitOpacity).toBeGreaterThanOrEqual(0.99)
   await page.waitForTimeout(160)
   const heroLeadState = await page.evaluate(() => {
     const heroSlide = document.querySelector<HTMLElement>(
@@ -550,10 +564,13 @@ test('home switches five full-screen pages vertically while marquee stays fixed'
   expect(transitionState.aboutTextAnimationDuration).toBe('0.7s')
   expect(transitionState.aboutTextAnimationDelay).toBe('0.42s')
   expect(transitionState.aboutGalleryAnimationName).toContain(
-    'homeAboutGalleryEnter'
+    'homeAboutGalleryScaleEnter'
   )
-  expect(transitionState.aboutGalleryAnimationDelay).toBe('0.42s')
-  expect(transitionState.aboutGalleryAnimationDuration).toBe('0.65s')
+  expect(transitionState.aboutGalleryAnimationName).toContain(
+    'homeAboutGalleryFadeEnter'
+  )
+  expect(transitionState.aboutGalleryAnimationDelay).toBe('0.42s, 0.42s')
+  expect(transitionState.aboutGalleryAnimationDuration).toBe('1s, 0.65s')
   expect(transitionState.heroOpacity).toBe(1)
   expect(transitionState.heroTransform).toBe('none')
   expect(transitionState.sloganOpacity).toBeGreaterThan(0)
@@ -584,7 +601,11 @@ test('home switches five full-screen pages vertically while marquee stays fixed'
     Math.abs(transitionState.heroSlideTop) / transitionState.viewportHeight,
     2
   )
-  expect(transitionState.marqueeTransitionDuration).toBe('0.36s')
+  expect(
+    transitionState.marqueeTransitionDuration
+      .split(', ')
+      .every((duration) => duration === '0.36s')
+  ).toBe(true)
   const indicatorTravel =
     transitionState.indicatorTrackTop - initialIndicatorGeometry.left.trackTop
   expect(indicatorTravel).toBeLessThan(0)
@@ -625,6 +646,7 @@ test('home switches five full-screen pages vertically while marquee stays fixed'
     '0s, 0s',
   ])
   await waitForActivePage(page, 'about')
+  await expect(scrollDownHint).toBeVisible()
   const aboutTitle = page.locator('.home-about-title')
   const aboutIntro = page.locator('.home-about-intro')
   const aboutDescription = page.locator('.home-about-description')
@@ -649,7 +671,11 @@ test('home switches five full-screen pages vertically while marquee stays fixed'
       await aboutTitle.evaluate((el) => getComputedStyle(el).fontFamily)
     ).toLowerCase()
   ).toContain('anton')
-  await expect(aboutIntro).toHaveText('你好，我是路卡。')
+  await expect(aboutIntro).toHaveText('你好，我是路卡（Luca）。')
+  await expect(aboutIntro.locator('.home-about-intro__name')).toHaveAttribute(
+    'href',
+    '/island'
+  )
   await expect(aboutIntro).toHaveCSS('background-color', 'rgb(0, 0, 0)')
   await expect(aboutIntro).toHaveCSS('font-weight', '900')
   await expect(aboutDescription).toContainText('Anutrium记录着我的')
@@ -727,6 +753,19 @@ test('home switches five full-screen pages vertically while marquee stays fixed'
   await page.locator('.dome-gallery__tile').first().dispatchEvent('click')
   await expect(page.locator('.dome-gallery__viewer')).toBeVisible()
   await expect(page.locator('.dome-gallery__preview-image')).toBeVisible()
+  await expect(page.locator('.dome-gallery__preview-caption')).toHaveCount(1)
+  await expect(page.locator('.dome-gallery__preview-caption')).toHaveCSS(
+    'font-weight',
+    '700'
+  )
+  await expect(page.locator('.dome-gallery__preview-caption')).toHaveCSS(
+    'text-align',
+    'left'
+  )
+  await expect(page.locator('.dome-gallery__preview-caption')).toHaveCSS(
+    'letter-spacing',
+    'normal'
+  )
   await expect(page.locator('.dome-gallery__viewer-scrim')).toHaveCSS(
     'background-color',
     'rgba(0, 0, 0, 0)'
@@ -921,6 +960,8 @@ test('home switches five full-screen pages vertically while marquee stays fixed'
   await expect(page.locator('.home-page')).toHaveClass(
     /is-craft-footer-visible/
   )
+  await expect(scrollDownHint).toHaveAttribute('aria-hidden', 'true')
+  await expect(scrollDownHint).toBeDisabled()
   await expect(pageFooter).not.toHaveAttribute('aria-hidden', 'true')
   const footerEntryState = await page.evaluate((initialMarqueeTop) => {
     const marquee = document.querySelector<HTMLElement>(
@@ -983,6 +1024,8 @@ test('home switches five full-screen pages vertically while marquee stays fixed'
   await expect(page.locator('.home-page')).not.toHaveClass(
     /is-craft-footer-visible/
   )
+  await expect(scrollDownHint).toHaveAttribute('aria-hidden', 'false')
+  await expect(scrollDownHint).toBeEnabled()
   await expect(pageFooter).toHaveAttribute('aria-hidden', 'true')
   await expect
     .poll(() =>
@@ -1049,6 +1092,13 @@ test('home switches five full-screen pages vertically while marquee stays fixed'
   }
   await page.mouse.wheel(0, -720)
   await page.waitForTimeout(220)
+  await expect(scrollDownHint).toHaveClass(/is-page-transitioning/)
+  await expect(scrollDownHint).toHaveClass(/is-reverse/)
+  expect(
+    await scrollDownHint
+      .locator('.scroll-down-hint__label')
+      .evaluate((element) => getComputedStyle(element).animationDirection)
+  ).toBe('reverse')
   const reverseHeaderState = await page.evaluate(() => {
     const hero = document.querySelector<HTMLElement>('.home-page-slide--hero')!
     const heroContent = document.querySelector<HTMLElement>('.hero-content')!

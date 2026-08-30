@@ -1,7 +1,12 @@
 <template>
   <button
     class="scroll-down-hint no-rem"
-    :class="{ 'is-hidden': !isVisible }"
+    :class="{
+      'is-fixed': fixed,
+      'is-hidden': !isVisible,
+      'is-page-transitioning': transitioning,
+      'is-reverse': transitioning && transitionDirection === 'backward',
+    }"
     :aria-hidden="!isVisible"
     :aria-label="label"
     :disabled="!isVisible"
@@ -21,15 +26,21 @@ import { onMounted, onUnmounted, ref, watch } from 'vue'
 const props = withDefaults(
   defineProps<{
     enterDelay?: number
+    fixed?: boolean
     hidden?: boolean
     initialEnterDelay?: number
     label?: string
+    transitionDirection?: 'backward' | 'forward'
+    transitioning?: boolean
   }>(),
   {
     enterDelay: 0,
+    fixed: false,
     hidden: false,
     initialEnterDelay: 0,
     label: 'EXPLORE',
+    transitionDirection: 'forward',
+    transitioning: false,
   }
 )
 const emit = defineEmits<{ (event: 'activate'): void }>()
@@ -114,6 +125,32 @@ onUnmounted(() => {
   }
 }
 
+.scroll-down-hint.no-rem.is-fixed {
+  position: fixed;
+}
+
+.scroll-down-hint.no-rem.is-page-transitioning {
+  .scroll-down-hint__label,
+  .scroll-down-hint__rail {
+    animation-name: scrollDownHintPageTransition;
+    animation-duration: 0.44s;
+    animation-fill-mode: both;
+    animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+    will-change: transform, opacity;
+  }
+
+  .scroll-down-hint__rail {
+    animation-delay: 0.13s;
+  }
+}
+
+.scroll-down-hint.no-rem.is-page-transitioning.is-reverse {
+  .scroll-down-hint__label,
+  .scroll-down-hint__rail {
+    animation-direction: reverse;
+  }
+}
+
 .scroll-down-hint__label {
   margin-bottom: 10px;
   font-family: 'anton', sans-serif;
@@ -153,6 +190,30 @@ onUnmounted(() => {
   }
 }
 
+@keyframes scrollDownHintPageTransition {
+  0%,
+  22% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  38% {
+    opacity: 0;
+    transform: translateY(-120%);
+  }
+
+  55%,
+  70% {
+    opacity: 0;
+    transform: translateY(120%);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .scroll-down-hint.no-rem {
     transition-duration: 0.01ms;
@@ -161,6 +222,15 @@ onUnmounted(() => {
   .scroll-down-hint__marker {
     animation: none;
     transform: translateY(10px);
+  }
+
+  .scroll-down-hint.no-rem.is-page-transitioning {
+    .scroll-down-hint__label,
+    .scroll-down-hint__rail {
+      animation: none;
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }
 </style>

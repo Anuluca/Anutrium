@@ -58,6 +58,7 @@ declare module '@vue/runtime-core' {
     SparklesText: typeof import('./src/components/ui/sparkles-text/SparklesText.vue')['default']
     StartAnimation: typeof import('./src/components/StartAnimation/index.vue')['default']
     SteamProfilePanel: typeof import('./src/components/SteamProfilePanel/index.vue')['default']
+    TextHighlight: typeof import('./src/components/TextHighlight/index.vue')['default']
     TextRoll: typeof import('./src/components/TextRoll/index.vue')['default']
     ThemeToggle: typeof import('./src/components/ThemeToggle/index.vue')['default']
     ToolCard: typeof import('./src/components/ToolCard/index.vue')['default']

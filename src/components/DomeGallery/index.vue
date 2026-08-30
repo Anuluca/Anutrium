@@ -54,10 +54,27 @@
         <div class="dome-gallery__viewer-scrim" aria-hidden="true" />
         <div
           class="dome-gallery__preview-image"
+          :class="{ 'is-clickable': preview.link }"
           :style="previewStyle"
-          @click.stop
+          :aria-label="
+            preview.link ? `Open ${preview.title || 'image'}` : undefined
+          "
+          :role="preview.link ? 'link' : undefined"
+          :tabindex="preview.link ? 0 : undefined"
+          @click.stop="handlePreviewImageClick"
+          @keydown.enter.prevent.stop="handlePreviewImageKeydown"
         >
           <img :src="preview.src" :alt="preview.title" />
+          <span v-if="preview.title" class="dome-gallery__preview-caption">
+            {{ preview.title }}
+          </span>
+          <el-icon
+            v-if="preview.link"
+            class="dome-gallery__preview-link-icon"
+            aria-hidden="true"
+          >
+            <Link />
+          </el-icon>
         </div>
       </div>
     </main>
@@ -66,6 +83,8 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { Link } from '@element-plus/icons-vue'
 
 import { setSmoothScrollLocked } from '@/utils/smoothScroll'
 
@@ -73,6 +92,7 @@ interface DomeGalleryImage {
   src: string
   title?: string
   alt?: string
+  link?: string
 }
 
 interface DomeGalleryProps {
@@ -92,7 +112,7 @@ interface DomeGalleryProps {
   autoRotateSpeed?: number
   entranceDelay?: number
   entranceDuration?: number
-  entranceRotationDeg?: number
+  entranceRotationSpeed?: number
 }
 
 interface TileItem {
@@ -103,6 +123,7 @@ interface TileItem {
   sizeY: number
   src: string
   title: string
+  link?: string
 }
 
 interface PreviewRect {
@@ -115,6 +136,7 @@ interface PreviewRect {
 interface PreviewItem {
   src: string
   title: string
+  link?: string
   startRect: PreviewRect
   targetRect: PreviewRect
 }
@@ -136,8 +158,9 @@ const props = withDefaults(defineProps<DomeGalleryProps>(), {
   autoRotateSpeed: 1.2,
   entranceDelay: 0,
   entranceDuration: 0,
-  entranceRotationDeg: 0,
+  entranceRotationSpeed: 0,
 })
+const router = useRouter()
 
 const rootRef = ref<HTMLDivElement | null>(null)
 const mainRef = ref<HTMLElement | null>(null)
@@ -159,7 +182,6 @@ let autoRotationFrame: number | null = null
 let lastAutoRotationTime = 0
 let prefersReducedMotion = false
 let entranceStartTime = 0
-let isEntranceComplete = true
 let resizeObserver: ResizeObserver | null = null
 let focusedTile: HTMLElement | null = null
 let previewCloseTimer: number | null = null
@@ -198,6 +220,7 @@ const items = computed<TileItem[]>(() => {
       index,
       src: image.src,
       title: image.title || image.alt || '',
+      link: image.link,
     }
   })
 })
@@ -224,9 +247,9 @@ const parseLength = (value: string, fallback: number) => {
 const previewStyle = computed(() => {
   if (!preview.value) return {}
   const rect =
-    previewPhase.value === 'opening'
-      ? preview.value.startRect
-      : preview.value.targetRect
+    previewPhase.value === 'opened'
+      ? preview.value.targetRect
+      : preview.value.startRect
 
   return {
     left: `${rect.left}px`,
@@ -258,22 +281,17 @@ const startAutoRotation = () => {
       inertiaFrame === null &&
       elapsed > 0
     ) {
-      if (!isEntranceComplete) {
-        if (timestamp >= entranceStartTime) {
-          const progress = clamp(
-            (timestamp - entranceStartTime) /
-              Math.max(1, props.entranceDuration),
-            0,
-            1
-          )
-          const easedProgress = 1 - Math.pow(1 - progress, 3)
-          rotation.y = -props.entranceRotationDeg * (1 - easedProgress)
-          isEntranceComplete = progress >= 1
-        }
-      } else {
-        rotation.y = wrapAngle(
-          rotation.y + (props.autoRotateSpeed * elapsed) / 1000
+      if (timestamp >= entranceStartTime) {
+        const progress = clamp(
+          (timestamp - entranceStartTime) / Math.max(1, props.entranceDuration),
+          0,
+          1
         )
+        const easedProgress = progress * progress * (3 - 2 * progress)
+        const rotationSpeed =
+          props.entranceRotationSpeed +
+          (props.autoRotateSpeed - props.entranceRotationSpeed) * easedProgress
+        rotation.y = wrapAngle(rotation.y + (rotationSpeed * elapsed) / 1000)
       }
       applySphereTransform()
     }
@@ -295,9 +313,8 @@ const syncRadius = () => {
   const root = rootRef.value
   if (!root) return
 
-  const bounds = root.getBoundingClientRect()
-  const width = Math.max(1, bounds.width)
-  const height = Math.max(1, bounds.height)
+  const width = Math.max(1, root.clientWidth)
+  const height = Math.max(1, root.clientHeight)
   const minDimension = Math.min(width, height)
   const aspect = width / height
   let basis = minDimension
@@ -317,8 +334,8 @@ const syncRadius = () => {
   root.style.setProperty('--dome-viewer-pad', `${viewerPad.value}px`)
   root.style.setProperty('--dome-overlay-color', props.overlayBlurColor)
   root.style.setProperty(
-    '--dome-image-filter',
-    props.grayscale ? 'grayscale(1)' : 'none'
+    '--dome-grayscale-filter',
+    props.grayscale ? 'grayscale(1)' : ''
   )
   applySphereTransform()
 }
@@ -434,6 +451,7 @@ const openPreview = (item: TileItem, tile: HTMLElement) => {
   preview.value = {
     src: item.src,
     title: item.title,
+    link: item.link,
     startRect,
     targetRect,
   }
@@ -454,6 +472,32 @@ const handleTileClick = (item: TileItem, event: MouseEvent) => {
 
   event.preventDefault()
   openPreview(item, event.currentTarget as HTMLElement)
+}
+
+const handlePreviewImageClick = () => {
+  const link = preview.value?.link?.trim()
+  if (!link) return
+
+  let url: URL
+  try {
+    const normalizedLink = /^www\.anuluca\.com(?:\/|$)/i.test(link)
+      ? `https://${link}`
+      : link
+    url = new URL(normalizedLink, window.location.origin)
+  } catch {
+    return
+  }
+
+  if (url.hostname === 'www.anuluca.com') {
+    void router.push(`${url.pathname}${url.search}${url.hash}`)
+    return
+  }
+
+  window.open(url.toString(), '_blank', 'noopener,noreferrer')
+}
+
+const handlePreviewImageKeydown = () => {
+  handlePreviewImageClick()
 }
 
 const closePreview = () => {
@@ -491,11 +535,6 @@ onMounted(() => {
     '(prefers-reduced-motion: reduce)'
   ).matches
   entranceStartTime = performance.now() + props.entranceDelay
-  isEntranceComplete =
-    prefersReducedMotion ||
-    props.entranceRotationDeg === 0 ||
-    props.entranceDuration === 0
-  if (!isEntranceComplete) rotation.y = -props.entranceRotationDeg
   syncRadius()
   startAutoRotation()
 })
@@ -525,7 +564,7 @@ watch(() => props, syncRadius, { deep: true })
   --dome-radius: 420px;
   --dome-viewer-pad: 24px;
   --dome-overlay-color: transparent;
-  --dome-image-filter: none;
+  --dome-grayscale-filter: ;
 
   position: relative;
   width: 100%;
@@ -608,7 +647,7 @@ watch(() => props, syncRadius, { deep: true })
     height: 100%;
     object-fit: cover;
     opacity: 0.4;
-    filter: contrast(0.72) saturate(0.52) var(--dome-image-filter);
+    filter: contrast(0.7) saturate(0.8) var(--dome-grayscale-filter);
     pointer-events: none;
     backface-visibility: hidden;
     transition: filter 240ms ease, opacity 240ms ease, transform 240ms ease;
@@ -657,6 +696,10 @@ watch(() => props, syncRadius, { deep: true })
   will-change: left, top, width, height, opacity;
   pointer-events: auto;
 
+  &.is-clickable {
+    cursor: pointer;
+  }
+
   img {
     display: block;
     width: 100%;
@@ -664,6 +707,50 @@ watch(() => props, syncRadius, { deep: true })
     object-fit: cover;
     opacity: 1;
     filter: none;
+    transition: transform 240ms ease;
+  }
+
+  &:hover img {
+    transform: scale(1.03);
+  }
+
+  .dome-gallery__preview-caption {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    padding: 72px 18px 18px;
+    background: linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.88),
+      rgba(0, 0, 0, 0.42) 58%,
+      transparent
+    );
+    color: #fff;
+    font-family: 'alibaba-puhuiti', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.35;
+    letter-spacing: 0;
+    text-align: left;
+    pointer-events: none;
+  }
+
+  .dome-gallery__preview-link-icon {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    width: 22px;
+    height: 22px;
+    color: #fff;
+    font-size: 20px;
+    transform: scale(1);
+    transition: transform 240ms ease;
+    pointer-events: none;
+  }
+
+  &:hover .dome-gallery__preview-link-icon {
+    transform: scale(1.12);
   }
 }
 

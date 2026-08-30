@@ -2,7 +2,7 @@
   <div :class="[pageClass, 'main-container', 'tool-page-layout']">
     <section class="tool-page-stage">
       <DetailPageHeader
-        back-label="CRAFT"
+        :back-label="backLabel"
         :back-path="backPath"
         :title="title"
       />
@@ -13,8 +13,14 @@
     </section>
 
     <ToolRecommendationRow
+      v-if="showRecommendations"
       class="tool-recommendation-row"
       :recommended-tools="recommendedTools"
+    />
+    <div
+      v-else
+      class="tool-recommendation-row tool-recommendation-row--empty"
+      aria-hidden="true"
     />
     <PageFooter class="tool-page-footer" />
   </div>
@@ -31,14 +37,18 @@ export type { RecommendedTool }
 
 withDefaults(
   defineProps<{
+    backLabel?: string
     backPath?: string
     pageClass: string
     recommendedTools?: RecommendedTool[]
+    showRecommendations?: boolean
     title: string
   }>(),
   {
+    backLabel: 'CRAFT',
     backPath: '/craft',
     recommendedTools: () => [],
+    showRecommendations: true,
   }
 )
 </script>
@@ -73,6 +83,10 @@ withDefaults(
 
 .tool-recommendation-row {
   flex-shrink: 0;
+}
+
+.tool-recommendation-row--empty {
+  height: 0;
 }
 
 @media (min-width: 769px) {

@@ -169,12 +169,6 @@
               </div>
             </div>
           </div>
-          <ScrollDownHint
-            :enter-delay="HERO_CONTENT_TRANSITION_DURATION"
-            :hidden="isHeroContentInactive"
-            :initial-enter-delay="HERO_INITIAL_ENTRANCE_DURATION"
-            @activate="goToHomePage(1)"
-          />
         </section>
       </SwiperSlide>
 
@@ -187,6 +181,7 @@
           {
             'is-page-entering': enteringHomePageIndex === index + 1,
             'is-page-leaving': leavingHomePageIndex === index + 1,
+            'is-page-content-fading': fadingHomePageIndex === index + 1,
           },
         ]"
         :aria-hidden="activeHomePageIndex !== index + 1"
@@ -200,7 +195,19 @@
             <div v-if="page.id === 'about'" class="home-about-copy">
               <h2 class="home-section-title home-about-title">ABOUT ME</h2>
               <div class="home-about-introduction">
-                <p class="home-about-intro">{{ t('home.dynamic.intro') }}</p>
+                <p class="home-about-intro">
+                  <span>{{ t('home.dynamic.intro.before') }}</span>
+                  <RouterLink
+                    class="home-about-intro__name"
+                    to="/island"
+                    @click.stop
+                  >
+                    <TextHighlight :duration="300" text-end-color="#000000">
+                      {{ t('home.dynamic.intro.name') }}
+                    </TextHighlight>
+                  </RouterLink>
+                  <span>{{ t('home.dynamic.intro.after') }}</span>
+                </p>
                 <p class="home-about-description">
                   <span>{{ aboutDescription.before }}</span>
                   <RandomTypedText
@@ -223,8 +230,8 @@
               <DomeGallery
                 :images="aboutGalleryItems"
                 :entrance-delay="420"
-                :entrance-duration="650"
-                :entrance-rotation-deg="24"
+                :entrance-duration="1100"
+                :entrance-rotation-speed="42"
               />
             </div>
             <PageFooter
@@ -235,6 +242,16 @@
         </section>
       </SwiperSlide>
     </Swiper>
+
+    <ScrollDownHint
+      :enter-delay="0"
+      fixed
+      :hidden="isCraftFooterVisible"
+      :initial-enter-delay="HERO_INITIAL_ENTRANCE_DURATION"
+      :transition-direction="homePageTransitionDirection ?? 'forward'"
+      :transitioning="homePageMotionDuration > 0"
+      @activate="goToNextHomePage"
+    />
 
     <nav
       v-for="side in homeIndicatorSides"
@@ -291,6 +308,7 @@ import MarqueeShowcase from '@/components/MarqueeShowcase/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
 import RandomTypedText from '@/components/RandomTypedText/index.vue'
 import ScrollDownHint from '@/components/ScrollDownHint/index.vue'
+import TextHighlight from '@/components/TextHighlight/index.vue'
 import { RadiantText } from '@/components/ui/radiant-text'
 import { SparklesText } from '@/components/ui/sparkles-text'
 import { visualState } from '@/stores'
@@ -370,6 +388,8 @@ const activeIndex = ref(0)
 const activeHomePageIndex = ref(0)
 const enteringHomePageIndex = ref<number | null>(null)
 const leavingHomePageIndex = ref<number | null>(null)
+const fadingHomePageIndex = ref<number | null>(null)
+const pendingHomePageTransitionIndex = ref<number | null>(null)
 const homePageTransitionDirection = ref<'forward' | 'backward' | null>(null)
 const homeIndicatorPagePosition = ref(0)
 const homeIndicatorTransitionDuration = ref(0)
@@ -423,6 +443,7 @@ let craftFooterTransitionTimer: ReturnType<typeof setTimeout> | null = null
 let craftFooterWheelArmTimer: ReturnType<typeof setTimeout> | null = null
 let heroPageTransitionTimer: ReturnType<typeof setTimeout> | null = null
 let homePageFadeTimer: ReturnType<typeof setTimeout> | null = null
+let homePageContentExitTimer: ReturnType<typeof setTimeout> | null = null
 let isCraftFooterTransitionLocked = false
 let isCraftFooterWheelArmed = false
 let isHomePageTransitioning = false
@@ -445,6 +466,7 @@ const HOME_PAGE_CONTENT_MOTION_DURATION = 600
 const HERO_CONTENT_TRANSITION_DURATION = 1200
 const HERO_INITIAL_ENTRANCE_DURATION = 1750
 const HERO_PAGE_TRANSITION_DELAY = 340
+const HOME_PAGE_CONTENT_EXIT_DURATION = 200
 const HOME_INDICATOR_TRANSITION_RATIO = 0.72
 const CRAFT_FOOTER_GESTURE_THRESHOLD = 42
 const CRAFT_FOOTER_TRANSITION_DURATION = 720
@@ -571,6 +593,56 @@ const requestHeroPageTransition = (targetIndex = 1) => {
   )
 }
 
+const clearHomePageContentExitTimer = () => {
+  if (!homePageContentExitTimer) return
+  clearTimeout(homePageContentExitTimer)
+  homePageContentExitTimer = null
+}
+
+const completeHomePageContentExit = () => {
+  const targetIndex = pendingHomePageTransitionIndex.value
+  const swiper = homeSwiper.value
+  if (targetIndex === null || !swiper) return
+
+  pendingHomePageTransitionIndex.value = null
+  fadingHomePageIndex.value = null
+  homePageContentExitTimer = null
+
+  const targetPage = homePageIndicatorItems[targetIndex]
+  renderedHomePageIds.value = new Set(targetPage ? [targetPage.id] : ['hero'])
+
+  void nextTick(() => {
+    if (homeSwiper.value === swiper) swiper.slideTo(targetIndex)
+  })
+}
+
+const requestHomePageTransition = (targetIndex: number) => {
+  const swiper = homeSwiper.value
+  const activeIndex = activeHomePageIndex.value
+  if (
+    !swiper ||
+    activeIndex === 0 ||
+    targetIndex < 0 ||
+    targetIndex > getHomeLastPageIndex(swiper) ||
+    targetIndex === activeIndex ||
+    isHomePageTransitioning ||
+    pendingHomePageTransitionIndex.value !== null
+  ) {
+    return
+  }
+
+  pendingHomePageTransitionIndex.value = targetIndex
+  fadingHomePageIndex.value = activeIndex
+  homePageTransitionDirection.value =
+    targetIndex > activeIndex ? 'forward' : 'backward'
+  ensureHomePageRendered(targetIndex)
+  clearHomePageContentExitTimer()
+  homePageContentExitTimer = setTimeout(
+    completeHomePageContentExit,
+    reducedMotionQuery?.matches ? 0 : HOME_PAGE_CONTENT_EXIT_DURATION
+  )
+}
+
 const handleHomeWheel = (event: WheelEvent) => {
   if (activeHomePageIndex.value === 0) {
     if (event.deltaY <= NEWS_WHEEL_GESTURE_THRESHOLD) return
@@ -585,26 +657,49 @@ const handleHomeWheel = (event: WheelEvent) => {
     return
   }
 
-  if (activeHomePageIndex.value !== CRAFT_PAGE_INDEX) return
+  const activePage = activeHomePageIndex.value
 
-  if (isHomePageTransitioning || !isCraftFooterWheelArmed) {
-    consumeHomeGesture(event)
-    scheduleCraftFooterWheelArm()
-    return
+  if (activePage === CRAFT_PAGE_INDEX) {
+    if (isHomePageTransitioning || !isCraftFooterWheelArmed) {
+      consumeHomeGesture(event)
+      scheduleCraftFooterWheelArm()
+      return
+    }
+
+    if (isCraftFooterTransitionLocked) {
+      consumeHomeGesture(event)
+      return
+    }
+
+    if (event.deltaY > 18) {
+      consumeHomeGesture(event)
+      setCraftFooterVisible(true)
+      return
+    }
+
+    if (event.deltaY < -18 && isCraftFooterVisible.value) {
+      consumeHomeGesture(event)
+      setCraftFooterVisible(false)
+      return
+    }
   }
 
-  if (isCraftFooterTransitionLocked) {
+  if (
+    isHomePageTransitioning ||
+    pendingHomePageTransitionIndex.value !== null
+  ) {
     consumeHomeGesture(event)
     return
   }
 
   if (event.deltaY > 18) {
     consumeHomeGesture(event)
-    setCraftFooterVisible(true)
-  } else if (event.deltaY < -18 && isCraftFooterVisible.value) {
+    requestHomePageTransition(activePage + 1)
+  } else if (event.deltaY < -18) {
     consumeHomeGesture(event)
-    setCraftFooterVisible(false)
+    requestHomePageTransition(activePage - 1)
   }
+  return
 }
 
 const handleNewsWheel = (event: WheelEvent) => {
@@ -1032,7 +1127,16 @@ const goToHomePage = (index: number) => {
     requestHeroPageTransition(index)
     return
   }
-  homeSwiper.value?.slideTo(index)
+  requestHomePageTransition(index)
+}
+
+const goToNextHomePage = () => {
+  const nextIndex = Math.min(
+    activeHomePageIndex.value + 1,
+    homePageIndicatorItems.length - 1
+  )
+  if (nextIndex === activeHomePageIndex.value) return
+  goToHomePage(nextIndex)
 }
 
 const prevSlide = () => {
@@ -1143,6 +1247,7 @@ onUnmounted(() => {
   disarmCraftFooterWheel()
   if (heroPageTransitionTimer) clearTimeout(heroPageTransitionTimer)
   if (homePageFadeTimer) clearTimeout(homePageFadeTimer)
+  clearHomePageContentExitTimer()
   heroContentResizeObserver?.disconnect()
   heroContentResizeObserver = null
   craftFooterResizeObserver?.disconnect()
