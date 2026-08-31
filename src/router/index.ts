@@ -505,8 +505,8 @@ export const routes: RouteConfig[] = [
       import('@/views/Games/SleepingDogs/BullsAndCows/index.vue'),
     meta: {
       activeMenu: '/island',
-      titleEn: 'CAMERA HACK',
-      titleCn: '摄像头安全接入',
+      titleEn: 'GUESS THE NUMBER',
+      titleCn: '猜数字',
       fullFooter: true,
       pageFooter: true,
       ifShow: false,

@@ -27,7 +27,12 @@ const props = defineProps({
 
 const cursorStateStore = cursorState()
 
-const HIDDEN_CURSOR_CLASSNAMES = ['no-cursor', 'hide-cursor', 'cursor-none']
+const HIDDEN_CURSOR_CLASSNAMES = [
+  'no-cursor',
+  'hide-cursor',
+  'cursor-none',
+  'native-cursor',
+]
 const INTERACTIVE_CURSOR_SELECTOR =
   'a, button, [role="button"], [data-magnetic], .is-clickable'
 const FINE_POINTER_MEDIA = '(hover: hover) and (pointer: fine)'
@@ -269,6 +274,22 @@ watch(shouldAnimateCursor, (canAnimate) => {
   html.custom-cursor-enabled,
   html.custom-cursor-enabled * {
     cursor: none !important;
+  }
+
+  html.custom-cursor-enabled .native-cursor,
+  html.custom-cursor-enabled .native-cursor * {
+    cursor: default !important;
+  }
+
+  html.custom-cursor-enabled .native-cursor a,
+  html.custom-cursor-enabled .native-cursor button,
+  html.custom-cursor-enabled .native-cursor [role='button'] {
+    cursor: pointer !important;
+  }
+
+  html.custom-cursor-enabled .native-cursor input,
+  html.custom-cursor-enabled .native-cursor textarea {
+    cursor: text !important;
   }
 }
 </style>

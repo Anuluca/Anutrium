@@ -5,7 +5,11 @@
     overlay-color="linear-gradient(90deg, rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.38))"
   >
     <div class="stage-layout">
-      <div class="phone" :aria-label="copy.gameLabel">
+      <div
+        class="phone"
+        :class="`phone--${introPhase}`"
+        :aria-label="copy.gameLabel"
+      >
         <img
           class="phone-source"
           :src="referenceScene"
@@ -14,98 +18,113 @@
         />
 
         <section class="phone-screen">
-          <div class="screen-watermark" aria-hidden="true">
-            <img :src="referenceScene" alt="" draggable="false" />
-          </div>
-
-          <div class="legend" :aria-label="copy.resultLegend">
-            <div>
-              <i class="result-shape result-shape--misplaced" />
-              <span>{{ copy.invalidPlacement }}</span>
-            </div>
-            <div>
-              <i class="result-shape result-shape--absent" />
-              <span>{{ copy.invalidDigit }}</span>
+          <div
+            v-if="introPhase === 'loading'"
+            class="screen-loading"
+            role="status"
+            :aria-label="copy.loading"
+          >
+            <div class="screen-loading__track" aria-hidden="true">
+              <span />
             </div>
           </div>
 
-          <div class="history-title">
-            <span>{{ copy.previousAttempts }}</span>
-            <small>{{ attempts.length }}/{{ MAX_ATTEMPTS }}</small>
-          </div>
-
-          <div ref="attemptLog" class="attempt-log">
-            <div v-if="attempts.length === 0" class="empty-history">—</div>
-            <div
-              v-for="(attempt, attemptIndex) in attempts"
-              :key="attemptIndex"
-              class="attempt-row"
-            >
-              <span
-                v-for="(digit, digitIndex) in attempt.digits"
-                :key="digitIndex"
-                class="result-digit"
-                :class="`result-digit--${attempt.marks[digitIndex]}`"
-              >
-                {{ digit }}
-              </span>
+          <div v-if="introPhase === 'ready'" class="screen-interface">
+            <div class="screen-watermark" aria-hidden="true">
+              <img :src="referenceScene" alt="" draggable="false" />
             </div>
-          </div>
 
-          <div class="input-panel">
-            <p class="input-prompt" aria-live="polite">{{ screenMessage }}</p>
-
-            <div v-if="phase === 'active'" class="code-input">
-              <div
-                v-for="(digit, index) in inputDigits"
-                :key="index"
-                class="digit-control"
-                :class="{ 'digit-control--active': activeSlot === index }"
-              >
-                <button
-                  type="button"
-                  class="digit-step digit-step--up"
-                  :aria-label="`${copy.increaseDigit} ${index + 1}`"
-                  @click="adjustDigit(1, index)"
-                >
-                  ▲
-                </button>
-                <button
-                  type="button"
-                  class="digit-value"
-                  :class="{ 'digit-value--empty': digit === null }"
-                  :aria-label="`${copy.position} ${index + 1}`"
-                  @click="activateSlot(index)"
-                >
-                  {{ digit ?? '–' }}
-                </button>
-                <button
-                  type="button"
-                  class="digit-step digit-step--down"
-                  :aria-label="`${copy.decreaseDigit} ${index + 1}`"
-                  @click="adjustDigit(-1, index)"
-                >
-                  ▼
-                </button>
+            <div class="legend" :aria-label="copy.resultLegend">
+              <div>
+                <i class="result-shape result-shape--misplaced" />
+                <span>{{ copy.invalidPlacement }}</span>
+              </div>
+              <div>
+                <i class="result-shape result-shape--absent" />
+                <span>{{ copy.invalidDigit }}</span>
               </div>
             </div>
 
-            <div v-else class="final-code" :class="`final-code--${phase}`">
-              {{
-                phase === 'success'
-                  ? answer.join('')
-                  : copy.code(answer.join(''))
-              }}
+            <div class="history-title">
+              <span>{{ copy.previousAttempts }}</span>
+              <small>{{ attempts.length }}/{{ MAX_ATTEMPTS }}</small>
             </div>
 
-            <div class="input-actions">
-              <button
-                type="button"
-                class="enter-button"
-                @click="phase === 'active' ? submitGuess() : resetGame()"
+            <div ref="attemptLog" class="attempt-log">
+              <div v-if="attempts.length === 0" class="empty-history">—</div>
+              <div
+                v-for="(attempt, attemptIndex) in attempts"
+                :key="attemptIndex"
+                class="attempt-row"
               >
-                {{ phase === 'active' ? 'ENTER' : copy.retry }}
-              </button>
+                <span
+                  v-for="(digit, digitIndex) in attempt.digits"
+                  :key="digitIndex"
+                  class="result-digit"
+                  :class="`result-digit--${attempt.marks[digitIndex]}`"
+                >
+                  {{ digit }}
+                </span>
+              </div>
+            </div>
+
+            <div class="input-panel">
+              <p class="input-prompt" aria-live="polite">
+                {{ screenMessage }}
+              </p>
+
+              <div v-if="phase === 'active'" class="code-input">
+                <div
+                  v-for="(digit, index) in inputDigits"
+                  :key="index"
+                  class="digit-control"
+                  :class="{ 'digit-control--active': activeSlot === index }"
+                >
+                  <button
+                    type="button"
+                    class="digit-step digit-step--up"
+                    :aria-label="`${copy.increaseDigit} ${index + 1}`"
+                    @click="adjustDigit(1, index)"
+                  >
+                    ▲
+                  </button>
+                  <button
+                    type="button"
+                    class="digit-value"
+                    :class="{ 'digit-value--empty': digit === null }"
+                    :aria-label="`${copy.position} ${index + 1}`"
+                    @click="activateSlot(index)"
+                  >
+                    {{ digit ?? '–' }}
+                  </button>
+                  <button
+                    type="button"
+                    class="digit-step digit-step--down"
+                    :aria-label="`${copy.decreaseDigit} ${index + 1}`"
+                    @click="adjustDigit(-1, index)"
+                  >
+                    ▼
+                  </button>
+                </div>
+              </div>
+
+              <div v-else class="final-code" :class="`final-code--${phase}`">
+                {{
+                  phase === 'success'
+                    ? answer.join('')
+                    : copy.code(answer.join(''))
+                }}
+              </div>
+
+              <div class="input-actions">
+                <button
+                  type="button"
+                  class="enter-button"
+                  @click="phase === 'active' ? submitGuess() : resetGame()"
+                >
+                  {{ phase === 'active' ? 'ENTER' : copy.retry }}
+                </button>
+              </div>
             </div>
           </div>
         </section>
@@ -130,6 +149,7 @@ import {
 } from '@/utils/dailyBullsAndCows'
 
 type GamePhase = 'active' | 'success' | 'failed'
+type IntroPhase = 'entering' | 'loading' | 'ready'
 
 interface Attempt {
   digits: number[]
@@ -137,7 +157,8 @@ interface Attempt {
 }
 
 const MAX_ATTEMPTS = 6
-const AUTO_SUBMIT_DELAY = 260
+const PHONE_ENTRY_DURATION = 900
+const SCREEN_LOADING_DURATION = 1000
 const STORAGE_PREFIX = 'anutrium:daily-camera-hack:'
 const { locale } = useI18n()
 const dateKey = ref('--------')
@@ -148,9 +169,11 @@ const inputDigits = ref<Array<number | null>>(
 )
 const activeSlot = ref(0)
 const phase = ref<GamePhase>('active')
+const introPhase = ref<IntroPhase>('entering')
 const inputError = ref('')
 const attemptLog = ref<HTMLElement | null>(null)
-let autoSubmitTimer: number | null = null
+let phoneEntryTimer: number | null = null
+let screenLoadingTimer: number | null = null
 
 const copy = computed(() => {
   if (locale.value === 'en') {
@@ -168,6 +191,7 @@ const copy = computed(() => {
       increaseDigit: 'Increase digit',
       decreaseDigit: 'Decrease digit',
       gameLabel: 'Sleeping Dogs number guessing game',
+      loading: 'Loading game interface',
       resultLegend: 'Result legend',
       code: (value: string) => `CODE ${value}`,
     }
@@ -187,6 +211,7 @@ const copy = computed(() => {
     increaseDigit: '增加数字',
     decreaseDigit: '减少数字',
     gameLabel: '热血无赖猜数字游戏',
+    loading: '正在载入游戏界面',
     resultLegend: '结果图例',
     code: (value: string) => `密码 ${value}`,
   }
@@ -197,12 +222,6 @@ const screenMessage = computed(() => {
   if (phase.value === 'failed') return copy.value.denied
   return inputError.value || copy.value.enterUnique
 })
-
-const clearAutoSubmit = () => {
-  if (autoSubmitTimer === null) return
-  window.clearTimeout(autoSubmitTimer)
-  autoSubmitTimer = null
-}
 
 const scrollAttemptsToBottom = async () => {
   await nextTick()
@@ -259,7 +278,6 @@ const restoreGame = () => {
 }
 
 const submitGuess = () => {
-  clearAutoSubmit()
   if (phase.value !== 'active') return
   if (inputDigits.value.some((digit) => digit === null)) {
     inputError.value = copy.value.incomplete
@@ -284,46 +302,20 @@ const submitGuess = () => {
   void scrollAttemptsToBottom()
 }
 
-const scheduleAutoSubmit = () => {
-  clearAutoSubmit()
-  const digits = inputDigits.value
-  if (
-    phase.value !== 'active' ||
-    digits.some((digit) => digit === null) ||
-    new Set(digits).size !== DAILY_CODE_LENGTH
-  ) {
-    return
-  }
-  autoSubmitTimer = window.setTimeout(submitGuess, AUTO_SUBMIT_DELAY)
-}
-
 const adjustDigit = (direction: -1 | 1, index = activeSlot.value) => {
   if (phase.value !== 'active') return
   activeSlot.value = index
-  const usedDigits = new Set(
-    inputDigits.value.filter(
-      (digit, digitIndex): digit is number =>
-        digit !== null && digitIndex !== index
-    )
-  )
   const current = inputDigits.value[index]
-  let candidate = current === null ? (direction > 0 ? 9 : 0) : current
+  const initialValue = direction > 0 ? 0 : 9
 
-  for (let attempt = 0; attempt < 10; attempt += 1) {
-    candidate = (candidate + direction + 10) % 10
-    if (!usedDigits.has(candidate)) {
-      inputDigits.value[index] = candidate
-      inputError.value = ''
-      scheduleAutoSubmit()
-      return
-    }
-  }
+  inputDigits.value[index] =
+    current === null ? initialValue : (current + direction + 10) % 10
+  inputError.value = ''
 }
 
 const activateSlot = (index: number) => {
   activeSlot.value = index
   inputError.value = ''
-  if (inputDigits.value[index] === null) adjustDigit(1, index)
 }
 
 const setActiveDigit = (digit: number) => {
@@ -339,11 +331,9 @@ const setActiveDigit = (digit: number) => {
   inputDigits.value[activeSlot.value] = digit
   inputError.value = ''
   if (activeSlot.value < DAILY_CODE_LENGTH - 1) activeSlot.value += 1
-  scheduleAutoSubmit()
 }
 
 const clearInput = () => {
-  clearAutoSubmit()
   if (phase.value !== 'active') return
   if (inputDigits.value[activeSlot.value] !== null) {
     inputDigits.value[activeSlot.value] = null
@@ -355,7 +345,6 @@ const clearInput = () => {
 }
 
 const resetGame = () => {
-  clearAutoSubmit()
   attempts.value = []
   inputDigits.value = Array.from({ length: DAILY_CODE_LENGTH }, () => null)
   activeSlot.value = 0
@@ -365,6 +354,7 @@ const resetGame = () => {
 }
 
 const handleKeydown = (event: KeyboardEvent) => {
+  if (introPhase.value !== 'ready') return
   if (event.metaKey || event.ctrlKey || event.altKey) return
   if (/^\d$/.test(event.key)) setActiveDigit(Number(event.key))
   if (event.key === 'ArrowUp') adjustDigit(1)
@@ -380,16 +370,35 @@ const handleKeydown = (event: KeyboardEvent) => {
   }
 }
 
+const startIntro = () => {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    introPhase.value = 'ready'
+    return
+  }
+
+  phoneEntryTimer = window.setTimeout(() => {
+    introPhase.value = 'loading'
+    screenLoadingTimer = window.setTimeout(() => {
+      introPhase.value = 'ready'
+      void scrollAttemptsToBottom()
+      screenLoadingTimer = null
+    }, SCREEN_LOADING_DURATION)
+    phoneEntryTimer = null
+  }, PHONE_ENTRY_DURATION)
+}
+
 onMounted(() => {
   const today = new Date()
   dateKey.value = getLocalDateKey(today)
   answer.value = getDailyCode(today)
   restoreGame()
+  startIntro()
   window.addEventListener('keydown', handleKeydown)
 })
 
 onBeforeUnmount(() => {
-  clearAutoSubmit()
+  if (phoneEntryTimer !== null) window.clearTimeout(phoneEntryTimer)
+  if (screenLoadingTimer !== null) window.clearTimeout(screenLoadingTimer)
   window.removeEventListener('keydown', handleKeydown)
 })
 </script>

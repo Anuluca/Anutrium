@@ -239,7 +239,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import {
+  computed,
+  nextTick,
+  onMounted,
+  onUnmounted,
+  provide,
+  ref,
+  watch,
+} from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { Moon, Sunny } from '@element-plus/icons-vue'
@@ -267,6 +275,10 @@ const props = defineProps({
     default: false,
   },
 })
+provide(
+  'site-entry-active',
+  computed(() => props.entryActive)
+)
 
 const logoActive = ref(true)
 const headerLogoReady = ref(false)
