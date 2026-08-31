@@ -29,6 +29,8 @@ declare module '@vue/runtime-core' {
     FooterCom: typeof import('./src/components/FooterCom/index.vue')['default']
     FooterSocialLinkBar: typeof import('./src/components/FooterSocialLinkBar/index.vue')['default']
     FooterSocialLinks: typeof import('./src/components/FooterSocialLinks/index.vue')['default']
+    GamePageLayout: typeof import('./src/components/GamePageLayout/index.vue')['default']
+    GameStage: typeof import('./src/components/GameStage/index.vue')['default']
     ImageLogAlbumCard: typeof import('./src/components/ImageLogAlbumCard/index.vue')['default']
     IslandClock: typeof import('./src/components/IslandClock/index.vue')['default']
     JourneyVideoPlayer: typeof import('./src/components/JourneyVideoPlayer/index.vue')['default']

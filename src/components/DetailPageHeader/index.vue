@@ -8,7 +8,10 @@
     <button class="detail-page-header__back" type="button" @click="goBack">
       <span>{{ backLabel }}</span>
     </button>
-    <h1>{{ title }}</h1>
+    <div class="detail-page-header__heading">
+      <h1>{{ title }}</h1>
+      <p v-if="subtitle" class="detail-page-header__subtitle">{{ subtitle }}</p>
+    </div>
     <div class="detail-page-header__crosshair" aria-hidden="true" />
   </header>
 </template>
@@ -20,6 +23,7 @@ import { useRouter } from 'vue-router'
 const props = defineProps<{
   backLabel: string
   backPath: string
+  subtitle?: string
   title: string
 }>()
 
@@ -185,9 +189,16 @@ onBeforeUnmount(() => {
     }
   }
 
-  h1 {
+  &__heading {
     position: relative;
     z-index: 3;
+    display: flex;
+    align-items: baseline;
+    gap: clamp(10px, 1.4vw, 22px);
+    min-width: 0;
+  }
+
+  h1 {
     margin: 0;
     color: #e23456;
     font-family: 'alibaba-puhuiti', sans-serif;
@@ -208,6 +219,16 @@ onBeforeUnmount(() => {
     );
     text-shadow: 0 0 18px rgba(226, 52, 86, 0.2);
     transition: text-shadow 0.25s ease;
+  }
+
+  &__subtitle {
+    margin: 0;
+    color: rgba(226, 52, 86, 0.58);
+    font-family: 'alibaba-puhuiti', sans-serif;
+    font-size: clamp(0.7rem, 1.15vw, 1rem);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    line-height: 1.2;
   }
 
   &:hover h1 {
@@ -304,6 +325,16 @@ onBeforeUnmount(() => {
 
     &__back {
       font-size: 13px;
+    }
+
+    &__heading {
+      align-items: flex-start;
+      gap: 3px;
+      flex-direction: column;
+    }
+
+    &__subtitle {
+      font-size: clamp(9px, 2.5vw, 12px);
     }
   }
 }

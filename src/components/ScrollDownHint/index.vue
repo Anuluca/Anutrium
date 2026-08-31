@@ -108,10 +108,10 @@ onUnmounted(() => {
   cursor: pointer;
   opacity: 1;
   transform: translateX(-50%);
-  transition: opacity 0.42s ease-out;
-
+  transition: opacity 1s ease-out, transform 1s cubic-bezier(0.16, 1, 0.3, 1);
   &.is-hidden {
     opacity: 0;
+    transform: translate(-50%, -32px);
     pointer-events: none;
   }
 

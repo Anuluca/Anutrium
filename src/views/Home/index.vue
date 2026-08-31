@@ -30,6 +30,8 @@
           'is-page-entering': enteringHomePageIndex === 0,
           'is-page-leaving': leavingHomePageIndex === 0,
           'is-hero-inactive': isHeroContentInactive,
+          'is-hero-initial-entering': isHeroInitialEntering,
+          'is-hero-initial-hidden': isHeroInitialHidden,
         }"
       >
         <section
@@ -289,7 +291,11 @@
     </nav>
 
     <div class="home-marquee-fixed-layer" :style="{ top: marqueeViewportTop }">
-      <MarqueeShowcase class="marquee-showcase" :flat="isHeroContentInactive" />
+      <MarqueeShowcase
+        class="marquee-showcase"
+        :entrance-ready="isHeroInitialEntranceReady"
+        :flat="isHeroContentInactive"
+      />
     </div>
   </div>
 </template>
@@ -343,15 +349,21 @@ const visualStateStore = visualState()
 const newsItems = computed<NewsItem[]>(
   () => tm('home.dynamic.recommend') as NewsItem[]
 )
-const aboutGalleryItems = computed<AboutGalleryItem[]>(() => {
-  const items = [...(tm('home.dynamic.aboutGallery') as AboutGalleryItem[])]
 
-  for (let index = items.length - 1; index > 0; index -= 1) {
+function sampleRandomItems<T>(items: readonly T[], limit: number) {
+  if (items.length <= limit) return [...items]
+
+  const sample = items.slice(0, limit)
+  for (let index = limit; index < items.length; index += 1) {
     const randomIndex = Math.floor(Math.random() * (index + 1))
-    ;[items[index], items[randomIndex]] = [items[randomIndex], items[index]]
+    if (randomIndex < limit) sample[randomIndex] = items[index]
   }
+  return sample
+}
 
-  return items.slice(0, 20)
+const aboutGalleryItems = computed<AboutGalleryItem[]>(() => {
+  const items = tm('home.dynamic.aboutGallery') as AboutGalleryItem[]
+  return sampleRandomItems(items, 20)
 })
 const aboutDescriptionItems = computed(
   () => tm('home.dynamic.descriptionItem') as AboutDescriptionItem[]
@@ -395,6 +407,9 @@ const homeIndicatorPagePosition = ref(0)
 const homeIndicatorTransitionDuration = ref(0)
 const isCraftFooterVisible = ref(false)
 const isHeroContentInactive = ref(false)
+const isHeroInitialEntering = ref(false)
+const isHeroInitialHidden = ref(true)
+const isHeroInitialEntranceReady = ref(false)
 const renderedHomePageIds = ref<ReadonlySet<string>>(new Set(['hero']))
 const homeSwiper = ref<SwiperInstance | null>(null)
 const newsSwiper = ref<SwiperInstance | null>(null)
@@ -444,11 +459,14 @@ let craftFooterWheelArmTimer: ReturnType<typeof setTimeout> | null = null
 let heroPageTransitionTimer: ReturnType<typeof setTimeout> | null = null
 let homePageFadeTimer: ReturnType<typeof setTimeout> | null = null
 let homePageContentExitTimer: ReturnType<typeof setTimeout> | null = null
+let heroInitialEntranceObserver: MutationObserver | null = null
+let heroInitialEntranceTimer: ReturnType<typeof setTimeout> | null = null
 let isCraftFooterTransitionLocked = false
 let isCraftFooterWheelArmed = false
 let isHomePageTransitioning = false
 let homePointerStartY: number | null = null
 let didHandleHomePointer = false
+let hasTouchPagingListeners = false
 let newsWheelInteractionBounds: { left: number; right: number } | null = null
 let menuElement: HTMLElement | null = null
 let heroMetrics = {
@@ -464,7 +482,8 @@ const CRAFT_PAGE_INDEX = homePageIndicatorItems.findIndex(
 const HOME_PAGE_TRANSITION_DURATION = 600
 const HOME_PAGE_CONTENT_MOTION_DURATION = 600
 const HERO_CONTENT_TRANSITION_DURATION = 1200
-const HERO_INITIAL_ENTRANCE_DURATION = 1750
+const HERO_INITIAL_CONTENT_TRANSITION_DURATION = 1200
+const HERO_INITIAL_ENTRANCE_DURATION = 1000
 const HERO_PAGE_TRANSITION_DELAY = 340
 const HOME_PAGE_CONTENT_EXIT_DURATION = 200
 const HOME_INDICATOR_TRANSITION_RATIO = 0.72
@@ -473,10 +492,48 @@ const CRAFT_FOOTER_TRANSITION_DURATION = 720
 const CRAFT_FOOTER_WHEEL_QUIET_DURATION = 160
 const NEWS_WHEEL_GESTURE_THRESHOLD = 18
 
+const startHeroInitialEntrance = () => {
+  if (isHeroInitialEntranceReady.value) return
+
+  heroInitialEntranceObserver?.disconnect()
+  heroInitialEntranceObserver = null
+  isHeroInitialEntering.value = true
+  isHeroInitialEntranceReady.value = true
+  isHeroInitialHidden.value = false
+  heroInitialEntranceTimer = setTimeout(() => {
+    isHeroInitialEntering.value = false
+    heroInitialEntranceTimer = null
+  }, HERO_INITIAL_CONTENT_TRANSITION_DURATION)
+}
+
+const waitForHeroLayoutEntrance = () => {
+  const layoutElement = heroSection.value?.closest('.layout-page')
+  if (!layoutElement) {
+    startHeroInitialEntrance()
+    return
+  }
+
+  if (layoutElement.classList.contains('layout-show')) {
+    startHeroInitialEntrance()
+    return
+  }
+
+  heroInitialEntranceObserver = new MutationObserver(() => {
+    if (layoutElement.classList.contains('layout-show')) {
+      startHeroInitialEntrance()
+    }
+  })
+  heroInitialEntranceObserver.observe(layoutElement, {
+    attributeFilter: ['class'],
+    attributes: true,
+  })
+}
+
 const homePageStyle = computed(() => ({
   '--home-craft-footer-height': craftFooterHeight.value,
   '--home-hero-counter-offset': heroContentCounterOffset.value,
   '--home-hero-content-duration': `${HERO_CONTENT_TRANSITION_DURATION}ms`,
+  '--home-hero-initial-content-duration': `${HERO_INITIAL_CONTENT_TRANSITION_DURATION}ms`,
   '--home-page-motion-duration': `${homePageMotionDuration.value}ms`,
 }))
 const homeIndicatorTrackStyle = computed(() => ({
@@ -857,7 +914,6 @@ const stopSloganMotion = () => {
 const updateSloganMotion = () => {
   sloganRotateX += (sloganTargetRotateX - sloganRotateX) * 0.12
   sloganRotateY += (sloganTargetRotateY - sloganRotateY) * 0.12
-  applySloganTransform()
 
   const isSettled =
     Math.abs(sloganTargetRotateX - sloganRotateX) < 0.01 &&
@@ -871,6 +927,7 @@ const updateSloganMotion = () => {
     return
   }
 
+  applySloganTransform()
   sloganRafId = requestAnimationFrame(updateSloganMotion)
 }
 
@@ -892,9 +949,9 @@ const refreshHeroInteractionMetrics = () => {
     const rect = heroSection.value.getBoundingClientRect()
     heroMetrics = {
       centerX: rect.left + rect.width / 2,
-      centerY: rect.top + rect.height / 2,
+      centerY: window.innerHeight / 2,
       halfWidth: Math.max(1, rect.width / 2),
-      halfHeight: Math.max(1, rect.height / 2),
+      halfHeight: Math.max(1, window.innerHeight / 2),
     }
   }
 }
@@ -1231,19 +1288,29 @@ onMounted(async () => {
     capture: true,
     passive: false,
   })
-  window.addEventListener('pointerdown', handleHomePointerDown, true)
-  window.addEventListener('pointermove', handleHomePointerMove, {
-    capture: true,
-    passive: false,
-  })
-  window.addEventListener('pointerup', handleHomePointerEnd, true)
-  window.addEventListener('pointercancel', handleHomePointerEnd, true)
+  hasTouchPagingListeners = window.matchMedia('(pointer: coarse)').matches
+  if (hasTouchPagingListeners) {
+    window.addEventListener('pointerdown', handleHomePointerDown, true)
+    window.addEventListener('pointermove', handleHomePointerMove, {
+      capture: true,
+      passive: false,
+    })
+    window.addEventListener('pointerup', handleHomePointerEnd, true)
+    window.addEventListener('pointercancel', handleHomePointerEnd, true)
+  }
   document.addEventListener('visibilitychange', handleVisibilityChange)
   await nextTick()
+  waitForHeroLayoutEntrance()
   window.requestAnimationFrame(connectCraftFooterResizeObserver)
 })
 
 onUnmounted(() => {
+  heroInitialEntranceObserver?.disconnect()
+  heroInitialEntranceObserver = null
+  if (heroInitialEntranceTimer) {
+    clearTimeout(heroInitialEntranceTimer)
+    heroInitialEntranceTimer = null
+  }
   stopAnimatedHomeProgressSync()
   visualStateStore.setHomeHeaderScrollProgress(0)
   visualStateStore.setPageScrollProgressOverride(null)
@@ -1264,10 +1331,13 @@ onUnmounted(() => {
   window.removeEventListener('resize', handleHeroResize)
   window.removeEventListener('blur', resetHeroSloganMotion)
   window.removeEventListener('wheel', handleHomeWheel, true)
-  window.removeEventListener('pointerdown', handleHomePointerDown, true)
-  window.removeEventListener('pointermove', handleHomePointerMove, true)
-  window.removeEventListener('pointerup', handleHomePointerEnd, true)
-  window.removeEventListener('pointercancel', handleHomePointerEnd, true)
+  if (hasTouchPagingListeners) {
+    window.removeEventListener('pointerdown', handleHomePointerDown, true)
+    window.removeEventListener('pointermove', handleHomePointerMove, true)
+    window.removeEventListener('pointerup', handleHomePointerEnd, true)
+    window.removeEventListener('pointercancel', handleHomePointerEnd, true)
+    hasTouchPagingListeners = false
+  }
   document.removeEventListener('visibilitychange', handleVisibilityChange)
   reducedMotionQuery?.removeEventListener('change', handleReducedMotionChange)
   heroMotionQuery?.removeEventListener('change', syncHeroMotionListener)

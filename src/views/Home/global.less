@@ -4,6 +4,15 @@ body:has(.home-page) {
   }
 }
 
+.home-page.route-enter-active {
+  transition: none;
+}
+
+.home-page.route-enter-from {
+  opacity: 1;
+  transform: none;
+}
+
 @media screen and (max-aspect-ratio: @ratio-threshold) {
   body:has(.home-page) .router-container {
     padding-right: 0;

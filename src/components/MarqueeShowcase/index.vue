@@ -4,6 +4,7 @@
     class="marquee-wrapper"
     :class="{
       'is-ready': isMarqueeReady,
+      'is-entrance-ready': entranceReady,
       'is-flat': flat,
       'motion-paused': isMotionPaused,
     }"
@@ -38,9 +39,11 @@ import { onMounted, onUnmounted, ref } from 'vue'
 
 withDefaults(
   defineProps<{
+    entranceReady?: boolean
     flat?: boolean
   }>(),
   {
+    entranceReady: true,
     flat: false,
   }
 )
@@ -137,9 +140,8 @@ onUnmounted(() => {
   user-select: none;
 
   perspective: 1000px;
-  transform: translateY(72px) scale(1.16);
+  transform: translateY(-120px);
   transform-origin: center bottom;
-  animation: marqueeWrapperIn 1.1s cubic-bezier(0.23, 1, 0.32, 1) 0.95s forwards;
 
   -webkit-mask-image: linear-gradient(
     to right,
@@ -160,8 +162,18 @@ onUnmounted(() => {
     animation: marqueeScroll 25s linear infinite;
   }
 
+  &.is-entrance-ready {
+    animation: marqueeWrapperIn 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+
+    .marquee-3d-container {
+      animation: marqueePerspectiveIn 0.9s cubic-bezier(0.16, 1, 0.3, 1)
+        backwards;
+    }
+  }
+
   &.is-flat {
     .marquee-3d-container {
+      animation: none;
       transform: rotateX(0deg);
       opacity: 0.72;
     }
@@ -176,6 +188,7 @@ onUnmounted(() => {
 .marquee-3d-container {
   width: 100%;
   transform: rotateX(48deg);
+  transform-origin: center center;
   transform-style: preserve-3d;
   transition: transform 0.36s cubic-bezier(0.2, 0.8, 0.2, 1),
     opacity 0.36s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -229,15 +242,31 @@ onUnmounted(() => {
 @keyframes marqueeWrapperIn {
   from {
     opacity: 0;
-    transform: translateY(72px) scale(1.16);
+    transform: translateY(-120px);
   }
   to {
     opacity: 0.42;
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
+  }
+}
+
+@keyframes marqueePerspectiveIn {
+  from {
+    transform: rotateX(20deg);
+  }
+
+  to {
+    transform: rotateX(48deg);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .marquee-wrapper.is-entrance-ready,
+  .marquee-wrapper.is-entrance-ready .marquee-3d-container {
+    animation-duration: 0.01ms;
+    animation-delay: 0s;
+  }
+
   .marquee-3d-container {
     transition-duration: 0.01ms;
   }

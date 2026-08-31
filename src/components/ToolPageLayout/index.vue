@@ -4,6 +4,7 @@
       <DetailPageHeader
         :back-label="backLabel"
         :back-path="backPath"
+        :subtitle="subtitle"
         :title="title"
       />
 
@@ -42,6 +43,7 @@ withDefaults(
     pageClass: string
     recommendedTools?: RecommendedTool[]
     showRecommendations?: boolean
+    subtitle?: string
     title: string
   }>(),
   {
@@ -49,6 +51,7 @@ withDefaults(
     backPath: '/craft',
     recommendedTools: () => [],
     showRecommendations: true,
+    subtitle: '',
   }
 )
 </script>
