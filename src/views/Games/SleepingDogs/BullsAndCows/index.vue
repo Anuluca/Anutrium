@@ -6,6 +6,8 @@
     :rules-text="copy.rulesBody"
     :rules-note="copy.refreshNote"
     :source-text="copy.sourceBody"
+    :supported-inputs="['keyboardMouse', 'gamepad', 'mobile']"
+    game-icon="https://assets.anuluca.com/other/sleepingDogs.png"
     back-label="HOME"
     back-path="/"
   >

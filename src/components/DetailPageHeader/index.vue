@@ -1,10 +1,5 @@
 <template>
-  <header
-    class="detail-page-header no-cursor"
-    @mouseenter="startCrosshairTracking"
-    @mousemove="queueCrosshairUpdate"
-    @mouseleave="stopCrosshairTracking"
-  >
+  <header class="detail-page-header">
     <button class="detail-page-header__back" type="button" @click="goBack">
       <span>{{ backLabel }}</span>
     </button>
@@ -12,12 +7,10 @@
       <h1>{{ title }}</h1>
       <p v-if="subtitle" class="detail-page-header__subtitle">{{ subtitle }}</p>
     </div>
-    <div class="detail-page-header__crosshair" aria-hidden="true" />
   </header>
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 
 const props = defineProps<{
@@ -28,52 +21,6 @@ const props = defineProps<{
 }>()
 
 const router = useRouter()
-let crosshairFrame: number | null = null
-let crosshairTarget: HTMLElement | null = null
-let crosshairClientX = 0
-let crosshairClientY = 0
-
-const renderCrosshair = () => {
-  crosshairFrame = null
-  if (!crosshairTarget) return
-
-  const bounds = crosshairTarget.getBoundingClientRect()
-  crosshairTarget.style.setProperty(
-    '--detail-header-cross-x',
-    `${crosshairClientX - bounds.left}px`
-  )
-  crosshairTarget.style.setProperty(
-    '--detail-header-cross-y',
-    `${crosshairClientY - bounds.top}px`
-  )
-}
-
-const queueCrosshairUpdate = (event: MouseEvent) => {
-  crosshairTarget = event.currentTarget as HTMLElement
-  crosshairClientX = event.clientX
-  crosshairClientY = event.clientY
-
-  if (crosshairFrame === null) {
-    crosshairFrame = window.requestAnimationFrame(renderCrosshair)
-  }
-}
-
-const startCrosshairTracking = (event: MouseEvent) => {
-  const target = event.currentTarget as HTMLElement
-  target.classList.add('is-crosshair-active')
-  queueCrosshairUpdate(event)
-}
-
-const stopCrosshairTracking = (event: MouseEvent) => {
-  const target = event.currentTarget as HTMLElement
-  target.classList.remove('is-crosshair-active')
-  crosshairTarget = null
-
-  if (crosshairFrame !== null) {
-    window.cancelAnimationFrame(crosshairFrame)
-    crosshairFrame = null
-  }
-}
 
 const goBack = () => {
   const previousPath = window.history.state?.back
@@ -89,18 +36,11 @@ const goBack = () => {
 
   router.push(props.backPath)
 }
-
-onBeforeUnmount(() => {
-  if (crosshairFrame !== null) {
-    window.cancelAnimationFrame(crosshairFrame)
-  }
-})
 </script>
 
 <style lang="less" scoped>
 .detail-page-header {
   position: relative;
-  isolation: isolate;
   width: 100%;
   min-height: clamp(64px, 7vw, 108px);
   box-sizing: border-box;
@@ -108,53 +48,12 @@ onBeforeUnmount(() => {
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
-  gap: 8px;
-  overflow: hidden;
-  margin: 30px 0 0;
-  padding: clamp(10px, 1.2vw, 16px) clamp(14px, 2.5vw, 32px);
-  border-radius: 2px;
-  background-color: #000;
-  box-shadow: inset 0 0 0 1px rgba(226, 52, 86, 0.12);
+  gap: 0;
+  margin: 0 0 12px;
+  padding: 0;
+  overflow: visible;
   opacity: 0;
   animation: detailHeaderCrtOn 0.58s cubic-bezier(0.19, 1, 0.22, 1) 0.44s both;
-
-  &::before,
-  &::after {
-    position: absolute;
-    inset: 0;
-    content: '';
-    pointer-events: none;
-  }
-
-  &::before {
-    z-index: 0;
-    background: linear-gradient(
-        rgba(226, 52, 86, 0.08),
-        rgba(226, 52, 86, 0.02)
-      ),
-      repeating-linear-gradient(
-        90deg,
-        rgba(255, 255, 255, 0.16) 0,
-        rgba(255, 255, 255, 0.16) 1px,
-        transparent 1px,
-        transparent 5px
-      );
-    mix-blend-mode: screen;
-    opacity: 0.42;
-  }
-
-  &::after {
-    z-index: 8;
-    background: linear-gradient(
-      to bottom,
-      transparent 47%,
-      rgba(255, 255, 255, 0.92) 50%,
-      transparent 53%
-    );
-    opacity: 0;
-    mix-blend-mode: screen;
-    animation: detailHeaderCrtFlash 0.58s linear 0.44s both;
-  }
 
   &__back {
     position: relative;
@@ -207,16 +106,6 @@ onBeforeUnmount(() => {
     letter-spacing: -0.02em;
     line-height: 1.05;
     overflow-wrap: anywhere;
-    -webkit-mask-image: repeating-linear-gradient(
-      to bottom,
-      #000 0 2px,
-      transparent 2px 3px
-    );
-    mask-image: repeating-linear-gradient(
-      to bottom,
-      #000 0 2px,
-      transparent 2px 3px
-    );
     text-shadow: 0 0 18px rgba(226, 52, 86, 0.2);
     transition: text-shadow 0.25s ease;
   }
@@ -227,48 +116,13 @@ onBeforeUnmount(() => {
     font-family: 'alibaba-puhuiti', sans-serif;
     font-size: clamp(0.7rem, 1.15vw, 1rem);
     font-weight: 700;
-    letter-spacing: 0.06em;
+    letter-spacing: 0;
     line-height: 1.2;
   }
 
   &:hover h1 {
     text-shadow: 0 0 24px rgba(226, 52, 86, 0.43),
       0 0 60px rgba(226, 52, 86, 0.36);
-  }
-
-  &__crosshair {
-    position: absolute;
-    inset: 0;
-    z-index: 5;
-    opacity: 0;
-    pointer-events: none;
-
-    &::before,
-    &::after {
-      position: absolute;
-      content: '';
-      background: #e23456;
-    }
-
-    &::before {
-      top: 0;
-      bottom: 0;
-      left: var(--detail-header-cross-x);
-      width: 1px;
-      transform: translateX(-0.5px);
-    }
-
-    &::after {
-      top: var(--detail-header-cross-y);
-      right: 0;
-      left: 0;
-      height: 1px;
-      transform: translateY(-0.5px);
-    }
-  }
-
-  &.is-crosshair-active &__crosshair {
-    opacity: 1;
   }
 }
 
@@ -297,31 +151,12 @@ onBeforeUnmount(() => {
   }
 }
 
-@keyframes detailHeaderCrtFlash {
-  0%,
-  37% {
-    opacity: 0;
-  }
-
-  44% {
-    opacity: 0.95;
-  }
-
-  58% {
-    opacity: 0.28;
-  }
-
-  100% {
-    opacity: 0;
-  }
-}
-
 @media (max-width: 768px) {
   .detail-page-header {
     aspect-ratio: 6 / 1;
     min-height: 0;
-    margin: 0;
-    padding: clamp(10px, 3vw, 16px) clamp(20px, 6vw, 32px);
+    margin: 0 0 6px;
+    padding: 0;
 
     &__back {
       font-size: 13px;
@@ -329,7 +164,7 @@ onBeforeUnmount(() => {
 
     &__heading {
       align-items: flex-start;
-      gap: 3px;
+      gap: 0;
       flex-direction: column;
     }
 
@@ -345,10 +180,6 @@ onBeforeUnmount(() => {
     clip-path: none;
     filter: none;
     animation: none;
-
-    &::after {
-      animation: none;
-    }
   }
 }
 </style>

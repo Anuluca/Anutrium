@@ -63,6 +63,7 @@ withDefaults(
   display: flex;
   flex-direction: column;
   padding-bottom: 0 !important;
+  overflow: visible;
 }
 
 .tool-page-stage {
@@ -94,7 +95,7 @@ withDefaults(
 
 @media (min-width: 769px) {
   .tool-page-layout :deep(.detail-page-header) {
-    margin-top: 20px;
+    margin-top: 0;
   }
 }
 </style>
