@@ -45,8 +45,12 @@ export const getDailyCode = (date = new Date()) => {
   return digits.slice(0, DAILY_CODE_LENGTH)
 }
 
-export const scoreGuess = (guess: number[], answer: number[]): DigitMark[] =>
+export const scoreGuess = (
+  guess: readonly number[],
+  answer: readonly number[],
+  answerDigits = new Set(answer)
+): DigitMark[] =>
   guess.map((digit, index) => {
     if (digit === answer[index]) return 'exact'
-    return answer.includes(digit) ? 'misplaced' : 'absent'
+    return answerDigits.has(digit) ? 'misplaced' : 'absent'
   })

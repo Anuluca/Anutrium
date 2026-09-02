@@ -159,17 +159,15 @@ const goBack = () => {
     padding: 0;
 
     &__back {
-      font-size: 13px;
+      font-size: 19.5px;
     }
 
-    &__heading {
-      align-items: flex-start;
-      gap: 0;
-      flex-direction: column;
+    h1 {
+      font-size: clamp(1.65rem, 3.9vw, 3.45rem);
     }
 
     &__subtitle {
-      font-size: clamp(9px, 2.5vw, 12px);
+      font-size: clamp(13.5px, 3.75vw, 18px);
     }
   }
 }

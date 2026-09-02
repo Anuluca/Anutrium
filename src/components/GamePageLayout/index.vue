@@ -13,7 +13,6 @@
           ref="gameContainer"
           class="game-page-canvas native-cursor no-rem"
           :class="{
-            'game-page-canvas--fullscreen': isFullscreen,
             'game-page-canvas--page-fullscreen': isPageFullscreen,
           }"
         >
@@ -263,8 +262,10 @@ const inputOptions = computed<Array<{ key: GameInputMethod; label: string }>>(
   ]
 )
 
+const supportedInputs = computed(() => new Set(props.supportedInputs))
+
 const isInputSupported = (input: GameInputMethod) =>
-  props.supportedInputs.includes(input)
+  supportedInputs.value.has(input)
 
 const syncFullscreenState = () => {
   isFullscreen.value = document.fullscreenElement === gameContainer.value
@@ -835,6 +836,10 @@ onBeforeUnmount(() => {
 
 @media (max-width: 768px) and (orientation: portrait) {
   :global(.game-page-layout) {
+    --game-mobile-horizontal-gutter: max(16px, env(safe-area-inset-left));
+    --game-mobile-vertical-gutter: calc(
+      2.83333rem + max(0.66667rem, env(safe-area-inset-top))
+    );
     position: fixed !important;
     top: 0;
     left: 0;
@@ -843,16 +848,28 @@ onBeforeUnmount(() => {
     max-width: none !important;
     height: 100dvw !important;
     min-height: 0 !important;
-    padding: 0 7px !important;
-    overflow-y: auto;
+    padding: 0 !important;
+    overflow: hidden;
     background: #050505;
     transform: rotate(90deg) translateY(-100%);
     transform-origin: top left;
   }
 
   :global(.game-page-layout .tool-page-stage) {
-    flex: 0 0 auto;
+    flex: 1 1 auto;
+    height: 100%;
+    min-height: 0;
+    padding: var(--game-mobile-horizontal-gutter)
+      var(--game-mobile-vertical-gutter) var(--game-mobile-horizontal-gutter)
+      var(--game-mobile-vertical-gutter);
+    box-sizing: border-box;
     transform: none;
+  }
+
+  :global(.game-page-layout .tool-page-content) {
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
   }
 
   :global(.game-page-layout .detail-page-header) {
@@ -864,9 +881,64 @@ onBeforeUnmount(() => {
   }
 
   .game-page-workspace {
-    height: calc(100dvw - 60px);
-    min-height: 300px;
-    margin: 3px 0;
+    grid-template-columns: minmax(0, 76fr) minmax(172px, 24fr);
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
+    margin: 0;
+  }
+
+  .game-page-sidebar {
+    height: 100%;
+  }
+
+  .game-page-description {
+    h2 {
+      font-size: clamp(28px, 2.55vw, 40px);
+    }
+
+    p {
+      font-size: clamp(16px, 1.35vw, 21px);
+    }
+
+    small {
+      font-size: 18px;
+    }
+  }
+
+  .game-page-compatibility.no-rem {
+    gap: 3.5px;
+    min-height: 24px;
+    margin: 0 7px 12px;
+    font-size: 9px;
+  }
+
+  .game-page-compatibility.no-rem .game-page-compatibility__devices {
+    gap: 6px;
+  }
+
+  .game-page-input-device.no-rem {
+    width: 18px;
+    height: 18px;
+
+    > svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  .game-page-input-device.no-rem .game-page-input-device__check {
+    right: -3px;
+    bottom: -2.5px;
+    width: 10px;
+    height: 10px;
+    font-size: 7px;
+  }
+
+  .game-page-canvas:not(.game-page-canvas--page-fullscreen):not(:fullscreen) {
+    width: 100%;
+    height: 100%;
+    margin: 0;
   }
 
   .game-page-action,

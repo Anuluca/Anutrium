@@ -1,8 +1,14 @@
 <template>
-  <section class="game-stage" :style="stageStyle">
-    <div class="game-stage__background" aria-hidden="true" />
-    <div class="game-stage__overlay" aria-hidden="true" />
-    <div class="game-stage__content"><slot /></div>
+  <section
+    class="game-stage"
+    :class="{ 'game-stage--contained-content': contentAspectRatio > 0 }"
+    :style="stageStyle"
+  >
+    <div class="game-stage__viewport">
+      <div class="game-stage__background" aria-hidden="true" />
+      <div class="game-stage__overlay" aria-hidden="true" />
+      <div class="game-stage__content"><slot /></div>
+    </div>
   </section>
 </template>
 
@@ -14,12 +20,14 @@ const props = withDefaults(
     aspectRatio?: string
     backgroundImage?: string
     backgroundPosition?: string
+    contentAspectRatio?: number
     overlayColor?: string
   }>(),
   {
     aspectRatio: 'auto',
     backgroundImage: '',
     backgroundPosition: 'center',
+    contentAspectRatio: 0,
     overlayColor: 'rgba(0, 0, 0, 0)',
   }
 )
@@ -32,6 +40,7 @@ const stageStyle = computed(
         ? `url("${props.backgroundImage}")`
         : 'none',
       '--game-stage-background-position': props.backgroundPosition,
+      '--game-stage-content-ratio': props.contentAspectRatio,
       '--game-stage-overlay': props.overlayColor,
     } as CSSProperties)
 )
@@ -58,7 +67,7 @@ const stageStyle = computed(
   }
 
   &__background {
-    z-index: -2;
+    z-index: 0;
     background-image: var(--game-stage-background-image);
     background-position: var(--game-stage-background-position);
     background-size: cover;
@@ -66,13 +75,29 @@ const stageStyle = computed(
   }
 
   &__overlay {
-    z-index: -1;
+    z-index: 1;
     background: var(--game-stage-overlay);
     pointer-events: none;
   }
 
   &__content {
-    z-index: 1;
+    z-index: 2;
+  }
+
+  &__viewport {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    isolation: isolate;
+  }
+
+  &--contained-content &__viewport {
+    width: min(100cqw, calc(100cqh * var(--game-stage-content-ratio)));
+    height: auto;
+    aspect-ratio: var(--game-stage-content-ratio);
+    margin: auto;
+    container-type: size;
   }
 }
 </style>

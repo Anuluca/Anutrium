@@ -1,6 +1,7 @@
 <template>
   <GameStage
     class="bulls-cows-stage"
+    :content-aspect-ratio="16 / 9"
     :background-image="stageBackground"
     overlay-color="linear-gradient(90deg, rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.38))"
   >
@@ -137,8 +138,8 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import referenceScene from '@/assets/img/games/sleeping-dogs/game-reference.png'
-import stageBackground from '@/assets/img/games/sleeping-dogs/game-stage-background.png'
+import referenceScene from '@/assets/img/games/sleeping-dogs/game-reference.jpg'
+import stageBackground from '@/assets/img/games/sleeping-dogs/game-stage-background.jpg'
 import GameStage from '@/components/GameStage/index.vue'
 import {
   DAILY_CODE_LENGTH,
@@ -160,13 +161,20 @@ const MAX_ATTEMPTS = 6
 const PHONE_ENTRY_DURATION = 900
 const SCREEN_LOADING_DURATION = 1000
 const STORAGE_PREFIX = 'anutrium:daily-camera-hack:'
+const createEmptyInput = () =>
+  Array.from({ length: DAILY_CODE_LENGTH }, () => null)
+
+const isValidGuess = (guess: unknown): guess is number[] =>
+  Array.isArray(guess) &&
+  guess.length === DAILY_CODE_LENGTH &&
+  guess.every((digit) => Number.isInteger(digit) && digit >= 0 && digit <= 9) &&
+  new Set(guess).size === DAILY_CODE_LENGTH
+
 const { locale } = useI18n()
 const dateKey = ref('--------')
 const answer = ref<number[]>([])
 const attempts = ref<Attempt[]>([])
-const inputDigits = ref<Array<number | null>>(
-  Array.from({ length: DAILY_CODE_LENGTH }, () => null)
-)
+const inputDigits = ref<Array<number | null>>(createEmptyInput())
 const activeSlot = ref(0)
 const phase = ref<GamePhase>('active')
 const introPhase = ref<IntroPhase>('entering')
@@ -223,6 +231,8 @@ const screenMessage = computed(() => {
   return inputError.value || copy.value.enterUnique
 })
 
+const answerDigits = computed(() => new Set(answer.value))
+
 const scrollAttemptsToBottom = async () => {
   await nextTick()
   if (attemptLog.value)
@@ -258,18 +268,17 @@ const restoreGame = () => {
   try {
     const guesses = JSON.parse(saved) as unknown
     if (!Array.isArray(guesses)) return
-    attempts.value = guesses
-      .filter(
-        (guess): guess is number[] =>
-          Array.isArray(guess) &&
-          guess.length === DAILY_CODE_LENGTH &&
-          guess.every(
-            (digit) => Number.isInteger(digit) && digit >= 0 && digit <= 9
-          ) &&
-          new Set(guess).size === DAILY_CODE_LENGTH
-      )
-      .slice(0, MAX_ATTEMPTS)
-      .map((digits) => ({ digits, marks: scoreGuess(digits, answer.value) }))
+    const restoredAttempts: Attempt[] = []
+    for (const guess of guesses) {
+      if (restoredAttempts.length === MAX_ATTEMPTS) break
+      if (!isValidGuess(guess)) continue
+
+      restoredAttempts.push({
+        digits: guess,
+        marks: scoreGuess(guess, answer.value, answerDigits.value),
+      })
+    }
+    attempts.value = restoredAttempts
     derivePhase()
     void scrollAttemptsToBottom()
   } catch {
@@ -292,9 +301,9 @@ const submitGuess = () => {
 
   attempts.value.push({
     digits: [...digits],
-    marks: scoreGuess(digits, answer.value),
+    marks: scoreGuess(digits, answer.value, answerDigits.value),
   })
-  inputDigits.value = Array.from({ length: DAILY_CODE_LENGTH }, () => null)
+  inputDigits.value = createEmptyInput()
   activeSlot.value = 0
   inputError.value = ''
   derivePhase()
@@ -346,7 +355,7 @@ const clearInput = () => {
 
 const resetGame = () => {
   attempts.value = []
-  inputDigits.value = Array.from({ length: DAILY_CODE_LENGTH }, () => null)
+  inputDigits.value = createEmptyInput()
   activeSlot.value = 0
   phase.value = 'active'
   inputError.value = ''
@@ -356,17 +365,29 @@ const resetGame = () => {
 const handleKeydown = (event: KeyboardEvent) => {
   if (introPhase.value !== 'ready') return
   if (event.metaKey || event.ctrlKey || event.altKey) return
-  if (/^\d$/.test(event.key)) setActiveDigit(Number(event.key))
-  if (event.key === 'ArrowUp') adjustDigit(1)
-  if (event.key === 'ArrowDown') adjustDigit(-1)
-  if (event.key === 'ArrowLeft')
-    activeSlot.value = Math.max(0, activeSlot.value - 1)
-  if (event.key === 'ArrowRight') {
-    activeSlot.value = Math.min(DAILY_CODE_LENGTH - 1, activeSlot.value + 1)
-  }
-  if (event.key === 'Backspace' || event.key === 'Delete') clearInput()
-  if (event.key === 'Enter') {
-    phase.value === 'active' ? submitGuess() : resetGame()
+
+  if (/^\d$/.test(event.key)) return setActiveDigit(Number(event.key))
+
+  switch (event.key) {
+    case 'ArrowUp':
+      event.preventDefault()
+      return adjustDigit(1)
+    case 'ArrowDown':
+      event.preventDefault()
+      return adjustDigit(-1)
+    case 'ArrowLeft':
+      event.preventDefault()
+      activeSlot.value = Math.max(0, activeSlot.value - 1)
+      return
+    case 'ArrowRight':
+      event.preventDefault()
+      activeSlot.value = Math.min(DAILY_CODE_LENGTH - 1, activeSlot.value + 1)
+      return
+    case 'Backspace':
+    case 'Delete':
+      return clearInput()
+    case 'Enter':
+      return phase.value === 'active' ? submitGuess() : resetGame()
   }
 }
 
