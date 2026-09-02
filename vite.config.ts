@@ -175,6 +175,7 @@ export default defineConfig({
       '/island/trainer-card',
       '/island/study-notes',
       '/games/sleepingdogs/bullsAndCows',
+      '/games/sleepingdogs/saftybox',
     ],
   },
   base: '/',

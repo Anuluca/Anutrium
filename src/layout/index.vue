@@ -347,7 +347,9 @@ const filterRoutes = routes.filter((item) => {
   return item?.meta?.ifShow
 })
 
-const ifNoMenu = computed(() => !!route.meta?.noMenu)
+const noMenuShellActive = ref(!!route.meta?.noMenu)
+let pendingNoMenuShell = noMenuShellActive.value
+const ifNoMenu = computed(() => noMenuShellActive.value)
 
 const isMobile = computed(() => visualStateStore.deviceType !== 'desktop')
 const isMobileMenuOpen = ref(false)
@@ -766,6 +768,7 @@ const lockIslandRouteGeometry = (leavingElement: Element) => {
 const unlockIslandRouteGeometry = () => {
   clearIslandGeometryUnlockTimer()
   restoreIslandRouteGeometry()
+  noMenuShellActive.value = pendingNoMenuShell
   document.body.classList.remove(
     ...islandLeavingClasses,
     ...floraLeavingClasses
@@ -870,6 +873,14 @@ watch(
     scheduleIslandGeometryUnlock()
     refreshScrollState()
   }
+)
+
+watch(
+  () => route.fullPath,
+  () => {
+    pendingNoMenuShell = !!route.meta?.noMenu
+  },
+  { flush: 'sync' }
 )
 </script>
 
