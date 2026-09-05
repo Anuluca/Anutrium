@@ -15,6 +15,51 @@ const waitForActivePage = async (page: Page, id: string) => {
   return slide
 }
 
+const dispatchSlowTouchSwipe = async (
+  page: Page,
+  startY: number,
+  endY: number
+) => {
+  const client = await page.context().newCDPSession(page)
+  await client.send('Input.dispatchTouchEvent', {
+    type: 'touchStart',
+    touchPoints: [{ x: 200, y: startY }],
+  })
+  await page.waitForTimeout(350)
+  await client.send('Input.dispatchTouchEvent', {
+    type: 'touchMove',
+    touchPoints: [{ x: 200, y: startY + Math.sign(endY - startY) * 16 }],
+  })
+  await client.send('Input.dispatchTouchEvent', {
+    type: 'touchMove',
+    touchPoints: [{ x: 200, y: endY }],
+  })
+  await client.send('Input.dispatchTouchEvent', {
+    type: 'touchEnd',
+    touchPoints: [],
+  })
+  await client.detach()
+}
+
+test('mobile home paging accepts a short slow swipe', async ({
+  page,
+}, testInfo) => {
+  test.skip(!testInfo.project.name.includes('mobile'))
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.home-page-swiper')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+
+  await dispatchSlowTouchSwipe(page, 520, 400)
+  await waitForActivePage(page, 'about')
+
+  await dispatchSlowTouchSwipe(page, 520, 400)
+  await waitForActivePage(page, 'archive')
+
+  await dispatchSlowTouchSwipe(page, 400, 520)
+  await waitForActivePage(page, 'about')
+})
+
 test('home switches five full-screen pages vertically while marquee stays fixed', async ({
   page,
 }, testInfo) => {

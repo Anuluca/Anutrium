@@ -856,28 +856,29 @@ onBeforeUnmount(() => {
   }
 
   :global(.game-page-layout .tool-page-stage) {
-    flex: 1 1 auto;
-    height: 100%;
-    min-height: 0;
-    padding: var(--game-mobile-horizontal-gutter)
-      var(--game-mobile-vertical-gutter) var(--game-mobile-horizontal-gutter)
-      var(--game-mobile-vertical-gutter);
+    flex: 1 1 auto !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    padding: var(--game-mobile-horizontal-gutter) 0
+      var(--game-mobile-horizontal-gutter) var(--game-mobile-vertical-gutter) !important;
     box-sizing: border-box;
-    transform: none;
+    transform: none !important;
   }
 
   :global(.game-page-layout .tool-page-content) {
     display: flex;
-    flex: 1 1 auto;
-    min-height: 0;
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
   }
 
   :global(.game-page-layout .detail-page-header) {
-    width: 100%;
-    min-height: 46px;
-    aspect-ratio: auto;
-    margin: 0 0 12px;
-    padding: 0;
+    flex: 0 0 46px !important;
+    width: 100% !important;
+    height: 46px !important;
+    min-height: 46px !important;
+    aspect-ratio: auto !important;
+    margin: 0 0 12px !important;
+    padding: 0 !important;
   }
 
   .game-page-workspace {
@@ -890,6 +891,8 @@ onBeforeUnmount(() => {
 
   .game-page-sidebar {
     height: 100%;
+    transform: none !important;
+    animation: none !important;
   }
 
   .game-page-description {

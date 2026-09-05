@@ -7,6 +7,7 @@
 }
 
 .safe-workspace {
+  --safe-box-scene: none;
   position: absolute;
   inset: 0;
   overflow: hidden;
@@ -251,7 +252,7 @@
     height: 2.7cqw;
     place-items: center;
     border: 1px solid rgba(87, 201, 255, 0.55);
-    color: rgba(87, 201, 255, 0.36);
+    color: rgba(188, 195, 202, 0.68);
     background: rgba(2, 14, 29, 0.56);
     font-size: clamp(6px, 1.15cqw, 19px);
     font-weight: 800;
@@ -259,6 +260,7 @@
 
     &.is-active {
       border-color: #eee;
+      color: rgba(218, 222, 226, 0.82);
       box-shadow: inset 0 0 0 1px rgba(87, 201, 255, 0.52);
     }
 
@@ -343,6 +345,21 @@
   }
 }
 
+.safe-scene-cleanup {
+  position: absolute;
+  top: 87.8cqh;
+  left: 82.7cqw;
+  z-index: 4;
+  width: 10.8cqw;
+  height: 9.2cqh;
+  background-image: var(--safe-box-scene);
+  background-position: 92.7% bottom;
+  background-size: 100cqw 180cqh;
+  background-repeat: no-repeat;
+  mask-image: radial-gradient(ellipse at center, #000 54%, transparent 76%);
+  pointer-events: none;
+}
+
 .safe-controls {
   position: absolute;
   top: 50%;
@@ -360,7 +377,7 @@
     place-content: center;
     padding: 0;
     border: 0.22cqw solid rgba(220, 235, 246, 0.58);
-    border-radius: 50%;
+    border-radius: 0.55cqw;
     color: #fff;
     background: rgba(18, 34, 48, 0.78);
     box-shadow: 0 0.35cqw 0.75cqw rgba(0, 0, 0, 0.48);

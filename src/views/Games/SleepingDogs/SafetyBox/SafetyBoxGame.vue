@@ -6,7 +6,11 @@
     :background-image="safeBoxScene"
     overlay-color="linear-gradient(90deg, rgba(0, 0, 0, 0.03), rgba(0, 0, 0, 0.12))"
   >
-    <div class="safe-workspace" :aria-label="copy.gameLabel">
+    <div
+      class="safe-workspace"
+      :style="{ '--safe-box-scene': `url(${safeBoxScene})` }"
+      :aria-label="copy.gameLabel"
+    >
       <section
         class="safe-dial"
         :class="{ 'safe-dial--confirmed': confirmedIndex !== null }"
@@ -107,6 +111,8 @@
           <span>{{ dateKey }}</span>
         </footer>
       </section>
+
+      <div class="safe-scene-cleanup" aria-hidden="true" />
 
       <div class="safe-controls" :aria-label="copy.controlsLabel">
         <button

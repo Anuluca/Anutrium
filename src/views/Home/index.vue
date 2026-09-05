@@ -17,6 +17,7 @@
       :simulate-touch="false"
       :resistance-ratio="0"
       :threshold="12"
+      :long-swipes-ratio="HOME_PAGE_LONG_SWIPE_RATIO"
       @swiper="setHomeSwiper"
       @set-translate="handleHomeSetTranslate"
       @set-transition="handleHomeSetTransition"
@@ -487,6 +488,7 @@ const HERO_INITIAL_ENTRANCE_DURATION = 1000
 const HERO_PAGE_TRANSITION_DELAY = 340
 const HOME_PAGE_CONTENT_EXIT_DURATION = 200
 const HOME_INDICATOR_TRANSITION_RATIO = 0.72
+const HOME_PAGE_LONG_SWIPE_RATIO = 0.1
 const CRAFT_FOOTER_GESTURE_THRESHOLD = 42
 const CRAFT_FOOTER_TRANSITION_DURATION = 720
 const CRAFT_FOOTER_WHEEL_QUIET_DURATION = 160

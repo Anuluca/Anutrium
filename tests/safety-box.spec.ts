@@ -51,6 +51,7 @@ test('safety box enforces the dial order and confirms each number', async ({
   const rotateButtons = page.locator('.safe-controls__rotate')
   await expect(slots).toHaveCount(3)
   await expect(slots.nth(0)).toHaveText('0')
+  await expect(slots.nth(0)).toHaveCSS('color', 'rgba(218, 222, 226, 0.82)')
   await expect(page.getByTestId('safe-current-value')).toContainText('00')
 
   await page.keyboard.press('ArrowRight')
@@ -76,6 +77,17 @@ test('safety box enforces the dial order and confirms each number', async ({
   await expect(resetButton.locator('svg')).toHaveCount(1)
   await expect(resetButton).toHaveText('')
 
+  const resetButtonShape = await resetButton.evaluate((element) => {
+    const style = getComputedStyle(element)
+    return {
+      borderRadius: Number.parseFloat(style.borderTopLeftRadius),
+      width: element.getBoundingClientRect().width,
+    }
+  })
+  expect(resetButtonShape.borderRadius).toBeLessThan(
+    resetButtonShape.width * 0.25
+  )
+
   const controlsBox = await controls.boundingBox()
   const canvasBox = await canvas.boundingBox()
   expect(controlsBox).not.toBeNull()
@@ -91,6 +103,59 @@ test('safety box enforces the dial order and confirms each number', async ({
     await expect(rotateButtons).toHaveCount(2)
     await expect(rotateButtons.first()).toBeHidden()
   }
+})
+
+test('mobile game layout resists late-loaded generic page styles', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'mobile-chrome')
+
+  await page.goto('/games/sleepingdogs/bullsAndCows', {
+    waitUntil: 'domcontentloaded',
+  })
+  await expect(page.locator('.game-page-canvas')).toBeVisible({
+    timeout: 20_000,
+  })
+  await page.waitForTimeout(1_600)
+
+  await page.addStyleTag({
+    content: `
+      .game-page-layout .tool-page-stage {
+        flex: 1 0 auto;
+        padding-right: 3.5rem;
+        transform: translateY(-3dvh);
+      }
+      .game-page-layout .detail-page-header {
+        height: auto;
+        min-height: 0;
+        aspect-ratio: 6 / 1;
+      }
+      .game-page-layout .game-page-sidebar {
+        transform: translateX(-100%);
+      }
+    `,
+  })
+
+  const geometry = await page.evaluate(() => {
+    const stage = document.querySelector<HTMLElement>('.tool-page-stage')!
+    const header = document.querySelector<HTMLElement>('.detail-page-header')!
+    const content = document.querySelector<HTMLElement>('.tool-page-content')!
+    const sidebar = document.querySelector<HTMLElement>('.game-page-sidebar')!
+    const headerRect = header.getBoundingClientRect()
+    const contentRect = content.getBoundingClientRect()
+
+    return {
+      contentHeaderGap: headerRect.left - contentRect.right,
+      headerScreenWidth: headerRect.width,
+      sidebarTransform: getComputedStyle(sidebar).transform,
+      stageTransform: getComputedStyle(stage).transform,
+    }
+  })
+
+  expect(geometry.stageTransform).toBe('none')
+  expect(geometry.sidebarTransform).toBe('none')
+  expect(geometry.headerScreenWidth).toBeLessThanOrEqual(47)
+  expect(geometry.contentHeaderGap).toBeLessThanOrEqual(13)
 })
 
 test('safety box matches the bulls and cows game top spacing', async ({
