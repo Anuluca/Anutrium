@@ -51,12 +51,17 @@ test('safety box enforces the dial order and confirms each number', async ({
   const rotateButtons = page.locator('.safe-controls__rotate')
   await expect(slots).toHaveCount(3)
   await expect(slots.nth(0)).toHaveText('0')
-  await expect(slots.nth(0)).toHaveCSS('color', 'rgba(218, 222, 226, 0.82)')
+  await expect(slots.nth(0)).toHaveCSS('color', 'rgb(255, 255, 255)')
   await expect(page.getByTestId('safe-current-value')).toContainText('00')
+  await expect(page.locator('.safe-dial__directions')).toHaveText('LR')
+  await expect(page.locator('.safe-dial__directions svg')).toHaveCount(2)
 
   await page.keyboard.press('ArrowRight')
   await expect(page.getByTestId('safe-current-value')).toContainText('00')
   await expect(slots.nth(0)).toHaveText('0')
+
+  await page.keyboard.press('ArrowLeft')
+  await expect(page.locator('.safe-dial')).toHaveClass(/safe-dial--moving-/)
 
   await solveTumbler(page, 0, 'a')
   const secondValue = Number(await slots.nth(1).textContent())
@@ -200,6 +205,22 @@ test('safety box matches the bulls and cows game top spacing', async ({
   expect(
     Math.abs(safeGeometry.viewportTop - bullsGeometry.viewportTop)
   ).toBeLessThanOrEqual(1)
+})
+
+test('detail header releases its animation clipping after entry', async ({
+  page,
+}) => {
+  await openSafetyBox(page)
+
+  const header = page.locator('.detail-page-header')
+  await expect
+    .poll(() =>
+      header.evaluate((element) => getComputedStyle(element).clipPath)
+    )
+    .toBe('none')
+  await expect
+    .poll(() => header.evaluate((element) => getComputedStyle(element).filter))
+    .toBe('none')
 })
 
 test('safety box keeps its geometry stable while leaving the route', async ({

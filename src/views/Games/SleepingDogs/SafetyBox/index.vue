@@ -29,13 +29,14 @@ const { locale } = useI18n()
 const copy = computed(() =>
   locale.value === 'en'
     ? {
-        pageTitle: '保险箱小游戏',
+        pageTitle: 'Safe Cracking',
         pageSubtitle: 'Sleeping Dogs Mini-game',
         refreshNote:
           'The three-number combination refreshes daily at midnight.',
         rulesBody:
           'Crack all three tumblers in order: counter-clockwise, clockwise, then counter-clockwise. Use A / ←, D / →, or the gamepad right stick and follow the signal peak.',
-        sourceBody: '复刻《热血无赖》保险箱小游戏玩法。',
+        sourceBody:
+          'Recreated from the safe-cracking mini-game in Sleeping Dogs.',
       }
     : {
         pageTitle: '保险箱小游戏',

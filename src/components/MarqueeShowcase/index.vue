@@ -6,7 +6,7 @@
       'is-ready': isMarqueeReady,
       'is-entrance-ready': entranceReady,
       'is-flat': flat,
-      'motion-paused': isMotionPaused,
+      'motion-paused': isMotionPaused || props.paused,
     }"
   >
     <div class="marquee-3d-container">
@@ -37,14 +37,16 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     entranceReady?: boolean
     flat?: boolean
+    paused?: boolean
   }>(),
   {
     entranceReady: true,
     flat: false,
+    paused: false,
   }
 )
 
@@ -179,9 +181,13 @@ onUnmounted(() => {
     }
   }
 
-  &:hover .marquee-track,
+  &:hover .marquee-track {
+    animation-play-state: paused;
+  }
+
   &.motion-paused .marquee-track {
     animation-play-state: paused;
+    will-change: auto;
   }
 }
 

@@ -13,7 +13,13 @@
     >
       <section
         class="safe-dial"
-        :class="{ 'safe-dial--confirmed': confirmedIndex !== null }"
+        :class="[
+          { 'safe-dial--confirmed': confirmedIndex !== null },
+          dialMotionClass,
+        ]"
+        :style="{
+          '--dial-motion-angle': `${dialMotionDirection * 1.15}deg`,
+        }"
         :aria-label="activeDialLabel"
       >
         <div class="safe-dial__pointer" aria-hidden="true" />
@@ -50,8 +56,12 @@
             class="safe-dial__confirmed-icon"
             aria-hidden="true"
           />
-          <span v-else>{{ currentValue }}</span>
-          <small>{{ copy.dial }}</small>
+          <div v-else class="safe-dial__directions" aria-hidden="true">
+            <span>L</span>
+            <ArrowLeftBold />
+            <span>R</span>
+            <ArrowRightBold />
+          </div>
         </div>
       </section>
 
@@ -168,7 +178,7 @@ import {
   RefreshRight,
 } from '@element-plus/icons-vue'
 
-import safeBoxScene from '@/assets/img/games/sleeping-dogs/safe-box-scene.png'
+import safeBoxScene from '@/assets/img/games/sleeping-dogs/safe-box-scene.webp'
 import GameStage from '@/components/GameStage/index.vue'
 import { getLocalDateKey } from '@/utils/dailyBullsAndCows'
 import {
@@ -207,6 +217,8 @@ const activeIndex = ref(0)
 const phase = ref<GamePhase>('cracking')
 const directionWarning = ref(false)
 const confirmedIndex = ref<number | null>(null)
+const dialMotionDirection = ref<Direction>(1)
+const dialMotionSequence = ref(0)
 let warningTimer: number | null = null
 let confirmationTimer: number | null = null
 let pointerTimer: number | null = null
@@ -265,6 +277,12 @@ const requiredDirection = computed(
 )
 
 const wheelRotation = computed(() => -currentValue.value * DIAL_STEP)
+
+const dialMotionClass = computed(() =>
+  dialMotionSequence.value === 0
+    ? ''
+    : `safe-dial--moving-${dialMotionSequence.value % 2 === 0 ? 'a' : 'b'}`
+)
 
 const signalStrength = computed(() => {
   if (phase.value === 'open') return 1
@@ -419,6 +437,8 @@ const rotateDial = (direction: Direction) => {
     return
   }
 
+  dialMotionDirection.value = direction
+  dialMotionSequence.value += 1
   positions.value[index] =
     (positions.value[index] + direction + SAFE_BOX_DIAL_SIZE) %
     SAFE_BOX_DIAL_SIZE

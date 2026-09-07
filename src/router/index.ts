@@ -500,6 +500,20 @@ export const routes: RouteConfig[] = [
     },
   },
   {
+    path: '/ai-playground/arknightxpersona3reload',
+    name: 'ARKNIGHT_PERSONA_RELOAD',
+    component: () => import('@/views/AiPlayground/ArknightPersona/index.vue'),
+    meta: {
+      titleEn: 'ARKNIGHTS × PERSONA 3 RELOAD',
+      titleCn: 'GPT-6-Astra前端UI复刻',
+      fullFooter: true,
+      pageFooter: true,
+      ifShow: false,
+      noMenu: true,
+      starBackground: 'deep-black',
+    },
+  },
+  {
     path: '/games/sleepingdogs/bullsAndCows',
     name: 'SLEEPING_DOGS_BULLS_AND_COWS',
     component: () =>

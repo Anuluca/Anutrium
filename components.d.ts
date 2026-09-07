@@ -56,6 +56,7 @@ declare module '@vue/runtime-core' {
     RouterView: typeof import('vue-router')['RouterView']
     SafeImageViewer: typeof import('./src/components/SafeImageViewer/index.vue')['default']
     ScrollDownHint: typeof import('./src/components/ScrollDownHint/index.vue')['default']
+    ScrollSectionTitle: typeof import('./src/components/ScrollSectionTitle/index.vue')['default']
     SectionCount: typeof import('./src/components/SectionCount/index.vue')['default']
     Sections: typeof import('./src/components/Sections/index.vue')['default']
     ShareButton: typeof import('./src/components/ShareButton/index.vue')['default']

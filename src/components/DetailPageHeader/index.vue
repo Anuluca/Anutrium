@@ -52,8 +52,9 @@ const goBack = () => {
   margin: 0 0 12px;
   padding: 0;
   overflow: visible;
-  opacity: 0;
-  animation: detailHeaderCrtOn 0.58s cubic-bezier(0.19, 1, 0.22, 1) 0.44s both;
+  opacity: 1;
+  animation: detailHeaderCrtOn 0.58s cubic-bezier(0.19, 1, 0.22, 1) 0.44s
+    backwards;
 
   &__back {
     position: relative;

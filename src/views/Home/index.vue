@@ -196,7 +196,12 @@
             :class="`home-page-content--${page.id}`"
           >
             <div v-if="page.id === 'about'" class="home-about-copy">
-              <h2 class="home-section-title home-about-title">ABOUT ME</h2>
+              <ScrollSectionTitle
+                :marker-active="enteredHomePageMarkerIndex === index + 1"
+                class="home-about-title"
+                marker-direction="down"
+                title="ABOUT ME"
+              />
               <div class="home-about-introduction">
                 <p class="home-about-intro">
                   <span>{{ t('home.dynamic.intro.before') }}</span>
@@ -226,7 +231,12 @@
               </div>
             </div>
             <div v-else class="home-placeholder-copy">
-              <h2 class="home-section-title">{{ page.title }}</h2>
+              <ScrollSectionTitle
+                :color="page.color"
+                :marker-active="enteredHomePageMarkerIndex === index + 1"
+                :marker-direction="page.markerDirection"
+                :title="page.title"
+              />
               <p class="home-placeholder-status">开发中</p>
             </div>
             <div v-if="page.id === 'about'" class="home-about-gallery">
@@ -296,6 +306,7 @@
         class="marquee-showcase"
         :entrance-ready="isHeroInitialEntranceReady"
         :flat="isHeroContentInactive"
+        :paused="homePageMotionDuration > 0"
       />
     </div>
   </div>
@@ -315,6 +326,7 @@ import MarqueeShowcase from '@/components/MarqueeShowcase/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
 import RandomTypedText from '@/components/RandomTypedText/index.vue'
 import ScrollDownHint from '@/components/ScrollDownHint/index.vue'
+import ScrollSectionTitle from '@/components/ScrollSectionTitle/index.vue'
 import TextHighlight from '@/components/TextHighlight/index.vue'
 import { RadiantText } from '@/components/ui/radiant-text'
 import { SparklesText } from '@/components/ui/sparkles-text'
@@ -377,10 +389,30 @@ const aboutDescription = computed(() => {
   }
 })
 const placeholderPages = [
-  { id: 'about', title: 'ABOUT ME' },
-  { id: 'archive', title: 'ARCHIVE' },
-  { id: 'flanerie', title: 'FLANERIE' },
-  { id: 'craft', title: 'CRAFT' },
+  {
+    id: 'about',
+    title: 'ABOUT ME',
+    color: '#e23456',
+    markerDirection: 'down',
+  },
+  {
+    id: 'archive',
+    title: 'ARCHIVE',
+    color: '#2f7548',
+    markerDirection: 'right',
+  },
+  {
+    id: 'flanerie',
+    title: 'FLANERIE',
+    color: '#8a2c1b',
+    markerDirection: 'right',
+  },
+  {
+    id: 'craft',
+    title: 'CRAFT',
+    color: '#244392',
+    markerDirection: 'right',
+  },
 ] as const
 const homePageIndicatorItems = [
   { id: 'hero', title: 'PASSION' },
@@ -399,6 +431,7 @@ const heroContentCounterOffset = ref('0px')
 const homePageMotionDuration = ref(0)
 const activeIndex = ref(0)
 const activeHomePageIndex = ref(0)
+const enteredHomePageMarkerIndex = ref<number | null>(null)
 const enteringHomePageIndex = ref<number | null>(null)
 const leavingHomePageIndex = ref<number | null>(null)
 const fadingHomePageIndex = ref<number | null>(null)
@@ -459,6 +492,7 @@ let craftFooterTransitionTimer: ReturnType<typeof setTimeout> | null = null
 let craftFooterWheelArmTimer: ReturnType<typeof setTimeout> | null = null
 let heroPageTransitionTimer: ReturnType<typeof setTimeout> | null = null
 let homePageFadeTimer: ReturnType<typeof setTimeout> | null = null
+let homePageMarkerEntranceTimer: ReturnType<typeof setTimeout> | null = null
 let homePageContentExitTimer: ReturnType<typeof setTimeout> | null = null
 let heroInitialEntranceObserver: MutationObserver | null = null
 let heroInitialEntranceTimer: ReturnType<typeof setTimeout> | null = null
@@ -482,6 +516,7 @@ const CRAFT_PAGE_INDEX = homePageIndicatorItems.findIndex(
 )
 const HOME_PAGE_TRANSITION_DURATION = 600
 const HOME_PAGE_CONTENT_MOTION_DURATION = 600
+const HOME_PAGE_MARKER_ENTRANCE_DELAY = 420
 const HERO_CONTENT_TRANSITION_DURATION = 1200
 const HERO_INITIAL_CONTENT_TRANSITION_DURATION = 1200
 const HERO_INITIAL_ENTRANCE_DURATION = 1000
@@ -1154,9 +1189,11 @@ const handleHomeSlideChange = (swiper: SwiperInstance) => {
 
 const handleHomeTransitionStart = (swiper: SwiperInstance) => {
   isHomePageTransitioning = true
+  enteredHomePageMarkerIndex.value = null
   startAnimatedHomeProgressSync()
   if (swiper.activeIndex === CRAFT_PAGE_INDEX) disarmCraftFooterWheel()
   if (homePageFadeTimer) clearTimeout(homePageFadeTimer)
+  if (homePageMarkerEntranceTimer) clearTimeout(homePageMarkerEntranceTimer)
   enteringHomePageIndex.value = swiper.activeIndex
   leavingHomePageIndex.value = swiper.previousIndex
   homePageTransitionDirection.value =
@@ -1167,12 +1204,21 @@ const handleHomeTransitionStart = (swiper: SwiperInstance) => {
     homePageTransitionDirection.value = null
     homePageFadeTimer = null
   }, HOME_PAGE_CONTENT_MOTION_DURATION)
+  homePageMarkerEntranceTimer = setTimeout(() => {
+    enteredHomePageMarkerIndex.value = swiper.activeIndex
+    homePageMarkerEntranceTimer = null
+  }, HOME_PAGE_MARKER_ENTRANCE_DELAY)
 }
 
 const handleHomeTransitionEnd = (swiper: SwiperInstance) => {
   isHomePageTransitioning = false
   stopAnimatedHomeProgressSync()
   homePageMotionDuration.value = 0
+  if (homePageMarkerEntranceTimer) {
+    clearTimeout(homePageMarkerEntranceTimer)
+    homePageMarkerEntranceTimer = null
+  }
+  enteredHomePageMarkerIndex.value = swiper.activeIndex
   void nextTick(() => window.requestAnimationFrame(syncMarqueeViewportTop))
   if (swiper.activeIndex === CRAFT_PAGE_INDEX) {
     scheduleCraftFooterWheelArm()
@@ -1321,6 +1367,7 @@ onUnmounted(() => {
   disarmCraftFooterWheel()
   if (heroPageTransitionTimer) clearTimeout(heroPageTransitionTimer)
   if (homePageFadeTimer) clearTimeout(homePageFadeTimer)
+  if (homePageMarkerEntranceTimer) clearTimeout(homePageMarkerEntranceTimer)
   clearHomePageContentExitTimer()
   heroContentResizeObserver?.disconnect()
   heroContentResizeObserver = null

@@ -176,6 +176,7 @@ export default defineConfig({
       '/island/study-notes',
       '/games/sleepingdogs/bullsAndCows',
       '/games/sleepingdogs/saftybox',
+      '/ai-playground/arknightxpersona3reload',
     ],
   },
   base: '/',
