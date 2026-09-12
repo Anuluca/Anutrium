@@ -178,7 +178,6 @@ import {
   RefreshRight,
 } from '@element-plus/icons-vue'
 
-import safeBoxScene from '@/assets/img/games/sleeping-dogs/safe-box-scene.webp'
 import GameStage from '@/components/GameStage/index.vue'
 import { getLocalDateKey } from '@/utils/dailyBullsAndCows'
 import {
@@ -187,6 +186,9 @@ import {
   SAFE_BOX_COMBINATION_LENGTH,
   SAFE_BOX_DIAL_SIZE,
 } from '@/utils/dailySafeBox'
+
+const safeBoxScene =
+  'https://assets.anuluca.com/Island/myGames/sleeping-dogs/safe-box-scene.webp'
 
 type Direction = -1 | 1
 type GamePhase = 'cracking' | 'open'

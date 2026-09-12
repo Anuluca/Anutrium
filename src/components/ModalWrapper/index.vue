@@ -9,9 +9,10 @@
     :lock-scroll="false"
     transition="crt-effect"
     class="modal-wrapper-dialog no-rem"
-    :class="`modal-close-placement--${closePlacement}`"
+    :class="{ 'modal-wrapper-dialog--flush-desktop': flushDesktop }"
     :style="{
       '--modal-width': typeof width === 'number' ? `${width}px` : width,
+      '--modal-theme-color': themeColor || 'var(--page-theme-color, #e23456)',
     }"
     @close="handleDialogClose"
     @closed="handleClosed"
@@ -20,14 +21,14 @@
       <DiamondCloseBtn :title="closeTitle" @click="requestClose" />
     </div>
 
+    <div v-if="title" class="modal-external-title" aria-hidden="true">
+      <span>{{ title }}</span>
+    </div>
+
     <div class="corner corner-tl" />
     <div class="corner corner-tr" />
     <div class="corner corner-bl" />
     <div class="corner corner-br" />
-
-    <div v-if="showTacticalText" class="modal-tactical-text">
-      {{ tacticalText }}
-    </div>
 
     <div class="modal-scanlines" />
 
@@ -50,19 +51,17 @@ const props = withDefaults(
   defineProps<{
     modelValue: boolean
     width?: string | number
-    showTacticalText?: boolean
-    tacticalText?: string
+    themeColor?: string
+    title?: string
     closeTitle?: string
     appendToBody?: boolean
-    closePlacement?: 'outside-bottom' | 'work-detail'
+    flushDesktop?: boolean
   }>(),
   {
     width: '1280px',
-    showTacticalText: true,
-    tacticalText: '[PROJECT_DETAIL]',
     closeTitle: 'Close (ESC)',
     appendToBody: true,
-    closePlacement: 'outside-bottom',
+    flushDesktop: false,
   }
 )
 
@@ -106,8 +105,6 @@ const handleClosed = () => {
 </script>
 
 <style lang="less" scoped>
-@red: #e23456;
-
 .modal-scanlines {
   position: absolute;
   inset: 0;
@@ -122,11 +119,36 @@ const handleClosed = () => {
   opacity: 0.6;
 }
 
+.modal-external-title {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  z-index: 5;
+  color: var(--modal-accent, var(--page-theme-color, #e23456));
+  font-family: 'cn-custom', sans-serif;
+  font-size: 0.96rem;
+  font-weight: 400;
+  letter-spacing: 1px;
+  line-height: 1;
+  opacity: 0.2;
+  transform: translateX(-50%);
+  pointer-events: none;
+
+  span {
+    display: block;
+  }
+}
+
 .corner {
   position: absolute;
   width: 12px;
   height: 12px;
-  border: 1px solid rgba(226, 52, 86, 0.45);
+  border: 1px solid
+    color-mix(
+      in srgb,
+      var(--modal-accent, var(--page-theme-color, #e23456)) 45%,
+      transparent
+    );
   z-index: 5;
   pointer-events: none;
 
@@ -155,35 +177,23 @@ const handleClosed = () => {
     border-top: 0;
   }
 }
-
-.modal-tactical-text {
-  position: absolute;
-  top: 6px;
-  left: 30px;
-  font-family: 'cn-custom', monospace;
-  font-size: 0.48rem;
-  color: rgba(255, 255, 255, 0.12);
-  letter-spacing: 2px;
-  z-index: 5;
-  pointer-events: none;
-}
 </style>
 
 <style lang="less">
-@red: #e23456;
-
 .modal-wrapper-dialog {
-  background: rgba(11, 7, 14, 0.99) !important;
-  border: 1px solid rgba(226, 52, 86, 0.35) !important;
+  --modal-accent: var(--modal-theme-color, var(--page-theme-color, #e23456));
+
+  background: #0f0d11 !important;
+  border: 1px solid color-mix(in srgb, var(--modal-accent) 35%, transparent) !important;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.85) !important;
 
-  margin: 0 !important;
+  margin: 0 0 60px !important;
   width: var(--modal-width, 1280px) !important;
   max-height: 90vh !important;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  padding: 0 !important;
+  overflow: visible;
+  padding: 10px !important;
   border-radius: 0 !important;
 
   transform-origin: center center !important;
@@ -211,12 +221,9 @@ const handleClosed = () => {
   overscroll-behavior: contain;
 }
 
-.modal-wrapper-dialog.modal-close-placement--outside-bottom {
-  margin-bottom: 56px !important;
-  overflow: visible;
-
+.modal-wrapper-dialog {
   .modal-close-row .diamond-close-btn {
-    top: calc(100% + 14px);
+    top: calc(100% + 30px);
     right: auto;
     left: 50%;
     transform: translateX(-50%);
@@ -232,6 +239,12 @@ const handleClosed = () => {
   overscroll-behavior: contain;
 }
 
+@media (min-width: 769px) {
+  .modal-wrapper-dialog--flush-desktop {
+    padding: 0 !important;
+  }
+}
+
 @media (max-width: 768px) {
   .modal-wrapper-dialog.no-rem {
     width: calc(100vw - 20px) !important;
@@ -242,24 +255,6 @@ const handleClosed = () => {
       display: flex;
       flex-direction: column;
       min-height: 0;
-    }
-
-    &.modal-close-placement--work-detail .modal-close-row {
-      min-height: 52px;
-      display: flex;
-      flex: 0 0 52px;
-      align-items: center;
-      justify-content: flex-end;
-      box-sizing: border-box;
-      padding: 8px 12px;
-      border-bottom: 1px solid rgba(226, 52, 86, 0.18);
-    }
-
-    &.modal-close-placement--work-detail .modal-close-row .diamond-close-btn {
-      position: relative;
-      top: auto;
-      right: auto;
-      flex: 0 0 36px;
     }
   }
 }

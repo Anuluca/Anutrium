@@ -1,19 +1,30 @@
 .arknight-page.no-rem {
   :deep(.tool-page-stage) {
     transform: none;
-    padding-top: 12px;
-    padding-bottom: 30px;
+    padding-top: 8px;
+    padding-bottom: 8px;
   }
   :deep(.detail-page-header) {
-    margin-bottom: 22px;
+    margin-bottom: clamp(8px, 1.4dvh, 16px);
   }
 }
 
+.replica-content.no-rem {
+  width: 100%;
+  min-height: 0;
+}
+
 .replica-frame.no-rem {
+  container-type: inline-size;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: min(56.25cqw, calc(100dvh - 184px));
+  min-height: 0;
   overflow: hidden;
   border: 1px solid #394153;
   border-radius: 6px;
-  background: #0d111b;
+  background: #000;
   box-shadow: 0 14px 36px #0003;
   animation: frame-enter 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
   button {
@@ -24,53 +35,18 @@
     outline: 3px solid #fff;
     outline-offset: 5px;
   }
-  .frame-caption,
-  .frame-controls {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    color: #929cb1;
-    font-family: 'Courier New', monospace;
-  }
-  .frame-caption {
-    height: 37px;
-    padding: 0 17px;
-    font-size: 10px;
-    letter-spacing: 1.8px;
-    border-bottom: 1px solid #303a4b;
-  }
-  .frame-caption > span {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .frame-caption b {
-    color: #d5deed;
-    font-weight: 400;
-  }
-  .frame-caption em {
-    color: #30bfff;
-    font-style: normal;
-  }
-  .frame-caption i,
-  .interaction-hint i {
-    display: inline-block;
-    width: 5px;
-    height: 5px;
-    background: #33c8ff;
-    border-radius: 50%;
-  }
   .scene-viewport {
+    display: grid;
+    place-items: center;
     width: 100%;
+    height: 100%;
     overflow: hidden;
+    background: #000;
   }
-  .scene-viewport.is-expanded {
-    overflow-x: auto;
-    scrollbar-width: thin;
-    scrollbar-color: #279cf8 #11182b;
-  }
-  .scene-sizing {
+  .scene-canvas {
     position: relative;
+    flex: none;
+    aspect-ratio: 16 / 9;
     overflow: hidden;
   }
   .ark-scene {
@@ -507,7 +483,7 @@
   .event-banner {
     width: 267px;
     height: 100px;
-    background-image: url('@/assets/img/ai-playground/arknight-persona/reference.webp') !important;
+    background-image: url('https://assets.anuluca.com/Island/playground/arknight-persona/reference.webp') !important;
     background-repeat: no-repeat !important;
     background-size: 1600px 912px !important;
     transition: translate 0.2s, filter 0.2s;
@@ -811,7 +787,7 @@
     bottom: 65px;
     width: 315px;
     height: 165px;
-    background: url('@/assets/img/ai-playground/arknight-persona/reference.webp') -24px -684px /
+    background: url('https://assets.anuluca.com/Island/playground/arknight-persona/reference.webp') -24px -684px /
       1600px 912px no-repeat !important;
     transform: rotate(-4deg);
     transition: filter 0.2s;
@@ -895,39 +871,6 @@
     font: 20px Arial, sans-serif;
     letter-spacing: 2px;
   }
-  .frame-controls {
-    gap: 12px;
-    padding: 10px 16px;
-    font-size: 11px;
-    border-top: 1px solid #303a4b;
-  }
-  .interaction-hint {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .frame-controls > div {
-    display: flex;
-    gap: 16px;
-  }
-  .frame-controls button {
-    padding: 4px 0;
-    border: 0;
-    background: none;
-    color: #a6b2c9;
-    font-size: 11px;
-    transition: color 0.2s;
-  }
-  .frame-controls button:hover {
-    color: #49caff;
-  }
-  .frame-controls button:focus-visible {
-    outline-width: 1px;
-    outline-offset: 2px;
-  }
-  .frame-controls button span {
-    margin-left: 4px;
-  }
   .motion-disabled .petals i {
     animation-play-state: paused;
   }
@@ -948,7 +891,7 @@
 }
 
 .replica-credit.no-rem {
-  margin: 21px 0 0;
+  margin: clamp(8px, 1.5dvh, 14px) 0 0;
   color: #9297a4;
   font: 12px/1.8 Arial, 'Microsoft YaHei', sans-serif;
   letter-spacing: 1px;
@@ -1299,6 +1242,99 @@
     font-size: 10px;
     color: #6e8098;
     letter-spacing: 1px;
+  }
+}
+
+@media (max-width: 768px) and (orientation: portrait) {
+  :global(.arknight-page) {
+    position: fixed !important;
+    inset: 0;
+    z-index: 1200;
+    width: 100dvw !important;
+    max-width: none !important;
+    height: 100dvh !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    overflow: hidden;
+    background: #050505;
+    transform: none !important;
+  }
+
+  :global(.arknight-page .tool-page-stage) {
+    flex: 1 1 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    padding: max(16px, env(safe-area-inset-top))
+      max(36px, env(safe-area-inset-right))
+      max(16px, env(safe-area-inset-bottom))
+      max(36px, env(safe-area-inset-left)) !important;
+    box-sizing: border-box;
+    transform: none !important;
+  }
+
+  :global(.arknight-page .detail-page-header) {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    aspect-ratio: auto !important;
+    margin: 0 0 8px !important;
+    padding: 0 !important;
+  }
+
+  :global(.arknight-page .tool-page-content) {
+    position: relative;
+    display: block;
+    flex: 1 1 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible;
+    container-type: size;
+  }
+
+  :global(.arknight-page .tool-recommendation-row),
+  :global(.arknight-page .tool-page-footer) {
+    display: none !important;
+  }
+
+  .replica-content.no-rem {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    width: calc(100cqh - 16px);
+    height: 100cqw;
+    min-height: 0;
+    flex-direction: column;
+    transform: rotate(90deg) translateY(-100%);
+    transform-origin: top left;
+  }
+
+  .replica-frame.no-rem {
+    flex: 1 1 0;
+    width: 100%;
+    height: auto;
+    border-radius: 0;
+  }
+
+  .replica-credit.no-rem {
+    flex: 0 0 auto;
+    margin: 8px 0 0;
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 768px) and (orientation: landscape) {
+  .replica-frame.no-rem {
+    height: min(56.25cqw, calc(100dvh - 142px));
+    border-radius: 0;
+  }
+
+  .replica-credit.no-rem {
+    margin-top: 8px;
+    font-size: 10px;
   }
 }
 

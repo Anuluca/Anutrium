@@ -138,8 +138,6 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import referenceScene from '@/assets/img/games/sleeping-dogs/game-reference.jpg'
-import stageBackground from '@/assets/img/games/sleeping-dogs/game-stage-background.jpg'
 import GameStage from '@/components/GameStage/index.vue'
 import {
   DAILY_CODE_LENGTH,
@@ -148,6 +146,11 @@ import {
   getLocalDateKey,
   scoreGuess,
 } from '@/utils/dailyBullsAndCows'
+
+const referenceScene =
+  'https://assets.anuluca.com/Island/myGames/sleeping-dogs/game-reference.jpg'
+const stageBackground =
+  'https://assets.anuluca.com/Island/myGames/sleeping-dogs/game-stage-background.jpg'
 
 type GamePhase = 'active' | 'success' | 'failed'
 type IntroPhase = 'entering' | 'loading' | 'ready'

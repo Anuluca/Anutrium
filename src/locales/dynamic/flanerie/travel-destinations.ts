@@ -2,10 +2,9 @@ export const group = {
   id: 'visited',
   title: {
     zhCn: '旅行目的地',
-    en: 'VISITED CITIES',
+    en: 'VISITED',
   },
-  titleEn: 'VISITED CITIES',
-  railLabel: 'VISITED',
+  titleEn: 'VISITED',
 } as const
 
 const travelDestinations = [
@@ -13,8 +12,8 @@ const travelDestinations = [
     id: 'changsha',
     category: 'visited',
     title: {
-      zhCn: '湖南｜长沙',
-      en: 'HUNAN | CHANGSHA',
+      zhCn: '湖南·长沙',
+      en: 'HUNAN · CHANGSHA',
     },
     mapLabel: {
       zhCn: '长沙',
@@ -73,8 +72,8 @@ const travelDestinations = [
     id: 'xiangtan',
     category: 'visited',
     title: {
-      zhCn: '湖南｜湘潭',
-      en: 'HUNAN | XIANGTAN',
+      zhCn: '湖南·湘潭',
+      en: 'HUNAN · XIANGTAN',
     },
     mapLabel: {
       zhCn: '湘潭',
@@ -133,8 +132,8 @@ const travelDestinations = [
     id: 'shaoshan',
     category: 'visited',
     title: {
-      zhCn: '湖南｜韶山',
-      en: 'HUNAN | SHAOSHAN',
+      zhCn: '湖南·韶山',
+      en: 'HUNAN · SHAOSHAN',
     },
     mapLabel: {
       zhCn: '韶山',
@@ -184,8 +183,8 @@ const travelDestinations = [
     id: 'anqing',
     category: 'visited',
     title: {
-      zhCn: '安徽｜安庆',
-      en: 'ANHUI | ANQING',
+      zhCn: '安徽·安庆',
+      en: 'ANHUI · ANQING',
     },
     mapLabel: {
       zhCn: '安庆',
@@ -244,8 +243,8 @@ const travelDestinations = [
     id: 'chizhou',
     category: 'visited',
     title: {
-      zhCn: '安徽｜池州',
-      en: 'ANHUI | CHIZHOU',
+      zhCn: '安徽·池州',
+      en: 'ANHUI · CHIZHOU',
     },
     mapLabel: {
       zhCn: '池州',
@@ -367,8 +366,8 @@ const travelDestinations = [
     id: 'huangshan',
     category: 'visited',
     title: {
-      zhCn: '安徽｜黄山',
-      en: 'ANHUI | HUANGSHAN',
+      zhCn: '安徽·黄山',
+      en: 'ANHUI · HUANGSHAN',
     },
     mapLabel: {
       zhCn: '黄山',
@@ -604,8 +603,8 @@ const travelDestinations = [
     id: 'fuzhou-jiangxi',
     category: 'visited',
     title: {
-      zhCn: '江西｜抚州',
-      en: 'JIANGXI | FUZHOU',
+      zhCn: '江西·抚州',
+      en: 'JIANGXI · FUZHOU',
     },
     mapLabel: {
       zhCn: '抚州',
@@ -700,8 +699,8 @@ const travelDestinations = [
     id: 'jingdezhen',
     category: 'visited',
     title: {
-      zhCn: '江西｜景德镇',
-      en: 'JIANGXI | JINGDEZHEN',
+      zhCn: '江西·景德镇',
+      en: 'JIANGXI · JINGDEZHEN',
     },
     mapLabel: {
       zhCn: '景德镇',
@@ -787,8 +786,8 @@ const travelDestinations = [
     id: 'lushan',
     category: 'visited',
     title: {
-      zhCn: '江西｜庐山',
-      en: 'JIANGXI | LUSHAN',
+      zhCn: '江西·庐山',
+      en: 'JIANGXI · LUSHAN',
     },
     mapLabel: {
       zhCn: '庐山',
@@ -921,8 +920,8 @@ const travelDestinations = [
     id: 'donglin-buddha',
     category: 'visited',
     title: {
-      zhCn: '江西｜东林大佛',
-      en: 'JIANGXI | DONGLIN BUDDHA',
+      zhCn: '江西·东林大佛',
+      en: 'JIANGXI · DONGLIN BUDDHA',
     },
     mapLabel: {
       zhCn: '东林大佛',
@@ -959,8 +958,8 @@ const travelDestinations = [
     id: 'poyang-lake',
     category: 'visited',
     title: {
-      zhCn: '江西｜鄱阳湖',
-      en: 'JIANGXI | POYANG LAKE',
+      zhCn: '江西·鄱阳湖',
+      en: 'JIANGXI · POYANG LAKE',
     },
     mapLabel: {
       zhCn: '鄱阳湖',
@@ -1007,8 +1006,8 @@ const travelDestinations = [
     id: 'jiujiang',
     category: 'visited',
     title: {
-      zhCn: '江西｜九江',
-      en: 'JIANGXI | JIUJIANG',
+      zhCn: '江西·九江',
+      en: 'JIANGXI · JIUJIANG',
     },
     mapLabel: {
       zhCn: '九江',
@@ -1109,8 +1108,8 @@ const travelDestinations = [
     id: 'nanjing',
     category: 'visited',
     title: {
-      zhCn: '江苏｜南京',
-      en: 'JIANGSU | NANJING',
+      zhCn: '江苏·南京',
+      en: 'JIANGSU · NANJING',
     },
     mapLabel: {
       zhCn: '南京',
@@ -1339,8 +1338,8 @@ const travelDestinations = [
     id: 'suzhou',
     category: 'visited',
     title: {
-      zhCn: '江苏｜苏州',
-      en: 'JIANGSU | SUZHOU',
+      zhCn: '江苏·苏州',
+      en: 'JIANGSU · SUZHOU',
     },
     mapLabel: {
       zhCn: '苏州',
@@ -1555,8 +1554,8 @@ const travelDestinations = [
     id: 'fuzhou-fujian',
     category: 'visited',
     title: {
-      zhCn: '福建｜福州',
-      en: 'FUJIAN | FUZHOU',
+      zhCn: '福建·福州',
+      en: 'FUJIAN · FUZHOU',
     },
     mapLabel: {
       zhCn: '福州',
@@ -1669,8 +1668,8 @@ const travelDestinations = [
     id: 'pingtandao',
     category: 'visited',
     title: {
-      zhCn: '福建｜平潭岛',
-      en: 'FUJIAN | PINGTAN ISLAND',
+      zhCn: '福建·平潭岛',
+      en: 'FUJIAN · PINGTAN ISLAND',
     },
     mapLabel: {
       zhCn: '平潭岛',

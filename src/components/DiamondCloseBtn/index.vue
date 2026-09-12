@@ -30,9 +30,9 @@ defineEmits<{
 </script>
 
 <style scoped lang="less">
-@red: #e23456;
-
 .diamond-close-btn {
+  --diamond-close-accent: var(--modal-accent, var(--page-theme-color, #e23456));
+
   position: absolute;
   top: 14px;
   right: 14px;
@@ -52,7 +52,7 @@ defineEmits<{
     width: 24px;
     height: 24px;
     background: rgba(0, 0, 0, 0.6);
-    border: 2px solid @red;
+    border: 2px solid var(--diamond-close-accent);
     transform: rotate(45deg);
     display: flex;
     align-items: center;
@@ -63,14 +63,15 @@ defineEmits<{
       content: '';
       position: absolute;
       inset: -4px;
-      border: 1px solid rgba(226, 52, 86, 0.3);
+      border: 1px solid
+        color-mix(in srgb, var(--diamond-close-accent) 30%, transparent);
       opacity: 0;
       transition: opacity 0.3s ease;
     }
 
     .close-icon {
       transform: rotate(-45deg) scale(3);
-      color: @red;
+      color: var(--diamond-close-accent);
       transition: all 0.3s ease;
     }
   }
@@ -78,7 +79,8 @@ defineEmits<{
   &:hover {
     .diamond-shape {
       background: rgba(0, 0, 0, 0.8);
-      box-shadow: 0 0 15px rgba(226, 52, 86, 0.4);
+      box-shadow: 0 0 15px
+        color-mix(in srgb, var(--diamond-close-accent) 40%, transparent);
 
       &::before {
         opacity: 1;
@@ -87,7 +89,7 @@ defineEmits<{
       .close-icon {
         transform: rotate(45deg);
         color: #fff;
-        filter: drop-shadow(0 0 8px @red);
+        filter: drop-shadow(0 0 8px var(--diamond-close-accent));
       }
     }
   }

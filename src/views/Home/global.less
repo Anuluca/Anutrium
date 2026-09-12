@@ -1,3 +1,16 @@
+// 倾斜参数只作用于容器，逐帧更新时不向轮播和 Logo 的所有后代传播。
+@property --hero-rotate-x {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@property --hero-rotate-y {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
 body:has(.home-page) {
   .router-container {
     margin-top: 0;
@@ -235,6 +248,15 @@ body:has(.home-page) {
     .carousel-counter {
       top: 8px;
       right: 10px;
+    }
+  }
+}
+
+@media screen and (max-width: 1024px) and (hover: none) and (pointer: coarse) {
+  .home-page {
+    .recommend,
+    .cards-viewport {
+      touch-action: none;
     }
   }
 }

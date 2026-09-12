@@ -38,6 +38,9 @@ const motionState = computed(() =>
     : 'paused'
 )
 
+// 尺寸仅由 ResizeObserver 更新，动画帧不读取布局，避免与鼠标变换交错触发同步布局。
+let canvasWidth = 1
+let canvasHeight = 1
 let particles: Particle[] = []
 let context: CanvasRenderingContext2D | null = null
 let animationFrameId: number | null = null
@@ -64,8 +67,8 @@ const resetParticles = () => {
   const canvas = canvasElement.value
   if (!canvas) return
 
-  const width = canvas.clientWidth
-  const height = canvas.clientHeight
+  const width = canvasWidth
+  const height = canvasHeight
   particles = Array.from({ length: props.quantity }, () =>
     createParticle(width, height)
   )
@@ -78,6 +81,8 @@ const resizeCanvas = () => {
 
   const width = Math.max(1, canvas.clientWidth)
   const height = Math.max(1, canvas.clientHeight)
+  canvasWidth = width
+  canvasHeight = height
   const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5)
   const backingWidth = Math.round(width * pixelRatio)
   const backingHeight = Math.round(height * pixelRatio)
@@ -99,8 +104,8 @@ const drawParticles = (frameTime: number, shouldMove: boolean) => {
   const canvas = canvasElement.value
   if (!canvas || !context) return
 
-  const width = canvas.clientWidth
-  const height = canvas.clientHeight
+  const width = canvasWidth
+  const height = canvasHeight
   const elapsed = Math.min(32, Math.max(0, frameTime - lastFrameTime))
   const ease = Math.max(1, props.ease)
   const staticity = Math.max(1, props.staticity)

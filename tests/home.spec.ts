@@ -1,4 +1,4 @@
-import { expect, type Page, test } from '@playwright/test'
+import { devices, expect, type Page, test } from '@playwright/test'
 
 const PAGE_LOAD_TIMEOUT = 20_000
 const ISLAND_EXIT_MAX_GEOMETRY_SHIFT = 1
@@ -92,9 +92,30 @@ test.describe('top-level pages', () => {
   }
 })
 
-test('page hero title stays fixed and collapses upward without resizing text', async ({
+test('page theme color follows the active route', async ({ page }) => {
+  const samples = [
+    { path: '/', color: '#e23456' },
+    { path: '/archive', color: '#5ad480' },
+    { path: '/test', color: '#e23456' },
+  ]
+
+  for (const sample of samples) {
+    await page.goto(sample.path, { waitUntil: 'domcontentloaded' })
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          getComputedStyle(document.documentElement)
+            .getPropertyValue('--page-theme-color')
+            .trim()
+        )
+      )
+      .toBe(sample.color)
+  }
+})
+
+test('page hero title stays fixed and erases upward without resizing text', async ({
   page,
-}) => {
+}, testInfo) => {
   await page.goto('/archive', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.archives-page')).toBeVisible({
     timeout: PAGE_LOAD_TIMEOUT,
@@ -110,14 +131,24 @@ test('page hero title stays fixed and collapses upward without resizing text', a
       const bounds = viewport.getBoundingClientRect()
       const heading = viewport.querySelector('h1')!
       const text = viewport.querySelector('.page-hero-title__text')!
+      const viewportStyle = getComputedStyle(viewport)
+      const maskSize = viewportStyle.webkitMaskSize || viewportStyle.maskSize
+      const visibleMaskRatio = Number.parseFloat(
+        maskSize.trim().split(/\s+/).at(-1) || '100'
+      )
 
       return {
         bottom: bounds.bottom,
+        collapseDistance: Number.parseFloat(
+          viewportStyle.getPropertyValue('--page-hero-title-collapse-distance')
+        ),
         fontSize: getComputedStyle(heading).fontSize,
         height: bounds.height,
+        maskSize,
         overflow: getComputedStyle(viewport).overflow,
         textTransform: getComputedStyle(text).transform,
         top: bounds.top,
+        visibleMaskRatio,
       }
     })
 
@@ -139,16 +170,101 @@ test('page hero title stays fixed and collapses upward without resizing text', a
         ),
       { timeout: 3_000 }
     )
-    .toBeGreaterThan(20)
+    .toBeGreaterThanOrEqual(30)
   await expect
-    .poll(async () => (await readTitleMetrics()).height, { timeout: 3_000 })
-    .toBeLessThan(initial.height - 5)
+    .poll(async () => (await readTitleMetrics()).visibleMaskRatio, {
+      timeout: 3_000,
+    })
+    .toBeLessThan(initial.visibleMaskRatio - 5)
 
   const collapsed = await readTitleMetrics()
   expect(Math.abs(collapsed.top - initial.top)).toBeLessThanOrEqual(1)
-  expect(collapsed.bottom).toBeLessThan(initial.bottom - 5)
+  expect(Math.abs(collapsed.bottom - initial.bottom)).toBeLessThanOrEqual(1)
+  expect(Math.abs(collapsed.height - initial.height)).toBeLessThanOrEqual(1)
+  expect(collapsed.maskSize).not.toBe(initial.maskSize)
   expect(collapsed.fontSize).toBe(initial.fontSize)
   expect(collapsed.textTransform).toBe(initial.textTransform)
+
+  if (testInfo.project.name.includes('mobile')) {
+    expect(initial.collapseDistance).toBeLessThanOrEqual(56)
+    expect(collapsed.visibleMaskRatio).toBeLessThanOrEqual(1)
+  }
+})
+
+test('page hero title keeps pace with scrolling on tablet viewports', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name.includes('mobile'))
+
+  await page.setViewportSize({ width: 1024, height: 1366 })
+  await page.goto('/archive', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.archives-page')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+  await page.waitForTimeout(800)
+
+  const titleViewport = page.locator('.page-hero-title__clip')
+  const readWipeMetrics = () =>
+    titleViewport.evaluate((viewport) => {
+      const style = getComputedStyle(viewport)
+      const maskSize = style.webkitMaskSize || style.maskSize
+
+      return {
+        collapseDistance: Number.parseFloat(
+          style.getPropertyValue('--page-hero-title-collapse-distance')
+        ),
+        visibleMaskRatio: Number.parseFloat(
+          maskSize.trim().split(/\s+/).at(-1) || '100'
+        ),
+      }
+    })
+
+  const initial = await readWipeMetrics()
+  expect(initial.collapseDistance).toBeGreaterThanOrEqual(24)
+  expect(initial.collapseDistance).toBeLessThanOrEqual(56)
+
+  await page.mouse.wheel(0, 100)
+  await expect
+    .poll(async () => (await readWipeMetrics()).visibleMaskRatio, {
+      timeout: 3_000,
+    })
+    .toBeLessThanOrEqual(1)
+})
+
+test('page hero title detects large touch iPads in landscape', async ({
+  browser,
+}, testInfo) => {
+  test.skip(testInfo.project.name.includes('mobile'))
+
+  const context = await browser.newContext({
+    ...devices['iPad Pro 11 landscape'],
+    baseURL: 'http://127.0.0.1:3000',
+    viewport: { width: 1366, height: 1024 },
+  })
+
+  try {
+    const page = await context.newPage()
+    await page.goto('/archive', { waitUntil: 'domcontentloaded' })
+    await expect(page.locator('.archives-page')).toBeVisible({
+      timeout: PAGE_LOAD_TIMEOUT,
+    })
+    await page.waitForTimeout(800)
+
+    const collapseDistance = await page
+      .locator('.page-hero-title__clip')
+      .evaluate((viewport) =>
+        Number.parseFloat(
+          getComputedStyle(viewport).getPropertyValue(
+            '--page-hero-title-collapse-distance'
+          )
+        )
+      )
+
+    expect(collapseDistance).toBeGreaterThanOrEqual(24)
+    expect(collapseDistance).toBeLessThanOrEqual(56)
+  } finally {
+    await context.close()
+  }
 })
 
 test('page hero title stages a random direction before animating', async ({
@@ -717,30 +833,310 @@ test('archive section headings show their dynamic project totals', async ({
     timeout: PAGE_LOAD_TIMEOUT,
   })
 
-  const sectionCounts = await page.evaluate(() =>
-    Array.from(
-      document.querySelectorAll<HTMLElement>(
-        '.archives-page .home-section-layout'
-      )
-    ).map((section) => {
-      const count = section.querySelector<HTMLElement>(
-        '.archive-section-count strong'
-      )
+  const sections = page.locator('.archives-page .home-section-layout')
+  await expect(sections).toHaveCount(3)
+
+  for (let index = 0; index < 3; index += 1) {
+    const section = sections.nth(index)
+    const count = section.locator('.section-count strong')
+    const actual = await section.locator('.shared-work-card').count()
+
+    await section.scrollIntoViewIfNeeded()
+    await expect
+      .poll(() => count.textContent())
+      .toBe(String(actual).padStart(2, '0'))
+    expect(
+      (
+        await count.evaluate((element) => getComputedStyle(element).fontFamily)
+      ).toLowerCase()
+    ).toContain('cn-custom')
+  }
+
+  const railAlignment = await sections.first().evaluate((element) => {
+    const contentTop = element
+      .querySelector<HTMLElement>('.home-section-content')!
+      .getBoundingClientRect().top
+    const labelTop = element
+      .querySelector<HTMLElement>('.home-section-rail__label')!
+      .getBoundingClientRect().top
+    const lineStyle = getComputedStyle(element, '::before')
+
+    return {
+      labelOffset: Math.abs(labelTop - contentTop),
+      lineGridRow: lineStyle.gridRowStart,
+    }
+  })
+  expect(railAlignment.labelOffset).toBeLessThanOrEqual(1)
+  expect(railAlignment.lineGridRow).toBe('2')
+})
+
+test('mobile section navigation expands from NAV and closes from the backdrop', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'mobile-chrome')
+
+  await page.goto('/archive', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.archives-page')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+
+  const navigation = page.locator('.sections-fixed-nav')
+  const toggle = navigation.locator('.sections-fixed-nav__toggle')
+  const items = navigation.locator('.sections-fixed-nav__item')
+
+  await expect(toggle).toBeVisible()
+  await expect(items.first()).toBeHidden()
+  const toggleSize = await toggle.boundingBox()
+  if (!toggleSize) throw new Error('NAV trigger is unavailable')
+  await toggle.click({ position: { x: 4, y: toggleSize.height - 4 } })
+
+  await expect(navigation).toHaveClass(/\bis-mobile-open\b/)
+  await expect(items.first()).toBeVisible()
+  await expect(
+    items.first().locator('.sections-fixed-nav__label')
+  ).toBeVisible()
+  const menu = navigation.locator('.sections-fixed-nav__menu')
+  await expect
+    .poll(() => menu.evaluate((element) => getComputedStyle(element).opacity))
+    .toBe('1')
+
+  const expandedGeometry = await navigation.evaluate((element) => {
+    const menuElement = element.querySelector<HTMLElement>(
+      '.sections-fixed-nav__menu'
+    )!
+    const navigationBounds = element.getBoundingClientRect()
+    const menuBounds = menuElement.getBoundingClientRect()
+    const lineBounds = element
+      .querySelector<HTMLElement>('.sections-fixed-nav__line')!
+      .getBoundingClientRect()
+    const markerBounds = element
+      .querySelector<HTMLElement>('.sections-fixed-nav__marker')!
+      .getBoundingClientRect()
+
+    return {
+      anchorOffset: Math.max(
+        Math.abs(menuBounds.left - navigationBounds.left),
+        Math.abs(menuBounds.bottom - navigationBounds.bottom)
+      ),
+      navLabelOpacity: getComputedStyle(element, '::before').opacity,
+      nodeCenterOffset: Math.abs(
+        markerBounds.left +
+          markerBounds.width / 2 -
+          (lineBounds.left + lineBounds.width / 2)
+      ),
+      transformOrigin: getComputedStyle(menuElement).transformOrigin,
+    }
+  })
+  expect(expandedGeometry.anchorOffset).toBeLessThanOrEqual(2)
+  expect(expandedGeometry.navLabelOpacity).toBe('0')
+  expect(expandedGeometry.nodeCenterOffset).toBeLessThanOrEqual(0.5)
+  expect(expandedGeometry.transformOrigin).toMatch(/^0px /)
+
+  const backdrop = page.locator('.sections-fixed-nav__backdrop')
+  await expect(backdrop).toBeVisible()
+  await expect
+    .poll(() =>
+      backdrop.evaluate((element) => {
+        const filter = getComputedStyle(element).backdropFilter
+        return Number.parseFloat(
+          filter.match(/blur\((\d+(?:\.\d+)?)px\)/)?.[1] || '0'
+        )
+      })
+    )
+    .toBeGreaterThanOrEqual(4)
+  const backdropBackground = await backdrop.evaluate((element) => {
+    const style = getComputedStyle(element)
+    return {
+      color: style.backgroundColor,
+      image: style.backgroundImage,
+    }
+  })
+  expect(backdropBackground.color).toBe('rgba(0, 0, 0, 0)')
+  expect(backdropBackground.image).toContain('radial-gradient')
+  expect(backdropBackground.image).toMatch(/at (?:left bottom|0% 100%)/)
+  expect(backdropBackground.image).toContain('rgba(0, 0, 0, 0.9)')
+
+  await backdrop.click({ position: { x: 300, y: 100 } })
+  await expect(backdrop).toHaveCount(0)
+  await expect(items.first()).toBeHidden()
+
+  await page
+    .locator('.archives-page .home-section-layout')
+    .first()
+    .scrollIntoViewIfNeeded()
+  const backToTop = page.locator('.back-to-top-button')
+  await expect(backToTop).toBeVisible()
+  await expect(navigation).not.toHaveClass(/\bis-page-end\b/)
+
+  const navigationAlignment = await page.evaluate(() => {
+    const navigationElement = document.querySelector<HTMLElement>(
+      '.sections-fixed-nav'
+    )!
+    const backToTopElement = document.querySelector<HTMLElement>(
+      '.back-to-top-button'
+    )!
+    const navigationBounds = navigationElement.getBoundingClientRect()
+    const backToTopBounds = backToTopElement.getBoundingClientRect()
+    const navLabelStyle = getComputedStyle(navigationElement, '::before')
+    const navigationStyle = getComputedStyle(navigationElement)
+    const backToTopStyle = getComputedStyle(backToTopElement)
+    const context = document.createElement('canvas').getContext('2d')!
+    context.font = `${navLabelStyle.fontWeight} ${navLabelStyle.fontSize} ${navLabelStyle.fontFamily}`
+    const navLabelWidth = context.measureText('NAV').width
+    const navLabelLeft = navigationBounds.left + parseFloat(navLabelStyle.left)
+
+    return {
+      centerOffset: Math.abs(
+        backToTopBounds.left +
+          backToTopBounds.width / 2 -
+          (navLabelLeft + navLabelWidth / 2)
+      ),
+      verticalGap:
+        parseFloat(navigationStyle.bottom) -
+        (parseFloat(backToTopStyle.bottom) + backToTopBounds.height),
+    }
+  })
+  expect(navigationAlignment.centerOffset).toBeLessThanOrEqual(1)
+  expect(navigationAlignment.verticalGap).toBeGreaterThanOrEqual(10)
+  expect(navigationAlignment.verticalGap).toBeLessThanOrEqual(14)
+})
+
+test('mobile header branding keeps its horizontal geometry while scrolling', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'mobile-chrome')
+
+  await page.goto('/archive', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.archives-page')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+  await expect(page.locator('.layout-page')).toHaveClass(/\blayout-show\b/, {
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+
+  const readBrandGeometry = () =>
+    page.locator('.logo-box').evaluate((element) => {
+      const logoBounds = element
+        .querySelector<HTMLElement>('.logo')!
+        .getBoundingClientRect()
+      const titleBounds = element
+        .querySelector<HTMLElement>('.right')!
+        .getBoundingClientRect()
 
       return {
-        displayed: Number(count?.textContent),
-        actual: section.querySelectorAll('.shared-work-card, .misc-card')
-          .length,
-        fontFamily: count ? window.getComputedStyle(count).fontFamily : '',
+        logoLeft: logoBounds.left,
+        logoTop: logoBounds.top,
+        logoWidth: logoBounds.width,
+        titleLeft: titleBounds.left,
+        titleTop: titleBounds.top,
+        titleWidth: titleBounds.width,
       }
     })
-  )
-
-  expect(sectionCounts).toHaveLength(3)
-  for (const sectionCount of sectionCounts) {
-    expect(sectionCount.displayed).toBe(sectionCount.actual)
-    expect(sectionCount.fontFamily.toLowerCase()).toContain('anton')
+  const setScrollTop = async (top: number) => {
+    await page.evaluate((nextTop) => {
+      window.scrollTo(0, nextTop)
+      document.scrollingElement?.scrollTo(0, nextTop)
+      document.documentElement.scrollTop = nextTop
+      document.body.scrollTop = nextTop
+    }, top)
+    await page.waitForTimeout(100)
   }
+
+  const initial = await readBrandGeometry()
+  await setScrollTop(50)
+  const transitioning = await readBrandGeometry()
+  await setScrollTop(120)
+  const scrolled = await readBrandGeometry()
+
+  for (const geometry of [transitioning, scrolled]) {
+    const logoLeftShift = Math.abs(geometry.logoLeft - initial.logoLeft)
+    expect(logoLeftShift).toBeLessThanOrEqual(1)
+    expect(
+      Math.abs(geometry.logoWidth - initial.logoWidth)
+    ).toBeLessThanOrEqual(1)
+    expect(
+      Math.abs(geometry.titleLeft - initial.titleLeft)
+    ).toBeLessThanOrEqual(1)
+    expect(
+      Math.abs(geometry.titleWidth - initial.titleWidth)
+    ).toBeLessThanOrEqual(1)
+  }
+  expect(initial.logoTop - scrolled.logoTop).toBeGreaterThanOrEqual(1)
+  expect(initial.logoTop - scrolled.logoTop).toBeLessThanOrEqual(5)
+  expect(initial.titleTop - scrolled.titleTop).toBeGreaterThanOrEqual(1)
+  expect(initial.titleTop - scrolled.titleTop).toBeLessThanOrEqual(5)
+})
+
+test('mobile first-load desktop recommendation is fixed and closable', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'mobile-chrome')
+
+  await page.goto('/archive', { waitUntil: 'domcontentloaded' })
+  const alert = page.locator('.mobile-experience-alert .el-alert')
+  await expect(alert).toContainText('使用电脑访问以获得最佳体验', {
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+  await expect(page.locator('.entry-overlay-container')).toHaveCount(0)
+  await alert.evaluate(async (element) => {
+    await Promise.all(
+      element
+        .getAnimations({ subtree: true })
+        .map((animation) => animation.finished)
+    )
+  })
+
+  const alertStyle = await alert.evaluate((element) => {
+    const bounds = element.getBoundingClientRect()
+    const style = getComputedStyle(element)
+    return {
+      bottomOffset: Math.abs(window.innerHeight - bounds.bottom),
+      backgroundColor: style.backgroundColor,
+      borderColor: style.borderTopColor,
+      centerOffset: Math.abs(
+        bounds.left + bounds.width / 2 - window.innerWidth / 2
+      ),
+      fontSize: Number.parseFloat(
+        getComputedStyle(element.querySelector('.el-alert__title')!).fontSize
+      ),
+      iconSize: Number.parseFloat(
+        getComputedStyle(element.querySelector('.el-alert__icon')!).fontSize
+      ),
+      iconCount: element.querySelectorAll('.el-alert__icon svg').length,
+      animationName: style.animationName,
+      position: getComputedStyle(element.parentElement!).position,
+      shadow: style.boxShadow,
+      zIndex: getComputedStyle(element.parentElement!).zIndex,
+    }
+  })
+  expect(alertStyle.bottomOffset).toBeCloseTo(112, 0)
+  expect(alertStyle.backgroundColor).toBe('rgba(15, 13, 17, 0.6)')
+  expect(alertStyle.borderColor).toBe('rgb(226, 52, 86)')
+  expect(alertStyle.centerOffset).toBeLessThanOrEqual(1)
+  expect(alertStyle.fontSize).toBeGreaterThanOrEqual(16)
+  expect(alertStyle.fontSize).toBeLessThan(18)
+  expect(alertStyle.iconCount).toBe(1)
+  expect(alertStyle.animationName).toContain('mobileExperienceAlertCrtOn')
+  expect(alertStyle.iconSize).toBeLessThan(20)
+  expect(alertStyle.position).toBe('fixed')
+  expect(alertStyle.shadow).not.toBe('none')
+  expect(alertStyle.zIndex).toBe('10000')
+
+  const closeButton = alert.locator('.el-alert__close-btn')
+  await expect(closeButton).toHaveText('别说了！')
+  await expect(closeButton).toHaveCSS('color', 'rgb(113, 203, 125)')
+  await expect(closeButton).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
+  await closeButton.click()
+  await expect(alert).toHaveClass(/el-alert-fade-leave-active/)
+  await expect
+    .poll(() =>
+      alert.evaluate((element) => getComputedStyle(element).animationName)
+    )
+    .toContain('mobileExperienceAlertCrtOff')
+  await expect(alert).toBeHidden()
+  await page.locator('.logo-box').click()
+  await expect(page).toHaveURL(/\/$/)
+  await expect(alert).toBeHidden()
 })
 
 /*
@@ -1494,10 +1890,13 @@ test('home defers secondary journey images until interaction', async ({
   await expect(firstJourneyCard.locator('.vlog-img--hover')).toHaveCount(1)
 })
 
-test('home loads the work detail modal on demand', async ({
+test('archive loads the work detail modal on demand', async ({
   page,
 }, testInfo) => {
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/archive', { waitUntil: 'domcontentloaded' })
+  const englishButton = page.locator('.footer-com .language button').last()
+  await englishButton.click()
+  await expect(englishButton).toBeDisabled()
   const firstWorkCard = page.locator('.works-grid .shared-work-card').first()
 
   await expect(firstWorkCard).toBeAttached({ timeout: PAGE_LOAD_TIMEOUT })
@@ -1507,18 +1906,83 @@ test('home loads the work detail modal on demand', async ({
   await expect(dialog).toBeVisible({
     timeout: PAGE_LOAD_TIMEOUT,
   })
+  const externalTitle = dialog.locator('.modal-external-title')
+  await expect(externalTitle).toHaveText('PROJECT DETAILS')
+  const externalTitleStyle = await externalTitle.evaluate((element) => ({
+    centerDelta: Math.abs(
+      element.getBoundingClientRect().left +
+        element.getBoundingClientRect().width / 2 -
+        (element.parentElement!.getBoundingClientRect().left +
+          element.parentElement!.getBoundingClientRect().width / 2)
+    ),
+    fontFamily: getComputedStyle(element).fontFamily.toLowerCase(),
+    fontSize: Number.parseFloat(getComputedStyle(element).fontSize),
+    fontWeight: getComputedStyle(element).fontWeight,
+    letterSpacing: getComputedStyle(element).letterSpacing,
+    opacity: getComputedStyle(element).opacity,
+    clipPath: getComputedStyle(element.querySelector<HTMLElement>('span')!)
+      .clipPath,
+  }))
+  expect(externalTitleStyle.centerDelta).toBeLessThanOrEqual(1)
+  expect(externalTitleStyle.fontFamily).toContain('cn-custom')
+  expect(externalTitleStyle.fontSize).toBeGreaterThan(10)
+  expect(externalTitleStyle.fontWeight).toBe('400')
+  expect(externalTitleStyle.letterSpacing).toBe('1px')
+  expect(externalTitleStyle.opacity).toBe('0.2')
+  expect(externalTitleStyle.clipPath).toBe('none')
+  await expect(dialog.locator('.aside-company-name')).toBeAttached()
+  await expect(
+    dialog.locator('.project-share-button.share-button')
+  ).toBeAttached()
+  const detailChrome = await dialog.evaluate((element) => {
+    const companyName = element.querySelector<HTMLElement>(
+      '.aside-company-name'
+    )!
+    const shareButton = element.querySelector<HTMLElement>(
+      '.project-share-button.share-button'
+    )!
+    const confidentialTitle = element.querySelector<HTMLElement>(
+      '.confidential-notice strong'
+    )!
+
+    return {
+      asideIdCount: element.querySelectorAll('.aside-id').length,
+      companyColor: getComputedStyle(companyName).color,
+      companyFontSize: Number.parseFloat(
+        getComputedStyle(companyName).fontSize
+      ),
+      confidentialKickerCount: element.querySelectorAll('.confidential-kicker')
+        .length,
+      confidentialTitleWeight: confidentialTitle
+        ? getComputedStyle(confidentialTitle).fontWeight
+        : null,
+      shareBackground: getComputedStyle(shareButton).backgroundImage,
+      shareBorderWidth: getComputedStyle(shareButton).borderWidth,
+      shareCodeCount: shareButton.querySelectorAll('.share-button__code')
+        .length,
+    }
+  })
+  expect(detailChrome.asideIdCount).toBe(0)
+  expect(detailChrome.companyColor).toBe('rgb(113, 203, 125)')
+  expect(detailChrome.companyFontSize).toBeGreaterThan(12)
+  expect(detailChrome.confidentialKickerCount).toBe(0)
+  if (detailChrome.confidentialTitleWeight) {
+    expect(detailChrome.confidentialTitleWeight).toBe('700')
+  }
+  expect(detailChrome.shareBackground).toBe('none')
+  expect(detailChrome.shareBorderWidth).toBe('0px')
+  expect(detailChrome.shareCodeCount).toBe(0)
 
   if (testInfo.project.name.includes('mobile')) {
     const mobileLayout = await dialog.evaluate((element) => {
-      const closeRow = element.querySelector('.modal-close-row')!
-      const modalBody = element.querySelector('.modal-body')!
+      const closeButton =
+        element.querySelector<HTMLElement>('.diamond-close-btn')!
       const asideCompany = element.querySelector('.aside-company')!
       const asideDivider = element.querySelector('.aside-divider')!
       const asideLogo = element.querySelector('.aside-logo')!
       const modalAside = element.querySelector('.modal-aside')!
       const companyInfo = element.querySelector('.aside-company-info')!
       const companyName = element.querySelector('.aside-company-name')!
-      const companyId = element.querySelector('.aside-id')!
       const shareButton = element.querySelector('.project-share-button')!
 
       return {
@@ -1532,15 +1996,17 @@ test('home loads the work detail modal on demand', async ({
           (asideCompany as HTMLElement).offsetTop -
           (modalAside as HTMLElement).offsetTop,
         asideLogoWidth: (asideLogo as HTMLElement).offsetWidth,
-        bodyStartsAfterCloseRow:
-          (modalBody as HTMLElement).offsetTop >=
-          (closeRow as HTMLElement).offsetTop +
-            (closeRow as HTMLElement).offsetHeight -
-            1,
-        closeRowHeight: (closeRow as HTMLElement).offsetHeight,
-        companyIdFontSize: Number.parseFloat(
-          getComputedStyle(companyId).fontSize
+        closeCenterDelta: Math.abs(
+          closeButton.getBoundingClientRect().left +
+            closeButton.getBoundingClientRect().width / 2 -
+            (element.getBoundingClientRect().left +
+              element.getBoundingClientRect().width / 2)
         ),
+        closeIsBelowDialog:
+          closeButton.getBoundingClientRect().top >=
+          element.getBoundingClientRect().bottom,
+        closeIsInViewport:
+          closeButton.getBoundingClientRect().bottom <= window.innerHeight,
         companyInfoJustifyContent: getComputedStyle(companyInfo).justifyContent,
         companyNameFontSize: Number.parseFloat(
           getComputedStyle(companyName).fontSize
@@ -1554,8 +2020,9 @@ test('home loads the work detail modal on demand', async ({
       }
     })
 
-    expect(mobileLayout.bodyStartsAfterCloseRow).toBe(true)
-    expect(mobileLayout.closeRowHeight).toBeGreaterThanOrEqual(52)
+    expect(mobileLayout.closeCenterDelta).toBeLessThanOrEqual(1)
+    expect(mobileLayout.closeIsBelowDialog).toBe(true)
+    expect(mobileLayout.closeIsInViewport).toBe(true)
     expect(mobileLayout.asideCompanyHeight).toBeGreaterThanOrEqual(44)
     expect(mobileLayout.asideCompanyAlignItems).toBe('center')
     expect(
@@ -1565,14 +2032,10 @@ test('home loads the work detail modal on demand', async ({
     ).toBeLessThanOrEqual(1)
     expect(mobileLayout.asideLogoWidth).toBeGreaterThanOrEqual(44)
     expect(mobileLayout.companyNameFontSize).toBeGreaterThanOrEqual(15)
-    expect(mobileLayout.companyIdFontSize).toBeGreaterThanOrEqual(11)
     expect(mobileLayout.companyInfoJustifyContent).toBe('center')
     expect(mobileLayout.shareButtonAlignSelf).toBe('center')
-    expect(mobileLayout.dialogTop).toBeGreaterThanOrEqual(92)
-    expect(mobileLayout.dialogBottomGap).toBeGreaterThanOrEqual(92)
-    expect(
-      Math.abs(mobileLayout.dialogTop - mobileLayout.dialogBottomGap)
-    ).toBeLessThanOrEqual(1)
+    expect(mobileLayout.dialogTop).toBeGreaterThanOrEqual(64)
+    expect(mobileLayout.dialogBottomGap).toBeGreaterThanOrEqual(100)
   }
 })
 

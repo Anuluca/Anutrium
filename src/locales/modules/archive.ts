@@ -3,24 +3,23 @@ import dynamic from '../dynamic/archive'
 const archive = {
   title01: {
     zhCn: '工作项目',
-    en: 'MAIN PROJECTS',
+    en: 'MAIN',
   },
   title02: {
     zhCn: '个人项目',
-    en: 'PERSONAL PROJECTS',
+    en: 'PERSONAL',
   },
   title03: {
     zhCn: '其他工作项目',
-    en: 'OTHER PROJECTS',
+    en: 'OTHER',
   },
-  statusKicker: 'CURRENT_STATUS / AVAILABLE',
   statusTitle: {
     zhCn: '开放新的工作机会',
     en: 'OPEN TO NEW WORK',
   },
   statusDescription: {
-    zhCn: '目前可以沟通前端工程与创意开发相关工作机会，并根据周期接受自由职业委托。',
-    en: 'Available to discuss frontend engineering and creative development roles, with freelance work assessed against schedule.',
+    zhCn: '开放前端工程、创意开发与自由职业合作。',
+    en: 'Open to frontend, creative-development, and freelance work.',
   },
   statusWorkLabel: {
     zhCn: '个人状态',

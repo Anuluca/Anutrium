@@ -479,7 +479,7 @@ onUnmounted(() => {
     border-top: 1px solid rgba(128, 128, 128, 0.26);
     border-bottom: 1px solid rgba(128, 128, 128, 0.26);
     background: var(--page-footer-surface-background);
-    box-shadow: 0 14px 24px rgba(0, 0, 0, 0.72);
+    box-shadow: 0 14px 24px rgba(0, 0, 0, 0.42);
     padding: 0;
     pointer-events: none;
 

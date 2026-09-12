@@ -493,6 +493,21 @@ test('footer modal preserves the page position while open and after closing', as
   const modal = page.locator('.modal-wrapper-dialog')
   await expect(modal).toBeVisible()
   await page.waitForTimeout(550)
+  const modalTheme = await modal.evaluate((element) => {
+    const closeButton =
+      element.querySelector<HTMLElement>('.diamond-close-btn')!
+
+    return {
+      dialogAccent: getComputedStyle(element)
+        .getPropertyValue('--modal-accent')
+        .trim(),
+      closeAccent: getComputedStyle(closeButton)
+        .getPropertyValue('--diamond-close-accent')
+        .trim(),
+    }
+  })
+  expect(modalTheme.dialogAccent).toBe('#3d2875')
+  expect(modalTheme.closeAccent).toBe('#3d2875')
 
   expectPagePositionToMatch(
     await readPagePosition(page, '.about-page'),

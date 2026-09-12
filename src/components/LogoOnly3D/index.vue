@@ -13,9 +13,11 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 
 import Logo from '@/components/Logo/index.vue'
+
+const props = defineProps({ active: { type: Boolean, default: true } })
 
 const sceneElement = ref(null)
 const isMotionPaused = ref(false)
@@ -25,10 +27,13 @@ let reducedMotionQuery = null
 
 const updateMotionState = () => {
   isMotionPaused.value =
+    !props.active ||
     !isSceneVisible ||
     document.visibilityState === 'hidden' ||
     !!reducedMotionQuery?.matches
 }
+
+watch(() => props.active, updateMotionState)
 
 onMounted(() => {
   reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')

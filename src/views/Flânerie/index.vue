@@ -6,25 +6,7 @@
     <PageHeroTitle />
 
     <section class="vlog-section">
-      <div
-        ref="mapContainerRef"
-        class="map-container"
-        @animationend="handleMapRevealEnd"
-      >
-        <div class="map-hud-label">
-          <span>TRAVEL_MAP</span>
-          <span v-if="locale !== 'en'" class="map-hud-label__cn">
-            旅行地图
-          </span>
-        </div>
-        <div id="travel-map" ref="mapRef" class="travel-map" />
-
-        <div class="corner corner-tl" />
-        <div class="corner corner-tr" />
-        <div class="corner corner-bl" />
-        <div class="corner corner-br" />
-        <div class="map-scanlines" />
-      </div>
+      <TravelMap :vlogs="vlogs" @select="scrollToVlog" />
 
       <div class="vlog-groups">
         <section
@@ -34,7 +16,6 @@
         >
           <Sections
             :section-number="index + 1"
-            :rail-label="group.railLabel"
             :title="group.title"
             :title-en="group.titleEn"
           >
@@ -43,9 +24,11 @@
             </template>
             <div class="vlog-grid">
               <VlogCard
-                v-for="vlog in group.items"
+                v-for="(vlog, vlogIndex) in group.items"
                 :id="`vlog-${vlog.id}`"
                 :key="vlog.id"
+                class="vlog-image-reveal-entry"
+                :style="getVlogRevealStyle(vlogIndex)"
                 :vlog="vlog"
                 :active="activeVlogId === vlog.id"
                 :interactive="true"
@@ -61,60 +44,30 @@
 </template>
 
 <script setup lang="ts">
-/* eslint-disable simple-import-sort/imports */
 import {
-  type Component,
   computed,
-  createVNode,
+  type CSSProperties,
   nextTick,
   onMounted,
   onUnmounted,
   ref,
-  render,
-  watch,
 } from 'vue'
-import { Minus, Plus } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
+
+import PageFooter from '@/components/PageFooter/index.vue'
 import PageHeroTitle from '@/components/PageHeroTitle/index.vue'
 import SectionCount from '@/components/SectionCount/index.vue'
 import Sections from '@/components/Sections/index.vue'
+import TravelMap from '@/components/TravelMap/index.vue'
 import VlogCard from '@/components/VlogCard/index.vue'
-import PageFooter from '@/components/PageFooter/index.vue'
-import { visualState } from '@/stores'
+import { useScrollReveal } from '@/composables/useScrollReveal'
 import { getPageScrollTop, scrollPageTo } from '@/utils/pageScroll'
 
-type VlogCategory = 'visited' | 'resident' | 'activity'
-
-interface VlogGroup {
-  id: VlogCategory
-  title: string
-  titleEn?: string
-  railLabel: string
-}
-
-interface VlogLocation {
-  id: string
-  name: string
-  lat: number
-  lng: number
-}
-
-interface VlogItem {
-  id: string
-  category?: VlogCategory
-  title: string
-  mapLabel: string
-  date: string
-  tagline: string
-  img: string
-  img2?: string
-  location: VlogLocation
-}
+import type { JourneyGroup, JourneyItem } from '@/types/flanerie'
 
 const router = useRouter()
 const { locale, tm } = useI18n()
-const visualStateStore = visualState()
 const JOURNEY_RETURN_FLAG_KEY = 'anutrium:flanerie:returning-from-detail'
 const JOURNEY_RETURN_VLOG_KEY = 'anutrium:flanerie:selected-vlog'
 const JOURNEY_RETURN_SCROLL_KEY = 'anutrium:flanerie:scroll-top'
@@ -124,22 +77,28 @@ interface JourneyReturnState {
   scrollTop: number | null
 }
 
-const vlogs = computed<VlogItem[]>(() => {
-  return tm('flanerie.dynamic.vlogs') as VlogItem[]
+const vlogs = computed<JourneyItem[]>(() => {
+  return tm('flanerie.dynamic.vlogs') as JourneyItem[]
 })
 
 const vlogGroups = computed(() => {
-  const groups = tm('flanerie.dynamic.groups') as VlogGroup[]
+  const groups = tm('flanerie.dynamic.groups') as JourneyGroup[]
+  const itemsByCategory = new Map<JourneyGroup['id'], JourneyItem[]>()
+
+  vlogs.value.forEach((vlog) => {
+    const category = vlog.category ?? 'visited'
+    const items = itemsByCategory.get(category)
+    if (items) items.push(vlog)
+    else itemsByCategory.set(category, [vlog])
+  })
 
   return groups.map((group) => ({
     ...group,
-    items: vlogs.value.filter(
-      (vlog) => (vlog.category || 'visited') === group.id
-    ),
+    items: itemsByCategory.get(group.id) ?? [],
   }))
 })
 
-const openVlog = (vlog: VlogItem) => {
+const openVlog = (vlog: JourneyItem) => {
   if (typeof window !== 'undefined') {
     window.sessionStorage.setItem(JOURNEY_RETURN_VLOG_KEY, vlog.id)
     window.sessionStorage.setItem(
@@ -151,13 +110,23 @@ const openVlog = (vlog: VlogItem) => {
   router.push(`/flanerie/${vlog.id}`)
 }
 
-const mapRef = ref<HTMLElement | null>(null)
-const mapContainerRef = ref<HTMLElement | null>(null)
 const activeVlogId = ref<string | null>(null)
-let mapInstance: any = null
 let activeVlogTimer: number | undefined
-let mapRevealRefreshTimer: number | undefined
 let isJourneyPageUnmounted = false
+
+useScrollReveal({
+  selector: '.flanerie-page .vlog-image-reveal-entry',
+  revealedClass: 'is-vlog-image-revealed',
+  rootMargin: '0px 0px -14% 0px',
+  threshold: 0,
+})
+
+const getVlogRevealStyle = (index: number): CSSProperties =>
+  ({
+    '--vlog-image-delay-1': '420ms',
+    '--vlog-image-delay-2': `${420 + (index % 2) * 120}ms`,
+    '--vlog-image-delay-3': `${420 + (index % 3) * 120}ms`,
+  } as CSSProperties)
 
 const consumeJourneyReturnState = (): JourneyReturnState | null => {
   if (typeof window === 'undefined') return null
@@ -223,55 +192,6 @@ const restoreJourneyReturnState = async (returnState: JourneyReturnState) => {
   }, 1000)
 }
 
-interface MapPlaceGroup extends VlogLocation {
-  targets: Array<{
-    label: string
-    vlogId: string
-  }>
-}
-
-const VISITED_REGION_GEOJSON_URLS: Record<string, string> = {
-  beijing: '/geo/visited-regions/beijing.geojson',
-  hunan: '/geo/visited-regions/hunan.geojson',
-  anhui: '/geo/visited-regions/anhui.geojson',
-  chongqing: '/geo/visited-regions/chongqing.geojson',
-  shanghai: '/geo/visited-regions/shanghai.geojson',
-  hubei: '/geo/visited-regions/hubei.geojson',
-  guangdong: '/geo/visited-regions/guangdong.geojson',
-  jiangxi: '/geo/visited-regions/jiangxi.geojson',
-  jiangsu: '/geo/visited-regions/jiangsu.geojson',
-  fujian: '/geo/visited-regions/fujian.geojson',
-  singapore: '/geo/visited-regions/singapore.geojson',
-}
-const geoJsonBoundaryCache = new Map<string, Promise<any | null>>()
-let leafletLoadPromise: Promise<void> | null = null
-
-const mapPlaces = computed<MapPlaceGroup[]>(() => {
-  const places = new Map<string, MapPlaceGroup>()
-
-  vlogs.value
-    .filter((vlog) => vlog.category !== 'activity')
-    .forEach((vlog) => {
-      const currentPlace = places.get(vlog.location.id)
-      const target = {
-        label: vlog.mapLabel || vlog.title,
-        vlogId: vlog.id,
-      }
-
-      if (currentPlace) {
-        currentPlace.targets.push(target)
-        return
-      }
-
-      places.set(vlog.location.id, {
-        ...vlog.location,
-        targets: [target],
-      })
-    })
-
-  return Array.from(places.values())
-})
-
 const clearActiveVlogTimer = () => {
   if (!activeVlogTimer) return
 
@@ -297,326 +217,19 @@ const scrollToVlog = (vlogId: string) => {
   }, 1000)
 }
 
-const buildPlacePopup = (place: MapPlaceGroup) => {
-  const items = place.targets
-    .map(
-      (target) =>
-        `<button class="map-place-option" type="button" data-vlog-id="${target.vlogId}">${target.label}</button>`
-    )
-    .join('')
-
-  return `<div class="map-place-menu">
-    <div class="map-place-title">${place.name}</div>
-    <div class="map-place-list">${items}</div>
-  </div>`
-}
-
-const getMapTileUrl = () =>
-  visualStateStore.theme === 'light'
-    ? 'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png'
-    : 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.jpg'
-
-const loadGeoJsonBoundary = async (url: string) => {
-  const cachedBoundary = geoJsonBoundaryCache.get(url)
-  if (cachedBoundary) return cachedBoundary
-
-  const boundaryLoad = fetch(url)
-    .then(async (response) => {
-      if (!response.ok) return null
-
-      const data = await response.json()
-      return data?.type === 'FeatureCollection' || data?.type === 'Feature'
-        ? data
-        : null
-    })
-    .catch((error) => {
-      geoJsonBoundaryCache.delete(url)
-      throw error
-    })
-
-  geoJsonBoundaryCache.set(url, boundaryLoad)
-  return boundaryLoad
-}
-
-const addVisitedRegionHighlights = async (L: any, map: any) => {
-  const visitedRegionIds = new Set(mapPlaces.value.map((place) => place.id))
-  const paneName = 'visited-region-pane'
-
-  map.createPane(paneName)
-  const pane = map.getPane(paneName)
-  if (pane) {
-    pane.style.zIndex = '350'
-    pane.style.pointerEvents = 'none'
-  }
-
-  await Promise.all(
-    Array.from(visitedRegionIds).map(async (regionId) => {
-      const geoJsonUrl = VISITED_REGION_GEOJSON_URLS[regionId]
-      if (!geoJsonUrl) return
-
-      try {
-        const geoJson = await loadGeoJsonBoundary(geoJsonUrl)
-        if (!geoJson || mapInstance !== map) return
-
-        L.geoJSON(geoJson, {
-          pane: paneName,
-          interactive: false,
-          className: 'visited-region-highlight',
-          style: {
-            color: '#e23456',
-            weight: 1.4,
-            opacity: 0.68,
-            fillColor: '#e23456',
-            fillOpacity: visualStateStore.theme === 'light' ? 0.07 : 0.13,
-          },
-        }).addTo(map)
-      } catch {
-        // Region highlights are decorative; keep the map usable if a boundary API is unavailable.
-      }
-    })
-  )
-}
-
-const renderZoomIcon = (selector: string, Icon: Component) => {
-  const button = mapContainerRef.value?.querySelector<HTMLElement>(selector)
-  if (!button) return
-
-  button.textContent = ''
-  button.classList.add('map-zoom-button')
-  render(createVNode(Icon), button)
-}
-
-const renderZoomControlIcons = () => {
-  renderZoomIcon('.leaflet-control-zoom-in', Plus)
-  renderZoomIcon('.leaflet-control-zoom-out', Minus)
-}
-
-const refreshMapSize = () => {
-  if (!mapInstance) return
-
-  window.requestAnimationFrame(() => {
-    mapInstance?.invalidateSize({ animate: false, pan: false })
-  })
-}
-
-const scheduleMapSizeRefresh = (delay = 0) => {
-  window.clearTimeout(mapRevealRefreshTimer)
-  mapRevealRefreshTimer = window.setTimeout(() => {
-    refreshMapSize()
-    mapRevealRefreshTimer = undefined
-  }, delay)
-}
-
-const handleMapRevealEnd = (event: AnimationEvent) => {
-  if (
-    event.target !== mapContainerRef.value ||
-    !event.animationName.includes('travelMapClipIn')
-  ) {
-    return
-  }
-
-  refreshMapSize()
-}
-
-const initMap = async () => {
-  if (!mapRef.value) return
-
-  const L = (window as any).L
-  if (!L) return
-
-  const map = L.map(mapRef.value, {
-    center: [25, 105],
-    zoom: 4,
-    minZoom: 2,
-    maxZoom: 8,
-    zoomControl: false,
-    attributionControl: false,
-    scrollWheelZoom: false,
-  })
-  mapInstance = map
-
-  L.tileLayer(getMapTileUrl(), { subdomains: 'abcd', maxZoom: 8 }).addTo(map)
-
-  L.control.zoom({ position: 'bottomright' }).addTo(map)
-  renderZoomControlIcons()
-  refreshMapSize()
-  scheduleMapSizeRefresh(900)
-
-  void addVisitedRegionHighlights(L, map)
-
-  mapPlaces.value.forEach((place) => {
-    const icon = L.divIcon({
-      className: '',
-      html: `<div class="map-marker">
-               <div class="marker-pulse"></div>
-               <div class="marker-dot"></div>
-             </div>`,
-      iconSize: [20, 20],
-      iconAnchor: [10, 10],
-    })
-
-    const marker = L.marker([place.lat, place.lng], { icon }).addTo(map)
-    let closeTimer: number | undefined
-
-    const scheduleClose = () => {
-      window.clearTimeout(closeTimer)
-      closeTimer = window.setTimeout(() => {
-        marker.closePopup()
-      }, 260)
-    }
-
-    const cancelClose = () => {
-      window.clearTimeout(closeTimer)
-    }
-
-    marker.bindPopup(buildPlacePopup(place), {
-      closeButton: false,
-      autoClose: true,
-      closeOnClick: false,
-      className: 'map-place-popup-wrap',
-      offset: [0, -8],
-    })
-
-    marker.on('mouseover', () => {
-      cancelClose()
-      map.closePopup()
-      marker.openPopup()
-    })
-
-    marker.on('mouseout', scheduleClose)
-
-    marker.on('popupopen', (event: any) => {
-      const popupEl = event.popup.getElement()
-      if (!popupEl) return
-
-      L.DomEvent.disableClickPropagation(popupEl)
-      popupEl.addEventListener('mouseenter', cancelClose)
-      popupEl.addEventListener('mouseleave', scheduleClose)
-      popupEl.onclick = (clickEvent: MouseEvent) => {
-        const button = (
-          clickEvent.target as HTMLElement
-        ).closest<HTMLButtonElement>('.map-place-option')
-        const vlogId = button?.dataset.vlogId
-        if (!vlogId) return
-
-        scrollToVlog(vlogId)
-        marker.closePopup()
-      }
-    })
-  })
-}
-
-const loadLeaflet = () => {
-  if ((window as any).L) return Promise.resolve()
-  if (leafletLoadPromise) return leafletLoadPromise
-
-  leafletLoadPromise = new Promise<void>((resolve, reject) => {
-    let script = document.querySelector<HTMLScriptElement>(
-      'script[data-leaflet-runtime]'
-    )
-
-    if (script?.dataset.leafletRuntimeState === 'failed') {
-      script.remove()
-      script = null
-    }
-
-    const handleError = () => {
-      if (script) {
-        script.dataset.leafletRuntimeState = 'failed'
-        script.remove()
-      }
-      leafletLoadPromise = null
-      reject(new Error('Failed to load Leaflet runtime'))
-    }
-
-    const handleLoad = () => {
-      if (!(window as any).L) {
-        handleError()
-        return
-      }
-
-      if (script) script.dataset.leafletRuntimeState = 'loaded'
-      resolve()
-    }
-
-    if (!script) {
-      script = document.createElement('script')
-      script.dataset.leafletRuntime = 'true'
-      script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
-    }
-
-    script.dataset.leafletRuntimeState = 'loading'
-    script.addEventListener('load', handleLoad, { once: true })
-    script.addEventListener('error', handleError, { once: true })
-    if (!script.isConnected) document.head.appendChild(script)
-  })
-
-  return leafletLoadPromise
-}
-
-onMounted(async () => {
+onMounted(() => {
   isJourneyPageUnmounted = false
   const returnState = consumeJourneyReturnState()
   if (returnState) restoreJourneyReturnState(returnState)
-
-  if (!document.getElementById('leaflet-css')) {
-    const link = document.createElement('link')
-    link.id = 'leaflet-css'
-    link.rel = 'stylesheet'
-    link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
-    document.head.appendChild(link)
-  }
-
-  try {
-    await loadLeaflet()
-  } catch {
-    return
-  }
-  if (isJourneyPageUnmounted) return
-  await nextTick()
-  if (isJourneyPageUnmounted) return
-  initMap()
 })
-
-watch(locale, async () => {
-  if (mapInstance) {
-    mapInstance.remove()
-    mapInstance = null
-  }
-
-  await nextTick()
-  initMap()
-})
-
-watch(
-  () => visualStateStore.theme,
-  async () => {
-    if (mapInstance) {
-      mapInstance.remove()
-      mapInstance = null
-    }
-
-    await nextTick()
-    initMap()
-  }
-)
 
 onUnmounted(() => {
   isJourneyPageUnmounted = true
   clearActiveVlogTimer()
-  window.clearTimeout(mapRevealRefreshTimer)
-
-  if (mapInstance) {
-    mapInstance.remove()
-    mapInstance = null
-  }
 })
 </script>
 
 <style lang="less" scoped>
-@red: #e23456;
-@border: rgba(255, 255, 255, 0.08);
-
 .flanerie-page {
   width: 100%;
   color: #fff;
@@ -630,11 +243,6 @@ onUnmounted(() => {
   overflow-x: clip;
 }
 
-.vlog-grid {
-  content-visibility: auto;
-  contain-intrinsic-size: 760px;
-}
-
 .vlog-groups {
   display: flex;
   flex-direction: column;
@@ -645,129 +253,45 @@ onUnmounted(() => {
   min-width: 0;
 }
 
-.map-container {
-  --travel-map-height: 400px;
-
-  position: relative;
-  width: 100%;
-  height: var(--travel-map-height);
-  max-height: var(--travel-map-height);
-  border: 1px solid @border;
-  overflow: hidden;
-  margin-bottom: 40px;
-  background: #0a050f;
-  isolation: isolate;
-  animation: travelMapClipIn 0.64s cubic-bezier(0.18, 0.84, 0.28, 1) 0.18s both;
-
-  .map-hud-label {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    display: flex;
-    flex-direction: column;
-    padding-left: 10px;
-    border-left: 10px solid #e23456;
-    gap: 3px;
-    font-family: 'cn-custom', monospace;
-    font-size: 0.55rem;
-    letter-spacing: 3px;
-    color: @red;
-    z-index: 500;
-    opacity: 0.8;
-
-    &__cn {
-      font-family: 'alibaba-puhuiti', sans-serif;
-      font-size: 0.72rem;
-      font-weight: 900;
-      letter-spacing: 0.12em;
-    }
-  }
-
-  .travel-map {
-    width: 100%;
-    height: var(--travel-map-height);
-  }
-
-  :deep(.visited-region-highlight) {
-    filter: drop-shadow(0 0 7px rgba(226, 52, 86, 0.48));
-    stroke-linejoin: round;
-  }
-
-  .map-scanlines {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      to bottom,
-      rgba(255, 255, 255, 0.015) 1px,
-      transparent 1px
-    );
-    background-size: 100% 3px;
-    z-index: 400;
-    pointer-events: none;
-    opacity: 0.5;
-  }
-
-  .corner {
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    z-index: 3;
-    pointer-events: none;
-    transition: all 0.4s ease;
-
-    &-tl {
-      top: 15px;
-      left: 15px;
-      border-right: 0;
-      border-bottom: 0;
-    }
-    &-tr {
-      top: 15px;
-      right: 15px;
-      border-left: 0;
-      border-bottom: 0;
-    }
-    &-bl {
-      bottom: 15px;
-      left: 15px;
-      border-right: 0;
-      border-top: 0;
-    }
-    &-br {
-      bottom: 15px;
-      right: 15px;
-      border-left: 0;
-      border-top: 0;
-    }
-  }
-}
-
-@keyframes travelMapClipIn {
-  0% {
-    clip-path: inset(0 0 100% 0);
-    opacity: 0;
-  }
-
-  100% {
-    clip-path: inset(0 0 0 0);
-    opacity: 1;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .map-container {
-    animation: none;
-    clip-path: inset(0 0 0 0);
-    opacity: 1;
-  }
-}
-
 .vlog-grid {
   display: grid;
+  content-visibility: auto;
+  contain-intrinsic-size: 760px;
   grid-template-columns: repeat(3, minmax(0, 580px));
-  justify-content: space-between;
-  gap: 10px 10px;
+  justify-content: center;
+  column-gap: 8px;
+  row-gap: 10px;
+}
+
+.vlog-image-reveal-entry :deep(.vlog-img-wrap) {
+  clip-path: inset(49.5%);
+  -webkit-mask-image: linear-gradient(#000 0 0);
+  mask-image: linear-gradient(#000 0 0);
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 1% 1%;
+  mask-size: 1% 1%;
+}
+
+.vlog-image-reveal-entry.is-vlog-image-revealed :deep(.vlog-img-wrap) {
+  animation: vlogImageFrameExpand 1.18s cubic-bezier(0.16, 0.72, 0.24, 1)
+    var(--vlog-image-delay-3, 420ms) both;
+}
+
+@keyframes vlogImageFrameExpand {
+  from {
+    clip-path: inset(49.5%);
+    -webkit-mask-size: 1% 1%;
+    mask-size: 1% 1%;
+  }
+
+  to {
+    clip-path: inset(0);
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+  }
 }
 
 @media (max-width: 768px) {
@@ -783,196 +307,35 @@ onUnmounted(() => {
   }
 
   .vlog-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    justify-content: stretch;
-    gap: 28px 10px;
+    grid-template-columns: minmax(0, 580px);
+    justify-content: center;
+    column-gap: 8px;
+    row-gap: 28px;
   }
 
-  .map-container {
-    --travel-map-height: 570px;
-  }
-
-  .vlog-grid :deep(.shared-vlog-card) {
-    max-width: none;
-    min-height: clamp(220px, 58vw, 320px);
-
-    .vlog-img-wrap {
-      height: clamp(180px, 48vw, 270px);
-
-      .vlog-img {
-        max-height: clamp(180px, 48vw, 270px);
-      }
-    }
-
-    .vlog-title {
-      font-size: clamp(0.98rem, 4.2vw, 1.24rem);
-      white-space: normal;
-    }
-  }
-
-  .flanerie-page.is-en {
-    .vlog-grid :deep(.shared-vlog-card .vlog-title) {
-      font-size: clamp(0.86rem, 3.7vw, 1.06rem);
-    }
+  .vlog-image-reveal-entry.is-vlog-image-revealed :deep(.vlog-img-wrap) {
+    animation-delay: var(--vlog-image-delay-1, 420ms);
   }
 }
 
 @media (min-width: 769px) and (max-width: 1180px) {
   .vlog-grid {
     grid-template-columns: repeat(2, minmax(0, 540px));
-    justify-content: space-between;
-  }
-}
-</style>
-
-<style lang="less">
-.leaflet-container {
-  background: #0a050f !important;
-}
-.leaflet-tile {
-  filter: brightness(0.7) saturate(0.5) hue-rotate(180deg) invert(0.05);
-}
-.leaflet-control-zoom a {
-  display: flex !important;
-  align-items: center;
-  justify-content: center;
-  background: rgba(13, 9, 18, 0.9) !important;
-  color: #e23456 !important;
-  border-color: rgba(226, 52, 86, 0.3) !important;
-  font-family: 'anton', monospace !important;
-  line-height: 1 !important;
-
-  &:hover {
-    background: rgba(226, 52, 86, 0.15) !important;
+    justify-content: center;
   }
 
-  svg {
-    width: 16px;
-    height: 16px;
-    display: block;
+  .vlog-image-reveal-entry.is-vlog-image-revealed :deep(.vlog-img-wrap) {
+    animation-delay: var(--vlog-image-delay-2, 420ms);
   }
 }
 
-.map-marker {
-  position: relative;
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.marker-dot {
-  width: 8px;
-  height: 8px;
-  background: #e23456;
-  transform: rotate(45deg);
-  position: relative;
-  z-index: 2;
-  box-shadow: 0 0 8px #e23456;
-}
-.marker-pulse {
-  position: absolute;
-  width: 20px;
-  height: 20px;
-  border: 1px solid #e23456;
-  transform: rotate(45deg);
-  animation: markerPulse 2s ease-out infinite;
-  opacity: 0;
-}
-@keyframes markerPulse {
-  0% {
-    transform: rotate(45deg) scale(0.5);
-    opacity: 0.8;
-  }
-  100% {
-    transform: rotate(45deg) scale(2);
-    opacity: 0;
-  }
-}
-
-.map-place-popup-wrap {
-  .leaflet-popup-content-wrapper {
-    padding: 0;
-    border-radius: 0;
-    background: rgba(7, 3, 10, 0.96);
-    border: 1px solid rgba(226, 52, 86, 0.45);
-    box-shadow: 10px 10px 0 rgba(0, 0, 0, 0.36);
-  }
-
-  .leaflet-popup-content {
-    margin: 0;
-  }
-
-  .leaflet-popup-tip {
-    background: rgba(7, 3, 10, 0.96);
-    border: 1px solid rgba(226, 52, 86, 0.45);
-    box-shadow: none;
-  }
-}
-
-.map-place-menu {
-  min-width: 156px;
-  padding: 10px;
-}
-
-.map-place-title {
-  margin-bottom: 8px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid rgba(226, 52, 86, 0.28);
-  font-family: 'alibaba-puhuiti', monospace;
-  font-size: 0.58rem;
-  font-weight: 900;
-  letter-spacing: 1.6px;
-  color: #e23456;
-}
-
-.map-place-list {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.map-place-option {
-  width: 100%;
-  padding: 7px 9px;
-  border: 0;
-  background: rgba(255, 255, 255, 0.04);
-  color: rgba(255, 255, 255, 0.82);
-  cursor: pointer;
-  text-align: left;
-  font-family: 'alibaba-puhuiti', sans-serif;
-  font-size: 0.74rem;
-  font-weight: 900;
-  transition: background 0.2s, color 0.2s, transform 0.2s;
-
-  &:hover {
-    background: rgba(226, 52, 86, 0.18);
-    color: #fff;
-  }
-}
-
-@media (min-width: 769px) {
-  .map-place-popup-wrap {
-    .leaflet-popup-content-wrapper,
-    .leaflet-popup-content {
-      width: max-content !important;
-      max-width: min(560px, 72vw);
-    }
-  }
-
-  .map-place-menu {
-    min-width: max-content;
-    max-width: min(560px, 72vw);
-  }
-
-  .map-place-list {
-    flex-direction: row;
-    flex-wrap: wrap;
-  }
-
-  .map-place-option {
-    width: auto;
-    white-space: nowrap;
+@media (prefers-reduced-motion: reduce) {
+  .vlog-image-reveal-entry :deep(.vlog-img-wrap),
+  .vlog-image-reveal-entry.is-vlog-image-revealed :deep(.vlog-img-wrap) {
+    clip-path: inset(0);
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+    animation: none;
   }
 }
 </style>

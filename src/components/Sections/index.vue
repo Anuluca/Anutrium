@@ -5,69 +5,88 @@
     :class="{ 'scroll-reveal-ready': isScrollRevealReady }"
     data-sections-nav-item="true"
     :data-section-anchor="sectionAnchorId"
-    :data-section-label="railLabel"
+    :data-section-label="sectionLabel"
     :data-section-number="formattedSectionNumber"
     :data-section-title="title"
   >
     <Teleport v-if="isClient && isNavigationHost" to="body">
+      <button
+        v-if="isMobileNavigationOpen"
+        class="sections-fixed-nav__backdrop"
+        type="button"
+        :aria-label="
+          locale === 'en' ? 'Close section navigation' : '关闭页面导航'
+        "
+        @click="closeMobileNavigation"
+      />
       <nav
         class="sections-fixed-nav"
-        :class="{ 'is-page-end': isNavigationAtPageEnd }"
+        :class="{
+          'is-mobile-open': isMobileNavigationOpen,
+          'is-page-end': isNavigationAtPageEnd,
+        }"
         :aria-label="
           locale === 'en' ? 'Page section navigation' : '页面模块导航'
         "
+        @keydown.esc="closeMobileNavigation"
       >
-        <span class="sections-fixed-nav__line" aria-hidden="true" />
         <button
-          v-for="item in navigationItems"
-          :key="item.anchorId"
-          class="sections-fixed-nav__item"
-          :class="{ 'is-active': activeAnchorId === item.anchorId }"
+          v-if="!isMobileNavigationOpen"
+          class="sections-fixed-nav__toggle"
           type="button"
-          :aria-label="`${item.number} ${item.title}`"
-          :aria-current="
-            activeAnchorId === item.anchorId ? 'location' : undefined
+          :aria-expanded="isMobileNavigationOpen"
+          :aria-label="
+            locale === 'en' ? 'Toggle section navigation' : '展开页面导航'
           "
-          :title="item.title"
-          @click="scrollToSection(item, $event)"
+          @click="toggleMobileNavigation"
         >
-          <span class="sections-fixed-nav__marker" aria-hidden="true" />
-          <span class="sections-fixed-nav__copy">
-            <span class="sections-fixed-nav__num">{{ item.number }}</span>
-            <span class="sections-fixed-nav__label">{{ item.title }}</span>
-          </span>
+          NAV
         </button>
+        <div class="sections-fixed-nav__menu">
+          <span class="sections-fixed-nav__line" aria-hidden="true" />
+          <button
+            v-for="item in navigationItems"
+            :key="item.anchorId"
+            class="sections-fixed-nav__item"
+            :class="{ 'is-active': activeAnchorId === item.anchorId }"
+            type="button"
+            :aria-label="`${item.number} ${item.title}`"
+            :aria-current="
+              activeAnchorId === item.anchorId ? 'location' : undefined
+            "
+            :title="item.title"
+            @click="handleSectionNavigation(item, $event)"
+          >
+            <span class="sections-fixed-nav__marker" aria-hidden="true" />
+            <span class="sections-fixed-nav__copy">
+              <span class="sections-fixed-nav__num">{{ item.number }}</span>
+              <span class="sections-fixed-nav__label">{{ item.title }}</span>
+            </span>
+          </button>
+        </div>
       </nav>
     </Teleport>
 
     <aside class="home-section-rail scroll-reveal-title" aria-hidden="true">
       <span class="home-section-rail__num">{{ formattedSectionNumber }}</span>
-      <span class="home-section-rail__label">{{ railLabel }}</span>
+      <span class="home-section-rail__label">{{ sectionLabel }}</span>
     </aside>
 
     <div class="home-section-panel">
-      <div
-        v-if="$slots.actions"
-        class="home-section-title-row home-section-heading scroll-reveal-title"
-      >
+      <div class="home-section-title-row scroll-reveal-title">
         <h2 :id="sectionAnchorId" class="home-section-title">
-          <span v-if="shouldShowEnglishTitle" class="home-section-title__en">
-            {{ titleEn }}
+          <span class="home-section-title__text">{{ title }}</span>
+          <span v-if="shouldShowTitleEn" class="home-section-title__en">
+            <span
+              v-for="(character, index) in titleEnCharacters"
+              :key="`${character}-${index}`"
+            >
+              {{ character }}
+            </span>
           </span>
-          {{ title }}
         </h2>
-        <slot name="actions" />
+        <slot v-if="$slots.actions" name="actions" />
       </div>
-      <h2
-        v-else
-        :id="sectionAnchorId"
-        class="home-section-title home-section-heading scroll-reveal-title"
-      >
-        <span v-if="shouldShowEnglishTitle" class="home-section-title__en">
-          {{ titleEn }}
-        </span>
-        {{ title }}
-      </h2>
 
       <div class="home-section-content scroll-reveal-content">
         <slot />
@@ -82,36 +101,41 @@ import { useI18n } from 'vue-i18n'
 
 import { useScrollReveal } from '@/composables/useScrollReveal'
 import {
+  type SectionNavigationItem,
   toSectionAnchorSlug,
   useSectionNavigation,
 } from '@/composables/useSectionNavigation'
 
 const props = defineProps<{
   sectionNumber: string | number
-  railLabel: string
   title: string
   titleEn?: string
 }>()
 
 const { locale } = useI18n()
 const sectionRef = ref<HTMLElement | null>(null)
+const isMobileNavigationOpen = ref(false)
 const { isReady: isScrollRevealReady } = useScrollReveal({
   rootMargin: '0px 0px -12% 0px',
   target: sectionRef,
   threshold: 0.04,
 })
 
-const shouldShowEnglishTitle = computed(
-  () => locale.value !== 'en' && !!props.titleEn
-)
 const formattedSectionNumber = computed(() =>
   String(props.sectionNumber).padStart(2, '0')
+)
+const sectionLabel = computed(() => props.titleEn || props.title)
+const shouldShowTitleEn = computed(
+  () => locale.value !== 'en' && Boolean(props.titleEn)
+)
+const titleEnCharacters = computed(() =>
+  shouldShowTitleEn.value ? Array.from(props.titleEn || '') : []
 )
 
 const sectionAnchorId = computed(
   () =>
     `section-${toSectionAnchorSlug(props.sectionNumber)}-${toSectionAnchorSlug(
-      props.railLabel
+      sectionLabel.value
     )}`
 )
 
@@ -131,45 +155,69 @@ const {
     element.querySelector<HTMLElement>(`#${anchorId}`),
 })
 
+const closeMobileNavigation = () => {
+  isMobileNavigationOpen.value = false
+}
+
+const toggleMobileNavigation = () => {
+  isMobileNavigationOpen.value = !isMobileNavigationOpen.value
+}
+
+const handleSectionNavigation = (
+  item: SectionNavigationItem,
+  event: MouseEvent
+) => {
+  closeMobileNavigation()
+  scrollToSection(item, event)
+}
+
 watch(
-  () => [
-    props.railLabel,
-    props.sectionNumber,
-    props.title,
-    props.titleEn,
-    locale.value,
-  ],
+  () => [props.sectionNumber, props.title, props.titleEn, locale.value],
   announceNavigationRefresh
 )
+
+watch(isNavigationAtPageEnd, (isAtPageEnd) => {
+  if (isAtPageEnd) closeMobileNavigation()
+})
 </script>
 
 <style lang="less" scoped>
 .home-section-layout {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(88px, 120px) minmax(0, 1fr);
-  gap: 0;
+  grid-template-columns: max-content minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  column-gap: 0.7rem;
   min-height: 100%;
+
+  &::before {
+    grid-row: 2;
+    grid-column: 1;
+    width: 1px;
+    height: 100%;
+    justify-self: center;
+    background: var(--border-color-strong);
+    content: '';
+  }
+}
+
+.home-section-content {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 480px;
 }
 
 .home-section-rail {
-  position: relative;
+  display: grid;
+  grid-row: 1 / span 2;
+  grid-column: 1;
+  grid-template-rows: subgrid;
   min-height: 180px;
-
-  &::after {
-    position: absolute;
-    top: 3.45rem;
-    bottom: -1px;
-    left: 50%;
-    width: 1px;
-    background: var(--border-color-strong);
-    content: '';
-    transform: translateX(-50%);
-  }
 }
 
 .home-section-rail__num {
   display: block;
+  grid-row: 1;
+  align-self: start;
   margin-top: 0.15rem;
   color: transparent;
   font-family: 'anton', monospace;
@@ -181,16 +229,31 @@ watch(
 }
 
 .home-section-rail__label {
-  position: absolute;
-  top: 3.45rem;
-  right: calc(50% + 8px);
+  grid-row: 2;
+  align-self: start;
+  justify-self: center;
   margin: 0;
   color: rgba(255, 255, 255, 0.25);
   font-family: 'cn-custom', monospace;
   font-size: 0.64rem;
   letter-spacing: 0;
   text-transform: uppercase;
+  transform: translateX(calc(-50% - 8px));
   writing-mode: vertical-rl;
+  -webkit-mask-image: repeating-linear-gradient(
+    to right,
+    #000 0,
+    #000 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  mask-image: repeating-linear-gradient(
+    to right,
+    #000 0,
+    #000 1px,
+    transparent 1px,
+    transparent 3px
+  );
 }
 
 .sections-fixed-nav {
@@ -228,6 +291,15 @@ watch(
     white-space: nowrap;
     pointer-events: none;
   }
+}
+
+.sections-fixed-nav__backdrop,
+.sections-fixed-nav__toggle {
+  display: none;
+}
+
+.sections-fixed-nav__menu {
+  display: contents;
 }
 
 .sections-fixed-nav__line {
@@ -366,45 +438,64 @@ watch(
 }
 
 .home-section-panel {
+  display: contents;
   min-width: 0;
-  padding-top: 10px;
 }
 
 .home-section-content {
+  grid-row: 2;
+  grid-column: 2;
   min-width: 0;
 }
 
 .home-section-title {
-  display: flex;
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch;
+  gap: 0.28rem;
   scroll-margin-top: 7rem;
   margin-bottom: 20px;
-  padding-bottom: 10px;
+  padding: 0;
   color: #e23456;
   font-family: 'anton', 'alibaba-puhuiti';
   font-size: 1.3rem;
   font-weight: 900;
 }
 
+.home-section-title__text {
+  display: block;
+  line-height: 1;
+}
+
 .home-section-title__en {
+  align-self: center;
+  display: flex;
+  width: calc(100% - 0.2rem);
+  justify-content: space-between;
   color: rgba(255, 255, 255, 0.36);
-  font-family: 'anton', monospace;
-  font-size: 0.66em;
+  font-family: 'cn-custom', monospace;
+  font-size: 0.34em;
   font-weight: 400;
+  letter-spacing: 0;
   line-height: 1;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .home-section-title-row {
   display: flex;
-  align-items: center;
+  grid-row: 1;
+  grid-column: 2;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 20px;
   margin-bottom: 20px;
+  padding-top: 10px;
 
   .home-section-title {
-    flex: 1;
+    flex: 0 1 auto;
     margin-bottom: 0;
   }
 }
@@ -445,29 +536,24 @@ watch(
 
 @media screen and (max-aspect-ratio: @ratio-threshold) {
   .home-section-layout {
-    grid-template-columns: 46px minmax(0, 1fr);
-    gap: 0;
+    grid-template-columns: max-content minmax(0, 1fr);
+    column-gap: 0.8rem;
+    row-gap: 0;
   }
 
   .home-section-rail {
     min-height: 120px;
-
-    &::after {
-      top: 2.3rem;
-      bottom: -1px;
-    }
   }
 
   .home-section-rail__num {
-    margin-top: 0.1rem;
-    font-size: 1.5rem;
+    margin-top: 0;
+    font-size: 2.2rem;
   }
 
   .home-section-rail__label {
-    top: 2.3rem;
-    right: calc(50% + 7px);
     font-size: 0.48rem;
     letter-spacing: 0;
+    transform: translateX(calc(-50% - 7px));
   }
 
   .sections-fixed-nav {
@@ -523,17 +609,249 @@ watch(
     display: none;
   }
 
-  .home-section-panel {
-    padding-top: 6px;
-  }
-
   .home-section-title-row {
     gap: 10px;
+    padding-top: 0;
   }
 
   .home-section-title-row .home-section-title {
     min-width: 0;
-    font-size: 1rem;
+    margin-top: -0.04em;
+    font-size: 1.35rem;
+  }
+}
+
+// 横屏手机的宽高比会命中桌面规则，这里仅同步标题头部的移动端几何。
+@media screen and (max-width: 1024px) and (hover: none) and (pointer: coarse) {
+  .home-section-layout {
+    column-gap: 0.8rem;
+  }
+
+  .home-section-rail__num {
+    margin-top: 0;
+    font-size: 2.2rem;
+  }
+
+  .home-section-title-row {
+    padding-top: 0;
+
+    .home-section-title {
+      min-width: 0;
+      margin-top: -0.04em;
+      font-size: 1.35rem;
+    }
+  }
+}
+
+@media screen and (max-aspect-ratio: @ratio-threshold),
+  screen and (max-width: 1024px) and (hover: none) and (pointer: coarse) {
+  .home-section-rail__label {
+    transform: translateX(calc(-50% - 7px));
+  }
+
+  .sections-fixed-nav__backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 89;
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    background: radial-gradient(
+      circle at left bottom,
+      rgba(0, 0, 0, 0.9) 0%,
+      rgba(0, 0, 0, 0.72) 28%,
+      rgba(0, 0, 0, 0.38) 52%,
+      rgba(0, 0, 0, 0.14) 72%,
+      transparent 92%
+    );
+    -webkit-backdrop-filter: blur(calc(1px * 4));
+    backdrop-filter: blur(calc(1px * 4));
+    cursor: default;
+    animation: sections-fixed-nav-backdrop-in 0.2s ease-out both;
+  }
+
+  .sections-fixed-nav {
+    bottom: calc(env(safe-area-inset-bottom) + 72 * 1px);
+    left: 20px;
+    z-index: 90;
+    width: 0;
+    height: 0;
+    gap: 0;
+    padding: 0;
+    overflow: visible;
+    border-radius: 0;
+    background: transparent;
+    opacity: 1;
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s;
+
+    &::before {
+      display: block;
+      top: -1.4rem;
+      z-index: 1;
+      color: rgba(226, 52, 86, 0.5);
+      font-size: 1.4rem;
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 0.18s ease, visibility 0s;
+    }
+
+    &:hover,
+    &:focus-within {
+      width: 0;
+
+      .sections-fixed-nav__copy {
+        max-width: 0;
+        opacity: 0;
+      }
+    }
+
+    &.is-mobile-open,
+    &.is-mobile-open:hover,
+    &.is-mobile-open:focus-within {
+      width: 0;
+      background: transparent;
+
+      &::before {
+        visibility: hidden;
+        opacity: 0;
+      }
+
+      .sections-fixed-nav__menu {
+        visibility: visible;
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(0) scale(1);
+        transition-delay: 0s, 0s, 0s;
+      }
+
+      .sections-fixed-nav__line {
+        visibility: visible;
+        opacity: 1;
+        transform: scaleY(1);
+        transition-delay: 0.06s;
+      }
+
+      .sections-fixed-nav__item {
+        visibility: visible;
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateX(0);
+        transition-delay: 0.1s, 0.1s, 0s, 0s;
+
+        &:nth-of-type(2) {
+          transition-delay: 0.15s, 0.15s, 0s, 0s;
+        }
+
+        &:nth-of-type(3) {
+          transition-delay: 0.2s, 0.2s, 0s, 0s;
+        }
+      }
+
+      .sections-fixed-nav__copy {
+        max-width: 267px;
+        overflow: visible;
+        opacity: 1;
+      }
+
+      .sections-fixed-nav__label {
+        display: block;
+      }
+    }
+
+    &.is-page-end {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transform: translateY(8px);
+      transition: opacity 0.2s ease, transform 0.2s ease,
+        visibility 0s linear 0.2s;
+    }
+  }
+
+  .sections-fixed-nav__toggle {
+    position: absolute;
+    top: calc(-1.4rem - 8px);
+    left: -10px;
+    z-index: 2;
+    display: block;
+    width: 78px;
+    height: 52px;
+    padding: 0;
+    border: 0;
+    color: transparent;
+    background: transparent;
+    font-size: 0;
+    cursor: pointer;
+  }
+
+  .sections-fixed-nav__menu {
+    position: absolute;
+    bottom: 0;
+    left: -2px;
+    display: flex;
+    width: min(320px, calc(100vw - 40px));
+    box-sizing: border-box;
+    flex-direction: column;
+    gap: 4px;
+    padding: 15px 7px;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(10px) scale(0.9);
+    transform-origin: left bottom;
+    transition: opacity 0.28s ease,
+      transform 0.46s cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 0.28s;
+  }
+
+  .sections-fixed-nav__line {
+    top: 36px;
+    bottom: 36px;
+    left: 16px;
+    visibility: hidden;
+    opacity: 0;
+    transform: scaleY(0);
+    transform-origin: top;
+    animation: none;
+    transition: opacity 0.28s ease,
+      transform 0.38s cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 0.28s;
+  }
+
+  .sections-fixed-nav__item {
+    display: grid;
+    grid-template-columns: 23px minmax(0, 1fr);
+    min-height: 60px;
+    padding: 5px 4px 5px 0;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-10px);
+    animation: none;
+    transition: opacity 0.3s ease,
+      transform 0.42s cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 0.3s,
+      color 0.25s ease;
+  }
+
+  .sections-fixed-nav__marker {
+    position: relative;
+    left: -1px;
+    width: 11px;
+    height: 11px;
+  }
+
+  .sections-fixed-nav__copy {
+    height: 2.09rem;
+  }
+
+  .sections-fixed-nav__num {
+    width: 2.23rem;
+    font-size: 1.35rem;
+  }
+
+  .sections-fixed-nav__label {
+    max-width: 224px;
+    font-size: 0.81rem;
   }
 }
 
@@ -571,6 +889,16 @@ watch(
   to {
     opacity: 1;
     transform: translateX(0);
+  }
+}
+
+@keyframes sections-fixed-nav-backdrop-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
   }
 }
 </style>

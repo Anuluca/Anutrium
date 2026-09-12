@@ -2,7 +2,9 @@
   <ModalWrapper
     v-model="dialogVisible"
     width="1480px"
-    close-placement="work-detail"
+    :theme-color="themeColor"
+    :title="t('workDetailModal.title')"
+    flush-desktop
     @close="handleClose"
   >
     <div v-if="work?.crystal" class="modal-crystal-logo">
@@ -14,162 +16,167 @@
     </div>
 
     <div class="modal-body" data-lenis-nested-scroll>
-      <aside v-if="work" class="modal-aside" data-lenis-nested-scroll>
-        <div class="aside-company no-rem">
-          <div v-if="work.logo" class="aside-logo">
-            <img
-              :src="work.logo"
-              :alt="work.company"
-              loading="lazy"
-              decoding="async"
+      <aside v-if="work" class="modal-aside">
+        <div class="aside-fixed">
+          <div class="aside-company no-rem">
+            <div v-if="work.logo" class="aside-logo">
+              <img
+                :src="work.logo"
+                :alt="work.company"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+            <div class="aside-company-info">
+              <p
+                class="aside-company-name"
+                :class="{ 'aside-company-name--english': locale === 'en' }"
+              >
+                <TypedText
+                  :text="work.company"
+                  :delay="480"
+                  :speed="24"
+                  :start="dialogVisible"
+                  loop-overflow
+                />
+              </p>
+            </div>
+            <ShareButton
+              class="project-share-button"
+              :target-id="work.id"
+              :target-title="work.title"
+              target-type="project"
+              :text="work.description || work.title"
+              :title="work.title"
+              :url="projectShareUrl"
+              :show-arrow="false"
+              show-icon
+              :show-label="false"
+              icon-only
+              :style="{
+                '--share-button-icon-color': '#71CB7D',
+                '--share-button-icon-hover-color': '#E23456',
+              }"
             />
           </div>
-          <div class="aside-company-info">
-            <p class="aside-company-name">
-              <TypedText
-                :text="work.company"
-                :delay="480"
-                :speed="24"
-                :start="dialogVisible"
-              />
-            </p>
-            <p class="aside-id">
-              <TypedText
-                :text="work.id"
-                :delay="540"
-                :speed="32"
-                :start="dialogVisible"
-              />
-            </p>
-          </div>
-          <ShareButton
-            class="project-share-button"
-            :target-id="work.id"
-            :target-title="work.title"
-            target-type="project"
-            :text="work.description || work.title"
-            :title="work.title"
-            :url="projectShareUrl"
-            :show-arrow="false"
-            show-icon
-            :show-label="false"
-          />
-        </div>
 
-        <div class="aside-divider" />
+          <div class="aside-divider" />
 
-        <h2 class="aside-title">
-          <TypedText
-            :text="work.title"
-            :delay="520"
-            :speed="30"
-            :start="dialogVisible"
-          />
-        </h2>
-
-        <div v-if="work.time" class="aside-field">
-          <span class="field-label">TIME</span>
-          <span class="field-val">
+          <h2 class="aside-title">
             <TypedText
-              :text="work.time"
-              :delay="620"
-              :speed="26"
+              :text="work.title"
+              :delay="520"
+              :speed="30"
               :start="dialogVisible"
             />
-          </span>
+          </h2>
         </div>
 
-        <div v-if="participationText" class="aside-field">
-          <span class="field-label">{{
-            t('workDetailModal.participation')
-          }}</span>
-          <span class="field-val">
-            <TypedText
-              :text="participationText"
-              :delay="680"
-              :speed="34"
-              :start="dialogVisible"
-            />
-          </span>
-        </div>
-
-        <div v-if="work.tags?.length" class="aside-field aside-tags">
-          <span class="field-label">STACK</span>
-          <div class="tags-wrap">
-            <span v-for="(tag, index) in work.tags" :key="tag" class="tag">
+        <div class="aside-content" data-lenis-nested-scroll>
+          <div v-if="work.time" class="aside-field">
+            <span class="field-label">TIME</span>
+            <span class="field-val">
               <TypedText
-                :text="tag"
-                :delay="720 + index * 55"
-                :speed="28"
+                :text="work.time"
+                :delay="620"
+                :speed="26"
                 :start="dialogVisible"
               />
             </span>
           </div>
-        </div>
 
-        <div v-if="work.description" class="aside-desc">
-          <span class="field-label">ABOUT</span>
-          <p>
-            <TypedText
-              :text="work.description"
-              :delay="780"
-              :speed="14"
-              :start="dialogVisible"
-            />
-          </p>
-        </div>
+          <div v-if="participationText" class="aside-field">
+            <span class="field-label">{{
+              t('workDetailModal.participation')
+            }}</span>
+            <span class="field-val">
+              <TypedText
+                :text="participationText"
+                :delay="680"
+                :speed="34"
+                :start="dialogVisible"
+              />
+            </span>
+          </div>
 
-        <div v-if="work.confidential" class="confidential-notice">
-          <span class="confidential-kicker">
-            {{ t('workDetailModal.confidentialKicker') }}
-          </span>
-          <strong>
-            <TypedText
-              :text="t('workDetailModal.confidential')"
-              :delay="840"
-              :speed="22"
-              :start="dialogVisible"
-            />
-          </strong>
-          <p>
-            <TypedText
-              :text="t('workDetailModal.confidentialDescription')"
-              :delay="920"
-              :speed="14"
-              :start="dialogVisible"
-            />
-          </p>
-        </div>
-
-        <div v-if="work.links?.length" class="aside-links">
-          <span class="field-label">LINKS</span>
-          <div class="links-list">
-            <a
-              v-for="(link, idx) in work.links"
-              :key="idx"
-              :href="link.url"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="link-item"
-            >
-              <ElIcon class="link-icon" aria-hidden="true">
-                <component :is="getLinkIcon(link.icon)" />
-              </ElIcon>
-              <span class="link-text">
+          <div v-if="work.tags?.length" class="aside-field aside-tags">
+            <span class="field-label">STACK</span>
+            <div class="tags-wrap">
+              <span v-for="(tag, index) in work.tags" :key="tag" class="tag">
                 <TypedText
-                  :text="link.label"
-                  :delay="900 + idx * 90"
-                  :speed="24"
+                  :text="tag"
+                  :delay="720 + index * 55"
+                  :speed="28"
                   :start="dialogVisible"
                 />
               </span>
-              <span class="link-arrow">→</span>
-            </a>
+            </div>
+          </div>
+
+          <div v-if="work.description" class="aside-desc">
+            <span class="field-label">ABOUT</span>
+            <p>
+              <TypedText
+                :text="work.description"
+                :delay="780"
+                :speed="14"
+                :start="dialogVisible"
+              />
+            </p>
+          </div>
+
+          <div v-if="work.confidential" class="confidential-notice">
+            <ElIcon class="confidential-lock" aria-hidden="true">
+              <Lock />
+            </ElIcon>
+            <strong>
+              <TypedText
+                :text="t('workDetailModal.confidential')"
+                :delay="840"
+                :speed="22"
+                :start="dialogVisible"
+              />
+            </strong>
+            <p>
+              <TypedText
+                :text="t('workDetailModal.confidentialDescription')"
+                :delay="920"
+                :speed="14"
+                :start="dialogVisible"
+              />
+            </p>
+          </div>
+
+          <div v-if="work.links?.length" class="aside-links">
+            <span class="field-label">LINKS</span>
+            <div class="links-list">
+              <a
+                v-for="(link, idx) in work.links"
+                :key="idx"
+                :href="link.url"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="link-item"
+              >
+                <ElIcon class="link-icon" aria-hidden="true">
+                  <component :is="getLinkIcon(link.icon)" />
+                </ElIcon>
+                <span class="link-text">
+                  <TypedText
+                    :text="link.label"
+                    :delay="900 + idx * 90"
+                    :speed="24"
+                    :start="dialogVisible"
+                  />
+                </span>
+                <span class="link-arrow">→</span>
+              </a>
+            </div>
           </div>
         </div>
       </aside>
 
-      <div v-if="work" class="modal-gallery" data-lenis-nested-scroll>
+      <div v-if="work" class="modal-gallery">
         <div
           v-if="work.images && work.images.length"
           :key="`${work.id}-${animationRun}`"
@@ -284,7 +291,7 @@
             <span class="details-label">DETAILS</span>
             <div class="details-line" />
           </div>
-          <ul class="details-list">
+          <ul class="details-list" data-lenis-nested-scroll>
             <li
               v-for="(detail, idx) in work.details"
               :key="idx"
@@ -321,6 +328,7 @@ import { ElIcon } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import {
   Link as LinkIcon,
+  Lock,
   Monitor,
   Promotion,
   VideoPlay,
@@ -330,42 +338,17 @@ import CrystalLogo from '@/components/CrystalLogo/index.vue'
 import SafeImageViewer from '@/components/SafeImageViewer/index.vue'
 import ShareButton from '@/components/ShareButton/index.vue'
 import TypedText from '@/components/TypedText/index.vue'
+import type { ArchiveWork } from '@/types/archive'
 
 import 'element-plus/es/components/icon/style/css'
 
-interface WorkItem {
-  id: string
-  title: string
-  tags?: string[]
-  img?: string
-  company: string
-  logo?: string
-  time?: string
-  description?: string
-  details?: string[]
-  images?: string[]
-  imageDescriptions?: string[]
-  link?: string
-  links?: Array<{ label: string; url: string; icon?: string }>
-  participation?: number
-  confidential?: boolean
-  crystal?: {
-    image?: string
-    links?: Array<{
-      href: string
-      label: string
-      target?: '_blank' | '_self'
-    }>
-    text?: string
-  }
-}
-
 const props = defineProps<{
-  work: WorkItem | null
+  work: ArchiveWork | null
   visible: boolean
+  themeColor?: string
 }>()
 const emit = defineEmits<{ close: [] }>()
-const { t } = useI18n()
+const { locale, t } = useI18n()
 
 const dialogVisible = ref(false)
 const animationRun = ref(0)
@@ -444,6 +427,7 @@ const closeImageViewer = () => {
 
 <style lang="less" scoped>
 @red: #e23456;
+@work-accent: #71cb7d;
 @border: rgba(255, 255, 255, 0.08);
 
 .modal-crystal-logo {
@@ -458,6 +442,7 @@ const closeImageViewer = () => {
   display: grid;
   grid-template-columns: 320px 1fr;
   flex: 1;
+  min-height: 0;
   overflow: hidden;
   position: relative;
   z-index: 1;
@@ -508,15 +493,16 @@ const closeImageViewer = () => {
     z-index: 0;
   }
 
-  .confidential-kicker {
-    display: block;
-    margin-bottom: 8px;
+  .confidential-lock {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 0;
     color: @red;
-    font-family: 'cn-custom', monospace;
-    font-size: 0.34rem;
-    letter-spacing: 0.08em;
-    position: relative;
-    z-index: 1;
+    font-size: 3.4rem;
+    opacity: 0.28;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
   }
 
   strong {
@@ -524,7 +510,8 @@ const closeImageViewer = () => {
     margin-bottom: 7px;
     color: rgba(255, 255, 255, 0.92);
     font-family: 'alibaba-puhuiti', sans-serif;
-    font-size: 0.48rem;
+    font-size: 0.64rem;
+    font-weight: 700;
     line-height: 1.5;
     position: relative;
     z-index: 1;
@@ -541,22 +528,45 @@ const closeImageViewer = () => {
 }
 
 .modal-aside {
-  padding: 40px 24px;
+  min-height: 0;
+  padding: 24px;
   border-right: 1px solid @border;
-  overflow-y: auto;
+  overflow: hidden;
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
+  gap: 0;
+}
+
+.aside-fixed {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
   gap: 16px;
-  > *:last-child {
-    margin-bottom: 50px;
+}
+
+.aside-content {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-top: 16px;
+  padding-right: 4px;
+  padding-bottom: 50px;
+
+  > * {
+    flex-shrink: 0;
   }
 
   &::-webkit-scrollbar {
     width: 2px;
   }
+
   &::-webkit-scrollbar-thumb {
-    background: rgba(226, 52, 86, 0.3);
+    background: @work-accent;
   }
 }
 
@@ -569,6 +579,9 @@ const closeImageViewer = () => {
 .aside-company-info {
   flex: 1;
   min-width: 0;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
 }
 
 .aside-logo {
@@ -587,18 +600,20 @@ const closeImageViewer = () => {
 }
 
 .aside-company-name {
+  width: 100%;
+  overflow: hidden;
+  color: @work-accent;
   font-family: 'cn-custom', monospace;
-  font-size: 0.62rem;
-  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.9rem;
+  font-weight: 400;
   letter-spacing: 0.5px;
-}
+  line-height: 1.1;
+  white-space: nowrap;
 
-.aside-id {
-  font-family: 'cn-custom', monospace;
-  font-size: 0.5rem;
-  color: rgba(255, 255, 255, 0.25);
-  margin-top: 2px;
-  letter-spacing: 1px;
+  &--english {
+    font-family: 'anton', sans-serif;
+    letter-spacing: 0.04em;
+  }
 }
 
 .aside-divider {
@@ -616,7 +631,7 @@ const closeImageViewer = () => {
 }
 
 .project-share-button {
-  align-self: flex-start;
+  align-self: center;
   margin-left: auto;
   width: fit-content;
 }
@@ -631,7 +646,7 @@ const closeImageViewer = () => {
   font-family: 'cn-custom', monospace;
   font-size: 0.5rem;
   letter-spacing: 2px;
-  color: @red;
+  color: @work-accent;
   opacity: 0.8;
 }
 
@@ -650,8 +665,10 @@ const closeImageViewer = () => {
 
 .tag {
   font-family: 'cn-custom', monospace;
-  font-size: 0.52rem;
+  font-size: 0.46rem;
+  line-height: 0.624rem;
   border: 1px solid @border;
+  border-radius: 4px;
   padding: 3px 8px;
   color: rgba(255, 255, 255, 0.5);
   letter-spacing: 0.5px;
@@ -703,6 +720,7 @@ const closeImageViewer = () => {
   .link-icon {
     font-size: 0.9rem;
     flex-shrink: 0;
+    color: @red;
   }
 
   .link-text {
@@ -730,18 +748,12 @@ const closeImageViewer = () => {
 
 .modal-gallery {
   position: relative;
-  overflow-y: auto;
+  min-height: 0;
+  overflow: hidden;
   background: #050208;
   display: flex;
   flex-direction: column;
   perspective: 1200px;
-
-  &::-webkit-scrollbar {
-    width: 2px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: rgba(226, 52, 86, 0.3);
-  }
 }
 
 .gallery-carousel {
@@ -840,7 +852,7 @@ const closeImageViewer = () => {
   width: 36px;
   height: 36px;
   border: 0;
-  color: #fff;
+  color: @red;
   background: transparent;
   display: flex;
   align-items: center;
@@ -917,7 +929,7 @@ const closeImageViewer = () => {
 .gallery-counter {
   position: absolute;
   top: 14px;
-  right: 60px;
+  right: 32px;
   display: flex;
   align-items: baseline;
   gap: 2px;
@@ -925,15 +937,15 @@ const closeImageViewer = () => {
 
   .counter-cur {
     font-family: 'anton', monospace;
-    font-size: 0.85rem;
+    font-size: 1rem;
     color: @red;
     letter-spacing: 1px;
   }
   .counter-sep,
   .counter-total {
     font-family: 'anton', monospace;
-    font-size: 0.7rem;
-    color: rgba(255, 255, 255, 0.25);
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.5);
   }
 }
 
@@ -949,11 +961,16 @@ const closeImageViewer = () => {
 }
 
 .details-section {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  flex-direction: column;
   padding: 30px 40px;
   border-top: 1px solid @border;
 }
 
 .details-header {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -964,23 +981,35 @@ const closeImageViewer = () => {
   font-family: 'cn-custom', monospace;
   font-size: 0.5rem;
   letter-spacing: 3px;
-  color: @red;
+  color: @work-accent;
   opacity: 0.8;
 }
 
 .details-line {
   flex: 1;
   height: 1px;
-  background: linear-gradient(to right, rgba(226, 52, 86, 0.3), transparent);
+  background: linear-gradient(to right, fade(@work-accent, 45%), transparent);
 }
 
 .details-list {
+  flex: 1 1 auto;
+  min-height: 0;
   list-style: none;
   padding: 0;
   margin: 0;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  &::-webkit-scrollbar {
+    width: 2px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: @work-accent;
+  }
 }
 
 .detail-item {
@@ -993,9 +1022,10 @@ const closeImageViewer = () => {
   font-family: 'anton', monospace;
   font-size: 0.7rem;
   line-height: 1.275rem;
-  color: @red;
+  color: @work-accent;
   min-width: 20px;
   opacity: 0.7;
+  transform: translateY(-1px);
 }
 
 .detail-text {
@@ -1046,14 +1076,24 @@ const closeImageViewer = () => {
 
   .modal-aside {
     border-right: none;
-    border-bottom: 1px solid @border;
+    border-bottom: 0;
     padding: 16px 20px 30px;
     max-height: none;
     overflow: visible;
   }
 
+  .aside-fixed,
+  .aside-content {
+    overflow: visible;
+  }
+
+  .aside-content {
+    display: flex;
+    padding: 16px 0 0;
+  }
+
   .aside-company.no-rem {
-    min-height: 50px;
+    min-height: 48px;
     align-items: center;
     gap: 10px;
 
@@ -1063,8 +1103,8 @@ const closeImageViewer = () => {
     }
 
     .aside-company-name {
-      font-size: 15px;
-      line-height: 1.25;
+      font-size: 22px;
+      line-height: 1.1;
     }
 
     .aside-company-info {
@@ -1078,20 +1118,14 @@ const closeImageViewer = () => {
       align-self: center;
     }
 
-    .aside-id {
-      margin-top: 4px;
-      font-size: 11px;
-      line-height: 1.2;
-    }
-
     :deep(.share-button--compact) {
-      min-height: 30px;
-      padding: 4px 7px;
+      min-height: 48px;
+      padding: 6px 12px;
     }
 
     :deep(.share-button__icon) {
-      width: 14px;
-      height: 14px;
+      width: 28px;
+      height: 28px;
     }
 
     :deep(.share-button__code) {
@@ -1101,11 +1135,115 @@ const closeImageViewer = () => {
 
   .modal-gallery {
     min-height: 240px;
+    margin-inline: 12px;
+    background: transparent !important;
     overflow: visible;
   }
 
+  .confidential-notice {
+    .confidential-lock {
+      font-size: 2.4rem;
+    }
+
+    strong {
+      font-size: 0.78rem;
+      line-height: 1.25;
+    }
+
+    p {
+      font-size: 0.46rem;
+      line-height: 1.4;
+    }
+  }
+
+  .links-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .link-item {
+    min-height: 52px;
+    min-width: 0;
+    gap: 6px;
+    padding: 8px 8px 8px 14px;
+
+    .link-icon {
+      font-size: 1.15rem;
+    }
+
+    .link-text {
+      min-width: 0;
+      font-size: 0.68rem;
+    }
+  }
+
+  .details-section,
+  .details-list {
+    overflow: visible;
+  }
+
+  .details-section {
+    overflow: hidden;
+  }
+
+  .details-list {
+    max-height: min(40dvh, 360px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+  }
+
   .gallery-track-wrap {
-    height: 300px;
+    height: 380px;
+  }
+
+  .gallery-btn {
+    width: 60px;
+    height: 60px;
+
+    &--prev {
+      left: 10px;
+
+      .gallery-btn__triangle {
+        border-right-width: 20px;
+      }
+    }
+
+    &--next {
+      right: 10px;
+
+      .gallery-btn__triangle {
+        border-left-width: 20px;
+      }
+    }
+  }
+
+  .gallery-btn__triangle {
+    border-top-width: 14px;
+    border-bottom-width: 14px;
+  }
+
+  .gallery-counter {
+    top: 18px;
+    right: 20px;
+
+    .counter-cur {
+      font-size: 1.25rem;
+    }
+
+    .counter-sep,
+    .counter-total {
+      font-size: 1.05rem;
+    }
+  }
+
+  .gallery-slide .slide-description {
+    right: 76px;
+    bottom: 24px;
+    font-size: 0.7rem;
+    line-height: 1.55;
   }
 
   .details-section {

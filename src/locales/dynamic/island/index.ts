@@ -135,19 +135,19 @@ const latestPages = {
   en: [
     {
       title: 'State Grid UAV System',
-      module: 'ARCHIVE / MAIN PROJECT',
+      module: 'ARCHIVE / MAIN',
       path: '/archive?project=W001',
       img: 'https://placehold.co/260x180/14070c/e23456?text=STATE%20GRID',
     },
     {
       title: 'Substation Digital Cockpit',
-      module: 'ARCHIVE / MAIN PROJECT',
+      module: 'ARCHIVE / MAIN',
       path: '/archive?project=W002',
       img: 'https://placehold.co/260x180/14070c/e23456?text=COCKPIT',
     },
     {
       title: 'Digital Synergy Supervision',
-      module: 'ARCHIVE / MAIN PROJECT',
+      module: 'ARCHIVE / MAIN',
       path: '/archive?project=W003',
       img: 'https://placehold.co/260x180/14070c/e23456?text=SUPERVISION',
     },

@@ -170,11 +170,14 @@ const common = {
     },
   },
   workDetailModal: {
+    title: {
+      zhCn: '项目详情',
+      en: 'PROJECT DETAILS',
+    },
     participation: {
       zhCn: '参与度',
       en: 'PARTICIPATION',
     },
-    confidentialKicker: 'DISCLOSURE_LEVEL / RESTRICTED',
     confidential: {
       zhCn: '详情受保密协议限制',
       en: 'DETAILS LIMITED BY CONFIDENTIALITY AGREEMENT',

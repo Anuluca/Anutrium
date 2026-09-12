@@ -933,12 +933,19 @@
       &.scroll-layout-active {
         padding: 0.33333rem 0;
         padding-top: max(0.66667rem, env(safe-area-inset-top));
+
+        .logo-box {
+          margin-top: -0.2rem;
+          padding-left: 1rem !important;
+          transform: translateY(-0.12rem);
+        }
       }
 
       .logo-box {
         transform: none;
         min-width: auto;
         width: 100%;
+        padding-left: 1rem !important;
         margin-left: -0.33333rem;
         justify-content: center;
 

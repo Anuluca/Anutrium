@@ -183,26 +183,27 @@ onUnmounted(() => {
   transform: translateY(18px);
 }
 
-@media screen and (max-aspect-ratio: 1) {
+@media screen and (max-aspect-ratio: 1),
+  screen and (max-width: 1024px) and (hover: none) and (pointer: coarse) {
   .back-to-top-button.no-rem {
     right: 17px;
     bottom: 20px;
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.32);
   }
 
   .button-arrow.no-rem {
-    top: 7px;
-    width: 6px;
-    height: 6px;
+    top: 8px;
+    width: 7px;
+    height: 7px;
     border-top-width: 1.5px;
     border-left-width: 1.5px;
   }
 
   .button-label.no-rem {
-    bottom: 8px;
-    font-size: 10px;
+    bottom: 9px;
+    font-size: 11px;
     letter-spacing: 0.06em;
   }
 }

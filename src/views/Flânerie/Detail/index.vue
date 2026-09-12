@@ -107,36 +107,16 @@ import MediaGallery, {
 } from '@/components/MediaGallery/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
 
+import type { JourneyItem, JourneyPhoto, JourneyVideo } from '@/types/flanerie'
+
 const router = useRouter()
 const route = useRoute()
 const { t, tm } = useI18n()
 const JOURNEY_RETURN_FLAG_KEY = 'anutrium:flanerie:returning-from-detail'
 const JOURNEY_RETURN_VLOG_KEY = 'anutrium:flanerie:selected-vlog'
 
-interface VideoItem {
-  title: string
-  cover: string
-  bvid?: string
-  url: string
-  orientation?: 'landscape' | 'portrait'
+interface VideoItem extends JourneyVideo {
   embedUrl?: string
-}
-
-interface PhotoItem {
-  title?: string
-  location?: string
-  device?: string
-  time?: string
-  url: string
-}
-
-interface VlogItem {
-  id: string
-  title: string
-  date: string
-  tagline: string
-  videos: Omit<VideoItem, 'embedUrl'>[]
-  photos: PhotoItem[]
 }
 
 const PAGE_SIZE = 30
@@ -147,8 +127,8 @@ const currentPage = ref(1)
 const videoEntranceHandoff = ref(false)
 
 const vlogId = computed(() => route.params.vlogId as string)
-const vlog = computed<VlogItem | undefined>(() => {
-  const vlogs = tm('flanerie.dynamic.vlogs') as VlogItem[]
+const vlog = computed<JourneyItem | undefined>(() => {
+  const vlogs = tm('flanerie.dynamic.vlogs') as JourneyItem[]
   return vlogs.find((item) => item.id === vlogId.value)
 })
 
@@ -167,7 +147,7 @@ const videos = computed<VideoItem[]>(() => {
   }))
 })
 
-const photos = computed<PhotoItem[]>(() => vlog.value?.photos || [])
+const photos = computed<JourneyPhoto[]>(() => vlog.value?.photos || [])
 const totalPages = computed(() => Math.ceil(photos.value.length / PAGE_SIZE))
 const paginatedPhotos = computed(() => {
   const start = (currentPage.value - 1) * PAGE_SIZE

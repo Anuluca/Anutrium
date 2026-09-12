@@ -5,12 +5,15 @@
       'share-button--copied': copied,
       'share-button--compact': !showLabel && !showArrow,
       'share-button--with-icon': showIcon,
+      'share-button--icon-only': iconOnly,
     }"
     type="button"
     @click="handleShare"
   >
     <ShareIcon v-if="showIcon" class="share-button__icon" aria-hidden="true" />
-    <span class="share-button__code">{{ copied ? 'COPIED' : 'SHARE' }}</span>
+    <span v-if="!iconOnly" class="share-button__code">{{
+      copied ? 'COPIED' : 'SHARE'
+    }}</span>
     <span v-if="showLabel" class="share-button__label">{{
       copied ? copiedText : label
     }}</span>
@@ -39,6 +42,7 @@ const props = withDefaults(
     showArrow?: boolean
     showIcon?: boolean
     showLabel?: boolean
+    iconOnly?: boolean
   }>(),
   {
     copiedText: '已复制',
@@ -51,6 +55,7 @@ const props = withDefaults(
     showArrow: true,
     showIcon: false,
     showLabel: true,
+    iconOnly: false,
   }
 )
 
@@ -182,6 +187,19 @@ const handleShare = async () => {
     grid-template-columns: auto auto;
   }
 
+  &--icon-only {
+    min-height: 28px;
+    padding: 0;
+    border: 0;
+    color: var(--share-button-icon-color, #71cb7d);
+    background: transparent;
+    grid-template-columns: auto;
+
+    &::before {
+      display: none;
+    }
+  }
+
   &:hover,
   &:focus-visible,
   &--copied {
@@ -189,6 +207,14 @@ const handleShare = async () => {
     border-color: #5ad480;
     background: #5ad480;
     outline: none;
+  }
+
+  &.share-button--icon-only:hover,
+  &.share-button--icon-only:focus-visible,
+  &.share-button--icon-only.share-button--copied {
+    border: 0;
+    color: var(--share-button-icon-hover-color, #e23456);
+    background: transparent;
   }
 }
 

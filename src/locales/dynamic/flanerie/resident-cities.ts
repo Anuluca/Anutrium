@@ -2,10 +2,9 @@ export const group = {
   id: 'resident',
   title: {
     zhCn: '常住的城市',
-    en: 'RESIDENT CITIES',
+    en: 'RESIDENT',
   },
-  titleEn: 'RESIDENT CITIES',
-  railLabel: 'RESIDENT',
+  titleEn: 'RESIDENT',
 } as const
 
 const residentCities = [
@@ -13,8 +12,8 @@ const residentCities = [
     id: 'nanchang',
     category: 'resident',
     title: {
-      zhCn: '江西｜南昌',
-      en: 'JIANGXI | NANCHANG',
+      zhCn: '江西·南昌',
+      en: 'JIANGXI · NANCHANG',
     },
     mapLabel: {
       zhCn: '南昌',
@@ -510,8 +509,8 @@ const residentCities = [
     id: 'wuhan',
     category: 'resident',
     title: {
-      zhCn: '湖北｜武汉',
-      en: 'HUBEI | WUHAN',
+      zhCn: '湖北·武汉',
+      en: 'HUBEI · WUHAN',
     },
     mapLabel: {
       zhCn: '武汉',
@@ -803,8 +802,8 @@ const residentCities = [
     id: 'shenzhen',
     category: 'resident',
     title: {
-      zhCn: '广东｜深圳',
-      en: 'GUANGDONG | SHENZHEN',
+      zhCn: '广东·深圳',
+      en: 'GUANGDONG · SHENZHEN',
     },
     mapLabel: {
       zhCn: '深圳',

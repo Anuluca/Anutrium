@@ -138,6 +138,18 @@ const DESCRIPTION_ROUTE_GROUPS: Record<string, keyof typeof PAGE_DESCRIPTIONS> =
     ISLAND_TRAINER_CARD: 'ISLAND',
   }
 
+const PAGE_THEME_COLORS: Partial<
+  Record<keyof typeof PAGE_DESCRIPTIONS, string>
+> = {
+  ABOUT: '#3d2875',
+  ARCHIVE: '#5ad480',
+  CRAFT: '#244392',
+  FLANERIE: '#8a2c1b',
+  HOME: '#e23456',
+  ISLAND: '#e23456',
+  PET: '#e23456',
+}
+
 interface RouteMeta {
   activeMenu?: string
   updatedAt?: string
@@ -545,6 +557,22 @@ export const routes: RouteConfig[] = [
     },
   },
   {
+    path: '/games/chineseChessCardGames/chineseChess',
+    name: 'CHINESE_CHESS',
+    component: () =>
+      import('@/views/Games/ChineseChessCardGames/ChineseChess/index.vue'),
+    meta: {
+      activeMenu: '/island',
+      titleEn: '中国象棋',
+      titleCn: '中国象棋',
+      fullFooter: true,
+      pageFooter: true,
+      ifShow: false,
+      noMenu: true,
+      starBackground: 'deep-black',
+    },
+  },
+  {
     path: '/test',
     name: 'TEST',
     component: () => import('@/views/Island/index.vue'),
@@ -637,6 +665,28 @@ export const syncSeoMeta = (to: RouteLocationNormalizedLoaded) => {
   setMetaContent('link[rel="canonical"]', seoMeta.canonicalUrl, 'href')
 }
 
+export const getPageThemeColor = (route: RouteLocationNormalizedLoaded) => {
+  const routeName = String(route.name || 'HOME')
+  const activeMenuGroup =
+    typeof route.meta.activeMenu === 'string'
+      ? route.meta.activeMenu.split('/').filter(Boolean)[0]?.toUpperCase()
+      : undefined
+  const pageGroup =
+    activeMenuGroup || DESCRIPTION_ROUTE_GROUPS[routeName] || routeName
+
+  return (
+    PAGE_THEME_COLORS[pageGroup as keyof typeof PAGE_THEME_COLORS] || '#e23456'
+  )
+}
+
+export const syncPageTheme = (route: RouteLocationNormalizedLoaded) => {
+  if (typeof document === 'undefined') return
+  document.documentElement.style.setProperty(
+    '--page-theme-color',
+    getPageThemeColor(route)
+  )
+}
+
 export const installRouterGuards = (router: Router) => {
   if (typeof document !== 'undefined') installRouteIntentPreload(router)
 
@@ -671,6 +721,7 @@ export const installRouterGuards = (router: Router) => {
     routeCursorFallbackTimer = window.setTimeout(finishRouteCursorLoading, 1500)
 
     syncSeoMeta(to)
+    syncPageTheme(to)
   })
 
   router.onError(() => {

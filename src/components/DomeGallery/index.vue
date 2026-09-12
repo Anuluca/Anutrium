@@ -5,10 +5,6 @@
     :class="{
       'is-preview-open': preview && previewPhase !== 'closing',
     }"
-    :style="{
-      '--dome-segments-x': props.segments,
-      '--dome-segments-y': props.segments,
-    }"
   >
     <main ref="mainRef" class="dome-gallery__main">
       <div class="dome-gallery__stage">
@@ -26,10 +22,11 @@
               @click.stop="handleTileClick(item, $event)"
             >
               <img
-                :src="item.src"
+                :src="item.thumbnailSrc"
                 :alt="item.title"
                 :draggable="false"
                 decoding="async"
+                loading="lazy"
               />
             </button>
           </div>
@@ -37,7 +34,11 @@
       </div>
 
       <div class="dome-gallery__radial-overlay" aria-hidden="true" />
-      <div class="dome-gallery__blur-overlay" aria-hidden="true" />
+      <div
+        v-if="props.overlayBlurColor !== 'transparent'"
+        class="dome-gallery__blur-overlay"
+        aria-hidden="true"
+      />
       <div class="dome-gallery__edge-overlay dome-gallery__edge-overlay--top" />
       <div
         class="dome-gallery__edge-overlay dome-gallery__edge-overlay--bottom"
@@ -86,6 +87,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Link } from '@element-plus/icons-vue'
 
+import { getHomeThumbnailUrl } from '@/utils/imageVariant'
 import { setSmoothScrollLocked } from '@/utils/smoothScroll'
 
 interface DomeGalleryImage {
@@ -101,7 +103,6 @@ interface DomeGalleryProps {
   fitBasis?: 'auto' | 'min' | 'max' | 'width' | 'height'
   minRadius?: number
   maxRadius?: number
-  padFactor?: number
   overlayBlurColor?: string
   maxVerticalRotationDeg?: number
   dragSensitivity?: number
@@ -113,6 +114,7 @@ interface DomeGalleryProps {
   entranceDelay?: number
   entranceDuration?: number
   entranceRotationSpeed?: number
+  previewViewportCentered?: boolean
 }
 
 interface TileItem {
@@ -122,6 +124,7 @@ interface TileItem {
   sizeX: number
   sizeY: number
   src: string
+  thumbnailSrc: string
   title: string
   link?: string
 }
@@ -147,7 +150,6 @@ const props = withDefaults(defineProps<DomeGalleryProps>(), {
   fitBasis: 'auto',
   minRadius: 420,
   maxRadius: Infinity,
-  padFactor: 0.25,
   overlayBlurColor: 'transparent',
   maxVerticalRotationDeg: 1,
   dragSensitivity: 20,
@@ -159,6 +161,7 @@ const props = withDefaults(defineProps<DomeGalleryProps>(), {
   entranceDelay: 0,
   entranceDuration: 0,
   entranceRotationSpeed: 0,
+  previewViewportCentered: false,
 })
 const router = useRouter()
 
@@ -166,8 +169,6 @@ const rootRef = ref<HTMLDivElement | null>(null)
 const mainRef = ref<HTMLElement | null>(null)
 const sphereRef = ref<HTMLDivElement | null>(null)
 const radius = ref(0)
-const viewerPad = ref(0)
-const openedImage = ref<DomeGalleryImage | null>(null)
 const preview = ref<PreviewItem | null>(null)
 const previewPhase = ref<'opening' | 'opened' | 'closing'>('opening')
 
@@ -185,6 +186,8 @@ let entranceStartTime = 0
 let resizeObserver: ResizeObserver | null = null
 let focusedTile: HTMLElement | null = null
 let previewCloseTimer: number | null = null
+let areDragListenersActive = false
+let activePointerId: number | null = null
 const scrollLockKey = 'dome-gallery-preview'
 
 const clamp = (value: number, min: number, max: number) =>
@@ -219,6 +222,7 @@ const items = computed<TileItem[]>(() => {
       ...coordinate,
       index,
       src: image.src,
+      thumbnailSrc: getHomeThumbnailUrl(image.src),
       title: image.title || image.alt || '',
       link: image.link,
     }
@@ -242,6 +246,56 @@ const getTileWrapStyle = (item: TileItem) => {
 const parseLength = (value: string, fallback: number) => {
   const parsed = Number.parseFloat(value)
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
+}
+
+const getRenderedScale = (renderedSize: number, layoutSize: number) => {
+  const scale = renderedSize / Math.max(1, layoutSize)
+  return Number.isFinite(scale) && scale > 0 ? scale : 1
+}
+
+const getPreviewGeometry = (
+  root: HTMLElement,
+  tile: HTMLElement,
+  width: number,
+  height: number
+) => {
+  const rootRect = root.getBoundingClientRect()
+  const tileRect = tile.getBoundingClientRect()
+
+  if (!props.previewViewportCentered) {
+    return {
+      startRect: {
+        left: tileRect.left - rootRect.left,
+        top: tileRect.top - rootRect.top,
+        width: tileRect.width,
+        height: tileRect.height,
+      },
+      targetRect: {
+        left: Math.max(0, (rootRect.width - width) / 2),
+        top: Math.max(0, (rootRect.height - height) / 2),
+        width,
+        height,
+      },
+    }
+  }
+
+  const scaleX = getRenderedScale(rootRect.width, root.clientWidth)
+  const scaleY = getRenderedScale(rootRect.height, root.clientHeight)
+
+  return {
+    startRect: {
+      left: (tileRect.left - rootRect.left) / scaleX,
+      top: (tileRect.top - rootRect.top) / scaleY,
+      width: tileRect.width / scaleX,
+      height: tileRect.height / scaleY,
+    },
+    targetRect: {
+      left: (window.innerWidth / 2 - rootRect.left - width / 2) / scaleX,
+      top: (window.innerHeight / 2 - rootRect.top - height / 2) / scaleY,
+      width: width / scaleX,
+      height: height / scaleY,
+    },
+  }
 }
 
 const previewStyle = computed(() => {
@@ -329,9 +383,7 @@ const syncRadius = () => {
     props.minRadius,
     props.maxRadius
   )
-  viewerPad.value = Math.max(8, Math.round(minDimension * props.padFactor))
   root.style.setProperty('--dome-radius', `${radius.value}px`)
-  root.style.setProperty('--dome-viewer-pad', `${viewerPad.value}px`)
   root.style.setProperty('--dome-overlay-color', props.overlayBlurColor)
   root.style.setProperty(
     '--dome-grayscale-filter',
@@ -379,17 +431,26 @@ const getPointerPosition = (event: PointerEvent) => ({
 })
 
 const handlePointerDown = (event: PointerEvent) => {
-  if (openedImage.value) return
+  if (preview.value || isDragging) return
   stopInertia()
   isDragging = true
+  activePointerId = event.pointerId
   didMove = false
   startRotation.x = rotation.x
   startRotation.y = rotation.y
   startPosition = getPointerPosition(event)
+  setDragListenersActive(true)
 }
 
 const handlePointerMove = (event: PointerEvent) => {
-  if (!isDragging || !startPosition || openedImage.value) return
+  if (
+    !isDragging ||
+    activePointerId !== event.pointerId ||
+    !startPosition ||
+    preview.value
+  ) {
+    return
+  }
 
   const position = getPointerPosition(event)
   const deltaX = position.x - startPosition.x
@@ -406,47 +467,66 @@ const handlePointerMove = (event: PointerEvent) => {
 }
 
 const handlePointerEnd = (event: PointerEvent) => {
-  if (!isDragging) return
+  if (activePointerId !== event.pointerId) return
+  if (!isDragging) {
+    activePointerId = null
+    startPosition = null
+    setDragListenersActive(false)
+    return
+  }
   isDragging = false
 
   if (didMove && startPosition) {
-    const position = getPointerPosition(event)
-    const velocityX =
-      ((position.x - startPosition.x) / props.dragSensitivity) * 0.02
-    const velocityY =
-      ((position.y - startPosition.y) / props.dragSensitivity) * 0.02
-    startInertia(velocityX, velocityY)
     lastDragEndAt = performance.now()
+
+    if (event.type !== 'pointercancel' && !prefersReducedMotion) {
+      const position = getPointerPosition(event)
+      const velocityX =
+        ((position.x - startPosition.x) / props.dragSensitivity) * 0.02
+      const velocityY =
+        ((position.y - startPosition.y) / props.dragSensitivity) * 0.02
+      startInertia(velocityX, velocityY)
+    }
   }
 
   didMove = false
   startPosition = null
+  activePointerId = null
+  setDragListenersActive(false)
+}
+
+const setDragListenersActive = (active: boolean) => {
+  if (areDragListenersActive === active) return
+  areDragListenersActive = active
+
+  if (active) {
+    window.addEventListener('pointermove', handlePointerMove, { passive: true })
+    window.addEventListener('pointerup', handlePointerEnd)
+    window.addEventListener('pointercancel', handlePointerEnd)
+    return
+  }
+
+  window.removeEventListener('pointermove', handlePointerMove)
+  window.removeEventListener('pointerup', handlePointerEnd)
+  window.removeEventListener('pointercancel', handlePointerEnd)
 }
 
 const openPreview = (item: TileItem, tile: HTMLElement) => {
   const root = rootRef.value
   if (!root || preview.value) return
 
-  const rootRect = root.getBoundingClientRect()
-  const tileRect = tile.getBoundingClientRect()
   const width = parseLength(props.openedImageWidth, 250)
   const height = parseLength(props.openedImageHeight, 350)
-  const startRect = {
-    left: tileRect.left - rootRect.left,
-    top: tileRect.top - rootRect.top,
-    width: tileRect.width,
-    height: tileRect.height,
-  }
-  const targetRect = {
-    left: Math.max(0, (rootRect.width - width) / 2),
-    top: Math.max(0, (rootRect.height - height) / 2),
+  const { startRect, targetRect } = getPreviewGeometry(
+    root,
+    tile,
     width,
-    height,
-  }
+    height
+  )
 
   focusedTile = tile
   focusedTile.style.visibility = 'hidden'
-  openedImage.value = item
+  stopAutoRotation()
   previewPhase.value = 'opening'
   preview.value = {
     src: item.src,
@@ -510,8 +590,8 @@ const closePreview = () => {
     focusedTile?.style.removeProperty('visibility')
     focusedTile = null
     preview.value = null
-    openedImage.value = null
     setSmoothScrollLocked(scrollLockKey, false)
+    if (!prefersReducedMotion) startAutoRotation()
   }, 320)
 }
 
@@ -527,16 +607,13 @@ onMounted(() => {
   resizeObserver = new ResizeObserver(syncRadius)
   resizeObserver.observe(root)
   main.addEventListener('pointerdown', handlePointerDown, { passive: true })
-  window.addEventListener('pointermove', handlePointerMove, { passive: true })
-  window.addEventListener('pointerup', handlePointerEnd)
-  window.addEventListener('pointercancel', handlePointerEnd)
   window.addEventListener('keydown', handlePreviewKeydown)
   prefersReducedMotion = window.matchMedia(
     '(prefers-reduced-motion: reduce)'
   ).matches
   entranceStartTime = performance.now() + props.entranceDelay
   syncRadius()
-  startAutoRotation()
+  if (!prefersReducedMotion) startAutoRotation()
 })
 
 onUnmounted(() => {
@@ -548,21 +625,29 @@ onUnmounted(() => {
   resizeObserver?.disconnect()
   const main = mainRef.value
   main?.removeEventListener('pointerdown', handlePointerDown)
-  window.removeEventListener('pointermove', handlePointerMove)
-  window.removeEventListener('pointerup', handlePointerEnd)
-  window.removeEventListener('pointercancel', handlePointerEnd)
+  setDragListenersActive(false)
+  activePointerId = null
+  isDragging = false
+  startPosition = null
   window.removeEventListener('keydown', handlePreviewKeydown)
 })
 
-watch(() => props, syncRadius, { deep: true })
+watch(
+  () => [
+    props.fit,
+    props.fitBasis,
+    props.minRadius,
+    props.maxRadius,
+    props.overlayBlurColor,
+    props.grayscale,
+  ],
+  syncRadius
+)
 </script>
 
 <style lang="less" scoped>
 .dome-gallery {
-  --dome-segments-x: 35;
-  --dome-segments-y: 35;
   --dome-radius: 420px;
-  --dome-viewer-pad: 24px;
   --dome-overlay-color: transparent;
   --dome-grayscale-filter: ;
 
@@ -614,7 +699,8 @@ watch(() => props, syncRadius, { deep: true })
   bottom: -999px;
   left: -999px;
   margin: auto;
-  transform-style: preserve-3d;
+  // 每张卡片只保留外层三维平面，内部图片和圆角在该平面中一起绘制。
+  transform-style: flat;
   transform-origin: 50% 50%;
   backface-visibility: hidden;
   transition: transform 300ms ease;
@@ -629,9 +715,6 @@ watch(() => props, syncRadius, { deep: true })
   border-radius: 12px;
   background: var(--bg-color, #000);
   overflow: hidden;
-  transform: translateZ(0);
-  transform-style: preserve-3d;
-  backface-visibility: hidden;
   cursor: pointer;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
@@ -649,7 +732,6 @@ watch(() => props, syncRadius, { deep: true })
     opacity: 0.4;
     filter: contrast(0.7) saturate(0.8) var(--dome-grayscale-filter);
     pointer-events: none;
-    backface-visibility: hidden;
     transition: filter 240ms ease, opacity 240ms ease, transform 240ms ease;
   }
 

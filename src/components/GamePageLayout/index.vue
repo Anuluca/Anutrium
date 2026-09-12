@@ -16,6 +16,7 @@
             :class="{
               'game-page-canvas--page-fullscreen': isPageFullscreen,
             }"
+            @wheel="containGameWheel"
           >
             <div
               v-if="isEntryReady"
@@ -26,7 +27,11 @@
             </div>
 
             <div v-if="isAnyFullscreen" class="fullscreen-exit-control">
-              <button type="button" @click="exitFullscreenMode">
+              <button
+                type="button"
+                :aria-label="labels.exitFullscreen"
+                @click="exitFullscreenMode"
+              >
                 <CloseBold aria-hidden="true" />
                 <span>{{ labels.exitFullscreen }}</span>
               </button>
@@ -51,6 +56,9 @@
         :aria-label="labels.sidebar"
       >
         <div class="game-page-panel">
+          <span class="game-page-panel__tab" aria-hidden="true">
+            {{ labels.archiveFile }}
+          </span>
           <img
             v-if="gameIcon"
             class="game-page-sidebar__logo"
@@ -119,6 +127,7 @@
             <button
               type="button"
               class="game-page-action"
+              :aria-pressed="isPageFullscreen"
               @click="togglePageFullscreen"
             >
               <Monitor class="game-page-action__icon" aria-hidden="true" />
@@ -127,6 +136,7 @@
             <button
               type="button"
               class="game-page-action"
+              :aria-pressed="isFullscreen"
               @click="toggleFullscreen"
             >
               <FullScreen class="game-page-action__icon" aria-hidden="true" />
@@ -220,6 +230,7 @@ const labels = computed(() => {
   if (locale.value === 'en') {
     return {
       actions: 'Game actions',
+      archiveFile: 'INFO',
       controller: 'CONTROLLER',
       copied: 'COPIED',
       designSource: 'DESIGN SOURCE',
@@ -240,6 +251,7 @@ const labels = computed(() => {
 
   return {
     actions: '游戏操作',
+    archiveFile: 'INFO',
     controller: '手柄',
     copied: '已复制',
     designSource: '设计来源',
@@ -343,6 +355,27 @@ const refreshGame = () => {
   renderKey.value += 1
 }
 
+const containGameWheel = (event: WheelEvent) => {
+  const target = event.target
+  const scrollable =
+    target instanceof Element
+      ? target.closest<HTMLElement>('[data-game-scrollable]')
+      : null
+
+  if (scrollable && gameContainer.value?.contains(scrollable)) {
+    const maxScrollTop = scrollable.scrollHeight - scrollable.clientHeight
+    const canScrollUp = event.deltaY < 0 && scrollable.scrollTop > 0
+    const canScrollDown =
+      event.deltaY > 0 && scrollable.scrollTop < maxScrollTop
+
+    event.stopPropagation()
+    if (canScrollUp || canScrollDown || event.deltaY === 0) return
+  }
+
+  event.preventDefault()
+  event.stopPropagation()
+}
+
 onMounted(() => {
   document.addEventListener('fullscreenchange', syncFullscreenState)
   document.addEventListener('keydown', handleFullscreenKeydown)
@@ -376,7 +409,8 @@ onBeforeUnmount(() => {
 }
 
 .game-page-layout.no-rem .game-page-workspace {
-  --file-paper: #292724;
+  --file-paper: #2d2b27;
+  --file-paper-deep: #211f1c;
   --file-ink: #e7e3d9;
   --file-muted: #b9b3a9;
   --file-red: #9b293c;
@@ -384,16 +418,20 @@ onBeforeUnmount(() => {
   gap: 10px;
   padding: 10px;
   overflow: visible;
+  border: 1px solid #403c36;
   color: var(--file-ink);
-  background: transparent;
+  background: #171614;
+  box-shadow: 0 12px 26px rgb(0 0 0 / 24%);
 }
 
 .game-page-layout.no-rem .game-page-machine {
+  position: relative;
   display: grid;
   grid-template-rows: minmax(0, 1fr);
   min-width: 0;
   min-height: 0;
-  background: var(--file-paper);
+  border: 1px solid #4a453e;
+  background: var(--file-paper-deep);
 }
 
 .game-page-canvas,
@@ -408,7 +446,8 @@ onBeforeUnmount(() => {
   position: relative;
   z-index: 2;
   overflow: hidden;
-  border: 1px solid #34302e;
+  overscroll-behavior: none;
+  border: 6px solid var(--file-paper-deep, #211f1c);
   border-radius: 0;
   box-sizing: border-box;
   background: #050505;
@@ -560,20 +599,40 @@ onBeforeUnmount(() => {
 
 .game-page-layout.no-rem .game-page-panel {
   position: relative;
-  top: -5px;
+  top: 0;
   z-index: 1;
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto auto;
-  width: calc(100% + 22px);
-  height: calc(100% + 10px);
+  width: 100%;
+  height: 100%;
   min-height: 0;
-  padding: 12px;
+  padding: 32px 12px 12px;
+  border: 1px solid var(--file-line);
   box-sizing: border-box;
+  background: var(--file-paper);
+  box-shadow: 5px 7px 0 rgb(0 0 0 / 20%);
   font-family: 'alibaba-puhuiti', sans-serif;
   letter-spacing: 0;
   transform: perspective(800px) rotateY(-5deg);
   transform-origin: left center;
   transform-style: preserve-3d;
+}
+
+.game-page-layout.no-rem .game-page-panel__tab {
+  position: absolute;
+  top: -31px;
+  left: 0;
+  width: max-content;
+  max-width: calc(100% - 24px);
+  padding: 9px 14px 8px;
+  border: 0;
+  color: #fff;
+  background: transparent;
+  font: 40px/1 'cn-custom', sans-serif;
+  letter-spacing: 0;
+  opacity: 0.5;
+  text-align: center;
+  white-space: nowrap;
 }
 
 @keyframes game-sidebar-unfold {
@@ -595,12 +654,10 @@ onBeforeUnmount(() => {
 
   > section {
     padding: 12px;
+    border-top: 1px solid rgb(231 227 217 / 14%);
+    border-bottom: 1px solid var(--file-line);
     box-sizing: border-box;
-    background: linear-gradient(
-      to bottom,
-      rgb(63 63 63 / 57%) 0 58px,
-      transparent 58px 100%
-    );
+    background: #33312d;
   }
 
   > section + section {
@@ -701,12 +758,12 @@ onBeforeUnmount(() => {
   min-height: 48px;
   margin: 0;
   padding: 5px;
-  border: 0;
+  border: 1px solid #45413b;
   border-radius: 0;
   box-sizing: border-box;
   color: #e3dfd5;
   background: var(--game-action-background);
-  box-shadow: 0 6px 18px rgb(0 0 0 / 18%);
+  box-shadow: 0 4px 0 rgb(0 0 0 / 22%);
   font: 700 17px/1.2 'alibaba-puhuiti', sans-serif;
   cursor: pointer;
   transition: background-color 0.15s ease, color 0.15s ease,
@@ -719,10 +776,18 @@ onBeforeUnmount(() => {
   }
 
   &:hover {
+    color: #000;
+    background: #e23456;
     top: -1px;
     left: -1px;
     z-index: 1;
     box-shadow: 4px 6px 16px rgb(0 0 0 / 28%);
+  }
+
+  &[aria-pressed='true'] {
+    color: #fff;
+    border-color: var(--file-red);
+    background: #3f0b13;
   }
 
   &:focus-visible {
@@ -745,6 +810,12 @@ onBeforeUnmount(() => {
   color: #ca3c4f;
 }
 
+.game-page-layout.no-rem .game-page-action:hover .game-page-action__icon,
+.game-page-layout.no-rem
+  :deep(.game-page-share.share-button:hover .share-button__icon) {
+  color: #000;
+}
+
 .game-page-layout.no-rem :deep(.game-page-share.share-button::before),
 .game-page-layout.no-rem :deep(.game-page-share .share-button__code) {
   display: none;
@@ -758,7 +829,7 @@ onBeforeUnmount(() => {
 
 @media (max-height: 800px), (max-width: 1100px) {
   .game-page-layout.no-rem .game-page-panel {
-    padding: 6px;
+    padding: 28px 6px 6px;
   }
 
   .game-page-layout.no-rem .game-page-description {
@@ -770,7 +841,7 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 960px) and (orientation: landscape) {
-  .game-page-workspace {
+  .game-page-layout.no-rem .game-page-workspace {
     height: calc(100dvh - 86px);
     min-height: 280px;
     margin: 4px 0;
@@ -779,57 +850,68 @@ onBeforeUnmount(() => {
 
 @media (max-width: 768px) and (orientation: portrait) {
   :global(.game-page-layout) {
-    --game-mobile-horizontal-gutter: max(16px, env(safe-area-inset-left));
-    --game-mobile-vertical-gutter: calc(
-      2.83333rem + max(0.66667rem, env(safe-area-inset-top))
-    );
     position: fixed !important;
-    top: 0;
-    left: 0;
+    inset: 0;
     z-index: 1200;
-    width: 100dvh !important;
+    width: 100dvw !important;
     max-width: none !important;
-    height: 100dvw !important;
+    height: 100dvh !important;
     min-height: 0 !important;
     padding: 0 !important;
     overflow: hidden;
     background: #050505;
-    transform: rotate(90deg) translateY(-100%);
-    transform-origin: top left;
+    transform: none !important;
   }
 
   :global(.game-page-layout .tool-page-stage) {
-    flex: 1 1 auto !important;
+    flex: 1 1 0 !important;
+    width: 100% !important;
     height: 100% !important;
     min-height: 0 !important;
-    padding: var(--game-mobile-horizontal-gutter) 0
-      var(--game-mobile-horizontal-gutter) var(--game-mobile-vertical-gutter) !important;
+    padding: max(16px, env(safe-area-inset-top))
+      max(36px, env(safe-area-inset-right))
+      max(16px, env(safe-area-inset-bottom))
+      max(36px, env(safe-area-inset-left)) !important;
     box-sizing: border-box;
     transform: none !important;
   }
 
   :global(.game-page-layout .tool-page-content) {
-    display: flex;
+    position: relative;
+    display: block;
     flex: 1 1 0 !important;
+    width: 100% !important;
+    height: auto !important;
     min-height: 0 !important;
+    overflow: visible;
+    container-type: size;
   }
 
   :global(.game-page-layout .detail-page-header) {
-    flex: 0 0 46px !important;
+    flex: 0 0 auto !important;
     width: 100% !important;
-    height: 46px !important;
-    min-height: 46px !important;
-    aspect-ratio: auto !important;
-    margin: 0 0 12px !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 0 8px !important;
     padding: 0 !important;
   }
 
+  :global(.game-page-layout .tool-recommendation-row),
+  :global(.game-page-layout .tool-page-footer) {
+    display: none !important;
+  }
+
   .game-page-workspace {
+    position: absolute;
+    top: 0;
+    left: 0;
     grid-template-columns: minmax(0, 76fr) minmax(172px, 24fr);
-    flex: 1 1 auto;
-    height: auto;
+    width: calc(100cqh - 16px);
+    height: 100cqw;
     min-height: 0;
     margin: 0;
+    transform: rotate(90deg) translateY(-100%);
+    transform-origin: top left;
   }
 
   .game-page-layout.no-rem .game-page-sidebar {
@@ -842,6 +924,17 @@ onBeforeUnmount(() => {
     width: 100%;
     height: 100%;
     margin: 0;
+  }
+
+  // 页面在竖屏中以横向坐标系工作，全屏画布必须使用同一坐标系。
+  .game-page-canvas--page-fullscreen,
+  .game-page-canvas:fullscreen {
+    width: 100dvh;
+    max-width: none;
+    height: 100dvw;
+    max-height: none;
+    transform: rotate(90deg) translateY(-100%);
+    transform-origin: top left;
   }
 }
 
@@ -857,7 +950,7 @@ onBeforeUnmount(() => {
   }
 
   .game-page-layout.no-rem .game-page-panel {
-    padding: 6px;
+    padding: 25px 6px 6px;
   }
 
   .game-page-layout.no-rem .game-page-description {
@@ -898,6 +991,22 @@ onBeforeUnmount(() => {
   }
   .game-page-layout.no-rem :deep(.game-page-share .share-button__label) {
     font-size: 14px;
+  }
+}
+
+// 触屏没有 hover，退出全屏控件需要始终可见且满足触控尺寸。
+@media (hover: none), (pointer: coarse) {
+  .game-page-canvas.no-rem .fullscreen-exit-control {
+    top: max(8px, env(safe-area-inset-top));
+    width: min(188px, calc(100% - 32px));
+    height: 42px;
+
+    button {
+      position: relative;
+      min-height: 42px;
+      border: 2px solid rgba(155, 41, 60, 0.9);
+      transform: none;
+    }
   }
 }
 

@@ -7,14 +7,18 @@
       'is-en': locale === 'en',
       'is-base-loaded': isBaseLoaded,
       'is-hover-loaded': isHoverLoaded,
+      'has-media-stats': hasMediaStats,
+      'is-activity': vlog.category === 'activity',
+      'is-compact': compact,
+      'has-hover-effects': hoverEffects,
     }"
     :role="interactive ? 'button' : undefined"
     :tabindex="interactive ? 0 : undefined"
     @click="selectVlog"
-    @focusin="requestHoverImage"
-    @pointerenter="requestHoverImage"
+    @focusin="handleTitleHover"
     @keydown.enter.prevent="selectVlog"
     @keydown.space.prevent="selectVlog"
+    @mouseenter="handleTitleHover"
   >
     <div class="vlog-img-wrap">
       <div
@@ -26,93 +30,168 @@
         class="vlog-img vlog-img--base"
         :src="vlog.img"
         :alt="vlog.title"
-        loading="lazy"
         decoding="async"
         @load="isBaseLoaded = true"
       />
       <img
-        v-if="shouldLoadHoverImage"
+        v-if="hoverEffects && hoverImage"
         class="vlog-img vlog-img--hover"
-        :src="vlog.img2 || vlog.img"
+        :src="hoverImage"
         alt=""
         aria-hidden="true"
-        loading="lazy"
         decoding="async"
         @load="isHoverLoaded = true"
       />
-      <div class="vlog-blueprint-lines" aria-hidden="true" />
     </div>
     <div class="vlog-info">
-      <h4 class="vlog-title">{{ vlog.title }}</h4>
+      <h4 class="vlog-title" :class="{ 'is-split': splitTitle }">
+        <template v-if="splitTitle">
+          <ShuffleText
+            v-if="hoverEffects"
+            ref="prefixShuffleRef"
+            class="vlog-title-prefix"
+            :text="splitTitle.prefix"
+            shuffle-direction="right"
+            :trigger-on-hover="false"
+          />
+          <span v-else class="vlog-title-prefix">{{ splitTitle.prefix }}</span>
+          <ShuffleText
+            v-if="hoverEffects"
+            ref="restShuffleRef"
+            class="vlog-title-rest"
+            :text="splitTitle.rest"
+            shuffle-direction="down"
+            :trigger-on-hover="false"
+          />
+          <span v-else class="vlog-title-rest">{{ splitTitle.rest }}</span>
+        </template>
+        <ShuffleText
+          v-else-if="hoverEffects"
+          ref="titleShuffleRef"
+          :text="vlog.title"
+          :shuffle-direction="vlog.category === 'activity' ? 'right' : 'down'"
+          :trigger-on-hover="false"
+        />
+        <span v-else>{{ vlog.title }}</span>
+      </h4>
       <span class="vlog-date">{{ vlog.date }}</span>
+      <div v-if="hasMediaStats" class="vlog-media-stats">
+        <span v-if="videoCount" :aria-label="`${videoCount} videos`">
+          <el-icon><VideoCamera /></el-icon>
+          <b>×{{ videoCount }}</b>
+        </span>
+        <span v-if="photoCount" :aria-label="`${photoCount} photos`">
+          <el-icon><Picture /></el-icon>
+          <b>×{{ photoCount }}</b>
+        </span>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { Picture, VideoCamera } from '@element-plus/icons-vue'
 
-interface VlogCardItem {
-  id: string
-  title: string
-  date: string
-  img: string
-  img2?: string
+import ShuffleText from '@/components/ShuffleText/index.vue'
+
+import type { JourneyItem } from '@/types/flanerie'
+
+interface ShuffleTextExpose {
+  play: () => void
 }
 
 const props = withDefaults(
   defineProps<{
-    vlog: VlogCardItem
+    vlog: JourneyItem
     active?: boolean
     interactive?: boolean
-    deferHoverImage?: boolean
+    compact?: boolean
+    hoverEffects?: boolean
   }>(),
   {
     active: false,
     interactive: false,
-    deferHoverImage: false,
+    compact: false,
+    hoverEffects: true,
   }
 )
 
 const emit = defineEmits<{
-  (event: 'select', vlog: VlogCardItem): void
+  (event: 'select', vlog: JourneyItem): void
 }>()
 
 const { locale } = useI18n()
 const isBaseLoaded = ref(false)
 const isHoverLoaded = ref(false)
-const shouldLoadHoverImage = ref(!props.deferHoverImage)
+const prefixShuffleRef = ref<ShuffleTextExpose | null>(null)
+const restShuffleRef = ref<ShuffleTextExpose | null>(null)
+const titleShuffleRef = ref<ShuffleTextExpose | null>(null)
+const hoverImage = computed(() => {
+  const image = props.vlog.img2
+  return image && image !== props.vlog.img ? image : null
+})
+const photoCount = computed(() => props.vlog.photos?.length ?? 0)
+const videoCount = computed(() => props.vlog.videos?.length ?? 0)
+const hasMediaStats = computed(
+  () => photoCount.value > 0 || videoCount.value > 0
+)
+const splitTitle = computed(() => {
+  const title = props.vlog.title
+  const separatorIndex = title.indexOf('·')
 
-const requestHoverImage = () => {
-  shouldLoadHoverImage.value = true
-}
+  if (props.vlog.category === 'activity' || separatorIndex < 1) {
+    return null
+  }
+
+  return {
+    prefix: title.slice(0, separatorIndex),
+    rest: title.slice(separatorIndex + 1),
+  }
+})
 
 const selectVlog = () => {
   if (!props.interactive) return
   emit('select', props.vlog)
 }
 
+const shuffleTitle = () => {
+  prefixShuffleRef.value?.play()
+  restShuffleRef.value?.play()
+  titleShuffleRef.value?.play()
+}
+
+const handleTitleHover = () => {
+  if (!props.hoverEffects) return
+  shuffleTitle()
+}
+
 watch(
-  () => [props.vlog.img, props.vlog.img2, props.deferHoverImage],
-  () => {
-    isBaseLoaded.value = false
-    isHoverLoaded.value = false
-    shouldLoadHoverImage.value = !props.deferHoverImage
-  }
+  () => props.vlog.img,
+  () => (isBaseLoaded.value = false)
 )
+watch(hoverImage, () => (isHoverLoaded.value = false))
 </script>
 
 <style lang="less" scoped>
 .shared-vlog-card {
+  --postcard-gap: clamp(0.375rem, 0.65vw, 0.625rem);
+  --postcard-padding: clamp(0.375rem, 0.65vw, 0.625rem);
+  --postcard-side-width: clamp(2.8rem, 12%, 3.4rem);
+
   position: relative;
+  display: grid;
   width: 100%;
   max-width: 580px;
-  min-height: 300px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding: 8px 0 0;
+  min-width: 0;
+  padding: var(--postcard-padding);
+  grid-template-columns: minmax(0, 1fr) var(--postcard-side-width);
+  gap: var(--postcard-gap);
+  overflow: hidden;
+  box-sizing: border-box;
+  background: #e8e8e8;
+  color: #111;
   cursor: default;
   isolation: isolate;
 
@@ -120,121 +199,59 @@ watch(
     cursor: pointer;
   }
 
-  &::before {
-    content: '';
-    position: absolute;
-    left: 14%;
-    right: 14%;
-    bottom: 54px;
-    height: 34px;
-    background: radial-gradient(
-      ellipse at center,
-      rgba(226, 52, 86, 0.32),
-      rgba(54, 209, 255, 0.12) 42%,
-      transparent 72%
-    );
-    opacity: 0.72;
-    z-index: -1;
-    transition: opacity 0.35s ease, filter 0.35s ease;
-  }
-
-  &::after {
-    content: '';
-    position: absolute;
-    left: 14%;
-    right: 14%;
-    bottom: 44px;
-    height: 52px;
-    background: repeating-linear-gradient(
-        90deg,
-        transparent 0 7px,
-        rgba(54, 209, 255, 0.24) 7px 8px,
-        rgba(226, 52, 86, 0.18) 8px 9px
-      ),
-      radial-gradient(
-        circle at 50% 50%,
-        rgba(226, 52, 86, 0.2),
-        transparent 58%
-      );
-    mix-blend-mode: screen;
-    opacity: 0;
-    transform: skew(-14deg);
-    pointer-events: none;
-    z-index: -1;
-    transition: opacity 0.35s ease;
-  }
-
-  &:hover,
   &.is-map-target {
-    &::before {
-      opacity: 0.95;
-      filter: hue-rotate(28deg);
-    }
+    outline: 2px solid #e23456;
+    outline-offset: -2px;
+  }
 
-    &::after {
-      opacity: 1;
-      animation: vlogSpectralDrift 0.9s steps(3, end) infinite;
-    }
+  &.has-detail:focus-visible {
+    outline: 2px solid #e23456;
+    outline-offset: 3px;
+  }
 
-    .vlog-blueprint-lines {
-      opacity: 0.82;
-      transform: scaleX(1);
-    }
-
-    .vlog-info::before {
-      background: rgba(54, 209, 255, 0.26);
-      box-shadow: -8px 0 0 rgba(226, 52, 86, 0.36);
-    }
-
-    .vlog-title {
-      letter-spacing: 0.04em;
-      text-shadow: 7px 0 0 rgba(226, 52, 86, 0.72);
+  &.has-hover-effects:hover {
+    .vlog-img {
+      transform: scale(1.05);
     }
   }
 
-  &.is-hover-loaded:hover,
-  &.is-hover-loaded.is-map-target {
+  &.has-hover-effects.is-hover-loaded:hover,
+  &.has-hover-effects.is-hover-loaded.is-map-target {
     .vlog-img--base {
       opacity: 0;
     }
 
     .vlog-img--hover {
       opacity: 1;
-      filter: drop-shadow(10px 12px 0 rgba(0, 0, 0, 0.46));
     }
   }
 }
 
 .vlog-img-wrap {
   position: relative;
+  z-index: 1;
+  min-width: 0;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #eee;
+}
+
+.vlog-img {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: block;
   width: 100%;
-  height: 345px;
-  display: grid;
-  place-items: end center;
-  box-sizing: border-box;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.28s ease,
+    transform 0.42s cubic-bezier(0.22, 0.72, 0.24, 1);
+}
 
-  .vlog-img {
-    position: relative;
-    width: auto;
-    max-width: 100%;
-    height: auto;
-    max-height: 345px;
-    object-fit: contain;
-    display: block;
-    filter: drop-shadow(10px 12px 0 rgba(0, 0, 0, 0.46));
-    transition: opacity 0.62s ease, filter 0.62s ease;
-    opacity: 0;
-    z-index: 1;
-  }
-
-  .vlog-img--hover {
-    position: absolute;
-    left: 50%;
-    bottom: 0;
-    opacity: 0;
-    transform: translateX(-50%);
-    z-index: 2;
-  }
+.vlog-img--hover {
+  z-index: 2;
 }
 
 .shared-vlog-card.is-base-loaded .vlog-img--base {
@@ -243,174 +260,273 @@ watch(
 
 .vlog-image-placeholder {
   position: absolute;
-  bottom: 0;
-  left: 50%;
-  width: 12rem;
-  max-width: 70%;
-  height: 78%;
-  overflow: hidden;
-  background: rgba(226, 52, 86, 0.04);
-  transform: translateX(-50%);
-
-  &::after {
-    position: absolute;
-    inset: 0;
-    content: '';
-    background: linear-gradient(
-      105deg,
-      transparent 30%,
-      rgba(226, 52, 86, 0.12) 50%,
-      transparent 70%
-    );
-    transform: translateX(-100%);
-    animation: vlogPlaceholderShimmer 1.6s ease-in-out infinite;
-  }
-}
-
-.vlog-blueprint-lines {
-  position: absolute;
-  inset: 8% 6% 0;
-  background-image: linear-gradient(
-      90deg,
-      transparent 0 18%,
-      rgba(226, 52, 86, 0.48) 18%,
-      rgba(226, 52, 86, 0.48) calc(18% + 1px),
-      transparent calc(18% + 1px) 46%,
-      transparent calc(46% + 1px) 74%,
-      rgba(226, 52, 86, 0.48) calc(74% + 1px),
-      transparent calc(74% + 1px)
-    ),
-    linear-gradient(
-      0deg,
-      transparent 0 22%,
-      rgba(226, 52, 86, 0.48) 22%,
-      transparent calc(22% + 1px) 51%,
-      transparent calc(51% + 1px) 79%,
-      rgba(226, 52, 86, 0.44) calc(79% + 1px),
-      transparent calc(79% + 1px)
-    );
-  mask-image: radial-gradient(ellipse at center, #000 44%, transparent 76%);
-  opacity: 0;
-  mix-blend-mode: screen;
-  pointer-events: none;
-  z-index: 2;
-  transform: scaleX(0.92);
-  transition: opacity 0.28s ease, transform 0.42s ease;
+  inset: 0;
+  z-index: 0;
+  background: #eee;
 }
 
 .vlog-info {
   position: relative;
-  width: 100%;
-  min-height: 0;
+  z-index: 2;
   display: flex;
+  min-width: 0;
+  min-height: 0;
+  align-items: flex-end;
   flex-direction: column;
-  align-items: center;
-  margin: -30px 0 0;
-  padding: 0 10px;
-  box-sizing: border-box;
-  z-index: 3;
-
-  &::before {
-    content: '';
-    position: absolute;
-    left: 50%;
-    bottom: 34px;
-    width: min(90%, 280px);
-    height: 16px;
-    background: rgba(226, 52, 86, 0.4);
-    transform: translateX(-50%) skew(-12deg);
-    z-index: -1;
-    transition: background 0.35s ease, box-shadow 0.35s ease;
-  }
+  justify-content: flex-start;
+  gap: clamp(0.25rem, 0.5vw, 0.45rem);
+  overflow: visible;
+  color: #111;
+  opacity: 1;
 }
 
 .vlog-title {
-  position: relative;
-  max-width: 110%;
-  margin: 0 0 9px;
-  color: #fff;
-  font-family: 'cn-custom', 'alibaba-puhuiti', sans-serif;
-  font-size: 1.3rem;
-  -webkit-text-stroke: 1px #000000;
-  letter-spacing: 0;
-  line-height: 1.12;
-  text-align: center;
+  max-height: calc(100% - 1.4rem);
+  margin: 0;
+  color: #111;
+  font-family: 'cn-custom', sans-serif;
+  font-size: clamp(1.5rem, 2.5vw, 2.2rem);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.1em;
   text-overflow: ellipsis;
   white-space: nowrap;
-  transition: text-shadow 0.35s ease, letter-spacing 0.35s ease;
-  text-shadow: 0 0 20px #000;
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+}
+
+.shared-vlog-card:not(.is-activity) .vlog-title {
+  padding-inline-end: 0.14em;
+  margin-inline-end: -0.14em;
+  letter-spacing: -0.16em;
+}
+
+.shared-vlog-card:not(.is-activity) .vlog-title.is-split {
+  display: flex;
+  padding-inline-end: 0;
+  margin-inline-end: 0;
+  align-items: flex-end;
+  flex-direction: column;
+  writing-mode: horizontal-tb;
+
+  .vlog-title-prefix {
+    flex: none;
+    font-size: 0.5em;
+    letter-spacing: 0;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+
+  .vlog-title-rest {
+    min-height: 0;
+    padding-inline-end: 0.14em;
+    margin-inline-end: -0.14em;
+    letter-spacing: -0.16em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+  }
 }
 
 .vlog-date {
-  margin-top: -16px;
-  margin-bottom: 25px;
-  color: rgba(226, 52, 86, 0.9);
-  font-family: 'cn-custom', monospace;
-  text-shadow: 0 0 10px #000;
-  font-size: 0.66rem;
-  font-weight: 800;
-  letter-spacing: 1.2px;
+  flex: none;
+  color: rgba(17, 17, 17, 0.5);
+  font-family: 'cn-custom', sans-serif;
+  font-size: clamp(0.46rem, 0.62vw, 0.58rem);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  writing-mode: horizontal-tb;
+}
+
+.shared-vlog-card:not(.is-activity) .vlog-date {
+  font-size: clamp(0.52rem, 0.7vw, 0.64rem);
+}
+
+.vlog-media-stats {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  width: max-content;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35rem;
+  color: rgba(17, 17, 17, 0.62);
+  font-family: 'cn-custom', sans-serif;
+  font-size: clamp(0.32rem, 0.42vw, 0.39rem);
+  font-weight: 400;
+  line-height: 1;
+
+  > span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.08rem;
+  }
+
+  .el-icon {
+    font-size: 1.15em;
+  }
+
+  b {
+    font-family: 'alibaba-puhuiti', sans-serif;
+    font-weight: 400;
+  }
+}
+
+.shared-vlog-card.is-activity {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(2.65rem, auto);
+  row-gap: clamp(0.1rem, 0.2vw, 0.18rem);
+
+  .vlog-img-wrap {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .vlog-info {
+    display: grid;
+    min-height: 2.65rem;
+    grid-column: 1;
+    grid-row: 2;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: clamp(0.45rem, 1vw, 0.8rem);
+  }
+
+  .vlog-title,
+  &.has-media-stats .vlog-title {
+    max-width: 100%;
+    max-height: none;
+    align-self: end;
+    grid-column: 1;
+    grid-row: 1 / 3;
+    overflow-wrap: anywhere;
+    font-size: clamp(1.08rem, 1.7vw, 1.5rem);
+    line-height: 1.05;
+    text-overflow: ellipsis;
+    white-space: normal;
+    writing-mode: horizontal-tb;
+    text-orientation: mixed;
+  }
+
+  .vlog-date {
+    align-self: end;
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end;
+    writing-mode: horizontal-tb;
+    text-orientation: mixed;
+  }
+
+  .vlog-media-stats {
+    position: static;
+    align-self: end;
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.18rem;
+  }
 }
 
 .shared-vlog-card.is-en {
   .vlog-title {
-    font-family: 'Anton';
-    font-size: 1.3rem;
+    font-family: 'Anton', sans-serif;
+    font-weight: 400;
+    letter-spacing: -0.03em;
+    text-orientation: mixed;
   }
 
   .vlog-date {
-    margin-top: -10px;
+    font-family: 'Anton', sans-serif;
+    font-weight: 400;
+    letter-spacing: 0.02em;
   }
 }
 
-@keyframes vlogSpectralDrift {
-  0%,
-  100% {
-    transform: translateX(-6px) skew(-14deg);
-  }
-
-  50% {
-    transform: translateX(8px) skew(-14deg);
-  }
+.shared-vlog-card.is-en:not(.is-activity) .vlog-title {
+  letter-spacing: -0.07em;
 }
 
-@keyframes vlogPlaceholderShimmer {
-  to {
-    transform: translateX(100%);
+.shared-vlog-card.is-en:not(.is-activity) .vlog-title.is-split {
+  .vlog-title-rest {
+    letter-spacing: -0.07em;
+    text-orientation: mixed;
   }
 }
 
 @media (max-width: 768px) {
   .shared-vlog-card {
-    min-height: 384px;
+    --postcard-gap: 0.3rem;
+    --postcard-padding: 0.3rem;
+    --postcard-side-width: clamp(2.5rem, 18%, 3rem);
+  }
 
-    .vlog-img-wrap {
-      height: 326px;
+  .vlog-title {
+    max-height: calc(100% - 1.15rem);
+    font-size: clamp(1.75rem, 7.2vw, 2.15rem);
+  }
 
-      .vlog-img {
-        max-height: 326px;
-      }
+  .vlog-date {
+    font-size: clamp(0.4rem, 1.8vw, 0.5rem);
+  }
+
+  .shared-vlog-card:not(.is-activity) .vlog-date {
+    font-size: clamp(0.46rem, 2vw, 0.55rem);
+  }
+
+  .shared-vlog-card.is-activity {
+    grid-template-rows: auto minmax(2.2rem, auto);
+    row-gap: 0.1rem;
+
+    .vlog-info {
+      min-height: 2.2rem;
+      gap: 0.35rem;
     }
 
-    .vlog-title {
-      font-size: 1.05rem;
-      -webkit-text-stroke: 0;
-      white-space: normal;
-    }
-
-    &.is-en .vlog-title {
-      font-size: 0.86rem;
+    .vlog-title,
+    &.has-media-stats .vlog-title {
+      font-size: clamp(1.29rem, 5.55vw, 1.52rem);
     }
   }
 }
 
-@media (min-width: 769px) and (max-width: 1180px) {
-  .vlog-img-wrap {
-    height: 320px;
+.shared-vlog-card.is-compact {
+  --postcard-gap: 2.5%;
+  --postcard-padding: 2.5%;
+  --postcard-side-width: 23%;
 
-    .vlog-img {
-      max-height: 320px;
-    }
+  container-type: inline-size;
+
+  .vlog-info {
+    gap: 2cqw;
+  }
+
+  .vlog-title {
+    max-height: calc(100% - 10cqw);
+    font-size: 13cqw;
+  }
+
+  .vlog-date,
+  &:not(.is-activity) .vlog-date {
+    font-size: 4.2cqw;
+  }
+
+  .vlog-media-stats {
+    gap: 2.2cqw;
+    font-size: 3.2cqw;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vlog-img {
+    transition-duration: 0.01ms;
   }
 }
 </style>

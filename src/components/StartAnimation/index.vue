@@ -6,7 +6,7 @@ import Logo from '@/components/Logo/index.vue'
 import LogoRotating3D from '@/components/Logo_rotating3D/index.vue'
 import { loadCriticalFont } from '@/utils/fontLoader'
 
-const emit = defineEmits(['finished'])
+const emit = defineEmits(['finished', 'hidden'])
 const route = useRoute()
 
 const isAnimating = ref(true)
@@ -58,6 +58,7 @@ const hideIntro = () => {
   if (!isAnimating.value) return
 
   isAnimating.value = false
+  emit('hidden')
 }
 
 const forceHideIntro = () => {

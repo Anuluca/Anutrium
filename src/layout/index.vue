@@ -360,6 +360,7 @@ let pageResizeObserver: ResizeObserver | null = null
 
 const isFullscreen = ref(false)
 const scrollProgress = ref(0)
+let documentHeaderScrollProgress = 0
 const isPageScrollable = ref(false)
 const resolvedPageScrollProgress = computed(
   () => visualStateStore.pageScrollProgressOverride ?? scrollProgress.value
@@ -375,8 +376,17 @@ let headerScrollGeometry: HeaderScrollGeometry[] = []
 let logoTimer: number | null = null
 let layoutTimer: number | null = null
 let islandGeometryUnlockTimer: number | null = null
+let removeRouteGeometryGuard: (() => void) | null = null
 let lockedIslandRouteGeometry: {
   element: HTMLElement
+  position: string
+  top: string
+  left: string
+  width: string
+  height: string
+  margin: string
+} | null = null
+let lockedRouterContainerGeometry: {
   position: string
   top: string
   left: string
@@ -515,6 +525,21 @@ const getHeaderAnimationTargets = () => {
     document.querySelector<HTMLElement>('.mobile-menu-icon')
   if (!header) return mobileMenuIcon ? [mobileMenuIcon] : []
 
+  const mobileHamburger =
+    mobileMenuIcon?.querySelector<HTMLElement>('.hamburger') || null
+  const usesMobileHeader =
+    isMobile.value ||
+    window.matchMedia(
+      '(max-width: 1024px) and (hover: none) and (pointer: coarse)'
+    ).matches
+
+  // 移动端站点标识保持固定几何，避免滚动插值让 Logo 和标题横向形变。
+  if (usesMobileHeader) {
+    return [mobileMenuIcon, mobileHamburger].filter(
+      (element): element is HTMLElement => element instanceof HTMLElement
+    )
+  }
+
   const logo = header.querySelector<HTMLElement>('.logo-box > .logo')
   const logoText = header.querySelector<HTMLElement>('.logo-box > .right')
   const moduleName = header.querySelector<HTMLElement>(
@@ -524,9 +549,6 @@ const getHeaderAnimationTargets = () => {
     (element): element is HTMLElement =>
       element instanceof HTMLElement && element.classList.contains('el-menu')
   )
-  const mobileHamburger =
-    mobileMenuIcon?.querySelector<HTMLElement>('.hamburger') || null
-
   return [
     logo,
     logoText,
@@ -665,9 +687,11 @@ const syncScrollState = () => {
     : 0
   isPageScrollable.value = maxScroll > 1
 
-  const pageProgress = Math.min(1, scrollTop / HEADER_SCROLL_DISTANCE)
+  documentHeaderScrollProgress = Math.min(1, scrollTop / HEADER_SCROLL_DISTANCE)
   const homeProgress = visualStateStore.homeHeaderScrollProgress
-  renderHeaderScrollProgress(Math.max(pageProgress, homeProgress))
+  renderHeaderScrollProgress(
+    Math.max(documentHeaderScrollProgress, homeProgress)
+  )
 }
 
 const handleScroll = () => syncScrollState()
@@ -720,28 +744,58 @@ const refreshScrollState = () => {
 }
 
 const restoreIslandRouteGeometry = () => {
-  if (!lockedIslandRouteGeometry) return
+  if (lockedIslandRouteGeometry) {
+    const { element, position, top, left, width, height, margin } =
+      lockedIslandRouteGeometry
+    Object.assign(element.style, {
+      position,
+      top,
+      left,
+      width,
+      height,
+      margin,
+    })
+    lockedIslandRouteGeometry = null
+  }
 
-  const { element, position, top, left, width, height, margin } =
-    lockedIslandRouteGeometry
-  Object.assign(element.style, {
-    position,
-    top,
-    left,
-    width,
-    height,
-    margin,
-  })
-  lockedIslandRouteGeometry = null
+  if (lockedRouterContainerGeometry && routerContainer.value) {
+    Object.assign(routerContainer.value.style, lockedRouterContainerGeometry)
+    lockedRouterContainerGeometry = null
+  }
 }
 
 const lockIslandRouteGeometry = (leavingElement: Element) => {
+  if (lockedIslandRouteGeometry?.element === leavingElement) return
+
   clearIslandGeometryUnlockTimer()
   restoreIslandRouteGeometry()
   const isIslandRoute = markIslandRouteLeaving(leavingElement)
-  if (!isIslandRoute) return
+  const shouldLockGeometry =
+    isIslandRoute || leavingElement.classList.contains('game-page-layout')
+  if (!shouldLockGeometry) return
 
   if (leavingElement instanceof HTMLElement) {
+    const container = routerContainer.value
+    if (container) {
+      const containerBounds = container.getBoundingClientRect()
+      lockedRouterContainerGeometry = {
+        position: container.style.position,
+        top: container.style.top,
+        left: container.style.left,
+        width: container.style.width,
+        height: container.style.height,
+        margin: container.style.margin,
+      }
+      Object.assign(container.style, {
+        position: 'fixed',
+        top: `${containerBounds.top}px`,
+        left: `${containerBounds.left}px`,
+        width: `${containerBounds.width}px`,
+        height: `${containerBounds.height}px`,
+        margin: '0',
+      })
+    }
+
     const bounds = leavingElement.getBoundingClientRect()
     lockedIslandRouteGeometry = {
       element: leavingElement,
@@ -813,6 +867,13 @@ onMounted(() => {
     pageResizeObserver = new ResizeObserver(handleScroll)
     pageResizeObserver.observe(routerContainer.value)
   }
+  removeRouteGeometryGuard = router.beforeEach((to, from) => {
+    if (to.fullPath === from.fullPath) return true
+
+    const leavingElement = routerContainer.value?.firstElementChild
+    if (leavingElement) lockIslandRouteGeometry(leavingElement)
+    return true
+  })
   window.addEventListener('resize', refreshHeaderScrollGeometry, {
     passive: true,
   })
@@ -830,6 +891,8 @@ onUnmounted(() => {
   unlockMobilePageScroll()
   removePageScrollListener?.()
   removePageScrollListener = null
+  removeRouteGeometryGuard?.()
+  removeRouteGeometryGuard = null
   pageResizeObserver?.disconnect()
   pageResizeObserver = null
   window.removeEventListener('resize', refreshHeaderScrollGeometry)
@@ -846,7 +909,10 @@ watch(
 
 watch(
   () => visualStateStore.homeHeaderScrollProgress,
-  () => syncScrollState(),
+  (progress) => {
+    // 首页翻页不改变文档滚动位置，复用滚动/尺寸事件更新的值，避免逐帧读取布局。
+    renderHeaderScrollProgress(Math.max(documentHeaderScrollProgress, progress))
+  },
   { flush: 'sync' }
 )
 

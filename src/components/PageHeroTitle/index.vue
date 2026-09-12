@@ -60,6 +60,9 @@ const characterAnimationDelay = {
   min: 500,
   max: 1400,
 }
+const mobileViewportQuery = '(max-width: 768px)'
+const tabletViewportQuery =
+  '(max-width: 1199px), (max-width: 1366px) and (any-pointer: coarse)'
 const themeColors: Record<string, string> = {
   ARCHIVE: '#2f7548',
   FLANERIE: '#8a2c1b',
@@ -192,10 +195,9 @@ const syncScrollCollapse = () => {
   if (!titleClip.value || !titleFullHeight) return
 
   const progress = Math.min(1, getPageScrollTop() / collapseDistance)
-  const visibleHeight = titleFullHeight * (1 - progress)
   titleClip.value.style.setProperty(
-    '--page-hero-title-visible-height',
-    `${visibleHeight.toFixed(2)}px`
+    '--page-hero-title-visible-ratio',
+    `${((1 - progress) * 100).toFixed(2)}%`
   )
 }
 
@@ -207,7 +209,20 @@ const measureTitleGeometry = () => {
 
   fitTitleToRow()
   titleFullHeight = titleHeading.value.offsetHeight
-  collapseDistance = Math.max(140, Math.min(280, titleFullHeight * 1.35))
+  const isMobileViewport = window.matchMedia(mobileViewportQuery).matches
+  const isTabletViewport = window.matchMedia(tabletViewportQuery).matches
+
+  if (isMobileViewport) {
+    collapseDistance = Math.max(24, Math.min(56, titleFullHeight * 0.72))
+  } else if (isTabletViewport) {
+    collapseDistance = Math.max(24, Math.min(56, titleFullHeight * 0.45))
+  } else {
+    collapseDistance = Math.max(140, Math.min(280, titleFullHeight * 1.35))
+  }
+  titleClip.value.style.setProperty(
+    '--page-hero-title-collapse-distance',
+    `${collapseDistance.toFixed(2)}px`
+  )
   syncScrollCollapse()
 }
 
@@ -259,6 +274,7 @@ onBeforeUnmount(() => {
 
 .page-hero-title {
   --page-hero-title-font-size: clamp(3.25rem, 11vw, 14rem);
+  --page-hero-title-wipe-feather: clamp(10px, 1.2vw, 18px);
 
   position: sticky;
   top: 120px;
@@ -272,14 +288,28 @@ onBeforeUnmount(() => {
 
   .page-hero-title__clip {
     width: 100%;
-    height: var(
-      --page-hero-title-visible-height,
-      calc(var(--page-hero-title-font-size) * 0.82)
-    );
+    height: calc(var(--page-hero-title-font-size) * 0.82);
     overflow: hidden;
     color: inherit;
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      #000 0,
+      #000 calc(100% - var(--page-hero-title-wipe-feather)),
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      #000 0,
+      #000 calc(100% - var(--page-hero-title-wipe-feather)),
+      transparent 100%
+    );
+    -webkit-mask-position: top;
+    mask-position: top;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: 100% var(--page-hero-title-visible-ratio, 100%);
+    mask-size: 100% var(--page-hero-title-visible-ratio, 100%);
     contain: layout paint style;
-    will-change: height;
   }
 
   h1 {
@@ -403,6 +433,7 @@ onBeforeUnmount(() => {
 @media (max-width: 768px) {
   .page-hero-title {
     --page-hero-title-font-size: 11vw;
+    --page-hero-title-wipe-feather: 8px;
   }
 }
 </style>

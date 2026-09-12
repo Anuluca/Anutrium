@@ -118,6 +118,14 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    watch: {
+      ignored: [
+        '**/.vite-ssg-temp/**',
+        '**/dist/**',
+        '**/playwright-report/**',
+        '**/test-results/**',
+      ],
+    },
   },
   ssgOptions: {
     dirStyle: 'nested',
@@ -176,6 +184,7 @@ export default defineConfig({
       '/island/study-notes',
       '/games/sleepingdogs/bullsAndCows',
       '/games/sleepingdogs/saftybox',
+      '/games/chineseChessCardGames/chineseChess',
       '/ai-playground/arknightxpersona3reload',
     ],
   },

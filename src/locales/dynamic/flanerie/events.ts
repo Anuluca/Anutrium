@@ -5,7 +5,6 @@ export const group = {
     en: 'EVENTS',
   },
   titleEn: 'EVENTS',
-  railLabel: 'EVENTS',
 } as const
 
 const events = [
@@ -13,8 +12,8 @@ const events = [
     id: 'super_wuhan',
     category: 'activity',
     title: {
-      zhCn: '武汉｜宝可梦超级赛',
-      en: 'WUHAN | POKEMON SUPER TOURNAMENT',
+      zhCn: '武汉·宝可梦超级赛',
+      en: 'WUHAN · POKEMON SUPER TOURNAMENT',
     },
     mapLabel: {
       zhCn: '武汉',
@@ -96,8 +95,8 @@ const events = [
     id: 'poke_coco',
     category: 'activity',
     title: {
-      zhCn: '北京｜《剧场版宝可梦：可可》首映会',
-      en: 'BEIJING | POKEMON THE MOVIE: COCO PREMIERE',
+      zhCn: '北京·《剧场版 宝可梦：可可》首映',
+      en: 'BEIJING · POKEMON THE MOVIE: COCO PREMIERE',
     },
     mapLabel: {
       zhCn: '北京',
@@ -179,8 +178,8 @@ const events = [
     id: 'pikachu_costume',
     category: 'activity',
     title: {
-      zhCn: '深圳｜卓悦汇宝可梦见面会',
-      en: 'SHENZHEN | POKEMON MEET-AND-GREET AT ONE AVENUE',
+      zhCn: '深圳·卓悦汇宝可梦见面会',
+      en: 'SHENZHEN · POKEMON MEET-AND-GREET AT ONE AVENUE',
     },
     mapLabel: {
       zhCn: '深圳',
@@ -289,7 +288,7 @@ const events = [
     id: 'live_zhangxueyou60+',
     category: 'activity',
     title: {
-      zhCn: '南昌｜张学友“60+”演唱会',
+      zhCn: '南昌·张学友“60+”演唱会',
       en: '',
     },
     mapLabel: {
@@ -367,8 +366,8 @@ const events = [
     id: 'dyna_gaia',
     category: 'activity',
     title: {
-      zhCn: '武汉｜戴拿&盖亚见面会',
-      en: 'WUHAN | ULTRAMAN DYNA & GAIA MEET-AND-GREET',
+      zhCn: '武汉·戴拿&盖亚见面会',
+      en: 'WUHAN · ULTRAMAN DYNA & GAIA MEET-AND-GREET',
     },
     mapLabel: {
       zhCn: '武汉',
@@ -459,8 +458,8 @@ const events = [
     id: 'ginga',
     category: 'activity',
     title: {
-      zhCn: '深圳｜银河奥特曼见面会',
-      en: 'SHENZHEN | ULTRAMAN GINGA MEET-AND-GREET',
+      zhCn: '深圳·银河奥特曼见面会',
+      en: 'SHENZHEN · ULTRAMAN GINGA MEET-AND-GREET',
     },
     mapLabel: {
       zhCn: '深圳',
@@ -569,8 +568,8 @@ const events = [
     id: 'zet',
     category: 'activity',
     title: {
-      zhCn: '深圳｜泽塔奥特曼见面会',
-      en: 'SHENZHEN | ULTRAMAN Z MEET-AND-GREET',
+      zhCn: '深圳·泽塔奥特曼见面会',
+      en: 'SHENZHEN · ULTRAMAN Z MEET-AND-GREET',
     },
     mapLabel: {
       zhCn: '深圳',
@@ -841,8 +840,8 @@ const events = [
     id: 'zero',
     category: 'activity',
     title: {
-      zhCn: '深圳｜赛罗奥特曼见面会',
-      en: 'SHENZHEN | ULTRAMAN ZERO MEET-AND-GREET',
+      zhCn: '深圳·赛罗奥特曼见面会',
+      en: 'SHENZHEN · ULTRAMAN ZERO MEET-AND-GREET',
     },
     mapLabel: {
       zhCn: '深圳',

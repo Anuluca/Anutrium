@@ -2,6 +2,7 @@
 /* eslint-disable simple-import-sort/imports */
 import layout from './layout/index.vue'
 import FooterCom from '@/components/FooterCom/index.vue'
+import MobileExperienceAlert from '@/components/MobileExperienceAlert/index.vue'
 import {
   computed,
   defineAsyncComponent,
@@ -13,7 +14,12 @@ import { useHead } from '@vueuse/head'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { visualState } from './stores'
-import { getSeoMeta, syncSeoMeta, type SeoLocale } from '@/router'
+import {
+  getSeoMeta,
+  syncPageTheme,
+  syncSeoMeta,
+  type SeoLocale,
+} from '@/router'
 import { installExternalLinkTracking } from '@/utils/analytics'
 import { startSmoothScroll, stopSmoothScroll } from '@/utils/smoothScroll'
 
@@ -37,6 +43,7 @@ let removeExternalLinkTracking: (() => void) | null = null
 let resizeRafId: number | null = null
 let entryAnimationTimer: number | null = null
 const entryAnimationReady = ref(false)
+const entryOverlayHidden = ref(false)
 
 interface VlogSeoItem {
   id: string
@@ -145,6 +152,10 @@ const startAnimationFinished = () => {
   }, 250)
 }
 
+const startAnimationHidden = () => {
+  entryOverlayHidden.value = true
+}
+
 onMounted(() => {
   setRootFontSize()
   window.addEventListener('resize', scheduleRootFontSizeUpdate, {
@@ -153,6 +164,7 @@ onMounted(() => {
   const savedTheme = localStorage.getItem('theme')
   visualStateStore.setTheme(savedTheme === 'light' ? 'light' : 'dark')
   syncSeoMeta(route)
+  syncPageTheme(route)
   removeExternalLinkTracking = installExternalLinkTracking()
   startSmoothScroll()
 })
@@ -168,7 +180,10 @@ onUnmounted(() => {
 
 <template>
   <CursorMove />
-  <StartAnimation @finished="startAnimationFinished" />
+  <StartAnimation
+    @finished="startAnimationFinished"
+    @hidden="startAnimationHidden"
+  />
   <layout :entry-active="entryAnimationReady" />
   <PetTeaserLink
     v-if="!['/pet', '/404', '/island', '/test'].includes(route.path)"
@@ -181,6 +196,7 @@ onUnmounted(() => {
   />
   <FooterCom :entry-active="entryAnimationReady" />
   <BackController :entry-active="entryAnimationReady" />
+  <MobileExperienceAlert v-if="entryOverlayHidden" />
 </template>
 
 <style scoped lang="less">

@@ -145,22 +145,33 @@ test('mobile game layout resists late-loaded generic page styles', async ({
     const stage = document.querySelector<HTMLElement>('.tool-page-stage')!
     const header = document.querySelector<HTMLElement>('.detail-page-header')!
     const content = document.querySelector<HTMLElement>('.tool-page-content')!
+    const workspace = document.querySelector<HTMLElement>(
+      '.game-page-workspace'
+    )!
     const sidebar = document.querySelector<HTMLElement>('.game-page-sidebar')!
     const headerRect = header.getBoundingClientRect()
     const contentRect = content.getBoundingClientRect()
 
     return {
-      contentHeaderGap: headerRect.left - contentRect.right,
+      contentTop: contentRect.top,
+      headerBottom: headerRect.bottom,
+      headerScreenHeight: headerRect.height,
       headerScreenWidth: headerRect.width,
       sidebarTransform: getComputedStyle(sidebar).transform,
       stageTransform: getComputedStyle(stage).transform,
+      viewportWidth: window.innerWidth,
+      workspaceTransform: getComputedStyle(workspace).transform,
     }
   })
 
   expect(geometry.stageTransform).toBe('none')
   expect(geometry.sidebarTransform).toBe('none')
-  expect(geometry.headerScreenWidth).toBeLessThanOrEqual(47)
-  expect(geometry.contentHeaderGap).toBeLessThanOrEqual(13)
+  expect(geometry.headerScreenWidth).toBeGreaterThan(
+    geometry.viewportWidth * 0.8
+  )
+  expect(geometry.headerScreenHeight).toBeGreaterThan(48)
+  expect(geometry.contentTop).toBeGreaterThanOrEqual(geometry.headerBottom - 1)
+  expect(geometry.workspaceTransform).not.toBe('none')
 })
 
 test('safety box matches the bulls and cows game top spacing', async ({
@@ -312,4 +323,140 @@ test('safety box keeps its geometry stable while leaving the route', async ({
   expect(geometry.pageLeftShift).toBeLessThanOrEqual(1)
   expect(geometry.containerTopShift).toBeLessThanOrEqual(1)
   expect(geometry.containerLeftShift).toBeLessThanOrEqual(1)
+})
+
+test('sleeping dogs games share the archive cabinet surfaces', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium')
+
+  const readSurfaces = async (path: string) => {
+    await page.goto(path, { waitUntil: 'domcontentloaded' })
+    await expect(page.locator('.game-page-canvas')).toBeVisible({
+      timeout: 20_000,
+    })
+
+    return page.evaluate(() => {
+      const canvas = document.querySelector<HTMLElement>('.game-page-canvas')!
+      const panel = document.querySelector<HTMLElement>('.game-page-panel')!
+      const action = document.querySelector<HTMLElement>('.game-page-action')!
+
+      return {
+        actionBackground: getComputedStyle(action).backgroundColor,
+        actionBorder: getComputedStyle(action).borderTopColor,
+        canvasBorder: getComputedStyle(canvas).borderTopColor,
+        panelBackground: getComputedStyle(panel).backgroundColor,
+        panelBorder: getComputedStyle(panel).borderTopColor,
+      }
+    })
+  }
+
+  const bullsAndCows = await readSurfaces('/games/sleepingdogs/bullsAndCows')
+  const safetyBox = await readSurfaces(SAFETY_BOX_PATH)
+
+  expect(safetyBox).toEqual(bullsAndCows)
+  const archiveTab = page.locator('.game-page-panel__tab')
+  await expect(archiveTab).toHaveText('游戏档案')
+  await expect(archiveTab).toHaveCSS('letter-spacing', 'normal')
+  await expect
+    .poll(() => archiveTab.evaluate((element) => element.clientWidth))
+    .toBeLessThan(72)
+  await expect(page.locator('.game-page-machine__plate')).toHaveCount(0)
+
+  const actions = page.locator('.game-page-actions > *')
+  await expect(actions).toHaveCount(4)
+  for (const action of await actions.all()) {
+    await action.hover()
+    await expect(action).toHaveCSS('background-color', 'rgb(226, 52, 86)')
+    await expect(action).toHaveCSS('color', 'rgb(0, 0, 0)')
+    await expect(action.locator('svg')).toHaveCSS('color', 'rgb(0, 0, 0)')
+  }
+})
+
+test('mobile portrait page fullscreen stays landscape and exposes exit', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'mobile-chrome')
+
+  await page.goto('/games/sleepingdogs/bullsAndCows', {
+    waitUntil: 'domcontentloaded',
+  })
+  await expect(page.locator('.game-page-canvas')).toBeVisible({
+    timeout: 20_000,
+  })
+
+  const pageFullscreen = page.getByRole('button', { name: '网页全屏' })
+  await expect(pageFullscreen).toHaveAttribute('aria-pressed', 'false')
+  await pageFullscreen.click()
+
+  const canvas = page.locator('.game-page-canvas--page-fullscreen')
+  const exit = page.getByRole('button', { name: '退出全屏' })
+  await expect(canvas).toBeVisible()
+  await expect(exit).toBeVisible()
+
+  const geometry = await page.evaluate(() => {
+    const canvas = document.querySelector<HTMLElement>(
+      '.game-page-canvas--page-fullscreen'
+    )!
+    const exit = document.querySelector<HTMLElement>(
+      '.fullscreen-exit-control button'
+    )!
+    const canvasRect = canvas.getBoundingClientRect()
+    const exitRect = exit.getBoundingClientRect()
+
+    return {
+      canvasHeight: canvasRect.height,
+      canvasWidth: canvasRect.width,
+      exitInside:
+        exitRect.top >= -1 &&
+        exitRect.left >= -1 &&
+        exitRect.right <= window.innerWidth + 1 &&
+        exitRect.bottom <= window.innerHeight + 1,
+      exitSize: Math.min(exitRect.width, exitRect.height),
+      viewportHeight: window.innerHeight,
+      viewportWidth: window.innerWidth,
+    }
+  })
+
+  expect(
+    Math.abs(geometry.canvasWidth - geometry.viewportWidth)
+  ).toBeLessThanOrEqual(1)
+  expect(
+    Math.abs(geometry.canvasHeight - geometry.viewportHeight)
+  ).toBeLessThanOrEqual(1)
+  expect(geometry.exitInside).toBe(true)
+  expect(geometry.exitSize).toBeGreaterThanOrEqual(42)
+
+  await exit.click()
+  await expect(canvas).toHaveCount(0)
+})
+
+test('mobile landscape layout does not rotate twice', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'mobile-chrome')
+  await page.setViewportSize({ width: 915, height: 412 })
+  await page.goto(SAFETY_BOX_PATH, { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.safety-box-stage')).toBeVisible({
+    timeout: 20_000,
+  })
+
+  const geometry = await page.evaluate(() => {
+    const layout = document.querySelector<HTMLElement>('.game-page-layout')!
+    const workspace = document.querySelector<HTMLElement>(
+      '.game-page-workspace'
+    )!
+    const workspaceRect = workspace.getBoundingClientRect()
+
+    return {
+      bottom: workspaceRect.bottom,
+      height: workspaceRect.height,
+      transform: getComputedStyle(layout).transform,
+      viewportHeight: window.innerHeight,
+    }
+  })
+
+  expect(geometry.transform).toBe('none')
+  expect(geometry.height).toBeGreaterThan(280)
+  expect(geometry.bottom).toBeLessThanOrEqual(geometry.viewportHeight + 1)
 })

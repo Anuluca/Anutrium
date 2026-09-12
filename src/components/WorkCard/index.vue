@@ -1,475 +1,348 @@
 <template>
-  <div
+  <button
+    type="button"
     class="shared-work-card"
-    data-magnetic
-    role="button"
-    tabindex="0"
+    :class="{
+      'shared-work-card--always-visible': displayMode === 'always-visible',
+      'shared-work-card--grid-background': background === 'grid',
+    }"
     @click="emit('select', work)"
-    @keydown.enter.prevent="emit('select', work)"
-    @keydown.space.prevent="emit('select', work)"
   >
-    <div class="work-base">
-      <img :src="work.img" :alt="work.title" loading="lazy" decoding="async" />
-      <div class="work-hud-overlay" />
-      <div class="scanlines" />
-    </div>
-
-    <div class="work-content">
-      <div class="work-top-info">
-        <div class="company-row">
-          <div class="company-logo">
-            <img
-              :src="work.logo"
-              :alt="work.company"
-              loading="lazy"
-              decoding="async"
-            />
-          </div>
-          <div class="company-details">
-            <p class="work-subtitle">{{ work.company }}</p>
-            <p class="ref-num">REF. {{ referenceNumber }}</p>
-          </div>
-        </div>
-
-        <div class="work-tags">
-          <span v-for="tag in work.tags" :key="tag" class="tech-label">
-            {{ tag }}
-          </span>
-        </div>
-      </div>
-
-      <div class="work-title-row">
-        <h3 class="work-name" :class="{ 'cn-font': locale === 'zhCn' }">
-          {{ work.title }}
-        </h3>
-        <div class="project-ref-id">
-          <div>ID. {{ work.id }}</div>
-          <div v-if="work.time" class="time">{{ work.time }}</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="work-corner work-corner--tl" />
-    <div class="work-corner work-corner--tr" />
-    <div class="work-corner work-corner--bl" />
-    <div class="work-corner work-corner--br" />
-    <div class="tactical-text">[MENTOR_NV42]</div>
-  </div>
+    <img
+      v-if="work.img && background !== 'grid'"
+      class="work-card-image"
+      :src="work.img"
+      :alt="work.title"
+      loading="lazy"
+      decoding="async"
+    />
+    <span class="work-card-info">
+      <small v-if="work.company">{{ work.company }}</small>
+      <strong>{{ work.title }}</strong>
+      <span v-if="work.tags?.length" class="work-card-stack">
+        <span
+          v-for="(tag, index) in work.tags"
+          :key="tag"
+          class="work-card-stack__tag"
+          :style="{ '--work-card-stack-index': index }"
+        >
+          {{ tag }}
+        </span>
+      </span>
+      <small v-if="work.time" class="work-card-info__time">
+        {{ work.time }}
+      </small>
+    </span>
+    <i class="work-card-corner work-card-corner--tl" />
+    <i class="work-card-corner work-card-corner--tr" />
+    <i class="work-card-corner work-card-corner--bl" />
+    <i class="work-card-corner work-card-corner--br" />
+  </button>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useI18n } from 'vue-i18n'
+import type { WorkCardItem } from '@/types/archive'
 
-interface WorkCardItem {
-  id: string
-  title: string
-  tags: string[]
-  img: string
-  company: string
-  logo: string
-  time?: string
-}
-
-const props = defineProps<{
+defineProps<{
   work: WorkCardItem
-  index: number
+  displayMode?: 'always-visible'
+  background?: 'grid'
 }>()
 
 const emit = defineEmits<{
   (event: 'select', work: WorkCardItem): void
 }>()
-
-const { locale } = useI18n()
-
-const referenceNumber = computed(() => `${props.index + 1}A`)
 </script>
 
 <style lang="less" scoped>
 .shared-work-card {
   position: relative;
-  min-width: 0;
-  aspect-ratio: 16 / 9;
   display: flex;
+  min-width: 0;
+  border: none;
+  padding: 0;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(13, 9, 18, 0.8);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  appearance: none;
+  aspect-ratio: 16 / 10;
+  background: #0d0d0e;
+  box-shadow: 0 0.35rem 0.9rem rgba(0, 0, 0, 0.22);
   cursor: pointer;
-  transform-style: preserve-3d;
-  transition: transform 0.46s cubic-bezier(0.16, 1, 0.3, 1),
-    border-color 0.28s ease, box-shadow 0.46s ease;
 
-  &::before {
+  &::after {
     position: absolute;
-    z-index: 4;
+    inset: 0;
+    z-index: 1;
     content: '';
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.045) 1px,
+      transparent 1px
+    );
+    background-size: 100% 4px;
+    opacity: 0.68;
     pointer-events: none;
   }
+}
 
-  &::before {
-    inset: 8px;
-    border: 1px solid rgba(226, 52, 86, 0);
-    opacity: 0;
-    transform: scale(0.965);
-    transition: opacity 0.25s ease, border-color 0.25s ease,
-      transform 0.46s cubic-bezier(0.16, 1, 0.3, 1);
+.work-card-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.62);
+  transition: filter 280ms ease-out,
+    transform 1200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.work-card-info {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  min-height: 70%;
+  box-sizing: border-box;
+  padding: clamp(2rem, 4vw, 4rem) clamp(0.5rem, 1vw, 0.9rem)
+    clamp(0.5rem, 1vw, 0.9rem);
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  color: #fff;
+  font-family: 'alibaba-puhuiti', sans-serif;
+  text-align: center;
+  z-index: 2;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(17, 17, 17, 0.28) 34%,
+    rgba(17, 17, 17, 0.78) 72%,
+    #111 100%
+  );
+  opacity: 0;
+  transition: opacity 160ms ease-out;
+}
+
+.work-card-info strong {
+  font-size: clamp(0.68rem, 0.88vw, 0.9rem);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.work-card-info small {
+  color: #54a86c;
+  font-family: 'cn-custom', sans-serif;
+  font-size: clamp(0.38rem, 0.48vw, 0.5rem);
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.work-card-info small:first-child {
+  margin-bottom: 0.125rem;
+}
+
+.work-card-info small:last-child {
+  margin-top: 0.125rem;
+}
+
+.work-card-info__time {
+  word-spacing: 0.35em;
+}
+
+.work-card-stack {
+  display: flex;
+  max-height: 0;
+  margin-top: 0;
+  width: 100%;
+  align-content: flex-start;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.2rem;
+  flex-wrap: wrap;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 240ms ease-out, margin 200ms ease-out,
+    opacity 180ms ease-out;
+}
+
+.work-card-stack__tag {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  padding: 2px 6px;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: 'cn-custom', monospace;
+  font-size: clamp(0.36rem, 0.42vw, 0.46rem);
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  line-height: 0.56rem;
+  text-transform: uppercase;
+  opacity: 0;
+  transform: scale(0.55);
+  transform-origin: center top;
+  transition: opacity 160ms ease-out,
+    transform 260ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.work-card-corner {
+  position: absolute;
+  z-index: 3;
+  width: 0.25rem;
+  height: 0.25rem;
+  background: #54a86c;
+  opacity: 0;
+  transform: scale(0);
+  transition: opacity 160ms ease-out, transform 180ms ease-out;
+  pointer-events: none;
+
+  &--tl {
+    top: 0.55rem;
+    left: 0.55rem;
   }
 
-  &:focus-visible {
-    border-color: rgba(226, 52, 86, 0.72);
-    outline: 2px solid rgba(226, 52, 86, 0.28);
-    outline-offset: 2px;
+  &--tr {
+    top: 0.55rem;
+    right: 0.55rem;
+  }
+
+  &--bl {
+    bottom: 0.55rem;
+    left: 0.55rem;
+  }
+
+  &--br {
+    right: 0.55rem;
+    bottom: 0.55rem;
+  }
+}
+
+.shared-work-card--always-visible {
+  .work-card-info {
+    min-height: 78%;
+  }
+
+  .work-card-info strong {
+    font-size: clamp(0.95rem, 1.25vw, 1.35rem);
+  }
+
+  .work-card-info small {
+    font-size: clamp(0.5rem, 0.65vw, 0.68rem);
+  }
+
+  .work-card-info,
+  .work-card-corner {
+    opacity: 1;
+  }
+
+  .work-card-corner {
+    transform: scale(1);
+    transition: opacity 180ms ease-out, transform 180ms ease-out,
+      width 720ms cubic-bezier(0.16, 1, 0.3, 1),
+      height 720ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+.shared-work-card--grid-background {
+  background: linear-gradient(135deg, rgba(84, 168, 108, 0.12), transparent 42%),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    rgba(13, 9, 18, 0.78);
+  background-size: auto, 22px 22px, 22px 22px, auto;
+
+  .work-card-info {
+    top: 0;
+    min-height: 0;
+    padding: 1.175rem 0.9rem 0.825rem;
+    justify-content: center;
+  }
+
+  .work-card-corner {
+    opacity: 0.5;
+  }
+}
+
+.shared-work-card:not(.shared-work-card--always-visible) {
+  box-sizing: border-box;
+
+  .work-card-info small:first-child {
+    margin-bottom: 0.05rem;
+  }
+
+  .work-card-info small:last-child {
+    margin-top: 0.05rem;
   }
 }
 
 @media (hover: hover) and (pointer: fine) {
   .shared-work-card:hover {
-    border-color: rgba(226, 52, 86, 0.84);
-    box-shadow: 0 24px 54px rgba(0, 0, 0, 0.42);
+    .work-card-image {
+      filter: brightness(1);
+      transform: scale(1.06);
+    }
 
-    &::before {
-      border-color: rgba(226, 52, 86, 0.44);
+    .work-card-info,
+    .work-card-corner {
+      opacity: 1;
+    }
+
+    .work-card-stack {
+      max-height: 2.5rem;
+      margin-top: 0.2rem;
+      opacity: 1;
+    }
+
+    .work-card-stack__tag {
       opacity: 1;
       transform: scale(1);
+      transition-delay: calc(var(--work-card-stack-index) * 70ms);
+    }
+  }
+
+  .shared-work-card--always-visible:hover {
+    .work-card-image {
+      filter: brightness(0.62);
     }
 
-    .work-base img {
-      filter: brightness(0.76) saturate(0.88) contrast(1.08);
+    .work-card-corner {
+      width: 0.5rem;
+      height: 0.5rem;
+      opacity: 0.5;
+    }
+  }
+
+  .shared-work-card:not(.shared-work-card--always-visible):hover {
+    .work-card-corner {
+      transform: scale(1);
+    }
+  }
+
+  .shared-work-card--grid-background:hover .work-card-corner {
+    opacity: 0.5;
+  }
+}
+
+@media screen and (max-aspect-ratio: @ratio-threshold),
+  screen and (max-width: 1024px) and (hover: none) and (pointer: coarse) {
+  .shared-work-card--always-visible {
+    &:not(.shared-work-card--grid-background) .work-card-info {
+      padding-bottom: 0.75rem;
     }
 
-    .work-hud-overlay::after {
-      opacity: 0.48;
-      transform: perspective(500px) rotateX(58deg) translateY(0);
+    .work-card-info strong {
+      font-size: 1.15rem;
     }
 
-    .scanlines {
-      opacity: 0.86;
-    }
-
-    .work-name {
-      color: #fff;
-      text-shadow: 0 0 24px rgba(226, 52, 86, 0.32);
-    }
-
-    .work-subtitle,
-    .ref-num,
-    .project-ref-id div {
-      color: rgba(255, 255, 255, 0.78);
-    }
-
-    .tech-label,
-    .company-logo {
-      border-color: rgba(255, 255, 255, 0.42);
-      background-color: rgba(10, 5, 10, 0.56);
-    }
-
-    .tech-label {
-      color: rgba(255, 255, 255, 0.9);
-    }
-
-    .work-corner {
-      width: 23px;
-      height: 23px;
-      border-color: #fff;
-      border-width: 2px;
-    }
-
-    .work-corner--tl {
-      transform: translate(-7px, -7px);
-    }
-
-    .work-corner--tr {
-      transform: translate(7px, -7px);
-    }
-
-    .work-corner--bl {
-      transform: translate(-7px, 7px);
-    }
-
-    .work-corner--br {
-      transform: translate(7px, 7px);
-    }
-
-    .tactical-text {
-      color: rgba(255, 255, 255, 0.62);
+    .work-card-info small {
+      font-size: 0.6rem;
     }
   }
 }
 
-.work-base {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  z-index: 0;
-
-  img {
-    width: 100%;
-    height: 100%;
-    display: block;
-    object-fit: cover;
-    filter: brightness(0.6) saturate(0.7);
-    transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  }
-}
-
-.work-hud-overlay {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  background: linear-gradient(
-    to right,
-    rgba(10, 5, 10, 0.5),
-    rgba(10, 5, 10, 0.9)
-  );
-  z-index: 1;
-
-  &::after {
-    position: absolute;
-    content: '';
-    pointer-events: none;
-  }
-
-  &::after {
-    right: -10%;
-    bottom: -58%;
-    left: -10%;
-    height: 76%;
-    opacity: 0;
-    background-image: linear-gradient(
-        rgba(226, 52, 86, 0.18) 1px,
-        transparent 1px
-      ),
-      linear-gradient(90deg, rgba(226, 52, 86, 0.18) 1px, transparent 1px);
-    background-size: 28px 22px;
-    transform: perspective(500px) rotateX(58deg) translateY(24px);
-    transform-origin: center bottom;
-    transition: opacity 0.3s ease, transform 0.5s ease;
-  }
-}
-
-.scanlines {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0.04) 1px,
-    transparent 1px
-  );
-  background-size: 100% 4px;
-  opacity: 0.6;
-  transition: opacity 0.25s ease;
-  z-index: 2;
-}
-
-.work-content {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: clamp(18px, 1.55vw, 30px);
-  z-index: 2;
-}
-
-.work-top-info {
-  min-width: 0;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: clamp(10px, 1vw, 20px);
-}
-
-.company-row {
-  min-width: 0;
-  flex: 1 1 auto;
-  display: flex;
-  align-items: center;
-  gap: clamp(8px, 0.8vw, 15px);
-}
-
-.company-details {
-  min-width: 0;
-}
-
-.company-logo {
-  width: clamp(34px, 2.6vw, 50px);
-  height: clamp(34px, 2.6vw, 50px);
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(0, 0, 0, 0.3);
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    filter: brightness(0.8);
-  }
-}
-
-.work-subtitle,
-.ref-num {
-  font-family: 'cn-custom', monospace;
-}
-
-.work-subtitle {
-  overflow: hidden;
-  color: var(--opacity-color);
-  font-size: clamp(0.52rem, 0.55vw, 0.65rem);
-  letter-spacing: 0.5px;
-  line-height: 1.4;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.ref-num {
-  margin-top: 2px;
-  color: rgba(255, 255, 255, 0.4);
-  font-size: 0.55rem;
-}
-
-.work-tags {
-  min-width: 0;
-  max-width: 48%;
-  flex: 0 1 auto;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: clamp(4px, 0.4vw, 8px);
-}
-
-.tech-label {
-  padding: 3px clamp(6px, 0.5vw, 10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.6);
-  font-family: 'cn-custom', monospace;
-  font-size: clamp(0.45rem, 0.46vw, 0.55rem);
-  text-transform: uppercase;
-  transition: color 0.25s ease, border-color 0.25s ease,
-    background-color 0.25s ease;
-}
-
-.work-title-row {
-  min-width: 0;
-  width: 100%;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  margin-top: auto;
-}
-
-.work-name {
-  min-width: 0;
-  flex: 1 1 auto;
-  margin-right: 15px;
-  color: var(--text-color);
-  font-family: 'anton', sans-serif;
-  font-size: 40px;
-  line-height: 1.1;
-  overflow-wrap: anywhere;
-  transition: color 0.25s ease, text-shadow 0.3s ease;
-}
-
-.project-ref-id {
-  flex: 0 0 auto;
-
-  div {
-    color: rgba(255, 255, 255, 0.3);
-    font-family: 'Anton', monospace;
-    font-size: 0.6rem;
-    text-align: right;
-
-    &.time {
-      color: rgb(40, 40, 40);
-      background-color: rgba(255, 255, 255, 0.3);
-    }
-  }
-}
-
-.work-corner {
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  pointer-events: none;
-  transition: all 0.4s ease;
-  z-index: 3;
-
-  &--tl {
-    top: 15px;
-    left: 15px;
-    border-right: 0;
-    border-bottom: 0;
-  }
-
-  &--tr {
-    top: 15px;
-    right: 15px;
-    border-bottom: 0;
-    border-left: 0;
-  }
-
-  &--bl {
-    bottom: 15px;
-    left: 15px;
-    border-top: 0;
-    border-right: 0;
-  }
-
-  &--br {
-    right: 15px;
-    bottom: 15px;
-    border-top: 0;
-    border-left: 0;
-  }
-}
-
-.tactical-text {
-  position: absolute;
-  top: 5px;
-  right: 30px;
-  color: rgba(255, 255, 255, 0.1);
-  font-family: 'cn-custom', monospace;
-  font-size: 0.5rem;
-  pointer-events: none;
-  transition: color 0.25s ease;
-  z-index: 3;
-}
-
-@media (max-width: 768px) {
-  .shared-work-card {
-    aspect-ratio: auto;
-    min-height: 280px;
-  }
-
-  .work-content {
-    width: 100%;
-    height: 100%;
-    padding: 30px 20px;
-  }
-
-  .work-top-info {
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .company-logo {
-    width: 32px;
-    height: 32px;
-  }
-
-  .work-tags {
-    justify-content: flex-start;
-  }
-
-  .work-name {
-    font-size: 1.6rem;
+@media (prefers-reduced-motion: reduce) {
+  .work-card-image,
+  .work-card-corner {
+    transition-duration: 0.01ms;
   }
 }
 </style>

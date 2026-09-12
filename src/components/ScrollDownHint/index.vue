@@ -214,6 +214,16 @@ onUnmounted(() => {
   }
 }
 
+@media screen and (max-aspect-ratio: @ratio-threshold),
+  screen and (max-width: 1024px) and (hover: none) and (pointer: coarse) {
+  .scroll-down-hint.no-rem {
+    bottom: var(
+      --home-mobile-explore-bottom,
+      max(clamp(32px, 5dvh, 52px), calc(env(safe-area-inset-bottom) + 24px))
+    );
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .scroll-down-hint.no-rem {
     transition-duration: 0.01ms;

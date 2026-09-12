@@ -13,6 +13,14 @@ const homeDynamic = {
       en: '.',
     },
   },
+  archiveSubtitle: {
+    zhCn: '我参与的项目',
+    en: 'PROJECTS I CONTRIBUTED TO',
+  },
+  flanerieSubtitle: {
+    zhCn: '我喜欢体验各地的人文生活',
+    en: 'I LIKE EXPERIENCING LOCAL CULTURE AND EVERYDAY LIFE',
+  },
   aboutDescription: {
     zhCn: 'Anutrium记录着我的—，我想把它们留存在网络中。',
     en: 'Anutrium documents my —, and I want to preserve them on the web.',

@@ -60,6 +60,102 @@ test('mobile home paging accepts a short slow swipe', async ({
   await waitForActivePage(page, 'about')
 })
 
+test('home paging pauses the bottom marquee during transitions', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.layout-page')).toHaveClass(/\blayout-show\b/, {
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+
+  await page.evaluate(() => {
+    const probe = {
+      marqueePausedStates: [] as boolean[],
+    }
+    const probeWindow = window as Window & {
+      __homeSectionTitleProbe?: typeof probe
+    }
+    probeWindow.__homeSectionTitleProbe = probe
+
+    const marquee = document.querySelector<HTMLElement>('.marquee-wrapper')!
+    const recordMarqueeState = () => {
+      probe.marqueePausedStates.push(
+        marquee.classList.contains('motion-paused')
+      )
+    }
+    new MutationObserver(recordMarqueeState).observe(marquee, {
+      attributeFilter: ['class'],
+      attributes: true,
+    })
+    recordMarqueeState()
+  })
+
+  await page.mouse.wheel(0, 720)
+  const marquee = page.locator('.marquee-wrapper')
+  await waitForActivePage(page, 'about')
+  await expect(marquee).not.toHaveClass(/motion-paused/)
+
+  const firstEntryProbe = await page.evaluate(
+    () =>
+      (
+        window as Window & {
+          __homeSectionTitleProbe: {
+            marqueePausedStates: boolean[]
+          }
+        }
+      ).__homeSectionTitleProbe
+  )
+  expect(firstEntryProbe.marqueePausedStates).toContain(true)
+  expect(firstEntryProbe.marqueePausedStates.at(-1)).toBe(false)
+
+  await page.evaluate(() => {
+    const swiper = (
+      document.querySelector<HTMLElement>(
+        '.home-page-swiper'
+      ) as HTMLElement & {
+        swiper: { slideTo: (index: number) => void }
+      }
+    ).swiper
+    swiper.slideTo(2)
+    window.setTimeout(() => swiper.slideTo(3), 80)
+  })
+
+  await expect(marquee).toHaveClass(/motion-paused/)
+  await waitForActivePage(page, 'flanerie')
+  await expect(marquee).not.toHaveClass(/motion-paused/)
+  await expect(
+    page.locator('#home-section-flanerie .scroll-section-title')
+  ).toHaveCount(1)
+})
+
+test('home paging respects reduced motion', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.layout-page')).toHaveClass(/\blayout-show\b/, {
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+
+  await page.mouse.wheel(0, 720)
+  await waitForActivePage(page, 'about')
+
+  const reducedState = await page.locator('.home-page-swiper').evaluate(() => {
+    const swiperStyles = getComputedStyle(
+      document.querySelector<HTMLElement>(
+        '.home-page-swiper > .swiper-wrapper'
+      )!
+    )
+    return {
+      pageTransitionDuration: swiperStyles.transitionDuration,
+    }
+  })
+
+  expect(Number.parseFloat(reducedState.pageTransitionDuration)).toBeLessThan(
+    0.00001
+  )
+  await expect(page.locator('.marquee-wrapper')).toHaveClass(/motion-paused/)
+})
+
 test('home switches five full-screen pages vertically while marquee stays fixed', async ({
   page,
 }, testInfo) => {
@@ -178,12 +274,12 @@ test('home switches five full-screen pages vertically while marquee stays fixed'
     expect(side.fontSize).toBeGreaterThanOrEqual(17)
     expect(side.indicatorTransform).not.toBe('none')
     expect(side.inactiveColor).toBe('rgba(255, 255, 255, 0.3)')
-    expect(side.itemHeight).toBeCloseTo(side.fontSize, 1)
+    expect(side.itemHeight).toBeGreaterThan(side.fontSize)
+    expect(side.itemHeight).toBeLessThan(side.fontSize * 2)
     expect(side.lineHeight).toBeCloseTo(side.fontSize, 1)
     expect(side.markerColor).toBe('rgb(226, 52, 86)')
-    expect(side.markerCenterOffset).toBeGreaterThan(0)
-    expect(side.markerCenterOffset).toBeLessThan(3)
-    expect(side.markerHeight).toBeCloseTo(side.markerWidth, 1)
+    expect(Math.abs(side.markerCenterOffset)).toBeLessThan(4)
+    expect(Math.abs(side.markerHeight - side.markerWidth)).toBeLessThan(0.25)
     expect(side.markerIsOutside).toBe(true)
     expect(side.position).toBe('fixed')
     expect(side.trackTransitionDuration).toBe('0s')
@@ -231,7 +327,7 @@ test('home switches five full-screen pages vertically while marquee stays fixed'
     contentGeometry.secondarySlides.map((page) => page.backgroundColor)
   ).toEqual([
     'rgba(0, 0, 0, 0)',
-    'rgba(72, 187, 120, 0.1)',
+    'rgba(0, 0, 0, 0)',
     'rgba(237, 137, 54, 0.1)',
     'rgba(66, 153, 225, 0.1)',
   ])

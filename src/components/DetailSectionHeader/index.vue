@@ -31,20 +31,31 @@
   }
 
   &__number {
-    color: rgba(226, 52, 86, 0.55);
-    font-family: 'cn-custom', 'Courier New', monospace;
-    font-size: 0.68rem;
-    font-weight: 900;
+    display: inline-flex;
+    align-items: center;
+    align-self: center;
+    justify-content: center;
+    color: transparent;
+    font-family: 'anton', monospace;
+    font-size: 0.76rem;
+    line-height: 1;
+    text-align: center;
+    -webkit-text-stroke: 1px #e23456;
+    text-shadow: 0 0 10px rgba(226, 52, 87, 0.27);
   }
 
   &__label {
+    display: inline-flex;
+    align-items: center;
     margin-left: 5px;
     color: #e23456;
     font-family: 'alibaba-puhuiti', sans-serif;
     font-size: 0.68rem;
     font-weight: 900;
     letter-spacing: 1px;
+    line-height: 1;
     text-transform: uppercase;
+    transform: translateY(0.08em);
   }
 
   &__meta {
@@ -55,6 +66,12 @@
     font-family: 'cn-custom', 'Courier New', monospace;
     font-size: 0.56rem;
     font-weight: 100;
+
+    :deep(> span:first-child) {
+      color: #e23456 !important;
+      font-weight: 900;
+      -webkit-text-fill-color: #e23456;
+    }
   }
 }
 </style>
