@@ -23,17 +23,20 @@
               <SectionCount :count="group.items.length" />
             </template>
             <div class="vlog-grid">
-              <VlogCard
+              <div
                 v-for="(vlog, vlogIndex) in group.items"
                 :id="`vlog-${vlog.id}`"
                 :key="vlog.id"
                 class="vlog-image-reveal-entry"
                 :style="getVlogRevealStyle(vlogIndex)"
-                :vlog="vlog"
-                :active="activeVlogId === vlog.id"
-                :interactive="true"
-                @select="openVlog(vlog)"
-              />
+              >
+                <VlogCard
+                  :vlog="vlog"
+                  :active="activeVlogId === vlog.id"
+                  :interactive="true"
+                  @select="openVlog(vlog)"
+                />
+              </div>
             </div>
           </Sections>
         </section>

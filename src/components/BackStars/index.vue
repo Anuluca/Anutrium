@@ -107,6 +107,7 @@ const getCanonicalRotation = (signId: ZodiacSignId) => {
 
 const routeRotation = ref(getCanonicalRotation(props.activeSign))
 const heroScale = ref(1)
+const isMobileViewport = ref(false)
 const isChartTransitioning = ref(false)
 const isRouteTransitioning = ref(false)
 const isEntryComplete = ref(false)
@@ -139,11 +140,13 @@ const stageStyle = computed(() => ({
   '--route-rotation': `${routeRotation.value}deg`,
 }))
 const PARTICLE_COLOR = '#e2c28a'
+const particleQuantity = computed(() => (isMobileViewport.value ? 50 : 100))
 
 const updateHeroScale = () => {
   const viewportWidth = window.innerWidth
   const viewportHeight = window.innerHeight
   const isMobile = viewportWidth <= 768
+  isMobileViewport.value = isMobile
   const heightRatio = isMobile ? 0.67 : 0.72
   const horizontalGap = isMobile ? 44 : 72
   const heroSize = Math.min(
@@ -230,9 +233,7 @@ onUnmounted(() => {
     <div class="particle-viewport">
       <ParticlesBg
         class="particle-field"
-        :quantity="100"
-        :ease="100"
-        :staticity="10"
+        :quantity="particleQuantity"
         :color="PARTICLE_COLOR"
         :refresh="props.entryActive"
       />

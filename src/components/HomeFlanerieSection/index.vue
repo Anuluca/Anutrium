@@ -55,7 +55,6 @@ import ScrollSectionTitle from '@/components/ScrollSectionTitle/index.vue'
 import TravelMap from '@/components/TravelMap/index.vue'
 import VlogCard from '@/components/VlogCard/index.vue'
 import { homeFlanerieJourneyCardConfig } from '@/config/homeFlanerieJourneyCards'
-import { getHomeImageVariantUrl } from '@/utils/imageVariant'
 
 import type { JourneyItem } from '@/types/flanerie'
 
@@ -89,13 +88,7 @@ const configuredJourneys = computed(() => {
   })
 })
 const journeys = computed(() =>
-  configuredJourneys.value.map(({ journey }) => ({
-    ...journey,
-    img: getHomeImageVariantUrl(journey.img, 'journey-thumb'),
-    img2: journey.img2
-      ? getHomeImageVariantUrl(journey.img2, 'journey-thumb')
-      : undefined,
-  }))
+  configuredJourneys.value.map(({ journey }) => journey)
 )
 const journeyTransforms = computed(() =>
   configuredJourneys.value.map(({ config }) =>

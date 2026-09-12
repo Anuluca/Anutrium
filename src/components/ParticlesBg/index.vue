@@ -3,8 +3,6 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 interface Props {
   quantity?: number
-  ease?: number
-  staticity?: number
   color?: string
   refresh?: boolean
 }
@@ -21,8 +19,6 @@ interface Particle {
 
 const props = withDefaults(defineProps<Props>(), {
   quantity: 100,
-  ease: 100,
-  staticity: 10,
   color: '#ffffff',
   refresh: false,
 })
@@ -38,7 +34,7 @@ const motionState = computed(() =>
     : 'paused'
 )
 
-// 尺寸仅由 ResizeObserver 更新，动画帧不读取布局，避免与鼠标变换交错触发同步布局。
+// 尺寸仅由 ResizeObserver 更新，动画帧不读取布局。
 let canvasWidth = 1
 let canvasHeight = 1
 let particles: Particle[] = []
@@ -48,10 +44,6 @@ let resizeObserver: ResizeObserver | null = null
 let intersectionObserver: IntersectionObserver | null = null
 let reducedMotionQuery: MediaQueryList | null = null
 let lastFrameTime = 0
-let pointerX: number | null = null
-let pointerY: number | null = null
-let pointerOffsetX = 0
-let pointerOffsetY = 0
 
 const createParticle = (width: number, height: number): Particle => ({
   alpha: 0.16 + Math.random() * 0.52,
@@ -107,17 +99,6 @@ const drawParticles = (frameTime: number, shouldMove: boolean) => {
   const width = canvasWidth
   const height = canvasHeight
   const elapsed = Math.min(32, Math.max(0, frameTime - lastFrameTime))
-  const ease = Math.max(1, props.ease)
-  const staticity = Math.max(1, props.staticity)
-  const targetOffsetX =
-    pointerX === null ? 0 : (pointerX - width / 2) / staticity
-  const targetOffsetY =
-    pointerY === null ? 0 : (pointerY - height / 2) / staticity
-
-  if (shouldMove) {
-    pointerOffsetX += (targetOffsetX - pointerOffsetX) / ease
-    pointerOffsetY += (targetOffsetY - pointerOffsetY) / ease
-  }
 
   context.clearRect(0, 0, width, height)
   context.fillStyle = props.color
@@ -136,13 +117,7 @@ const drawParticles = (frameTime: number, shouldMove: boolean) => {
 
     context.globalAlpha = particle.alpha * flicker
     context.beginPath()
-    context.arc(
-      particle.x + pointerOffsetX,
-      particle.y + pointerOffsetY,
-      particle.radius,
-      0,
-      Math.PI * 2
-    )
+    context.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2)
     context.fill()
   }
 
@@ -175,16 +150,6 @@ const syncAnimation = () => {
   }
 }
 
-const handlePointerMove = (event: PointerEvent) => {
-  pointerX = event.clientX
-  pointerY = event.clientY
-}
-
-const handlePointerLeave = () => {
-  pointerX = null
-  pointerY = null
-}
-
 const handleVisibilityChange = () => {
   isPageVisible.value = !document.hidden
 }
@@ -214,8 +179,6 @@ onMounted(() => {
   isReducedMotion.value = reducedMotionQuery.matches
   reducedMotionQuery.addEventListener('change', handleReducedMotionChange)
   document.addEventListener('visibilitychange', handleVisibilityChange)
-  window.addEventListener('pointermove', handlePointerMove, { passive: true })
-  document.documentElement.addEventListener('pointerleave', handlePointerLeave)
 
   resizeObserver = new ResizeObserver(() => {
     resizeCanvas()
@@ -238,11 +201,6 @@ onUnmounted(() => {
   intersectionObserver?.disconnect()
   reducedMotionQuery?.removeEventListener('change', handleReducedMotionChange)
   document.removeEventListener('visibilitychange', handleVisibilityChange)
-  window.removeEventListener('pointermove', handlePointerMove)
-  document.documentElement.removeEventListener(
-    'pointerleave',
-    handlePointerLeave
-  )
 })
 </script>
 

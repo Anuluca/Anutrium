@@ -382,7 +382,7 @@ import { SparklesText } from '@/components/ui/sparkles-text'
 import WorkDetailModal from '@/components/WorkDetailModal/index.vue'
 import { visualState } from '@/stores'
 import { trackProjectClick } from '@/utils/analytics'
-import { getHomeImageVariantUrl } from '@/utils/imageVariant'
+import { getCardThumbnailUrl } from '@/utils/imageVariant'
 
 import type { ArchiveWork } from '@/types/archive'
 import type { JourneyItem } from '@/types/flanerie'
@@ -417,8 +417,11 @@ const visualStateStore = visualState()
 const HomeFlanerieSection = defineAsyncComponent(
   () => import('@/components/HomeFlanerieSection/index.vue')
 )
-const newsItems = computed<NewsItem[]>(
-  () => tm('home.dynamic.recommend') as NewsItem[]
+const newsItems = computed<NewsItem[]>(() =>
+  (tm('home.dynamic.recommend') as NewsItem[]).map((item) => ({
+    ...item,
+    img: getCardThumbnailUrl(item.img),
+  }))
 )
 
 function sampleRandomItems<T>(items: readonly T[], limit: number) {
@@ -476,7 +479,7 @@ const archiveProjectData = computed(() => {
       projects.push({
         id: work.id,
         title: work.title,
-        img: getHomeImageVariantUrl(img, 'project-thumb'),
+        img,
         company: work.company,
         time: work.time,
       })

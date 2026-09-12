@@ -11,7 +11,7 @@
     <img
       v-if="work.img && background !== 'grid'"
       class="work-card-image"
-      :src="work.img"
+      :src="cardImage"
       :alt="work.title"
       loading="lazy"
       decoding="async"
@@ -41,13 +41,19 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+
+import { getCardThumbnailUrl } from '@/utils/imageVariant'
+
 import type { WorkCardItem } from '@/types/archive'
 
-defineProps<{
+const props = defineProps<{
   work: WorkCardItem
   displayMode?: 'always-visible'
   background?: 'grid'
 }>()
+
+const cardImage = computed(() => getCardThumbnailUrl(props.work.img ?? ''))
 
 const emit = defineEmits<{
   (event: 'select', work: WorkCardItem): void

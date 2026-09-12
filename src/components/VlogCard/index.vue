@@ -28,7 +28,7 @@
       />
       <img
         class="vlog-img vlog-img--base"
-        :src="vlog.img"
+        :src="cardImage"
         :alt="vlog.title"
         decoding="async"
         @load="isBaseLoaded = true"
@@ -95,6 +95,7 @@ import { useI18n } from 'vue-i18n'
 import { Picture, VideoCamera } from '@element-plus/icons-vue'
 
 import ShuffleText from '@/components/ShuffleText/index.vue'
+import { getCardThumbnailUrl } from '@/utils/imageVariant'
 
 import type { JourneyItem } from '@/types/flanerie'
 
@@ -128,9 +129,10 @@ const isHoverLoaded = ref(false)
 const prefixShuffleRef = ref<ShuffleTextExpose | null>(null)
 const restShuffleRef = ref<ShuffleTextExpose | null>(null)
 const titleShuffleRef = ref<ShuffleTextExpose | null>(null)
+const cardImage = computed(() => getCardThumbnailUrl(props.vlog.img))
 const hoverImage = computed(() => {
   const image = props.vlog.img2
-  return image && image !== props.vlog.img ? image : null
+  return image && image !== props.vlog.img ? getCardThumbnailUrl(image) : null
 })
 const photoCount = computed(() => props.vlog.photos?.length ?? 0)
 const videoCount = computed(() => props.vlog.videos?.length ?? 0)
@@ -167,10 +169,7 @@ const handleTitleHover = () => {
   shuffleTitle()
 }
 
-watch(
-  () => props.vlog.img,
-  () => (isBaseLoaded.value = false)
-)
+watch(cardImage, () => (isBaseLoaded.value = false))
 watch(hoverImage, () => (isHoverLoaded.value = false))
 </script>
 
