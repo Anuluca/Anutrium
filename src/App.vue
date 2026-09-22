@@ -229,11 +229,11 @@ watch(
   <FooterCom :entry-active="entryAnimationReady" />
   <BackController :entry-active="entryAnimationReady" />
   <MobileExperienceAlert v-if="entryOverlayHidden" />
-  <div class="mobile-screen-frame" aria-hidden="true" />
+  <div class="mobile-screen-frame-bottom" aria-hidden="true" />
 </template>
 
 <style scoped lang="less">
-.mobile-screen-frame {
+.mobile-screen-frame-bottom {
   display: none;
 }
 
@@ -266,17 +266,61 @@ watch(
 
 @media screen and (max-aspect-ratio: @ratio-threshold),
   screen and (max-width: 1024px) and (hover: none) and (pointer: coarse) {
-  .mobile-screen-frame {
+  .mobile-screen-frame-bottom {
     position: fixed;
-    inset: 0;
-    z-index: 20000;
+    right: 0;
+    bottom: -1px;
+    left: 0;
+    z-index: 99;
     display: block;
-    border-color: var(--mobile-screen-frame-color);
-    border-style: solid;
-    border-width: var(--mobile-screen-frame-size)
-      var(--mobile-screen-frame-inline-size);
-    box-sizing: border-box;
-    box-shadow: inset 0 0 20px rgb(0 0 0 / 40%);
+    height: 29PX;
+    backdrop-filter: blur(4px);
+    background: linear-gradient(
+      to top,
+      var(--mobile-screen-frame-color) 0 6PX,
+      transparent 6PX 8PX,
+      color-mix(
+          in srgb,
+          var(--mobile-screen-frame-color) 82%,
+          transparent
+        )
+        8PX 12PX,
+      transparent 12PX 14PX,
+      color-mix(
+          in srgb,
+          var(--mobile-screen-frame-color) 66%,
+          transparent
+        )
+        14PX 17PX,
+      transparent 17PX 19PX,
+      color-mix(
+          in srgb,
+          var(--mobile-screen-frame-color) 50%,
+          transparent
+        )
+        19PX 21PX,
+      transparent 21PX 23PX,
+      color-mix(
+          in srgb,
+          var(--mobile-screen-frame-color) 36%,
+          transparent
+        )
+        23PX 24PX,
+      transparent 24PX 26PX,
+      color-mix(
+          in srgb,
+          var(--mobile-screen-frame-color) 22%,
+          transparent
+        )
+        26PX 26.75PX,
+      transparent 26.75PX 28.75PX,
+      color-mix(
+          in srgb,
+          var(--mobile-screen-frame-color) 12%,
+          transparent
+        )
+        28.75PX 29.25PX
+    );
     pointer-events: none;
   }
 }

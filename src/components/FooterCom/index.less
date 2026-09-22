@@ -317,16 +317,13 @@ body.light {
 @media screen and (max-aspect-ratio: @ratio-threshold),
   screen and (max-width: 1024px) and (hover: none) and (pointer: coarse) {
   .footer-com {
-    left: var(--footer-com-mobile-inline-inset);
+    left: 0;
     bottom: calc(var(--mobile-screen-frame-size) + 10px);
     width: calc(
-      100vw - var(--footer-com-mobile-inline-inset) -
-        var(--footer-com-mobile-inline-inset)
+      100vw
     );
     height: 39px;
     border: 0;
-    border-right: 5PX solid rgb(26 11 14);
-    border-left: 5PX solid rgb(26 11 14);
     box-sizing: border-box;
     box-shadow: 0 3px 14px rgb(0 0 0 / 22%);
 
@@ -337,9 +334,12 @@ body.light {
 
     .center {
       font-size: 19.5px;
+    backdrop-filter: blur(0);
 
       .expand {
-        background-image: radial-gradient(#99949412 1px, #000000b3 1px);
+    background-image: none;
+    opacity: 0.8;
+    background-color: transparent;
       }
 
       .expand .marquee-wrap {
@@ -355,9 +355,9 @@ body.light {
   body.light .footer-com {
     border-color: rgb(26 11 14);
     border-top-width: 0;
-    border-right-width: 5PX;
+    border-right-width: 1PX;
     border-bottom-width: 0;
-    border-left-width: 5PX;
+    border-left-width: 1PX;
     box-shadow: 0 3px 14px rgb(0 0 0 / 22%);
   }
 }

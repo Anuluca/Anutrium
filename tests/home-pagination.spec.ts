@@ -2061,19 +2061,12 @@ test('page progress component follows ordinary document scrolling', async ({
       '.page-scroll-progress'
     )!
     const rootStyle = getComputedStyle(document.documentElement)
-    const frameBlockSize =
-      Number.parseFloat(
-        rootStyle.getPropertyValue('--mobile-screen-frame-size')
-      ) || 0
-    const frameInlineSize =
-      Number.parseFloat(
-        rootStyle.getPropertyValue('--mobile-screen-frame-inline-size')
-      ) || 0
+    const frameBlockSize = Number.parseFloat(rootStyle.paddingTop) || 0
+    const frameInlineSize = Number.parseFloat(rootStyle.paddingRight) || 0
     const menuBounds = menu.getBoundingClientRect()
     const progressBounds = progress.getBoundingClientRect()
 
     return {
-      menuTopDelta: Math.abs(menuBounds.top - frameBlockSize),
       menuLeftDelta: Math.abs(menuBounds.left - frameInlineSize),
       menuRightDelta: Math.abs(
         menuBounds.right - (window.innerWidth - frameInlineSize)

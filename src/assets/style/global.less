@@ -926,29 +926,10 @@ body .el-message-box {
 @media screen and (max-aspect-ratio: @ratio-threshold),
   screen and (max-width: 1024px) and (hover: none) and (pointer: coarse) {
   html:root {
-    --mobile-screen-frame-size: calc(8 * 1px);
-    --mobile-screen-frame-inline-size: calc(
-      var(--mobile-screen-frame-size) * 2
-    );
-    --footer-com-mobile-inline-inset: calc(
-      30px + var(--mobile-screen-frame-inline-size) -
-        var(--mobile-screen-frame-size)
-    );
-  }
-
-  html {
-    padding: var(--mobile-screen-frame-size)
-      var(--mobile-screen-frame-inline-size);
-    box-sizing: border-box;
-  }
-
-  body,
-  #app {
-    width: 100%;
-    min-height: calc(
-      100dvh - var(--mobile-screen-frame-size) -
-        var(--mobile-screen-frame-size)
-    );
+    --mobile-screen-frame-size: 0px;
+    --mobile-screen-frame-inline-size: 0px;
+    --mobile-screen-frame-color: #0c0a0c;
+    --footer-com-mobile-inline-inset: 30px;
   }
 
   body:has(.sections-fixed-nav) .back-to-top-button.no-rem {
