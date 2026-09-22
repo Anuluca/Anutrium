@@ -271,57 +271,47 @@ watch(
     right: 0;
     bottom: -1px;
     left: 0;
-    z-index: 1;
+    z-index: 10;
     display: block;
     height: 29px;
     zoom: 3.5;
-    background: linear-gradient(
-      to top,
-      var(--mobile-screen-frame-color) 0 6px,
-      transparent 6px 8px,
-      color-mix(
-          in srgb,
-          var(--mobile-screen-frame-color) 82%,
-          transparent
-        )
-        8px 12px,
-      transparent 12px 14px,
-      color-mix(
-          in srgb,
-          var(--mobile-screen-frame-color) 66%,
-          transparent
-        )
-        14px 17px,
-      transparent 17px 19px,
-      color-mix(
-          in srgb,
-          var(--mobile-screen-frame-color) 50%,
-          transparent
-        )
-        19px 21px,
-      transparent 21px 23px,
-      color-mix(
-          in srgb,
-          var(--mobile-screen-frame-color) 36%,
-          transparent
-        )
-        23px 24px,
-      transparent 24px 26px,
-      color-mix(
-          in srgb,
-          var(--mobile-screen-frame-color) 22%,
-          transparent
-        )
-        26px 26.75px,
-      transparent 26.75px 28.75px,
-      color-mix(
-          in srgb,
-          var(--mobile-screen-frame-color) 12%,
-          transparent
-        )
-        28.75px 29.25px
-    );
     pointer-events: none;
+
+    &::before,
+    &::after {
+      position: absolute;
+      inset: 0;
+      content: '';
+    }
+
+    &::before {
+      z-index: 0;
+      background: linear-gradient(
+        to bottom,
+        transparent 0%,
+        color-mix(in srgb, var(--bg-color) 25%, transparent) 35%,
+        color-mix(in srgb, var(--bg-color) 72%, transparent) 70%,
+        var(--bg-color) 100%
+      );
+    }
+
+    &::after {
+      z-index: 1;
+      background: linear-gradient(
+        to top,
+        var(--mobile-screen-frame-color) 0 14px,
+        transparent 14px 16px,
+        var(--mobile-screen-frame-color) 16px 17px,
+        transparent 17px 19px,
+        var(--mobile-screen-frame-color) 19px 21px,
+        transparent 21px 23px,
+        var(--mobile-screen-frame-color) 23px 24px,
+        transparent 24px 26px,
+        var(--mobile-screen-frame-color) 26px 26.75px,
+        transparent 26.75px 28.75px,
+        var(--mobile-screen-frame-color) 28.75px 29.25px
+      );
+    }
   }
 }
 </style>

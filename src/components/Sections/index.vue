@@ -673,7 +673,7 @@ watch(isNavigationAtPageEnd, (isAtPageEnd) => {
   }
 
   .sections-fixed-nav {
-    bottom: calc(env(safe-area-inset-bottom) + 72 * 1px);
+    bottom: calc(env(safe-area-inset-bottom) + 80 * 1px);
     left: 20px;
     z-index: 90;
     width: 0;

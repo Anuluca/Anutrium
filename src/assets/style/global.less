@@ -928,14 +928,14 @@ body .el-message-box {
   html:root {
     --mobile-screen-frame-size: 0px;
     --mobile-screen-frame-inline-size: 0px;
-    --mobile-screen-frame-color: #0c0a0c;
+    --mobile-screen-frame-color: #000;
     --footer-com-mobile-inline-inset: 30px;
   }
 
   body:has(.sections-fixed-nav) .back-to-top-button.no-rem {
     right: auto;
-    bottom: calc(env(safe-area-inset-bottom) + 20px);
-    left: calc(1.6rem - 20px);
+    bottom: calc(env(safe-area-inset-bottom) + 68px - 2rem);
+    left: calc(1.6rem - 1rem);
   }
 }
 

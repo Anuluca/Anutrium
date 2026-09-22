@@ -1,19 +1,21 @@
 <template>
-  <Transition name="back-to-top">
-    <button
-      v-if="isVisible && !suppressed"
-      ref="buttonElement"
-      class="back-to-top-button no-rem"
-      type="button"
-      aria-label="回到页面顶部"
-      title="BACK TO TOP"
-      @click="scrollToTop"
-    >
-      <span class="button-progress" aria-hidden="true" />
-      <span class="button-arrow no-rem" aria-hidden="true" />
-      <span class="button-label no-rem">TOP</span>
-    </button>
-  </Transition>
+  <Teleport to="body">
+    <Transition name="back-to-top">
+      <button
+        v-if="isVisible && !suppressed"
+        ref="buttonElement"
+        class="back-to-top-button no-rem"
+        type="button"
+        aria-label="回到页面顶部"
+        title="BACK TO TOP"
+        @click="scrollToTop"
+      >
+        <span class="button-progress" aria-hidden="true" />
+        <span class="button-arrow no-rem" aria-hidden="true" />
+        <span class="button-label no-rem">TOP</span>
+      </button>
+    </Transition>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -177,14 +179,14 @@ const scrollToTop = () => {
   screen and (max-width: 1024px) and (hover: none) and (pointer: coarse) {
   .back-to-top-button.no-rem {
     right: 17px;
-    bottom: 20px;
-    width: 40px;
-    height: 40px;
+    bottom: 28px;
+    width: 2rem;
+    height: 2rem;
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.32);
   }
 
   .button-arrow.no-rem {
-    top: 8px;
+    top: 4px;
     width: 7px;
     height: 7px;
     border-top-width: 1.5px;
@@ -192,7 +194,7 @@ const scrollToTop = () => {
   }
 
   .button-label.no-rem {
-    bottom: 9px;
+    bottom: 4px;
     font-size: 11px;
     letter-spacing: 0.06em;
   }

@@ -1013,6 +1013,7 @@ test('mobile section navigation expands from NAV and closes from the backdrop', 
     const navLabelLeft = navigationBounds.left + parseFloat(navLabelStyle.left)
 
     return {
+      widthDelta: Math.abs(backToTopBounds.width - navLabelWidth),
       centerOffset: Math.abs(
         backToTopBounds.left +
           backToTopBounds.width / 2 -
@@ -1023,6 +1024,7 @@ test('mobile section navigation expands from NAV and closes from the backdrop', 
         (parseFloat(backToTopStyle.bottom) + backToTopBounds.height),
     }
   })
+  expect(navigationAlignment.widthDelta).toBeLessThanOrEqual(1)
   expect(navigationAlignment.centerOffset).toBeLessThanOrEqual(1)
   expect(navigationAlignment.verticalGap).toBeGreaterThanOrEqual(10)
   expect(navigationAlignment.verticalGap).toBeLessThanOrEqual(14)

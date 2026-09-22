@@ -318,7 +318,7 @@ body.light {
   screen and (max-width: 1024px) and (hover: none) and (pointer: coarse) {
   .footer-com {
     left: 0;
-    bottom: calc(var(--mobile-screen-frame-size) + 10px);
+    bottom: 2px;
     width: calc(
       100vw
     );
@@ -326,6 +326,11 @@ body.light {
     border: 0;
     box-sizing: border-box;
     box-shadow: none;
+
+    &,
+    * {
+      text-shadow: 0 1PX 4PX rgb(0 0 0 / 42%);
+    }
 
     .left,
     .right {
