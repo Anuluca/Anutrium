@@ -180,7 +180,7 @@ const journeyTransforms = computed(() =>
 }
 
 .home-flanerie-more {
-  align-self: center;
+  align-self: flex-start;
   margin-top: clamp(1rem, 2.2dvh, 1.5rem);
   opacity: 0;
 }

@@ -925,6 +925,24 @@ body .el-message-box {
 
 @media screen and (max-aspect-ratio: @ratio-threshold),
   screen and (max-width: 1024px) and (hover: none) and (pointer: coarse) {
+  :root {
+    --mobile-screen-frame-size: calc(8 * 1px);
+  }
+
+  html {
+    padding: var(--mobile-screen-frame-size);
+    box-sizing: border-box;
+  }
+
+  body,
+  #app {
+    width: 100%;
+    min-height: calc(
+      100dvh - var(--mobile-screen-frame-size) -
+        var(--mobile-screen-frame-size)
+    );
+  }
+
   body:has(.sections-fixed-nav) .back-to-top-button.no-rem {
     right: auto;
     bottom: calc(env(safe-area-inset-bottom) + 20px);
@@ -950,6 +968,14 @@ html body {
 
 @media screen and (max-aspect-ratio: @ratio-threshold) {
   html body {
+    padding: 0;
+  }
+}
+
+@media screen and (max-aspect-ratio: @ratio-threshold),
+  screen and (max-width: 1024px) and (hover: none) and (pointer: coarse) {
+  html body {
+    box-sizing: border-box;
     padding: 0;
   }
 }

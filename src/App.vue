@@ -229,9 +229,14 @@ watch(
   <FooterCom :entry-active="entryAnimationReady" />
   <BackController :entry-active="entryAnimationReady" />
   <MobileExperienceAlert v-if="entryOverlayHidden" />
+  <div class="mobile-screen-frame" aria-hidden="true" />
 </template>
 
 <style scoped lang="less">
+.mobile-screen-frame {
+  display: none;
+}
+
 .footer-bottom-gradient {
   position: fixed;
   right: 0;
@@ -256,6 +261,20 @@ watch(
 @media screen and (max-aspect-ratio: @ratio-threshold) {
   .footer-bottom-gradient {
     display: none;
+  }
+}
+
+@media screen and (max-aspect-ratio: @ratio-threshold),
+  screen and (max-width: 1024px) and (hover: none) and (pointer: coarse) {
+  .mobile-screen-frame {
+    position: fixed;
+    inset: 0;
+    z-index: 20000;
+    display: block;
+    border: var(--mobile-screen-frame-size) solid #000;
+    box-sizing: border-box;
+    box-shadow: inset 0 0 20px rgb(0 0 0 / 40%);
+    pointer-events: none;
   }
 }
 </style>

@@ -145,7 +145,7 @@ const containerStyle = computed(() => ({
   '--background-top-inset': `${Math.max(0, props.topInset)}px`,
 }))
 const PARTICLE_COLOR = '#e2c28a'
-const particleQuantity = computed(() => (isMobileViewport.value ? 50 : 100))
+const particleQuantity = computed(() => (isMobileViewport.value ? 25 : 100))
 
 const clearParticleRevealFrames = () => {
   if (particleRevealRafId !== null) {

@@ -316,8 +316,45 @@ body.light {
 
 @media screen and (max-aspect-ratio: @ratio-threshold),
   screen and (max-width: 1024px) and (hover: none) and (pointer: coarse) {
-  .footer-com .right .mark {
-    display: none;
+  .footer-com {
+    left: var(--footer-com-mobile-inline-inset);
+    bottom: calc(var(--mobile-screen-frame-size) + 10px);
+    width: calc(
+      100vw - var(--footer-com-mobile-inline-inset) -
+        var(--footer-com-mobile-inline-inset)
+    );
+    height: 39px;
+    border: 0;
+    border-right: 5PX solid rgb(26 11 14);
+    border-left: 5PX solid rgb(26 11 14);
+    box-sizing: border-box;
+    box-shadow: 0 3px 14px rgb(0 0 0 / 22%);
+
+    .left,
+    .right {
+      display: none;
+    }
+
+    .center {
+      font-size: 19.5px;
+
+      .expand .marquee-wrap {
+        padding-top: 4.5px;
+
+        b {
+          font-size: 18px;
+        }
+      }
+    }
+  }
+
+  body.light .footer-com {
+    border-color: rgb(26 11 14);
+    border-top-width: 0;
+    border-right-width: 5PX;
+    border-bottom-width: 0;
+    border-left-width: 5PX;
+    box-shadow: 0 3px 14px rgb(0 0 0 / 22%);
   }
 }
 

@@ -1396,6 +1396,10 @@
 }
 
 @media screen and (max-aspect-ratio: @ratio-threshold) {
+  .hero-content {
+    scale: 1;
+  }
+
   .main-slogan {
     --home-passion-logo-visual-shift: -0.75rem;
   }
@@ -1482,18 +1486,21 @@
   .home-page.main-container {
     --home-mobile-footer-offset: 24px;
     --home-mobile-controls-shift: 24px;
+    --home-mobile-edge-shift: calc(
+      var(--footer-com-inline-inset) + 4px -
+        var(--footer-com-mobile-inline-inset)
+    );
     --home-mobile-explore-bottom: calc(
-      max(
-          clamp(32px, 5dvh, 52px),
-          calc(env(safe-area-inset-bottom) + 24px)
-        ) + var(--home-mobile-footer-offset) +
-        var(--home-mobile-controls-shift)
+      max(clamp(32px, 5dvh, 52px), calc(env(safe-area-inset-bottom) + 24px)) +
+        var(--home-mobile-footer-offset) + var(--home-mobile-controls-shift)
     );
   }
 
   .home-corner-lines {
+    --home-corner-inline-inset: var(--footer-com-mobile-inline-inset);
     --home-corner-bottom-inset: calc(
-      clamp(1rem, 2.5vw, 2.5rem) + var(--home-mobile-footer-offset)
+      clamp(1rem, 2.5vw, 2.5rem) + var(--home-mobile-footer-offset) +
+        var(--mobile-screen-frame-size) + 8px
     );
   }
 
@@ -1508,12 +1515,12 @@
     height: 54px;
 
     &--left {
-      left: 0.3rem;
+      left: calc(0.3rem - var(--home-mobile-edge-shift));
       transform-origin: left 38%;
     }
 
     &--right {
-      right: 0.3rem;
+      right: calc(0.3rem - var(--home-mobile-edge-shift));
       transform-origin: right 38%;
     }
   }

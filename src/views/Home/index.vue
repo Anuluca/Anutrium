@@ -1922,7 +1922,15 @@ const handleHomeTransitionEnd = (swiper: SwiperInstance) => {
   const activeSlide = swiper.slides[swiper.activeIndex] as
     | HTMLElement
     | undefined
-  if (!activeSlide || Math.abs(activeSlide.getBoundingClientRect().top) > 1) {
+  const swiperElement = swiper.el as HTMLElement | undefined
+  if (
+    !activeSlide ||
+    !swiperElement ||
+    Math.abs(
+      activeSlide.getBoundingClientRect().top -
+        swiperElement.getBoundingClientRect().top
+    ) > 1
+  ) {
     return
   }
 

@@ -9,7 +9,13 @@ const waitForActivePage = async (page: Page, id: string) => {
   })
   await expect
     .poll(() =>
-      slide.evaluate((element) => element.getBoundingClientRect().top)
+      slide.evaluate((element) => {
+        const swiper = element.closest('.home-page-swiper')
+        return (
+          element.getBoundingClientRect().top -
+          (swiper?.getBoundingClientRect().top ?? 0)
+        )
+      })
     )
     .toBeCloseTo(0, 0)
   return slide
@@ -51,18 +57,29 @@ test('mobile home paging accepts a short slow swipe', async ({
   })
 
   await dispatchSlowTouchSwipe(page, 520, 400)
-  await expect(page.locator('#home-section-about h2')).toHaveCount(0)
+  await expect(page.locator('#home-section-about .home-about-copy')).toHaveCount(
+    0
+  )
   await waitForActivePage(page, 'about')
-  await expect(page.locator('#home-section-about h2')).toHaveCount(1)
+  await expect(page.locator('#home-section-about .home-about-copy')).toHaveCount(
+    1
+  )
   await expect(page.locator('.home-page-slide.is-page-entering')).toHaveCount(0)
+  await expect(
+    page.locator('#home-section-about .dome-gallery__auto-rotation')
+  ).toHaveCSS('animation-play-state', 'running, running')
 
   await dispatchSlowTouchSwipe(page, 520, 400)
   await expect(page.locator('#home-section-about').locator('..')).toHaveClass(
     /is-page-content-fading/
   )
-  await expect(page.locator('#home-section-archive h2')).toHaveCount(0)
+  await expect(
+    page.locator('#home-section-archive .home-archive-copy')
+  ).toHaveCount(0)
   await waitForActivePage(page, 'archive')
-  await expect(page.locator('#home-section-archive h2')).toHaveCount(1)
+  await expect(
+    page.locator('#home-section-archive .home-archive-copy')
+  ).toHaveCount(1)
   await expect(page.locator('.home-page-slide.is-page-entering')).toHaveCount(0)
 
   await dispatchSlowTouchSwipe(page, 400, 520)
@@ -695,6 +712,19 @@ test('home unmounts each previous secondary section when the next one enters', a
         'animation-timing-function',
         'ease-out'
       )
+      const flanerieMoreAlignment = await page.evaluate(() => ({
+        buttonLeft: document
+          .querySelector<HTMLElement>('.home-flanerie-more')!
+          .getBoundingClientRect().left,
+        subtitleLeft: document
+          .querySelector<HTMLElement>('.home-flanerie-subtitle')!
+          .getBoundingClientRect().left,
+      }))
+      expect(
+        Math.abs(
+          flanerieMoreAlignment.buttonLeft - flanerieMoreAlignment.subtitleLeft
+        )
+      ).toBeLessThanOrEqual(1)
     }
   }
 

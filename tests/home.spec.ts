@@ -2886,7 +2886,7 @@ test('particle background remains active after route navigation', async ({
 
 test('particle field stays bounded and uses one Canvas 2D surface', async ({
   page,
-}) => {
+}, testInfo) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' })
   const particleField = page.locator('.particles-bg')
   await expect(particleField).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
@@ -2925,7 +2925,9 @@ test('particle field stays bounded and uses one Canvas 2D surface', async ({
 
   expect(metrics.contextAvailable).toBe(true)
   expect(metrics.renderer).toBe('canvas-2d')
-  expect(metrics.particleCount).toBe(100)
+  expect(metrics.particleCount).toBe(
+    testInfo.project.name.includes('mobile') ? 25 : 100
+  )
   expect(metrics.backingWidth).toBeLessThanOrEqual(metrics.maxBackingWidth)
   expect(metrics.backingHeight).toBeLessThanOrEqual(metrics.maxBackingHeight)
   expect(metrics.particleLayer).toBeGreaterThan(metrics.zodiacLayer)
