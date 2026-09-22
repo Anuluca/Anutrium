@@ -21,6 +21,16 @@ const common = {
     zhCn: '向下滚动',
     en: 'SCROLL DOWN',
   },
+  mobileExperienceAlert: {
+    message: {
+      zhCn: '使用电脑访问以获得最佳体验',
+      en: 'VISIT ON DESKTOP FOR THE BEST EXPERIENCE',
+    },
+    dismiss: {
+      zhCn: '别说了！',
+      en: 'GOT IT!',
+    },
+  },
   pagination: {
     previousPage: {
       zhCn: '上一页',

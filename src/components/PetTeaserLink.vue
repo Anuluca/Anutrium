@@ -730,7 +730,7 @@ onUnmounted(() => {
 
 @media screen and (max-aspect-ratio: @ratio-threshold) {
   .pet-teaser {
-    --pet-footer-offset: 0px;
+    --pet-footer-offset: 44px;
   }
 
   .pet-teaser__interaction-zone {

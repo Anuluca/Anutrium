@@ -1,23 +1,28 @@
 <template>
   <Transition
+    appear
     name="mobile-experience-alert"
     :duration="transitionDuration"
     @after-leave="emit('closed')"
   >
-    <div v-if="visible" class="mobile-experience-alert no-rem">
+    <div
+      v-if="visible"
+      class="mobile-experience-alert no-rem"
+      :class="{ 'is-en': locale === 'en' }"
+    >
       <div class="el-alert el-alert--error" role="alert">
-        <span v-if="showIcon" class="el-alert__icon" aria-hidden="true">
-          <slot name="icon">
+        <div class="el-alert__message">
+          <span class="el-alert__icon" aria-hidden="true">
             <svg viewBox="0 0 24 24">
               <circle cx="12" cy="12" r="10" fill="currentColor" />
               <path d="M11 10h2v7h-2zm0-4h2v2h-2z" fill="#0f0d11" />
             </svg>
-          </slot>
-        </span>
-        <div class="el-alert__content">
-          <span class="el-alert__title">
-            <slot>{{ message }}</slot>
           </span>
+          <div class="el-alert__content">
+            <span class="el-alert__title">
+              <slot>{{ displayMessage }}</slot>
+            </span>
+          </div>
         </div>
         <button
           v-if="closable"
@@ -25,7 +30,7 @@
           type="button"
           @click="close"
         >
-          <slot name="action">{{ closeText }}</slot>
+          <slot name="action">{{ displayCloseText }}</slot>
         </button>
       </div>
     </div>
@@ -33,21 +38,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 const props = withDefaults(
   defineProps<{
     modelValue?: boolean
     message?: string
     closeText?: string
-    showIcon?: boolean
     closable?: boolean
   }>(),
   {
     modelValue: true,
-    message: '使用电脑访问以获得最佳体验',
-    closeText: '别说了！',
-    showIcon: true,
     closable: true,
   }
 )
@@ -58,7 +60,14 @@ const emit = defineEmits<{
   closed: []
 }>()
 
-const transitionDuration = { enter: 580, leave: 460 }
+const transitionDuration = { enter: 280, leave: 220 }
+const { locale, t } = useI18n()
+const displayMessage = computed(
+  () => props.message ?? t('mobileExperienceAlert.message')
+)
+const displayCloseText = computed(
+  () => props.closeText ?? t('mobileExperienceAlert.dismiss')
+)
 const visible = ref(props.modelValue)
 
 watch(
@@ -85,41 +94,58 @@ const close = () => {
   screen and (max-width: 1024px) and (hover: none) and (pointer: coarse) {
   .mobile-experience-alert.no-rem {
     position: fixed;
-    right: auto;
-    bottom: calc(env(safe-area-inset-bottom) + 112px);
-    left: 50%;
+    right: 0;
+    bottom: 0;
+    left: 0;
     z-index: 10000;
     display: block;
-    width: max-content;
-    max-width: calc(100vw - 24px);
+    width: 100vw;
+    max-width: none;
     pointer-events: none;
-    transform: translateX(-50%);
 
     .el-alert {
       display: flex;
       align-items: center;
-      width: max-content;
+      justify-content: center;
+      width: 100%;
       min-height: 0;
-      max-width: 100%;
-      padding: 10px 6rem 10px 12px;
+      max-width: none;
+      padding: 16px 5.5rem;
+      border-right: 0;
+      border-bottom: 0;
+      border-left: 0;
       box-sizing: border-box;
-      background: rgb(15 13 17 / 60%) !important;
+      background: linear-gradient(
+        to top,
+        rgb(0 0 0 / 96%) 0%,
+        rgb(0 0 0 / 96%) 1%,
+        rgb(0 0 0 / 38%) 28%,
+        rgb(0 0 0 / 0%) 100%
+      ) !important;
       -webkit-backdrop-filter: blur(8px);
       backdrop-filter: blur(8px);
       box-shadow: 0 18px 52px 10px rgb(0 0 0 / 74%);
       pointer-events: auto;
-      transform-origin: center;
-      animation: mobileExperienceAlertCrtOn 0.58s cubic-bezier(0.19, 1, 0.22, 1)
-        both;
+    }
+
+    .el-alert::before {
+      display: none;
+    }
+
+    .el-alert__message {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
     }
 
     .el-alert__icon {
       display: inline-flex;
       flex: none;
-      width: 1.22rem;
-      margin-left: 4px;
-      margin-right: 4px;
-      font-size: 1.22rem;
+      width: 0.95rem;
+      margin: 0;
+      font-size: 0.95rem;
 
       svg {
         display: block;
@@ -128,8 +154,14 @@ const close = () => {
       }
     }
 
+    .el-alert__content {
+      flex: 0 1 auto;
+      text-align: center;
+    }
+
     .el-alert__title {
-      font-size: 1.08rem;
+      font-size: 0.94rem;
+      font-weight: 600;
       line-height: 1.2;
     }
 
@@ -143,8 +175,8 @@ const close = () => {
       background: transparent;
       appearance: none;
       font-family: 'alibaba-puhuiti', sans-serif;
-      font-size: 0.9rem;
-      font-weight: 700;
+      font-size: 0.78rem;
+      font-weight: 600;
       line-height: 1.2;
       transform: translateY(-50%);
 
@@ -156,102 +188,27 @@ const close = () => {
       }
     }
 
-    .el-alert::after {
-      position: absolute;
-      inset: 0;
-      z-index: 3;
-      content: '';
-      background: #fff;
-      opacity: 0;
-      mix-blend-mode: screen;
-      pointer-events: none;
-      animation: mobileExperienceAlertCrtFlashOn 0.58s linear both;
-    }
-
-    &.mobile-experience-alert-leave-active .el-alert {
-      animation: mobileExperienceAlertCrtOff 0.46s cubic-bezier(0.2, 1, 0.22, 1)
-        forwards !important;
-
-      &::after {
-        animation: mobileExperienceAlertCrtFlashOff 0.46s linear forwards;
+    &.is-en {
+      .el-alert,
+      .el-alert__title,
+      .el-alert__close-btn.is-customed {
+        font-family: 'Anton', sans-serif;
+        font-weight: 600;
       }
     }
   }
 }
 
-@keyframes mobileExperienceAlertCrtOn {
-  0% {
-    opacity: 0;
-    filter: brightness(8) contrast(2);
-    transform: scale3d(0, 0.015, 1);
-  }
-
-  45% {
-    opacity: 1;
-    filter: brightness(4) contrast(1.5);
-    transform: scale3d(1, 0.015, 1);
-  }
-
-  100% {
-    opacity: 1;
-    filter: brightness(1) contrast(1);
-    transform: scale3d(1, 1, 1);
-  }
+.mobile-experience-alert-enter-active {
+  transition: opacity 0.28s ease-out;
 }
 
-@keyframes mobileExperienceAlertCrtFlashOn {
-  0%,
-  22%,
-  48%,
-  74%,
-  100% {
-    opacity: 0;
-  }
-
-  34% {
-    opacity: 0.68;
-  }
-
-  60% {
-    opacity: 0.46;
-  }
+.mobile-experience-alert-leave-active {
+  transition: opacity 0.22s ease-in;
 }
 
-@keyframes mobileExperienceAlertCrtOff {
-  0% {
-    opacity: 1;
-    filter: brightness(1);
-    transform: scale3d(1, 1, 1);
-  }
-
-  55% {
-    opacity: 1;
-    filter: brightness(4) contrast(1.5);
-    transform: scale3d(1, 0.015, 1);
-  }
-
-  100% {
-    opacity: 0;
-    filter: brightness(10);
-    transform: scale3d(0, 0, 1);
-  }
-}
-
-@keyframes mobileExperienceAlertCrtFlashOff {
-  0%,
-  10%,
-  34%,
-  64%,
-  100% {
-    opacity: 0;
-  }
-
-  20% {
-    opacity: 0.58;
-  }
-
-  48% {
-    opacity: 0.72;
-  }
+.mobile-experience-alert-enter-from,
+.mobile-experience-alert-leave-to {
+  opacity: 0;
 }
 </style>

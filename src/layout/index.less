@@ -140,12 +140,14 @@
       }
     }
 
-    &.scrolled:hover::after {
-      opacity: 0;
-    }
+    @media (hover: hover) and (pointer: fine) {
+      &.scrolled:hover::after {
+        opacity: 0;
+      }
 
-    &.scrolled:hover > .header-hover-overlay {
-      opacity: 1;
+      &.scrolled:hover > .header-hover-overlay {
+        opacity: 1;
+      }
     }
 
     > .logo-box,
@@ -170,27 +172,29 @@
       pointer-events: none;
       transition: transform 0.5s ease, opacity 0.5s ease;
 
-      &:hover {
-        .zhCn .name-center {
-          opacity: 1 !important;
-          width: 4.1rem;
-        }
-
-        .zhCn {
-          .site-subtitle-text--short {
-            opacity: 0;
-            transform: translateY(calc(-50% + 0.1rem));
+      @media (hover: hover) and (pointer: fine) {
+        &:hover {
+          .zhCn .name-center {
+            opacity: 1 !important;
+            width: 4.1rem;
           }
 
-          .site-subtitle-text--long {
-            opacity: 1;
-            transform: translateY(-50%);
-          }
-        }
+          .zhCn {
+            .site-subtitle-text--short {
+              opacity: 0;
+              transform: translateY(calc(-50% + 0.1rem));
+            }
 
-        .en .name-center {
-          opacity: 1 !important;
-          width: 5.16667rem;
+            .site-subtitle-text--long {
+              opacity: 1;
+              transform: translateY(-50%);
+            }
+          }
+
+          .en .name-center {
+            opacity: 1 !important;
+            width: 5.16667rem;
+          }
         }
       }
 
@@ -580,7 +584,6 @@
         display: block;
         height: 3px;
         width: 100%;
-        border-radius: 2px;
         position: absolute;
         top: 50%;
         left: 0;
@@ -764,8 +767,10 @@
               border-bottom: none;
             }
 
-            &:hover {
-              background: rgba(120, 120, 120, 0.1);
+            @media (hover: hover) and (pointer: fine) {
+              &:hover {
+                background: rgba(120, 120, 120, 0.1);
+              }
             }
 
             &.active {
@@ -1060,20 +1065,6 @@
           margin-bottom: 0;
           color: var(--text-color);
           margin-top: 0.1rem !important;
-        }
-
-        &:hover {
-          .name-center {
-            opacity: 0 !important;
-
-            &.zhCn {
-              width: 0 !important;
-            }
-
-            &.en {
-              width: 0 !important;
-            }
-          }
         }
 
         .current-module-name {

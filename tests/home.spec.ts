@@ -1117,36 +1117,55 @@ test('mobile first-load desktop recommendation is fixed and closable', async ({
 
   const alertStyle = await alert.evaluate((element) => {
     const bounds = element.getBoundingClientRect()
+    const messageBounds = element
+      .querySelector('.el-alert__message')!
+      .getBoundingClientRect()
     const style = getComputedStyle(element)
+    const titleStyle = getComputedStyle(
+      element.querySelector('.el-alert__title')!
+    )
     return {
       bottomOffset: Math.abs(window.innerHeight - bounds.bottom),
-      backgroundColor: style.backgroundColor,
-      borderColor: style.borderTopColor,
+      backgroundImage: style.backgroundImage,
+      backdropFilter: style.backdropFilter,
+      borderTopColor: style.borderTopColor,
+      borderRightWidth: style.borderRightWidth,
+      borderBottomWidth: style.borderBottomWidth,
+      borderLeftWidth: style.borderLeftWidth,
       centerOffset: Math.abs(
         bounds.left + bounds.width / 2 - window.innerWidth / 2
       ),
-      fontSize: Number.parseFloat(
-        getComputedStyle(element.querySelector('.el-alert__title')!).fontSize
+      messageCenterOffset: Math.abs(
+        messageBounds.left + messageBounds.width / 2 - window.innerWidth / 2
       ),
-      iconSize: Number.parseFloat(
-        getComputedStyle(element.querySelector('.el-alert__icon')!).fontSize
-      ),
+      viewportWidthOffset: Math.abs(bounds.width - window.innerWidth),
+      fontSize: Number.parseFloat(titleStyle.fontSize),
+      fontWeight: titleStyle.fontWeight,
       iconCount: element.querySelectorAll('.el-alert__icon svg').length,
+      textAlign: getComputedStyle(element.querySelector('.el-alert__content')!)
+        .textAlign,
       animationName: style.animationName,
       position: getComputedStyle(element.parentElement!).position,
       shadow: style.boxShadow,
       zIndex: getComputedStyle(element.parentElement!).zIndex,
     }
   })
-  expect(alertStyle.bottomOffset).toBeCloseTo(112, 0)
-  expect(alertStyle.backgroundColor).toBe('rgba(15, 13, 17, 0.6)')
-  expect(alertStyle.borderColor).toBe('rgb(226, 52, 86)')
+  expect(alertStyle.bottomOffset).toBeLessThanOrEqual(1)
+  expect(alertStyle.backgroundImage).toContain('linear-gradient')
+  expect(alertStyle.backdropFilter).toContain('blur(8px)')
+  expect(alertStyle.borderTopColor).toBe('rgb(226, 52, 86)')
+  expect(alertStyle.borderRightWidth).toBe('0px')
+  expect(alertStyle.borderBottomWidth).toBe('0px')
+  expect(alertStyle.borderLeftWidth).toBe('0px')
   expect(alertStyle.centerOffset).toBeLessThanOrEqual(1)
-  expect(alertStyle.fontSize).toBeGreaterThanOrEqual(16)
-  expect(alertStyle.fontSize).toBeLessThan(18)
+  expect(alertStyle.messageCenterOffset).toBeLessThanOrEqual(1)
+  expect(alertStyle.viewportWidthOffset).toBeLessThanOrEqual(1)
+  expect(alertStyle.fontSize).toBeGreaterThan(12)
+  expect(alertStyle.fontSize).toBeLessThan(15)
+  expect(alertStyle.fontWeight).toBe('600')
   expect(alertStyle.iconCount).toBe(1)
-  expect(alertStyle.animationName).toContain('mobileExperienceAlertCrtOn')
-  expect(alertStyle.iconSize).toBeLessThan(20)
+  expect(alertStyle.textAlign).toBe('center')
+  expect(alertStyle.animationName).toBe('none')
   expect(alertStyle.position).toBe('fixed')
   expect(alertStyle.shadow).not.toBe('none')
   expect(alertStyle.zIndex).toBe('10000')
@@ -1155,15 +1174,29 @@ test('mobile first-load desktop recommendation is fixed and closable', async ({
   await expect(closeButton).toHaveText('别说了！')
   await expect(closeButton).toHaveCSS('color', 'rgb(113, 203, 125)')
   await expect(closeButton).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
+  await expect(closeButton).toHaveCSS('font-weight', '600')
+
+  await page.locator('.mobile-menu-icon').click()
+  await page.locator('.mobile-menu-language').click()
+  await expect(alert.locator('.el-alert__title')).toHaveText(
+    'VISIT ON DESKTOP FOR THE BEST EXPERIENCE'
+  )
+  await expect(closeButton).toHaveText('GOT IT!')
+  await expect(alert.locator('.el-alert__title')).toHaveCSS(
+    'font-family',
+    'Anton, sans-serif'
+  )
+  await expect(closeButton).toHaveCSS('font-family', 'Anton, sans-serif')
+  await expect(page.locator('.mobile-menu-panel')).toBeHidden()
+
   await closeButton.click()
   await expect(page.locator('.mobile-experience-alert')).toHaveClass(
     /mobile-experience-alert-leave-active/
   )
-  await expect
-    .poll(() =>
-      alert.evaluate((element) => getComputedStyle(element).animationName)
-    )
-    .toContain('mobileExperienceAlertCrtOff')
+  await expect(page.locator('.mobile-experience-alert')).toHaveCSS(
+    'transition-property',
+    'opacity'
+  )
   await expect(alert).toBeHidden()
   await page.locator('.logo-box').click()
   await expect(page).toHaveURL(/\/$/)

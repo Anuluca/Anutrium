@@ -128,6 +128,67 @@ test('entry SVG logo docks with compositor-only FLIP geometry', async ({
     .toBe(true)
 })
 
+test('mobile entry background compresses downward into the footer target', async ({
+  page,
+}, testInfo) => {
+  test.skip(!testInfo.project.name.includes('mobile'))
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+
+  const overlay = page.locator('.entry-overlay-container')
+  await expect(overlay).toHaveClass(/is-background-exiting/, {
+    timeout: 15_000,
+  })
+
+  const geometry = await overlay.evaluate((element) => {
+    const style = getComputedStyle(element)
+    const footer = document.querySelector<HTMLElement>(
+      '[data-entry-footer-target]'
+    )!
+    const footerBounds = footer.getBoundingClientRect()
+
+    return {
+      targetX: Number.parseFloat(style.getPropertyValue('--entry-bg-target-x')),
+      targetY: Number.parseFloat(style.getPropertyValue('--entry-bg-target-y')),
+      targetScaleX: Number.parseFloat(
+        style.getPropertyValue('--entry-bg-target-scale-x')
+      ),
+      targetScaleY: Number.parseFloat(
+        style.getPropertyValue('--entry-bg-target-scale-y')
+      ),
+      targetRadius: style.getPropertyValue('--entry-bg-target-radius').trim(),
+      footer: {
+        left: footerBounds.left,
+        top: footerBounds.top,
+        width: footerBounds.width,
+        height: footerBounds.height,
+      },
+      viewport: {
+        width: window.innerWidth,
+        height: window.innerHeight,
+      },
+    }
+  })
+
+  expect(Math.abs(geometry.targetX - geometry.footer.left)).toBeLessThanOrEqual(
+    1
+  )
+  expect(Math.abs(geometry.targetY - geometry.footer.top)).toBeLessThanOrEqual(
+    1
+  )
+  expect(geometry.targetScaleX).toBeCloseTo(
+    geometry.footer.width / geometry.viewport.width,
+    3
+  )
+  expect(geometry.targetScaleY).toBeCloseTo(
+    geometry.footer.height / geometry.viewport.height,
+    3
+  )
+  expect(geometry.targetScaleX).toBeGreaterThan(0.9)
+  expect(geometry.targetScaleY).toBeLessThan(0.1)
+  expect(geometry.targetY).toBeGreaterThan(geometry.viewport.height * 0.8)
+  expect(geometry.targetRadius).toBe('0px')
+})
+
 test('header loads the custom CJK font and uses semantic native navigation', async ({
   page,
 }, testInfo) => {
@@ -162,6 +223,44 @@ test('header loads the custom CJK font and uses semantic native navigation', asy
     menuTag: 'NAV',
     menuItemTag: 'LI',
   })
+})
+
+test('critical font preload does not register an unrestricted duplicate face after reload', async ({
+  page,
+}) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.entry-overlay-container')).toHaveCount(0, {
+    timeout: 15_000,
+  })
+
+  await page.reload({ waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.entry-overlay-container')).toHaveCount(0, {
+    timeout: 15_000,
+  })
+
+  const fontFaces = await page.evaluate(async () => {
+    await document.fonts.load('400 16px UnboundedSans', 'ANUTRIUM')
+    await document.fonts.load('400 16px UnboundedSans', '路卡庭院')
+
+    return Array.from(document.fonts)
+      .filter((fontFace) => fontFace.family === 'UnboundedSans')
+      .map((fontFace) => ({
+        status: fontFace.status,
+        unicodeRange: fontFace.unicodeRange.replace(/\s/g, '').toUpperCase(),
+      }))
+  })
+
+  expect(fontFaces).toHaveLength(2)
+  expect(fontFaces.every(({ status }) => status === 'loaded')).toBe(true)
+  expect(
+    fontFaces.some(({ unicodeRange }) => unicodeRange.includes('U+0-FF'))
+  ).toBe(true)
+  expect(
+    fontFaces.some(({ unicodeRange }) => unicodeRange.includes('U+3400-9FFF'))
+  ).toBe(true)
+  expect(
+    fontFaces.some(({ unicodeRange }) => unicodeRange === 'U+0-10FFFF')
+  ).toBe(false)
 })
 
 test('header keeps its size while the scrolled state moves it upward', async ({

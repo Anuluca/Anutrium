@@ -300,16 +300,16 @@ watch(
       background: linear-gradient(
         to top,
         var(--mobile-screen-frame-color) 0 14px,
-        transparent 14px 16px,
-        var(--mobile-screen-frame-color) 16px 17px,
-        transparent 17px 19px,
-        var(--mobile-screen-frame-color) 19px 21px,
-        transparent 21px 23px,
-        var(--mobile-screen-frame-color) 23px 24px,
-        transparent 24px 26px,
-        var(--mobile-screen-frame-color) 26px 26.75px,
-        transparent 26.75px 28.75px,
-        var(--mobile-screen-frame-color) 28.75px 29.25px
+        transparent 14px 15.95px,
+        var(--mobile-screen-frame-color) 15.95px 17.95px,
+        transparent 17.95px 19.9px,
+        var(--mobile-screen-frame-color) 19.9px 21.4px,
+        transparent 21.4px 23.35px,
+        var(--mobile-screen-frame-color) 23.35px 24.35px,
+        transparent 24.35px 26.3px,
+        var(--mobile-screen-frame-color) 26.3px 26.95px,
+        transparent 26.95px 28.9px,
+        var(--mobile-screen-frame-color) 28.9px 29.25px
       );
     }
   }

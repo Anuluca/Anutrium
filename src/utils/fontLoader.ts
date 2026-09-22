@@ -1,10 +1,10 @@
 const CRITICAL_FONT_FAMILY = 'UnboundedSans'
-const CRITICAL_FONT_URL =
-  'https://assets.anuluca.com/fonts/unboundedsans-latin.woff2?v=20260913'
+const CRITICAL_FONT_SAMPLE = 'ANUTRIUM'
 let criticalFontLoadPromise: Promise<boolean> | null = null
 
 /**
  * 在后台加载首屏字体。入口过渡不等待网络，避免冷缓存时延长首屏遮罩。
+ * 复用 CSS 中带 unicode-range 的字体面，避免重复注册同名字体破坏 Safari 的字形匹配。
  */
 export function loadCriticalFont(): Promise<boolean> {
   if (criticalFontLoadPromise) return criticalFontLoadPromise
@@ -15,23 +15,8 @@ export function loadCriticalFont(): Promise<boolean> {
       return
     }
 
-    const markLoaded = (loaded: boolean) => {
-      resolve(loaded)
-    }
-
     if (!('fonts' in document)) {
-      const link = document.createElement('link')
-      link.rel = 'preload'
-      link.as = 'font'
-      link.type = 'font/woff2'
-      link.href = CRITICAL_FONT_URL
-      link.crossOrigin = 'anonymous'
-      link.onload = () => markLoaded(true)
-      link.onerror = () => {
-        console.warn(`字体 ${CRITICAL_FONT_FAMILY} 加载失败`)
-        markLoaded(false)
-      }
-      document.head.appendChild(link)
+      resolve(true)
       return
     }
 
@@ -39,27 +24,21 @@ export function loadCriticalFont(): Promise<boolean> {
 
     Promise.resolve()
       .then(async () => {
-        if (typeof FontFace !== 'undefined') {
-          const fontFace = new FontFace(
-            CRITICAL_FONT_FAMILY,
-            `url("${CRITICAL_FONT_URL}") format("woff2")`,
-            {
-              display: 'swap',
-              style: 'normal',
-              weight: '400 900',
-            }
-          )
-
-          await fontFace.load()
-          document.fonts.add(fontFace)
-        }
-
-        await document.fonts.load(`16px ${cssFontFamily}`)
-        markLoaded(true)
+        const loadedFaces = await document.fonts.load(
+          `400 16px ${cssFontFamily}`,
+          CRITICAL_FONT_SAMPLE
+        )
+        resolve(
+          loadedFaces.length > 0 &&
+            document.fonts.check(
+              `400 16px ${cssFontFamily}`,
+              CRITICAL_FONT_SAMPLE
+            )
+        )
       })
       .catch(() => {
         console.warn(`字体 ${CRITICAL_FONT_FAMILY} 加载失败`)
-        markLoaded(false)
+        resolve(false)
       })
   })
 

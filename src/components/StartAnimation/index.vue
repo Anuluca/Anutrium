@@ -128,21 +128,6 @@ const getFooterFallbackRect = () => {
 }
 
 const getBackgroundTargetRect = () => {
-  const { width, height } = getViewportSize()
-
-  if (isMobileLayout()) {
-    const size = Math.min(96, Math.max(40, width * 0.26))
-
-    return {
-      left: (width - size) / 2,
-      top: (height - size) / 2,
-      width: size,
-      height: size,
-      opacity: 0,
-      radius: `${size / 2}px`,
-    }
-  }
-
   const footerTarget = getVisibleElementRect('[data-entry-footer-target]')
   if (!footerTarget) return getFooterFallbackRect()
   const { rect, style } = footerTarget
