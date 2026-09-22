@@ -271,11 +271,10 @@ watch(
     right: 0;
     bottom: -1px;
     left: 0;
-    z-index: 99;
+    z-index: 1;
     display: block;
     height: 29px;
-    zoom: 2;
-    backdrop-filter: blur(4px);
+    zoom: 3.5;
     background: linear-gradient(
       to top,
       var(--mobile-screen-frame-color) 0 6px,
