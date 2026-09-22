@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { cn } from '@inspira-ui/plugins'
 
 interface Props {
   active?: boolean
@@ -31,9 +30,11 @@ const styleVariables = computed(() => ({
 <template>
   <span
     :style="styleVariables"
-    :class="
-      cn('radiant-text', props.active && 'radiant-text--active', props.class)
-    "
+    :class="[
+      'radiant-text',
+      props.active && 'radiant-text--active',
+      props.class,
+    ]"
   >
     <span class="radiant-text__base"><slot /></span>
     <span v-if="props.active" class="radiant-text__shine" aria-hidden="true">

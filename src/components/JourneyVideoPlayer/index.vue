@@ -16,7 +16,14 @@
       @click="openVideo(video)"
     >
       <div class="video-frame">
-        <img :src="video.cover" :alt="video.title" loading="lazy" />
+        <img
+          :src="video.cover"
+          :alt="video.title"
+          loading="lazy"
+          width="1280"
+          height="720"
+          decoding="async"
+        />
         <span class="video-play" aria-hidden="true"><span>▶</span></span>
       </div>
       <strong class="video-title">{{ video.title }}</strong>
@@ -69,6 +76,7 @@
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import DiamondCloseBtn from '@/components/DiamondCloseBtn/index.vue'
+import { useIntersectionActivation } from '@/composables/useIntersectionActivation'
 import { useOverlayScrollLock } from '@/composables/useOverlayScrollLock'
 
 interface VideoItem {
@@ -89,7 +97,6 @@ const emit = defineEmits<{
 const videoListRef = ref<HTMLElement | null>(null)
 const activeVideo = ref<VideoItem | null>(null)
 const entranceStarted = ref(false)
-let videoListObserver: IntersectionObserver | null = null
 let isVideoListVisible = false
 let hasEmittedEntranceHandoff = false
 
@@ -142,42 +149,39 @@ watch(
 
 useOverlayScrollLock('journey-video', () => Boolean(activeVideo.value))
 
+const prefersReducedMotion = () =>
+  window.matchMedia('(prefers-reduced-motion: reduce)').matches
+const { refresh: observeVideoList } = useIntersectionActivation(
+  videoListRef,
+  ([entry]) => {
+    isVideoListVisible = entry?.isIntersecting ?? false
+    if (isVideoListVisible && !entranceStarted.value) {
+      entranceStarted.value = true
+    }
+  },
+  {
+    autoStart: false,
+    threshold: 0.12,
+    rootMargin: '0px 0px -8% 0px',
+    onUnsupported: () => {
+      isVideoListVisible = true
+      entranceStarted.value = true
+    },
+  }
+)
+
 onMounted(() => {
   window.addEventListener('keydown', handleKeydown)
 
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  if (prefersReducedMotion()) {
     entranceStarted.value = true
     emitEntranceHandoff()
     return
   }
-
-  if (!('IntersectionObserver' in window)) {
-    isVideoListVisible = true
-    entranceStarted.value = true
-    return
-  }
-
-  videoListObserver = new IntersectionObserver(
-    ([entry]) => {
-      isVideoListVisible = entry.isIntersecting
-
-      if (entry.isIntersecting && !entranceStarted.value) {
-        entranceStarted.value = true
-      }
-    },
-    {
-      threshold: 0.12,
-      rootMargin: '0px 0px -8% 0px',
-    }
-  )
-
-  if (videoListRef.value) {
-    videoListObserver.observe(videoListRef.value)
-  }
+  observeVideoList()
 })
 
 onBeforeUnmount(() => {
-  videoListObserver?.disconnect()
   window.removeEventListener('keydown', handleKeydown)
 })
 </script>

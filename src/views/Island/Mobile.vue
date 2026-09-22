@@ -31,7 +31,14 @@
           class="latest-card"
           :to="page.path"
         >
-          <img :src="page.img" :alt="page.title" loading="lazy" />
+          <img
+            :src="page.img"
+            :alt="page.title"
+            loading="lazy"
+            width="768"
+            height="576"
+            decoding="async"
+          />
           <span>
             <strong>{{ page.title }}</strong>
             <em>{{ page.module }}</em>
@@ -74,7 +81,14 @@
               type="button"
               @click="openHarborItem(item)"
             >
-              <img :src="item.img" :alt="item.title" loading="lazy" />
+              <img
+                :src="item.img"
+                :alt="item.title"
+                loading="lazy"
+                width="768"
+                height="576"
+                decoding="async"
+              />
               <span class="card-vignette" />
               <span class="mobile-card-info">
                 <strong>{{ item.title }}</strong>
@@ -91,19 +105,34 @@
     </section>
 
     <section class="mobile-player" :aria-label="t('island.player.ariaLabel')">
-      <audio
-        ref="audioRef"
-        :src="track.src"
-        crossorigin="anonymous"
-        loop
-        preload="auto"
-        @play="isPlaying = true"
-        @pause="isPlaying = false"
-      />
-      <button class="player-cover-btn" type="button" @click="togglePlayback">
-        <img :src="track.cover" :alt="`${track.title} cover`" loading="lazy" />
+      <a
+        v-if="track.storeUrl"
+        class="player-cover-btn"
+        :href="track.storeUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <img
+          :src="track.cover"
+          :alt="`${track.title} cover`"
+          loading="lazy"
+          width="512"
+          height="512"
+          decoding="async"
+        />
         <span>ANUTRIUM</span>
-      </button>
+      </a>
+      <div v-else class="player-cover-btn">
+        <img
+          :src="track.cover"
+          :alt="`${track.title} cover`"
+          loading="lazy"
+          width="512"
+          height="512"
+          decoding="async"
+        />
+        <span>ANUTRIUM</span>
+      </div>
       <div class="player-copy">
         <a
           v-if="track.storeUrl"
@@ -116,38 +145,6 @@
         </a>
         <strong v-else>{{ track.title }}</strong>
         <em>{{ track.artist }}</em>
-      </div>
-      <span class="player-status">{{ t('island.player.nowPlaying') }}</span>
-      <div class="player-controls">
-        <button
-          class="player-control player-control--prev"
-          type="button"
-          :aria-label="t('island.player.prevTrack')"
-          @click="playPreviousTrack"
-        >
-          <i />
-        </button>
-        <button
-          class="player-control player-control--pause"
-          :class="{ 'is-paused': !isPlaying }"
-          type="button"
-          :aria-label="
-            isPlaying
-              ? t('island.player.pauseTrack')
-              : t('island.player.playTrack')
-          "
-          @click="togglePlayback"
-        >
-          <i />
-        </button>
-        <button
-          class="player-control player-control--next"
-          type="button"
-          :aria-label="t('island.player.nextTrack')"
-          @click="playNextTrack"
-        >
-          <i />
-        </button>
       </div>
       <IslandClock variant="mobile" />
       <i class="player-radar" aria-hidden="true" />
@@ -177,8 +174,6 @@ interface TrackItem {
   title: string
   artist: string
   cover: string
-  src: string
-  volume?: number
   storeUrl?: string
 }
 
@@ -190,110 +185,13 @@ const fallbackTrack: TrackItem = {
   title: 'Harbor Light Placeholder',
   artist: 'ANUTRIUM SINGLE TRACK',
   cover: createIslandPlaceholder('ALBUM COVER', 320, 320),
-  src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
 }
 
-const audioRef = ref<HTMLAudioElement | null>(null)
 const latestScrollRef = ref<HTMLElement | null>(null)
-const isPlaying = ref(false)
 const isLatestScrollAtStart = ref(true)
 const isLatestScrollAtEnd = ref(false)
-const currentTrackIndex = ref(0)
-const DEFAULT_PLAYER_VOLUME = 0.12
-const FADE_IN_DURATION = 900
-const FADE_OUT_DURATION = 520
-let volumeFadeRafId: number | null = null
 
-const track = computed(
-  () => tracks.value[currentTrackIndex.value] || fallbackTrack
-)
-
-const cancelVolumeFade = () => {
-  if (volumeFadeRafId === null) return
-  window.cancelAnimationFrame(volumeFadeRafId)
-  volumeFadeRafId = null
-}
-
-const fadeAudioVolume = (
-  audio: HTMLAudioElement,
-  targetVolume: number,
-  duration: number,
-  onComplete?: () => void
-) => {
-  cancelVolumeFade()
-  const initialVolume = audio.volume
-  const startedAt = performance.now()
-
-  const step = (now: number) => {
-    const progress = Math.min(1, (now - startedAt) / duration)
-    const easedProgress = 1 - Math.pow(1 - progress, 3)
-    audio.volume =
-      initialVolume + (targetVolume - initialVolume) * easedProgress
-
-    if (progress < 1) {
-      volumeFadeRafId = window.requestAnimationFrame(step)
-      return
-    }
-
-    volumeFadeRafId = null
-    onComplete?.()
-  }
-
-  volumeFadeRafId = window.requestAnimationFrame(step)
-}
-
-const startPlayback = async () => {
-  const audio = audioRef.value
-  if (!audio) return
-
-  cancelVolumeFade()
-  audio.volume = 0
-
-  try {
-    await audio.play()
-    isPlaying.value = true
-    fadeAudioVolume(
-      audio,
-      track.value.volume ?? DEFAULT_PLAYER_VOLUME,
-      FADE_IN_DURATION
-    )
-  } catch {
-    isPlaying.value = false
-  }
-}
-
-const playTrackAt = async (index: number) => {
-  const trackCount = tracks.value.length
-  if (!trackCount) return
-
-  const shouldResume = isPlaying.value || !audioRef.value?.paused
-  currentTrackIndex.value = (index + trackCount) % trackCount
-  await nextTick()
-  audioRef.value?.load()
-
-  if (shouldResume) await startPlayback()
-}
-
-const playPreviousTrack = () => {
-  void playTrackAt(currentTrackIndex.value - 1)
-}
-
-const playNextTrack = () => {
-  void playTrackAt(currentTrackIndex.value + 1)
-}
-
-const togglePlayback = async () => {
-  const audio = audioRef.value
-  if (!audio) return
-
-  if (audio.paused || !isPlaying.value) {
-    await startPlayback()
-    return
-  }
-
-  isPlaying.value = false
-  fadeAudioVolume(audio, 0, FADE_OUT_DURATION, () => audio.pause())
-}
+const track = computed(() => tracks.value[0] || fallbackTrack)
 
 const updateLatestScrollState = () => {
   const scrollEl = latestScrollRef.value
@@ -316,23 +214,12 @@ const resetLatestScroll = () => {
 onMounted(() => {
   nextTick(() => {
     resetLatestScroll()
-    if (audioRef.value) {
-      audioRef.value.autoplay = false
-      audioRef.value.pause()
-      audioRef.value.volume = 0
-    }
   })
   window.addEventListener('resize', updateLatestScrollState)
 })
 
 onUnmounted(() => {
-  cancelVolumeFade()
-  audioRef.value?.pause()
   window.removeEventListener('resize', updateLatestScrollState)
-})
-
-watch(tracks, (nextTracks) => {
-  if (currentTrackIndex.value >= nextTracks.length) currentTrackIndex.value = 0
 })
 
 watch(latestPages, () => {

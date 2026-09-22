@@ -19,6 +19,9 @@
                 :src="NINTENDO_PROFILE_IMAGE_URL"
                 alt="Anuluca"
                 loading="lazy"
+                width="320"
+                height="320"
+                decoding="async"
               />
               <strong>Anuluca</strong>
             </div>
@@ -187,7 +190,7 @@ onUnmounted(() => {
 
   code {
     flex: 1;
-    font-family: 'anton', monospace;
+    font-family: 'Anton', monospace;
     font-size: 14px;
     letter-spacing: 1px;
     line-height: 32px;

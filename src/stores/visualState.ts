@@ -11,13 +11,19 @@ export default defineStore('visualState', {
     theme: Theme
     deviceType: DeviceType
     zodiacLayout: ZodiacLayout
+    homeStarfieldVisible: boolean
     homeHeaderScrollProgress: number
+    backgroundTopInset: number
+    routeLeaveRevision: number
     pageScrollProgressOverride: number | null
   } => ({
     theme: 'dark',
     deviceType: 'desktop',
     zodiacLayout: 'hero',
+    homeStarfieldVisible: true,
     homeHeaderScrollProgress: 0,
+    backgroundTopInset: 0,
+    routeLeaveRevision: 0,
     pageScrollProgressOverride: null,
   }),
 
@@ -83,10 +89,25 @@ export default defineStore('visualState', {
       this.zodiacLayout = layout
     },
 
+    setHomeStarfieldVisible(visible: boolean): void {
+      if (this.homeStarfieldVisible === visible) return
+      this.homeStarfieldVisible = visible
+    },
+
     setHomeHeaderScrollProgress(progress: number): void {
       const normalizedProgress = Math.min(1, Math.max(0, progress))
       if (this.homeHeaderScrollProgress === normalizedProgress) return
       this.homeHeaderScrollProgress = normalizedProgress
+    },
+
+    setBackgroundTopInset(inset: number): void {
+      const normalizedInset = Math.max(0, inset)
+      if (this.backgroundTopInset === normalizedInset) return
+      this.backgroundTopInset = normalizedInset
+    },
+
+    markRouteLeaveComplete(): void {
+      this.routeLeaveRevision += 1
     },
 
     setPageScrollProgressOverride(progress: number | null): void {

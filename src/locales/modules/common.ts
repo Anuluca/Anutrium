@@ -21,6 +21,20 @@ const common = {
     zhCn: '向下滚动',
     en: 'SCROLL DOWN',
   },
+  pagination: {
+    previousPage: {
+      zhCn: '上一页',
+      en: 'PREV',
+    },
+    nextPage: {
+      zhCn: '下一页',
+      en: 'NEXT',
+    },
+    pageLabel: {
+      zhCn: '页',
+      en: 'PAGE',
+    },
+  },
   switchFriendCode: {
     copySuccess: {
       zhCn: 'SW 好友码复制成功',

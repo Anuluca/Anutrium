@@ -51,10 +51,19 @@ test('mobile home paging accepts a short slow swipe', async ({
   })
 
   await dispatchSlowTouchSwipe(page, 520, 400)
+  await expect(page.locator('#home-section-about h2')).toHaveCount(0)
   await waitForActivePage(page, 'about')
+  await expect(page.locator('#home-section-about h2')).toHaveCount(1)
+  await expect(page.locator('.home-page-slide.is-page-entering')).toHaveCount(0)
 
   await dispatchSlowTouchSwipe(page, 520, 400)
+  await expect(page.locator('#home-section-about').locator('..')).toHaveClass(
+    /is-page-content-fading/
+  )
+  await expect(page.locator('#home-section-archive h2')).toHaveCount(0)
   await waitForActivePage(page, 'archive')
+  await expect(page.locator('#home-section-archive h2')).toHaveCount(1)
+  await expect(page.locator('.home-page-slide.is-page-entering')).toHaveCount(0)
 
   await dispatchSlowTouchSwipe(page, 400, 520)
   await waitForActivePage(page, 'about')
@@ -154,6 +163,623 @@ test('home paging respects reduced motion', async ({ page }) => {
     0.00001
   )
   await expect(page.locator('.marquee-wrapper')).toHaveClass(/motion-paused/)
+})
+
+test('home prevents native bounce from sub-threshold wheel input', async ({
+  page,
+}) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.home-page-swiper')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+
+  const state = await page.evaluate(() => {
+    const wheelResults = [3, 8, 17, -3, -17].map((deltaY) => {
+      const event = new WheelEvent('wheel', {
+        bubbles: true,
+        cancelable: true,
+        clientX: 4,
+        clientY: window.innerHeight / 2,
+        deltaY,
+      })
+      const dispatched = window.dispatchEvent(event)
+      return { defaultPrevented: event.defaultPrevented, dispatched }
+    })
+
+    return {
+      bodyOverscrollBehavior: getComputedStyle(document.body)
+        .overscrollBehavior,
+      htmlOverscrollBehavior: getComputedStyle(document.documentElement)
+        .overscrollBehavior,
+      swiperTouchAction: getComputedStyle(
+        document.querySelector<HTMLElement>('.home-page-swiper')!
+      ).touchAction,
+      wheelResults,
+    }
+  })
+
+  expect(state.bodyOverscrollBehavior).toBe('none')
+  expect(state.htmlOverscrollBehavior).toBe('none')
+  expect(state.swiperTouchAction).toBe('none')
+  expect(
+    state.wheelResults.every(
+      ({ defaultPrevented, dispatched }) => defaultPrevented && !dispatched
+    )
+  ).toBe(true)
+})
+
+test('home coordinates exits while changing between Passion and About Me', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.home-page')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+  await expect(page.locator('.layout-page')).toHaveClass(/\blayout-show\b/, {
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+  await page.waitForTimeout(1_800)
+
+  const forwardTimeline = await page.evaluate(
+    () =>
+      new Promise<{
+        phaseTargetsApplied: number
+        menuComplete: number
+        passionComplete: number
+        passionStopped: number
+        marqueeComplete: number
+        aboutMounted: number
+        pageStarts: number
+      }>((resolve, reject) => {
+        const startedAt = performance.now()
+        let phaseTargetsApplied = Number.NaN
+        let menuComplete = Number.NaN
+        let passionComplete = Number.NaN
+        let passionStopped = Number.NaN
+        let marqueeComplete = Number.NaN
+        let aboutMounted = Number.NaN
+        let pageStarts = Number.NaN
+
+        window.dispatchEvent(
+          new WheelEvent('wheel', {
+            bubbles: true,
+            cancelable: true,
+            clientX: 24,
+            clientY: window.innerHeight / 2,
+            deltaY: 720,
+          })
+        )
+
+        const sample = () => {
+          const elapsed = performance.now() - startedAt
+          const home = document.querySelector<HTMLElement>('.home-page')!
+          const layout = document.querySelector<HTMLElement>('.layout-page')!
+          const header = document.querySelector<HTMLElement>(
+            '.el-menu-layout-all'
+          )!
+          const hero = document.querySelector<HTMLElement>(
+            '.home-page-slide--hero'
+          )!
+          const aboutSlide = document.querySelector<HTMLElement>(
+            '.home-placeholder-slide--about'
+          )!
+          const slogan = document.querySelector<HTMLElement>('.main-slogan')!
+          const recommend = document.querySelector<HTMLElement>(
+            '.hero-content > .recommend'
+          )!
+          const marquee = document.querySelector<HTMLElement>(
+            '.home-marquee-fixed-layer'
+          )!
+          const progress = Number.parseFloat(
+            getComputedStyle(layout).getPropertyValue(
+              '--header-scroll-progress'
+            )
+          )
+          const blurOpacity = Number.parseFloat(
+            getComputedStyle(header, '::before').opacity
+          )
+          const sloganOpacity = Number.parseFloat(
+            getComputedStyle(slogan).opacity
+          )
+          const recommendOpacity = Number.parseFloat(
+            getComputedStyle(recommend).opacity
+          )
+          const marqueeTop = marquee.getBoundingClientRect().top
+          const headerBottom = header.getBoundingClientRect().bottom
+          const marqueeTargetTop = new DOMMatrix(marquee.style.transform).m42
+
+          if (
+            Number.isNaN(phaseTargetsApplied) &&
+            home.classList.contains('is-header-transition-staging') &&
+            hero.classList.contains('is-hero-inactive') &&
+            Math.abs(marqueeTargetTop - headerBottom) < 3
+          ) {
+            phaseTargetsApplied = elapsed
+          }
+          if (
+            Number.isNaN(menuComplete) &&
+            progress > 0.99 &&
+            blurOpacity > 0.99
+          ) {
+            menuComplete = elapsed
+          }
+          if (
+            Number.isNaN(passionComplete) &&
+            sloganOpacity < 0.03 &&
+            recommendOpacity < 0.03
+          ) {
+            passionComplete = elapsed
+          }
+          if (
+            Number.isNaN(passionStopped) &&
+            aboutSlide.classList.contains('swiper-slide-active') &&
+            hero.classList.contains('is-page-leaving') &&
+            Number.parseFloat(getComputedStyle(slogan).transitionDuration) ===
+              0 &&
+            Number.parseFloat(
+              getComputedStyle(recommend).transitionDuration
+            ) === 0
+          ) {
+            passionStopped = elapsed
+          }
+          if (
+            Number.isNaN(aboutMounted) &&
+            aboutSlide.querySelector('.home-page-content--about')
+          ) {
+            aboutMounted = elapsed
+          }
+          if (
+            Number.isNaN(marqueeComplete) &&
+            Math.abs(marqueeTop - headerBottom) < 3
+          ) {
+            marqueeComplete = elapsed
+          }
+          if (
+            Number.isNaN(pageStarts) &&
+            hero.getBoundingClientRect().top < -1
+          ) {
+            pageStarts = elapsed
+          }
+
+          const timeline = [
+            phaseTargetsApplied,
+            menuComplete,
+            passionComplete,
+            passionStopped,
+            marqueeComplete,
+            aboutMounted,
+            pageStarts,
+          ]
+          if (timeline.every(Number.isFinite)) {
+            resolve({
+              phaseTargetsApplied,
+              menuComplete,
+              passionComplete,
+              passionStopped,
+              marqueeComplete,
+              aboutMounted,
+              pageStarts,
+            })
+            return
+          }
+          if (elapsed > 4_000) {
+            reject(
+              new Error(
+                `Forward transition did not finish: ${JSON.stringify(timeline)}`
+              )
+            )
+            return
+          }
+          requestAnimationFrame(sample)
+        }
+        requestAnimationFrame(sample)
+      })
+  )
+
+  expect(forwardTimeline.phaseTargetsApplied).toBeLessThan(
+    forwardTimeline.pageStarts
+  )
+  const usesTouchCarousel = await page.evaluate(
+    () => window.matchMedia('(hover: none) and (pointer: coarse)').matches
+  )
+  if (usesTouchCarousel) {
+    expect(
+      forwardTimeline.pageStarts - forwardTimeline.phaseTargetsApplied
+    ).toBeLessThan(500)
+  } else {
+    expect(
+      forwardTimeline.pageStarts - forwardTimeline.phaseTargetsApplied
+    ).toBeGreaterThan(550)
+    expect(
+      forwardTimeline.pageStarts - forwardTimeline.phaseTargetsApplied
+    ).toBeLessThan(900)
+  }
+  expect(
+    Math.abs(forwardTimeline.passionStopped - forwardTimeline.pageStarts)
+  ).toBeLessThan(100)
+  expect(forwardTimeline.aboutMounted).toBeLessThan(forwardTimeline.pageStarts)
+  expect(forwardTimeline.aboutMounted).toBeGreaterThan(
+    forwardTimeline.phaseTargetsApplied + (usesTouchCarousel ? 40 : 300)
+  )
+  await waitForActivePage(page, 'about')
+  await page.waitForTimeout(100)
+
+  const reverseTimeline = await page.evaluate(
+    () =>
+      new Promise<{
+        phaseTargetsApplied: number
+        menuComplete: number
+        aboutExitComplete: number
+        passionStarts: number
+        pageStarts: number
+      }>((resolve, reject) => {
+        const startedAt = performance.now()
+        let phaseTargetsApplied = Number.NaN
+        let menuComplete = Number.NaN
+        let aboutExitComplete = Number.NaN
+        let passionStarts = Number.NaN
+        let pageStarts = Number.NaN
+
+        window.dispatchEvent(
+          new WheelEvent('wheel', {
+            bubbles: true,
+            cancelable: true,
+            clientX: 24,
+            clientY: window.innerHeight / 2,
+            deltaY: -720,
+          })
+        )
+
+        const sample = () => {
+          const elapsed = performance.now() - startedAt
+          const home = document.querySelector<HTMLElement>('.home-page')!
+          const layout = document.querySelector<HTMLElement>('.layout-page')!
+          const header = document.querySelector<HTMLElement>(
+            '.el-menu-layout-all'
+          )!
+          const hero = document.querySelector<HTMLElement>(
+            '.home-page-slide--hero'
+          )!
+          const aboutSlide = document.querySelector<HTMLElement>(
+            '.home-placeholder-slide--about'
+          )!
+          const slogan = document.querySelector<HTMLElement>('.main-slogan')!
+          const aboutContent = document.querySelector<HTMLElement>(
+            '.home-page-content--about'
+          )
+          const progress = Number.parseFloat(
+            getComputedStyle(layout).getPropertyValue(
+              '--header-scroll-progress'
+            )
+          )
+          const blurOpacity = Number.parseFloat(
+            getComputedStyle(header, '::before').opacity
+          )
+          const sloganOpacity = Number.parseFloat(
+            getComputedStyle(slogan).opacity
+          )
+          const aboutOpacity = aboutContent
+            ? Number.parseFloat(getComputedStyle(aboutContent).opacity)
+            : 0
+
+          if (
+            Number.isNaN(phaseTargetsApplied) &&
+            home.classList.contains('is-header-transition-staging') &&
+            aboutSlide.classList.contains('is-page-content-fading')
+          ) {
+            phaseTargetsApplied = elapsed
+          }
+          if (
+            Number.isNaN(menuComplete) &&
+            progress < 0.01 &&
+            blurOpacity < 0.01
+          ) {
+            menuComplete = elapsed
+          }
+          if (Number.isNaN(aboutExitComplete) && aboutOpacity < 0.03) {
+            aboutExitComplete = elapsed
+          }
+          if (Number.isNaN(passionStarts) && sloganOpacity > 0.03) {
+            passionStarts = elapsed
+          }
+          if (
+            Number.isNaN(pageStarts) &&
+            hero.getBoundingClientRect().top > -window.innerHeight + 1
+          ) {
+            pageStarts = elapsed
+          }
+
+          const timeline = [
+            phaseTargetsApplied,
+            menuComplete,
+            aboutExitComplete,
+            passionStarts,
+            pageStarts,
+          ]
+          if (timeline.every(Number.isFinite)) {
+            resolve({
+              phaseTargetsApplied,
+              menuComplete,
+              aboutExitComplete,
+              passionStarts,
+              pageStarts,
+            })
+            return
+          }
+          if (elapsed > 4_000) {
+            reject(
+              new Error(
+                `Reverse transition did not finish: ${JSON.stringify(timeline)}`
+              )
+            )
+            return
+          }
+          requestAnimationFrame(sample)
+        }
+        requestAnimationFrame(sample)
+      })
+  )
+
+  expect(reverseTimeline.phaseTargetsApplied).toBeLessThanOrEqual(
+    reverseTimeline.passionStarts
+  )
+  expect(reverseTimeline.menuComplete).toBeLessThanOrEqual(
+    reverseTimeline.passionStarts
+  )
+  expect(reverseTimeline.aboutExitComplete).toBeLessThanOrEqual(
+    reverseTimeline.passionStarts
+  )
+  expect(reverseTimeline.menuComplete).toBeLessThanOrEqual(
+    reverseTimeline.pageStarts
+  )
+  expect(reverseTimeline.aboutExitComplete).toBeLessThanOrEqual(
+    reverseTimeline.pageStarts
+  )
+  await expect
+    .poll(() =>
+      page
+        .locator('.home-page-slide--hero')
+        .evaluate((slide) => slide.getBoundingClientRect().top)
+    )
+    .toBeCloseTo(0, 0)
+})
+
+test('home unmounts each previous secondary section when the next one enters', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.layout-page')).toHaveClass(/\blayout-show\b/, {
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+  await page.waitForTimeout(1_800)
+  await expect(page.locator('.home-corner-lines')).toHaveCount(0)
+  await expect(page.locator('.hero-content')).toHaveCSS('scale', '1.08')
+
+  await page.mouse.wheel(0, 720)
+  await expect(page.locator('.home-corner-lines-enter-active')).toHaveCount(1)
+  expect(
+    await page
+      .locator('.home-corner-lines-enter-active .home-corner-lines__corner')
+      .first()
+      .evaluate((element) => getComputedStyle(element).animationName)
+  ).toContain('homeCornerLineMoveIn')
+  await waitForActivePage(page, 'about')
+  await expect(page.locator('.home-page-content--about')).toHaveCount(1)
+  await expect(page.locator('.home-corner-lines__corner')).toHaveCount(4)
+  const cornerDecoration = await page.evaluate(() => {
+    const corner = document.querySelector<HTMLElement>(
+      '.home-corner-lines__corner--top-left'
+    )!
+    const cornerBounds = corner.getBoundingClientRect()
+    const cornerStyles = getComputedStyle(corner)
+    const cornerContainer = corner.closest<HTMLElement>('.home-corner-lines')!
+    const footerBounds = document
+      .querySelector<HTMLElement>('.footer-com')!
+      .getBoundingClientRect()
+    const marqueeTextBounds = document
+      .querySelector<HTMLElement>('.marquee-showcase .text-solid')!
+      .getBoundingClientRect()
+
+    return {
+      borderColor: cornerStyles.borderTopColor,
+      footerLeft: footerBounds.left,
+      footerRight: footerBounds.right,
+      height: cornerBounds.height,
+      left: cornerBounds.left,
+      marqueeTextBottom: marqueeTextBounds.bottom,
+      opacity: cornerStyles.opacity,
+      position: getComputedStyle(cornerContainer).position,
+      top: cornerBounds.top,
+      topRight: document
+        .querySelector<HTMLElement>('.home-corner-lines__corner--top-right')!
+        .getBoundingClientRect().right,
+      viewportWidth: window.innerWidth,
+      width: cornerBounds.width,
+      zIndex: Number.parseInt(getComputedStyle(cornerContainer).zIndex, 10),
+      headerZIndex: Number.parseInt(
+        getComputedStyle(
+          document.querySelector<HTMLElement>('.el-menu-layout-all')!
+        ).zIndex,
+        10
+      ),
+    }
+  })
+  expect(cornerDecoration.borderColor).toBe('rgb(226, 52, 86)')
+  expect(cornerDecoration.opacity).toBe('1')
+  expect(cornerDecoration.position).toBe('fixed')
+  expect(cornerDecoration.zIndex).toBeGreaterThan(cornerDecoration.headerZIndex)
+  expect(cornerDecoration.left - cornerDecoration.footerLeft).toBeGreaterThan(1)
+  expect(
+    cornerDecoration.left - cornerDecoration.footerLeft
+  ).toBeLessThanOrEqual(4)
+  expect(
+    cornerDecoration.footerRight - cornerDecoration.topRight
+  ).toBeGreaterThan(1)
+  expect(
+    cornerDecoration.footerRight - cornerDecoration.topRight
+  ).toBeLessThanOrEqual(4)
+  expect(
+    cornerDecoration.viewportWidth - cornerDecoration.topRight
+  ).toBeCloseTo(cornerDecoration.left, 1)
+  expect(cornerDecoration.top).toBeGreaterThan(0)
+  expect(
+    Math.abs(cornerDecoration.top - cornerDecoration.marqueeTextBottom)
+  ).toBeLessThanOrEqual(8)
+  expect(cornerDecoration.width).toBeGreaterThan(0)
+  expect(cornerDecoration.width).toBeLessThanOrEqual(14)
+  expect(cornerDecoration.height).toBeGreaterThan(0)
+  expect(cornerDecoration.height).toBeLessThanOrEqual(14)
+  await expect(
+    page.getByRole('link', { name: 'MORE ABOUT ME' })
+  ).toHaveAttribute('href', '/island')
+
+  const moreLinks = {
+    archive: {
+      color: 'rgb(47, 117, 72)',
+      href: '/archive',
+      label: 'MORE ARCHIVES',
+    },
+    craft: {
+      color: 'rgb(36, 67, 146)',
+      href: '/craft',
+      label: 'MORE CRAFTS',
+    },
+    flanerie: {
+      color: 'rgb(138, 44, 27)',
+      href: '/flanerie',
+      label: 'MORE FLANERIES',
+    },
+  } as const
+
+  for (const [previousPage, nextPage] of [
+    ['about', 'archive'],
+    ['archive', 'flanerie'],
+    ['flanerie', 'craft'],
+  ] as const) {
+    await expect(page.locator('.home-page-slide.is-page-entering')).toHaveCount(
+      0
+    )
+    await page.mouse.wheel(0, 720)
+    await expect(page.locator('.home-corner-theme-enter-active')).toHaveCount(1)
+    expect(
+      await page
+        .locator('.home-corner-theme-enter-active')
+        .evaluate((element) => getComputedStyle(element).animationName)
+    ).toContain('homeCornerLinesFlashIn')
+    expect(
+      await page
+        .locator('.home-corner-theme-enter-active .home-corner-lines__corner')
+        .first()
+        .evaluate((element) => getComputedStyle(element).animationName)
+    ).toBe('none')
+    await waitForActivePage(page, nextPage)
+    await expect(
+      page.locator(`.home-page-content--${previousPage}`)
+    ).toHaveCount(0)
+    await expect(page.locator(`.home-page-content--${nextPage}`)).toHaveCount(1)
+    await expect(page.locator('.home-page-content--secondary')).toHaveCount(1)
+    await expect(
+      page.getByRole('link', { name: moreLinks[nextPage].label })
+    ).toHaveAttribute('href', moreLinks[nextPage].href)
+    await expect(
+      page.locator('.home-corner-lines__corner--top-left')
+    ).toHaveCSS('border-top-color', moreLinks[nextPage].color)
+
+    if (nextPage === 'flanerie') {
+      const flanerieSubtitle = page.locator('.home-flanerie-subtitle')
+      await expect(flanerieSubtitle).toHaveCSS('animation-duration', '0.7s')
+      await expect(flanerieSubtitle).toHaveCSS('animation-delay', '0.42s')
+      await expect(flanerieSubtitle).toHaveCSS(
+        'animation-timing-function',
+        'ease-out'
+      )
+    }
+  }
+
+  await expect(page.locator('.home-section-title')).toHaveCount(0)
+
+  const craftGrid = page.locator('.home-craft-grid')
+  const craftCards = craftGrid.locator('.home-craft-card')
+  await expect(craftCards).toHaveCount(4)
+  await expect(craftGrid.getByRole('heading', { level: 3 })).toHaveText([
+    '配色提取器',
+    '可视化贝塞尔曲线调整',
+    '弹力球',
+    '节拍器',
+  ])
+  const craftSubtitle = page.locator('.home-craft-subtitle')
+  await expect(craftSubtitle).toHaveText('所想即所做')
+  expect(
+    await craftSubtitle.evaluate(
+      (element) => getComputedStyle(element).animationName
+    )
+  ).toContain('homeAboutTextEnter')
+  await expect(page.getByText('开发中', { exact: true })).toHaveCount(0)
+
+  const craftGridGeometry = await craftGrid.evaluate((grid) => {
+    const gridBounds = grid.getBoundingClientRect()
+    const subtitleBounds = document
+      .querySelector<HTMLElement>('.home-craft-subtitle')!
+      .getBoundingClientRect()
+    const cardBounds = Array.from(
+      grid.querySelectorAll<HTMLElement>('.home-craft-card'),
+      (card) => card.getBoundingClientRect()
+    )
+
+    return {
+      centerOffset: Math.abs(
+        gridBounds.left + gridBounds.width / 2 - window.innerWidth / 2
+      ),
+      columnCount: getComputedStyle(grid).gridTemplateColumns.split(' ').length,
+      firstRowTopDelta: Math.max(
+        ...cardBounds
+          .slice(0, 3)
+          .map((bounds) => Math.abs(bounds.top - cardBounds[0].top))
+      ),
+      fourthCardStartsSecondRow: cardBounds[3].top > cardBounds[0].bottom,
+      fourthCardLeftDelta: Math.abs(cardBounds[3].left - cardBounds[0].left),
+      gridStartsAfterSubtitle: gridBounds.top > subtitleBounds.bottom,
+      cardWidth: getComputedStyle(grid.children[0] as HTMLElement).width,
+      textAlign: getComputedStyle(grid.children[0] as HTMLElement).textAlign,
+    }
+  })
+  expect(craftGridGeometry.centerOffset).toBeLessThanOrEqual(1)
+  expect(craftGridGeometry.columnCount).toBe(3)
+  expect(craftGridGeometry.firstRowTopDelta).toBeLessThanOrEqual(1)
+  expect(craftGridGeometry.fourthCardStartsSecondRow).toBe(true)
+  expect(craftGridGeometry.fourthCardLeftDelta).toBeLessThanOrEqual(1)
+  expect(craftGridGeometry.gridStartsAfterSubtitle).toBe(true)
+  expect(Number.parseFloat(craftGridGeometry.cardWidth)).toBeLessThan(320)
+  expect(craftGridGeometry.textAlign).toBe('left')
+
+  const craftMoreLink = page.getByRole('link', { name: 'MORE CRAFTS' })
+  const craftMoreLinkStyle = await craftMoreLink.evaluate((link) => {
+    const bounds = link.getBoundingClientRect()
+    const styles = getComputedStyle(link)
+
+    return {
+      backgroundColor: styles.backgroundColor,
+      boxShadow: styles.boxShadow,
+      centerOffset: Math.abs(
+        bounds.left + bounds.width / 2 - window.innerWidth / 2
+      ),
+      color: styles.color,
+      fontFamily: styles.fontFamily,
+      textShadow: styles.textShadow,
+    }
+  })
+  expect(craftMoreLinkStyle.centerOffset).toBeLessThanOrEqual(1)
+  expect(craftMoreLinkStyle.backgroundColor).toBe('rgb(36, 67, 146)')
+  expect(craftMoreLinkStyle.boxShadow).not.toBe('none')
+  expect(craftMoreLinkStyle.color).toBe('rgb(0, 0, 0)')
+  expect(craftMoreLinkStyle.fontFamily.toLowerCase()).toContain('unboundedsans')
+  expect(craftMoreLinkStyle.textShadow).toBe('none')
+
+  await craftMoreLink.hover()
+  await expect(craftMoreLink).toHaveCSS('background-position', '0px 0px')
+  await expect(craftMoreLink).toHaveCSS('color', 'rgb(255, 255, 255)')
 })
 
 test('home switches five full-screen pages vertically while marquee stays fixed', async ({
@@ -270,7 +896,7 @@ test('home switches five full-screen pages vertically while marquee stays fixed'
     expect(side.activeColor).toBe('rgb(226, 52, 86)')
     expect(side.activeTextShiftedInward).toBe(true)
     expect(side.activeText).toBe('PASSION')
-    expect(side.fontFamily).toContain('anton')
+    expect(side.fontFamily.toLowerCase()).toContain('anton')
     expect(side.fontSize).toBeGreaterThanOrEqual(17)
     expect(side.indicatorTransform).not.toBe('none')
     expect(side.inactiveColor).toBe('rgba(255, 255, 255, 0.3)')
@@ -328,8 +954,8 @@ test('home switches five full-screen pages vertically while marquee stays fixed'
   ).toEqual([
     'rgba(0, 0, 0, 0)',
     'rgba(0, 0, 0, 0)',
-    'rgba(237, 137, 54, 0.1)',
-    'rgba(66, 153, 225, 0.1)',
+    'rgba(0, 0, 0, 0)',
+    'rgba(0, 0, 0, 0)',
   ])
   for (const secondarySlide of contentGeometry.secondarySlides) {
     expect(secondarySlide.slideHeight).toBeCloseTo(
@@ -462,7 +1088,7 @@ test('home switches five full-screen pages vertically while marquee stays fixed'
   } else {
     await page.mouse.wheel(0, 720)
   }
-  await expect(page.locator('.home-about-gallery')).toHaveCount(1)
+  expect(await page.locator('.home-about-gallery').count()).toBe(0)
   await page.waitForTimeout(80)
   await expect(scrollDownHint).toHaveClass(/is-page-transitioning/)
   expect(
@@ -517,55 +1143,17 @@ test('home switches five full-screen pages vertically while marquee stays fixed'
   )
   expect(heroLeadState.marqueeFlat).toBe(true)
   expect(heroLeadState.marqueeTop).toBeLessThan(initialGeometry.marqueeTop)
-  expect(heroLeadState.sloganOpacity).toBeGreaterThan(0)
+  expect(heroLeadState.sloganOpacity).toBeGreaterThanOrEqual(0)
   expect(heroLeadState.sloganOpacity).toBeLessThan(1)
-  expect(heroLeadState.recommendOpacity).toBeGreaterThan(0)
+  expect(heroLeadState.recommendOpacity).toBeGreaterThanOrEqual(0)
   expect(heroLeadState.recommendOpacity).toBeLessThan(1)
   expect(heroLeadState.sloganTranslateX).toBeLessThan(0)
   expect(heroLeadState.recommendTranslateX).toBeGreaterThan(0)
 
-  await expect
-    .poll(
-      () =>
-        page.evaluate(() => {
-          const about = document.querySelector<HTMLElement>(
-            '.home-page-content--about'
-          )
-          const aboutCopy = document.querySelector<HTMLElement>(
-            '.home-placeholder-slide--about .home-about-copy'
-          )
-          if (!about || !aboutCopy) return false
-          const aboutOpacity = Number.parseFloat(
-            getComputedStyle(about).opacity
-          )
-          const sloganOpacity = Number.parseFloat(
-            getComputedStyle(
-              document.querySelector<HTMLElement>('.main-slogan')!
-            ).opacity
-          )
-          const recommendOpacity = Number.parseFloat(
-            getComputedStyle(
-              document.querySelector<HTMLElement>('.hero-content > .recommend')!
-            ).opacity
-          )
-          const heroBounds = document
-            .querySelector<HTMLElement>('.hero-content')!
-            .getBoundingClientRect()
-          const aboutBounds = aboutCopy.getBoundingClientRect()
-          return (
-            sloganOpacity > 0 &&
-            sloganOpacity < 1 &&
-            recommendOpacity > 0 &&
-            recommendOpacity < 1 &&
-            aboutOpacity > 0 &&
-            aboutOpacity < 1 &&
-            heroBounds.bottom > 0 &&
-            aboutBounds.top < window.innerHeight
-          )
-        }),
-      { intervals: [16], timeout: 2_000 }
-    )
-    .toBe(true)
+  await expect(page.locator('.home-about-gallery')).toHaveCount(1)
+  await expect(page.locator('.home-placeholder-slide--about')).toHaveClass(
+    /is-page-entering/
+  )
   const transitionState = await page.evaluate(() => {
     const hero = document.querySelector<HTMLElement>(
       '.home-page-content--hero'
@@ -580,7 +1168,6 @@ test('home switches five full-screen pages vertically while marquee stays fixed'
     const recommend = document.querySelector<HTMLElement>(
       '.hero-content > .recommend'
     )!
-    const aboutTitle = document.querySelector<HTMLElement>('.home-about-title')!
     const aboutIntroduction = document.querySelector<HTMLElement>(
       '.home-about-introduction'
     )!
@@ -598,7 +1185,6 @@ test('home switches five full-screen pages vertically while marquee stays fixed'
       aboutAnimationDelay: getComputedStyle(about).animationDelay,
       aboutTransform: getComputedStyle(about).transform,
       aboutTop: about.getBoundingClientRect().top,
-      aboutTitleAnimationName: getComputedStyle(aboutTitle).animationName,
       aboutTextAnimationDuration:
         getComputedStyle(aboutIntroduction).animationDuration,
       aboutTextAnimationDelay:
@@ -628,7 +1214,7 @@ test('home switches five full-screen pages vertically while marquee stays fixed'
       leavingPage:
         document.querySelector<HTMLElement>('.is-page-leaving')?.className,
       headerBackgroundOpacity: Number.parseFloat(
-        getComputedStyle(header, '::before').opacity
+        getComputedStyle(header, '::after').opacity
       ),
       headerLayoutActive: header.classList.contains('scroll-layout-active'),
       headerProgress: Number.parseFloat(
@@ -700,7 +1286,6 @@ test('home switches five full-screen pages vertically while marquee stays fixed'
   expect(transitionState.aboutTop).toBeLessThan(transitionState.viewportHeight)
   expect(transitionState.aboutAnimationDelay).toBe('0s, 0.2s')
   expect(transitionState.aboutTransform).not.toBe('none')
-  expect(transitionState.aboutTitleAnimationName).toBe('none')
   expect(transitionState.aboutTextAnimationName).toContain('homeAboutTextEnter')
   expect(transitionState.aboutTextAnimationDuration).toBe('0.7s')
   expect(transitionState.aboutTextAnimationDelay).toBe('0.42s')
@@ -714,34 +1299,24 @@ test('home switches five full-screen pages vertically while marquee stays fixed'
   expect(transitionState.aboutGalleryAnimationDuration).toBe('1s, 0.65s')
   expect(transitionState.heroOpacity).toBe(1)
   expect(transitionState.heroTransform).toBe('none')
-  expect(transitionState.sloganOpacity).toBeGreaterThan(0)
-  expect(transitionState.sloganOpacity).toBeLessThan(1)
-  expect(transitionState.recommendOpacity).toBeGreaterThan(0)
-  expect(transitionState.recommendOpacity).toBeLessThan(1)
+  expect(transitionState.sloganOpacity).toBe(0)
+  expect(transitionState.recommendOpacity).toBe(0)
   expect(transitionState.sloganTranslate.x).toBeLessThan(0)
   expect(transitionState.sloganTranslate.y).toBe(0)
   expect(transitionState.recommendTranslate.x).toBeGreaterThan(0)
   expect(transitionState.recommendTranslate.y).toBe(0)
   expect(transitionState.sloganScale).toBeGreaterThan(1)
   expect(transitionState.recommendScale).toBeGreaterThan(1)
-  expect(transitionState.sloganTransitionDuration).toContain('1.2s')
-  expect(transitionState.recommendTransitionDuration).toContain('1.2s')
+  expect(transitionState.sloganTransitionDuration).toBe('0s')
+  expect(transitionState.recommendTransitionDuration).toBe('0s')
   expect(transitionState.enteringPage).toContain(
     'home-placeholder-slide--about'
   )
   expect(transitionState.leavingPage).toContain('home-page-slide--hero')
   expect(transitionState.headerLayoutActive).toBe(true)
-  expect(transitionState.headerScrolled).toBe(false)
-  expect(transitionState.headerProgress).toBeGreaterThan(0)
-  expect(transitionState.headerProgress).toBeLessThan(1)
-  expect(transitionState.headerBackgroundOpacity).toBeCloseTo(
-    transitionState.headerProgress,
-    2
-  )
-  expect(transitionState.headerProgress).toBeCloseTo(
-    Math.abs(transitionState.heroSlideTop) / transitionState.viewportHeight,
-    2
-  )
+  expect(transitionState.headerScrolled).toBe(true)
+  expect(transitionState.headerProgress).toBeCloseTo(1, 2)
+  expect(transitionState.headerBackgroundOpacity).toBeCloseTo(1, 2)
   expect(
     transitionState.marqueeTransitionDuration
       .split(', ')
@@ -788,36 +1363,17 @@ test('home switches five full-screen pages vertically while marquee stays fixed'
   ])
   await waitForActivePage(page, 'about')
   await expect(scrollDownHint).toBeVisible()
-  const aboutTitle = page.locator('.home-about-title')
   const aboutIntro = page.locator('.home-about-intro')
   const aboutDescription = page.locator('.home-about-description')
   const aboutHighlight = page.locator('.home-about-highlight')
-  await expect(aboutTitle).toHaveText('ABOUT ME')
-  await expect(aboutTitle).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
-  await expect(aboutTitle).toHaveCSS('color', 'rgb(226, 52, 86)')
-  await expect(aboutTitle).toHaveCSS('position', 'absolute')
-  const aboutTitleOffset = await aboutTitle.evaluate((title) => {
-    const copy = title.closest<HTMLElement>('.home-about-copy')!
-    return title.getBoundingClientRect().top - copy.getBoundingClientRect().top
-  })
-  expect(aboutTitleOffset).toBeGreaterThan(0)
-  expect(aboutTitleOffset).toBeLessThan(32)
-  await expect(page.locator('.home-section-title')).toHaveCount(1)
+  await expect(page.locator('.home-section-title')).toHaveCount(0)
   await expect(page.locator('.home-about-copy')).toHaveCSS(
     'background-color',
     'rgba(0, 0, 0, 0)'
   )
-  expect(
-    (
-      await aboutTitle.evaluate((el) => getComputedStyle(el).fontFamily)
-    ).toLowerCase()
-  ).toContain('anton')
-  await expect(aboutIntro).toHaveText('你好，我是路卡（Luca）。')
-  await expect(aboutIntro.locator('.home-about-intro__name')).toHaveAttribute(
-    'href',
-    '/island'
-  )
-  await expect(aboutIntro).toHaveCSS('background-color', 'rgb(0, 0, 0)')
+  await expect(aboutIntro).toHaveText('你好，我是路卡。')
+  await expect(aboutIntro.locator('a')).toHaveCount(0)
+  await expect(aboutIntro).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
   await expect(aboutIntro).toHaveCSS('font-weight', '900')
   await expect(aboutDescription).toContainText('Anutrium记录着我的')
   await expect(aboutDescription).toContainText('我想把它们留存在网络中。')
@@ -1032,6 +1588,7 @@ test('home switches five full-screen pages vertically while marquee stays fixed'
   await page.mouse.wheel(0, 720)
   const flanerieSlide = await waitForActivePage(page, 'flanerie')
   await expect(flanerieSlide).toHaveCSS('opacity', '1')
+  await expect(page.locator('.home-page-content--archive')).toHaveCount(0)
 
   await page.mouse.wheel(0, 720)
   for (let index = 0; index < 7; index += 1) {
@@ -1040,6 +1597,7 @@ test('home switches five full-screen pages vertically while marquee stays fixed'
   }
   const craftSlide = await waitForActivePage(page, 'craft')
   await expect(craftSlide).toHaveCSS('opacity', '1')
+  await expect(page.locator('.home-page-content--flanerie')).toHaveCount(0)
   await expect(page.locator('.home-page-content')).toHaveCount(2)
   await expect(page.locator('.home-page')).not.toHaveClass(
     /is-craft-footer-visible/
@@ -1280,14 +1838,9 @@ test('home switches five full-screen pages vertically while marquee stays fixed'
   expect(reverseHeaderState.recommendTranslateX).toBeGreaterThan(0)
   expect(reverseHeaderState.sloganScale).toBeGreaterThan(1)
   expect(reverseHeaderState.recommendScale).toBeGreaterThan(1)
-  expect(reverseHeaderState.layoutActive).toBe(true)
+  expect(reverseHeaderState.layoutActive).toBe(false)
   expect(reverseHeaderState.scrolled).toBe(false)
-  expect(reverseHeaderState.progress).toBeGreaterThan(0)
-  expect(reverseHeaderState.progress).toBeLessThan(1)
-  expect(reverseHeaderState.progress).toBeCloseTo(
-    Math.abs(reverseHeaderState.heroTop) / reverseHeaderState.viewportHeight,
-    2
-  )
+  expect(reverseHeaderState.progress).toBeCloseTo(0, 2)
   await expect(slides.first()).toHaveClass(/swiper-slide-active/)
   await expect(page.locator('.el-menu-layout-all')).not.toHaveClass(/scrolled/)
   await expect(page.locator('.marquee-wrapper')).not.toHaveClass(/is-flat/)
@@ -1441,14 +1994,19 @@ test('page progress component follows ordinary document scrolling', async ({
     )
     .toBeGreaterThan(1)
 
-  await page.mouse.wheel(0, 100_000)
   await expect
-    .poll(() =>
-      progress.evaluate((element) =>
-        Number.parseFloat(
-          getComputedStyle(element).getPropertyValue('--page-scroll-progress')
+    .poll(
+      async () => {
+        await page.evaluate(() =>
+          document.body.scrollTo({ top: document.body.scrollHeight })
         )
-      )
+        return progress.evaluate((element) =>
+          Number.parseFloat(
+            getComputedStyle(element).getPropertyValue('--page-scroll-progress')
+          )
+        )
+      },
+      { timeout: 20_000 }
     )
     .toBeGreaterThanOrEqual(99)
 

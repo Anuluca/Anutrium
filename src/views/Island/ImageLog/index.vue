@@ -61,7 +61,7 @@ const openAlbum = (albumId: string) => {
 </script>
 
 <style lang="less" scoped>
-@mono: 'cn-custom', 'Courier New', monospace;
+@mono: 'UnboundedSans', 'Courier New', monospace;
 
 .image-log-page {
   color: #fff;

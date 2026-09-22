@@ -23,7 +23,13 @@
           :class="{ 'has-image': previewUrl }"
         >
           <template v-if="previewUrl">
-            <img :src="previewUrl" alt="Preview" class="pt-preview-img" />
+            <img
+              :src="previewUrl"
+              alt="Preview"
+              class="pt-preview-img"
+              loading="eager"
+              decoding="async"
+            />
             <div class="pt-preview-overlay">
               <span>[ 点击或拖拽更换图像 ]</span>
             </div>
@@ -325,7 +331,7 @@ onBeforeUnmount(() => {
 
 .palette-tool {
   color: @text;
-  font-family: 'cn-custom', system-ui, sans-serif;
+  font-family: 'UnboundedSans', system-ui, sans-serif;
 }
 
 .pt-upload-area {

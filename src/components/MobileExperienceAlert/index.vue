@@ -1,24 +1,79 @@
 <template>
-  <div class="mobile-experience-alert no-rem">
-    <ElAlert
-      title="使用电脑访问以获得最佳体验"
-      type="error"
-      :closable="true"
-      :show-icon="true"
-      close-text="别说了！"
-    >
-      <template #icon>
-        <InfoFilled />
-      </template>
-    </ElAlert>
-  </div>
+  <Transition
+    name="mobile-experience-alert"
+    :duration="transitionDuration"
+    @after-leave="emit('closed')"
+  >
+    <div v-if="visible" class="mobile-experience-alert no-rem">
+      <div class="el-alert el-alert--error" role="alert">
+        <span v-if="showIcon" class="el-alert__icon" aria-hidden="true">
+          <slot name="icon">
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10" fill="currentColor" />
+              <path d="M11 10h2v7h-2zm0-4h2v2h-2z" fill="#0f0d11" />
+            </svg>
+          </slot>
+        </span>
+        <div class="el-alert__content">
+          <span class="el-alert__title">
+            <slot>{{ message }}</slot>
+          </span>
+        </div>
+        <button
+          v-if="closable"
+          class="el-alert__close-btn is-customed"
+          type="button"
+          @click="close"
+        >
+          <slot name="action">{{ closeText }}</slot>
+        </button>
+      </div>
+    </div>
+  </Transition>
 </template>
 
 <script setup lang="ts">
-import { InfoFilled } from '@element-plus/icons-vue'
-import { ElAlert } from 'element-plus'
+import { ref, watch } from 'vue'
 
-import 'element-plus/es/components/alert/style/css'
+const props = withDefaults(
+  defineProps<{
+    modelValue?: boolean
+    message?: string
+    closeText?: string
+    showIcon?: boolean
+    closable?: boolean
+  }>(),
+  {
+    modelValue: true,
+    message: '使用电脑访问以获得最佳体验',
+    closeText: '别说了！',
+    showIcon: true,
+    closable: true,
+  }
+)
+
+const emit = defineEmits<{
+  'update:modelValue': [value: boolean]
+  close: []
+  closed: []
+}>()
+
+const transitionDuration = { enter: 580, leave: 460 }
+const visible = ref(props.modelValue)
+
+watch(
+  () => props.modelValue,
+  (value) => {
+    visible.value = value
+  }
+)
+
+const close = () => {
+  if (!visible.value) return
+  visible.value = false
+  emit('update:modelValue', false)
+  emit('close')
+}
 </script>
 
 <style scoped lang="less">
@@ -40,11 +95,17 @@ import 'element-plus/es/components/alert/style/css'
     pointer-events: none;
     transform: translateX(-50%);
 
-    :deep(.el-alert) {
+    .el-alert {
+      display: flex;
+      align-items: center;
       width: max-content;
+      min-height: 0;
       max-width: 100%;
-      padding-right: 6rem;
+      padding: 10px 6rem 10px 12px;
+      box-sizing: border-box;
       background: rgb(15 13 17 / 60%) !important;
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
       box-shadow: 0 18px 52px 10px rgb(0 0 0 / 74%);
       pointer-events: auto;
       transform-origin: center;
@@ -52,20 +113,35 @@ import 'element-plus/es/components/alert/style/css'
         both;
     }
 
-    :deep(.el-alert__icon) {
+    .el-alert__icon {
+      display: inline-flex;
+      flex: none;
       width: 1.22rem;
+      margin-left: 4px;
+      margin-right: 4px;
       font-size: 1.22rem;
+
+      svg {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
     }
 
-    :deep(.el-alert__title) {
+    .el-alert__title {
       font-size: 1.08rem;
+      line-height: 1.2;
     }
 
-    :deep(.el-alert__close-btn.is-customed) {
+    .el-alert__close-btn.is-customed {
+      position: absolute;
       top: 50%;
-      right: 1rem;
+      right: 16px;
+      padding: 0;
+      border: 0;
       color: #71cb7d !important;
       background: transparent;
+      appearance: none;
       font-family: 'alibaba-puhuiti', sans-serif;
       font-size: 0.9rem;
       font-weight: 700;
@@ -80,7 +156,7 @@ import 'element-plus/es/components/alert/style/css'
       }
     }
 
-    :deep(.el-alert::after) {
+    .el-alert::after {
       position: absolute;
       inset: 0;
       z-index: 3;
@@ -92,8 +168,7 @@ import 'element-plus/es/components/alert/style/css'
       animation: mobileExperienceAlertCrtFlashOn 0.58s linear both;
     }
 
-    :deep(.el-alert-fade-leave-active) {
-      transform-origin: center;
+    &.mobile-experience-alert-leave-active .el-alert {
       animation: mobileExperienceAlertCrtOff 0.46s cubic-bezier(0.2, 1, 0.22, 1)
         forwards !important;
 

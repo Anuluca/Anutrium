@@ -1,79 +1,51 @@
-let leafletLoadPromise: Promise<void> | null = null
-const geoJsonBoundaryCache = new Map<string, Promise<unknown | null>>()
+import type * as Leaflet from 'leaflet'
 
-export const ensureLeafletStyles = () => {
-  if (document.getElementById('leaflet-css')) return
+type LeafletRuntime = typeof Leaflet
 
-  const link = document.createElement('link')
-  link.id = 'leaflet-css'
-  link.rel = 'stylesheet'
-  link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
-  document.head.appendChild(link)
+interface GeoJsonBoundary {
+  type: 'FeatureCollection'
+  features: Array<{
+    type: 'Feature'
+    properties?: Record<string, unknown>
+    geometry: unknown
+  }>
 }
 
+let leafletLoadPromise: Promise<LeafletRuntime> | null = null
+const geoJsonBoundaryCache = new Map<string, GeoJsonBoundary>()
+
 export const loadLeaflet = () => {
-  if ((window as Window & { L?: unknown }).L) return Promise.resolve()
   if (leafletLoadPromise) return leafletLoadPromise
 
-  leafletLoadPromise = new Promise<void>((resolve, reject) => {
-    let script = document.querySelector<HTMLScriptElement>(
-      'script[data-leaflet-runtime]'
-    )
-
-    if (script?.dataset.leafletRuntimeState === 'failed') {
-      script.remove()
-      script = null
-    }
-
-    const handleError = () => {
-      script?.remove()
+  leafletLoadPromise = Promise.all([
+    import('leaflet'),
+    import('leaflet/dist/leaflet.css'),
+  ])
+    .then(([leaflet]) => leaflet)
+    .catch((error) => {
       leafletLoadPromise = null
-      reject(new Error('Failed to load Leaflet runtime'))
-    }
-
-    const handleLoad = () => {
-      if (!(window as Window & { L?: unknown }).L) {
-        handleError()
-        return
-      }
-
-      if (script) script.dataset.leafletRuntimeState = 'loaded'
-      resolve()
-    }
-
-    if (!script) {
-      script = document.createElement('script')
-      script.dataset.leafletRuntime = 'true'
-      script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
-    }
-
-    script.dataset.leafletRuntimeState = 'loading'
-    script.addEventListener('load', handleLoad, { once: true })
-    script.addEventListener('error', handleError, { once: true })
-    if (!script.isConnected) document.head.appendChild(script)
-  })
+      throw error
+    })
 
   return leafletLoadPromise
 }
 
-export const loadGeoJsonBoundary = async (url: string) => {
+export const loadGeoJsonBoundary = async (
+  url: string,
+  signal?: AbortSignal
+) => {
   const cachedBoundary = geoJsonBoundaryCache.get(url)
   if (cachedBoundary) return cachedBoundary
 
-  const boundaryLoad = fetch(url)
-    .then(async (response) => {
-      if (!response.ok) return null
+  const response = await fetch(url, { signal })
+  if (!response.ok) return null
 
-      const data = (await response.json()) as { type?: string }
-      return data.type === 'FeatureCollection' || data.type === 'Feature'
-        ? data
-        : null
-    })
-    .catch((error) => {
-      geoJsonBoundaryCache.delete(url)
-      throw error
-    })
+  const data = (await response.json()) as Partial<GeoJsonBoundary>
+  if (data.type !== 'FeatureCollection' || !Array.isArray(data.features)) {
+    return null
+  }
 
-  geoJsonBoundaryCache.set(url, boundaryLoad)
-  return boundaryLoad
+  const boundary = data as GeoJsonBoundary
+  if (!signal?.aborted) geoJsonBoundaryCache.set(url, boundary)
+  return boundary
 }

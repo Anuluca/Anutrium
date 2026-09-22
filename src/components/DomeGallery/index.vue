@@ -2,33 +2,44 @@
   <div
     ref="rootRef"
     class="dome-gallery"
+    :data-motion-active="props.active ? 'true' : 'false'"
+    :data-segment-count="segmentCount"
+    :data-tile-count="items.length"
     :class="{
       'is-preview-open': preview && previewPhase !== 'closing',
     }"
   >
-    <main ref="mainRef" class="dome-gallery__main">
+    <main class="dome-gallery__main" @pointerdown.passive="handlePointerDown">
       <div class="dome-gallery__stage">
         <div ref="sphereRef" class="dome-gallery__sphere">
           <div
-            v-for="item in items"
-            :key="`${item.x},${item.y},${item.index}`"
-            class="dome-gallery__tile-wrap"
-            :style="getTileWrapStyle(item)"
+            class="dome-gallery__auto-rotation"
+            :class="{ 'is-paused': isAutoRotationPaused }"
+            :style="autoRotationStyle"
           >
-            <button
-              class="dome-gallery__tile"
-              type="button"
-              :aria-label="item.title || 'Open image'"
-              @click.stop="handleTileClick(item, $event)"
+            <div
+              v-for="item in items"
+              :key="`${item.x},${item.y},${item.index}`"
+              class="dome-gallery__tile-wrap"
+              :style="item.wrapStyle"
             >
-              <img
-                :src="item.thumbnailSrc"
-                :alt="item.title"
-                :draggable="false"
-                decoding="async"
-                loading="lazy"
-              />
-            </button>
+              <button
+                class="dome-gallery__tile"
+                type="button"
+                :aria-label="item.title || 'Open image'"
+                @click.stop="handleTileClick(item, $event)"
+              >
+                <img
+                  :src="item.thumbnailSrc"
+                  :alt="item.title"
+                  :draggable="false"
+                  decoding="async"
+                  loading="lazy"
+                  width="200"
+                  height="200"
+                />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -63,9 +74,14 @@
           :role="preview.link ? 'link' : undefined"
           :tabindex="preview.link ? 0 : undefined"
           @click.stop="handlePreviewImageClick"
-          @keydown.enter.prevent.stop="handlePreviewImageKeydown"
+          @keydown.enter.prevent.stop="handlePreviewImageClick"
         >
-          <img :src="preview.src" :alt="preview.title" />
+          <img
+            :src="preview.src"
+            :alt="preview.title"
+            loading="eager"
+            decoding="async"
+          />
           <span v-if="preview.title" class="dome-gallery__preview-caption">
             {{ preview.title }}
           </span>
@@ -83,7 +99,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import {
+  computed,
+  type CSSProperties,
+  nextTick,
+  onMounted,
+  onUnmounted,
+  ref,
+  watch,
+} from 'vue'
 import { useRouter } from 'vue-router'
 import { Link } from '@element-plus/icons-vue'
 
@@ -98,6 +122,7 @@ interface DomeGalleryImage {
 }
 
 interface DomeGalleryProps {
+  active?: boolean
   images?: (string | DomeGalleryImage)[]
   fit?: number
   fitBasis?: 'auto' | 'min' | 'max' | 'width' | 'height'
@@ -107,6 +132,7 @@ interface DomeGalleryProps {
   maxVerticalRotationDeg?: number
   dragSensitivity?: number
   segments?: number
+  compactSegments?: number
   grayscale?: boolean
   openedImageWidth?: string
   openedImageHeight?: string
@@ -127,6 +153,14 @@ interface TileItem {
   thumbnailSrc: string
   title: string
   link?: string
+  wrapStyle: CSSProperties
+}
+
+interface TileCoordinate {
+  x: number
+  y: number
+  sizeX: number
+  sizeY: number
 }
 
 interface PreviewRect {
@@ -145,6 +179,7 @@ interface PreviewItem {
 }
 
 const props = withDefaults(defineProps<DomeGalleryProps>(), {
+  active: true,
   images: () => [],
   fit: 0.5,
   fitBasis: 'auto',
@@ -153,7 +188,8 @@ const props = withDefaults(defineProps<DomeGalleryProps>(), {
   overlayBlurColor: 'transparent',
   maxVerticalRotationDeg: 1,
   dragSensitivity: 20,
-  segments: 40,
+  segments: 34,
+  compactSegments: 28,
   grayscale: false,
   openedImageWidth: '250px',
   openedImageHeight: '350px',
@@ -166,11 +202,37 @@ const props = withDefaults(defineProps<DomeGalleryProps>(), {
 const router = useRouter()
 
 const rootRef = ref<HTMLDivElement | null>(null)
-const mainRef = ref<HTMLElement | null>(null)
 const sphereRef = ref<HTMLDivElement | null>(null)
 const radius = ref(0)
 const preview = ref<PreviewItem | null>(null)
 const previewPhase = ref<'opening' | 'opened' | 'closing'>('opening')
+const isCompactDensity = ref(
+  typeof window !== 'undefined' &&
+    window.matchMedia('(max-width: 768px), (hover: none) and (pointer: coarse)')
+      .matches
+)
+const isDragActive = ref(false)
+const isInertiaActive = ref(false)
+const isAutoRotationPaused = computed(
+  () =>
+    !props.active ||
+    prefersReducedMotion.value ||
+    isDragActive.value ||
+    isInertiaActive.value ||
+    !!preview.value
+)
+const autoRotationStyle = computed(() => ({
+  '--dome-auto-rotation-delay': `${props.entranceDelay}ms`,
+  '--dome-entry-rotation-duration': `${Math.max(0, props.entranceDuration)}ms`,
+  '--dome-entry-rotation': `${
+    ((props.entranceRotationSpeed + props.autoRotateSpeed) / 2) *
+    (Math.max(0, props.entranceDuration) / 1000)
+  }deg`,
+  '--dome-auto-rotation-duration': `${Math.max(
+    1,
+    360 / Math.max(0.01, Math.abs(props.autoRotateSpeed))
+  )}s`,
+}))
 
 const rotation = { x: 0, y: 0 }
 const startRotation = { x: 0, y: 0 }
@@ -179,14 +241,15 @@ let isDragging = false
 let didMove = false
 let lastDragEndAt = 0
 let inertiaFrame: number | null = null
-let autoRotationFrame: number | null = null
-let lastAutoRotationTime = 0
-let prefersReducedMotion = false
-let entranceStartTime = 0
+const prefersReducedMotion = ref(false)
+let dragFrame: number | null = null
+let pendingDragPosition: { x: number; y: number } | null = null
 let resizeObserver: ResizeObserver | null = null
+let compactDensityQuery: MediaQueryList | null = null
 let focusedTile: HTMLElement | null = null
 let previewCloseTimer: number | null = null
 let areDragListenersActive = false
+let isPreviewKeyListenerActive = false
 let activePointerId: number | null = null
 const scrollLockKey = 'dome-gallery-preview'
 
@@ -200,48 +263,70 @@ const wrapAngle = (value: number) => {
 
 const normalizeImage = (image: string | DomeGalleryImage): DomeGalleryImage =>
   typeof image === 'string' ? { src: image } : image
+const normalizedImagePool = computed(() =>
+  props.images.map(normalizeImage).map((image) => ({
+    ...image,
+    thumbnailSrc: getHomeThumbnailUrl(image.src),
+  }))
+)
 
-const items = computed<TileItem[]>(() => {
+const segmentCount = computed(() => {
+  const regularSegments = Number.isFinite(props.segments)
+    ? Math.floor(props.segments)
+    : 34
+  const compactSegments = Number.isFinite(props.compactSegments)
+    ? Math.floor(props.compactSegments)
+    : 28
+  const configuredSegments = isCompactDensity.value
+    ? Math.min(regularSegments, compactSegments)
+    : regularSegments
+
+  return Math.max(8, configuredSegments)
+})
+
+const tileCoordinates = computed<TileCoordinate[]>(() => {
+  const segments = segmentCount.value
   const xColumns = Array.from(
-    { length: props.segments },
-    (_, index) => -37 + index * 2
+    { length: segments },
+    (_, index) => -(segments - 3) + index * 2
   )
-  const evenRows = [-4, -2, 0, 2, 4]
-  const oddRows = [-3, -1, 1, 3, 5]
-  const coordinates = xColumns.flatMap((x, column) => {
+  const evenRows = isCompactDensity.value ? [-2, 0, 2] : [-3, -1, 1, 3]
+  const oddRows = isCompactDensity.value ? [-1, 1, 3] : [-2, 0, 2]
+  return xColumns.flatMap((x, column) => {
     const rows = column % 2 === 0 ? evenRows : oddRows
     return rows.map((y) => ({ x, y, sizeX: 2, sizeY: 2 }))
   })
-  const imagePool = props.images?.map(normalizeImage) ?? []
+})
+
+const items = computed<TileItem[]>(() => {
+  const segments = segmentCount.value
+  const imagePool = normalizedImagePool.value
 
   if (!imagePool.length) return []
 
-  return coordinates.map((coordinate, index) => {
+  const unit = 360 / segments / 2
+  const tileUnit = (Math.PI * radius.value) / segments
+  return tileCoordinates.value.map((coordinate, index) => {
     const image = imagePool[index % imagePool.length]
     return {
       ...coordinate,
       index,
       src: image.src,
-      thumbnailSrc: getHomeThumbnailUrl(image.src),
+      thumbnailSrc: image.thumbnailSrc,
       title: image.title || image.alt || '',
       link: image.link,
+      wrapStyle: {
+        width: `${tileUnit * coordinate.sizeX}px`,
+        height: `${tileUnit * coordinate.sizeY}px`,
+        transform: `rotateY(${
+          unit * (coordinate.x + (coordinate.sizeX - 1) / 2)
+        }deg) rotateX(${
+          unit * (coordinate.y - (coordinate.sizeY - 1) / 2)
+        }deg) translateZ(${radius.value}px)`,
+      },
     }
   })
 })
-
-const getTileWrapStyle = (item: TileItem) => {
-  const unit = 360 / props.segments / 2
-  const tileWidth = (Math.PI * radius.value) / props.segments
-  const tileHeight = tileWidth
-
-  return {
-    width: `${tileWidth * item.sizeX}px`,
-    height: `${tileHeight * item.sizeY}px`,
-    transform: `rotateY(${unit * (item.x + (item.sizeX - 1) / 2)}deg) rotateX(${
-      unit * (item.y - (item.sizeY - 1) / 2)
-    }deg) translateZ(${radius.value}px)`,
-  }
-}
 
 const parseLength = (value: string, fallback: number) => {
   const parsed = Number.parseFloat(value)
@@ -321,48 +406,6 @@ const applySphereTransform = () => {
   }deg) rotateY(${rotation.y}deg)`
 }
 
-const startAutoRotation = () => {
-  if (autoRotationFrame !== null) return
-
-  const step = (timestamp: number) => {
-    const elapsed = Math.min(100, timestamp - lastAutoRotationTime)
-    lastAutoRotationTime = timestamp
-
-    if (
-      !prefersReducedMotion &&
-      !isDragging &&
-      !preview.value &&
-      inertiaFrame === null &&
-      elapsed > 0
-    ) {
-      if (timestamp >= entranceStartTime) {
-        const progress = clamp(
-          (timestamp - entranceStartTime) / Math.max(1, props.entranceDuration),
-          0,
-          1
-        )
-        const easedProgress = progress * progress * (3 - 2 * progress)
-        const rotationSpeed =
-          props.entranceRotationSpeed +
-          (props.autoRotateSpeed - props.entranceRotationSpeed) * easedProgress
-        rotation.y = wrapAngle(rotation.y + (rotationSpeed * elapsed) / 1000)
-      }
-      applySphereTransform()
-    }
-
-    autoRotationFrame = window.requestAnimationFrame(step)
-  }
-
-  lastAutoRotationTime = performance.now()
-  autoRotationFrame = window.requestAnimationFrame(step)
-}
-
-const stopAutoRotation = () => {
-  if (autoRotationFrame === null) return
-  window.cancelAnimationFrame(autoRotationFrame)
-  autoRotationFrame = null
-}
-
 const syncRadius = () => {
   const root = rootRef.value
   if (!root) return
@@ -396,10 +439,12 @@ const stopInertia = () => {
   if (inertiaFrame === null) return
   window.cancelAnimationFrame(inertiaFrame)
   inertiaFrame = null
+  isInertiaActive.value = false
 }
 
 const startInertia = (velocityX: number, velocityY: number) => {
   stopInertia()
+  isInertiaActive.value = true
   let x = clamp(velocityX, -1.4, 1.4) * 80
   let y = clamp(velocityY, -1.4, 1.4) * 80
   let frames = 0
@@ -409,6 +454,7 @@ const startInertia = (velocityX: number, velocityY: number) => {
     y *= 0.965
     if ((Math.abs(x) < 0.02 && Math.abs(y) < 0.02) || frames++ > 240) {
       inertiaFrame = null
+      isInertiaActive.value = false
       return
     }
 
@@ -431,9 +477,10 @@ const getPointerPosition = (event: PointerEvent) => ({
 })
 
 const handlePointerDown = (event: PointerEvent) => {
-  if (preview.value || isDragging) return
+  if (!props.active || preview.value || isDragging) return
   stopInertia()
   isDragging = true
+  isDragActive.value = true
   activePointerId = event.pointerId
   didMove = false
   startRotation.x = rotation.x
@@ -452,18 +499,25 @@ const handlePointerMove = (event: PointerEvent) => {
     return
   }
 
-  const position = getPointerPosition(event)
-  const deltaX = position.x - startPosition.x
-  const deltaY = position.y - startPosition.y
-  if (!didMove && deltaX * deltaX + deltaY * deltaY > 16) didMove = true
+  pendingDragPosition = getPointerPosition(event)
+  if (dragFrame !== null) return
+  dragFrame = window.requestAnimationFrame(() => {
+    dragFrame = null
+    const position = pendingDragPosition
+    if (!position || !startPosition || !isDragging) return
+    pendingDragPosition = null
+    const deltaX = position.x - startPosition.x
+    const deltaY = position.y - startPosition.y
+    if (!didMove && deltaX * deltaX + deltaY * deltaY > 16) didMove = true
 
-  rotation.x = clamp(
-    startRotation.x - deltaY / props.dragSensitivity,
-    -props.maxVerticalRotationDeg,
-    props.maxVerticalRotationDeg
-  )
-  rotation.y = wrapAngle(startRotation.y + deltaX / props.dragSensitivity)
-  applySphereTransform()
+    rotation.x = clamp(
+      startRotation.x - deltaY / props.dragSensitivity,
+      -props.maxVerticalRotationDeg,
+      props.maxVerticalRotationDeg
+    )
+    rotation.y = wrapAngle(startRotation.y + deltaX / props.dragSensitivity)
+    applySphereTransform()
+  })
 }
 
 const handlePointerEnd = (event: PointerEvent) => {
@@ -475,11 +529,15 @@ const handlePointerEnd = (event: PointerEvent) => {
     return
   }
   isDragging = false
+  isDragActive.value = false
+  if (dragFrame !== null) window.cancelAnimationFrame(dragFrame)
+  dragFrame = null
+  pendingDragPosition = null
 
   if (didMove && startPosition) {
     lastDragEndAt = performance.now()
 
-    if (event.type !== 'pointercancel' && !prefersReducedMotion) {
+    if (event.type !== 'pointercancel' && !prefersReducedMotion.value) {
       const position = getPointerPosition(event)
       const velocityX =
         ((position.x - startPosition.x) / props.dragSensitivity) * 0.02
@@ -511,6 +569,19 @@ const setDragListenersActive = (active: boolean) => {
   window.removeEventListener('pointercancel', handlePointerEnd)
 }
 
+const resetDragInteraction = () => {
+  stopInertia()
+  if (dragFrame !== null) window.cancelAnimationFrame(dragFrame)
+  dragFrame = null
+  pendingDragPosition = null
+  activePointerId = null
+  startPosition = null
+  isDragging = false
+  didMove = false
+  isDragActive.value = false
+  setDragListenersActive(false)
+}
+
 const openPreview = (item: TileItem, tile: HTMLElement) => {
   const root = rootRef.value
   if (!root || preview.value) return
@@ -526,7 +597,6 @@ const openPreview = (item: TileItem, tile: HTMLElement) => {
 
   focusedTile = tile
   focusedTile.style.visibility = 'hidden'
-  stopAutoRotation()
   previewPhase.value = 'opening'
   preview.value = {
     src: item.src,
@@ -576,10 +646,6 @@ const handlePreviewImageClick = () => {
   window.open(url.toString(), '_blank', 'noopener,noreferrer')
 }
 
-const handlePreviewImageKeydown = () => {
-  handlePreviewImageClick()
-}
-
 const closePreview = () => {
   if (!preview.value || previewPhase.value === 'closing') return
   previewPhase.value = 'closing'
@@ -591,7 +657,6 @@ const closePreview = () => {
     focusedTile = null
     preview.value = null
     setSmoothScrollLocked(scrollLockKey, false)
-    if (!prefersReducedMotion) startAutoRotation()
   }, 320)
 }
 
@@ -599,38 +664,52 @@ const handlePreviewKeydown = (event: KeyboardEvent) => {
   if (event.key === 'Escape') closePreview()
 }
 
+const setPreviewKeyListenerActive = (active: boolean) => {
+  if (isPreviewKeyListenerActive === active) return
+  isPreviewKeyListenerActive = active
+  if (active) window.addEventListener('keydown', handlePreviewKeydown)
+  else window.removeEventListener('keydown', handlePreviewKeydown)
+}
+
+const handleCompactDensityChange = (event: MediaQueryListEvent) => {
+  isCompactDensity.value = event.matches
+}
+
 onMounted(() => {
   const root = rootRef.value
-  const main = mainRef.value
-  if (!root || !main) return
+  if (!root) return
 
   resizeObserver = new ResizeObserver(syncRadius)
   resizeObserver.observe(root)
-  main.addEventListener('pointerdown', handlePointerDown, { passive: true })
-  window.addEventListener('keydown', handlePreviewKeydown)
-  prefersReducedMotion = window.matchMedia(
+  compactDensityQuery = window.matchMedia(
+    '(max-width: 768px), (hover: none) and (pointer: coarse)'
+  )
+  isCompactDensity.value = compactDensityQuery.matches
+  compactDensityQuery.addEventListener('change', handleCompactDensityChange)
+  prefersReducedMotion.value = window.matchMedia(
     '(prefers-reduced-motion: reduce)'
   ).matches
-  entranceStartTime = performance.now() + props.entranceDelay
   syncRadius()
-  if (!prefersReducedMotion) startAutoRotation()
 })
 
 onUnmounted(() => {
-  stopInertia()
-  stopAutoRotation()
+  resetDragInteraction()
   if (previewCloseTimer !== null) window.clearTimeout(previewCloseTimer)
   focusedTile?.style.removeProperty('visibility')
   setSmoothScrollLocked(scrollLockKey, false)
   resizeObserver?.disconnect()
-  const main = mainRef.value
-  main?.removeEventListener('pointerdown', handlePointerDown)
-  setDragListenersActive(false)
-  activePointerId = null
-  isDragging = false
-  startPosition = null
-  window.removeEventListener('keydown', handlePreviewKeydown)
+  compactDensityQuery?.removeEventListener('change', handleCompactDensityChange)
+  setPreviewKeyListenerActive(false)
 })
+
+watch(preview, (value) => setPreviewKeyListenerActive(!!value))
+
+watch(
+  () => props.active,
+  (active) => {
+    if (!active) resetDragInteraction()
+  }
+)
 
 watch(
   () => [
@@ -690,6 +769,44 @@ watch(
   height: 0;
   transform-style: preserve-3d;
   will-change: transform;
+}
+
+.dome-gallery__auto-rotation {
+  position: relative;
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+  animation: dome-gallery-entry-rotation
+      var(--dome-entry-rotation-duration, 0ms) cubic-bezier(0.2, 0.8, 0.2, 1)
+      var(--dome-auto-rotation-delay, 0ms) forwards,
+    dome-gallery-auto-rotation var(--dome-auto-rotation-duration, 300s) linear
+      calc(
+        var(--dome-auto-rotation-delay, 0ms) +
+          var(--dome-entry-rotation-duration, 0ms)
+      )
+      infinite;
+  will-change: transform;
+
+  &.is-paused {
+    animation-play-state: paused;
+    will-change: auto;
+  }
+}
+
+@keyframes dome-gallery-entry-rotation {
+  to {
+    transform: rotateY(var(--dome-entry-rotation, 0deg));
+  }
+}
+
+@keyframes dome-gallery-auto-rotation {
+  from {
+    transform: rotateY(var(--dome-entry-rotation, 0deg));
+  }
+
+  to {
+    transform: rotateY(calc(var(--dome-entry-rotation, 0deg) + 1turn));
+  }
 }
 
 .dome-gallery__tile-wrap {

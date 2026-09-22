@@ -82,7 +82,7 @@ const showMediaInfo = (media: GalleryMedia) => Boolean(media.title)
 
 <style lang="less" scoped>
 @red: #e23456;
-@mono: 'cn-custom', 'Courier New', monospace;
+@mono: 'UnboundedSans', 'Courier New', monospace;
 
 .works-gallery-page {
   color: var(--text-color);

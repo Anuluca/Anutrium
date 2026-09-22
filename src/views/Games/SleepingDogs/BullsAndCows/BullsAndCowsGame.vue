@@ -16,6 +16,10 @@
           :src="referenceScene"
           alt=""
           draggable="false"
+          width="1920"
+          height="1080"
+          loading="eager"
+          decoding="async"
         />
 
         <section class="phone-screen">
@@ -32,7 +36,15 @@
 
           <div v-if="introPhase === 'ready'" class="screen-interface">
             <div class="screen-watermark" aria-hidden="true">
-              <img :src="referenceScene" alt="" draggable="false" />
+              <img
+                :src="referenceScene"
+                alt=""
+                draggable="false"
+                width="1920"
+                height="1080"
+                loading="eager"
+                decoding="async"
+              />
             </div>
 
             <div class="legend" :aria-label="copy.resultLegend">

@@ -7,15 +7,10 @@
     <line id="ray" x1="500" y1="444" x2="500" y2="424" class="p v r" stroke-width=".9"/>
   </defs>
   <g class="v">
-    <circle cx="500" cy="500" r="486" class="p" stroke-width="1" stroke-dasharray="4 8"/>
     <circle cx="500" cy="500" r="478" class="p" stroke-width=".9"/>
     <circle cx="500" cy="500" r="468" class="f" stroke-width=".8" stroke-dasharray="1 7"/>
     <circle cx="500" cy="500" r="460" class="f" pathLength="360" stroke-width=".75" stroke-dasharray="1 4"/>
     <path d="M48 500A452 452 0 0 1 500 48M952 500A452 452 0 0 1 500 952" class="f r" stroke-width="1"/>
-    <circle cx="500" cy="14" r="4" fill="#e2c28a"/>
-    <circle cx="986" cy="500" r="3" fill="#e2c28a"/>
-    <circle cx="500" cy="986" r="4" fill="#e2c28a"/>
-    <circle cx="14" cy="500" r="3" fill="#e2c28a"/>
   </g>
   <g>
     <circle cx="500" cy="500" r="310" class="f v" stroke-width=".8"/>

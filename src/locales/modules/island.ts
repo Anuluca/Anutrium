@@ -146,25 +146,8 @@ const island = {
   },
   player: {
     ariaLabel: {
-      zhCn: '音乐播放器',
-      en: 'Music player',
-    },
-    nowPlaying: 'NOW PLAYING',
-    prevTrack: {
-      zhCn: '上一首',
-      en: 'Previous track',
-    },
-    nextTrack: {
-      zhCn: '下一首',
-      en: 'Next track',
-    },
-    pauseTrack: {
-      zhCn: '暂停',
-      en: 'Pause',
-    },
-    playTrack: {
-      zhCn: '播放',
-      en: 'Play',
+      zhCn: '音乐推荐',
+      en: 'Featured music',
     },
     tracks: dynamic.tracks,
   },

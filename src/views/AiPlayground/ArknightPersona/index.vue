@@ -32,6 +32,10 @@
                 class="classroom"
                 :src="classroom"
                 alt="洒满蓝色日光的教室"
+                width="1600"
+                height="912"
+                loading="eager"
+                decoding="async"
                 @load="backgroundReady = true"
               />
               <div class="scene-tint" />
@@ -42,6 +46,10 @@
                   :src="protagonist"
                   alt="蓝发少年结城理，身穿黑色校服，佩戴耳机"
                   draggable="false"
+                  width="900"
+                  height="912"
+                  loading="eager"
+                  decoding="async"
                   @load="characterReady = true"
                 />
               </div>

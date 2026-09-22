@@ -2,11 +2,11 @@
   <Transition name="back-to-top">
     <button
       v-if="isVisible && !suppressed"
+      ref="buttonElement"
       class="back-to-top-button no-rem"
       type="button"
       aria-label="回到页面顶部"
       title="BACK TO TOP"
-      :style="{ '--scroll-progress': `${scrollProgress}%` }"
       @click="scrollToTop"
     >
       <span class="button-progress" aria-hidden="true" />
@@ -17,14 +17,9 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
+import { nextTick, ref } from 'vue'
 
-import {
-  addPageScrollListener,
-  getPageMaxScrollTop,
-  getPageScrollTop,
-  scrollPageTo,
-} from '@/utils/pageScroll'
+import { scrollPageTo } from '@/utils/pageScroll'
 
 withDefaults(
   defineProps<{
@@ -36,26 +31,32 @@ withDefaults(
 )
 
 const SHOW_THRESHOLD = 240
+const buttonElement = ref<HTMLElement | null>(null)
 const isVisible = ref(false)
-const scrollProgress = ref(0)
-let scrollRafId: number | null = null
-let removePageScrollListener: (() => void) | null = null
+let latestProgress = 0
 
-const updateVisibility = () => {
-  if (scrollRafId !== null) return
-
-  scrollRafId = window.requestAnimationFrame(() => {
-    const scrollTop = getPageScrollTop()
-    const maxScroll = Math.max(1, getPageMaxScrollTop())
-    scrollProgress.value = Math.min(100, (scrollTop / maxScroll) * 100)
-
-    const nextValue = scrollTop > SHOW_THRESHOLD
-    if (isVisible.value !== nextValue) {
-      isVisible.value = nextValue
+const setScrollState = (scrollTop: number, progress: number) => {
+  latestProgress = progress
+  const nextVisible = scrollTop > SHOW_THRESHOLD
+  if (isVisible.value !== nextVisible) {
+    isVisible.value = nextVisible
+    if (nextVisible) {
+      void nextTick(() => {
+        buttonElement.value?.style.setProperty(
+          '--scroll-progress',
+          `${latestProgress}%`
+        )
+      })
     }
-    scrollRafId = null
-  })
+  } else {
+    buttonElement.value?.style.setProperty(
+      '--scroll-progress',
+      `${latestProgress}%`
+    )
+  }
 }
+
+defineExpose({ setScrollState })
 
 const scrollToTop = () => {
   const reduceMotion = window.matchMedia(
@@ -68,17 +69,6 @@ const scrollToTop = () => {
     behavior: reduceMotion ? 'auto' : 'smooth',
   })
 }
-
-onMounted(() => {
-  updateVisibility()
-  removePageScrollListener = addPageScrollListener(updateVisibility)
-})
-
-onUnmounted(() => {
-  removePageScrollListener?.()
-  removePageScrollListener = null
-  if (scrollRafId !== null) window.cancelAnimationFrame(scrollRafId)
-})
 </script>
 
 <style lang="less" scoped>
@@ -161,7 +151,7 @@ onUnmounted(() => {
   right: 0;
   bottom: 10px;
   left: 0;
-  font-family: 'anton', 'alibaba-puhuiti';
+  font-family: 'Anton', 'alibaba-puhuiti';
   font-size: 16px;
   letter-spacing: 0.08em;
   line-height: 1;

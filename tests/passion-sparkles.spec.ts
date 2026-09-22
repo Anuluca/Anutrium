@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 const PAGE_LOAD_TIMEOUT = 20_000
 
-test('PASSION uses large yellow non-rotating Inspira sparkles only on hover', async ({
+test('PASSION uses large yellow non-rotating CSS sparkles only on hover', async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name.includes('mobile'))
@@ -12,7 +12,14 @@ test('PASSION uses large yellow non-rotating Inspira sparkles only on hover', as
   const passionText = passionLine.locator('.passion')
   const radiantText = passionLine.locator('.passion-radiant')
   const sparkles = passionLine.locator('.sparkles-text__sparkle')
+  const heroSlide = page.locator('.home-page-slide--hero')
   await expect(passionText).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
+  await expect(heroSlide).not.toHaveClass(/is-hero-initial-hidden/, {
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+  await expect(heroSlide).not.toHaveClass(/is-hero-initial-entering/, {
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
   await expect(passionText).toHaveCSS('opacity', '1')
   await expect(radiantText).toHaveText('PASSION')
   await expect(radiantText).not.toHaveClass(/radiant-text--active/)

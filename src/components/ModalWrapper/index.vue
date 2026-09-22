@@ -45,6 +45,8 @@ import { ElDialog } from 'element-plus'
 import DiamondCloseBtn from '@/components/DiamondCloseBtn/index.vue'
 import { useOverlayScrollLock } from '@/composables/useOverlayScrollLock'
 
+import 'element-plus/theme-chalk/dark/css-vars.css'
+
 import 'element-plus/es/components/dialog/style/css'
 
 const props = withDefaults(
@@ -125,7 +127,7 @@ const handleClosed = () => {
   left: 50%;
   z-index: 5;
   color: var(--modal-accent, var(--page-theme-color, #e23456));
-  font-family: 'cn-custom', sans-serif;
+  font-family: 'UnboundedSans', sans-serif;
   font-size: 0.96rem;
   font-weight: 400;
   letter-spacing: 1px;

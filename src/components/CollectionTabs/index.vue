@@ -13,7 +13,10 @@
       :style="{
         '--collection-accent': item.accentColor || '#e23456',
         '--collection-cover': item.coverUrl
-          ? `url(${item.coverUrl})`
+          ? `url(${getCardThumbnailUrl(item.coverUrl)})`
+          : undefined,
+        '--collection-cover-mobile': item.coverUrl
+          ? `url(${getCardMobileThumbnailUrl(item.coverUrl)})`
           : undefined,
         '--collection-cover-position': item.coverPosition || 'right center',
       }"
@@ -33,6 +36,11 @@
 </template>
 
 <script setup lang="ts">
+import {
+  getCardMobileThumbnailUrl,
+  getCardThumbnailUrl,
+} from '@/utils/imageVariant'
+
 export interface CollectionTabItem {
   id: string
   title: string
@@ -189,7 +197,7 @@ defineEmits<{
 
   &__index {
     color: var(--collection-accent);
-    font-family: 'cn-custom', 'Courier New', monospace;
+    font-family: 'UnboundedSans', 'Courier New', monospace;
     font-size: var(--collection-tab-index-size);
   }
 
@@ -207,7 +215,7 @@ defineEmits<{
     small {
       margin-top: 5px;
       color: var(--text-faint);
-      font-family: 'cn-custom', 'Courier New', monospace;
+      font-family: 'UnboundedSans', 'Courier New', monospace;
       font-size: var(--collection-tab-subtitle-size);
       letter-spacing: 0.08em;
     }
@@ -215,7 +223,7 @@ defineEmits<{
 
   &__count {
     color: color-mix(in srgb, var(--text-color) 16%, transparent);
-    font-family: 'cn-custom', 'Courier New', monospace;
+    font-family: 'UnboundedSans', 'Courier New', monospace;
     font-size: var(--collection-tab-count-size);
     font-weight: 900;
   }
@@ -273,6 +281,12 @@ defineEmits<{
     &__count {
       display: none;
     }
+  }
+}
+
+@media (max-width: 768px) {
+  .collection-tab::before {
+    background-image: var(--collection-cover-mobile);
   }
 }
 </style>

@@ -1,9 +1,9 @@
 const R2_ASSET_ORIGIN = 'https://assets.anuluca.com'
 
-export type ImageVariant = 'home-thumb' | 'card-thumb'
+export type ImageVariant = 'home-thumb' | 'card-thumb' | 'card-mobile'
 
 /**
- * 标记由 Cloudflare Images 转换流处理的首页缩略图。
+ * 标记由 Cloudflare Images 转换流处理的 R2 缩略图。
  * 原图继续保留在 R2；非本站资源保持原样，避免影响外部图片。
  */
 export const getImageVariantUrl = (source: string, variant: ImageVariant) => {
@@ -23,3 +23,6 @@ export const getHomeThumbnailUrl = (source: string) =>
 
 export const getCardThumbnailUrl = (source: string) =>
   getImageVariantUrl(source, 'card-thumb')
+
+export const getCardMobileThumbnailUrl = (source: string) =>
+  getImageVariantUrl(source, 'card-mobile')

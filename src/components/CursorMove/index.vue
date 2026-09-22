@@ -27,12 +27,8 @@ const props = defineProps({
 
 const cursorStateStore = cursorState()
 
-const HIDDEN_CURSOR_CLASSNAMES = [
-  'no-cursor',
-  'hide-cursor',
-  'cursor-none',
-  'native-cursor',
-]
+const HIDDEN_CURSOR_SELECTOR =
+  '.no-cursor, .hide-cursor, .cursor-none, .native-cursor'
 const INTERACTIVE_CURSOR_SELECTOR =
   'a, button, [role="button"], [data-magnetic], .is-clickable'
 const FINE_POINTER_MEDIA = '(hover: hover) and (pointer: fine)'
@@ -54,6 +50,10 @@ const settleThreshold = 0.35
 let animationFrameId = null
 let hasPointerListeners = false
 let finePointerQuery = null
+let latestPointerX = 0
+let latestPointerY = 0
+let hasPendingPointerMove = false
+let shouldSnapToPointer = true
 
 const shouldTrackCursor = computed(() => {
   return props.enabled && hasFinePointer.value
@@ -76,62 +76,60 @@ const syncNativeCursor = () => {
 }
 
 const checkShouldHideCursor = (target) => {
-  if (!target || !target.classList) return false
-
-  for (const className of HIDDEN_CURSOR_CLASSNAMES) {
-    if (
-      target.classList.contains(className) ||
-      target.closest(`.${className}`)
-    ) {
-      return true
-    }
-  }
-  return false
+  return target instanceof Element && !!target.closest(HIDDEN_CURSOR_SELECTOR)
 }
 
-const onMouseMove = (e) => {
-  if (!shouldAnimateCursor.value) return
-
-  mouse.x = e.clientX
-  mouse.y = e.clientY
-  const isReenteringViewport = !isPointerInside.value
-  isPointerInside.value = true
-  if (!hasPointerPosition.value || isReenteringViewport) {
-    follower.x = mouse.x
-    follower.y = mouse.y
-    hasPointerPosition.value = true
-    syncCursorPosition()
-  }
-  syncNativeCursor()
-
-  const nextShouldHideCursor = checkShouldHideCursor(e.target)
+const syncCursorTarget = (target) => {
+  const nextShouldHideCursor = checkShouldHideCursor(target)
   if (shouldHideCursor.value !== nextShouldHideCursor) {
     shouldHideCursor.value = nextShouldHideCursor
   }
 
   const nextIsHovering =
-    !nextShouldHideCursor && !!e.target.closest?.(INTERACTIVE_CURSOR_SELECTOR)
+    !nextShouldHideCursor &&
+    target instanceof Element &&
+    !!target.closest(INTERACTIVE_CURSOR_SELECTOR)
   if (isHovering.value !== nextIsHovering) {
     isHovering.value = nextIsHovering
   }
+}
 
+const onPointerMove = (event) => {
+  if (!shouldAnimateCursor.value) return
+
+  latestPointerX = event.clientX
+  latestPointerY = event.clientY
+  hasPendingPointerMove = true
   startRender()
 }
 
+const onPointerOver = (event) => {
+  if (!shouldAnimateCursor.value) return
+  if (!isPointerInside.value) isPointerInside.value = true
+  syncCursorTarget(event.target)
+}
+
+const onPointerOut = (event) => {
+  if (!event.relatedTarget) {
+    onPointerLeaveViewport()
+    return
+  }
+  syncCursorTarget(event.relatedTarget)
+}
+
 const onPointerLeaveViewport = () => {
+  hasPendingPointerMove = false
+  shouldSnapToPointer = true
   isPointerInside.value = false
   isClicked.value = false
-  syncNativeCursor()
+  stopRender()
 }
 
 const onWindowBlur = () => {
   isPointerInside.value = false
-  syncNativeCursor()
-}
-
-const onWindowMouseOut = (event) => {
-  if (event.relatedTarget || event.toElement) return
-  onPointerLeaveViewport()
+  hasPendingPointerMove = false
+  shouldSnapToPointer = true
+  stopRender()
 }
 
 const onPointerDown = () => (isClicked.value = true)
@@ -154,9 +152,27 @@ const stopRender = () => {
 }
 
 const render = () => {
-  if (!shouldAnimateCursor.value || !hasPointerPosition.value) {
-    stopRender()
+  animationFrameId = null
+  if (!shouldAnimateCursor.value) {
+    hasPendingPointerMove = false
     return
+  }
+  if (!hasPointerPosition.value && !hasPendingPointerMove) return
+
+  if (hasPendingPointerMove) {
+    const shouldSnap = shouldSnapToPointer || !hasPointerPosition.value
+    mouse.x = latestPointerX
+    mouse.y = latestPointerY
+    hasPendingPointerMove = false
+    isPointerInside.value = true
+
+    if (shouldSnap) {
+      follower.x = mouse.x
+      follower.y = mouse.y
+      hasPointerPosition.value = true
+      shouldSnapToPointer = false
+      syncCursorPosition()
+    }
   }
 
   const dx = mouse.x - follower.x
@@ -170,7 +186,6 @@ const render = () => {
     follower.x = mouse.x
     follower.y = mouse.y
     syncCursorPosition()
-    stopRender()
     return
   }
 
@@ -191,7 +206,9 @@ const handleVisibilityChange = () => {
 const addPointerListeners = () => {
   if (hasPointerListeners) return
 
-  window.addEventListener('mousemove', onMouseMove)
+  window.addEventListener('pointermove', onPointerMove, { passive: true })
+  window.addEventListener('pointerover', onPointerOver, { passive: true })
+  window.addEventListener('pointerout', onPointerOut, { passive: true })
   window.addEventListener('pointerdown', onPointerDown, true)
   window.addEventListener('pointerup', onPointerUp, true)
   window.addEventListener('pointercancel', onPointerUp, true)
@@ -199,7 +216,6 @@ const addPointerListeners = () => {
     'mouseleave',
     onPointerLeaveViewport
   )
-  window.addEventListener('mouseout', onWindowMouseOut)
   window.addEventListener('blur', onWindowBlur)
   hasPointerListeners = true
 }
@@ -207,7 +223,9 @@ const addPointerListeners = () => {
 const removePointerListeners = () => {
   if (!hasPointerListeners) return
 
-  window.removeEventListener('mousemove', onMouseMove)
+  window.removeEventListener('pointermove', onPointerMove)
+  window.removeEventListener('pointerover', onPointerOver)
+  window.removeEventListener('pointerout', onPointerOut)
   window.removeEventListener('pointerdown', onPointerDown, true)
   window.removeEventListener('pointerup', onPointerUp, true)
   window.removeEventListener('pointercancel', onPointerUp, true)
@@ -215,7 +233,6 @@ const removePointerListeners = () => {
     'mouseleave',
     onPointerLeaveViewport
   )
-  window.removeEventListener('mouseout', onWindowMouseOut)
   window.removeEventListener('blur', onWindowBlur)
   hasPointerListeners = false
   isHovering.value = false
@@ -223,7 +240,8 @@ const removePointerListeners = () => {
   shouldHideCursor.value = false
   hasPointerPosition.value = false
   isPointerInside.value = false
-  syncNativeCursor()
+  hasPendingPointerMove = false
+  shouldSnapToPointer = true
 }
 
 const syncPointerListeners = () => {
@@ -260,8 +278,9 @@ onUnmounted(() => {
 
 watch(shouldTrackCursor, () => {
   syncPointerListeners()
-  syncNativeCursor()
 })
+
+watch(isCustomCursorReady, syncNativeCursor, { flush: 'sync' })
 
 watch(shouldAnimateCursor, (canAnimate) => {
   if (canAnimate) startRender()

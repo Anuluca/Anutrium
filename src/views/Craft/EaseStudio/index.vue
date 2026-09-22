@@ -337,7 +337,7 @@ const copyCss = async () => {
 
 .ease-tool {
   color: @text;
-  font-family: 'cn-custom', system-ui, sans-serif;
+  font-family: 'UnboundedSans', system-ui, sans-serif;
 }
 
 .curve-panel {

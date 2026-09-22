@@ -224,7 +224,7 @@ const handleShare = async () => {
 }
 
 .share-button__code {
-  font-family: 'cn-custom', monospace;
+  font-family: 'UnboundedSans', monospace;
   font-size: 0.28rem;
   letter-spacing: 0.14em;
   opacity: 0.66;

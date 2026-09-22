@@ -23,6 +23,8 @@
         class="tl-card__img"
         loading="lazy"
         decoding="async"
+        width="768"
+        height="576"
       />
       <div v-else class="tl-card__img-placeholder">
         <span class="tl-card__placeholder-icon">{{ tool.icon }}</span>
@@ -311,7 +313,7 @@ const { locale } = useI18n()
 .tl-card__title {
   margin: 2px 0 0;
   color: @text;
-  font-family: 'cn-custom';
+  font-family: 'UnboundedSans';
   font-size: 17px;
   letter-spacing: 0.04em;
   line-height: 1.15;

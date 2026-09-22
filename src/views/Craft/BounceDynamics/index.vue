@@ -617,7 +617,7 @@ onBeforeUnmount(() => {
 .bounce-tool {
   width: 100%;
   color: @text;
-  font-family: 'cn-custom', system-ui, sans-serif;
+  font-family: 'UnboundedSans', system-ui, sans-serif;
 }
 
 .bounce-stage {
@@ -665,7 +665,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: baseline;
   gap: 12px;
-  font-family: 'cn-custom', monospace;
+  font-family: 'UnboundedSans', monospace;
 
   span,
   em {

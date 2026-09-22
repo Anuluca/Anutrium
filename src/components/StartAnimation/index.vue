@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import { nextTick, onMounted, onUnmounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
 
 import Logo from '@/components/Logo/index.vue'
 import LogoRotating3D from '@/components/Logo_rotating3D/index.vue'
 import { loadCriticalFont } from '@/utils/fontLoader'
 
 const emit = defineEmits(['finished', 'hidden'])
-const route = useRoute()
 
 const isAnimating = ref(true)
 const isLogoWipingOut = ref(false)
@@ -17,6 +15,7 @@ const isLogoDocking = ref(false)
 const isBackgroundExiting = ref(false)
 const isBackgroundFading = ref(false)
 const logoRotating3DRef = ref()
+const logo2DRef = ref<HTMLElement | null>(null)
 const entryStyle = ref<Record<string, string>>({})
 const timers: number[] = []
 let isUnmounted = false
@@ -80,24 +79,18 @@ const isMobileLayout = () =>
   window.matchMedia('(max-aspect-ratio: 1/1)').matches ||
   window.innerWidth < 768
 
-const getVisibleRect = (selector: string) => {
-  const elements = Array.from(document.querySelectorAll<HTMLElement>(selector))
+const getVisibleElementRect = (selector: string) => {
+  for (const element of document.querySelectorAll<HTMLElement>(selector)) {
+    const rect = element.getBoundingClientRect()
+    if (rect.width <= 0 || rect.height <= 0) continue
 
-  return (
-    elements
-      .map((element) => ({
-        element,
-        rect: element.getBoundingClientRect(),
-        style: window.getComputedStyle(element),
-      }))
-      .find(
-        ({ rect, style }) =>
-          rect.width > 0 &&
-          rect.height > 0 &&
-          style.display !== 'none' &&
-          style.visibility !== 'hidden'
-      )?.rect || null
-  )
+    const style = window.getComputedStyle(element)
+    if (style.display !== 'none' && style.visibility !== 'hidden') {
+      return { element, rect, style }
+    }
+  }
+
+  return null
 }
 
 const getLogoFallbackRect = () => {
@@ -123,18 +116,6 @@ const getLogoFallbackRect = () => {
 const getFooterFallbackRect = () => {
   const { width, height } = getViewportSize()
   const footerHeight = 26
-  const hasFullFooter = route.meta.fullFooter !== false
-
-  if (hasFullFooter) {
-    return {
-      left: 0,
-      top: height - footerHeight,
-      width,
-      height: footerHeight,
-      opacity: 0.98,
-      radius: '0px',
-    }
-  }
 
   return {
     left: 40,
@@ -162,32 +143,44 @@ const getBackgroundTargetRect = () => {
     }
   }
 
-  const footerRect = getVisibleRect('[data-entry-footer-target]')
-  if (!footerRect) return getFooterFallbackRect()
+  const footerTarget = getVisibleElementRect('[data-entry-footer-target]')
+  if (!footerTarget) return getFooterFallbackRect()
+  const { rect, style } = footerTarget
 
   return {
-    left: footerRect.left,
-    top: footerRect.top,
-    width: footerRect.width,
-    height: footerRect.height,
+    left: rect.left,
+    top: rect.top,
+    width: rect.width,
+    height: rect.height,
     opacity: 0.98,
-    radius: window.getComputedStyle(
-      document.querySelector('[data-entry-footer-target]') as HTMLElement
-    ).borderRadius,
+    radius: style.borderRadius,
   }
 }
 
 const measureExitTargets = () => {
   const { width, height } = getViewportSize()
+  const logoTarget = getVisibleElementRect('[data-entry-logo-target]')
+  const logoTargetSvgRect = logoTarget?.element
+    .querySelector('svg')
+    ?.getBoundingClientRect()
   const logoRect =
-    getVisibleRect('[data-entry-logo-target]') || getLogoFallbackRect()
+    logoTargetSvgRect || logoTarget?.rect || getLogoFallbackRect()
+  const logoSourceRect = logo2DRef.value?.getBoundingClientRect()
+  const logoSourceWidth = Math.max(1, logoSourceRect?.width || logoRect.width)
+  const logoSourceHeight = Math.max(
+    1,
+    logoSourceRect?.height || logoRect.height
+  )
+  const logoTargetScale = Math.min(
+    logoRect.width / logoSourceWidth,
+    logoRect.height / logoSourceHeight
+  )
   const backgroundRect = getBackgroundTargetRect()
 
   entryStyle.value = {
-    '--entry-logo-target-left': `${logoRect.left}px`,
-    '--entry-logo-target-top': `${logoRect.top}px`,
-    '--entry-logo-target-width': `${logoRect.width}px`,
-    '--entry-logo-target-height': `${logoRect.height}px`,
+    '--entry-logo-target-x': `${logoRect.left}px`,
+    '--entry-logo-target-y': `${logoRect.top}px`,
+    '--entry-logo-target-scale': `${logoTargetScale}`,
     '--entry-bg-target-x': `${backgroundRect.left}px`,
     '--entry-bg-target-y': `${backgroundRect.top}px`,
     '--entry-bg-target-scale-x': `${backgroundRect.width / width}`,
@@ -266,12 +259,11 @@ onMounted(() => {
   }, INTRO_FAILSAFE_DURATION)
   schedule(forceHideIntro, INTRO_FORCE_HIDE_DURATION)
 
-  Promise.all([loadCriticalFont(), waitWithSchedule(INTRO_MIN_DURATION)]).then(
-    () => {
-      if (isUnmounted) return
-      logoRotating3DRef.value?.stop()
-    }
-  )
+  void loadCriticalFont()
+  waitWithSchedule(INTRO_MIN_DURATION).then(() => {
+    if (isUnmounted) return
+    logoRotating3DRef.value?.stop()
+  })
 })
 
 onUnmounted(() => {
@@ -300,6 +292,7 @@ onUnmounted(() => {
         </div>
       </div>
       <div
+        ref="logo2DRef"
         :class="{
           'logo-wrapper2': true,
           show: logo2DShow,

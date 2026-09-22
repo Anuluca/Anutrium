@@ -641,15 +641,7 @@ const imageLog = [
           zhCn: '网络记录',
           en: 'WEB RECORDS',
         },
-        photos: [
-          {
-            url: 'https://assets.anuluca.com/Island/picRecord/pokemonCorocoro/',
-            title: {
-              zhCn: '',
-              en: '',
-            },
-          },
-        ],
+        photos: [],
       },
     ],
   },

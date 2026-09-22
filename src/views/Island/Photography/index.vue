@@ -17,101 +17,95 @@
         @update:model-value="selectGroupTab"
       />
 
-      <Transition name="collection-switch" mode="out-in">
-        <section
-          v-if="activeGroup"
-          :key="activeGroupId"
-          class="library-workspace"
-          :class="{
-            'has-subject-filter': activeGroup.photoGroups?.length,
-          }"
+      <section
+        v-if="activeGroup"
+        :key="activeGroupId"
+        class="library-workspace"
+        :class="{
+          'has-subject-filter': activeGroup.photoGroups?.length,
+        }"
+      >
+        <FilterRail
+          v-if="activeGroup.photoGroups?.length"
+          :aria-label="
+            t('island.modules.photography.photoWorks.subjectNavigation')
+          "
+          :items="photoGroupFilters"
+          :model-value="activePhotoGroupId"
+          @update:model-value="selectPhotoGroup"
+        />
+
+        <MediaGallery
+          v-if="paginatedPhotos.length"
+          :key="galleryRenderKey"
+          :items="paginatedPhotos"
+          :get-media-label="getMediaLabel"
+          preserve-image-colors
         >
-          <FilterRail
-            v-if="activeGroup.photoGroups?.length"
-            :aria-label="
-              t('island.modules.photography.photoWorks.subjectNavigation')
-            "
-            :items="photoGroupFilters"
-            :model-value="activePhotoGroupId"
-            @update:model-value="selectPhotoGroup"
-          />
-
-          <Transition name="gallery-switch" mode="out-in">
-            <MediaGallery
-              v-if="paginatedPhotos.length"
-              :key="galleryRenderKey"
-              :entrance-step-ms="90"
-              :items="paginatedPhotos"
-              :get-media-label="getMediaLabel"
-              preserve-image-colors
-              staggered-entrance
-            >
-              <template #info="{ item: photo }">
-                <div class="photo-info__inner">
-                  <span class="photo-info__device">
-                    {{ photo.device || '' }}
-                  </span>
-                  <span
-                    class="photo-info__time"
-                    :class="{
-                      'photo-info__time--divided': photo.time && photo.location,
-                    }"
-                  >
-                    {{ photo.time || '' }}
-                  </span>
-                  <span class="photo-info__location">
-                    <Location
-                      v-if="photo.location"
-                      class="photo-info__location-icon"
-                      aria-hidden="true"
-                    />
-                    <span>{{ photo.location || '' }}</span>
-                  </span>
-                </div>
-              </template>
-            </MediaGallery>
-
-            <div
-              v-else
-              :key="`${galleryRenderKey}:empty`"
-              class="photography-empty"
-            >
-              {{ t('island.modules.photography.photoWorks.empty') }}
+          <template #info="{ item: photo }">
+            <div class="photo-info__inner">
+              <span class="photo-info__device">
+                {{ photo.device || '' }}
+              </span>
+              <span
+                class="photo-info__time"
+                :class="{
+                  'photo-info__time--divided': photo.time && photo.location,
+                }"
+              >
+                {{ photo.time || '' }}
+              </span>
+              <span class="photo-info__location">
+                <Location
+                  v-if="photo.location"
+                  class="photo-info__location-icon"
+                  aria-hidden="true"
+                />
+                <span>{{ photo.location || '' }}</span>
+              </span>
             </div>
-          </Transition>
+          </template>
+        </MediaGallery>
 
-          <nav
-            v-if="totalPages > 1"
-            class="photo-pagination"
-            :aria-label="t('flanerie.pageLabel')"
+        <div
+          v-else
+          :key="`${galleryRenderKey}:empty`"
+          class="photography-empty"
+        >
+          {{ t('island.modules.photography.photoWorks.empty') }}
+        </div>
+
+        <nav
+          v-if="totalPages > 1"
+          class="photo-pagination"
+          :aria-label="t('pagination.pageLabel')"
+        >
+          <button
+            type="button"
+            :disabled="currentPage === 1"
+            @click="setPage(currentPage - 1)"
           >
-            <button
-              type="button"
-              :disabled="currentPage === 1"
-              @click="setPage(currentPage - 1)"
-            >
-              {{ t('flanerie.previousPage') }}
-            </button>
-            <button
-              v-for="page in totalPages"
-              :key="page"
-              type="button"
-              :class="{ 'is-active': page === currentPage }"
-              :aria-current="page === currentPage ? 'page' : undefined"
-              @click="setPage(page)"
-            >
-              {{ page }}
-            </button>
-            <button
-              type="button"
-              :disabled="currentPage === totalPages"
-              @click="setPage(currentPage + 1)"
-            >
-              {{ t('flanerie.nextPage') }}
-            </button>
-          </nav>
-        </section>
-      </Transition>
+            {{ t('pagination.previousPage') }}
+          </button>
+          <button
+            v-for="page in totalPages"
+            :key="page"
+            type="button"
+            :class="{ 'is-active': page === currentPage }"
+            :aria-current="page === currentPage ? 'page' : undefined"
+            @click="setPage(page)"
+          >
+            {{ page }}
+          </button>
+          <button
+            type="button"
+            :disabled="currentPage === totalPages"
+            @click="setPage(currentPage + 1)"
+          >
+            {{ t('pagination.nextPage') }}
+          </button>
+        </nav>
+      </section>
     </main>
 
     <PageFooter />
@@ -162,7 +156,7 @@ interface PhotographyGroup {
   photoGroups?: PhotographyPhotoGroup[]
 }
 
-const PAGE_SIZE = 30
+const PAGE_SIZE = 15
 const { locale, t, tm } = useI18n()
 const route = useRoute()
 const router = useRouter()
@@ -361,7 +355,7 @@ watch(
 
 <style lang="less" scoped>
 @red: #e23456;
-@mono: 'cn-custom', 'Courier New', monospace;
+@mono: 'UnboundedSans', 'Courier New', monospace;
 @cjk: 'alibaba-puhuiti', sans-serif;
 
 .photography-page {
@@ -394,46 +388,6 @@ watch(
       grid-column: 2;
     }
   }
-}
-
-.collection-switch-enter-active {
-  transition: opacity 0.35s ease, transform 0.48s cubic-bezier(0.22, 1, 0.36, 1),
-    filter 0.35s ease;
-}
-
-.collection-switch-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-.collection-switch-enter-from {
-  opacity: 0;
-  filter: blur(5px);
-  transform: translateY(14px);
-}
-
-.collection-switch-leave-to {
-  opacity: 0;
-  transform: translateY(-5px);
-}
-
-.gallery-switch-enter-active {
-  transition: opacity 0.32s ease, transform 0.42s cubic-bezier(0.22, 1, 0.36, 1),
-    filter 0.32s ease;
-}
-
-.gallery-switch-leave-active {
-  transition: opacity 0.18s ease, transform 0.18s ease;
-}
-
-.gallery-switch-enter-from {
-  opacity: 0;
-  filter: blur(4px);
-  transform: translateX(12px);
-}
-
-.gallery-switch-leave-to {
-  opacity: 0;
-  transform: translateX(-6px);
 }
 
 .library-toolbar {
@@ -621,15 +575,6 @@ watch(
     > span {
       padding: 0 5px;
     }
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .collection-switch-enter-active,
-  .collection-switch-leave-active,
-  .gallery-switch-enter-active,
-  .gallery-switch-leave-active {
-    transition: none;
   }
 }
 </style>

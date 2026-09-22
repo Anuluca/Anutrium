@@ -14,13 +14,20 @@
         class="image-log-album-card__photo"
         :class="`image-log-album-card__photo--${photoIndex + 1}`"
       >
-        <img
-          v-if="photo"
-          :src="photo.url"
-          :alt="photo.title || album.title"
-          loading="lazy"
-          decoding="async"
-        />
+        <picture v-if="photo">
+          <source
+            media="(max-width: 768px)"
+            :srcset="getCardMobileThumbnailUrl(photo.url)"
+          />
+          <img
+            :src="getCardThumbnailUrl(photo.url)"
+            :alt="photo.title || album.title"
+            loading="lazy"
+            decoding="async"
+            width="768"
+            height="576"
+          />
+        </picture>
         <span v-else class="image-log-album-card__color-panel">
           <span>MORE...</span>
         </span>
@@ -37,6 +44,11 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+
+import {
+  getCardMobileThumbnailUrl,
+  getCardThumbnailUrl,
+} from '@/utils/imageVariant'
 
 export interface ImageLogAlbumCardPhoto {
   url: string
@@ -79,7 +91,7 @@ const cardStyle = computed(() => ({
 
 <style lang="less" scoped>
 @red: #e23456;
-@mono: 'cn-custom', 'Courier New', monospace;
+@mono: 'UnboundedSans', 'Courier New', monospace;
 @cjk: 'alibaba-puhuiti', sans-serif;
 
 .image-log-album-card {
@@ -254,10 +266,15 @@ const cardStyle = computed(() => ({
   }
 
   img,
+  picture,
   .image-log-album-card__color-panel {
     display: block;
     width: 100%;
     height: 100%;
+  }
+
+  picture {
+    position: relative;
   }
 
   img {

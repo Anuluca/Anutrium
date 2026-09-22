@@ -2,6 +2,7 @@
 import {
   computed,
   type CSSProperties,
+  nextTick,
   onMounted,
   onUnmounted,
   ref,
@@ -9,6 +10,7 @@ import {
 } from 'vue'
 
 import ParticlesBg from '@/components/ParticlesBg/index.vue'
+import { addPageResizeListener } from '@/utils/pageScroll'
 
 type ZodiacSignId =
   | 'aries'
@@ -32,18 +34,16 @@ interface Props {
   deepBlack?: boolean
   activeSign?: ZodiacSignId
   layout?: ZodiacLayout
+  particlesVisible?: boolean
+  topInset?: number
   entryActive?: boolean
 }
 
 interface ZodiacSign {
   id: ZodiacSignId
   glyph: string
-  name: string
-  code: string
   positionStyle: CSSProperties
   faceStyle: { transform: string }
-  degreePositionStyle: CSSProperties
-  degreeFaceStyle: { transform: string }
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -52,9 +52,11 @@ const props = withDefaults(defineProps<Props>(), {
   deepBlack: false,
   activeSign: 'leo',
   layout: 'hero',
+  particlesVisible: true,
+  topInset: 0,
   entryActive: true,
 })
-const STATIC_CHART_SRC = '/images/zodiac-chart-static.svg?v=20260830'
+const STATIC_CHART_SRC = '/images/zodiac-chart-static.svg?v=20260921-2'
 
 const polarPercent = (radius: number, angle: number): CSSProperties => {
   const radians = (angle * Math.PI) / 180
@@ -65,45 +67,38 @@ const polarPercent = (radius: number, angle: number): CSSProperties => {
 }
 
 const zodiacSource = [
-  ['aries', '♈︎', 'ARIES', 'ARI'],
-  ['taurus', '♉︎', 'TAURUS', 'TAU'],
-  ['gemini', '♊︎', 'GEMINI', 'GEM'],
-  ['cancer', '♋︎', 'CANCER', 'CNC'],
-  ['leo', '♌︎', 'LEO', 'LEO'],
-  ['virgo', '♍︎', 'VIRGO', 'VIR'],
-  ['libra', '♎︎', 'LIBRA', 'LIB'],
-  ['scorpio', '♏︎', 'SCORPIO', 'SCO'],
-  ['sagittarius', '♐︎', 'SAGITTARIUS', 'SGR'],
-  ['capricorn', '♑︎', 'CAPRICORN', 'CAP'],
-  ['aquarius', '♒︎', 'AQUARIUS', 'AQR'],
-  ['pisces', '♓︎', 'PISCES', 'PSC'],
+  ['aries', '♈︎'],
+  ['taurus', '♉︎'],
+  ['gemini', '♊︎'],
+  ['cancer', '♋︎'],
+  ['leo', '♌︎'],
+  ['virgo', '♍︎'],
+  ['libra', '♎︎'],
+  ['scorpio', '♏︎'],
+  ['sagittarius', '♐︎'],
+  ['capricorn', '♑︎'],
+  ['aquarius', '♒︎'],
+  ['pisces', '♓︎'],
 ] as const
 
-const zodiacSigns: ZodiacSign[] = zodiacSource.map(
-  ([id, glyph, name, code], index) => {
-    const centerAngle = -105 - index * 30
-    const degreeAngle = -90 - index * 30
-    return {
-      id,
-      glyph,
-      name,
-      code,
-      positionStyle: polarPercent(40, centerAngle),
-      faceStyle: { transform: `rotate(${centerAngle + 90}deg)` },
-      degreePositionStyle: polarPercent(34.9, degreeAngle),
-      degreeFaceStyle: { transform: `rotate(${degreeAngle + 90}deg)` },
-    }
+const zodiacSigns: ZodiacSign[] = zodiacSource.map(([id, glyph], index) => {
+  const centerAngle = -105 - index * 30
+  return {
+    id,
+    glyph,
+    positionStyle: polarPercent(40, centerAngle),
+    faceStyle: { transform: `rotate(${centerAngle + 90}deg)` },
   }
-)
+})
 
 const sectorStyles = Array.from({ length: 12 }, (_, index) => ({
   transform: `translateX(-50%) rotate(${index * 30}deg)`,
 }))
-
-const getCanonicalRotation = (signId: ZodiacSignId) => {
-  const signIndex = zodiacSigns.findIndex((sign) => sign.id === signId)
-  return 15 + Math.max(0, signIndex) * 30
-}
+const zodiacRotationById = new Map<ZodiacSignId, number>(
+  zodiacSigns.map((sign, index) => [sign.id, 15 + index * 30])
+)
+const getCanonicalRotation = (signId: ZodiacSignId) =>
+  zodiacRotationById.get(signId) ?? 15
 
 const routeRotation = ref(getCanonicalRotation(props.activeSign))
 const heroScale = ref(1)
@@ -112,10 +107,17 @@ const isChartTransitioning = ref(false)
 const isRouteTransitioning = ref(false)
 const isEntryComplete = ref(false)
 const isHighlightSettled = ref(false)
+const isParticleFieldMounted = ref(props.particlesVisible)
+const isParticleFieldVisible = ref(props.particlesVisible)
 const activeChartTransitions = new Set<string>()
 let resizeRafId: number | null = null
+let particleRevealRafId: number | null = null
+let particleRevealSecondRafId: number | null = null
+let particleRemovalTimer: number | null = null
 const isReducedMotion = ref(false)
 let reducedMotionQuery: MediaQueryList | null = null
+let removePageResizeListener: (() => void) | null = null
+const PARTICLE_VISIBILITY_DURATION = 520
 
 const handleReducedMotionChange = (event: MediaQueryListEvent) => {
   isReducedMotion.value = event.matches
@@ -139,8 +141,69 @@ const stageStyle = computed(() => ({
   '--hero-scale': heroScale.value,
   '--route-rotation': `${routeRotation.value}deg`,
 }))
+const containerStyle = computed(() => ({
+  '--background-top-inset': `${Math.max(0, props.topInset)}px`,
+}))
 const PARTICLE_COLOR = '#e2c28a'
 const particleQuantity = computed(() => (isMobileViewport.value ? 50 : 100))
+
+const clearParticleRevealFrames = () => {
+  if (particleRevealRafId !== null) {
+    window.cancelAnimationFrame(particleRevealRafId)
+    particleRevealRafId = null
+  }
+  if (particleRevealSecondRafId !== null) {
+    window.cancelAnimationFrame(particleRevealSecondRafId)
+    particleRevealSecondRafId = null
+  }
+}
+
+const clearParticleRemovalTimer = () => {
+  if (particleRemovalTimer === null) return
+  window.clearTimeout(particleRemovalTimer)
+  particleRemovalTimer = null
+}
+
+const removeHiddenParticleField = () => {
+  if (props.particlesVisible) return
+  isParticleFieldMounted.value = false
+  clearParticleRemovalTimer()
+}
+
+const handleParticleVisibilityTransitionEnd = (event: TransitionEvent) => {
+  if (event.propertyName !== 'opacity' || isParticleFieldVisible.value) return
+  removeHiddenParticleField()
+}
+
+watch(
+  () => props.particlesVisible,
+  async (visible) => {
+    clearParticleRevealFrames()
+    clearParticleRemovalTimer()
+
+    if (!visible) {
+      isParticleFieldVisible.value = false
+      particleRemovalTimer = window.setTimeout(
+        removeHiddenParticleField,
+        PARTICLE_VISIBILITY_DURATION + 80
+      )
+      return
+    }
+
+    isParticleFieldVisible.value = false
+    isParticleFieldMounted.value = true
+    await nextTick()
+    if (!props.particlesVisible) return
+
+    particleRevealRafId = window.requestAnimationFrame(() => {
+      particleRevealRafId = null
+      particleRevealSecondRafId = window.requestAnimationFrame(() => {
+        particleRevealSecondRafId = null
+        if (props.particlesVisible) isParticleFieldVisible.value = true
+      })
+    })
+  }
+)
 
 const updateHeroScale = () => {
   const viewportWidth = window.innerWidth
@@ -209,6 +272,7 @@ const containerClass = computed(() => [
     'is-entry-ready': props.entryActive,
     'is-entry-complete': isEntryComplete.value,
     'is-highlight-settled': isHighlightSettled.value,
+    'has-background-top-inset': props.topInset > 0,
   },
 ])
 
@@ -217,22 +281,31 @@ onMounted(() => {
   reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
   isReducedMotion.value = reducedMotionQuery.matches
   reducedMotionQuery.addEventListener('change', handleReducedMotionChange)
-  window.addEventListener('resize', scheduleHeroScaleUpdate, { passive: true })
+  removePageResizeListener = addPageResizeListener(scheduleHeroScaleUpdate)
 })
 
 onUnmounted(() => {
   activeChartTransitions.clear()
   reducedMotionQuery?.removeEventListener('change', handleReducedMotionChange)
-  window.removeEventListener('resize', scheduleHeroScaleUpdate)
+  removePageResizeListener?.()
+  removePageResizeListener = null
   if (resizeRafId !== null) window.cancelAnimationFrame(resizeRafId)
+  clearParticleRevealFrames()
+  clearParticleRemovalTimer()
 })
 </script>
 
 <template>
-  <div :class="containerClass" aria-hidden="true">
-    <div class="particle-viewport">
+  <div :class="containerClass" :style="containerStyle" aria-hidden="true">
+    <div
+      v-if="isParticleFieldMounted"
+      class="particle-viewport"
+      :class="{ 'is-visible': isParticleFieldVisible }"
+      @transitionend="handleParticleVisibilityTransitionEnd"
+    >
       <ParticlesBg
         class="particle-field"
+        :active="props.entryActive && isParticleFieldVisible"
         :quantity="particleQuantity"
         :color="PARTICLE_COLOR"
         :refresh="props.entryActive"
@@ -262,6 +335,9 @@ onUnmounted(() => {
         draggable="false"
         decoding="async"
         fetchpriority="high"
+        width="1000"
+        height="1000"
+        loading="eager"
       />
 
       <div class="zodiac-html-wheel">
@@ -273,18 +349,7 @@ onUnmounted(() => {
         />
 
         <div
-          v-for="(sign, index) in zodiacSigns"
-          :key="`degree-${sign.id}`"
-          class="zodiac-degree-position"
-          :style="sign.degreePositionStyle"
-        >
-          <span class="zodiac-degree" :style="sign.degreeFaceStyle">
-            {{ String(index * 30).padStart(3, '0') }}°
-          </span>
-        </div>
-
-        <div
-          v-for="(sign, index) in zodiacSigns"
+          v-for="sign in zodiacSigns"
           :key="sign.id"
           class="zodiac-sign-position"
           :style="sign.positionStyle"
@@ -295,10 +360,6 @@ onUnmounted(() => {
             :style="sign.faceStyle"
           >
             <span class="zodiac-glyph">{{ sign.glyph }}</span>
-            <span class="zodiac-name">{{ sign.name }}</span>
-            <span class="zodiac-code">
-              {{ sign.code }} · {{ String(index + 1).padStart(2, '0') }}
-            </span>
           </div>
         </div>
       </div>

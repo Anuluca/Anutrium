@@ -10,18 +10,31 @@ test('dome keeps rotating, dragging and opening front-facing cards', async ({
   )
   await page.locator('.scroll-down-hint').click()
   const gallery = page.locator('.dome-gallery')
-  const sphere = page.locator('.dome-gallery__sphere')
+  const autoRotation = page.locator('.dome-gallery__auto-rotation')
   await expect(gallery).toBeVisible()
   await expect(page.locator('.home-placeholder-slide--about')).toHaveClass(
     /swiper-slide-active/
   )
+  const isCompactViewport = (page.viewportSize()?.width || 0) <= 768
+  const expectedTileCount = isCompactViewport ? 84 : 119
+  await expect(page.locator('.dome-gallery__tile')).toHaveCount(
+    expectedTileCount
+  )
+  await expect(gallery).toHaveAttribute(
+    'data-tile-count',
+    String(expectedTileCount)
+  )
+  await expect(gallery).toHaveAttribute(
+    'data-segment-count',
+    isCompactViewport ? '28' : '34'
+  )
   await page.waitForTimeout(1800)
-  const transform = await sphere.evaluate(
-    (element) => (element as HTMLElement).style.transform
+  const transform = await autoRotation.evaluate(
+    (element) => getComputedStyle(element).transform
   )
   await expect
     .poll(() =>
-      sphere.evaluate((element) => (element as HTMLElement).style.transform)
+      autoRotation.evaluate((element) => getComputedStyle(element).transform)
     )
     .not.toBe(transform)
 
@@ -68,12 +81,12 @@ test('dome keeps rotating, dragging and opening front-facing cards', async ({
       Math.abs(finalGeometry[key] - initialGeometry[key])
     ).toBeLessThanOrEqual(1)
   }
-  const resumed = await sphere.evaluate(
-    (element) => (element as HTMLElement).style.transform
+  const resumed = await autoRotation.evaluate(
+    (element) => getComputedStyle(element).transform
   )
   await expect
     .poll(() =>
-      sphere.evaluate((element) => (element as HTMLElement).style.transform)
+      autoRotation.evaluate((element) => getComputedStyle(element).transform)
     )
     .not.toBe(resumed)
 })
@@ -96,4 +109,28 @@ test('dome requests Cloudflare thumbnails but previews the original image', asyn
   await expect(
     page.locator('.dome-gallery__preview-image img')
   ).not.toHaveAttribute('src', /[?&]image=home-thumb/)
+})
+
+test('dome stops its frame loop while the home section is leaving', async ({
+  page,
+}) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.home-page-slide--hero')).not.toHaveClass(
+    /is-hero-initial-hidden/,
+    { timeout: 20_000 }
+  )
+  await page.locator('.scroll-down-hint').click()
+
+  const gallery = page.locator('.dome-gallery')
+  const autoRotation = page.locator('.dome-gallery__auto-rotation')
+  await expect(gallery).toHaveAttribute('data-motion-active', 'true')
+  await page.waitForTimeout(100)
+
+  await page
+    .locator(
+      '.home-page-indicator--left .home-page-indicator__item--archive button'
+    )
+    .click()
+  await expect(gallery).toHaveAttribute('data-motion-active', 'false')
+  await expect(autoRotation).toHaveCSS('animation-play-state', 'paused')
 })

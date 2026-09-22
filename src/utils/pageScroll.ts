@@ -17,43 +17,22 @@ export const setSmoothPageScrollHandler = (
   smoothPageScrollHandler = handler
 }
 
-const getScrollElements = () => {
-  if (typeof document === 'undefined') return []
-
-  const scrollingElement = document.scrollingElement
-  const documentElement = document.documentElement
-  const body = document.body
-  const elements: HTMLElement[] = []
-
-  if (scrollingElement instanceof HTMLElement) elements.push(scrollingElement)
-  if (documentElement !== scrollingElement) elements.push(documentElement)
-  if (body !== scrollingElement && body !== documentElement) elements.push(body)
-
-  return elements
+/**
+ * 本站把 body 作为唯一页面滚动容器。所有滚动工具和观察器都通过这里取值，
+ * 避免 window、html、body 同时读写导致一次滚动触发多套计算。
+ */
+export const getPageScrollElement = (): HTMLElement | null => {
+  if (typeof document === 'undefined') return null
+  return document.body
 }
 
 export const getPageScrollTop = () => {
-  if (typeof window === 'undefined') return 0
-
-  const scrollingElement = document.scrollingElement as HTMLElement | null
-  return Math.max(
-    window.scrollY,
-    scrollingElement?.scrollTop || 0,
-    document.documentElement.scrollTop,
-    document.body?.scrollTop || 0
-  )
+  return getPageScrollElement()?.scrollTop || 0
 }
 
 export const getPageScrollHeight = () => {
   if (typeof window === 'undefined') return 0
-
-  const scrollingElement = document.scrollingElement as HTMLElement | null
-  return Math.max(
-    window.innerHeight,
-    scrollingElement?.scrollHeight || 0,
-    document.documentElement.scrollHeight,
-    document.body?.scrollHeight || 0
-  )
+  return Math.max(window.innerHeight, getPageScrollElement()?.scrollHeight || 0)
 }
 
 export const getPageMaxScrollTop = () =>
@@ -90,16 +69,7 @@ export const scrollPageTo = ({
   }
 
   const options: ScrollToOptions = { top, left, behavior }
-  window.scrollTo(options)
-
-  for (const element of getScrollElements()) {
-    if (
-      element !== document.scrollingElement &&
-      element.scrollHeight > element.clientHeight + 1
-    ) {
-      element.scrollTo(options)
-    }
-  }
+  getPageScrollElement()?.scrollTo(options)
 
   if (behavior !== 'smooth') onComplete()
 }
@@ -127,13 +97,19 @@ const dispatchPageScroll = (event: Event) => {
 }
 
 const attachPageScrollRuntime = () => {
-  window.addEventListener('scroll', dispatchPageScroll, pageScrollOptions)
-  document.addEventListener('scroll', dispatchPageScroll, pageScrollOptions)
+  getPageScrollElement()?.addEventListener(
+    'scroll',
+    dispatchPageScroll,
+    pageScrollOptions
+  )
 }
 
 const detachPageScrollRuntime = () => {
-  window.removeEventListener('scroll', dispatchPageScroll, true)
-  document.removeEventListener('scroll', dispatchPageScroll, true)
+  getPageScrollElement()?.removeEventListener(
+    'scroll',
+    dispatchPageScroll,
+    true
+  )
   latestPageScrollEvent = null
   if (pageScrollFrameId === null) return
   window.cancelAnimationFrame(pageScrollFrameId)
@@ -162,6 +138,58 @@ export const addPageScrollListener = (listener: EventListener) => {
   }
 }
 
+const pageResizeListeners = new Map<EventListener, number>()
+let pageResizeFrameId: number | null = null
+let latestPageResizeEvent: Event | null = null
+
+const dispatchPageResize = (event: Event) => {
+  latestPageResizeEvent = event
+  if (pageResizeFrameId !== null) return
+
+  pageResizeFrameId = window.requestAnimationFrame(() => {
+    pageResizeFrameId = null
+    const resizeEvent = latestPageResizeEvent
+    latestPageResizeEvent = null
+    if (!resizeEvent) return
+
+    for (const listener of pageResizeListeners.keys()) listener(resizeEvent)
+  })
+}
+
+const attachPageResizeRuntime = () => {
+  window.addEventListener('resize', dispatchPageResize, { passive: true })
+}
+
+const detachPageResizeRuntime = () => {
+  window.removeEventListener('resize', dispatchPageResize)
+  latestPageResizeEvent = null
+  if (pageResizeFrameId === null) return
+  window.cancelAnimationFrame(pageResizeFrameId)
+  pageResizeFrameId = null
+}
+
+export const addPageResizeListener = (listener: EventListener) => {
+  if (pageResizeListeners.size === 0) attachPageResizeRuntime()
+  pageResizeListeners.set(
+    listener,
+    (pageResizeListeners.get(listener) || 0) + 1
+  )
+  let isRemoved = false
+
+  return () => {
+    if (isRemoved) return
+    isRemoved = true
+
+    const subscriptionCount = pageResizeListeners.get(listener) || 0
+    if (subscriptionCount > 1) {
+      pageResizeListeners.set(listener, subscriptionCount - 1)
+    } else {
+      pageResizeListeners.delete(listener)
+    }
+    if (pageResizeListeners.size === 0) detachPageResizeRuntime()
+  }
+}
+
 export const supportsPageScrollEnd = () =>
   typeof window !== 'undefined' &&
   ('onscrollend' in window || 'onscrollend' in document)
@@ -175,13 +203,12 @@ export const addPageScrollEndListener = (listener: EventListener) => {
   }
   let isRemoved = false
 
-  window.addEventListener('scrollend', listener, options)
-  document.addEventListener('scrollend', listener, options)
+  const scrollElement = getPageScrollElement()
+  scrollElement?.addEventListener('scrollend', listener, options)
 
   return () => {
     if (isRemoved) return
     isRemoved = true
-    window.removeEventListener('scrollend', listener, true)
-    document.removeEventListener('scrollend', listener, true)
+    scrollElement?.removeEventListener('scrollend', listener, true)
   }
 }

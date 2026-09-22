@@ -148,7 +148,7 @@ watch(
     z-index: -1;
     color: rgba(226, 52, 86, 0.16);
     content: 'NAV';
-    font-family: 'anton', monospace;
+    font-family: 'Anton', monospace;
     font-size: 2rem;
     line-height: 1;
     pointer-events: none;
@@ -226,7 +226,7 @@ watch(
   width: 1.25rem;
   flex: 0 0 auto;
   color: inherit;
-  font-family: 'cn-custom', monospace;
+  font-family: 'UnboundedSans', monospace;
   font-size: 0.64rem;
   text-align: center;
 }

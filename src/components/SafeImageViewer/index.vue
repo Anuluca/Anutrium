@@ -14,6 +14,8 @@ import { ElImageViewer } from 'element-plus'
 
 import { useOverlayScrollLock } from '@/composables/useOverlayScrollLock'
 
+import 'element-plus/theme-chalk/dark/css-vars.css'
+
 import 'element-plus/es/components/image-viewer/style/css'
 
 withDefaults(

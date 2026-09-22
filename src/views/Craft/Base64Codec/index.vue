@@ -216,7 +216,7 @@ const copyOutput = async () => {
 
 .codec-tool {
   color: @text;
-  font-family: 'cn-custom', system-ui, sans-serif;
+  font-family: 'UnboundedSans', system-ui, sans-serif;
 }
 
 .codec-stage,

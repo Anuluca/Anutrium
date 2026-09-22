@@ -279,7 +279,7 @@ test('every PageFooter route keeps its copyright row clear of FooterCom', async 
       expect(
         geometry.firstMarqueeFont,
         `${path}: marquee font family`
-      ).toContain('cn-custom')
+      ).toContain('UnboundedSans')
       expect(
         geometry.marqueeBackground,
         `${path}: marquee background`

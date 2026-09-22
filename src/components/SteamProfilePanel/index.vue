@@ -19,6 +19,10 @@
           v-if="steamData.profile?.avatarfull"
           :src="steamData.profile.avatarfull"
           :alt="steamData.profile.personaname"
+          width="184"
+          height="184"
+          loading="lazy"
+          decoding="async"
         />
         <div class="steam-profile-identity">
           <h2>{{ steamData.profile?.personaname || 'Anuluca' }}</h2>
@@ -142,6 +146,9 @@
               :src="getGameIconUrl(game)"
               :alt="game.name"
               loading="lazy"
+              width="32"
+              height="32"
+              decoding="async"
             />
             <span class="steam-game-index">
               {{ game.indexLabel }}
@@ -303,7 +310,7 @@ const {
     );
     background-clip: text;
     content: 'SPAAAAACE!!';
-    font-family: 'anton', sans-serif;
+    font-family: 'Anton', sans-serif;
     font-size: 56px;
     font-style: italic;
     line-height: 1;
@@ -352,7 +359,7 @@ const {
   strong {
     margin-top: 3px;
     color: #fff;
-    font-family: 'anton', 'alibaba-puhuiti', sans-serif;
+    font-family: 'Anton', 'alibaba-puhuiti', sans-serif;
     font-size: 18px;
     line-height: 1;
   }
@@ -496,7 +503,7 @@ const {
 
     strong {
       color: #fff;
-      font-family: 'anton', 'alibaba-puhuiti', sans-serif;
+      font-family: 'Anton', 'alibaba-puhuiti', sans-serif;
       font-size: 19px;
       line-height: 1.15;
     }
@@ -723,7 +730,7 @@ const {
 
   > span {
     color: @steam-blue;
-    font-family: 'anton', sans-serif;
+    font-family: 'Anton', sans-serif;
     font-size: 13px;
   }
 }
@@ -779,7 +786,7 @@ const {
 }
 
 .steam-game-index {
-  font-family: 'anton', sans-serif;
+  font-family: 'Anton', sans-serif;
   text-align: left !important;
 }
 

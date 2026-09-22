@@ -96,6 +96,10 @@ const clearTimers = () => {
 
 const syncActiveTextScroll = () => {
   if (typeof window === 'undefined') return
+  if (!props.loopOverflow) {
+    shouldLoopOverflow.value = false
+    return
+  }
   if (scrollFrame !== null) window.cancelAnimationFrame(scrollFrame)
 
   scrollFrame = window.requestAnimationFrame(() => {
@@ -179,7 +183,7 @@ watch(visibleText, syncActiveTextScroll, { flush: 'post' })
 watch(isComplete, syncActiveTextScroll, { flush: 'post' })
 
 onMounted(() => {
-  if (typeof ResizeObserver === 'undefined') return
+  if (!props.loopOverflow || typeof ResizeObserver === 'undefined') return
   resizeObserver = new ResizeObserver(syncActiveTextScroll)
   if (typedTextRef.value) resizeObserver.observe(typedTextRef.value)
 })

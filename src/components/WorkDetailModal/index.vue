@@ -25,6 +25,8 @@
                 :alt="work.company"
                 loading="lazy"
                 decoding="async"
+                width="160"
+                height="160"
               />
             </div>
             <div class="aside-company-info">
@@ -200,6 +202,8 @@
                   :alt="`${work.title} ${i + 1}`"
                   :loading="i === 0 ? 'eager' : 'lazy'"
                   decoding="async"
+                  width="768"
+                  height="576"
                 />
 
                 <div class="slide-gradient-overlay" />
@@ -603,7 +607,7 @@ const closeImageViewer = () => {
   width: 100%;
   overflow: hidden;
   color: @work-accent;
-  font-family: 'cn-custom', monospace;
+  font-family: 'UnboundedSans', monospace;
   font-size: 0.9rem;
   font-weight: 400;
   letter-spacing: 0.5px;
@@ -611,7 +615,7 @@ const closeImageViewer = () => {
   white-space: nowrap;
 
   &--english {
-    font-family: 'anton', sans-serif;
+    font-family: 'Anton', sans-serif;
     letter-spacing: 0.04em;
   }
 }
@@ -643,7 +647,7 @@ const closeImageViewer = () => {
 }
 
 .field-label {
-  font-family: 'cn-custom', monospace;
+  font-family: 'UnboundedSans', monospace;
   font-size: 0.5rem;
   letter-spacing: 2px;
   color: @work-accent;
@@ -651,7 +655,7 @@ const closeImageViewer = () => {
 }
 
 .field-val {
-  font-family: 'cn-custom', monospace;
+  font-family: 'UnboundedSans', monospace;
   font-size: 0.7rem;
   color: rgba(255, 255, 255, 0.6);
   letter-spacing: 1px;
@@ -664,7 +668,7 @@ const closeImageViewer = () => {
 }
 
 .tag {
-  font-family: 'cn-custom', monospace;
+  font-family: 'UnboundedSans', monospace;
   font-size: 0.46rem;
   line-height: 0.624rem;
   border: 1px solid @border;
@@ -936,21 +940,21 @@ const closeImageViewer = () => {
   z-index: 5;
 
   .counter-cur {
-    font-family: 'anton', monospace;
+    font-family: 'Anton', monospace;
     font-size: 1rem;
     color: @red;
     letter-spacing: 1px;
   }
   .counter-sep,
   .counter-total {
-    font-family: 'anton', monospace;
+    font-family: 'Anton', monospace;
     font-size: 0.82rem;
     color: rgba(255, 255, 255, 0.5);
   }
 }
 
 .gallery-empty {
-  font-family: 'cn-custom', monospace;
+  font-family: 'UnboundedSans', monospace;
   font-size: 0.6rem;
   letter-spacing: 3px;
   color: rgba(255, 255, 255, 0.15);
@@ -978,7 +982,7 @@ const closeImageViewer = () => {
 }
 
 .details-label {
-  font-family: 'cn-custom', monospace;
+  font-family: 'UnboundedSans', monospace;
   font-size: 0.5rem;
   letter-spacing: 3px;
   color: @work-accent;
@@ -1019,7 +1023,7 @@ const closeImageViewer = () => {
 }
 
 .detail-index {
-  font-family: 'anton', monospace;
+  font-family: 'Anton', monospace;
   font-size: 0.7rem;
   line-height: 1.275rem;
   color: @work-accent;

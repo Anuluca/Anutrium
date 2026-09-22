@@ -307,7 +307,7 @@ const switchPlatform: FooterPlatformItem = {
   display: block;
   min-width: 0;
   overflow: hidden;
-  font-family: 'anton', 'alibaba-puhuiti', sans-serif;
+  font-family: 'Anton', 'alibaba-puhuiti', sans-serif;
   font-size: 11px;
   letter-spacing: 0.7px;
   line-height: 1;

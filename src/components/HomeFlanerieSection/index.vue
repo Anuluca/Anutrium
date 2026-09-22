@@ -4,18 +4,20 @@
       <TravelMap
         class="home-flanerie-map"
         mode="background"
+        :active="active"
         :vlogs="vlogs"
         @select="emit('select', $event)"
       />
     </div>
 
     <div class="home-flanerie-heading">
-      <ScrollSectionTitle
-        class="home-flanerie-title"
-        :color="color"
-        :title="title"
-      />
       <p class="home-flanerie-subtitle">{{ subtitle }}</p>
+      <ThemeActionButton
+        class="home-flanerie-more"
+        :color="color"
+        label="MORE FLANERIES"
+        to="/flanerie"
+      />
       <BounceCards
         class="home-flanerie-bounce-cards"
         :items="journeys"
@@ -51,7 +53,7 @@ import { computed } from 'vue'
 import { useMediaQuery } from '@vueuse/core'
 
 import BounceCards from '@/components/BounceCards/index.vue'
-import ScrollSectionTitle from '@/components/ScrollSectionTitle/index.vue'
+import ThemeActionButton from '@/components/ThemeActionButton/index.vue'
 import TravelMap from '@/components/TravelMap/index.vue'
 import VlogCard from '@/components/VlogCard/index.vue'
 import { homeFlanerieJourneyCardConfig } from '@/config/homeFlanerieJourneyCards'
@@ -63,7 +65,6 @@ const props = withDefaults(
     active?: boolean
     color?: string
     subtitle: string
-    title: string
     vlogs: JourneyItem[]
   }>(),
   {
@@ -118,8 +119,9 @@ const journeyTransforms = computed(() =>
     pointer-events: none;
   }
 
-  &.is-active .home-flanerie-subtitle {
-    animation: homeFlanerieTextEnter 0.7s ease-out 0.55s both;
+  &.is-active .home-flanerie-subtitle,
+  &.is-active .home-flanerie-more {
+    animation: homeFlanerieTextEnter 0.7s ease-out 0.42s both;
   }
 }
 
@@ -163,24 +165,24 @@ const journeyTransforms = computed(() =>
   pointer-events: none;
 }
 
-.home-flanerie-title {
-  position: relative;
-  top: auto;
-  left: auto;
-  transform: none;
-}
-
 .home-flanerie-subtitle {
   width: max-content;
   max-width: 100%;
-  margin: clamp(1.5rem, 4dvh, 3.25rem) 0 0;
+  margin: 0;
   padding: 0.08em 0;
   color: #fff;
   font-family: 'alibaba-puhuiti', sans-serif;
   font-size: clamp(1.8rem, 3.5vw, 3.4rem);
   font-weight: 900;
   line-height: 1.2;
+  opacity: 0;
   text-shadow: 0 0.08em 0.24em rgba(0, 0, 0, 0.72);
+}
+
+.home-flanerie-more {
+  align-self: center;
+  margin-top: clamp(1rem, 2.2dvh, 1.5rem);
+  opacity: 0;
 }
 
 .home-flanerie-bounce-cards {
@@ -228,7 +230,8 @@ const journeyTransforms = computed(() =>
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .home-flanerie-copy.is-active .home-flanerie-subtitle {
+  .home-flanerie-copy.is-active .home-flanerie-subtitle,
+  .home-flanerie-copy.is-active .home-flanerie-more {
     animation-duration: 0.01ms;
     animation-delay: 0s;
   }

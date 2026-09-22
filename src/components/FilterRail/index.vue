@@ -14,13 +14,23 @@
         :class="{ 'is-collage': item.imageUrls && item.imageUrls.length > 1 }"
         aria-hidden="true"
       >
-        <img
+        <picture
           v-for="imageUrl in item.imageUrls?.slice(0, 2)"
           :key="imageUrl"
-          :src="imageUrl"
-          alt=""
-          loading="lazy"
-        />
+        >
+          <source
+            media="(max-width: 768px)"
+            :srcset="getCardMobileThumbnailUrl(imageUrl)"
+          />
+          <img
+            :src="getCardThumbnailUrl(imageUrl)"
+            alt=""
+            loading="lazy"
+            width="768"
+            height="576"
+            decoding="async"
+          />
+        </picture>
         <span v-if="!item.imageUrls?.length" class="filter-rail__marker">
           {{ item.marker || item.title.slice(0, 2) }}
         </span>
@@ -36,6 +46,11 @@
 </template>
 
 <script setup lang="ts">
+import {
+  getCardMobileThumbnailUrl,
+  getCardThumbnailUrl,
+} from '@/utils/imageVariant'
+
 export interface FilterRailItem {
   id: string
   title: string
@@ -156,6 +171,10 @@ defineEmits<{
       transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
+    picture {
+      display: contents;
+    }
+
     &.is-collage {
       grid-template-columns: repeat(2, minmax(0, 1fr));
 
@@ -167,7 +186,7 @@ defineEmits<{
 
   &__marker {
     color: var(--filter-rail-accent);
-    font-family: 'cn-custom', monospace;
+    font-family: 'UnboundedSans', monospace;
     font-size: 0.48rem;
     font-weight: 900;
   }
@@ -199,7 +218,7 @@ defineEmits<{
 
   &__count {
     color: var(--text-faint);
-    font-family: 'cn-custom', monospace;
+    font-family: 'UnboundedSans', monospace;
     font-size: 0.44rem;
     font-weight: 700;
     letter-spacing: normal;

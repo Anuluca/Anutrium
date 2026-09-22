@@ -2,13 +2,13 @@
 /* eslint-disable simple-import-sort/imports */
 import layout from './layout/index.vue'
 import FooterCom from '@/components/FooterCom/index.vue'
-import MobileExperienceAlert from '@/components/MobileExperienceAlert/index.vue'
 import {
   computed,
   defineAsyncComponent,
   onMounted,
   onUnmounted,
   ref,
+  watch,
 } from 'vue'
 import { useHead } from '@vueuse/head'
 import { useI18n } from 'vue-i18n'
@@ -22,6 +22,8 @@ import {
 } from '@/router'
 import { installExternalLinkTracking } from '@/utils/analytics'
 import { startSmoothScroll, stopSmoothScroll } from '@/utils/smoothScroll'
+import { ensureLightThemeStyles } from '@/utils/themeStyles'
+import { scheduleTypekitLoad } from '@/utils/typekit'
 
 const BackController = defineAsyncComponent(
   () => import('@/components/BackController/index.vue')
@@ -35,6 +37,9 @@ const PetTeaserLink = defineAsyncComponent(
 const StartAnimation = defineAsyncComponent(
   () => import('@/components/StartAnimation/index.vue')
 )
+const MobileExperienceAlert = defineAsyncComponent(
+  () => import('@/components/MobileExperienceAlert/index.vue')
+)
 
 const visualStateStore = visualState()
 const route = useRoute()
@@ -42,8 +47,13 @@ const { locale, tm } = useI18n()
 let removeExternalLinkTracking: (() => void) | null = null
 let resizeRafId: number | null = null
 let entryAnimationTimer: number | null = null
+let cancelScheduledTypekitLoad: (() => void) | null = null
 const entryAnimationReady = ref(false)
 const entryOverlayHidden = ref(false)
+const petTeaserHiddenPaths = new Set(['/pet', '/404', '/island', '/test'])
+const shouldShowPetTeaser = computed(
+  () => !petTeaserHiddenPaths.has(route.path)
+)
 
 interface VlogSeoItem {
   id: string
@@ -52,7 +62,10 @@ interface VlogSeoItem {
 
 const seoMeta = computed(() => {
   const siteLocale: SeoLocale = locale.value === 'en' ? 'en' : 'zhCn'
-  const vlogs = tm('flanerie.dynamic.vlogs') as VlogSeoItem[]
+  const vlogs =
+    typeof route.params.vlogId === 'string'
+      ? (tm('flanerie.dynamic.vlogs') as VlogSeoItem[])
+      : []
 
   return getSeoMeta(route, siteLocale, Array.isArray(vlogs) ? vlogs : [])
 })
@@ -148,34 +161,50 @@ const startAnimationFinished = () => {
 
   entryAnimationTimer = window.setTimeout(() => {
     entryAnimationReady.value = true
+    syncSmoothScrollForRoute()
     entryAnimationTimer = null
   }, 250)
+}
+
+const syncSmoothScrollForRoute = () => {
+  if (!entryAnimationReady.value) return
+  if (route.path === '/') stopSmoothScroll()
+  else startSmoothScroll()
 }
 
 const startAnimationHidden = () => {
   entryOverlayHidden.value = true
 }
 
-onMounted(() => {
+onMounted(async () => {
   setRootFontSize()
   window.addEventListener('resize', scheduleRootFontSizeUpdate, {
     passive: true,
   })
   const savedTheme = localStorage.getItem('theme')
+  if (savedTheme === 'light') await ensureLightThemeStyles()
   visualStateStore.setTheme(savedTheme === 'light' ? 'light' : 'dark')
   syncSeoMeta(route)
   syncPageTheme(route)
   removeExternalLinkTracking = installExternalLinkTracking()
-  startSmoothScroll()
+  cancelScheduledTypekitLoad = scheduleTypekitLoad()
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', scheduleRootFontSizeUpdate)
   if (resizeRafId !== null) window.cancelAnimationFrame(resizeRafId)
   if (entryAnimationTimer !== null) window.clearTimeout(entryAnimationTimer)
+  cancelScheduledTypekitLoad?.()
   removeExternalLinkTracking?.()
   stopSmoothScroll()
 })
+
+watch(
+  () => route.path,
+  (path) => {
+    if (path === '/') stopSmoothScroll()
+  }
+)
 </script>
 
 <template>
@@ -184,9 +213,12 @@ onUnmounted(() => {
     @finished="startAnimationFinished"
     @hidden="startAnimationHidden"
   />
-  <layout :entry-active="entryAnimationReady" />
+  <layout
+    :entry-active="entryAnimationReady"
+    @route-transition-complete="syncSmoothScrollForRoute"
+  />
   <PetTeaserLink
-    v-if="!['/pet', '/404', '/island', '/test'].includes(route.path)"
+    v-if="shouldShowPetTeaser"
     :entry-active="entryAnimationReady"
   />
   <div
@@ -203,14 +235,14 @@ onUnmounted(() => {
 .footer-bottom-gradient {
   position: fixed;
   right: 0;
-  bottom: 0;
+  bottom: -60px;
   left: 0;
   z-index: 99;
-  height: 64px;
+  height: 120px;
   background: linear-gradient(
     to bottom,
     transparent 0%,
-    rgba(0, 0, 0, 0.62) 100%
+    rgba(0, 0, 0, 0.32) 100%
   );
   opacity: 0;
   pointer-events: none;

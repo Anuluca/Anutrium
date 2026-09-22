@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 import BackStars from '@/components/BackStars/index.vue'
@@ -43,7 +43,7 @@ const craftRouteNames = new Set([
   'IMAGEBASE64',
 ])
 
-const activeSign = computed<ZodiacSignId>(() => {
+const requestedActiveSign = computed<ZodiacSignId>(() => {
   const routeName = String(route.name || '')
   const redirectedPath = route.redirectedFrom?.path || ''
 
@@ -60,9 +60,30 @@ const activeSign = computed<ZodiacSignId>(() => {
   if (routeName === 'ABOUT') return 'virgo'
   return 'leo'
 })
+const activeSign = ref<ZodiacSignId>(requestedActiveSign.value)
+let pendingActiveSign = activeSign.value
+
+watch(
+  requestedActiveSign,
+  (sign) => {
+    pendingActiveSign = sign
+  },
+  { flush: 'sync' }
+)
+
+watch(
+  () => visualStateStore.routeLeaveRevision,
+  () => {
+    activeSign.value = pendingActiveSign
+  },
+  { flush: 'sync' }
+)
 
 const zodiacLayout = computed(() =>
   currentRouter.value === '/' ? visualStateStore.zodiacLayout : 'content'
+)
+const particlesVisible = computed(
+  () => currentRouter.value !== '/' || visualStateStore.homeStarfieldVisible
 )
 </script>
 
@@ -74,6 +95,8 @@ const zodiacLayout = computed(() =>
       :deep-black="useDeepBlackBackground"
       :active-sign="activeSign"
       :layout="zodiacLayout"
+      :particles-visible="particlesVisible"
+      :top-inset="visualStateStore.backgroundTopInset"
       :entry-active="props.entryActive"
     />
   </div>

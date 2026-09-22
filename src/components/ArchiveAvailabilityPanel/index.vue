@@ -234,7 +234,7 @@ const requestResume = async () => {
   h2 {
     margin: 0 0 0.3rem;
     color: #fff;
-    font-family: 'anton', 'cn-custom';
+    font-family: 'Anton', 'UnboundedSans';
     font-size: 1rem;
     letter-spacing: 0.02em;
     line-height: 1.2;

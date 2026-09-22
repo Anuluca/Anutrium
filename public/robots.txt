@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://anutrium.com/sitemap.xml
+Sitemap: https://anuluca.com/sitemap.xml

@@ -1,5 +1,6 @@
 <template>
-  <div
+  <component
+    :is="interactive ? 'button' : 'div'"
     class="shared-vlog-card"
     :class="{
       'is-map-target': active,
@@ -12,12 +13,10 @@
       'is-compact': compact,
       'has-hover-effects': hoverEffects,
     }"
+    :type="interactive ? 'button' : undefined"
     :role="interactive ? 'button' : undefined"
-    :tabindex="interactive ? 0 : undefined"
     @click="selectVlog"
     @focusin="handleTitleHover"
-    @keydown.enter.prevent="selectVlog"
-    @keydown.space.prevent="selectVlog"
     @mouseenter="handleTitleHover"
   >
     <div class="vlog-img-wrap">
@@ -26,22 +25,35 @@
         class="vlog-image-placeholder"
         aria-hidden="true"
       />
-      <img
-        class="vlog-img vlog-img--base"
-        :src="cardImage"
-        :alt="vlog.title"
-        decoding="async"
-        @load="isBaseLoaded = true"
-      />
-      <img
-        v-if="hoverEffects && hoverImage"
-        class="vlog-img vlog-img--hover"
-        :src="hoverImage"
-        alt=""
-        aria-hidden="true"
-        decoding="async"
-        @load="isHoverLoaded = true"
-      />
+      <picture>
+        <source media="(max-width: 768px)" :srcset="cardMobileImage" />
+        <img
+          class="vlog-img vlog-img--base"
+          :src="cardImage"
+          :alt="vlog.title"
+          :loading="imageLoading"
+          :fetchpriority="imageLoading === 'eager' ? 'high' : 'low'"
+          decoding="async"
+          width="768"
+          height="576"
+          @load="isBaseLoaded = true"
+        />
+      </picture>
+      <picture v-if="hoverEffects && hoverImage && shouldLoadHoverImage">
+        <source media="(max-width: 768px)" :srcset="hoverMobileImage!" />
+        <img
+          class="vlog-img vlog-img--hover"
+          :src="hoverImage"
+          alt=""
+          aria-hidden="true"
+          loading="eager"
+          fetchpriority="low"
+          decoding="async"
+          width="768"
+          height="576"
+          @load="isHoverLoaded = true"
+        />
+      </picture>
     </div>
     <div class="vlog-info">
       <h4 class="vlog-title" :class="{ 'is-split': splitTitle }">
@@ -86,7 +98,7 @@
         </span>
       </div>
     </div>
-  </div>
+  </component>
 </template>
 
 <script setup lang="ts">
@@ -95,7 +107,10 @@ import { useI18n } from 'vue-i18n'
 import { Picture, VideoCamera } from '@element-plus/icons-vue'
 
 import ShuffleText from '@/components/ShuffleText/index.vue'
-import { getCardThumbnailUrl } from '@/utils/imageVariant'
+import {
+  getCardMobileThumbnailUrl,
+  getCardThumbnailUrl,
+} from '@/utils/imageVariant'
 
 import type { JourneyItem } from '@/types/flanerie'
 
@@ -110,12 +125,14 @@ const props = withDefaults(
     interactive?: boolean
     compact?: boolean
     hoverEffects?: boolean
+    imageLoading?: 'eager' | 'lazy'
   }>(),
   {
     active: false,
     interactive: false,
     compact: false,
     hoverEffects: true,
+    imageLoading: 'lazy',
   }
 )
 
@@ -126,13 +143,23 @@ const emit = defineEmits<{
 const { locale } = useI18n()
 const isBaseLoaded = ref(false)
 const isHoverLoaded = ref(false)
+const shouldLoadHoverImage = ref(false)
 const prefixShuffleRef = ref<ShuffleTextExpose | null>(null)
 const restShuffleRef = ref<ShuffleTextExpose | null>(null)
 const titleShuffleRef = ref<ShuffleTextExpose | null>(null)
 const cardImage = computed(() => getCardThumbnailUrl(props.vlog.img))
+const cardMobileImage = computed(() =>
+  getCardMobileThumbnailUrl(props.vlog.img)
+)
 const hoverImage = computed(() => {
   const image = props.vlog.img2
   return image && image !== props.vlog.img ? getCardThumbnailUrl(image) : null
+})
+const hoverMobileImage = computed(() => {
+  const image = props.vlog.img2
+  return image && image !== props.vlog.img
+    ? getCardMobileThumbnailUrl(image)
+    : null
 })
 const photoCount = computed(() => props.vlog.photos?.length ?? 0)
 const videoCount = computed(() => props.vlog.videos?.length ?? 0)
@@ -166,11 +193,24 @@ const shuffleTitle = () => {
 
 const handleTitleHover = () => {
   if (!props.hoverEffects) return
+  if (hoverImage.value) shouldLoadHoverImage.value = true
   shuffleTitle()
 }
 
 watch(cardImage, () => (isBaseLoaded.value = false))
-watch(hoverImage, () => (isHoverLoaded.value = false))
+watch(hoverImage, () => {
+  isHoverLoaded.value = false
+  shouldLoadHoverImage.value = false
+})
+watch(
+  () => props.active,
+  (active) => {
+    if (active && props.hoverEffects && hoverImage.value) {
+      shouldLoadHoverImage.value = true
+    }
+  },
+  { immediate: true }
+)
 </script>
 
 <style lang="less" scoped>
@@ -185,12 +225,16 @@ watch(hoverImage, () => (isHoverLoaded.value = false))
   max-width: 580px;
   min-width: 0;
   padding: var(--postcard-padding);
+  border: 0;
   grid-template-columns: minmax(0, 1fr) var(--postcard-side-width);
   gap: var(--postcard-gap);
   overflow: hidden;
   box-sizing: border-box;
   background: #e8e8e8;
   color: #111;
+  font: inherit;
+  text-align: left;
+  appearance: none;
   cursor: default;
   isolation: isolate;
 
@@ -234,6 +278,10 @@ watch(hoverImage, () => (isHoverLoaded.value = false))
   overflow: hidden;
   border-radius: 4px;
   background: #eee;
+
+  picture {
+    display: contents;
+  }
 }
 
 .vlog-img {
@@ -283,7 +331,7 @@ watch(hoverImage, () => (isHoverLoaded.value = false))
   max-height: calc(100% - 1.4rem);
   margin: 0;
   color: #111;
-  font-family: 'cn-custom', sans-serif;
+  font-family: 'UnboundedSans', sans-serif;
   font-size: clamp(1.5rem, 2.5vw, 2.2rem);
   font-weight: 400;
   line-height: 1;
@@ -331,7 +379,7 @@ watch(hoverImage, () => (isHoverLoaded.value = false))
 .vlog-date {
   flex: none;
   color: rgba(17, 17, 17, 0.5);
-  font-family: 'cn-custom', sans-serif;
+  font-family: 'UnboundedSans', sans-serif;
   font-size: clamp(0.46rem, 0.62vw, 0.58rem);
   font-weight: 400;
   line-height: 1;
@@ -354,7 +402,7 @@ watch(hoverImage, () => (isHoverLoaded.value = false))
   justify-content: flex-end;
   gap: 0.35rem;
   color: rgba(17, 17, 17, 0.62);
-  font-family: 'cn-custom', sans-serif;
+  font-family: 'UnboundedSans', sans-serif;
   font-size: clamp(0.32rem, 0.42vw, 0.39rem);
   font-weight: 400;
   line-height: 1;

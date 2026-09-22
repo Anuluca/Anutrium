@@ -36,7 +36,7 @@
     align-self: center;
     justify-content: center;
     color: transparent;
-    font-family: 'anton', monospace;
+    font-family: 'Anton', monospace;
     font-size: 0.76rem;
     line-height: 1;
     text-align: center;
@@ -63,7 +63,7 @@
     align-items: baseline;
     gap: 7px;
     color: rgba(255, 255, 255, 0.3);
-    font-family: 'cn-custom', 'Courier New', monospace;
+    font-family: 'UnboundedSans', 'Courier New', monospace;
     font-size: 0.56rem;
     font-weight: 100;
 

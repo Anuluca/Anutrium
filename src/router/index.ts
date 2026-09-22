@@ -7,6 +7,7 @@ import type {
 import NProgress from 'nprogress'
 
 import i18n from '../locales'
+import { ensureRouteMessages } from '../locales/routeMessages'
 import { cursorState } from '../stores'
 import { ROUTE_CURSOR_LOADING_SOURCE } from '../stores/cursorState'
 
@@ -15,7 +16,7 @@ import 'nprogress/nprogress.css'
 const ROUTE_CONFIG = {
   DEFAULT_PATH: '/',
   NOT_FOUND_PATH: '/404',
-  SITE_URL: 'https://anutrium.com',
+  SITE_URL: 'https://anuluca.com',
 } as const
 const routeComponentLoads = new Map<string, Promise<unknown>>()
 let routeCursorFallbackTimer: number | null = null
@@ -55,6 +56,21 @@ const preloadRouteComponent = async (routeName: unknown) => {
 
 const installRouteIntentPreload = (router: Router) => {
   const preloadFromEvent = (event: Event) => {
+    const connection = (
+      navigator as Navigator & {
+        connection?: { effectiveType?: string; saveData?: boolean }
+      }
+    ).connection
+    if (
+      connection?.saveData ||
+      connection?.effectiveType === 'slow-2g' ||
+      connection?.effectiveType === '2g'
+    ) {
+      return
+    }
+
+    if (event instanceof PointerEvent && event.pointerType === 'touch') return
+
     const target = event.target
     if (!(target instanceof Element)) return
 
@@ -73,7 +89,10 @@ const installRouteIntentPreload = (router: Router) => {
     const resolvedRoute = router.resolve(
       `${url.pathname}${url.search}${url.hash}`
     )
-    void preloadRouteComponent(resolvedRoute.name).catch(() => undefined)
+    void Promise.all([
+      preloadRouteComponent(resolvedRoute.name),
+      ensureRouteMessages(resolvedRoute.name),
+    ]).catch(() => undefined)
   }
 
   document.addEventListener('pointerover', preloadFromEvent, {
@@ -81,10 +100,6 @@ const installRouteIntentPreload = (router: Router) => {
     capture: true,
   })
   document.addEventListener('focusin', preloadFromEvent, true)
-  document.addEventListener('touchstart', preloadFromEvent, {
-    passive: true,
-    capture: true,
-  })
 }
 
 const PAGE_DESCRIPTIONS: Record<string, { zhCn: string; en: string }> = {
@@ -650,7 +665,10 @@ export const syncSeoMeta = (to: RouteLocationNormalizedLoaded) => {
 
   const locale = i18n.global.locale.value === 'en' ? 'en' : 'zhCn'
   const translateMessage = i18n.global.tm as (key: string) => unknown
-  const vlogs = translateMessage('flanerie.dynamic.vlogs') as VlogSeoItem[]
+  const vlogs =
+    typeof to.params.vlogId === 'string'
+      ? (translateMessage('flanerie.dynamic.vlogs') as VlogSeoItem[])
+      : []
   const seoMeta = getSeoMeta(to, locale, vlogs)
 
   document.title = seoMeta.title
@@ -690,7 +708,7 @@ export const syncPageTheme = (route: RouteLocationNormalizedLoaded) => {
 export const installRouterGuards = (router: Router) => {
   if (typeof document !== 'undefined') installRouteIntentPreload(router)
 
-  router.beforeEach((to, from) => {
+  router.beforeEach(async (to, from) => {
     if (!router.hasRoute(to.name)) {
       if (to.path !== ROUTE_CONFIG.NOT_FOUND_PATH) {
         return { path: ROUTE_CONFIG.NOT_FOUND_PATH }
@@ -706,6 +724,7 @@ export const installRouterGuards = (router: Router) => {
       void preloadRouteComponent(to.name).catch(() => undefined)
     }
 
+    await ensureRouteMessages(to.name)
     return true
   })
 

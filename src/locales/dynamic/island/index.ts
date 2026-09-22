@@ -249,8 +249,6 @@ const tracks = [
     title: '幽灵东京',
     artist: 'AYASE · PREVIEW PROVIDED COURTESY OF ITUNES',
     cover: 'https://placehold.co/320x320/14070c/e23456?text=ALBUM%20COVER',
-    src: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/4b/7c/14/4b7c1462-882a-8df4-a4c4-db8b41505987/mzaf_13769688772858368327.plus.aac.p.m4a',
-    volume: 0.08,
     storeUrl:
       'https://music.apple.com/cn/album/%E5%B9%BD%E9%9C%8A%E6%9D%B1%E4%BA%AC/1487353903?i=1487353913',
   },
@@ -258,8 +256,6 @@ const tracks = [
     title: '贝加尔湖畔',
     artist: '李健 · PREVIEW PROVIDED COURTESY OF ITUNES',
     cover: 'https://placehold.co/320x320/14070c/e23456?text=ALBUM%20COVER',
-    src: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/67/c4/b8/67c4b832-adf5-7e9f-931f-5699892452c7/mzaf_5314494580193787769.plus.aac.p.m4a',
-    volume: 0.12,
     storeUrl:
       'https://music.apple.com/cn/album/%E8%B4%9D%E5%8A%A0%E5%B0%94%E6%B9%96%E7%95%94/905188240?i=905188255',
   },
@@ -267,8 +263,6 @@ const tracks = [
     title: 'Veridis Quo',
     artist: 'DAFT PUNK · PREVIEW PROVIDED COURTESY OF ITUNES',
     cover: 'https://placehold.co/320x320/14070c/e23456?text=ALBUM%20COVER',
-    src: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview122/v4/7a/f8/4d/7af84d3a-fc7b-1569-766b-8adf13dab451/mzaf_3503155761614342520.plus.aac.p.m4a',
-    volume: 0.12,
     storeUrl:
       'https://music.apple.com/us/album/veridis-quo/697194953?i=697196125',
   },

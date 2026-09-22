@@ -28,7 +28,7 @@ withDefaults(
   padding: 0;
   background: transparent;
   color: var(--scroll-section-title-color);
-  font-family: 'anton', sans-serif;
+  font-family: 'Anton', sans-serif;
   font-size: clamp(1.625rem, 4vw, 3.75rem);
   font-weight: 400;
   line-height: 0.88;

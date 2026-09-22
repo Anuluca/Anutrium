@@ -31,14 +31,22 @@
           </span>
 
           <div v-if="card.note.image" class="study-note-card__visual">
-            <img
-              class="study-note-card__image"
-              :src="card.note.image"
-              :alt="card.note.title"
-              decoding="async"
-              loading="lazy"
-              @load="scheduleMasonryLayout"
-            />
+            <picture>
+              <source
+                media="(max-width: 768px)"
+                :srcset="getCardMobileThumbnailUrl(card.note.image)"
+              />
+              <img
+                class="study-note-card__image"
+                :src="getCardThumbnailUrl(card.note.image)"
+                :alt="card.note.title"
+                width="768"
+                height="576"
+                decoding="async"
+                loading="lazy"
+                @load="scheduleMasonryLayout"
+              />
+            </picture>
           </div>
 
           <div class="study-note-card__copy">
@@ -60,14 +68,14 @@
       <nav
         v-if="totalPages > 1"
         class="study-note-pagination"
-        :aria-label="t('flanerie.pageLabel')"
+        :aria-label="t('pagination.pageLabel')"
       >
         <button
           type="button"
           :disabled="currentPage === 1"
           @click="setPage(currentPage - 1)"
         >
-          {{ t('flanerie.previousPage') }}
+          {{ t('pagination.previousPage') }}
         </button>
         <button
           v-for="page in totalPages"
@@ -84,7 +92,7 @@
           :disabled="currentPage === totalPages"
           @click="setPage(currentPage + 1)"
         >
-          {{ t('flanerie.nextPage') }}
+          {{ t('pagination.nextPage') }}
         </button>
       </nav>
     </main>
@@ -100,7 +108,11 @@ import { useRoute, useRouter } from 'vue-router'
 
 import DetailPageHeader from '@/components/DetailPageHeader/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
-import { scrollPageTo } from '@/utils/pageScroll'
+import {
+  getCardMobileThumbnailUrl,
+  getCardThumbnailUrl,
+} from '@/utils/imageVariant'
+import { getPageScrollTop, scrollPageTo } from '@/utils/pageScroll'
 
 type StudyNoteType = 'frontend' | 'other'
 
@@ -271,7 +283,7 @@ const setPage = async (page: number) => {
     const menuBottom = menu?.getBoundingClientRect().bottom || 0
     const listTop =
       noteListRef.value.getBoundingClientRect().top +
-      window.scrollY -
+      getPageScrollTop() -
       menuBottom -
       20
     scrollPageTo({ top: Math.max(0, listTop), behavior: 'smooth' })
@@ -281,7 +293,7 @@ const setPage = async (page: number) => {
 
 <style lang="less" scoped>
 @red: #e23456;
-@mono: 'cn-custom', 'Courier New', monospace;
+@mono: 'UnboundedSans', 'Courier New', monospace;
 
 .study-notes-page {
   color: var(--text-color);
@@ -360,6 +372,10 @@ const setPage = async (page: number) => {
     margin: 0 16px;
     overflow: hidden;
     background: rgba(128, 128, 128, 0.1);
+
+    picture {
+      display: contents;
+    }
   }
 
   &__image {

@@ -65,7 +65,7 @@ const goBack = () => {
     border: 0;
     color: #3276fe;
     background: transparent;
-    font-family: 'cn-custom', 'Courier New', monospace;
+    font-family: 'UnboundedSans', 'Courier New', monospace;
     font-size: 17px;
     letter-spacing: 0.1em;
     transform: scaleX(0.9);

@@ -72,7 +72,7 @@ onBeforeUnmount(() => resizeObserver?.disconnect())
     display: block;
     width: 100%;
     color: rgb(226 52 86 / 58%);
-    font-family: 'cn-custom', sans-serif;
+    font-family: 'UnboundedSans', sans-serif;
     font-size: clamp(1.35rem, 2.2vw, 2rem);
     font-weight: 400;
     text-align: center;
@@ -88,7 +88,7 @@ onBeforeUnmount(() => resizeObserver?.disconnect())
     display: block;
     width: max-content;
     color: rgb(255 255 255 / 30%);
-    font-family: 'cn-custom', sans-serif;
+    font-family: 'UnboundedSans', sans-serif;
     font-size: 0.42rem;
     letter-spacing: 0.04em;
   }

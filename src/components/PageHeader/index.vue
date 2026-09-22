@@ -181,13 +181,13 @@ defineProps({
   }
 
   .header-label {
-    font-family: 'cn-custom', monospace;
+    font-family: 'UnboundedSans', monospace;
     font-size: 0.4rem;
     color: var(--primary-color);
   }
 
   .page-title {
-    font-family: 'anton', sans-serif;
+    font-family: 'Anton', sans-serif;
     font-size: 2.5rem;
     line-height: 1;
     letter-spacing: -1px;
@@ -199,7 +199,7 @@ defineProps({
     z-index: 1;
 
     .title-en {
-      font-family: 'cn-custom', monospace;
+      font-family: 'UnboundedSans', monospace;
       color: #fff;
       position: relative;
       z-index: 3;

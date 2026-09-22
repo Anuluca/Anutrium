@@ -2,14 +2,27 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import {
-  addPageScrollListener,
-  getPageMaxScrollTop,
+  getCardMobileThumbnailUrl,
+  getCardThumbnailUrl,
+} from '@/utils/imageVariant'
+import {
+  addPageResizeListener,
+  getPageScrollElement,
   getPageScrollTop,
-  isPageAtEnd,
 } from '@/utils/pageScroll'
 
-const catEarsImage = 'https://assets.anuluca.com/other/cat_ear.png'
-const catImage = 'https://assets.anuluca.com/other/cat_full.png'
+const catEarsImage = getCardThumbnailUrl(
+  'https://assets.anuluca.com/other/cat_ear.png'
+)
+const catEarsMobileImage = getCardMobileThumbnailUrl(
+  'https://assets.anuluca.com/other/cat_ear.png'
+)
+const catImage = getCardThumbnailUrl(
+  'https://assets.anuluca.com/other/cat_full.png'
+)
+const catMobileImage = getCardMobileThumbnailUrl(
+  'https://assets.anuluca.com/other/cat_full.png'
+)
 
 type InteractionState = 'idle' | 'hovering' | 'activating'
 
@@ -21,7 +34,6 @@ const props = withDefaults(
     entryActive: true,
   }
 )
-
 const IDLE_MOTION_MIN_DELAY = 4_000
 const IDLE_MOTION_DELAY_RANGE = 5_000
 const ACTIVATION_DURATION = 650
@@ -31,7 +43,6 @@ const PET_PAGE_URL = 'https://flora-vs-luca.anuluca.com'
 const state = ref<InteractionState>('idle')
 const isIdleMotion = ref(false)
 const isMobilePageEnd = ref(false)
-const footerOffset = ref('0px')
 const teaserElement = ref<HTMLElement | null>(null)
 const animationStyle = computed(
   () =>
@@ -42,14 +53,12 @@ const animationStyle = computed(
 
 let idleMotionTimer: number | null = null
 let activationFallbackTimer: number | null = null
-let footerMeasureRaf: number | null = null
-let footerElement: HTMLElement | null = null
-let layoutResizeObserver: ResizeObserver | null = null
-let footerMutationObserver: MutationObserver | null = null
+let pageEndSentinel: HTMLElement | null = null
+let pageEndObserver: IntersectionObserver | null = null
+let isPageEndIntersecting = false
 let reducedMotionQuery: MediaQueryList | null = null
-let removePageScrollListener: (() => void) | null = null
+let removePageResizeListener: (() => void) | null = null
 let hasNavigated = false
-let isTrackingFooterTransition = false
 
 const clearIdleMotionTimer = () => {
   if (idleMotionTimer === null) return
@@ -166,77 +175,43 @@ const handleReducedMotionChange = () => {
 const updatePageEndState = () => {
   isMobilePageEnd.value =
     window.innerWidth <= window.innerHeight &&
-    isPageAtEnd(getPageScrollTop(), getPageMaxScrollTop())
-}
-
-const updateFooterOffset = () => {
-  footerMeasureRaf = null
-  if (
-    !footerElement ||
-    window.getComputedStyle(footerElement).display === 'none'
-  ) {
-    footerOffset.value = '0px'
-  } else {
-    const footerTop = footerElement.getBoundingClientRect().top
-    footerOffset.value = `${Math.max(0, window.innerHeight - footerTop)}px`
-  }
-  document.body.style.setProperty('--pet-footer-offset', footerOffset.value)
-  if (teaserElement.value) {
-    document.body.style.setProperty(
-      '--pet-teaser-height',
-      `${teaserElement.value.getBoundingClientRect().height}px`
-    )
-  }
-
-  if (isTrackingFooterTransition) scheduleFooterOffsetUpdate()
-}
-
-const scheduleFooterOffsetUpdate = () => {
-  if (footerMeasureRaf !== null) return
-  footerMeasureRaf = window.requestAnimationFrame(updateFooterOffset)
+    getPageScrollTop() > 0 &&
+    isPageEndIntersecting
 }
 
 const handleViewportResize = () => {
-  scheduleFooterOffsetUpdate()
   updatePageEndState()
 }
 
-const isFooterBottomTransition = (event: TransitionEvent) =>
-  event.target === footerElement && event.propertyName === 'bottom'
-
-const handleFooterTransitionRun = (event: TransitionEvent) => {
-  if (!isFooterBottomTransition(event)) return
-  isTrackingFooterTransition = true
-  scheduleFooterOffsetUpdate()
-}
-
-const handleFooterTransitionEnd = (event: TransitionEvent) => {
-  if (!isFooterBottomTransition(event)) return
-  isTrackingFooterTransition = false
-  scheduleFooterOffsetUpdate()
-}
-
-const observeFooter = () => {
-  footerElement = document.querySelector<HTMLElement>('.footer-com')
-  if (!footerElement) return
-
-  layoutResizeObserver = new ResizeObserver(() => {
-    scheduleFooterOffsetUpdate()
-    updatePageEndState()
-  })
-  layoutResizeObserver.observe(footerElement)
+const observePageEnd = () => {
   const routerContainer =
     document.querySelector<HTMLElement>('.router-container')
-  if (routerContainer) layoutResizeObserver.observe(routerContainer)
-  footerMutationObserver = new MutationObserver(scheduleFooterOffsetUpdate)
-  footerMutationObserver.observe(footerElement, {
-    attributes: true,
-    attributeFilter: ['class', 'style'],
+  if (!routerContainer) return
+
+  pageEndSentinel = document.createElement('span')
+  pageEndSentinel.className = 'pet-page-end-sentinel'
+  pageEndSentinel.setAttribute('aria-hidden', 'true')
+  Object.assign(pageEndSentinel.style, {
+    position: 'absolute',
+    right: '0',
+    bottom: '0',
+    width: '1px',
+    height: '1px',
+    pointerEvents: 'none',
   })
-  footerElement.addEventListener('transitionrun', handleFooterTransitionRun)
-  footerElement.addEventListener('transitionend', handleFooterTransitionEnd)
-  footerElement.addEventListener('transitioncancel', handleFooterTransitionEnd)
-  scheduleFooterOffsetUpdate()
+  routerContainer.appendChild(pageEndSentinel)
+  pageEndObserver = new IntersectionObserver(
+    ([entry]) => {
+      isPageEndIntersecting = entry?.isIntersecting ?? false
+      updatePageEndState()
+    },
+    {
+      root: getPageScrollElement(),
+      rootMargin: '0px 0px 80px 0px',
+      threshold: 0,
+    }
+  )
+  pageEndObserver.observe(pageEndSentinel)
 }
 
 watch(
@@ -268,12 +243,9 @@ onMounted(() => {
   reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
   reducedMotionQuery.addEventListener('change', handleReducedMotionChange)
   document.addEventListener('visibilitychange', handleVisibilityChange)
-  window.addEventListener('resize', handleViewportResize, {
-    passive: true,
-  })
-  observeFooter()
+  removePageResizeListener = addPageResizeListener(handleViewportResize)
+  observePageEnd()
   updatePageEndState()
-  removePageScrollListener = addPageScrollListener(updatePageEndState)
   scheduleIdleMotion()
 })
 
@@ -281,22 +253,10 @@ onUnmounted(() => {
   clearIdleMotionTimer()
   clearActivationFallback()
   document.removeEventListener('visibilitychange', handleVisibilityChange)
-  window.removeEventListener('resize', handleViewportResize)
-  removePageScrollListener?.()
-  removePageScrollListener = null
-  footerElement?.removeEventListener('transitionrun', handleFooterTransitionRun)
-  footerElement?.removeEventListener('transitionend', handleFooterTransitionEnd)
-  footerElement?.removeEventListener(
-    'transitioncancel',
-    handleFooterTransitionEnd
-  )
-  layoutResizeObserver?.disconnect()
-  footerMutationObserver?.disconnect()
-  if (footerMeasureRaf !== null) {
-    window.cancelAnimationFrame(footerMeasureRaf)
-  }
-  document.body.style.removeProperty('--pet-footer-offset')
-  document.body.style.removeProperty('--pet-teaser-height')
+  removePageResizeListener?.()
+  removePageResizeListener = null
+  pageEndObserver?.disconnect()
+  pageEndSentinel?.remove()
   reducedMotionQuery?.removeEventListener('change', handleReducedMotionChange)
 })
 </script>
@@ -326,21 +286,35 @@ onUnmounted(() => {
     @click="handleActivate"
   >
     <span class="pet-teaser__cat-stage" aria-hidden="true">
-      <img
-        class="pet-teaser__cat"
-        :src="catImage"
-        alt=""
-        draggable="false"
-        @animationend="handleCatAnimationEnd"
-      />
-
-      <span class="pet-teaser__ears-window">
+      <picture>
+        <source media="(max-width: 768px)" :srcset="catMobileImage" />
         <img
-          class="pet-teaser__ears"
-          :src="catEarsImage"
+          class="pet-teaser__cat"
+          :src="catImage"
           alt=""
           draggable="false"
+          width="231"
+          height="264"
+          loading="lazy"
+          decoding="async"
+          @animationend="handleCatAnimationEnd"
         />
+      </picture>
+
+      <span class="pet-teaser__ears-window">
+        <picture>
+          <source media="(max-width: 768px)" :srcset="catEarsMobileImage" />
+          <img
+            class="pet-teaser__ears"
+            :src="catEarsImage"
+            alt=""
+            draggable="false"
+            width="138"
+            height="138"
+            loading="lazy"
+            decoding="async"
+          />
+        </picture>
       </span>
     </span>
 
@@ -379,6 +353,7 @@ onUnmounted(() => {
 <style scoped lang="less">
 .pet-teaser {
   --pet-entry-opacity: 0.5;
+  --pet-footer-offset: 36px;
   --pet-wand-color: @primary-color;
 
   position: fixed;
@@ -396,7 +371,8 @@ onUnmounted(() => {
   pointer-events: none;
   cursor: pointer;
   isolation: isolate;
-  transition: opacity 0.45s ease, transform 0.2s ease, visibility 0s;
+  transition: opacity 0.45s ease, transform 0.2s ease, bottom 0.5s ease,
+    visibility 0s;
   -webkit-tap-highlight-color: transparent;
 
   &--ready {
@@ -455,6 +431,10 @@ onUnmounted(() => {
   z-index: 1;
   overflow: hidden;
   pointer-events: none;
+
+  > picture {
+    display: contents;
+  }
 }
 
 .pet-teaser__cat {
@@ -485,6 +465,10 @@ onUnmounted(() => {
   transform-origin: center bottom;
   transition: clip-path 0.52s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.36s ease,
     transform 0.48s cubic-bezier(0.16, 1, 0.3, 1), filter 0.32s ease;
+
+  picture {
+    display: contents;
+  }
 }
 
 .pet-teaser__ears {
@@ -745,6 +729,10 @@ onUnmounted(() => {
 }
 
 @media screen and (max-aspect-ratio: @ratio-threshold) {
+  .pet-teaser {
+    --pet-footer-offset: 0px;
+  }
+
   .pet-teaser__interaction-zone {
     left: 25%;
   }

@@ -8,14 +8,18 @@
     }"
     @click="emit('select', work)"
   >
-    <img
-      v-if="work.img && background !== 'grid'"
-      class="work-card-image"
-      :src="cardImage"
-      :alt="work.title"
-      loading="lazy"
-      decoding="async"
-    />
+    <picture v-if="work.img && background !== 'grid'" class="work-card-picture">
+      <source media="(max-width: 768px)" :srcset="cardMobileImage" />
+      <img
+        class="work-card-image"
+        :src="cardImage"
+        :alt="work.title"
+        loading="lazy"
+        decoding="async"
+        width="768"
+        height="576"
+      />
+    </picture>
     <span class="work-card-info">
       <small v-if="work.company">{{ work.company }}</small>
       <strong>{{ work.title }}</strong>
@@ -43,7 +47,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { getCardThumbnailUrl } from '@/utils/imageVariant'
+import {
+  getCardMobileThumbnailUrl,
+  getCardThumbnailUrl,
+} from '@/utils/imageVariant'
 
 import type { WorkCardItem } from '@/types/archive'
 
@@ -54,6 +61,9 @@ const props = defineProps<{
 }>()
 
 const cardImage = computed(() => getCardThumbnailUrl(props.work.img ?? ''))
+const cardMobileImage = computed(() =>
+  getCardMobileThumbnailUrl(props.work.img ?? '')
+)
 
 const emit = defineEmits<{
   (event: 'select', work: WorkCardItem): void
@@ -91,6 +101,10 @@ const emit = defineEmits<{
     opacity: 0.68;
     pointer-events: none;
   }
+}
+
+.work-card-picture {
+  display: contents;
 }
 
 .work-card-image {
@@ -139,7 +153,7 @@ const emit = defineEmits<{
 
 .work-card-info small {
   color: #54a86c;
-  font-family: 'cn-custom', sans-serif;
+  font-family: 'UnboundedSans', sans-serif;
   font-size: clamp(0.38rem, 0.48vw, 0.5rem);
   font-weight: 400;
   line-height: 1.2;
@@ -178,7 +192,7 @@ const emit = defineEmits<{
   border-radius: 4px;
   padding: 2px 6px;
   color: rgba(255, 255, 255, 0.5);
-  font-family: 'cn-custom', monospace;
+  font-family: 'UnboundedSans', monospace;
   font-size: clamp(0.36rem, 0.42vw, 0.46rem);
   font-weight: 400;
   letter-spacing: 0.5px;

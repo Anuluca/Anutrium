@@ -290,7 +290,7 @@ const visibleChar = (char: string) => {
 
 .entity-tool {
   color: @text;
-  font-family: 'cn-custom', system-ui, sans-serif;
+  font-family: 'UnboundedSans', system-ui, sans-serif;
 }
 
 .entity-stage {

@@ -22,14 +22,37 @@
           class="archive-project-marquee__group"
           :aria-hidden="copyIndex > 1"
         >
-          <WorkCard
+          <template
             v-for="project in row.projects"
             :key="`${copyIndex}-${project.id}`"
-            class="archive-project-marquee__card"
-            :tabindex="copyIndex === 1 ? 0 : -1"
-            :work="project"
-            @select="selectProject"
-          />
+          >
+            <WorkCard
+              v-if="copyIndex === 1"
+              class="archive-project-marquee__card"
+              :work="project"
+              @select="selectProject"
+            />
+            <div
+              v-else
+              class="archive-project-marquee__card archive-project-marquee__card--clone"
+              aria-hidden="true"
+            >
+              <picture>
+                <source
+                  media="(max-width: 768px)"
+                  :srcset="getCardMobileThumbnailUrl(project.img)"
+                />
+                <img
+                  :src="getCardThumbnailUrl(project.img)"
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  width="768"
+                  height="576"
+                />
+              </picture>
+            </div>
+          </template>
         </div>
       </div>
     </div>
@@ -40,6 +63,10 @@
 import { computed } from 'vue'
 
 import WorkCard from '@/components/WorkCard/index.vue'
+import {
+  getCardMobileThumbnailUrl,
+  getCardThumbnailUrl,
+} from '@/utils/imageVariant'
 
 import type { WorkCardItem } from '@/types/archive'
 
@@ -57,7 +84,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   paused: false,
   entranceActive: false,
-  repeat: 4,
+  repeat: 2,
 })
 const emit = defineEmits<{ select: [project: ArchiveProjectMarqueeItem] }>()
 const selectProject = (project: WorkCardItem) => {
@@ -65,7 +92,7 @@ const selectProject = (project: WorkCardItem) => {
 }
 
 const repeatCount = computed(() =>
-  Math.max(2, Number.isFinite(props.repeat) ? Math.floor(props.repeat) : 4)
+  Math.max(2, Number.isFinite(props.repeat) ? Math.floor(props.repeat) : 2)
 )
 
 const projectRows = computed(() => {
@@ -152,6 +179,25 @@ const projectRows = computed(() => {
 .archive-project-marquee__card {
   flex: 0 0 clamp(9rem, 16vw, 17rem);
   aspect-ratio: 16 / 10;
+}
+
+.archive-project-marquee__card--clone {
+  overflow: hidden;
+  background: #0d0d0e;
+  box-shadow: 0 0.35rem 0.9rem rgba(0, 0, 0, 0.22);
+  pointer-events: none;
+
+  picture,
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  img {
+    object-fit: cover;
+    filter: brightness(0.62);
+  }
 }
 
 .archive-project-marquee:not(.archive-project-marquee--paused)

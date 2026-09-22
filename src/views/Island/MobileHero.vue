@@ -70,7 +70,7 @@ const { t } = useI18n()
 .hero-label {
   display: block;
   color: @red;
-  font-family: 'cn-custom', monospace;
+  font-family: 'UnboundedSans', monospace;
   font-size: 12px;
   font-weight: 900;
   letter-spacing: 0.04em;
@@ -82,7 +82,7 @@ const { t } = useI18n()
 h1 {
   margin: 0;
   color: #fff;
-  font-family: 'cn-custom', monospace;
+  font-family: 'UnboundedSans', monospace;
   font-size: clamp(38px, 14vw, 86px);
   font-weight: 900;
   line-height: 0.9;
@@ -126,7 +126,7 @@ h1 {
   z-index: 1;
   max-width: 62%;
   color: rgba(226, 52, 87, 0.045);
-  font-family: 'anton', sans-serif;
+  font-family: 'Anton', sans-serif;
   font-size: clamp(54px, 17vw, 96px);
   font-weight: 900;
   line-height: 0.9;

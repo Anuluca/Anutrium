@@ -1,10 +1,10 @@
-const CRITICAL_FONT_FAMILY = 'cn-custom'
-const CRITICAL_FONT_URL = 'https://assets.anuluca.com/fonts/unboundedsans.ttf'
+const CRITICAL_FONT_FAMILY = 'UnboundedSans'
+const CRITICAL_FONT_URL =
+  'https://assets.anuluca.com/fonts/unboundedsans-latin.woff2?v=20260913'
 let criticalFontLoadPromise: Promise<boolean> | null = null
 
 /**
- * 加载首屏关键字体。入口过渡会等待这个 Promise 完成后再退出。
- * 使用 FontFace API 明确触发 unboundedsans.ttf 下载，避免仅依赖 CSS 首次使用时机。
+ * 在后台加载首屏字体。入口过渡不等待网络，避免冷缓存时延长首屏遮罩。
  */
 export function loadCriticalFont(): Promise<boolean> {
   if (criticalFontLoadPromise) return criticalFontLoadPromise
@@ -23,7 +23,7 @@ export function loadCriticalFont(): Promise<boolean> {
       const link = document.createElement('link')
       link.rel = 'preload'
       link.as = 'font'
-      link.type = 'font/ttf'
+      link.type = 'font/woff2'
       link.href = CRITICAL_FONT_URL
       link.crossOrigin = 'anonymous'
       link.onload = () => markLoaded(true)
@@ -42,7 +42,7 @@ export function loadCriticalFont(): Promise<boolean> {
         if (typeof FontFace !== 'undefined') {
           const fontFace = new FontFace(
             CRITICAL_FONT_FAMILY,
-            `url("${CRITICAL_FONT_URL}") format("truetype")`,
+            `url("${CRITICAL_FONT_URL}") format("woff2")`,
             {
               display: 'swap',
               style: 'normal',

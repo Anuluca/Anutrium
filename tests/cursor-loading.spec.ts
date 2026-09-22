@@ -36,7 +36,7 @@ test('desktop cursor uses the loading state for the full route transition', asyn
   await page.goto('/', { waitUntil: 'domcontentloaded' })
 
   const cursor = page.locator('.cursor-position')
-  const archiveMenuItem = page.locator('.el-menu-item.ARCHIVE')
+  const archiveMenuItem = page.locator('.desktop-menu-item.ARCHIVE')
   await expect(cursor).toBeAttached({ timeout: PAGE_LOAD_TIMEOUT })
   await expect(archiveMenuItem).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
 

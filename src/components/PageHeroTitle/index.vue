@@ -315,7 +315,7 @@ onBeforeUnmount(() => {
   h1 {
     width: 100%;
     margin: 0;
-    font-family: 'cn-custom', sans-serif;
+    font-family: 'UnboundedSans', sans-serif;
     font-size: var(--page-hero-title-font-size);
     font-weight: 900;
     letter-spacing: 0;

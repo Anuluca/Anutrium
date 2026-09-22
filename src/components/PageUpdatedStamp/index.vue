@@ -18,7 +18,7 @@ const updatedAt = computed(() =>
 .page-updated-stamp {
   z-index: 0;
   color: var(--updated-color, #e23456);
-  font-family: 'anton', sans-serif;
+  font-family: 'Anton', sans-serif;
   font-size: var(--updated-font-size, clamp(1.8rem, 2.7vw, 2.7rem));
   letter-spacing: 0;
   line-height: 1;

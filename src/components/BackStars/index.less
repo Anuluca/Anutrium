@@ -27,6 +27,7 @@
   --triangle-fade-end: 26.36328125vh;
   --triangle-fade-end: 26.36328125dvh;
   --triangle-entry-delay: 1s;
+  --background-top-inset: 0px;
   position: fixed;
   inset: 0;
   z-index: 0;
@@ -36,6 +37,10 @@
   background: transparent;
   contain: layout paint style;
   isolation: isolate;
+
+  &.has-background-top-inset {
+    clip-path: inset(var(--background-top-inset) 0 0);
+  }
 
   &::before {
     position: absolute;
@@ -137,11 +142,21 @@
 
 .particle-viewport {
   position: fixed;
-  inset: 0;
+  top: var(--background-top-inset);
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: var(--layer-particles);
   overflow: hidden;
+  opacity: 0;
   pointer-events: none;
   contain: paint;
+  transition: opacity 520ms ease;
+  will-change: opacity;
+
+  &.is-visible {
+    opacity: 1;
+  }
 }
 
 .particle-field {
@@ -275,16 +290,17 @@
   transform-origin: 50% 100%;
 }
 
-.zodiac-sign-position,
-.zodiac-degree-position {
+.zodiac-sign-position {
   position: absolute;
   transform: translate(-50%, -50%);
 }
 
 .zodiac-sign-face {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 6.8vw;
+  height: 6.8vw;
   color: var(--chart-primary);
   font-family: 'Times New Roman', 'Noto Serif Symbols', 'Noto Sans Symbols 2',
     serif;
@@ -295,30 +311,19 @@
 }
 
 .zodiac-glyph {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--chart-strong);
   font-family: 'Noto Sans Symbols 2', 'Segoe UI Symbol', 'Apple Symbols',
     'Arial Unicode MS', serif;
-  font-size: 4.2vw;
+  font-size: 6.4vw;
   font-variant-emoji: text;
-  transition: color 0.18s ease-out;
-}
-
-.zodiac-name {
-  margin-top: 0.5vw;
-  font-size: 1.2vw;
-  letter-spacing: 0;
-  transform: scaleX(1.3);
-  transform-origin: center;
-  transition: color 0.18s ease-out;
-}
-
-.zodiac-code {
-  margin-top: 0.45vw;
-  color: var(--chart-faint);
-  font-size: 0.8vw;
-  letter-spacing: 0;
-  transform: scaleX(1.3);
-  transform-origin: center;
+  line-height: 1;
+  opacity: 0.5;
+  transform: translateY(0.14em);
   transition: color 0.18s ease-out;
 }
 
@@ -328,9 +333,7 @@
       var(--triangle-entry-delay) both;
   }
 
-  .zodiac-sign-face.is-active .zodiac-glyph,
-  .zodiac-sign-face.is-active .zodiac-name,
-  .zodiac-sign-face.is-active .zodiac-code {
+  .zodiac-sign-face.is-active .zodiac-glyph {
     color: rgba(226, 194, 138, 0.3);
     transition-delay: var(--triangle-entry-delay);
   }
@@ -349,17 +352,6 @@
   animation: none;
   opacity: var(--triangle-highlight-opacity);
   transform: scaleY(1);
-}
-
-.zodiac-degree {
-  display: block;
-  color: var(--chart-faint);
-  font-family: 'anton', monospace;
-  font-size: 0.8vw;
-  letter-spacing: 0;
-  opacity: var(--stage-opacity);
-  transform-origin: center;
-  white-space: nowrap;
 }
 
 .zodiac-diamond-frame {
@@ -452,9 +444,7 @@
   .zodiac-triangle-stage,
   .zodiac-html-wheel,
   .zodiac-sign-face,
-  .zodiac-glyph,
-  .zodiac-name,
-  .zodiac-code {
+  .zodiac-glyph {
     transition: none;
   }
 

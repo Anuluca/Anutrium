@@ -22,14 +22,14 @@
           <div class="media-gallery__stage">
             <video
               v-if="isVideoUrl(media.url)"
-              :src="media.url"
+              :src="nearbyVideoUrls.has(media.url) ? media.url : undefined"
+              :data-video-src="media.url"
               :aria-label="getLabel(media)"
-              autoplay
               controls
               loop
               muted
               playsinline
-              preload="metadata"
+              preload="none"
               @loadedmetadata="markMediaLoaded(media.url)"
             />
             <button
@@ -39,13 +39,21 @@
               :aria-label="getLabel(media)"
               @click="openViewer(media.url)"
             >
-              <img
-                :src="media.url"
-                :alt="getLabel(media)"
-                loading="lazy"
-                decoding="async"
-                @load="markMediaLoaded(media.url)"
-              />
+              <picture>
+                <source
+                  media="(max-width: 768px)"
+                  :srcset="getMediaMobileThumbnailUrl(media)"
+                />
+                <img
+                  :src="getMediaThumbnailUrl(media)"
+                  :alt="getLabel(media)"
+                  loading="lazy"
+                  decoding="async"
+                  width="768"
+                  height="576"
+                  @load="markImageDecoded($event, media.url)"
+                />
+              </picture>
             </button>
           </div>
         </div>
@@ -69,9 +77,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue'
 
 import SafeImageViewer from '@/components/SafeImageViewer/index.vue'
+import { useIntersectionActivation } from '@/composables/useIntersectionActivation'
+import {
+  getCardMobileThumbnailUrl,
+  getCardThumbnailUrl,
+} from '@/utils/imageVariant'
 
 export interface GalleryMedia {
   url: string
@@ -103,16 +116,24 @@ const props = withDefaults(
 
 const VIDEO_FILE_PATTERN = /\.(?:mov|mp4|webm|m4v|ogv)(?:[?#].*)?$/i
 const galleryRef = ref<HTMLElement | null>(null)
-const loadedMediaUrls = ref(new Set<string>())
+const loadedMediaUrls = reactive(new Set<string>())
+const nearbyVideoUrls = reactive(new Set<string>())
 const showViewer = ref(false)
 const currentImageIndex = ref(0)
 const entranceStarted = ref(!props.staggeredEntrance)
-let galleryObserver: IntersectionObserver | null = null
 let isGalleryVisible = false
 
 const isVideoUrl = (url: string) => VIDEO_FILE_PATTERN.test(url)
+const getMediaThumbnailUrl = (media: GalleryMedia) =>
+  getCardThumbnailUrl(media.url)
+const getMediaMobileThumbnailUrl = (media: GalleryMedia) =>
+  getCardMobileThumbnailUrl(media.url)
 const getLabel = (media: GalleryMedia) => props.getMediaLabel(media)
 const shouldShowMediaInfo = (media: GalleryMedia) => props.showMediaInfo(media)
+const getVideoElements = () =>
+  galleryRef.value?.querySelectorAll<HTMLVideoElement>(
+    'video[data-video-src]'
+  ) ?? []
 const getEntranceStyle = (index: number) =>
   props.staggeredEntrance
     ? {
@@ -129,8 +150,19 @@ const imageUrls = computed(() =>
 )
 
 const markMediaLoaded = (url: string) => {
-  if (loadedMediaUrls.value.has(url)) return
-  loadedMediaUrls.value = new Set([...loadedMediaUrls.value, url])
+  loadedMediaUrls.add(url)
+}
+
+const markImageDecoded = async (event: Event, url: string) => {
+  const image = event.currentTarget as HTMLImageElement
+
+  try {
+    await image.decode()
+  } catch {
+    // 部分浏览器在图片已完成解码时会拒绝重复 decode，仍可安全显示。
+  }
+
+  markMediaLoaded(url)
 }
 
 const openViewer = (url: string) => {
@@ -152,15 +184,6 @@ const replayEntrance = async () => {
 }
 
 watch(
-  () => props.items,
-  () => {
-    showViewer.value = false
-    loadedMediaUrls.value = new Set()
-    replayEntrance()
-  }
-)
-
-watch(
   () => props.entranceReady,
   (isReady) => {
     if (!props.staggeredEntrance) return
@@ -176,40 +199,101 @@ watch(
   }
 )
 
-onMounted(() => {
-  if (!props.staggeredEntrance) return
+const { refresh: observeGalleryEntrance } = useIntersectionActivation(
+  galleryRef,
+  ([entry]) => {
+    isGalleryVisible = entry?.isIntersecting ?? false
 
-  if (!('IntersectionObserver' in window)) {
-    isGalleryVisible = true
-    entranceStarted.value = true
-    return
-  }
-
-  galleryObserver = new IntersectionObserver(
-    ([entry]) => {
-      isGalleryVisible = entry.isIntersecting
-
-      if (
-        entry.isIntersecting &&
-        props.entranceReady &&
-        !entranceStarted.value
-      ) {
-        entranceStarted.value = true
-      }
-    },
-    {
-      threshold: 0.08,
-      rootMargin: '0px 0px -8% 0px',
+    if (isGalleryVisible && props.entranceReady && !entranceStarted.value) {
+      entranceStarted.value = true
     }
-  )
-
-  if (galleryRef.value) {
-    galleryObserver.observe(galleryRef.value)
+  },
+  {
+    enabled: () => props.staggeredEntrance,
+    threshold: 0.08,
+    rootMargin: '0px 0px -8% 0px',
+    onUnsupported: () => {
+      isGalleryVisible = true
+      entranceStarted.value = true
+    },
   }
-})
+)
+
+const visibleVideoElements = new WeakSet<HTMLVideoElement>()
+const playVisibleVideo = async (video: HTMLVideoElement) => {
+  const source = video.dataset.videoSrc
+  if (!source) return
+
+  nearbyVideoUrls.add(source)
+  await nextTick()
+  if (!visibleVideoElements.has(video) || !video.isConnected) return
+  await video.play().catch(() => undefined)
+}
+
+const { refresh: observeNearbyVideos } = useIntersectionActivation(
+  getVideoElements,
+  (entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return
+      const video = entry.target as HTMLVideoElement
+      const source = video.dataset.videoSrc
+      if (source) nearbyVideoUrls.add(source)
+    })
+  },
+  {
+    rootMargin: '400px 0px',
+    threshold: 0,
+    onUnsupported: () => {
+      getVideoElements()?.forEach((video) => {
+        const source = video.dataset.videoSrc
+        if (source) nearbyVideoUrls.add(source)
+      })
+    },
+  }
+)
+
+const { refresh: observeVisibleVideos } = useIntersectionActivation(
+  getVideoElements,
+  (entries) => {
+    entries.forEach((entry) => {
+      const video = entry.target as HTMLVideoElement
+
+      if (entry.isIntersecting && entry.intersectionRatio >= 0.1) {
+        visibleVideoElements.add(video)
+        void playVisibleVideo(video)
+      } else {
+        visibleVideoElements.delete(video)
+        video.pause()
+      }
+    })
+  },
+  {
+    threshold: [0, 0.1],
+    onUnsupported: () => {
+      getVideoElements()?.forEach((video) => {
+        visibleVideoElements.add(video)
+        void playVisibleVideo(video)
+      })
+    },
+  }
+)
+
+watch(
+  () => props.items,
+  async () => {
+    showViewer.value = false
+    loadedMediaUrls.clear()
+    nearbyVideoUrls.clear()
+    void replayEntrance()
+    await nextTick()
+    observeGalleryEntrance()
+    observeNearbyVideos()
+    observeVisibleVideos()
+  }
+)
 
 onBeforeUnmount(() => {
-  galleryObserver?.disconnect()
+  getVideoElements()?.forEach((video) => video.pause())
 })
 </script>
 
@@ -309,22 +393,30 @@ onBeforeUnmount(() => {
   z-index: 1;
   max-height: var(--media-gallery-max-height);
 
+  &::before {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    content: '';
+    background: rgba(226, 52, 86, 0.04);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.24s ease;
+  }
+
   &.is-loading {
     width: 12rem;
     height: var(--media-gallery-max-height);
     overflow: hidden;
-    background: rgba(226, 52, 86, 0.04);
 
     &::before {
-      position: absolute;
-      inset: 0;
-      content: '';
       background: linear-gradient(
         105deg,
-        transparent 30%,
+        rgba(226, 52, 86, 0.04) 30%,
         rgba(226, 52, 86, 0.12) 50%,
-        transparent 70%
+        rgba(226, 52, 86, 0.04) 70%
       );
+      opacity: 1;
       transform: translateX(-100%);
       animation: media-placeholder-shimmer 1.6s ease-in-out infinite;
     }
@@ -334,6 +426,11 @@ onBeforeUnmount(() => {
       inset: 0;
       width: 100%;
       height: 100%;
+    }
+
+    img,
+    video {
+      opacity: 0;
     }
   }
 }
@@ -353,12 +450,14 @@ onBeforeUnmount(() => {
     height: auto;
     max-height: var(--media-gallery-max-height);
     object-fit: contain;
+    opacity: 1;
+    transition: opacity 0.28s ease;
   }
 
   img {
     object-position: center;
     filter: saturate(0.88) contrast(1.06) brightness(0.82);
-    transition: filter 0.28s ease, transform 0.28s ease;
+    transition: opacity 0.28s ease, filter 0.28s ease, transform 0.28s ease;
   }
 
   video {
@@ -379,6 +478,10 @@ onBeforeUnmount(() => {
   border: 0;
   background: transparent;
   cursor: zoom-in;
+
+  picture {
+    display: contents;
+  }
 
   &:hover img,
   &:focus-visible img {

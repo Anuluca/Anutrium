@@ -9,10 +9,9 @@
   --entry-bg-target-scale-y: 1;
   --entry-bg-target-opacity: 0.98;
   --entry-bg-target-radius: 0px;
-  --entry-logo-target-left: 0px;
-  --entry-logo-target-top: 0px;
-  --entry-logo-target-width: 34px;
-  --entry-logo-target-height: 34px;
+  --entry-logo-target-x: 0px;
+  --entry-logo-target-y: 0px;
+  --entry-logo-target-scale: 1;
 
   position: fixed;
   inset: 0;
@@ -74,30 +73,28 @@
 .logo-wrapper2 {
   position: absolute;
   z-index: 3;
-  top: 50%;
-  left: 50%;
+  top: 0;
+  left: 0;
   width: min(240px, 46vw);
   height: min(300px, 57.5vw);
   color: #fffff4;
   opacity: 0;
-  transform: translate3d(-50%, -50%, 0);
+  transform-origin: top left;
+  translate: calc(50vw - 50%) calc(50vh - 50%);
+  scale: 1;
   transition: opacity 0.54s ease-out, color 0.54s ease;
-  will-change: top, left, width, height, transform, opacity;
+  will-change: translate, scale, opacity;
 
   &.show {
     opacity: 1;
   }
 
   &.is-docking {
-    top: var(--entry-logo-target-top);
-    left: var(--entry-logo-target-left);
-    width: var(--entry-logo-target-width);
-    height: var(--entry-logo-target-height);
     color: var(--text-color);
-    transform: translate3d(0, 0, 0);
-    transition: top 1.22s @entry-logo-ease, left 1.22s @entry-logo-ease,
-      width 1.22s @entry-logo-ease, height 1.22s @entry-logo-ease,
-      transform 1.22s @entry-logo-ease, opacity 0.42s ease-out,
+    translate: var(--entry-logo-target-x) var(--entry-logo-target-y);
+    scale: var(--entry-logo-target-scale);
+    transition: translate 1.22s @entry-logo-ease,
+      scale 1.22s @entry-logo-ease, opacity 0.42s ease-out,
       color 0.54s ease;
   }
 

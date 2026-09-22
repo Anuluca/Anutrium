@@ -40,7 +40,12 @@
           :aria-label="imageAlt"
           @click="showImageViewer = true"
         >
-          <img :src="normalizedImage" :alt="imageAlt" />
+          <img
+            :src="normalizedImage"
+            :alt="imageAlt"
+            loading="lazy"
+            decoding="async"
+          />
         </button>
 
         <p v-if="normalizedText" class="popover-text">
@@ -83,6 +88,7 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import SafeImageViewer from '@/components/SafeImageViewer/index.vue'
+import { getPageScrollElement } from '@/utils/pageScroll'
 
 interface CrystalLink {
   href: string
@@ -219,7 +225,9 @@ const handleKeydown = (event: KeyboardEvent) => {
 
 onMounted(() => {
   document.addEventListener('click', handleDocumentClick)
-  document.addEventListener('scroll', updatePosition, true)
+  getPageScrollElement()?.addEventListener('scroll', updatePosition, {
+    passive: true,
+  })
   document.addEventListener('keydown', handleKeydown)
   window.addEventListener('resize', updatePosition, { passive: true })
 })
@@ -227,7 +235,7 @@ onMounted(() => {
 onUnmounted(() => {
   if (closeTimer !== null) window.clearTimeout(closeTimer)
   document.removeEventListener('click', handleDocumentClick)
-  document.removeEventListener('scroll', updatePosition, true)
+  getPageScrollElement()?.removeEventListener('scroll', updatePosition)
   document.removeEventListener('keydown', handleKeydown)
   window.removeEventListener('resize', updatePosition)
 })
@@ -369,7 +377,7 @@ watch(hasContent, (hasValue) => {
   gap: 8px;
   margin: 0 6px 8px;
   color: #e23456;
-  font-family: 'cn-custom', monospace;
+  font-family: 'UnboundedSans', monospace;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -458,7 +466,7 @@ watch(hasContent, (hasValue) => {
     border: 1px solid rgba(255, 255, 255, 0.09);
     color: rgba(255, 255, 255, 0.72);
     background: rgba(255, 255, 255, 0.025);
-    font-family: 'cn-custom', monospace;
+    font-family: 'UnboundedSans', monospace;
     font-size: 10px;
     letter-spacing: 0.07em;
     text-decoration: none;

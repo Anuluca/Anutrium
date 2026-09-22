@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { cn } from '@inspira-ui/plugins'
-import { Motion } from 'motion-v'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 
 interface Sparkle {
   id: string
@@ -10,7 +8,6 @@ interface Sparkle {
   color: string
   delay: number
   scale: number
-  lifespan: number
 }
 
 interface Props {
@@ -43,12 +40,6 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const sparkles = ref<Sparkle[]>([])
-const initialState = computed(() => ({
-  opacity: 0,
-  scale: 0,
-  ...(props.rotate ? { rotate: 75 } : {}),
-}))
-let interval: number | null = null
 let sparkleId = 0
 
 const randomBetween = (min: number, max: number) =>
@@ -74,7 +65,6 @@ const generateStar = (delay?: number, horizontalSlot?: number): Sparkle => {
     color: Math.random() > 0.5 ? props.colors.first : props.colors.second,
     delay: delay ?? Math.random() * 2,
     scale: Math.random() + 0.3,
-    lifespan: Math.random() * 10 + 5,
   }
 }
 
@@ -84,24 +74,12 @@ const initializeStars = () => {
   )
 }
 
-const updateStars = () => {
-  sparkles.value = sparkles.value.map((star) =>
-    star.lifespan <= 0
-      ? generateStar()
-      : { ...star, lifespan: star.lifespan - 0.1 }
-  )
-}
-
 const stopAnimation = () => {
-  if (interval === null) return
-  window.clearInterval(interval)
-  interval = null
+  sparkles.value = []
 }
 
 const startAnimation = () => {
-  stopAnimation()
   initializeStars()
-  interval = window.setInterval(updateStars, 100)
 }
 
 const syncAnimation = () => {
@@ -112,12 +90,6 @@ const syncAnimation = () => {
   }
   sparkles.value = []
 }
-
-const getAnimatedState = (sparkle: Sparkle) => ({
-  opacity: [0, 1, 0],
-  scale: [0, sparkle.scale, 0],
-  ...(props.rotate ? { rotate: [75, 120, 150] } : {}),
-})
 
 onMounted(syncAnimation)
 onUnmounted(stopAnimation)
@@ -138,24 +110,18 @@ watch(
 </script>
 
 <template>
-  <span :class="cn('sparkles-text text-6xl font-bold', props.class)">
+  <span :class="['sparkles-text', props.class]">
     <span class="sparkles-text__content">
       <template v-for="sparkle in sparkles" :key="sparkle.id">
-        <Motion
+        <svg
           v-if="props.active"
-          :initial="initialState"
-          :animate="getAnimatedState(sparkle)"
-          :transition="{
-            duration: 0.8,
-            repeat: Infinity,
-            delay: sparkle.delay,
-          }"
-          as="svg"
           class="sparkles-text__sparkle"
+          :class="{ 'sparkles-text__sparkle--rotating': props.rotate }"
           :style="{
             left: sparkle.x,
             top: sparkle.y,
-            opacity: 0,
+            '--sparkle-delay': `${sparkle.delay}s`,
+            '--sparkle-scale': sparkle.scale,
           }"
           :width="props.sparkleSize"
           :height="props.sparkleSize"
@@ -166,7 +132,7 @@ watch(
             d="M9.82531 0.843845C10.0553 0.215178 10.9446 0.215178 11.1746 0.843845L11.8618 2.72026C12.4006 4.19229 12.3916 6.39157 13.5 7.5C14.6084 8.60843 16.8077 8.59935 18.2797 9.13822L20.1561 9.82534C20.7858 10.0553 20.7858 10.9447 20.1561 11.1747L18.2797 11.8618C16.8077 12.4007 14.6084 12.3916 13.5 13.5C12.3916 14.6084 12.4006 16.8077 11.8618 18.2798L11.1746 20.1562C10.9446 20.7858 10.0553 20.7858 9.82531 20.1562L9.13819 18.2798C8.59932 16.8077 8.60843 14.6084 7.5 13.5C6.39157 12.3916 4.19225 12.4007 2.72023 11.8618L0.843814 11.1747C0.215148 10.9447 0.215148 10.0553 0.843814 9.82534L2.72023 9.13822C4.19225 8.59935 6.39157 8.60843 7.5 7.5C8.60843 6.39157 8.59932 4.19229 9.13819 2.72026L9.82531 0.843845Z"
             :fill="sparkle.color"
           />
-        </Motion>
+        </svg>
       </template>
       <slot>{{ text }}</slot>
     </span>
@@ -174,6 +140,36 @@ watch(
 </template>
 
 <style scoped>
+@keyframes sparkle-pulse {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(var(--sparkle-scale));
+  }
+}
+
+@keyframes sparkle-pulse-rotate {
+  0% {
+    opacity: 0;
+    transform: scale(0) rotate(75deg);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(var(--sparkle-scale)) rotate(120deg);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(0) rotate(150deg);
+  }
+}
+
 .sparkles-text {
   display: inline-block;
   vertical-align: baseline;
@@ -190,6 +186,12 @@ watch(
   z-index: 20;
   display: block;
   pointer-events: none;
+  opacity: 0;
   transform-origin: center;
+  animation: sparkle-pulse 0.8s ease-in-out var(--sparkle-delay) infinite;
+}
+
+.sparkles-text__sparkle--rotating {
+  animation-name: sparkle-pulse-rotate;
 }
 </style>

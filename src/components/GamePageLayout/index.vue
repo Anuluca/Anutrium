@@ -65,6 +65,10 @@
             :src="gameIcon"
             alt=""
             aria-hidden="true"
+            width="128"
+            height="128"
+            loading="eager"
+            decoding="async"
           />
           <div class="game-page-description">
             <section class="game-page-description__section">
@@ -628,7 +632,7 @@ onBeforeUnmount(() => {
   border: 0;
   color: #fff;
   background: transparent;
-  font: 40px/1 'cn-custom', sans-serif;
+  font: 40px/1 'UnboundedSans', sans-serif;
   letter-spacing: 0;
   opacity: 0.5;
   text-align: center;

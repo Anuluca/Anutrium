@@ -1,89 +1,55 @@
 <template>
   <span
+    ref="progressElement"
     class="page-scroll-progress no-rem"
-    :style="progressStyle"
+    :style="{ '--page-scroll-progress-top': `${props.top}px` }"
     aria-hidden="true"
   />
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { ref } from 'vue'
 
 const props = withDefaults(
   defineProps<{
-    progress: number
-    anchorSelector?: string
+    top?: number
   }>(),
   {
-    anchorSelector: '.el-menu-layout-all',
+    top: 0,
   }
 )
 
-const progressTop = ref<string>()
-let anchorElement: HTMLElement | null = null
-let anchorResizeObserver: ResizeObserver | null = null
-let measureRafId: number | null = null
-
-const progressStyle = computed(() => {
-  const normalizedProgress = Math.min(100, Math.max(0, props.progress))
-
-  return {
-    '--page-scroll-progress': `${normalizedProgress}%`,
-    '--page-scroll-progress-scale': normalizedProgress / 100,
-    '--page-scroll-progress-top': progressTop.value,
-  }
-})
-
-const syncProgressTop = () => {
-  measureRafId = null
-  if (!anchorElement) return
-
-  const nextTop = `${Math.max(
-    0,
-    anchorElement.getBoundingClientRect().bottom
-  )}px`
-  if (progressTop.value === nextTop) return
-
-  progressTop.value = nextTop
+const progressElement = ref<HTMLElement | null>(null)
+const setProgress = (progress: number) => {
+  const normalizedProgress = Math.min(100, Math.max(0, progress))
+  progressElement.value?.style.setProperty(
+    '--page-scroll-progress',
+    `${normalizedProgress}%`
+  )
+  progressElement.value?.style.setProperty(
+    '--page-scroll-progress-scale',
+    `${normalizedProgress / 100}`
+  )
 }
 
-const scheduleProgressTopSync = () => {
-  if (measureRafId !== null) return
-  measureRafId = window.requestAnimationFrame(syncProgressTop)
-}
-
-onMounted(() => {
-  anchorElement = document.querySelector<HTMLElement>(props.anchorSelector)
-  scheduleProgressTopSync()
-  window.addEventListener('resize', scheduleProgressTopSync, { passive: true })
-
-  if (anchorElement) {
-    anchorResizeObserver = new ResizeObserver(scheduleProgressTopSync)
-    anchorResizeObserver.observe(anchorElement)
-  }
-})
-
-onUnmounted(() => {
-  window.removeEventListener('resize', scheduleProgressTopSync)
-  if (measureRafId !== null) window.cancelAnimationFrame(measureRafId)
-  measureRafId = null
-  anchorResizeObserver?.disconnect()
-  anchorResizeObserver = null
-  anchorElement = null
-})
+defineExpose({ setProgress })
 </script>
 
 <style lang="less" scoped>
 .page-scroll-progress.no-rem {
   position: fixed;
-  top: var(--page-scroll-progress-top, 3.37rem);
+  top: calc(
+    var(--page-scroll-progress-top, 3.37rem) +
+      var(--page-scroll-progress-offset, 0px)
+  );
   right: 0;
+  bottom: 0;
   z-index: 1200;
   width: 4px;
-  height: calc(100dvh - var(--page-scroll-progress-top, 3.37rem));
   overflow: hidden;
   background: #000;
   pointer-events: none;
+  transition: top 0.24s ease;
 
   &::after {
     content: '';
@@ -95,6 +61,8 @@ onUnmounted(() => {
     background: #e23456;
     transform: scaleY(var(--page-scroll-progress-scale, 0));
     transform-origin: top;
+    transition: transform var(--page-scroll-progress-transition-duration, 0ms)
+      cubic-bezier(0.2, 0.8, 0.2, 1);
     will-change: transform;
   }
 }

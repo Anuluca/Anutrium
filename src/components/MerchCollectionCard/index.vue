@@ -12,14 +12,19 @@
         @click="handleSelect"
       >
         <span class="collection-card__media">
-          <img
-            class="collection-card__cover collection-card__cover--primary"
-            :style="coverStyle"
-            :src="primaryCover"
-            :alt="collection.title"
-            loading="lazy"
-            decoding="async"
-          />
+          <picture>
+            <source media="(max-width: 768px)" :srcset="primaryMobileCover" />
+            <img
+              class="collection-card__cover collection-card__cover--primary"
+              :style="coverStyle"
+              :src="primaryCover"
+              :alt="collection.title"
+              loading="lazy"
+              decoding="async"
+              width="768"
+              height="576"
+            />
+          </picture>
           <span class="collection-card__shade" />
           <span class="collection-card__scan" />
         </span>
@@ -53,6 +58,11 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
+import {
+  getCardMobileThumbnailUrl,
+  getCardThumbnailUrl,
+} from '@/utils/imageVariant'
+
 export interface MerchCollectionCardData {
   id: string
   title: string
@@ -81,8 +91,13 @@ const cardElement = ref<HTMLElement>()
 const EXPAND_OVERSCAN = 1.08
 const EXPAND_ANIMATION_DURATION = 1440
 
-const primaryCover = computed(
-  () => props.collection.photos[0]?.url || props.collection.cover
+const primaryCover = computed(() =>
+  getCardThumbnailUrl(props.collection.photos[0]?.url || props.collection.cover)
+)
+const primaryMobileCover = computed(() =>
+  getCardMobileThumbnailUrl(
+    props.collection.photos[0]?.url || props.collection.cover
+  )
 )
 
 const subtitleDisplayParts = computed(() =>
@@ -322,7 +337,7 @@ const handleSelect = () => {
     border-radius: 1px;
     color: #fff;
     background: #e23456;
-    font-family: 'cn-custom', 'Courier New', monospace;
+    font-family: 'UnboundedSans', 'Courier New', monospace;
     font-size: 0.6rem;
     font-weight: 900;
     box-shadow: 4px 6px 12px rgba(0, 0, 0, 0.44);

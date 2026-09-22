@@ -679,6 +679,7 @@ test('desktop custom cursor is ready during entry and hides outside viewport', a
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name.includes('mobile'))
+  await page.setViewportSize({ width: 1000, height: 700 })
   await page.goto('/', { waitUntil: 'domcontentloaded' })
 
   const cursor = page.locator('.cursor-position')
@@ -690,7 +691,9 @@ test('desktop custom cursor is ready during entry and hides outside viewport', a
   await expect(page.locator('html')).toHaveClass(/\bcustom-cursor-enabled\b/)
 
   await page.evaluate(() => {
-    window.dispatchEvent(new MouseEvent('mouseout', { relatedTarget: null }))
+    window.dispatchEvent(
+      new PointerEvent('pointerout', { relatedTarget: null })
+    )
   })
   await expect(cursor).toHaveClass(/\bis-hidden\b/)
   await expect(page.locator('html')).not.toHaveClass(
@@ -708,7 +711,7 @@ test('desktop navigation rolls text without moving route logos', async ({
   test.skip(testInfo.project.name.includes('mobile'))
   await page.goto('/', { waitUntil: 'domcontentloaded' })
 
-  const archiveMenuItem = page.locator('.el-menu-item.ARCHIVE')
+  const archiveMenuItem = page.locator('.desktop-menu-item.ARCHIVE')
   await expect(archiveMenuItem).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
   await expect(archiveMenuItem.locator('.menu-route-icon')).toHaveCount(0)
 
@@ -730,8 +733,26 @@ test('desktop navigation rolls text without moving route logos', async ({
 
   expect(initial.label).toBe('ARCHIVE')
   expect(initial.characterCount).toBe(7)
-  expect(initial.delays[3]).toBeLessThan(initial.delays[0])
-  expect(initial.delays[3]).toBeLessThan(initial.delays[6])
+  expect(initial.delays[3]).toBeGreaterThan(initial.delays[0])
+  expect(initial.delays[6]).toBeGreaterThan(initial.delays[3])
+
+  const labelsStayOnOneLine = await page
+    .locator('.desktop-menu')
+    .evaluate((menu) =>
+      [...menu.querySelectorAll<HTMLElement>('.second-title')].every(
+        (label) => {
+          const labelBounds = label.getBoundingClientRect()
+          const textBounds = label
+            .querySelector<HTMLElement>('span')!
+            .getBoundingClientRect()
+          return (
+            getComputedStyle(label).whiteSpace === 'nowrap' &&
+            labelBounds.height <= textBounds.height + 1
+          )
+        }
+      )
+    )
+  expect(labelsStayOnOneLine).toBeTruthy()
 
   await archiveMenuItem.hover()
   await page.waitForTimeout(650)
@@ -751,7 +772,11 @@ test('desktop navigation rolls text without moving route logos', async ({
         currentMovedOut: currentCharacters.every(
           (character) => character.getBoundingClientRect().bottom < bounds.top
         ),
-        filter: getComputedStyle(roll).filter,
+        textShadow: getComputedStyle(roll, '::after').textShadow,
+        rootOverflow: getComputedStyle(roll).overflow,
+        viewportOverflow: getComputedStyle(
+          roll.querySelector('.text-roll__viewport') as Element
+        ).overflow,
         incomingAligned: incomingCharacters.every(
           (character) =>
             Math.abs(character.getBoundingClientRect().top - bounds.top) < 1
@@ -760,7 +785,9 @@ test('desktop navigation rolls text without moving route logos', async ({
     })
 
   expect(hovered.currentMovedOut).toBeTruthy()
-  expect(hovered.filter).toContain('drop-shadow')
+  expect(hovered.textShadow).not.toBe('none')
+  expect(hovered.rootOverflow).toBe('visible')
+  expect(hovered.viewportOverflow).toBe('hidden')
   expect(hovered.incomingAligned).toBeTruthy()
 })
 
@@ -849,7 +876,7 @@ test('archive section headings show their dynamic project totals', async ({
       (
         await count.evaluate((element) => getComputedStyle(element).fontFamily)
       ).toLowerCase()
-    ).toContain('cn-custom')
+    ).toContain('unboundedsans')
   }
 
   const railAlignment = await sections.first().evaluate((element) => {
@@ -1127,7 +1154,9 @@ test('mobile first-load desktop recommendation is fixed and closable', async ({
   await expect(closeButton).toHaveCSS('color', 'rgb(113, 203, 125)')
   await expect(closeButton).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
   await closeButton.click()
-  await expect(alert).toHaveClass(/el-alert-fade-leave-active/)
+  await expect(page.locator('.mobile-experience-alert')).toHaveClass(
+    /mobile-experience-alert-leave-active/
+  )
   await expect
     .poll(() =>
       alert.evaluate((element) => getComputedStyle(element).animationName)
@@ -1290,7 +1319,9 @@ test('home uses centered display headings and keeps scroll-aware navigation', as
   expect(headingMetrics.centerOffset).toBeLessThanOrEqual(1)
   expect(headingMetrics.englishGap).toBeGreaterThanOrEqual(0)
   expect(headingMetrics.englishGap).toBeLessThanOrEqual(2)
-  expect(headingMetrics.englishFontFamily.toLowerCase()).toContain('cn-custom')
+  expect(headingMetrics.englishFontFamily.toLowerCase()).toContain(
+    'unboundedsans'
+  )
   expect(headingMetrics.englishLetterSpacing).toBe('normal')
   expect(headingMetrics.fontSize).toBeGreaterThanOrEqual(21)
   expect(headingMetrics.fontSize).toBeLessThan(56)
@@ -1924,7 +1955,7 @@ test('archive loads the work detail modal on demand', async ({
       .clipPath,
   }))
   expect(externalTitleStyle.centerDelta).toBeLessThanOrEqual(1)
-  expect(externalTitleStyle.fontFamily).toContain('cn-custom')
+  expect(externalTitleStyle.fontFamily).toContain('unboundedsans')
   expect(externalTitleStyle.fontSize).toBeGreaterThan(10)
   expect(externalTitleStyle.fontWeight).toBe('400')
   expect(externalTitleStyle.letterSpacing).toBe('1px')
@@ -2230,10 +2261,7 @@ test('mobile menu locks background scrolling', async ({ page }, testInfo) => {
   await page.locator('.mobile-menu-icon').click()
   const mobileMenu = page.locator('.mobile-menu-panel')
   await expect(mobileMenu).toHaveClass(/\bactive\b/)
-  await expect(mobileMenu).toHaveCSS(
-    'background-image',
-    /rgba\(0, 0, 0, 0\.22\)/
-  )
+  await expect(mobileMenu).toHaveCSS('background-image', /linear-gradient/)
   await expect(page.locator('html')).toHaveClass(/mobile-menu-scroll-locked/)
   await expect(page.locator('.router-container')).not.toHaveCSS(
     'filter',
@@ -2273,6 +2301,22 @@ test('mobile menu reuses the footer social link bar', async ({
   await expect(linkBar.locator('.footer-social-links__item')).toHaveCount(7)
   await expect(menu.locator('.contact-item')).toHaveCount(0)
 
+  await expect
+    .poll(() =>
+      menu.evaluate((element) => {
+        const panelBounds = element.getBoundingClientRect()
+        const footerBounds = element
+          .querySelector<HTMLElement>('.mobile-footer')!
+          .getBoundingClientRect()
+
+        return Math.max(
+          panelBounds.top - footerBounds.top,
+          footerBounds.bottom - panelBounds.bottom
+        )
+      })
+    )
+    .toBeLessThanOrEqual(1)
+
   const followsSwitches = await linkBar.evaluate((element) =>
     element.previousElementSibling?.classList.contains('switches')
   )
@@ -2288,6 +2332,26 @@ test('mobile menu reuses the footer social link bar', async ({
     return Math.abs(bounds.left + bounds.width / 2 - window.innerWidth / 2)
   })
   expect(centerDelta).toBeLessThanOrEqual(1)
+
+  const footerBoundsBeforeClose = await menu
+    .locator('.mobile-footer')
+    .evaluate((element) => {
+      const bounds = element.getBoundingClientRect()
+      return { height: bounds.height, top: bounds.top }
+    })
+  await page.locator('.mobile-menu-icon').click()
+  const footerBoundsDuringClose = await menu
+    .locator('.mobile-footer')
+    .evaluate((element) => {
+      const bounds = element.getBoundingClientRect()
+      return { height: bounds.height, top: bounds.top }
+    })
+  expect(
+    Math.abs(footerBoundsDuringClose.height - footerBoundsBeforeClose.height)
+  ).toBeLessThanOrEqual(1)
+  expect(
+    Math.abs(footerBoundsDuringClose.top - footerBoundsBeforeClose.top)
+  ).toBeLessThanOrEqual(1)
 })
 
 test('mobile home content uses tripled spacing between modules', async ({
@@ -3204,7 +3268,7 @@ test('image log groups fall back when English labels are missing', async ({
     timeout: PAGE_LOAD_TIMEOUT,
   })
   await page
-    .getByRole('button', { name: 'Switch to English' })
+    .getByRole('button', { name: 'En', exact: true })
     .evaluate((button: HTMLButtonElement) => button.click())
 
   await expect

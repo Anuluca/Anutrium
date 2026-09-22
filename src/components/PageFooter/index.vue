@@ -87,6 +87,7 @@ import { useRouter } from 'vue-router'
 
 import FooterSocialLinks from '@/components/FooterSocialLinks/index.vue'
 import Logo from '@/components/Logo/index.vue'
+import { addPageResizeListener } from '@/utils/pageScroll'
 
 const router = useRouter()
 const attrs = useAttrs()
@@ -128,12 +129,14 @@ const targetY = ref(0)
 
 let rafId: number | null = null
 let sizeSyncFrame: number | null = null
+let footerOffsetSyncFrame: number | null = null
 let cachedRect: DOMRect | null = null
 let footerComElement: HTMLElement | null = null
 let observer: IntersectionObserver | null = null
 let resizeObserver: ResizeObserver | null = null
 let footerComObserver: MutationObserver | null = null
 let reducedMotionQuery: MediaQueryList | null = null
+let removePageResizeListener: (() => void) | null = null
 
 const syncStickyFooterSize = () => {
   if (footerPanelRef.value) {
@@ -153,6 +156,10 @@ const syncStickyFooterSize = () => {
     )
   }
 
+  syncFooterComOffset()
+}
+
+const syncFooterComOffset = () => {
   if (
     !footerComElement ||
     window.getComputedStyle(footerComElement).display === 'none'
@@ -167,6 +174,14 @@ const syncStickyFooterSize = () => {
     Math.max(0, window.innerHeight - footerComRect.bottom)
 }
 
+const scheduleFooterComOffsetSync = () => {
+  if (footerOffsetSyncFrame !== null) return
+  footerOffsetSyncFrame = window.requestAnimationFrame(() => {
+    footerOffsetSyncFrame = null
+    syncFooterComOffset()
+  })
+}
+
 const scheduleStickyFooterSizeSync = () => {
   if (sizeSyncFrame !== null) return
 
@@ -174,6 +189,25 @@ const scheduleStickyFooterSizeSync = () => {
     sizeSyncFrame = null
     syncStickyFooterSize()
   })
+}
+
+const handleObservedFooterResize: ResizeObserverCallback = (entries) => {
+  let shouldMeasureFooterOffset = false
+
+  entries.forEach((entry) => {
+    const borderBox = entry.borderBoxSize?.[0]
+    const width = borderBox?.inlineSize ?? entry.contentRect.width
+    const height = borderBox?.blockSize ?? entry.contentRect.height
+
+    if (entry.target === footerPanelRef.value && height > 0) {
+      footerPanelHeight.value = Math.ceil(height)
+    } else if (entry.target === footerRef.value && width > 0) {
+      footerWidth.value = width
+    }
+    if (entry.target === footerComElement) shouldMeasureFooterOffset = true
+  })
+
+  if (shouldMeasureFooterOffset) scheduleFooterComOffsetSync()
 }
 
 const updateMotionState = () => {
@@ -269,15 +303,13 @@ onMounted(() => {
   reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
   reducedMotionQuery.addEventListener('change', updateMotionState)
   document.addEventListener('visibilitychange', updateMotionState)
-  window.addEventListener('resize', scheduleStickyFooterSizeSync, {
-    passive: true,
-  })
+  removePageResizeListener = addPageResizeListener(scheduleStickyFooterSizeSync)
 
   nextTick(() => {
     footerComElement = document.querySelector<HTMLElement>('.footer-com')
 
     if (footerComElement) {
-      footerComObserver = new MutationObserver(scheduleStickyFooterSizeSync)
+      footerComObserver = new MutationObserver(scheduleFooterComOffsetSync)
       footerComObserver.observe(footerComElement, {
         attributes: true,
         attributeFilter: ['class', 'style'],
@@ -285,7 +317,7 @@ onMounted(() => {
     }
 
     if ('ResizeObserver' in window) {
-      resizeObserver = new ResizeObserver(scheduleStickyFooterSizeSync)
+      resizeObserver = new ResizeObserver(handleObservedFooterResize)
       if (footerRef.value) resizeObserver.observe(footerRef.value)
       if (footerPanelRef.value) resizeObserver.observe(footerPanelRef.value)
       if (footerComElement) resizeObserver.observe(footerComElement)
@@ -312,11 +344,15 @@ onMounted(() => {
 onUnmounted(() => {
   if (rafId) cancelAnimationFrame(rafId)
   if (sizeSyncFrame !== null) cancelAnimationFrame(sizeSyncFrame)
+  if (footerOffsetSyncFrame !== null) {
+    cancelAnimationFrame(footerOffsetSyncFrame)
+  }
   observer?.disconnect()
   resizeObserver?.disconnect()
   footerComObserver?.disconnect()
   document.removeEventListener('visibilitychange', updateMotionState)
-  window.removeEventListener('resize', scheduleStickyFooterSizeSync)
+  removePageResizeListener?.()
+  removePageResizeListener = null
   reducedMotionQuery?.removeEventListener('change', updateMotionState)
 })
 </script>
@@ -363,7 +399,7 @@ onUnmounted(() => {
   }
 
   .footer-text {
-    font-family: 'anton', monospace;
+    font-family: 'Anton', monospace;
     font-size: 1.107rem;
     letter-spacing: 0;
     line-height: 1.8rem;
@@ -496,7 +532,7 @@ onUnmounted(() => {
 
       span {
         flex: 1 0 auto;
-        font-family: 'cn-custom', monospace;
+        font-family: 'UnboundedSans', monospace;
       }
     }
   }
@@ -558,7 +594,7 @@ onUnmounted(() => {
   }
 
   * {
-    font-family: 'anton', sans-serif;
+    font-family: 'Anton', sans-serif;
   }
 
   .license {

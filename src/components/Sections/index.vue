@@ -220,7 +220,7 @@ watch(isNavigationAtPageEnd, (isAtPageEnd) => {
   align-self: start;
   margin-top: 0.15rem;
   color: transparent;
-  font-family: 'anton', monospace;
+  font-family: 'Anton', monospace;
   font-size: clamp(1.65rem, 3.3vw, 2.65rem);
   line-height: 0.9;
   text-align: center;
@@ -234,7 +234,7 @@ watch(isNavigationAtPageEnd, (isAtPageEnd) => {
   justify-self: center;
   margin: 0;
   color: rgba(255, 255, 255, 0.25);
-  font-family: 'cn-custom', monospace;
+  font-family: 'UnboundedSans', monospace;
   font-size: 0.64rem;
   letter-spacing: 0;
   text-transform: uppercase;
@@ -284,7 +284,7 @@ watch(isNavigationAtPageEnd, (isAtPageEnd) => {
     left: -2px;
     z-index: -1;
     color: rgba(226, 52, 86, 0.06);
-    font-family: 'anton', monospace;
+    font-family: 'Anton', monospace;
     font-size: 2rem;
     line-height: 1;
     letter-spacing: 0.02em;
@@ -415,7 +415,7 @@ watch(isNavigationAtPageEnd, (isAtPageEnd) => {
   align-items: center;
   justify-content: center;
   color: transparent;
-  font-family: 'anton', monospace;
+  font-family: 'Anton', monospace;
   font-size: clamp(0.72rem, 1vw, 0.92rem);
   line-height: 1;
   -webkit-text-stroke: 1px var(--text-faint);
@@ -459,7 +459,7 @@ watch(isNavigationAtPageEnd, (isAtPageEnd) => {
   margin-bottom: 20px;
   padding: 0;
   color: #e23456;
-  font-family: 'anton', 'alibaba-puhuiti';
+  font-family: 'Anton', 'alibaba-puhuiti';
   font-size: 1.3rem;
   font-weight: 900;
 }
@@ -475,7 +475,7 @@ watch(isNavigationAtPageEnd, (isAtPageEnd) => {
   width: calc(100% - 0.2rem);
   justify-content: space-between;
   color: rgba(255, 255, 255, 0.36);
-  font-family: 'cn-custom', monospace;
+  font-family: 'UnboundedSans', monospace;
   font-size: 0.34em;
   font-weight: 400;
   letter-spacing: 0;

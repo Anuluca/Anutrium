@@ -2,15 +2,13 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import { ElLoading } from 'element-plus'
 
 import ThemeToggle from '@/components/ThemeToggle/index.vue'
 import { visualState } from '@/stores'
 import { persistLocale, type SiteLocale } from '@/utils/locale'
+import { ensureLightThemeStyles } from '@/utils/themeStyles'
 
 import './index.less'
-
-import 'element-plus/es/components/loading/style/css'
 
 interface BottomLineItem {
   title: string
@@ -41,7 +39,6 @@ const bottomLineData = computed(
 const isInternalHref = (href: string) =>
   href.startsWith('/') && !href.startsWith('//')
 
-const fullFooter = computed(() => route.meta.fullFooter)
 const isMotionPaused = ref(false)
 const footerExpanded = ref(false)
 const marqueeTrack = ref<HTMLElement | null>(null)
@@ -49,18 +46,26 @@ const marqueeDuration = ref('24s')
 const marqueeDistance = ref('0px')
 let footerAnimationTimer: number | null = null
 let marqueeFrame: number | null = null
+let marqueeResizeObserver: ResizeObserver | null = null
 let reducedMotionQuery: MediaQueryList | null = null
 let hasPlayedEntryAnimation = false
+const isThemeSwitching = ref(false)
+let themeSwitchTimer: number | null = null
 const isDev = import.meta.env.DEV
 
 onMounted(() => {
-  nextTick(scheduleMarqueeUpdate)
+  nextTick(() => {
+    scheduleMarqueeUpdate()
+    if (marqueeTrack.value && 'ResizeObserver' in window) {
+      marqueeResizeObserver = new ResizeObserver(scheduleMarqueeUpdate)
+      marqueeResizeObserver.observe(marqueeTrack.value)
+    }
+  })
   if (props.entryActive) {
     nextTick(initFooterAnimation)
   }
   reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
   updateMotionState()
-  window.addEventListener('resize', scheduleMarqueeUpdate, { passive: true })
   document.addEventListener('visibilitychange', updateMotionState)
   reducedMotionQuery.addEventListener('change', updateMotionState)
 })
@@ -70,7 +75,9 @@ onUnmounted(() => {
     window.clearTimeout(footerAnimationTimer)
   }
   if (marqueeFrame !== null) window.cancelAnimationFrame(marqueeFrame)
-  window.removeEventListener('resize', scheduleMarqueeUpdate)
+  if (themeSwitchTimer !== null) window.clearTimeout(themeSwitchTimer)
+  marqueeResizeObserver?.disconnect()
+  marqueeResizeObserver = null
   document.removeEventListener('visibilitychange', updateMotionState)
   reducedMotionQuery?.removeEventListener('change', updateMotionState)
 })
@@ -114,19 +121,16 @@ const changeLanguage = (lang: SiteLocale) => {
   locale.value = lang
 }
 
-const changeTheme = (isDark: boolean) => {
+const changeTheme = async (isDark: boolean) => {
   const newTheme = isDark ? 'dark' : 'light'
+  if (newTheme === 'light') await ensureLightThemeStyles()
 
   if (route.path === '/') {
-    const loadingInstance = ElLoading.service({
-      fullscreen: true,
-      background: 'rgba(0, 0, 0, 0.2)',
-      spinner: '1',
-    })
-
-    window.setTimeout(() => {
+    isThemeSwitching.value = true
+    themeSwitchTimer = window.setTimeout(() => {
       visualStateStore.setTheme(newTheme)
-      loadingInstance.close()
+      isThemeSwitching.value = false
+      themeSwitchTimer = null
     }, 150)
   } else {
     visualStateStore.setTheme(newTheme)
@@ -154,7 +158,6 @@ watch(locale, () => nextTick(scheduleMarqueeUpdate))
   <div
     :class="{
       'footer-com': true,
-      'full-footer': fullFooter,
       'footer-ready': props.entryActive,
       'footer-expanded': footerExpanded,
       'motion-paused': isMotionPaused,
@@ -170,24 +173,29 @@ watch(locale, () => nextTick(scheduleMarqueeUpdate))
         @click="router.push('/test')"
       />
       <div class="language">
-        <el-button
-          link
-          type="danger"
-          class="chinese"
+        <button
+          type="button"
+          class="el-button el-button--danger is-link chinese"
           :disabled="locale === 'zhCn'"
           @click="changeLanguage('zhCn')"
         >
-          汉语
-        </el-button>
-        <el-button link type="danger" disabled>|</el-button>
-        <el-button
-          link
-          type="danger"
+          <span>汉语</span>
+        </button>
+        <button
+          type="button"
+          class="el-button el-button--danger is-link"
+          disabled
+        >
+          <span>|</span>
+        </button>
+        <button
+          type="button"
+          class="el-button el-button--danger is-link"
           :disabled="locale === 'en'"
           @click="changeLanguage('en')"
         >
-          En
-        </el-button>
+          <span>En</span>
+        </button>
       </div>
     </div>
 
@@ -250,4 +258,13 @@ watch(locale, () => nextTick(scheduleMarqueeUpdate))
       />
     </div>
   </div>
+  <Teleport to="body">
+    <div
+      v-if="isThemeSwitching"
+      class="theme-switch-overlay"
+      aria-hidden="true"
+    >
+      <span />
+    </div>
+  </Teleport>
 </template>

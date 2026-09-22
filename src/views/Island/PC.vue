@@ -28,7 +28,14 @@
                   :to="page.path"
                   :tabindex="copy === 2 ? -1 : undefined"
                 >
-                  <img :src="page.img" :alt="page.title" loading="lazy" />
+                  <img
+                    :src="page.img"
+                    :alt="page.title"
+                    loading="lazy"
+                    width="768"
+                    height="576"
+                    decoding="async"
+                  />
                   <span>
                     <strong>{{ page.title }}</strong>
                     <em>{{ page.module }}</em>
@@ -83,7 +90,14 @@
                 @click="openHarborItem(item)"
               >
                 <span class="card-body">
-                  <img :src="item.img" :alt="item.title" loading="lazy" />
+                  <img
+                    :src="item.img"
+                    :alt="item.title"
+                    loading="lazy"
+                    width="768"
+                    height="576"
+                    decoding="async"
+                  />
                   <span class="card-shade" />
                   <span class="card-info">
                     <strong>{{ item.title }}</strong>

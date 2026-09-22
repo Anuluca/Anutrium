@@ -177,7 +177,6 @@ onUnmounted(() => {
     .marquee-3d-container {
       animation: none;
       transform: rotateX(0deg);
-      opacity: 0.72;
     }
   }
 
@@ -228,12 +227,13 @@ onUnmounted(() => {
 
 .text-solid,
 .text-stroke {
-  color: #e23456;
+  color: var(--home-passion-marquee-color, #8f2137);
+  opacity: var(--home-passion-marquee-opacity, 0.2);
 }
 
 .text-stroke {
   color: transparent;
-  -webkit-text-stroke: 2px #e23456;
+  -webkit-text-stroke: 2px var(--home-passion-marquee-color, #8f2137);
 }
 
 @keyframes marqueeScroll {
@@ -251,7 +251,7 @@ onUnmounted(() => {
     transform: translateY(-120px);
   }
   to {
-    opacity: 0.42;
+    opacity: 1;
     transform: translateY(0);
   }
 }

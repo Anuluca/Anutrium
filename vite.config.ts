@@ -35,18 +35,54 @@ export default defineConfig({
       injectRegister: 'script-defer',
       scope: '/',
       workbox: {
-        globPatterns: [
-          'assets/**/*.{js,css}',
-          'pwa-*.png',
-          'apple-touch-icon.png',
-          'favicon.ico',
-        ],
+        globPatterns: ['pwa-*.png', 'apple-touch-icon.png', 'favicon.ico'],
         dontCacheBustURLsMatching: /-[a-f0-9]{8}\.(?:js|css)$/,
         navigateFallback: undefined,
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
-        runtimeCaching: [],
+        runtimeCaching: [
+          {
+            urlPattern: /\/assets\/.*\.(?:js|css)$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'app-assets',
+              cacheableResponse: { statuses: [0, 200] },
+              expiration: {
+                maxEntries: 120,
+                maxAgeSeconds: 60 * 60 * 24 * 30,
+              },
+            },
+          },
+          {
+            urlPattern:
+              /^https:\/\/assets\.anuluca\.com\/fonts\/.*\.woff2(?:\?.*)?$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'r2-fonts',
+              cacheableResponse: { statuses: [0, 200] },
+              expiration: {
+                maxEntries: 8,
+                maxAgeSeconds: 60 * 60 * 24 * 365,
+                purgeOnQuotaError: true,
+              },
+            },
+          },
+          {
+            urlPattern:
+              /^https:\/\/assets\.anuluca\.com\/.*[?&]image=(?:card-thumb|home-thumb)(?:&|$)/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'r2-thumbnails',
+              cacheableResponse: { statuses: [0, 200] },
+              expiration: {
+                maxEntries: 240,
+                maxAgeSeconds: 60 * 60 * 24 * 30,
+                purgeOnQuotaError: true,
+              },
+            },
+          },
+        ],
       },
     }),
   ],
@@ -78,7 +114,7 @@ export default defineConfig({
     },
     rollupOptions: {
       output: {
-        assetFileNames: 'assets/[name][extname]',
+        assetFileNames: 'assets/[name]-[hash][extname]',
         manualChunks(id) {
           const normalizedId = id.replace(/\\/g, '/')
 
@@ -89,29 +125,19 @@ export default defineConfig({
           }
           if (normalizedId.includes('/three/')) return 'vendor-three'
           if (normalizedId.includes('/swiper/')) return 'vendor-swiper'
-          if (
-            normalizedId.includes('/motion-v/') ||
-            normalizedId.includes('/framer-motion/') ||
-            normalizedId.includes('/motion-dom/') ||
-            normalizedId.includes('/motion-utils/') ||
-            normalizedId.includes('/hey-listen/')
-          ) {
-            return 'vendor-motion'
-          }
-          if (
-            normalizedId.includes('/@inspira-ui/') ||
-            normalizedId.includes('/tailwind-merge/') ||
-            normalizedId.includes('/clsx/')
-          ) {
-            return 'vendor-inspira-ui'
-          }
-          if (
-            normalizedId.includes('/element-plus/') ||
-            normalizedId.includes('/@element-plus/')
-          ) {
+          if (normalizedId.includes('/@element-plus/icons-vue/')) {
+            // Icons import Element Plus internals, so splitting them creates a
+            // circular production chunk that can execute before core exports.
             return 'vendor-element-plus'
           }
-          return 'vendor'
+          if (normalizedId.includes('/element-plus/')) {
+            return 'vendor-element-plus'
+          }
+
+          // Let Rollup keep route-only dependencies with their actual consumers.
+          // A catch-all vendor chunk makes one shared framework import pull every
+          // third-party package into the initial graph of every route.
+          return undefined
         },
       },
     },
@@ -130,6 +156,7 @@ export default defineConfig({
   ssgOptions: {
     dirStyle: 'nested',
     formatting: 'minify',
+    crittersOptions: false,
     includedRoutes: () => [
       '/',
       '/archive',

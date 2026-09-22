@@ -5,10 +5,11 @@
       'layout-page': true,
       'layout-show': layoutShow,
       'entry-logo-ready': headerLogoReady,
-      'no-menu': ifNoMenu,
+      'no-menu': noMenuShellActive,
     }"
   >
     <el-header
+      ref="headerElement"
       class="el-menu-layout-all"
       :class="{
         scrolled: isScrolled,
@@ -16,6 +17,7 @@
         'content-aligned': headerPresentation.contentAligned,
       }"
     >
+      <span class="header-hover-overlay" aria-hidden="true" />
       <button
         class="logo-box"
         type="button"
@@ -62,7 +64,7 @@
             </span>
           </span>
         </div>
-        <Transition name="module-name">
+        <Transition name="module-name" :css="!isHomeRoute">
           <span
             v-if="headerPresentation.moduleName"
             :class="[
@@ -77,27 +79,28 @@
         </Transition>
       </button>
 
-      <el-menu
+      <nav
         v-if="!isMobile"
-        :default-active="currentRouter"
-        mode="horizontal"
-        :ellipsis="false"
+        class="desktop-menu"
+        :aria-label="locale === 'en' ? 'Primary navigation' : '主导航'"
       >
-        <div class="menu-box">
-          <RouterLink
-            v-for="(item, index) in filterRoutes"
-            :key="index"
-            :to="item.path"
+        <ul class="menu-box">
+          <li
+            v-for="item in filterRoutes"
+            :key="item.path"
+            :class="[
+              'desktop-menu-item',
+              item.name,
+              {
+                'is-active': currentRouter === item.path,
+                'is-inner-active':
+                  isInnerMenuRoute && currentRouter === item.path,
+              },
+            ]"
           >
-            <el-menu-item
-              :index="item.path"
-              :class="[
-                item.name,
-                {
-                  'is-inner-active':
-                    isInnerMenuRoute && currentRouter === item.path,
-                },
-              ]"
+            <RouterLink
+              :to="item.path"
+              :aria-current="currentRouter === item.path ? 'page' : undefined"
             >
               <div class="title-box">
                 <TextRoll class="main-title" :text="item.meta.titleEn" />
@@ -106,10 +109,10 @@
                   <span>{{ item.meta.titleCn }}</span>
                 </div>
               </div>
-            </el-menu-item>
-          </RouterLink>
-        </div>
-      </el-menu>
+            </RouterLink>
+          </li>
+        </ul>
+      </nav>
     </el-header>
 
     <button
@@ -132,13 +135,25 @@
     </button>
 
     <div
+      v-if="isMobileMenuMounted"
+      :class="{
+        'mobile-menu-backdrop': true,
+        active: isMobileMenuOpen,
+      }"
+      aria-hidden="true"
+      @click="closeMobileMenu"
+    />
+
+    <div
+      v-if="isMobile"
       :class="{
         'mobile-menu-panel': true,
-        active: isMobile && isMobileMenuOpen,
+        active: isMobileMenuOpen,
+        closing: isMobileMenuClosing,
       }"
       @click="closeMobileMenu"
     >
-      <div class="mobile-menu-wrapper">
+      <div v-if="isMobileMenuMounted" class="mobile-menu-wrapper">
         <div class="mobile-menu-content" @click.stop>
           <div class="mobile-menu-items">
             <RouterLink
@@ -198,7 +213,7 @@
             </button>
           </div>
           <div class="mobile-menu-social-links" @click.stop>
-            <FooterSocialLinks v-if="isMobileMenuOpen" />
+            <FooterSocialLinks />
           </div>
           <div class="about-me">© 2018-2026 ANULUCA</div>
           <div class="mobile-footer-left" />
@@ -206,28 +221,30 @@
       </div>
     </div>
 
-    <div
-      ref="routerContainer"
-      :class="{ 'router-container': true, blur: isMobile && isMobileMenuOpen }"
-    >
+    <div ref="routerContainer" class="router-container">
       <router-view v-slot="{ Component }">
         <transition
           name="route"
+          mode="out-in"
           @before-leave="lockIslandRouteGeometry"
-          @after-leave="unlockIslandRouteGeometry"
+          @after-leave="completeRouteLeave"
           @after-enter="completeRouteTransition"
           @enter-cancelled="completeRouteTransition"
-          @leave-cancelled="unlockIslandRouteGeometry"
+          @leave-cancelled="completeRouteLeave"
         >
           <component :is="Component" />
         </transition>
       </router-view>
       <div id="page-footer-portal" class="page-footer-portal" />
     </div>
-    <BackToTop :suppressed="isMobile && isMobileMenuOpen" />
+    <BackToTop
+      ref="backToTopElement"
+      :suppressed="isMobile && isMobileMenuOpen"
+    />
     <PageScrollProgress
       v-if="shouldShowPageScrollProgress"
-      :progress="resolvedPageScrollProgress"
+      ref="pageScrollProgressElement"
+      :top="headerBottom"
     />
     <button
       class="fullscreen"
@@ -241,6 +258,7 @@
 <script setup lang="ts">
 import {
   computed,
+  defineAsyncComponent,
   nextTick,
   onMounted,
   onUnmounted,
@@ -253,7 +271,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { Moon, Sunny } from '@element-plus/icons-vue'
 
 import BackToTop from '@/components/BackToTop/index.vue'
-import FooterSocialLinks from '@/components/FooterSocialLinks/index.vue'
 import Logo from '@/components/Logo/index.vue'
 import PageScrollProgress from '@/components/PageScrollProgress/index.vue'
 import TextRoll from '@/components/TextRoll/index.vue'
@@ -261,12 +278,19 @@ import { finishRouteCursorLoading, routes, syncSeoMeta } from '@/router'
 import { visualState } from '@/stores'
 import { persistLocale, type SiteLocale } from '@/utils/locale'
 import {
+  addPageResizeListener,
+  addPageScrollEndListener,
   addPageScrollListener,
   getPageMaxScrollTop,
   getPageScrollTop,
   scrollPageTo,
 } from '@/utils/pageScroll'
 import { setSmoothScrollLocked } from '@/utils/smoothScroll'
+import { ensureLightThemeStyles } from '@/utils/themeStyles'
+
+const FooterSocialLinks = defineAsyncComponent(
+  () => import('@/components/FooterSocialLinks/index.vue')
+)
 
 const { locale } = useI18n()
 const props = defineProps({
@@ -275,9 +299,17 @@ const props = defineProps({
     default: false,
   },
 })
+const emit = defineEmits<{
+  routeTransitionComplete: []
+}>()
+const headerBottom = ref(0)
 provide(
   'site-entry-active',
   computed(() => props.entryActive)
+)
+provide(
+  'site-header-bottom',
+  computed(() => headerBottom.value)
 )
 
 const logoActive = ref(true)
@@ -333,6 +365,7 @@ const headerPresentation = computed(() => {
     moduleTheme: moduleThemeByPath[modulePath] || '',
   }
 })
+const isHomeRoute = computed(() => route.name === 'HOME')
 const isInnerMenuRoute = computed(
   () =>
     typeof route.meta.activeMenu === 'string' &&
@@ -349,30 +382,45 @@ const filterRoutes = routes.filter((item) => {
 
 const noMenuShellActive = ref(!!route.meta?.noMenu)
 let pendingNoMenuShell = noMenuShellActive.value
-const ifNoMenu = computed(() => noMenuShellActive.value)
 
 const isMobile = computed(() => visualStateStore.deviceType !== 'desktop')
 const isMobileMenuOpen = ref(false)
+const isMobileMenuMounted = ref(false)
+const isMobileMenuClosing = ref(false)
 let isMobileScrollLocked = false
 let lockedMobileScrollY = 0
 let removePageScrollListener: (() => void) | null = null
+let removePageScrollEndListener: (() => void) | null = null
+let removePageResizeListener: (() => void) | null = null
 let pageResizeObserver: ResizeObserver | null = null
+let headerResizeObserver: ResizeObserver | null = null
+let pageMetricsFrameId: number | null = null
+let backgroundTopInsetTimer: number | null = null
+let headerScrolledTimer: number | null = null
+let headerScrollLayoutActivatedAt: number | null = null
+let mobileMenuOpenFrameId: number | null = null
+let mobileMenuUnmountTimer: number | null = null
 
-const isFullscreen = ref(false)
-const scrollProgress = ref(0)
+let documentScrollTop = 0
+let scrollProgress = 0
+let cachedPageMaxScrollTop = 0
 let documentHeaderScrollProgress = 0
+let renderedHeaderScrollProgress = ''
+let isHeaderFullyScrolled = false
 const isPageScrollable = ref(false)
-const resolvedPageScrollProgress = computed(
-  () => visualStateStore.pageScrollProgressOverride ?? scrollProgress.value
-)
+const headerElement = ref<{ $el?: HTMLElement } | HTMLElement | null>(null)
+const pageScrollProgressElement = ref<{
+  setProgress: (progress: number) => void
+} | null>(null)
+const backToTopElement = ref<{
+  setScrollState: (scrollTop: number, progress: number) => void
+} | null>(null)
 const shouldShowPageScrollProgress = computed(
   () =>
     visualStateStore.pageScrollProgressOverride !== null ||
     isPageScrollable.value
 )
 const isHeaderScrollLayoutActive = ref(false)
-let headerScrollAnimations: Animation[] = []
-let headerScrollGeometry: HeaderScrollGeometry[] = []
 let logoTimer: number | null = null
 let layoutTimer: number | null = null
 let islandGeometryUnlockTimer: number | null = null
@@ -400,8 +448,9 @@ const ISLAND_GEOMETRY_UNLOCK_DELAY = 260
 const ENTRY_LOGO_REVEAL_DELAY = 600
 const ENTRY_LOGO_REVEAL_DURATION = 300
 const HEADER_SCROLL_DISTANCE = 100
-const HEADER_SCROLL_TIMELINE_DURATION = 1000
 const HEADER_SCROLL_PROGRESS_EPSILON = 0.001
+const HEADER_BACKGROUND_CUTOUT_DELAY = 260
+const MOBILE_MENU_EXIT_DURATION = 650
 const islandShellClasses = ['island-pc-shell', 'island-mobile-shell'] as const
 const islandLeavingClasses = [
   'island-pc-shell-leaving',
@@ -409,19 +458,17 @@ const islandLeavingClasses = [
 ] as const
 const floraShellClasses = ['flora-shell'] as const
 const floraLeavingClasses = ['flora-shell-leaving'] as const
+const routeShellClasses = [
+  ...islandShellClasses,
+  ...islandLeavingClasses,
+  ...floraShellClasses,
+  ...floraLeavingClasses,
+] as const
 const islandLeavingClassByRouteShell = {
   'island-pc': 'island-pc-shell-leaving',
   'island-mobile': 'island-mobile-shell-leaving',
   flora: 'flora-shell-leaving',
 } as const
-
-interface HeaderScrollGeometry {
-  element: HTMLElement
-  offsetX: number
-  offsetY: number
-  scaleX: number
-  scaleY: number
-}
 
 const clearEntryAnimationTimers = () => {
   if (logoTimer !== null) {
@@ -458,36 +505,60 @@ const startEntryAnimation = () => {
   }, 100)
 }
 
-const toggleFullscreen = () => {
-  if (!document.fullscreenElement) {
-    document.documentElement
-      .requestFullscreen()
-      .then(() => {
-        isFullscreen.value = true
-      })
-      .catch((err) => {
-        console.error(`Error attempting to enable fullscreen: ${err}`)
-      })
-  } else {
-    if (document.exitFullscreen) {
-      document
-        .exitFullscreen()
-        .then(() => {
-          isFullscreen.value = false
-        })
-        .catch((err) => {
-          console.error(`Error attempting to exit fullscreen: ${err}`)
-        })
+const toggleFullscreen = async () => {
+  try {
+    if (!document.fullscreenElement) {
+      await document.documentElement.requestFullscreen()
+    } else if (document.exitFullscreen) {
+      await document.exitFullscreen()
     }
+  } catch (error) {
+    console.error(`Error attempting to toggle fullscreen: ${error}`)
   }
 }
 
+const clearMobileMenuTimers = () => {
+  if (mobileMenuOpenFrameId !== null) {
+    window.cancelAnimationFrame(mobileMenuOpenFrameId)
+    mobileMenuOpenFrameId = null
+  }
+  if (mobileMenuUnmountTimer !== null) {
+    window.clearTimeout(mobileMenuUnmountTimer)
+    mobileMenuUnmountTimer = null
+  }
+}
+
+const openMobileMenu = async () => {
+  clearMobileMenuTimers()
+  isMobileMenuClosing.value = false
+  isMobileMenuMounted.value = true
+  await nextTick()
+  mobileMenuOpenFrameId = window.requestAnimationFrame(() => {
+    mobileMenuOpenFrameId = null
+    isMobileMenuOpen.value = true
+  })
+}
+
 const toggleMobileMenu = () => {
-  isMobileMenuOpen.value = !isMobileMenuOpen.value
+  if (isMobileMenuOpen.value || mobileMenuOpenFrameId !== null) {
+    closeMobileMenu()
+    return
+  }
+
+  void openMobileMenu()
 }
 
 const closeMobileMenu = () => {
+  clearMobileMenuTimers()
+  isMobileMenuClosing.value = isMobileMenuOpen.value
   isMobileMenuOpen.value = false
+  if (!isMobileMenuMounted.value) return
+
+  mobileMenuUnmountTimer = window.setTimeout(() => {
+    mobileMenuUnmountTimer = null
+    isMobileMenuMounted.value = false
+    isMobileMenuClosing.value = false
+  }, MOBILE_MENU_EXIT_DURATION)
 }
 
 const preventBackgroundTouchMove = (event: TouchEvent) => {
@@ -519,134 +590,27 @@ const unlockMobilePageScroll = () => {
   scrollPageTo({ top: scrollY })
 }
 
-const getHeaderAnimationTargets = () => {
-  const header = document.querySelector<HTMLElement>('.el-menu-layout-all')
-  const mobileMenuIcon =
-    document.querySelector<HTMLElement>('.mobile-menu-icon')
-  if (!header) return mobileMenuIcon ? [mobileMenuIcon] : []
+const clearHeaderScrolledTimer = () => {
+  if (headerScrolledTimer === null) return
+  window.clearTimeout(headerScrolledTimer)
+  headerScrolledTimer = null
+}
 
-  const mobileHamburger =
-    mobileMenuIcon?.querySelector<HTMLElement>('.hamburger') || null
-  const usesMobileHeader =
-    isMobile.value ||
-    window.matchMedia(
-      '(max-width: 1024px) and (hover: none) and (pointer: coarse)'
-    ).matches
-
-  // 移动端站点标识保持固定几何，避免滚动插值让 Logo 和标题横向形变。
-  if (usesMobileHeader) {
-    return [mobileMenuIcon, mobileHamburger].filter(
-      (element): element is HTMLElement => element instanceof HTMLElement
+const scheduleHeaderScrolledState = () => {
+  const transitionDuration = Number.parseFloat(
+    getComputedStyle(document.documentElement).getPropertyValue(
+      '--page-scroll-progress-transition-duration'
     )
+  )
+  if (transitionDuration <= 0) {
+    isScrolled.value = true
+    return
   }
 
-  const logo = header.querySelector<HTMLElement>('.logo-box > .logo')
-  const logoText = header.querySelector<HTMLElement>('.logo-box > .right')
-  const moduleName = header.querySelector<HTMLElement>(
-    '.logo-box > .current-module-name'
-  )
-  const menu = Array.from(header.children).find(
-    (element): element is HTMLElement =>
-      element instanceof HTMLElement && element.classList.contains('el-menu')
-  )
-  return [
-    logo,
-    logoText,
-    moduleName,
-    menu,
-    mobileMenuIcon,
-    mobileHamburger,
-  ].filter((element): element is HTMLElement => element instanceof HTMLElement)
-}
-
-const getHeaderScrollLayoutElements = () =>
-  [
-    document.querySelector<HTMLElement>('.el-menu-layout-all'),
-    document.querySelector<HTMLElement>('.mobile-menu-icon'),
-  ].filter((element): element is HTMLElement => element instanceof HTMLElement)
-
-const toggleHeaderScrollClasses = (
-  layoutActive: boolean,
-  fullyScrolled: boolean
-) => {
-  for (const element of getHeaderScrollLayoutElements()) {
-    element.classList.toggle('scroll-layout-active', layoutActive)
-    element.classList.toggle('scrolled', fullyScrolled)
-  }
-}
-
-const cancelHeaderScrollAnimations = () => {
-  headerScrollAnimations.forEach((animation) => animation.cancel())
-  headerScrollAnimations = []
-}
-
-const measureHeaderScrollGeometry = () => {
-  cancelHeaderScrollAnimations()
-  const targets = getHeaderAnimationTargets()
-  const layoutActive = isHeaderScrollLayoutActive.value
-  const fullyScrolled = isScrolled.value
-
-  toggleHeaderScrollClasses(false, false)
-  const initialBounds = new Map(
-    targets.map((element) => [element, element.getBoundingClientRect()])
-  )
-  toggleHeaderScrollClasses(true, fullyScrolled)
-
-  headerScrollGeometry = targets.flatMap((element) => {
-    const initial = initialBounds.get(element)
-    if (!initial) return []
-
-    const current = element.getBoundingClientRect()
-    if (initial.width <= 0.5 || initial.height <= 0.5) return []
-
-    return [
-      {
-        element,
-        offsetX: initial.left - current.left,
-        offsetY: initial.top - current.top,
-        scaleX: current.width > 0.5 ? initial.width / current.width : 1,
-        scaleY: current.height > 0.5 ? initial.height / current.height : 1,
-      },
-    ]
-  })
-
-  toggleHeaderScrollClasses(layoutActive, fullyScrolled)
-}
-
-const createHeaderScrollAnimations = () => {
-  cancelHeaderScrollAnimations()
-  headerScrollAnimations = headerScrollGeometry.flatMap(
-    ({ element, offsetX, offsetY, scaleX, scaleY }) => {
-      if (
-        Math.abs(offsetX) < 0.5 &&
-        Math.abs(offsetY) < 0.5 &&
-        Math.abs(scaleX - 1) < 0.01 &&
-        Math.abs(scaleY - 1) < 0.01
-      ) {
-        return []
-      }
-
-      const animation = element.animate(
-        [
-          {
-            transform: `translate(${offsetX}px, ${offsetY}px) scale(${scaleX}, ${scaleY})`,
-            transformOrigin: 'top left',
-          },
-          {
-            transform: 'translate(0, 0) scale(1)',
-            transformOrigin: 'top left',
-          },
-        ],
-        {
-          duration: HEADER_SCROLL_TIMELINE_DURATION,
-          easing: 'linear',
-          fill: 'both',
-        }
-      )
-      animation.pause()
-      return [animation]
-    }
-  )
+  headerScrolledTimer = window.setTimeout(() => {
+    headerScrolledTimer = null
+    if (isHeaderFullyScrolled) isScrolled.value = true
+  }, transitionDuration)
 }
 
 const renderHeaderScrollProgress = (nextProgress: number) => {
@@ -654,38 +618,102 @@ const renderHeaderScrollProgress = (nextProgress: number) => {
   const layoutActive = progress > HEADER_SCROLL_PROGRESS_EPSILON
   const fullyScrolled = progress >= 1 - HEADER_SCROLL_PROGRESS_EPSILON
 
-  layoutPage.value?.style.setProperty(
-    '--header-scroll-progress',
-    progress.toFixed(4)
-  )
-  isHeaderScrollLayoutActive.value = layoutActive
-  isScrolled.value = fullyScrolled
-  toggleHeaderScrollClasses(layoutActive, fullyScrolled)
+  const progressValue = progress.toFixed(4)
+  if (renderedHeaderScrollProgress !== progressValue) {
+    renderedHeaderScrollProgress = progressValue
+    layoutPage.value?.style.setProperty(
+      '--header-scroll-progress',
+      progressValue
+    )
+  }
+  if (isHeaderScrollLayoutActive.value !== layoutActive) {
+    headerScrollLayoutActivatedAt = layoutActive ? performance.now() : null
+    isHeaderScrollLayoutActive.value = layoutActive
+  }
 
-  if (!layoutActive || fullyScrolled) {
-    cancelHeaderScrollAnimations()
+  if (isHeaderFullyScrolled === fullyScrolled) return
+  isHeaderFullyScrolled = fullyScrolled
+  clearHeaderScrolledTimer()
+  if (!fullyScrolled) {
+    if (isScrolled.value) isScrolled.value = false
     return
   }
 
-  if (!headerScrollGeometry.length) measureHeaderScrollGeometry()
-  if (!headerScrollAnimations.length) createHeaderScrollAnimations()
-  for (const animation of headerScrollAnimations) {
-    animation.currentTime = progress * HEADER_SCROLL_TIMELINE_DURATION
+  scheduleHeaderScrolledState()
+}
+
+const getHeaderElement = () => {
+  const target = headerElement.value
+  if (target instanceof HTMLElement) return target
+  return target?.$el instanceof HTMLElement ? target.$el : null
+}
+
+const syncHeaderBottom = () => {
+  const header = getHeaderElement()
+  if (!header) return
+
+  const baseBottom = header.offsetTop + header.offsetHeight
+  const rootFontSize =
+    Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
+  const scrollOffsetRem = isMobile.value ? -0.26667 : -0.6
+  const nextBottom = Math.max(
+    0,
+    baseBottom +
+      (isHeaderScrollLayoutActive.value ? scrollOffsetRem * rootFontSize : 0)
+  )
+  if (Math.abs(headerBottom.value - nextBottom) > 0.5) {
+    headerBottom.value = nextBottom
   }
 }
 
-const refreshHeaderScrollGeometry = () => {
-  measureHeaderScrollGeometry()
-  handleScroll()
+const clearBackgroundTopInsetTimer = () => {
+  if (backgroundTopInsetTimer === null) return
+  window.clearTimeout(backgroundTopInsetTimer)
+  backgroundTopInsetTimer = null
+}
+
+const updateBackgroundTopInset = () => {
+  backgroundTopInsetTimer = null
+  if (!isScrolled.value) {
+    visualStateStore.setBackgroundTopInset(0)
+    return
+  }
+
+  const visibleBottom = Math.min(window.innerHeight, headerBottom.value)
+  visualStateStore.setBackgroundTopInset(visibleBottom)
+}
+
+const scheduleBackgroundTopInset = () => {
+  clearBackgroundTopInsetTimer()
+  if (!isScrolled.value) {
+    visualStateStore.setBackgroundTopInset(0)
+    return
+  }
+
+  const activeDuration = headerScrollLayoutActivatedAt
+    ? performance.now() - headerScrollLayoutActivatedAt
+    : HEADER_BACKGROUND_CUTOUT_DELAY
+  const remainingDuration = Math.max(
+    0,
+    HEADER_BACKGROUND_CUTOUT_DELAY - activeDuration
+  )
+  // 等菜单位移完成后再改变背景裁切，避免两个合成区域同时变化。
+  backgroundTopInsetTimer = window.setTimeout(
+    updateBackgroundTopInset,
+    remainingDuration
+  )
 }
 
 const syncScrollState = () => {
   const scrollTop = getPageScrollTop()
-  const maxScroll = getPageMaxScrollTop()
-  scrollProgress.value = maxScroll
-    ? Math.min(100, (scrollTop / maxScroll) * 100)
+  documentScrollTop = scrollTop
+  scrollProgress = cachedPageMaxScrollTop
+    ? Math.min(100, (scrollTop / cachedPageMaxScrollTop) * 100)
     : 0
-  isPageScrollable.value = maxScroll > 1
+  pageScrollProgressElement.value?.setProgress(
+    visualStateStore.pageScrollProgressOverride ?? scrollProgress
+  )
+  backToTopElement.value?.setScrollState(documentScrollTop, scrollProgress)
 
   documentHeaderScrollProgress = Math.min(1, scrollTop / HEADER_SCROLL_DISTANCE)
   const homeProgress = visualStateStore.homeHeaderScrollProgress
@@ -695,6 +723,24 @@ const syncScrollState = () => {
 }
 
 const handleScroll = () => syncScrollState()
+
+const refreshPageMetrics = () => {
+  syncHeaderBottom()
+  cachedPageMaxScrollTop = getPageMaxScrollTop()
+  isPageScrollable.value = cachedPageMaxScrollTop > 1
+  syncScrollState()
+  if (isScrolled.value && visualStateStore.backgroundTopInset > 0) {
+    updateBackgroundTopInset()
+  }
+}
+
+const schedulePageMetricsRefresh = () => {
+  if (pageMetricsFrameId !== null) return
+  pageMetricsFrameId = window.requestAnimationFrame(() => {
+    pageMetricsFrameId = null
+    refreshPageMetrics()
+  })
+}
 
 const returnHome = () => {
   router.push('/')
@@ -707,8 +753,10 @@ const toggleLanguage = () => {
   syncSeoMeta(route)
 }
 
-const toggleTheme = () => {
-  visualStateStore.toggleTheme()
+const toggleTheme = async () => {
+  const nextTheme = visualStateStore.theme === 'light' ? 'dark' : 'light'
+  if (nextTheme === 'light') await ensureLightThemeStyles()
+  visualStateStore.setTheme(nextTheme)
 }
 
 const clearIslandGeometryUnlockTimer = () => {
@@ -719,12 +767,9 @@ const clearIslandGeometryUnlockTimer = () => {
 }
 
 const hasIslandShellClass = () =>
-  [
-    ...islandShellClasses,
-    ...islandLeavingClasses,
-    ...floraShellClasses,
-    ...floraLeavingClasses,
-  ].some((className) => document.body.classList.contains(className))
+  routeShellClasses.some((className) =>
+    document.body.classList.contains(className)
+  )
 
 const markIslandRouteLeaving = (leavingElement: Element) => {
   const routeShell = leavingElement.getAttribute('data-route-shell')
@@ -737,10 +782,6 @@ const markIslandRouteLeaving = (leavingElement: Element) => {
 
   document.body.classList.add(leavingClass)
   return true
-}
-
-const refreshScrollState = () => {
-  handleScroll()
 }
 
 const restoreIslandRouteGeometry = () => {
@@ -835,12 +876,18 @@ const unlockIslandRouteGeometry = () => {
     document.body.classList.remove(...floraShellClasses)
   }
 
-  nextTick(refreshScrollState)
+  void nextTick(schedulePageMetricsRefresh)
+}
+
+const completeRouteLeave = () => {
+  unlockIslandRouteGeometry()
+  visualStateStore.markRouteLeaveComplete()
 }
 
 const completeRouteTransition = () => {
   unlockIslandRouteGeometry()
   finishRouteCursorLoading()
+  emit('routeTransitionComplete')
 }
 
 const scheduleIslandGeometryUnlock = () => {
@@ -860,12 +907,19 @@ const scheduleIslandGeometryUnlock = () => {
 
 onMounted(() => {
   if (props.entryActive) startEntryAnimation()
-  measureHeaderScrollGeometry()
-  handleScroll()
+  refreshPageMetrics()
   removePageScrollListener = addPageScrollListener(handleScroll)
+  removePageScrollEndListener = addPageScrollEndListener(refreshPageMetrics)
+  removePageResizeListener = addPageResizeListener(schedulePageMetricsRefresh)
   if (routerContainer.value) {
-    pageResizeObserver = new ResizeObserver(handleScroll)
+    pageResizeObserver = new ResizeObserver(schedulePageMetricsRefresh)
     pageResizeObserver.observe(routerContainer.value)
+  }
+  const header = getHeaderElement()
+  if (header) {
+    headerResizeObserver = new ResizeObserver(syncHeaderBottom)
+    headerResizeObserver.observe(header)
+    syncHeaderBottom()
   }
   removeRouteGeometryGuard = router.beforeEach((to, from) => {
     if (to.fullPath === from.fullPath) return true
@@ -873,9 +927,6 @@ onMounted(() => {
     const leavingElement = routerContainer.value?.firstElementChild
     if (leavingElement) lockIslandRouteGeometry(leavingElement)
     return true
-  })
-  window.addEventListener('resize', refreshHeaderScrollGeometry, {
-    passive: true,
   })
 })
 
@@ -889,14 +940,26 @@ onUnmounted(() => {
     ...floraLeavingClasses
   )
   unlockMobilePageScroll()
+  clearMobileMenuTimers()
+  clearBackgroundTopInsetTimer()
+  clearHeaderScrolledTimer()
+  visualStateStore.setBackgroundTopInset(0)
   removePageScrollListener?.()
   removePageScrollListener = null
+  removePageScrollEndListener?.()
+  removePageScrollEndListener = null
+  removePageResizeListener?.()
+  removePageResizeListener = null
   removeRouteGeometryGuard?.()
   removeRouteGeometryGuard = null
   pageResizeObserver?.disconnect()
   pageResizeObserver = null
-  window.removeEventListener('resize', refreshHeaderScrollGeometry)
-  cancelHeaderScrollAnimations()
+  headerResizeObserver?.disconnect()
+  headerResizeObserver = null
+  if (pageMetricsFrameId !== null) {
+    window.cancelAnimationFrame(pageMetricsFrameId)
+    pageMetricsFrameId = null
+  }
   clearEntryAnimationTimers()
 })
 
@@ -908,13 +971,34 @@ watch(
 )
 
 watch(
-  () => visualStateStore.homeHeaderScrollProgress,
-  (progress) => {
-    // 首页翻页不改变文档滚动位置，复用滚动/尺寸事件更新的值，避免逐帧读取布局。
-    renderHeaderScrollProgress(Math.max(documentHeaderScrollProgress, progress))
-  },
-  { flush: 'sync' }
+  [
+    () => visualStateStore.homeHeaderScrollProgress,
+    () => visualStateStore.pageScrollProgressOverride,
+  ],
+  ([headerProgress, pageProgress]) => {
+    // 首页在同一帧更新两个进度值，合并响应可避免两次同步 watcher 调用。
+    renderHeaderScrollProgress(
+      Math.max(documentHeaderScrollProgress, headerProgress)
+    )
+    pageScrollProgressElement.value?.setProgress(pageProgress ?? scrollProgress)
+  }
 )
+
+watch(pageScrollProgressElement, (component) => {
+  component?.setProgress(
+    visualStateStore.pageScrollProgressOverride ?? scrollProgress
+  )
+})
+
+watch(backToTopElement, (component) => {
+  component?.setScrollState(documentScrollTop, scrollProgress)
+})
+
+watch(isHeaderScrollLayoutActive, () => {
+  syncHeaderBottom()
+})
+
+watch(isScrolled, scheduleBackgroundTopInset, { flush: 'sync' })
 
 watch([isMobile, isMobileMenuOpen], ([mobile, menuOpen]) => {
   if (mobile && menuOpen) {
@@ -923,28 +1007,18 @@ watch([isMobile, isMobileMenuOpen], ([mobile, menuOpen]) => {
   }
 
   unlockMobilePageScroll()
+  if (!mobile) closeMobileMenu()
 })
-
-watch([isMobile, locale], async () => {
-  await nextTick()
-  refreshHeaderScrollGeometry()
-})
-
-watch(
-  () => route.fullPath,
-  async () => {
-    closeMobileMenu()
-    await nextTick()
-    refreshHeaderScrollGeometry()
-    scheduleIslandGeometryUnlock()
-    refreshScrollState()
-  }
-)
 
 watch(
   () => route.fullPath,
   () => {
     pendingNoMenuShell = !!route.meta?.noMenu
+    closeMobileMenu()
+    void nextTick(() => {
+      scheduleIslandGeometryUnlock()
+      schedulePageMetricsRefresh()
+    })
   },
   { flush: 'sync' }
 )

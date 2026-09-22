@@ -20,23 +20,35 @@
             :title-en="group.titleEn"
           >
             <template #actions>
-              <SectionCount :count="group.items.length" />
+              <SectionCount :count="group.totalCount" />
             </template>
             <div class="vlog-grid">
               <div
-                v-for="(vlog, vlogIndex) in group.items"
+                v-for="(vlog, vlogIndex) in group.visibleItems"
                 :id="`vlog-${vlog.id}`"
                 :key="vlog.id"
                 class="vlog-image-reveal-entry"
+                :class="{
+                  'is-vlog-image-revealed': index === 0 && vlogIndex < 3,
+                }"
                 :style="getVlogRevealStyle(vlogIndex)"
               >
                 <VlogCard
                   :vlog="vlog"
                   :active="activeVlogId === vlog.id"
                   :interactive="true"
+                  :image-loading="
+                    index === 0 && vlogIndex < 3 ? 'eager' : 'lazy'
+                  "
                   @select="openVlog(vlog)"
                 />
               </div>
+              <div
+                v-if="group.hasMore"
+                class="vlog-load-sentinel"
+                :data-vlog-group="group.id"
+                aria-hidden="true"
+              />
             </div>
           </Sections>
         </section>
@@ -53,6 +65,7 @@ import {
   nextTick,
   onMounted,
   onUnmounted,
+  reactive,
   ref,
 } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -64,21 +77,29 @@ import SectionCount from '@/components/SectionCount/index.vue'
 import Sections from '@/components/Sections/index.vue'
 import TravelMap from '@/components/TravelMap/index.vue'
 import VlogCard from '@/components/VlogCard/index.vue'
+import { useIntersectionActivation } from '@/composables/useIntersectionActivation'
 import { useScrollReveal } from '@/composables/useScrollReveal'
-import { getPageScrollTop, scrollPageTo } from '@/utils/pageScroll'
+import {
+  consumeJourneyReturnState,
+  type JourneyReturnState,
+  rememberJourneySelection,
+} from '@/utils/journeyReturnState'
+import {
+  getPageScrollElement,
+  getPageScrollTop,
+  scrollPageTo,
+} from '@/utils/pageScroll'
 
 import type { JourneyGroup, JourneyItem } from '@/types/flanerie'
 
 const router = useRouter()
 const { locale, tm } = useI18n()
-const JOURNEY_RETURN_FLAG_KEY = 'anutrium:flanerie:returning-from-detail'
-const JOURNEY_RETURN_VLOG_KEY = 'anutrium:flanerie:selected-vlog'
-const JOURNEY_RETURN_SCROLL_KEY = 'anutrium:flanerie:scroll-top'
-
-interface JourneyReturnState {
-  vlogId: string
-  scrollTop: number | null
-}
+const VLOG_BATCH_SIZE = 9
+const visibleVlogCounts = reactive<Record<string, number>>({
+  visited: VLOG_BATCH_SIZE,
+  resident: 0,
+  activity: 0,
+})
 
 const vlogs = computed<JourneyItem[]>(() => {
   return tm('flanerie.dynamic.vlogs') as JourneyItem[]
@@ -95,21 +116,37 @@ const vlogGroups = computed(() => {
     else itemsByCategory.set(category, [vlog])
   })
 
-  return groups.map((group) => ({
-    ...group,
-    items: itemsByCategory.get(group.id) ?? [],
-  }))
+  return groups.map((group) => {
+    const items = itemsByCategory.get(group.id) ?? []
+    const visibleCount = visibleVlogCounts[group.id] || 0
+
+    return {
+      ...group,
+      totalCount: items.length,
+      visibleItems: items.slice(0, visibleCount),
+      hasMore: visibleCount < items.length,
+    }
+  })
 })
 
-const openVlog = (vlog: JourneyItem) => {
-  if (typeof window !== 'undefined') {
-    window.sessionStorage.setItem(JOURNEY_RETURN_VLOG_KEY, vlog.id)
-    window.sessionStorage.setItem(
-      JOURNEY_RETURN_SCROLL_KEY,
-      String(getPageScrollTop())
+const revealVlog = (vlogId: string) => {
+  const vlog = vlogs.value.find((item) => item.id === vlogId)
+  if (!vlog) return
+  const groupId = vlog.category ?? 'visited'
+  const groupItems = vlogs.value.filter(
+    (item) => (item.category ?? 'visited') === groupId
+  )
+  const itemIndex = groupItems.findIndex((item) => item.id === vlogId)
+  if (itemIndex >= 0) {
+    visibleVlogCounts[groupId] = Math.max(
+      visibleVlogCounts[groupId] || 0,
+      itemIndex + 1
     )
   }
+}
 
+const openVlog = (vlog: JourneyItem) => {
+  rememberJourneySelection(vlog.id, getPageScrollTop())
   router.push(`/flanerie/${vlog.id}`)
 }
 
@@ -117,12 +154,50 @@ const activeVlogId = ref<string | null>(null)
 let activeVlogTimer: number | undefined
 let isJourneyPageUnmounted = false
 
-useScrollReveal({
+const { refresh: refreshVlogReveal } = useScrollReveal({
   selector: '.flanerie-page .vlog-image-reveal-entry',
   revealedClass: 'is-vlog-image-revealed',
   rootMargin: '0px 0px -14% 0px',
   threshold: 0,
 })
+
+const loadNextVlogBatch = (groupId: string) => {
+  const totalCount = vlogGroups.value.find(
+    (group) => group.id === groupId
+  )?.totalCount
+  if (!totalCount) return
+  visibleVlogCounts[groupId] = Math.min(
+    totalCount,
+    (visibleVlogCounts[groupId] || 0) + VLOG_BATCH_SIZE
+  )
+}
+
+const { refresh: observeVlogGroupSentinels } = useIntersectionActivation(
+  () => document.querySelectorAll<HTMLElement>('.vlog-load-sentinel'),
+  (entries) => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue
+      const groupId = (entry.target as HTMLElement).dataset.vlogGroup
+      if (groupId) loadNextVlogBatch(groupId)
+    }
+    void nextTick(() => {
+      refreshVlogReveal()
+      observeVlogGroupSentinels()
+    })
+  },
+  {
+    autoStart: false,
+    root: getPageScrollElement,
+    rootMargin: '240px 0px',
+    threshold: 0,
+    onUnsupported: () => {
+      for (const group of vlogGroups.value) {
+        visibleVlogCounts[group.id] = group.totalCount
+      }
+      void nextTick(refreshVlogReveal)
+    },
+  }
+)
 
 const getVlogRevealStyle = (index: number): CSSProperties =>
   ({
@@ -130,27 +205,6 @@ const getVlogRevealStyle = (index: number): CSSProperties =>
     '--vlog-image-delay-2': `${420 + (index % 2) * 120}ms`,
     '--vlog-image-delay-3': `${420 + (index % 3) * 120}ms`,
   } as CSSProperties)
-
-const consumeJourneyReturnState = (): JourneyReturnState | null => {
-  if (typeof window === 'undefined') return null
-
-  const isReturn =
-    window.sessionStorage.getItem(JOURNEY_RETURN_FLAG_KEY) === 'true'
-  const vlogId = window.sessionStorage.getItem(JOURNEY_RETURN_VLOG_KEY)
-  const rawScrollTop = window.sessionStorage.getItem(JOURNEY_RETURN_SCROLL_KEY)
-  const parsedScrollTop = rawScrollTop === null ? NaN : Number(rawScrollTop)
-
-  window.sessionStorage.removeItem(JOURNEY_RETURN_FLAG_KEY)
-  window.sessionStorage.removeItem(JOURNEY_RETURN_VLOG_KEY)
-  window.sessionStorage.removeItem(JOURNEY_RETURN_SCROLL_KEY)
-
-  if (!isReturn || !vlogId) return null
-
-  return {
-    vlogId,
-    scrollTop: Number.isFinite(parsedScrollTop) ? parsedScrollTop : null,
-  }
-}
 
 const waitForAnimationFrames = (count: number) =>
   new Promise<void>((resolve) => {
@@ -167,6 +221,7 @@ const waitForAnimationFrames = (count: number) =>
   })
 
 const restoreJourneyReturnState = async (returnState: JourneyReturnState) => {
+  revealVlog(returnState.vlogId)
   activeVlogId.value = returnState.vlogId
   await nextTick()
 
@@ -202,7 +257,9 @@ const clearActiveVlogTimer = () => {
   activeVlogTimer = undefined
 }
 
-const scrollToVlog = (vlogId: string) => {
+const scrollToVlog = async (vlogId: string) => {
+  revealVlog(vlogId)
+  await nextTick()
   const target = document.getElementById(`vlog-${vlogId}`)
   if (!target) return
 
@@ -222,6 +279,7 @@ const scrollToVlog = (vlogId: string) => {
 
 onMounted(() => {
   isJourneyPageUnmounted = false
+  void nextTick(observeVlogGroupSentinels)
   const returnState = consumeJourneyReturnState()
   if (returnState) restoreJourneyReturnState(returnState)
 })
@@ -254,16 +312,21 @@ onUnmounted(() => {
 
 .vlog-group {
   min-width: 0;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 760px;
 }
 
 .vlog-grid {
   display: grid;
-  content-visibility: auto;
-  contain-intrinsic-size: 760px;
   grid-template-columns: repeat(3, minmax(0, 580px));
   justify-content: center;
   column-gap: 8px;
   row-gap: 10px;
+}
+
+.vlog-load-sentinel {
+  min-height: 1px;
+  grid-column: 1 / -1;
 }
 
 .vlog-image-reveal-entry :deep(.vlog-img-wrap) {

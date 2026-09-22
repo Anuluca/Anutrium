@@ -1,7 +1,11 @@
 <template>
   <div
+    ref="homePageElement"
     class="home-page main-container"
-    :class="{ 'is-craft-footer-visible': isCraftFooterVisible }"
+    :class="{
+      'is-craft-footer-visible': isCraftFooterVisible,
+      'is-header-transition-staging': isHomeHeaderTransitionStaging,
+    }"
     :style="homePageStyle"
   >
     <Swiper
@@ -9,12 +13,11 @@
       :class="
         homePageTransitionDirection && `is-page-${homePageTransitionDirection}`
       "
-      :modules="homeSwiperModules"
       direction="vertical"
       :slides-per-view="1"
       :speed="homePageTransitionDuration"
-      :mousewheel="homeMousewheelOptions"
       :simulate-touch="false"
+      :allow-touch-move="false"
       :resistance-ratio="0"
       :threshold="12"
       :long-swipes-ratio="HOME_PAGE_LONG_SWIPE_RATIO"
@@ -33,6 +36,9 @@
           'is-hero-inactive': isHeroContentInactive,
           'is-hero-initial-entering': isHeroInitialEntering,
           'is-hero-initial-hidden': isHeroInitialHidden,
+          'is-hero-exit-preparing': isHeroExitPreparing,
+          'is-hero-motion-prepared': isHeroMotionPrepared,
+          'is-hero-return-effects-deferred': isHeroReturnEffectsDeferred,
         }"
       >
         <section
@@ -50,90 +56,96 @@
                 @mouseleave="handleNewsWheelLeave"
                 @wheel="handleNewsWheel"
               >
-                <button class="nav-btn nav-btn--prev" @click="prevSlide">
-                  <span class="nav-triangle" aria-hidden="true" />
-                </button>
+                <template v-if="isHeroHeavyContentMounted">
+                  <button class="nav-btn nav-btn--prev" @click="prevSlide">
+                    <span class="nav-triangle" aria-hidden="true" />
+                  </button>
 
-                <Swiper
-                  class="cards-viewport"
-                  :modules="newsSwiperModules"
-                  :direction="carouselDirection"
-                  :slides-per-view="1"
-                  :speed="480"
-                  :loop="newsItems.length > 1"
-                  :autoplay="swiperAutoplayOptions"
-                  :resistance-ratio="0.72"
-                  :threshold="3"
-                  :touch-angle="carouselTouchAngle"
-                  :touch-start-prevent-default="false"
-                  @swiper="setNewsSwiper"
-                  @slide-change="handleSwiperSlideChange"
-                  @slider-move="handleSwiperSliderMove"
-                  @touch-start="handleSwiperTouchStart"
-                  @touch-end="handleSwiperTouchEnd"
-                >
-                  <SwiperSlide
-                    v-for="(item, index) in newsItems"
-                    :key="item.id"
+                  <Swiper
+                    class="cards-viewport"
+                    :direction="carouselDirection"
+                    :slides-per-view="1"
+                    :speed="480"
+                    :loop="newsItems.length > 1"
+                    :resistance-ratio="0.72"
+                    :threshold="3"
+                    :touch-angle="carouselTouchAngle"
+                    :touch-start-prevent-default="false"
+                    @swiper="setNewsSwiper"
+                    @slide-change="handleSwiperSlideChange"
+                    @slider-move="handleSwiperSliderMove"
+                    @touch-start="handleSwiperTouchStart"
+                    @touch-end="handleSwiperTouchEnd"
                   >
-                    <div
-                      class="news-card"
-                      data-magnetic
-                      :role="item.link ? 'link' : undefined"
-                      :tabindex="item.link ? 0 : -1"
-                      @click="openNewsItem(item)"
-                      @keydown.enter.prevent="openNewsItem(item)"
-                      @keydown.space.prevent="openNewsItem(item)"
+                    <SwiperSlide
+                      v-for="(item, index) in newsItems"
+                      :key="item.id"
                     >
-                      <div class="card-img">
-                        <img
-                          :src="item.img"
-                          :alt="item.title"
-                          :loading="index === 0 ? 'eager' : 'lazy'"
-                          :fetchpriority="index === 0 ? 'high' : 'low'"
-                          decoding="async"
-                        />
-                        <div class="card-img-overlay" />
-                      </div>
-
-                      <div class="card-content">
-                        <div class="card-top">
-                          <span
-                            class="card-cat"
-                            :class="`card-cat--${item.category.toLowerCase()}`"
-                          >
-                            {{ item.category }}
-                          </span>
+                      <button
+                        class="news-card"
+                        type="button"
+                        data-magnetic
+                        :disabled="!item.link"
+                        @click="openNewsItem(item)"
+                      >
+                        <div class="card-img">
+                          <picture>
+                            <source
+                              media="(max-width: 768px)"
+                              :srcset="item.mobileImg"
+                            />
+                            <img
+                              :src="item.img"
+                              :alt="item.title"
+                              :loading="index === 0 ? 'eager' : 'lazy'"
+                              :fetchpriority="index === 0 ? 'high' : 'low'"
+                              decoding="async"
+                              width="768"
+                              height="576"
+                            />
+                          </picture>
+                          <div class="card-img-overlay" />
                         </div>
-                        <h3 class="card-title">{{ item.title }}</h3>
-                        <p class="card-subtitle">
-                          <span class="subtitle">{{ item.subtitle }}</span>
-                          <span class="card-date">{{ item.date }}</span>
-                        </p>
-                      </div>
-                    </div>
-                  </SwiperSlide>
-                </Swiper>
 
-                <button class="nav-btn nav-btn--next" @click="nextSlide">
-                  <span class="nav-triangle" aria-hidden="true" />
-                </button>
+                        <div class="card-content">
+                          <div class="card-top">
+                            <span
+                              class="card-cat"
+                              :class="`card-cat--${item.category.toLowerCase()}`"
+                            >
+                              {{ item.category }}
+                            </span>
+                          </div>
+                          <h3 class="card-title">{{ item.title }}</h3>
+                          <p class="card-subtitle">
+                            <span class="subtitle">{{ item.subtitle }}</span>
+                            <span class="card-date">{{ item.date }}</span>
+                          </p>
+                        </div>
+                      </button>
+                    </SwiperSlide>
+                  </Swiper>
 
-                <div class="carousel-progress">
-                  <div
-                    v-for="(_, index) in newsItems"
-                    :key="index"
-                    class="progress-bar"
-                    :class="{ active: index === activeIndex }"
-                    @click="goTo(index)"
-                  />
-                </div>
+                  <button class="nav-btn nav-btn--next" @click="nextSlide">
+                    <span class="nav-triangle" aria-hidden="true" />
+                  </button>
 
-                <div class="carousel-counter">
-                  <span class="counter-cur">{{ activeIndex + 1 }}</span>
-                  <span class="counter-sep">/</span>
-                  <span class="counter-total">{{ newsItems.length }}</span>
-                </div>
+                  <div class="carousel-progress">
+                    <div
+                      v-for="(_, index) in newsItems"
+                      :key="index"
+                      class="progress-bar"
+                      :class="{ active: index === activeIndex }"
+                      @click="goTo(index)"
+                    />
+                  </div>
+
+                  <div class="carousel-counter">
+                    <span class="counter-cur">{{ activeIndex + 1 }}</span>
+                    <span class="counter-sep">/</span>
+                    <span class="counter-total">{{ newsItems.length }}</span>
+                  </div>
+                </template>
               </div>
 
               <div ref="mainSloganElement" class="main-slogan">
@@ -145,9 +157,10 @@
                     :class="{ 'is-hovering': isPassionHovering }"
                   >
                     <SparklesText
+                      v-if="isHeroHeavyContentMounted"
                       class="passion"
                       text="PASSION"
-                      :active="isPassionHovering"
+                      :active="isPassionHovering && !areHeroEffectsPaused"
                       :rotate="false"
                       :colors="PASSION_SPARKLE_COLORS"
                       :sparkle-area="PASSION_SPARKLE_AREA"
@@ -158,7 +171,7 @@
                     >
                       <RadiantText
                         class="passion-radiant"
-                        :active="isPassionHovering"
+                        :active="isPassionHovering && !areHeroEffectsPaused"
                         :duration="5"
                         :radiant-width="100"
                         base-color="#e23456"
@@ -167,11 +180,15 @@
                         PASSION
                       </RadiantText>
                     </SparklesText>
+                    <span v-else class="passion">PASSION</span>
                   </p>
                 </div>
-                <LogoOnly3D
-                  class="logoWith3d"
-                  :active="!isHeroContentInactive"
+                <Logo
+                  v-if="isHeroHeavyContentMounted"
+                  id="home-passion-static"
+                  class="passion-logo"
+                  :active="false"
+                  aria-hidden="true"
                 />
               </div>
             </div>
@@ -200,20 +217,11 @@
             :class="`home-page-content--${page.id}`"
           >
             <div v-if="page.id === 'about'" class="home-about-copy">
-              <ScrollSectionTitle class="home-about-title" title="ABOUT ME" />
               <div class="home-about-introduction">
                 <p class="home-about-intro">
-                  <span>{{ t('home.dynamic.intro.before') }}</span>
-                  <RouterLink
-                    class="home-about-intro__name"
-                    to="/island"
-                    @click.stop
-                  >
-                    <TextHighlight :duration="300" text-end-color="#000000">
-                      {{ t('home.dynamic.intro.name') }}
-                    </TextHighlight>
-                  </RouterLink>
-                  <span>{{ t('home.dynamic.intro.after') }}</span>
+                  {{ t('home.dynamic.intro.before')
+                  }}{{ t('home.dynamic.intro.name')
+                  }}{{ t('home.dynamic.intro.after') }}
                 </p>
                 <p class="home-about-description">
                   <span>{{ aboutDescription.before }}</span>
@@ -230,6 +238,12 @@
                     aboutHighlight.source
                   }}</span>
                 </p>
+                <ThemeActionButton
+                  class="home-about-more"
+                  color="#e23456"
+                  label="MORE ABOUT ME"
+                  to="/island"
+                />
               </div>
             </div>
             <div v-else-if="page.id === 'archive'" class="home-archive-copy">
@@ -243,33 +257,54 @@
                 @select="openArchiveProjectDetail"
               />
               <div class="home-archive-heading">
-                <ScrollSectionTitle
-                  class="home-archive-title"
-                  :color="page.color"
-                  :title="page.title"
-                />
                 <p class="home-archive-subtitle">
                   {{ t('home.dynamic.archiveSubtitle') }}
                 </p>
+                <ThemeActionButton
+                  class="home-archive-more"
+                  :color="page.color"
+                  label="MORE ARCHIVES"
+                  to="/archive"
+                />
               </div>
             </div>
             <HomeFlanerieSection
               v-else-if="page.id === 'flanerie'"
-              :active="activeHomePageIndex === index + 1"
+              :active="
+                activeHomePageIndex === index + 1 && !isHomePageTransitionActive
+              "
               :color="page.color"
               :subtitle="t('home.dynamic.flanerieSubtitle')"
-              :title="page.title"
               :vlogs="flanerieVlogs"
               @select="openFlanerieDetail"
             />
-            <div v-else class="home-placeholder-copy">
-              <ScrollSectionTitle :color="page.color" :title="page.title" />
-              <p v-if="page.id === 'craft'" class="home-placeholder-status">
-                开发中
-              </p>
+            <div v-else-if="page.id === 'craft'" class="home-craft-copy">
+              <p class="home-craft-subtitle">所想即所做</p>
+              <div class="home-craft-grid">
+                <ToolCard
+                  v-for="(tool, toolIndex) in homeCraftTools"
+                  :key="tool.id"
+                  class="home-craft-card"
+                  :tool="tool"
+                  :index="toolIndex"
+                  :total="homeCraftTools.length"
+                  :style="{ '--delay': `${0.12 + toolIndex * 0.06}s` }"
+                  @select="openHomeCraftTool"
+                />
+              </div>
+              <ThemeActionButton
+                class="home-craft-more"
+                :color="page.color"
+                label="MORE CRAFTS"
+                to="/craft"
+              />
             </div>
             <div v-if="page.id === 'about'" class="home-about-gallery">
               <DomeGallery
+                :active="
+                  activeHomePageIndex === index + 1 &&
+                  !isHomePageTransitionActive
+                "
                 :images="aboutGalleryItems"
                 :entrance-delay="420"
                 :entrance-duration="1100"
@@ -287,6 +322,7 @@
     </Swiper>
 
     <WorkDetailModal
+      v-if="selectedArchiveWork"
       :visible="selectedArchiveWork !== null"
       :work="selectedArchiveWork"
       theme-color="#71CB7D"
@@ -303,6 +339,32 @@
       @activate="goToNextHomePage"
     />
 
+    <Transition name="home-corner-lines" :duration="homeCornerEntranceDuration">
+      <div
+        v-if="activeHomePageIndex !== 0"
+        class="home-corner-lines"
+        aria-hidden="true"
+      >
+        <Transition
+          name="home-corner-theme"
+          :duration="homeCornerThemeTransitionDuration"
+        >
+          <div
+            :key="activeHomePageIndex"
+            class="home-corner-lines__set"
+            :style="{ '--home-corner-color': activeHomeCornerColor }"
+          >
+            <span
+              v-for="corner in homeCornerPositions"
+              :key="corner"
+              class="home-corner-lines__corner"
+              :class="`home-corner-lines__corner--${corner}`"
+            />
+          </div>
+        </Transition>
+      </div>
+    </Transition>
+
     <nav
       v-for="side in homeIndicatorSides"
       :key="side"
@@ -315,7 +377,7 @@
       :aria-hidden="activeHomePageIndex === 0"
       :inert="activeHomePageIndex === 0"
     >
-      <ol class="home-page-indicator__track" :style="homeIndicatorTrackStyle">
+      <ol class="home-page-indicator__track">
         <li
           v-for="(page, index) in homePageIndicatorItems"
           :key="`${side}-${page.id}`"
@@ -338,12 +400,12 @@
       </ol>
     </nav>
 
-    <div class="home-marquee-fixed-layer" :style="{ top: marqueeViewportTop }">
+    <div class="home-marquee-fixed-layer" :style="marqueeLayerStyle">
       <MarqueeShowcase
         class="marquee-showcase"
         :entrance-ready="isHeroInitialEntranceReady"
         :flat="isHeroContentInactive"
-        :paused="isHomePageTransitionActive"
+        :paused="!siteEntryActive || isHomePageTransitionActive"
       />
     </div>
   </div>
@@ -352,7 +414,9 @@
 <script setup lang="ts">
 import {
   computed,
+  type ComputedRef,
   defineAsyncComponent,
+  inject,
   nextTick,
   onMounted,
   onUnmounted,
@@ -361,8 +425,7 @@ import {
   watch,
 } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
-import { Autoplay, Mousewheel } from 'swiper/modules'
+import { onBeforeRouteLeave, useRouter } from 'vue-router'
 import type { Swiper as SwiperInstance } from 'swiper/types'
 import { Swiper, SwiperSlide } from 'swiper/vue'
 
@@ -370,24 +433,30 @@ import ArchiveProjectMarquee, {
   type ArchiveProjectMarqueeItem,
 } from '@/components/ArchiveProjectMarquee/index.vue'
 import DomeGallery from '@/components/DomeGallery/index.vue'
-import LogoOnly3D from '@/components/LogoOnly3D/index.vue'
+import Logo from '@/components/Logo/index.vue'
 import MarqueeShowcase from '@/components/MarqueeShowcase/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
 import RandomTypedText from '@/components/RandomTypedText/index.vue'
 import ScrollDownHint from '@/components/ScrollDownHint/index.vue'
-import ScrollSectionTitle from '@/components/ScrollSectionTitle/index.vue'
-import TextHighlight from '@/components/TextHighlight/index.vue'
+import ToolCard from '@/components/ToolCard/index.vue'
+import ThemeActionButton from '@/components/ThemeActionButton/index.vue'
 import { RadiantText } from '@/components/ui/radiant-text'
 import { SparklesText } from '@/components/ui/sparkles-text'
-import WorkDetailModal from '@/components/WorkDetailModal/index.vue'
 import { visualState } from '@/stores'
-import { trackProjectClick } from '@/utils/analytics'
-import { getCardThumbnailUrl } from '@/utils/imageVariant'
+import { trackProjectClick, trackToolClick } from '@/utils/analytics'
+import {
+  getCardMobileThumbnailUrl,
+  getCardThumbnailUrl,
+} from '@/utils/imageVariant'
 
 import type { ArchiveWork } from '@/types/archive'
 import type { JourneyItem } from '@/types/flanerie'
 
 import 'swiper/css'
+
+const WorkDetailModal = defineAsyncComponent(
+  () => import('@/components/WorkDetailModal/index.vue')
+)
 
 interface NewsItem {
   id: number
@@ -396,6 +465,7 @@ interface NewsItem {
   category: string
   date: string
   img: string
+  mobileImg?: string
   link?: string
   openInNewWindow?: boolean
 }
@@ -406,6 +476,18 @@ interface AboutGalleryItem {
   link?: string
 }
 
+interface HomeCraftTool {
+  id: string
+  title: string
+  sub: string
+  tags: string[]
+  category: 'work' | 'general'
+  icon: string
+  img?: string
+  statusLabel: string
+  link: string
+}
+
 interface AboutDescriptionItem {
   text: string
   link?: string
@@ -414,12 +496,21 @@ interface AboutDescriptionItem {
 const { t, tm } = useI18n()
 const router = useRouter()
 const visualStateStore = visualState()
+const siteEntryActive = inject<ComputedRef<boolean>>(
+  'site-entry-active',
+  computed(() => true)
+)
+const headerBottom = inject<ComputedRef<number>>(
+  'site-header-bottom',
+  computed(() => 0)
+)
 const HomeFlanerieSection = defineAsyncComponent(
   () => import('@/components/HomeFlanerieSection/index.vue')
 )
 const newsItems = computed<NewsItem[]>(() =>
   (tm('home.dynamic.recommend') as NewsItem[]).map((item) => ({
     ...item,
+    mobileImg: getCardMobileThumbnailUrl(item.img),
     img: getCardThumbnailUrl(item.img),
   }))
 )
@@ -445,6 +536,21 @@ const aboutDescriptionItems = computed(
 const flanerieVlogs = computed<JourneyItem[]>(
   () => tm('flanerie.dynamic.vlogs') as JourneyItem[]
 )
+const homeCraftToolIds = [
+  'palette',
+  'motion',
+  'bounce-dynamics',
+  'metronome',
+] as const
+const homeCraftTools = computed<HomeCraftTool[]>(() => {
+  const tools = tm('craft.dynamic.tools') as HomeCraftTool[]
+  const toolById = new Map(tools.map((tool) => [tool.id, tool]))
+
+  return homeCraftToolIds.flatMap((id) => {
+    const tool = toolById.get(id)
+    return tool ? [tool] : []
+  })
+})
 const aboutDescription = computed(() => {
   const [before, ...after] = t('home.dynamic.aboutDescription').split('—')
   return {
@@ -500,6 +606,10 @@ const openArchiveProjectDetail = (project: ArchiveProjectMarqueeItem) => {
 const openFlanerieDetail = (vlogId: string) => {
   router.push({ name: 'FLANERIE_DETAIL', params: { vlogId } })
 }
+const openHomeCraftTool = (tool: HomeCraftTool) => {
+  trackToolClick({ id: tool.id, title: tool.title, source: 'home_craft' })
+  router.push(tool.link)
+}
 const placeholderPages = [
   {
     id: 'about',
@@ -526,35 +636,55 @@ const homePageIndicatorItems = [
   { id: 'hero', title: 'PASSION' },
   ...placeholderPages,
 ] as const
+const homeCornerPositions = [
+  'top-left',
+  'top-right',
+  'bottom-right',
+  'bottom-left',
+] as const
 const homeIndicatorSides = ['left', 'right'] as const
+const homeCornerEntranceDuration = { enter: 900, leave: 420 } as const
+const homeCornerThemeTransitionDuration = { enter: 480, leave: 0 } as const
 const HOME_INDICATOR_ITEM_STEP = 1
 const HOME_PAGE_TRANSITION_DURATION = 600
+const MOBILE_HOME_PAGE_TRANSITION_DURATION = 360
+const NEWS_AUTOPLAY_DELAY = 4000
 const TOUCH_INPUT_MEDIA_QUERY = '(hover: none) and (pointer: coarse)'
 
 const heroSection = ref<HTMLElement | null>(null)
+const homePageElement = ref<HTMLElement | null>(null)
 const heroContentElement = ref<HTMLElement | null>(null)
 const recommendElement = ref<HTMLElement | null>(null)
 const mainSloganElement = ref<HTMLElement | null>(null)
 const marqueeViewportTop = ref('100dvh')
 const craftFooterHeight = ref('220px')
-const heroContentCounterOffset = ref('0px')
 const homePageMotionDuration = ref(0)
 const homePageTransitionDuration = ref(HOME_PAGE_TRANSITION_DURATION)
 const activeIndex = ref(0)
 const activeHomePageIndex = ref(0)
+const activeHomeCornerColor = computed(
+  () =>
+    placeholderPages[activeHomePageIndex.value - 1]?.color ??
+    placeholderPages[0].color
+)
 const enteringHomePageIndex = ref<number | null>(null)
 const leavingHomePageIndex = ref<number | null>(null)
 const fadingHomePageIndex = ref<number | null>(null)
 const pendingHomePageTransitionIndex = ref<number | null>(null)
+const deferredHomePageContentIndex = ref<number | null>(null)
 const homePageTransitionDirection = ref<'forward' | 'backward' | null>(null)
-const homeIndicatorPagePosition = ref(0)
-const homeIndicatorTransitionDuration = ref(0)
 const isCraftFooterVisible = ref(false)
 const isHeroContentInactive = ref(false)
 const isHeroInitialEntering = ref(false)
 const isHeroInitialHidden = ref(true)
 const isHeroInitialEntranceReady = ref(false)
+const isHeroExitPreparing = ref(false)
+const isHeroMotionPrepared = ref(true)
+const isHeroHeavyContentMounted = ref(true)
+const isHeroReturnEffectsDeferred = ref(false)
 const isHomePageTransitionActive = ref(false)
+const isHomeHeaderTransitionStaging = ref(false)
+const isMobileHomePageContentEntering = ref(false)
 const renderedHomePageIds = ref<ReadonlySet<string>>(new Set(['hero']))
 // Swiper 自行管理内部状态，避免把实例及其事件、幻灯片对象深层代理。
 const homeSwiper = shallowRef<SwiperInstance | null>(null)
@@ -564,16 +694,6 @@ const usesTouchCarousel = ref(
     window.matchMedia(TOUCH_INPUT_MEDIA_QUERY).matches
 )
 const isPassionHovering = ref(false)
-const homeSwiperModules = [Mousewheel]
-const newsSwiperModules = [Autoplay]
-const homeMousewheelOptions = {
-  eventsTarget: '.home-page',
-  forceToAxis: true,
-  releaseOnEdges: false,
-  sensitivity: 1,
-  thresholdDelta: 18,
-  thresholdTime: 520,
-}
 const PASSION_SPARKLE_COLORS = {
   first: '#e2c28a',
   second: '#e2c28a',
@@ -586,13 +706,14 @@ const PASSION_SPARKLE_AREA = {
 }
 
 let isPageVisible = true
+let isNewsHovered = false
 let sloganRotateX = 0
 let sloganRotateY = 0
 let sloganTargetRotateX = 0
 let sloganTargetRotateY = 0
 let sloganRafId: number | null = null
-let heroResizeRafId: number | null = null
-let homeProgressRafId: number | null = null
+let heroLayoutMeasureRafId: number | null = null
+let pendingHeroViewportResize = false
 let reducedMotionQuery: MediaQueryList | null = null
 let heroMotionQuery: MediaQueryList | null = null
 let touchInputQuery: MediaQueryList | null = null
@@ -601,25 +722,36 @@ let isHeroMotionListenerActive = false
 let isHeroMotionEnabled = false
 let didDragSwiper = false
 let dragResetTimer: ReturnType<typeof setTimeout> | null = null
+let newsAutoplayTimer: number | null = null
 let heroContentResizeObserver: ResizeObserver | null = null
 let craftFooterResizeObserver: ResizeObserver | null = null
+let craftFooterElement: HTMLElement | null = null
 let craftFooterTransitionTimer: ReturnType<typeof setTimeout> | null = null
 let craftFooterWheelArmTimer: ReturnType<typeof setTimeout> | null = null
-let heroPageTransitionTimer: ReturnType<typeof setTimeout> | null = null
 let homePageFadeTimer: ReturnType<typeof setTimeout> | null = null
 let homePageContentExitTimer: ReturnType<typeof setTimeout> | null = null
+let homeHeaderTransitionTimer: ReturnType<typeof setTimeout> | null = null
 let heroInitialEntranceObserver: MutationObserver | null = null
 let heroInitialEntranceTimer: ReturnType<typeof setTimeout> | null = null
+let heroExitPreparationFrameId: number | null = null
+let heroDeferredContentTimer: ReturnType<typeof setTimeout> | null = null
+let heroHeavyContentUnmountTimer: ReturnType<typeof setTimeout> | null = null
+let heroMotionReleaseTimer: ReturnType<typeof setTimeout> | null = null
+let heroReturnEffectsTimer: ReturnType<typeof setTimeout> | null = null
 let isCraftFooterTransitionLocked = false
 let isCraftFooterWheelArmed = false
 let isHomePageTransitioning = false
+let lockedHomeHeaderProgress: 0 | 1 | null = null
+let queuedHomePageTransitionIndex: number | null = null
 let homePointerStartX: number | null = null
 let homePointerStartY: number | null = null
 let homePointerAxis: 'horizontal' | 'vertical' | null = null
 let didHandleHomePointer = false
 let isTouchPagingListenerActive = false
 let newsWheelInteractionBounds: { left: number; right: number } | null = null
-let menuElement: HTMLElement | null = null
+let isHomeTouchGestureActive = false
+const homeMotionStyleCache = new Map<string, string>()
+let rootProgressTransitionDuration = ''
 let heroMetrics = {
   centerX: 0,
   centerY: 0,
@@ -631,17 +763,33 @@ const CRAFT_PAGE_INDEX = homePageIndicatorItems.findIndex(
   (page) => page.id === 'craft'
 )
 const HOME_PAGE_CONTENT_MOTION_DURATION = 600
+const MOBILE_HOME_PAGE_CONTENT_MOTION_DURATION = 260
 const HERO_CONTENT_TRANSITION_DURATION = 1200
 const HERO_INITIAL_CONTENT_TRANSITION_DURATION = 1200
 const HERO_INITIAL_ENTRANCE_DURATION = 1000
-const HERO_PAGE_TRANSITION_DELAY = 340
+const HERO_PAGE_TRANSITION_DELAY = 700
+const MOBILE_HERO_PAGE_TRANSITION_DELAY = 180
 const HOME_PAGE_CONTENT_EXIT_DURATION = 200
+const MOBILE_HOME_PAGE_CONTENT_EXIT_DURATION = 140
+const HOME_HEADER_PROGRESS_DURATION = 240
 const HOME_INDICATOR_TRANSITION_RATIO = 0.72
 const HOME_PAGE_LONG_SWIPE_RATIO = 0.1
 const CRAFT_FOOTER_GESTURE_THRESHOLD = 42
 const CRAFT_FOOTER_TRANSITION_DURATION = 720
 const CRAFT_FOOTER_WHEEL_QUIET_DURATION = 160
 const NEWS_WHEEL_GESTURE_THRESHOLD = 18
+const HERO_TARGET_MOUNT_PROGRESS = 0.62
+const HERO_EXIT_FADE_DELAY_PROGRESS = 0.35
+const HERO_EXIT_FADE_DURATION_PROGRESS = 0.6
+const HERO_HEAVY_CONTENT_UNMOUNT_PROGRESS =
+  HERO_EXIT_FADE_DELAY_PROGRESS + HERO_EXIT_FADE_DURATION_PROGRESS
+
+const areHeroEffectsPaused = computed(
+  () =>
+    isHeroExitPreparing.value ||
+    isHeroContentInactive.value ||
+    isHeroReturnEffectsDeferred.value
+)
 
 const startHeroInitialEntrance = () => {
   if (isHeroInitialEntranceReady.value) return
@@ -653,6 +801,7 @@ const startHeroInitialEntrance = () => {
   isHeroInitialHidden.value = false
   heroInitialEntranceTimer = setTimeout(() => {
     isHeroInitialEntering.value = false
+    if (!isHeroExitPreparing.value) isHeroMotionPrepared.value = false
     heroInitialEntranceTimer = null
   }, HERO_INITIAL_CONTENT_TRANSITION_DURATION)
 }
@@ -682,27 +831,79 @@ const waitForHeroLayoutEntrance = () => {
 
 const homePageStyle = computed(() => ({
   '--home-craft-footer-height': craftFooterHeight.value,
-  '--home-hero-counter-offset': heroContentCounterOffset.value,
+  '--home-marquee-viewport-top': marqueeViewportTop.value,
   '--home-hero-content-duration': `${HERO_CONTENT_TRANSITION_DURATION}ms`,
+  '--home-hero-exit-motion-duration': `${
+    usesTouchCarousel.value ? 180 : HERO_CONTENT_TRANSITION_DURATION
+  }ms`,
+  '--home-hero-exit-fade-delay': `${
+    (usesTouchCarousel.value
+      ? MOBILE_HERO_PAGE_TRANSITION_DELAY
+      : HERO_PAGE_TRANSITION_DELAY) * HERO_EXIT_FADE_DELAY_PROGRESS
+  }ms`,
+  '--home-hero-exit-fade-duration': `${
+    (usesTouchCarousel.value
+      ? MOBILE_HERO_PAGE_TRANSITION_DELAY
+      : HERO_PAGE_TRANSITION_DELAY) * HERO_EXIT_FADE_DURATION_PROGRESS
+  }ms`,
   '--home-hero-initial-content-duration': `${HERO_INITIAL_CONTENT_TRANSITION_DURATION}ms`,
-  '--home-page-motion-duration': `${homePageMotionDuration.value}ms`,
 }))
-const homeIndicatorTrackStyle = computed(() => ({
-  '--home-indicator-motion-duration': `${homeIndicatorTransitionDuration.value}ms`,
-  transform: `translate3d(0, ${
-    -(homeIndicatorPagePosition.value + 0.5) * HOME_INDICATOR_ITEM_STEP
-  }em, 0)`,
-  transitionDuration: `${homeIndicatorTransitionDuration.value}ms`,
+const marqueeLayerStyle = computed(() => ({
+  transform: `translate3d(0, ${marqueeViewportTop.value}, 0)`,
 }))
 
-const syncCraftFooterHeight = () => {
-  const footer = document.querySelector<HTMLElement>(
-    '#page-footer-portal > .bottom-text'
+const setHomeMotionStyle = (name: string, value: string) => {
+  const root = homePageElement.value
+  if (!root || homeMotionStyleCache.get(name) === value) return
+  homeMotionStyleCache.set(name, value)
+  root.style.setProperty(name, value)
+}
+
+const setRootProgressTransitionDuration = (duration: number) => {
+  const value = `${duration}ms`
+  if (rootProgressTransitionDuration === value) return
+  rootProgressTransitionDuration = value
+  document.documentElement.style.setProperty(
+    '--page-scroll-progress-transition-duration',
+    value
   )
-  if (!footer) return
+}
 
-  const height = Math.ceil(footer.getBoundingClientRect().height)
-  if (height > 0) craftFooterHeight.value = `${height}px`
+const renderHomeMotionStyles = (
+  swiper: SwiperInstance,
+  pagePosition: number,
+  duration: number
+) => {
+  const root = homePageElement.value
+  if (!root) return
+
+  const slideHeight = swiper.height || window.innerHeight
+  const normalizedPosition = Math.min(1, Math.max(0, pagePosition))
+  setHomeMotionStyle('--home-page-motion-duration', `${duration}ms`)
+  setHomeMotionStyle(
+    '--home-hero-counter-offset',
+    `${normalizedPosition * slideHeight}px`
+  )
+  setHomeMotionStyle(
+    '--home-indicator-offset',
+    `${-(pagePosition + 0.5) * HOME_INDICATOR_ITEM_STEP}em`
+  )
+  setHomeMotionStyle(
+    '--home-indicator-motion-duration',
+    `${duration > 0 ? duration * HOME_INDICATOR_TRANSITION_RATIO : 0}ms`
+  )
+  setRootProgressTransitionDuration(duration)
+}
+
+const syncCraftFooterHeight = (height?: number) => {
+  const footer =
+    craftFooterElement ??
+    document.querySelector<HTMLElement>('#page-footer-portal > .bottom-text')
+  if (!footer) return
+  craftFooterElement = footer
+
+  const nextHeight = Math.ceil(height ?? footer.getBoundingClientRect().height)
+  if (nextHeight > 0) craftFooterHeight.value = `${nextHeight}px`
 }
 
 const connectCraftFooterResizeObserver = () => {
@@ -711,10 +912,20 @@ const connectCraftFooterResizeObserver = () => {
     '#page-footer-portal > .bottom-text'
   )
   if (!footer) return
+  craftFooterElement = footer
 
-  craftFooterResizeObserver = new ResizeObserver(syncCraftFooterHeight)
+  craftFooterResizeObserver = new ResizeObserver(([entry]) => {
+    const borderBox = entry?.borderBoxSize?.[0]
+    syncCraftFooterHeight(borderBox?.blockSize ?? entry?.contentRect.height)
+  })
   craftFooterResizeObserver.observe(footer)
   syncCraftFooterHeight()
+}
+
+const disconnectCraftFooterResizeObserver = () => {
+  craftFooterResizeObserver?.disconnect()
+  craftFooterResizeObserver = null
+  craftFooterElement = null
 }
 
 const lockCraftFooterTransition = () => {
@@ -753,6 +964,36 @@ const consumeHomeGesture = (event: Event) => {
   event.stopPropagation()
 }
 
+const clearHomeHeaderTransition = () => {
+  if (homeHeaderTransitionTimer) {
+    clearTimeout(homeHeaderTransitionTimer)
+    homeHeaderTransitionTimer = null
+  }
+  isHomeHeaderTransitionStaging.value = false
+}
+
+const stageHomeHeaderTransition = (
+  targetProgress: 0 | 1,
+  transitionDelay: number,
+  onComplete: () => void
+) => {
+  clearHomeHeaderTransition()
+  lockedHomeHeaderProgress = targetProgress
+  isHomePageTransitionActive.value = true
+  isHomeHeaderTransitionStaging.value = true
+  setRootProgressTransitionDuration(HOME_HEADER_PROGRESS_DURATION)
+  visualStateStore.setHomeHeaderScrollProgress(targetProgress)
+
+  homeHeaderTransitionTimer = setTimeout(
+    () => {
+      homeHeaderTransitionTimer = null
+      isHomeHeaderTransitionStaging.value = false
+      onComplete()
+    },
+    reducedMotionQuery?.matches ? 0 : transitionDelay
+  )
+}
+
 const isNewsWheelInteraction = (event: WheelEvent) => {
   const target = recommendElement.value
   if (!target || activeHomePageIndex.value !== 0) return false
@@ -771,13 +1012,212 @@ const isNewsWheelInteraction = (event: WheelEvent) => {
   )
 }
 
+const clearHeroDeferredContentTimer = () => {
+  if (!heroDeferredContentTimer) return
+  clearTimeout(heroDeferredContentTimer)
+  heroDeferredContentTimer = null
+}
+
+const clearHeroMotionReleaseTimer = () => {
+  if (!heroMotionReleaseTimer) return
+  clearTimeout(heroMotionReleaseTimer)
+  heroMotionReleaseTimer = null
+}
+
+const clearHeroHeavyContentUnmountTimer = () => {
+  if (!heroHeavyContentUnmountTimer) return
+  clearTimeout(heroHeavyContentUnmountTimer)
+  heroHeavyContentUnmountTimer = null
+}
+
+const clearHeroReturnEffectsTimer = () => {
+  if (!heroReturnEffectsTimer) return
+  clearTimeout(heroReturnEffectsTimer)
+  heroReturnEffectsTimer = null
+}
+
+const scheduleHeroReturnEffectsReveal = () => {
+  clearHeroReturnEffectsTimer()
+  const reveal = () => {
+    heroReturnEffectsTimer = null
+    isHeroReturnEffectsDeferred.value = false
+    syncHeroMotionListener()
+    startAuto()
+  }
+  const delay =
+    (usesTouchCarousel.value
+      ? MOBILE_HERO_PAGE_TRANSITION_DELAY
+      : HERO_PAGE_TRANSITION_DELAY) * HERO_EXIT_FADE_DELAY_PROGRESS
+
+  if (reducedMotionQuery?.matches || delay <= 0) {
+    reveal()
+    return
+  }
+  heroReturnEffectsTimer = setTimeout(reveal, delay)
+}
+
+const mountHeroHeavyContent = () => {
+  clearHeroHeavyContentUnmountTimer()
+  isHeroHeavyContentMounted.value = true
+}
+
+const unmountHeroHeavyContent = () => {
+  clearHeroHeavyContentUnmountTimer()
+  pauseAuto()
+  newsSwiper.value = null
+  isHeroHeavyContentMounted.value = false
+}
+
+const clearHeroExitPreparationFrame = () => {
+  if (heroExitPreparationFrameId === null) return
+  window.cancelAnimationFrame(heroExitPreparationFrameId)
+  heroExitPreparationFrameId = null
+}
+
+const resetHeroExitPreparation = () => {
+  clearHeroExitPreparationFrame()
+  clearHeroDeferredContentTimer()
+  clearHeroHeavyContentUnmountTimer()
+  isHeroExitPreparing.value = false
+}
+
+const scheduleHeroHeavyContentUnmount = (exitDuration: number) => {
+  clearHeroHeavyContentUnmountTimer()
+  const unmount = () => {
+    heroHeavyContentUnmountTimer = null
+    if (
+      activeHomePageIndex.value === 0 &&
+      isHeroContentInactive.value &&
+      isHeroExitPreparing.value
+    ) {
+      unmountHeroHeavyContent()
+    }
+  }
+
+  if (reducedMotionQuery?.matches || exitDuration <= 0) {
+    unmount()
+    return
+  }
+  heroHeavyContentUnmountTimer = setTimeout(
+    unmount,
+    Math.round(exitDuration * HERO_HEAVY_CONTENT_UNMOUNT_PROGRESS)
+  )
+}
+
+const scheduleHeroTargetMount = (
+  swiper: SwiperInstance,
+  targetIndex: number,
+  exitDuration: number
+) => {
+  clearHeroDeferredContentTimer()
+  const mount = () => {
+    heroDeferredContentTimer = null
+    if (
+      homeSwiper.value === swiper &&
+      activeHomePageIndex.value === 0 &&
+      isHeroContentInactive.value
+    ) {
+      ensureHomePageRendered(targetIndex)
+    }
+  }
+
+  if (reducedMotionQuery?.matches || exitDuration <= 0) {
+    mount()
+    return
+  }
+  heroDeferredContentTimer = setTimeout(
+    mount,
+    Math.round(exitDuration * HERO_TARGET_MOUNT_PROGRESS)
+  )
+}
+
+const startPreparedHeroExit = (
+  swiper: SwiperInstance,
+  resolvedTargetIndex: number
+) => {
+  heroExitPreparationFrameId = null
+  if (
+    homeSwiper.value !== swiper ||
+    activeHomePageIndex.value !== 0 ||
+    !isHeroExitPreparing.value
+  ) {
+    resetHeroExitPreparation()
+    lockedHomeHeaderProgress = null
+    isHomePageTransitionActive.value = false
+    return
+  }
+
+  isHeroContentInactive.value = true
+  syncMarqueeViewportTop()
+
+  const exitDuration = usesTouchCarousel.value
+    ? MOBILE_HERO_PAGE_TRANSITION_DELAY
+    : HERO_PAGE_TRANSITION_DELAY
+  scheduleHeroTargetMount(swiper, resolvedTargetIndex, exitDuration)
+  scheduleHeroHeavyContentUnmount(exitDuration)
+
+  stageHomeHeaderTransition(1, exitDuration, () => {
+    if (homeSwiper.value !== swiper || activeHomePageIndex.value !== 0) {
+      resetHeroExitPreparation()
+      lockedHomeHeaderProgress = null
+      isHomePageTransitionActive.value = false
+      return
+    }
+
+    clearHeroDeferredContentTimer()
+    unmountHeroHeavyContent()
+    ensureHomePageRendered(resolvedTargetIndex)
+    void nextTick(() => {
+      if (homeSwiper.value !== swiper || activeHomePageIndex.value !== 0) return
+      swiper.allowSlideNext = true
+      swiper.slideTo(resolvedTargetIndex)
+    })
+  })
+}
+
+const beginHeroPageTransition = (
+  swiper: SwiperInstance,
+  resolvedTargetIndex: number
+) => {
+  if (
+    homeSwiper.value !== swiper ||
+    activeHomePageIndex.value !== 0 ||
+    isHeroContentInactive.value ||
+    isHeroExitPreparing.value ||
+    isMobileHomePageContentEntering.value
+  ) {
+    lockedHomeHeaderProgress = null
+    isHomePageTransitionActive.value = false
+    return
+  }
+
+  isHeroExitPreparing.value = true
+  isHeroMotionPrepared.value = true
+  isPassionHovering.value = false
+  pauseAuto()
+  swiper.allowSlideNext = false
+
+  void nextTick(() => {
+    if (reducedMotionQuery?.matches) {
+      startPreparedHeroExit(swiper, resolvedTargetIndex)
+      return
+    }
+    heroExitPreparationFrameId = window.requestAnimationFrame(() =>
+      startPreparedHeroExit(swiper, resolvedTargetIndex)
+    )
+  })
+}
+
 const requestHeroPageTransition = (targetIndex = 1) => {
   const swiper = homeSwiper.value
   if (
     !swiper ||
     activeHomePageIndex.value !== 0 ||
     targetIndex <= 0 ||
-    isHeroContentInactive.value
+    isHeroContentInactive.value ||
+    isHeroExitPreparing.value ||
+    isMobileHomePageContentEntering.value ||
+    homeHeaderTransitionTimer !== null
   ) {
     return
   }
@@ -786,20 +1226,7 @@ const requestHeroPageTransition = (targetIndex = 1) => {
     targetIndex,
     getHomeLastPageIndex(swiper)
   )
-  isHomePageTransitionActive.value = true
-  isHeroContentInactive.value = true
-  ensureHomePageRendered(resolvedTargetIndex)
-  pauseAuto()
-  syncMarqueeViewportTop()
-  swiper.allowSlideNext = false
-  heroPageTransitionTimer = setTimeout(
-    () => {
-      heroPageTransitionTimer = null
-      swiper.allowSlideNext = true
-      swiper.slideTo(resolvedTargetIndex)
-    },
-    reducedMotionQuery?.matches ? 0 : HERO_PAGE_TRANSITION_DELAY
-  )
+  beginHeroPageTransition(swiper, resolvedTargetIndex)
 }
 
 const clearHomePageContentExitTimer = () => {
@@ -817,12 +1244,72 @@ const completeHomePageContentExit = () => {
   fadingHomePageIndex.value = null
   homePageContentExitTimer = null
 
-  const targetPage = homePageIndicatorItems[targetIndex]
-  renderedHomePageIds.value = new Set(targetPage ? [targetPage.id] : ['hero'])
+  if (targetIndex === 0 && !usesTouchCarousel.value) {
+    mountHeroHeavyContent()
+  }
+
+  if (usesTouchCarousel.value) {
+    deferredHomePageContentIndex.value = targetIndex
+    renderedHomePageIds.value = new Set()
+  } else {
+    const targetPage = homePageIndicatorItems[targetIndex]
+    renderedHomePageIds.value = new Set(targetPage ? [targetPage.id] : ['hero'])
+  }
 
   void nextTick(() => {
     if (homeSwiper.value === swiper) swiper.slideTo(targetIndex)
   })
+}
+
+const flushQueuedHomePageTransition = () => {
+  const targetIndex = queuedHomePageTransitionIndex
+  if (targetIndex === null) return
+  queuedHomePageTransitionIndex = null
+  requestHomePageTransition(targetIndex)
+}
+
+const prepareHomePageContentExit = (targetIndex: number) => {
+  const swiper = homeSwiper.value
+  const activeIndex = activeHomePageIndex.value
+  if (
+    !swiper ||
+    activeIndex === 0 ||
+    targetIndex < 0 ||
+    targetIndex > getHomeLastPageIndex(swiper) ||
+    targetIndex === activeIndex
+  ) {
+    return false
+  }
+  if (
+    isHomePageTransitioning ||
+    isMobileHomePageContentEntering.value ||
+    pendingHomePageTransitionIndex.value !== null
+  ) {
+    queuedHomePageTransitionIndex = targetIndex
+    return false
+  }
+
+  isHomePageTransitionActive.value = true
+  pendingHomePageTransitionIndex.value = targetIndex
+  fadingHomePageIndex.value = activeIndex
+  homePageTransitionDirection.value =
+    targetIndex > activeIndex ? 'forward' : 'backward'
+  if (!usesTouchCarousel.value) ensureHomePageRendered(targetIndex)
+  clearHomePageContentExitTimer()
+  return true
+}
+
+const beginHomePageTransition = (targetIndex: number) => {
+  if (!prepareHomePageContentExit(targetIndex)) return
+
+  homePageContentExitTimer = setTimeout(
+    completeHomePageContentExit,
+    reducedMotionQuery?.matches
+      ? 0
+      : usesTouchCarousel.value
+      ? MOBILE_HOME_PAGE_CONTENT_EXIT_DURATION
+      : HOME_PAGE_CONTENT_EXIT_DURATION
+  )
 }
 
 const requestHomePageTransition = (targetIndex: number) => {
@@ -833,36 +1320,47 @@ const requestHomePageTransition = (targetIndex: number) => {
     activeIndex === 0 ||
     targetIndex < 0 ||
     targetIndex > getHomeLastPageIndex(swiper) ||
-    targetIndex === activeIndex ||
-    isHomePageTransitioning ||
-    pendingHomePageTransitionIndex.value !== null
+    targetIndex === activeIndex
   ) {
     return
   }
+  if (homeHeaderTransitionTimer !== null) return
+  if (
+    isHomePageTransitioning ||
+    isMobileHomePageContentEntering.value ||
+    pendingHomePageTransitionIndex.value !== null
+  ) {
+    queuedHomePageTransitionIndex = targetIndex
+    return
+  }
 
-  isHomePageTransitionActive.value = true
-  pendingHomePageTransitionIndex.value = targetIndex
-  fadingHomePageIndex.value = activeIndex
-  homePageTransitionDirection.value =
-    targetIndex > activeIndex ? 'forward' : 'backward'
-  ensureHomePageRendered(targetIndex)
-  clearHomePageContentExitTimer()
-  homePageContentExitTimer = setTimeout(
-    completeHomePageContentExit,
-    reducedMotionQuery?.matches ? 0 : HOME_PAGE_CONTENT_EXIT_DURATION
-  )
+  if (targetIndex === 0) {
+    if (!prepareHomePageContentExit(targetIndex)) return
+    clearHeroMotionReleaseTimer()
+    clearHeroReturnEffectsTimer()
+    isHeroReturnEffectsDeferred.value = true
+    isHeroMotionPrepared.value = true
+    stageHomeHeaderTransition(
+      0,
+      HOME_HEADER_PROGRESS_DURATION,
+      completeHomePageContentExit
+    )
+    return
+  }
+
+  beginHomePageTransition(targetIndex)
 }
 
 const handleHomeWheel = (event: WheelEvent) => {
   if (activeHomePageIndex.value === 0) {
-    if (event.deltaY <= NEWS_WHEEL_GESTURE_THRESHOLD) return
-    if (isHeroContentInactive.value) {
+    if (isHeroContentInactive.value || isHeroExitPreparing.value) {
       consumeHomeGesture(event)
       return
     }
     if (isNewsWheelInteraction(event)) return
 
     consumeHomeGesture(event)
+    if (event.deltaY <= NEWS_WHEEL_GESTURE_THRESHOLD) return
     requestHeroPageTransition()
     return
   }
@@ -896,17 +1394,17 @@ const handleHomeWheel = (event: WheelEvent) => {
 
   if (
     isHomePageTransitioning ||
-    pendingHomePageTransitionIndex.value !== null
+    pendingHomePageTransitionIndex.value !== null ||
+    homeHeaderTransitionTimer !== null
   ) {
     consumeHomeGesture(event)
     return
   }
 
+  consumeHomeGesture(event)
   if (event.deltaY > 18) {
-    consumeHomeGesture(event)
     requestHomePageTransition(activePage + 1)
   } else if (event.deltaY < -18) {
-    consumeHomeGesture(event)
     requestHomePageTransition(activePage - 1)
   }
   return
@@ -932,28 +1430,44 @@ const handleNewsWheel = (event: WheelEvent) => {
 }
 
 const handleNewsWheelEnter = () => {
+  isNewsHovered = true
   newsWheelInteractionBounds = null
   pauseAuto()
 }
 
 const handleNewsWheelLeave = () => {
+  isNewsHovered = false
   newsWheelInteractionBounds = null
-  resumeAuto()
+  startAuto()
+}
+
+const setHomeTouchGestureActive = (active: boolean) => {
+  if (isHomeTouchGestureActive === active) return
+  isHomeTouchGestureActive = active
+
+  if (active) {
+    window.addEventListener('pointermove', handleHomePointerMove, {
+      capture: true,
+      passive: false,
+    })
+    window.addEventListener('pointerup', handleHomePointerEnd, true)
+    window.addEventListener('pointercancel', handleHomePointerEnd, true)
+    return
+  }
+
+  window.removeEventListener('pointermove', handleHomePointerMove, true)
+  window.removeEventListener('pointerup', handleHomePointerEnd, true)
+  window.removeEventListener('pointercancel', handleHomePointerEnd, true)
 }
 
 const handleHomePointerDown = (event: PointerEvent) => {
-  const activePage = activeHomePageIndex.value
-  if (
-    event.pointerType !== 'touch' ||
-    (activePage !== 0 && activePage !== CRAFT_PAGE_INDEX)
-  ) {
-    return
-  }
+  if (event.pointerType !== 'touch') return
 
   homePointerStartX = event.clientX
   homePointerStartY = event.clientY
   homePointerAxis = null
   didHandleHomePointer = false
+  setHomeTouchGestureActive(true)
 }
 
 const handleHomePointerMove = (event: PointerEvent) => {
@@ -972,22 +1486,41 @@ const handleHomePointerMove = (event: PointerEvent) => {
 
   const deltaX = homePointerStartX - event.clientX
   const deltaY = homePointerStartY - event.clientY
-  if (activeHomePageIndex.value === 0 && homePointerAxis === null) {
+  if (homePointerAxis === null) {
     if (Math.max(Math.abs(deltaX), Math.abs(deltaY)) < 10) return
     homePointerAxis =
       Math.abs(deltaX) > Math.abs(deltaY) ? 'horizontal' : 'vertical'
   }
-  if (activeHomePageIndex.value === 0 && homePointerAxis === 'horizontal') {
-    return
-  }
+  if (homePointerAxis === 'horizontal') return
   if (Math.abs(deltaY) < CRAFT_FOOTER_GESTURE_THRESHOLD) return
 
   if (activeHomePageIndex.value === 0) {
-    if (deltaY > 0 || isHeroContentInactive.value) {
+    if (
+      deltaY > 0 ||
+      isHeroContentInactive.value ||
+      isHeroExitPreparing.value
+    ) {
       consumeHomeGesture(event)
     }
-    if (deltaY > 0 && !isHeroContentInactive.value) {
+    if (
+      deltaY > 0 &&
+      !isHeroContentInactive.value &&
+      !isHeroExitPreparing.value
+    ) {
       requestHeroPageTransition()
+    }
+    didHandleHomePointer = true
+    return
+  }
+
+  const activePage = activeHomePageIndex.value
+  if (activePage !== CRAFT_PAGE_INDEX) {
+    consumeHomeGesture(event)
+    if (
+      !isHomePageTransitioning &&
+      pendingHomePageTransitionIndex.value === null
+    ) {
+      requestHomePageTransition(activePage + (deltaY > 0 ? 1 : -1))
     }
     didHandleHomePointer = true
     return
@@ -1021,14 +1554,13 @@ const handleHomePointerEnd = (event: PointerEvent) => {
   homePointerStartY = null
   homePointerAxis = null
   didHandleHomePointer = false
+  setHomeTouchGestureActive(false)
 }
 
 const syncMarqueeViewportTop = () => {
   if (isHeroContentInactive.value) {
-    if (menuElement) {
-      marqueeViewportTop.value = `${
-        menuElement.getBoundingClientRect().bottom
-      }px`
+    if (headerBottom.value > 0) {
+      marqueeViewportTop.value = `${headerBottom.value}px`
     }
     return
   }
@@ -1044,6 +1576,8 @@ const syncMarqueeViewportTop = () => {
 const handleReducedMotionChange = () => {
   homePageTransitionDuration.value = reducedMotionQuery?.matches
     ? 0
+    : usesTouchCarousel.value
+    ? MOBILE_HOME_PAGE_TRANSITION_DURATION
     : HOME_PAGE_TRANSITION_DURATION
   if (homeSwiper.value) {
     homeSwiper.value.params.speed = homePageTransitionDuration.value
@@ -1055,13 +1589,13 @@ const carouselDirection = computed(() =>
   usesTouchCarousel.value ? 'horizontal' : 'vertical'
 )
 const carouselTouchAngle = computed(() => (usesTouchCarousel.value ? 30 : 45))
-const swiperAutoplayOptions = computed(() => ({
-  delay: 4000,
-  disableOnInteraction: false,
-  pauseOnMouseEnter: true,
-}))
 const shouldAutoPlayNews = () =>
-  isPageVisible && activeHomePageIndex.value === 0 && newsItems.value.length > 1
+  siteEntryActive.value &&
+  isPageVisible &&
+  !isNewsHovered &&
+  !isHeroReturnEffectsDeferred.value &&
+  activeHomePageIndex.value === 0 &&
+  newsItems.value.length > 1
 const setHeroTransformVariables = (
   element: HTMLElement | null,
   rotateX: number,
@@ -1077,12 +1611,12 @@ const applySloganTransform = () => {
   setHeroTransformVariables(
     mainSloganElement.value,
     sloganRotateX * 0.72 * motionScale,
-    sloganRotateY * 0.72 * motionScale
+    -sloganRotateY * 0.72 * motionScale
   )
   setHeroTransformVariables(
     recommendElement.value,
     sloganRotateX * motionScale,
-    -sloganRotateY * motionScale
+    sloganRotateY * motionScale
   )
 }
 
@@ -1159,20 +1693,15 @@ const setTouchPagingListenerActive = (active: boolean) => {
   isTouchPagingListenerActive = active
 
   if (active) {
-    window.addEventListener('pointerdown', handleHomePointerDown, true)
-    window.addEventListener('pointermove', handleHomePointerMove, {
+    window.addEventListener('pointerdown', handleHomePointerDown, {
       capture: true,
-      passive: false,
+      passive: true,
     })
-    window.addEventListener('pointerup', handleHomePointerEnd, true)
-    window.addEventListener('pointercancel', handleHomePointerEnd, true)
     return
   }
 
   window.removeEventListener('pointerdown', handleHomePointerDown, true)
-  window.removeEventListener('pointermove', handleHomePointerMove, true)
-  window.removeEventListener('pointerup', handleHomePointerEnd, true)
-  window.removeEventListener('pointercancel', handleHomePointerEnd, true)
+  setHomeTouchGestureActive(false)
   homePointerStartX = null
   homePointerStartY = null
   homePointerAxis = null
@@ -1181,21 +1710,28 @@ const setTouchPagingListenerActive = (active: boolean) => {
 
 const syncTouchInputMode = () => {
   usesTouchCarousel.value = touchInputQuery?.matches ?? false
+  handleReducedMotionChange()
   syncNewsCarouselMode()
   setTouchPagingListenerActive(usesTouchCarousel.value)
 }
 
 const syncHeroMotionListener = () => {
-  refreshHeroInteractionMetrics()
   const shouldListen =
-    canUseHeroMotion() && isPageVisible && !isHeroContentInactive.value
+    siteEntryActive.value &&
+    canUseHeroMotion() &&
+    isPageVisible &&
+    !isHeroContentInactive.value &&
+    !isHeroExitPreparing.value
   isHeroMotionEnabled = shouldListen
 
   if (shouldListen && !isHeroMotionListenerActive) {
-    window.addEventListener('mousemove', handleHeroMouseMove, { passive: true })
+    refreshHeroInteractionMetrics()
+    heroSection.value?.addEventListener('mousemove', handleHeroMouseMove, {
+      passive: true,
+    })
     isHeroMotionListenerActive = true
   } else if (!shouldListen && isHeroMotionListenerActive) {
-    window.removeEventListener('mousemove', handleHeroMouseMove)
+    heroSection.value?.removeEventListener('mousemove', handleHeroMouseMove)
     isHeroMotionListenerActive = false
   }
 
@@ -1209,19 +1745,30 @@ const syncHeroMotionListener = () => {
 }
 
 const handleHeroResize = () => {
-  if (heroResizeRafId !== null) return
   newsWheelInteractionBounds = null
-  heroResizeRafId = window.requestAnimationFrame(() => {
-    heroResizeRafId = null
-    syncHeroMotionListener()
-    syncMarqueeViewportTop()
-    syncCraftFooterHeight()
-    if (homeSwiper.value) {
-      syncHeroContentCounterOffset(
-        homeSwiper.value,
-        homeIndicatorPagePosition.value
-      )
+  pendingHeroViewportResize = true
+  scheduleHeroLayoutMeasure()
+}
+
+const scheduleHeroLayoutMeasure = () => {
+  if (heroLayoutMeasureRafId !== null) return
+  heroLayoutMeasureRafId = window.requestAnimationFrame(() => {
+    heroLayoutMeasureRafId = null
+    const viewportResized = pendingHeroViewportResize
+    pendingHeroViewportResize = false
+    if (viewportResized) {
+      syncHeroMotionListener()
+      syncCraftFooterHeight()
+      if (homeSwiper.value) {
+        renderHomeMotionStyles(
+          homeSwiper.value,
+          homeSwiper.value.activeIndex,
+          homePageMotionDuration.value
+        )
+      }
     }
+    syncMarqueeViewportTop()
+    if (isHeroMotionEnabled) refreshHeroInteractionMetrics()
   })
 }
 
@@ -1246,67 +1793,17 @@ const setNewsSwiper = (swiper: SwiperInstance) => {
   newsSwiper.value = swiper
   syncNewsCarouselMode()
   activeIndex.value = swiper.realIndex || 0
-  if (shouldAutoPlayNews()) swiper.autoplay.start()
-  else swiper.autoplay.stop()
+  startAuto()
 }
 
 const getHomeLastPageIndex = (swiper: SwiperInstance) =>
   Math.max(0, swiper.slides.length - 1)
-
-const syncHeroContentCounterOffset = (
-  swiper: SwiperInstance,
-  pagePosition: number
-) => {
-  const slideHeight = swiper.height || window.innerHeight
-  const nextOffset = `${Math.min(1, Math.max(0, pagePosition)) * slideHeight}px`
-  if (heroContentCounterOffset.value !== nextOffset) {
-    heroContentCounterOffset.value = nextOffset
-  }
-}
 
 const syncHomePageProgress = (swiper: SwiperInstance, pagePosition: number) => {
   const lastPageIndex = getHomeLastPageIndex(swiper)
   visualStateStore.setPageScrollProgressOverride(
     lastPageIndex > 0 ? (pagePosition / lastPageIndex) * 100 : 0
   )
-}
-
-const syncAnimatedHomeProgress = () => {
-  const swiper = homeSwiper.value
-  if (!swiper) {
-    homeProgressRafId = null
-    return
-  }
-
-  const transform = getComputedStyle(swiper.wrapperEl).transform
-  const translateY =
-    transform === 'none' ? 0 : new DOMMatrixReadOnly(transform).m42
-  const slideHeight = swiper.height || window.innerHeight
-  const lastPageIndex = getHomeLastPageIndex(swiper)
-  const pagePosition = Math.min(
-    lastPageIndex,
-    Math.max(0, -translateY / slideHeight)
-  )
-
-  syncHomePageProgress(swiper, pagePosition)
-  visualStateStore.setHomeHeaderScrollProgress(Math.min(1, pagePosition))
-
-  if (isHomePageTransitioning) {
-    homeProgressRafId = window.requestAnimationFrame(syncAnimatedHomeProgress)
-  } else {
-    homeProgressRafId = null
-  }
-}
-
-const startAnimatedHomeProgressSync = () => {
-  if (homeProgressRafId !== null) return
-  homeProgressRafId = window.requestAnimationFrame(syncAnimatedHomeProgress)
-}
-
-const stopAnimatedHomeProgressSync = () => {
-  if (homeProgressRafId === null) return
-  window.cancelAnimationFrame(homeProgressRafId)
-  homeProgressRafId = null
 }
 
 const ensureHomePageRendered = (pageIndex: number) => {
@@ -1323,13 +1820,16 @@ const retainActiveHomePage = (pageIndex: number) => {
 
 const syncHomeZodiacLayout = (pageIndex: number) => {
   visualStateStore.setZodiacLayout(pageIndex === 0 ? 'hero' : 'content')
+  visualStateStore.setHomeStarfieldVisible(pageIndex === 0)
 }
 
 const syncActiveHomePage = (swiper: SwiperInstance) => {
   const activePage = swiper.activeIndex
-  ensureHomePageRendered(activePage)
+  const isContentMountDeferred =
+    usesTouchCarousel.value && deferredHomePageContentIndex.value === activePage
+  if (!isContentMountDeferred) ensureHomePageRendered(activePage)
   activeHomePageIndex.value = activePage
-  isHeroContentInactive.value = activePage !== 0
+  isHeroContentInactive.value = activePage !== 0 || isContentMountDeferred
   swiper.allowSlideNext = activePage !== 0
   syncHomeZodiacLayout(activePage)
 }
@@ -1338,8 +1838,7 @@ const setHomeSwiper = (swiper: SwiperInstance) => {
   homeSwiper.value = swiper
   swiper.params.speed = homePageTransitionDuration.value
   syncActiveHomePage(swiper)
-  homeIndicatorPagePosition.value = swiper.activeIndex
-  syncHeroContentCounterOffset(swiper, swiper.activeIndex)
+  renderHomeMotionStyles(swiper, swiper.activeIndex, 0)
   syncHomePageProgress(swiper, swiper.activeIndex)
   visualStateStore.setHomeHeaderScrollProgress(swiper.activeIndex === 0 ? 0 : 1)
 }
@@ -1353,24 +1852,29 @@ const handleHomeSetTranslate = (swiper: SwiperInstance, translate: number) => {
     lastPageIndex,
     Math.max(0, -translate / slideHeight)
   )
-  homeIndicatorPagePosition.value = pagePosition
-  syncHeroContentCounterOffset(swiper, pagePosition)
-  if (homePageMotionDuration.value === 0) {
-    syncHomePageProgress(swiper, pagePosition)
+  renderHomeMotionStyles(swiper, pagePosition, homePageMotionDuration.value)
+  syncHomePageProgress(swiper, pagePosition)
+  if (lockedHomeHeaderProgress === null) {
     visualStateStore.setHomeHeaderScrollProgress(Math.min(1, pagePosition))
   }
 }
 
 const handleHomeSetTransition = (_swiper: SwiperInstance, duration: number) => {
   homePageMotionDuration.value = duration
-  homeIndicatorTransitionDuration.value =
-    duration > 0 ? duration * HOME_INDICATOR_TRANSITION_RATIO : 0
+  if (homeSwiper.value) {
+    renderHomeMotionStyles(
+      homeSwiper.value,
+      homeSwiper.value.activeIndex,
+      duration
+    )
+  }
 }
 
 const handleHomeSlideChange = (swiper: SwiperInstance) => {
   syncActiveHomePage(swiper)
-  void nextTick(() => window.requestAnimationFrame(syncMarqueeViewportTop))
+  void nextTick(scheduleHeroLayoutMeasure)
   if (swiper.activeIndex !== CRAFT_PAGE_INDEX) {
+    disconnectCraftFooterResizeObserver()
     isCraftFooterVisible.value = false
     disarmCraftFooterWheel()
   } else {
@@ -1385,19 +1889,33 @@ const handleHomeSlideChange = (swiper: SwiperInstance) => {
 const handleHomeTransitionStart = (swiper: SwiperInstance) => {
   isHomePageTransitioning = true
   isHomePageTransitionActive.value = true
-  startAnimatedHomeProgressSync()
   if (swiper.activeIndex === CRAFT_PAGE_INDEX) disarmCraftFooterWheel()
   if (homePageFadeTimer) clearTimeout(homePageFadeTimer)
-  enteringHomePageIndex.value = swiper.activeIndex
+  const isContentMountDeferred =
+    usesTouchCarousel.value &&
+    deferredHomePageContentIndex.value === swiper.activeIndex
+  if (swiper.activeIndex === 0 && !isContentMountDeferred) {
+    scheduleHeroReturnEffectsReveal()
+  }
+  if (isContentMountDeferred) {
+    renderedHomePageIds.value = new Set()
+  } else {
+    retainActiveHomePage(swiper.activeIndex)
+  }
+  enteringHomePageIndex.value = isContentMountDeferred
+    ? null
+    : swiper.activeIndex
   leavingHomePageIndex.value = swiper.previousIndex
   homePageTransitionDirection.value =
     swiper.activeIndex > swiper.previousIndex ? 'forward' : 'backward'
-  homePageFadeTimer = setTimeout(() => {
-    enteringHomePageIndex.value = null
-    leavingHomePageIndex.value = null
-    homePageTransitionDirection.value = null
-    homePageFadeTimer = null
-  }, HOME_PAGE_CONTENT_MOTION_DURATION)
+  if (!isContentMountDeferred) {
+    homePageFadeTimer = setTimeout(() => {
+      enteringHomePageIndex.value = null
+      leavingHomePageIndex.value = null
+      homePageTransitionDirection.value = null
+      homePageFadeTimer = null
+    }, HOME_PAGE_CONTENT_MOTION_DURATION)
+  }
 }
 
 const handleHomeTransitionEnd = (swiper: SwiperInstance) => {
@@ -1410,18 +1928,60 @@ const handleHomeTransitionEnd = (swiper: SwiperInstance) => {
 
   isHomePageTransitioning = false
   isHomePageTransitionActive.value = false
-  stopAnimatedHomeProgressSync()
+  if (swiper.activeIndex !== 0) {
+    resetHeroExitPreparation()
+    isHeroMotionPrepared.value = false
+  } else {
+    clearHeroMotionReleaseTimer()
+    const remainingHeroEntryDuration = Math.max(
+      0,
+      (usesTouchCarousel.value ? 180 : HERO_CONTENT_TRANSITION_DURATION) -
+        homePageTransitionDuration.value
+    )
+    heroMotionReleaseTimer = setTimeout(
+      () => {
+        isHeroMotionPrepared.value = false
+        heroMotionReleaseTimer = null
+      },
+      reducedMotionQuery?.matches ? 0 : remainingHeroEntryDuration
+    )
+  }
   homePageMotionDuration.value = 0
-  void nextTick(() => window.requestAnimationFrame(syncMarqueeViewportTop))
+  void nextTick(scheduleHeroLayoutMeasure)
   if (swiper.activeIndex === CRAFT_PAGE_INDEX) {
     scheduleCraftFooterWheelArm()
   }
-  homeIndicatorTransitionDuration.value = 0
-  homeIndicatorPagePosition.value = swiper.activeIndex
+  renderHomeMotionStyles(swiper, swiper.activeIndex, 0)
+  const shouldRevealDeferredContent =
+    usesTouchCarousel.value &&
+    deferredHomePageContentIndex.value === swiper.activeIndex
+  deferredHomePageContentIndex.value = null
   retainActiveHomePage(swiper.activeIndex)
-  syncHeroContentCounterOffset(swiper, swiper.activeIndex)
+  if (shouldRevealDeferredContent) {
+    if (swiper.activeIndex === 0) mountHeroHeavyContent()
+    isHeroContentInactive.value = swiper.activeIndex !== 0
+    if (swiper.activeIndex === 0) scheduleHeroReturnEffectsReveal()
+    isMobileHomePageContentEntering.value = true
+    enteringHomePageIndex.value = swiper.activeIndex
+    if (homePageFadeTimer) clearTimeout(homePageFadeTimer)
+    homePageFadeTimer = setTimeout(
+      () => {
+        enteringHomePageIndex.value = null
+        leavingHomePageIndex.value = null
+        homePageTransitionDirection.value = null
+        isMobileHomePageContentEntering.value = false
+        homePageFadeTimer = null
+        flushQueuedHomePageTransition()
+      },
+      reducedMotionQuery?.matches ? 0 : MOBILE_HOME_PAGE_CONTENT_MOTION_DURATION
+    )
+  } else {
+    void nextTick(flushQueuedHomePageTransition)
+  }
   syncHomePageProgress(swiper, swiper.activeIndex)
-  visualStateStore.setHomeHeaderScrollProgress(swiper.activeIndex === 0 ? 0 : 1)
+  const settledHeaderProgress = swiper.activeIndex === 0 ? 0 : 1
+  visualStateStore.setHomeHeaderScrollProgress(settledHeaderProgress)
+  lockedHomeHeaderProgress = null
 }
 
 const goToHomePage = (index: number) => {
@@ -1442,13 +2002,17 @@ const goToNextHomePage = () => {
   goToHomePage(nextIndex)
 }
 
-const prevSlide = () => {
-  if (newsItems.value.length) newsSwiper.value?.slidePrev()
+const runNewsCarouselAction = (action: (swiper: SwiperInstance) => void) => {
+  const swiper = newsSwiper.value
+  if (!swiper || !newsItems.value.length) return
+  pauseAuto()
+  action(swiper)
+  startAuto()
 }
-const nextSlide = () => {
-  if (newsItems.value.length) newsSwiper.value?.slideNext()
-}
-const goTo = (index: number) => newsSwiper.value?.slideToLoop(index)
+const prevSlide = () => runNewsCarouselAction((swiper) => swiper.slidePrev())
+const nextSlide = () => runNewsCarouselAction((swiper) => swiper.slideNext())
+const goTo = (index: number) =>
+  runNewsCarouselAction((swiper) => swiper.slideToLoop(index))
 const handleSwiperSlideChange = (swiper: SwiperInstance) => {
   activeIndex.value = swiper.realIndex
 }
@@ -1467,18 +2031,29 @@ const handleSwiperTouchEnd = () => {
       dragResetTimer = null
     }, 350)
   }
-  resumeAuto()
+  startAuto()
 }
 
 const startAuto = () => {
-  if (shouldAutoPlayNews()) newsSwiper.value?.autoplay.start()
-  else newsSwiper.value?.autoplay.stop()
+  if (!shouldAutoPlayNews() || !newsSwiper.value) {
+    pauseAuto()
+    return
+  }
+  if (newsAutoplayTimer !== null) return
+
+  newsAutoplayTimer = window.setTimeout(() => {
+    newsAutoplayTimer = null
+    const swiper = newsSwiper.value
+    if (!shouldAutoPlayNews() || !swiper) return
+    if (!swiper.animating) swiper.slideNext()
+    startAuto()
+  }, NEWS_AUTOPLAY_DELAY)
 }
 const pauseAuto = () => {
-  newsSwiper.value?.autoplay.stop()
+  if (newsAutoplayTimer === null) return
+  window.clearTimeout(newsAutoplayTimer)
+  newsAutoplayTimer = null
 }
-const resumeAuto = () => startAuto()
-
 const openNewsItem = (item: NewsItem) => {
   if (didDragSwiper) {
     didDragSwiper = false
@@ -1504,25 +2079,43 @@ const handleVisibilityChange = () => {
   }
 }
 
-watch(isHeroContentInactive, syncHeroMotionListener)
+watch(
+  [isHeroContentInactive, isHeroExitPreparing, isHeroReturnEffectsDeferred],
+  syncHeroMotionListener
+)
+watch(siteEntryActive, () => {
+  syncHeroMotionListener()
+  if (siteEntryActive.value) startAuto()
+  else pauseAuto()
+})
+watch(headerBottom, () => {
+  if (isHeroContentInactive.value) scheduleHeroLayoutMeasure()
+})
+
+onBeforeRouteLeave(() => {
+  isHomePageTransitionActive.value = true
+  clearHeroExitPreparationFrame()
+  clearHeroDeferredContentTimer()
+  clearHeroReturnEffectsTimer()
+  pauseAuto()
+  stopSloganMotion()
+})
 
 onMounted(async () => {
   isPageVisible = document.visibilityState !== 'hidden'
   reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
   heroMotionQuery = window.matchMedia('(hover: hover) and (pointer: fine)')
   touchInputQuery = window.matchMedia(TOUCH_INPUT_MEDIA_QUERY)
-  menuElement = document.querySelector<HTMLElement>('.el-menu-layout-all')
   reducedMotionQuery.addEventListener('change', handleReducedMotionChange)
   heroMotionQuery.addEventListener('change', syncHeroMotionListener)
   touchInputQuery.addEventListener('change', syncTouchInputMode)
   syncTouchInputMode()
-  handleReducedMotionChange()
   syncMarqueeViewportTop()
-  heroContentResizeObserver = new ResizeObserver(syncMarqueeViewportTop)
+  heroContentResizeObserver = new ResizeObserver(scheduleHeroLayoutMeasure)
   if (heroContentElement.value) {
     heroContentResizeObserver.observe(heroContentElement.value)
   }
-  startAuto()
+  if (siteEntryActive.value) startAuto()
   window.addEventListener('resize', handleHeroResize, { passive: true })
   window.addEventListener('blur', resetHeroSloganMotion)
   window.addEventListener('wheel', handleHomeWheel, {
@@ -1532,37 +2125,50 @@ onMounted(async () => {
   document.addEventListener('visibilitychange', handleVisibilityChange)
   await nextTick()
   waitForHeroLayoutEntrance()
-  window.requestAnimationFrame(connectCraftFooterResizeObserver)
+  if (activeHomePageIndex.value === CRAFT_PAGE_INDEX) {
+    window.requestAnimationFrame(connectCraftFooterResizeObserver)
+  }
 })
 
 onUnmounted(() => {
+  queuedHomePageTransitionIndex = null
   heroInitialEntranceObserver?.disconnect()
   heroInitialEntranceObserver = null
   if (heroInitialEntranceTimer) {
     clearTimeout(heroInitialEntranceTimer)
     heroInitialEntranceTimer = null
   }
-  stopAnimatedHomeProgressSync()
+  resetHeroExitPreparation()
+  clearHeroMotionReleaseTimer()
+  clearHeroReturnEffectsTimer()
+  visualStateStore.setHomeStarfieldVisible(true)
   visualStateStore.setHomeHeaderScrollProgress(0)
   visualStateStore.setPageScrollProgressOverride(null)
   if (dragResetTimer) clearTimeout(dragResetTimer)
+  pauseAuto()
   if (craftFooterTransitionTimer) clearTimeout(craftFooterTransitionTimer)
   disarmCraftFooterWheel()
-  if (heroPageTransitionTimer) clearTimeout(heroPageTransitionTimer)
+  clearHomeHeaderTransition()
+  lockedHomeHeaderProgress = null
   if (homePageFadeTimer) clearTimeout(homePageFadeTimer)
   clearHomePageContentExitTimer()
   heroContentResizeObserver?.disconnect()
   heroContentResizeObserver = null
-  craftFooterResizeObserver?.disconnect()
-  craftFooterResizeObserver = null
-  menuElement = null
+  disconnectCraftFooterResizeObserver()
   stopSloganMotion()
-  if (heroResizeRafId !== null) window.cancelAnimationFrame(heroResizeRafId)
-  window.removeEventListener('mousemove', handleHeroMouseMove)
+  heroSection.value?.removeEventListener('mousemove', handleHeroMouseMove)
   window.removeEventListener('resize', handleHeroResize)
   window.removeEventListener('blur', resetHeroSloganMotion)
   window.removeEventListener('wheel', handleHomeWheel, true)
   setTouchPagingListenerActive(false)
+  if (heroLayoutMeasureRafId !== null) {
+    window.cancelAnimationFrame(heroLayoutMeasureRafId)
+  }
+  document.documentElement.style.removeProperty(
+    '--page-scroll-progress-transition-duration'
+  )
+  rootProgressTransitionDuration = ''
+  homeMotionStyleCache.clear()
   document.removeEventListener('visibilitychange', handleVisibilityChange)
   reducedMotionQuery?.removeEventListener('change', handleReducedMotionChange)
   heroMotionQuery?.removeEventListener('change', syncHeroMotionListener)

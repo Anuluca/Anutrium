@@ -2,7 +2,10 @@
   <div
     ref="sceneElement"
     class="scene"
-    :class="{ 'motion-paused': isMotionPaused }"
+    :class="{
+      'motion-paused': isMotionPaused,
+      'visual-simplified': props.simplified,
+    }"
   >
     <div class="logo-artifact-stage">
       <div v-for="i in 3" :key="i" :class="['logo-layer', `layer-${i}`]">
@@ -17,7 +20,10 @@ import { onMounted, onUnmounted, ref, watch } from 'vue'
 
 import Logo from '@/components/Logo/index.vue'
 
-const props = defineProps({ active: { type: Boolean, default: true } })
+const props = defineProps({
+  active: { type: Boolean, default: true },
+  simplified: { type: Boolean, default: false },
+})
 
 const sceneElement = ref(null)
 const isMotionPaused = ref(false)
@@ -96,6 +102,24 @@ onUnmounted(() => {
       will-change: auto;
     }
   }
+
+  &.visual-simplified {
+    .logo-layer {
+      will-change: auto;
+      mix-blend-mode: normal;
+    }
+
+    .layer-1 {
+      filter: none;
+    }
+
+    .layer-2,
+    .layer-3 {
+      opacity: 0;
+      filter: none;
+      animation: none;
+    }
+  }
 }
 
 .logo-artifact-stage {
@@ -120,6 +144,7 @@ onUnmounted(() => {
 
     will-change: transform, opacity;
     mix-blend-mode: screen;
+    transition: opacity 100ms ease-out;
   }
 
   .layer-1 {

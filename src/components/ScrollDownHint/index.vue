@@ -153,7 +153,7 @@ onUnmounted(() => {
 
 .scroll-down-hint__label {
   margin-bottom: 10px;
-  font-family: 'anton', sans-serif;
+  font-family: 'Anton', sans-serif;
   font-size: 16px;
   font-weight: 400;
   line-height: 1;
@@ -217,9 +217,11 @@ onUnmounted(() => {
 @media screen and (max-aspect-ratio: @ratio-threshold),
   screen and (max-width: 1024px) and (hover: none) and (pointer: coarse) {
   .scroll-down-hint.no-rem {
-    bottom: var(
-      --home-mobile-explore-bottom,
-      max(clamp(32px, 5dvh, 52px), calc(env(safe-area-inset-bottom) + 24px))
+    bottom: calc(
+      var(
+          --home-mobile-explore-bottom,
+          max(clamp(32px, 5dvh, 52px), calc(env(safe-area-inset-bottom) + 24px))
+        ) + 12px
     );
   }
 }

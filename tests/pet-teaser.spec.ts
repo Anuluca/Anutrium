@@ -229,7 +229,7 @@ test('pet teaser activation preserves the current route and scroll state', async
 test('pet teaser stays inside the viewport and avoids fixed controls', async ({
   page,
 }, testInfo) => {
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/about', { waitUntil: 'domcontentloaded' })
   const teaser = page.locator('.pet-teaser')
   await expect(teaser).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
   await expect(teaser).toHaveClass(/\bpet-teaser--ready\b/, {
@@ -429,27 +429,38 @@ test('pet teaser stays inside the viewport and avoids fixed controls', async ({
   }
   if (metrics.footerGap !== null) {
     expect(Math.abs(metrics.footerGap)).toBeLessThanOrEqual(1)
+  }
+})
 
-    const maxTransitionGap = await page.evaluate(
-      () =>
-        new Promise<number>((resolve) => {
+test('pet teaser follows the footer during a route transition', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name.includes('mobile'))
+
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  const teaser = page.locator('.pet-teaser')
+  await expect(teaser).toHaveClass(/\bpet-teaser--ready\b/, {
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+
+  const maximumGap = await page.evaluate(
+    () =>
+      new Promise<number>((resolve) => {
+        const routeLink = document.querySelector<HTMLElement>(
+          '.desktop-menu a[href="/about"]'
+        )
+        if (!routeLink) throw new Error('About route link is unavailable')
+
+        routeLink.click()
+        const startedAt = performance.now()
+        let maximumGap = 0
+
+        const sample = (time: number) => {
           const ears = document.querySelector<HTMLElement>(
             '.pet-teaser__ears-window'
           )
           const footer = document.querySelector<HTMLElement>('.footer-com')
-          if (!ears || !footer) {
-            throw new Error('Footer transition geometry is unavailable')
-          }
-
-          const originalBottom = footer.style.bottom
-          const currentBottom = Number.parseFloat(
-            window.getComputedStyle(footer).bottom
-          )
-          footer.style.bottom = currentBottom > 5 ? '0px' : '10px'
-
-          const startedAt = performance.now()
-          let maximumGap = 0
-          const sample = (time: number) => {
+          if (ears && footer) {
             maximumGap = Math.max(
               maximumGap,
               Math.abs(
@@ -457,20 +468,17 @@ test('pet teaser stays inside the viewport and avoids fixed controls', async ({
                   footer.getBoundingClientRect().top
               )
             )
-
-            if (time - startedAt < 620) {
-              requestAnimationFrame(sample)
-            } else {
-              footer.style.bottom = originalBottom
-              resolve(maximumGap)
-            }
           }
 
-          requestAnimationFrame(sample)
-        })
-    )
-    expect(maxTransitionGap).toBeLessThanOrEqual(1.5)
-  }
+          if (time - startedAt < 620) requestAnimationFrame(sample)
+          else resolve(maximumGap)
+        }
+
+        requestAnimationFrame(sample)
+      })
+  )
+
+  expect(maximumGap).toBeLessThanOrEqual(1.5)
 })
 
 test('mobile pet teaser is compact and hides at the page bottom', async ({
@@ -478,7 +486,7 @@ test('mobile pet teaser is compact and hides at the page bottom', async ({
 }, testInfo) => {
   test.skip(!testInfo.project.name.includes('mobile'))
 
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/about', { waitUntil: 'domcontentloaded' })
   const teaser = page.locator('.pet-teaser')
   await expect(teaser).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
   await expect(teaser).toHaveClass(/\bpet-teaser--ready\b/, {

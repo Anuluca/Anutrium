@@ -1,6 +1,10 @@
 import type LenisInstance from 'lenis'
 
-import { getPageMaxScrollTop, setSmoothPageScrollHandler } from './pageScroll'
+import {
+  getPageMaxScrollTop,
+  getPageScrollElement,
+  setSmoothPageScrollHandler,
+} from './pageScroll'
 
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)'
 const DEFAULT_SCROLL_DURATION = 800
@@ -9,6 +13,7 @@ const FIXED_SCROLL_EASING = (progress: number) =>
 
 let lenis: LenisInstance | null = null
 let reducedMotionQuery: MediaQueryList | null = null
+let nativeTouchScrollQuery: MediaQueryList | null = null
 let shouldRun = false
 let setupVersion = 0
 let contentResizeObserver: ResizeObserver | null = null
@@ -36,8 +41,6 @@ interface PageScrollSnapshot {
     left: number
     top: number
   }>
-  windowX: number
-  windowY: number
 }
 
 let pageScrollSnapshot: PageScrollSnapshot | null = null
@@ -66,12 +69,6 @@ const preventLockedPageScrollKeys = (event: KeyboardEvent) => {
 }
 
 const restorePageScroll = (snapshot: PageScrollSnapshot) => {
-  if (
-    window.scrollX !== snapshot.windowX ||
-    window.scrollY !== snapshot.windowY
-  ) {
-    window.scrollTo(snapshot.windowX, snapshot.windowY)
-  }
   for (const { element, left, top } of snapshot.elements) {
     if (element.scrollLeft !== left) element.scrollLeft = left
     if (element.scrollTop !== top) element.scrollTop = top
@@ -102,13 +99,8 @@ const lockPageScrollPosition = () => {
 
   cancelPageScrollRestore()
 
-  const elements = [
-    document.scrollingElement,
-    document.documentElement,
-    document.body,
-  ].filter(
-    (element, index, list): element is HTMLElement =>
-      element instanceof HTMLElement && list.indexOf(element) === index
+  const elements = [getPageScrollElement()].filter(
+    (element): element is HTMLElement => element instanceof HTMLElement
   )
 
   pageScrollSnapshot = {
@@ -117,8 +109,6 @@ const lockPageScrollPosition = () => {
       left: element.scrollLeft,
       top: element.scrollTop,
     })),
-    windowX: window.scrollX,
-    windowY: window.scrollY,
   }
 
   document.addEventListener('wheel', preventLockedPageScroll, {
@@ -130,7 +120,11 @@ const lockPageScrollPosition = () => {
     passive: false,
   })
   document.addEventListener('keydown', preventLockedPageScrollKeys, true)
-  document.addEventListener('scroll', handleLockedPageScroll, true)
+  getPageScrollElement()?.addEventListener(
+    'scroll',
+    handleLockedPageScroll,
+    true
+  )
   scheduleLockedPageScrollRestore()
 }
 
@@ -142,7 +136,11 @@ const unlockPageScrollPosition = () => {
   document.removeEventListener('wheel', preventLockedPageScroll, true)
   document.removeEventListener('touchmove', preventLockedPageScroll, true)
   document.removeEventListener('keydown', preventLockedPageScrollKeys, true)
-  document.removeEventListener('scroll', handleLockedPageScroll, true)
+  getPageScrollElement()?.removeEventListener(
+    'scroll',
+    handleLockedPageScroll,
+    true
+  )
   restorePageScroll(snapshot)
   pageScrollSnapshot = null
   pageScrollRestoreFrame = window.requestAnimationFrame(() => {
@@ -203,13 +201,19 @@ const createLenis = async () => {
     !shouldRun ||
     lenis ||
     reducedMotionQuery?.matches ||
+    nativeTouchScrollQuery?.matches ||
     typeof window === 'undefined'
   ) {
     return
   }
 
   const { default: Lenis } = await import('lenis')
-  if (version !== setupVersion || !shouldRun || reducedMotionQuery?.matches) {
+  if (
+    version !== setupVersion ||
+    !shouldRun ||
+    reducedMotionQuery?.matches ||
+    nativeTouchScrollQuery?.matches
+  ) {
     return
   }
 
@@ -244,7 +248,10 @@ const createLenis = async () => {
       if (!lenis) return
 
       pendingImmediateScroll = undefined
-      if (left !== document.body.scrollLeft) document.body.scrollLeft = left
+      const scrollElement = getPageScrollElement()
+      if (scrollElement && left !== scrollElement.scrollLeft) {
+        scrollElement.scrollLeft = left
+      }
 
       if (behavior !== 'smooth') {
         lenis.resize()
@@ -291,12 +298,25 @@ const handleReducedMotionChange = () => {
   if (!reducedMotionQuery?.matches) void createLenis()
 }
 
+const handleNativeTouchScrollChange = () => {
+  ++setupVersion
+  removeLenis()
+  if (!nativeTouchScrollQuery?.matches) void createLenis()
+}
+
 export const startSmoothScroll = () => {
   if (typeof window === 'undefined' || shouldRun) return
 
   shouldRun = true
   reducedMotionQuery = window.matchMedia(REDUCED_MOTION_QUERY)
+  nativeTouchScrollQuery = window.matchMedia(
+    '(hover: none) and (pointer: coarse)'
+  )
   reducedMotionQuery.addEventListener('change', handleReducedMotionChange)
+  nativeTouchScrollQuery.addEventListener(
+    'change',
+    handleNativeTouchScrollChange
+  )
   void createLenis()
 }
 
@@ -304,7 +324,12 @@ export const stopSmoothScroll = () => {
   shouldRun = false
   ++setupVersion
   reducedMotionQuery?.removeEventListener('change', handleReducedMotionChange)
+  nativeTouchScrollQuery?.removeEventListener(
+    'change',
+    handleNativeTouchScrollChange
+  )
   reducedMotionQuery = null
+  nativeTouchScrollQuery = null
   removeLenis()
 }
 

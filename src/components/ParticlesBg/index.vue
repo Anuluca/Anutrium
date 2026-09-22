@@ -2,6 +2,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 interface Props {
+  active?: boolean
   quantity?: number
   color?: string
   refresh?: boolean
@@ -10,14 +11,20 @@ interface Props {
 interface Particle {
   alpha: number
   phase: number
-  radius: number
+  textureIndex: number
   velocityX: number
   velocityY: number
   x: number
   y: number
 }
 
+interface ParticleTexture {
+  canvas: HTMLCanvasElement
+  size: number
+}
+
 const props = withDefaults(defineProps<Props>(), {
+  active: true,
   quantity: 100,
   color: '#ffffff',
   refresh: false,
@@ -29,7 +36,10 @@ const isPageVisible = ref(true)
 const isReducedMotion = ref(false)
 const renderedParticleCount = ref(0)
 const motionState = computed(() =>
-  isIntersecting.value && isPageVisible.value && !isReducedMotion.value
+  props.active &&
+  isIntersecting.value &&
+  isPageVisible.value &&
+  !isReducedMotion.value
     ? 'running'
     : 'paused'
 )
@@ -44,11 +54,37 @@ let resizeObserver: ResizeObserver | null = null
 let intersectionObserver: IntersectionObserver | null = null
 let reducedMotionQuery: MediaQueryList | null = null
 let lastFrameTime = 0
+let particleTextures: ParticleTexture[] = []
+let particleTexturePixelRatio = 0
+const PARTICLE_RADII = [0.65, 1, 1.45, 2.1] as const
+
+const rebuildParticleTextures = (pixelRatio: number) => {
+  if (typeof document === 'undefined') return
+
+  particleTexturePixelRatio = pixelRatio
+  particleTextures = PARTICLE_RADII.map((radius) => {
+    const size = Math.ceil(radius * 2 + 2)
+    const textureCanvas = document.createElement('canvas')
+    textureCanvas.width = Math.ceil(size * pixelRatio)
+    textureCanvas.height = Math.ceil(size * pixelRatio)
+    const textureContext = textureCanvas.getContext('2d')
+
+    textureContext?.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0)
+    if (textureContext) {
+      textureContext.fillStyle = props.color
+      textureContext.beginPath()
+      textureContext.arc(size / 2, size / 2, radius, 0, Math.PI * 2)
+      textureContext.fill()
+    }
+
+    return { canvas: textureCanvas, size }
+  })
+}
 
 const createParticle = (width: number, height: number): Particle => ({
   alpha: 0.16 + Math.random() * 0.52,
   phase: Math.random() * Math.PI * 2,
-  radius: 0.6 + Math.random() * 1.65,
+  textureIndex: Math.floor(Math.random() * PARTICLE_RADII.length),
   velocityX: (Math.random() - 0.5) * 0.06,
   velocityY: (Math.random() - 0.5) * 0.06,
   x: Math.random() * width,
@@ -76,6 +112,9 @@ const resizeCanvas = () => {
   canvasWidth = width
   canvasHeight = height
   const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5)
+  if (particleTexturePixelRatio !== pixelRatio) {
+    rebuildParticleTextures(pixelRatio)
+  }
   const backingWidth = Math.round(width * pixelRatio)
   const backingHeight = Math.round(height * pixelRatio)
 
@@ -101,7 +140,6 @@ const drawParticles = (frameTime: number, shouldMove: boolean) => {
   const elapsed = Math.min(32, Math.max(0, frameTime - lastFrameTime))
 
   context.clearRect(0, 0, width, height)
-  context.fillStyle = props.color
 
   for (const particle of particles) {
     if (shouldMove) {
@@ -114,11 +152,17 @@ const drawParticles = (frameTime: number, shouldMove: boolean) => {
     }
 
     const flicker = 0.72 + Math.sin(frameTime * 0.0008 + particle.phase) * 0.28
+    const texture = particleTextures[particle.textureIndex]
+    if (!texture) continue
 
     context.globalAlpha = particle.alpha * flicker
-    context.beginPath()
-    context.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2)
-    context.fill()
+    context.drawImage(
+      texture.canvas,
+      particle.x - texture.size / 2,
+      particle.y - texture.size / 2,
+      texture.size,
+      texture.size
+    )
   }
 
   context.globalAlpha = 1
@@ -168,7 +212,10 @@ watch(
 )
 watch(
   () => props.color,
-  () => drawParticles(performance.now(), false)
+  () => {
+    rebuildParticleTextures(Math.min(window.devicePixelRatio || 1, 1.5))
+    drawParticles(performance.now(), false)
+  }
 )
 
 onMounted(() => {

@@ -106,14 +106,13 @@ import MediaGallery, {
   type GalleryMedia,
 } from '@/components/MediaGallery/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
+import { markJourneyReturn } from '@/utils/journeyReturnState'
 
 import type { JourneyItem, JourneyPhoto, JourneyVideo } from '@/types/flanerie'
 
 const router = useRouter()
 const route = useRoute()
 const { t, tm } = useI18n()
-const JOURNEY_RETURN_FLAG_KEY = 'anutrium:flanerie:returning-from-detail'
-const JOURNEY_RETURN_VLOG_KEY = 'anutrium:flanerie:selected-vlog'
 
 interface VideoItem extends JourneyVideo {
   embedUrl?: string
@@ -165,10 +164,7 @@ const setPage = (page: number) => {
 }
 
 onBeforeRouteLeave((to) => {
-  if (to.name !== 'FLANERIE' || typeof window === 'undefined') return
-
-  window.sessionStorage.setItem(JOURNEY_RETURN_FLAG_KEY, 'true')
-  window.sessionStorage.setItem(JOURNEY_RETURN_VLOG_KEY, vlogId.value)
+  if (to.name === 'FLANERIE') markJourneyReturn(vlogId.value)
 })
 
 watch(
@@ -188,7 +184,7 @@ watch(
 
 <style lang="less" scoped>
 @red: #e23456;
-@mono: 'cn-custom', 'Courier New', monospace;
+@mono: 'UnboundedSans', 'Courier New', monospace;
 @cjk: 'alibaba-puhuiti', sans-serif;
 
 .flr-page {

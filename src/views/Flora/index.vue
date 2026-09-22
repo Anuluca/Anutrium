@@ -35,6 +35,9 @@ onUnmounted(() => {
             alt="花花举起两只前爪的狸花猫"
             decoding="async"
             fetchpriority="high"
+            width="768"
+            height="768"
+            loading="eager"
           />
         </div>
       </div>
@@ -188,7 +191,7 @@ onUnmounted(() => {
 .flora-title-copy {
   grid-area: title;
   margin: 0;
-  font-family: 'cn-custom', sans-serif;
+  font-family: 'UnboundedSans', sans-serif;
   font-size: clamp(51px, 6.67vw, 160px);
   font-weight: 900;
   letter-spacing: 0;
@@ -290,7 +293,7 @@ onUnmounted(() => {
 
 .flora-profile__level {
   color: var(--flora-text-muted);
-  font-family: 'cn-custom', monospace;
+  font-family: 'UnboundedSans', monospace;
   font-size: clamp(17px, 1.35vw, 32px);
   font-weight: 500;
   white-space: nowrap;

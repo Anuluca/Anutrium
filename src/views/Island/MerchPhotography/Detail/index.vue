@@ -91,7 +91,7 @@ watch(
 
 <style lang="less" scoped>
 @red: #e23456;
-@mono: 'cn-custom', 'Courier New', monospace;
+@mono: 'UnboundedSans', 'Courier New', monospace;
 
 .merch-detail-page {
   color: var(--text-color);

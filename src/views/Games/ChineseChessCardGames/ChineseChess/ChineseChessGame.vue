@@ -43,7 +43,14 @@
           :class="`xiangqi-menu__card--${menuStep}`"
         >
           <header v-if="menuStep !== 'changelog'" class="xiangqi-menu__brand">
-            <img :src="gameIcon" alt="" />
+            <img
+              :src="gameIcon"
+              alt=""
+              width="128"
+              height="128"
+              loading="eager"
+              decoding="async"
+            />
             <h1>{{ copy.gameName }}</h1>
           </header>
 

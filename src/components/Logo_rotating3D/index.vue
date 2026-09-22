@@ -32,6 +32,12 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
 
+import {
+  cacheWebGLResource,
+  deferWebGLResourceDisposal,
+  takeCachedWebGLResource,
+} from '@/utils/webglResourceCache'
+
 const emit = defineEmits(['finished'])
 const props = defineProps({
   interactive: {
@@ -50,19 +56,34 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  resourceCacheKey: {
+    type: String,
+    default: '',
+  },
 })
 
 const container = ref(null)
 let isStopping = false
-let renderer, scene, camera, composer, controls, animationId
+let renderer, scene, camera, composer, controls
+let crystal, cage
+let animationId = null
 let environmentMap = null
 let resizeRafId = null
 let isPageVisible = true
+let isInViewport = true
+let visibilityObserver = null
 let lastFrameTime = null
 let animateFrame = null
+let stopStartTime = null
+let stopStartRotation = null
+let stopTargetRotation = null
+let runtimeGeneration = 0
+let isUnmounted = false
+let initializationPromise = null
 const ROTATION_SPEED = 0.6
 const STOP_DURATION = 700
 const MOBILE_BREAKPOINT = 768
+const RESOURCE_CACHE_TTL = 60_000
 
 const shouldUseMobileHighResolution = () =>
   props.mobileHighResolution && window.innerWidth <= MOBILE_BREAKPOINT
@@ -71,9 +92,23 @@ const getRendererPixelRatio = () => {
   if (!props.lowPower) return Math.min(window.devicePixelRatio || 1, 1.5)
 
   return shouldUseMobileHighResolution()
-    ? Math.min(window.devicePixelRatio || 1, 3)
+    ? Math.min(window.devicePixelRatio || 1, 1.5)
     : 0.75
 }
+
+const getResourceCacheKey = () => {
+  if (!props.resourceCacheKey) return ''
+
+  return [
+    props.resourceCacheKey,
+    props.interactive ? 'interactive' : 'static',
+    props.lowPower ? 'low-power' : 'full-power',
+    props.transparent ? 'transparent' : 'opaque',
+    props.mobileHighResolution ? 'mobile-hires' : 'default-resolution',
+  ].join(':')
+}
+
+const canRender = () => isPageVisible && isInViewport
 
 const getSceneSize = () => {
   const rect = container.value?.getBoundingClientRect()
@@ -84,195 +119,255 @@ const getSceneSize = () => {
   }
 }
 
-const initThree = () => {
+const assignResources = (resources) => {
+  renderer = resources.renderer
+  scene = resources.scene
+  camera = resources.camera
+  composer = resources.composer
+  controls = resources.controls
+  environmentMap = resources.environmentMap
+  crystal = resources.crystal
+  cage = resources.cage
+}
+
+const getResources = () => ({
+  renderer,
+  scene,
+  camera,
+  composer,
+  controls,
+  environmentMap,
+  crystal,
+  cage,
+})
+
+const clearResourceReferences = () => {
+  renderer = null
+  scene = null
+  camera = null
+  composer = null
+  controls = null
+  environmentMap = null
+  crystal = null
+  cage = null
+  animateFrame = null
+}
+
+const initThree = async () => {
+  const generation = ++runtimeGeneration
   const { width, height } = getSceneSize()
+  const resourceCacheKey = getResourceCacheKey()
+  const cachedResources = resourceCacheKey
+    ? takeCachedWebGLResource(resourceCacheKey)
+    : null
+  const canReuseCachedResources =
+    cachedResources && !cachedResources.renderer.getContext().isContextLost()
 
-  scene = new Scene()
-  scene.background = props.transparent ? null : new Color('#050505')
-  if (!props.transparent) {
-    scene.fog = new FogExp2(0x050505, 0.02)
-  }
+  if (canReuseCachedResources) {
+    assignResources(cachedResources)
+    camera.position.set(0, 0, 9)
+    camera.lookAt(0, 0, 0)
+    crystal.rotation.y = Math.PI / 4
+    cage.rotation.y = 0
+    renderer.setPixelRatio(getRendererPixelRatio())
+    renderer.setSize(width, height)
+    composer?.setSize(width, height)
+    camera.aspect = width / height
+    camera.updateProjectionMatrix()
+    controls && (controls.enabled = props.interactive)
+    container.value?.appendChild(renderer.domElement)
+  } else {
+    if (cachedResources) disposeResources(cachedResources)
 
-  camera = new PerspectiveCamera(45, width / height, 0.1, 100)
-  camera.position.set(0, 0, 9)
-  camera.lookAt(0, 0, 0)
+    scene = new Scene()
+    scene.background = props.transparent ? null : new Color('#050505')
+    if (!props.transparent) {
+      scene.fog = new FogExp2(0x050505, 0.02)
+    }
 
-  renderer = new WebGLRenderer({
-    alpha: props.transparent,
-    antialias: !props.lowPower || props.mobileHighResolution,
-    powerPreference: props.lowPower ? 'low-power' : 'high-performance',
-  })
-  renderer.setPixelRatio(getRendererPixelRatio())
-  renderer.setSize(width, height)
+    camera = new PerspectiveCamera(45, width / height, 0.1, 100)
+    camera.position.set(0, 0, 9)
+    camera.lookAt(0, 0, 0)
 
-  renderer.shadowMap.enabled = !props.lowPower
-  renderer.shadowMap.type = PCFSoftShadowMap
+    renderer = new WebGLRenderer({
+      alpha: props.transparent,
+      antialias: !props.lowPower || props.mobileHighResolution,
+      powerPreference: props.lowPower ? 'low-power' : 'high-performance',
+    })
+    renderer.setPixelRatio(getRendererPixelRatio())
+    renderer.setSize(width, height)
 
-  container.value.appendChild(renderer.domElement)
+    renderer.shadowMap.enabled = !props.lowPower
+    renderer.shadowMap.type = PCFSoftShadowMap
 
-  const pmremGenerator = new PMREMGenerator(renderer)
-  environmentMap = pmremGenerator.fromScene(new RoomEnvironment(), 0.04)
-  scene.environment = environmentMap.texture
-  pmremGenerator.dispose()
+    container.value?.appendChild(renderer.domElement)
 
-  const ambientLight = new AmbientLight(0xffffff, 0.1)
-  scene.add(ambientLight)
+    const pmremGenerator = new PMREMGenerator(renderer)
+    environmentMap = pmremGenerator.fromScene(new RoomEnvironment(), 0.04)
+    scene.environment = environmentMap.texture
+    pmremGenerator.dispose()
 
-  const spotLight = new SpotLight(0xffffff, 50)
-  spotLight.position.set(5, 10, 5)
-  spotLight.angle = Math.PI / 4
-  spotLight.penumbra = 0.5
-  spotLight.castShadow = !props.lowPower
-  spotLight.shadow.bias = -0.0001
-  scene.add(spotLight)
+    const ambientLight = new AmbientLight(0xffffff, 0.1)
+    scene.add(ambientLight)
 
-  if (!props.lowPower) {
-    const renderScene = new RenderPass(scene, camera)
-    const bloomPass = new UnrealBloomPass(
-      new Vector2(width, height),
-      1.5,
-      0.4,
-      0.85
-    )
-    bloomPass.threshold = 0.01
-    bloomPass.strength = 0.4
-    bloomPass.radius = 0.01
+    const spotLight = new SpotLight(0xffffff, 50)
+    spotLight.position.set(5, 10, 5)
+    spotLight.angle = Math.PI / 4
+    spotLight.penumbra = 0.5
+    spotLight.castShadow = !props.lowPower
+    spotLight.shadow.bias = -0.0001
+    scene.add(spotLight)
 
-    composer = new EffectComposer(renderer)
-    composer.addPass(renderScene)
-    composer.addPass(bloomPass)
-  }
-
-  if (props.interactive) {
-    controls = new OrbitControls(camera, renderer.domElement)
-    controls.enableDamping = true
-    controls.dampingFactor = 0.05
-  }
-
-  const cageMaterial = new MeshStandardMaterial({
-    color: 'black',
-    metalness: 0.5,
-    roughness: 0.5,
-    envMapIntensity: 0,
-  })
-
-  const crystalMaterial = new MeshPhysicalMaterial({
-    color: 0xffffff,
-    metalness: 0.01,
-    roughness: 0.01,
-    transmission: 1,
-    thickness: 2,
-    ior: 1.5,
-    reflectivity: 0.1,
-    transparent: true,
-  })
-
-  const group = new Group()
-  scene.add(group)
-
-  const createCrystal = () => {
-    const crystalGroup = new Group()
-    const radius = 1.5
-    const cylinderHeight = 4
-    const coneHeight = radius * 1.3
-    const segments = 4
-
-    const cylinder = new Mesh(
-      new CylinderGeometry(radius, radius, cylinderHeight, segments),
-      crystalMaterial
-    )
-    const topCone = new Mesh(
-      new ConeGeometry(radius, coneHeight, segments),
-      crystalMaterial
-    )
-    topCone.position.y = cylinderHeight / 2 + coneHeight / 2
-    const bottomCone = new Mesh(
-      new ConeGeometry(radius, coneHeight, segments),
-      crystalMaterial
-    )
-    bottomCone.rotation.x = Math.PI
-    bottomCone.position.y = -(cylinderHeight / 2 + coneHeight / 2)
-
-    crystalGroup.add(cylinder, topCone, bottomCone)
-    return crystalGroup
-  }
-
-  const createNCage = () => {
-    const cageGroup = new Group()
-    const size = 1.4
-    const height = 1
-    const pillarThickness = 0.7
-    const positions = [
-      { x: -size, z: size },
-      { x: size, z: size },
-      { x: size, z: -size },
-      { x: -size, z: -size },
-    ]
-
-    positions.forEach((pos) => {
-      const mesh = new Mesh(
-        new BoxGeometry(pillarThickness, height * 2, pillarThickness),
-        cageMaterial
+    if (!props.lowPower) {
+      const renderScene = new RenderPass(scene, camera)
+      const bloomPass = new UnrealBloomPass(
+        new Vector2(width, height),
+        1.5,
+        0.4,
+        0.85
       )
-      mesh.position.set(pos.x, 0, pos.z)
-      cageGroup.add(mesh)
+      bloomPass.threshold = 0.01
+      bloomPass.strength = 0.4
+      bloomPass.radius = 0.01
+
+      composer = new EffectComposer(renderer)
+      composer.addPass(renderScene)
+      composer.addPass(bloomPass)
+    }
+
+    if (props.interactive) {
+      controls = new OrbitControls(camera, renderer.domElement)
+      controls.enableDamping = true
+      controls.dampingFactor = 0.05
+    }
+
+    const cageMaterial = new MeshStandardMaterial({
+      color: 'black',
+      metalness: 0.5,
+      roughness: 0.5,
+      envMapIntensity: 0,
     })
 
-    const faces = [
-      { x: 0, z: size, r: 0 },
-      { x: size, z: 0, r: Math.PI / 2 },
-      { x: 0, z: -size, r: Math.PI },
-      { x: -size, z: 0, r: -Math.PI / 2 },
-    ]
-    const width = size * 1.5
-    const shearRate = -(height * 1.2) / width
+    const crystalMaterial = new MeshPhysicalMaterial({
+      color: 0xffffff,
+      metalness: 0.01,
+      roughness: 0.01,
+      transmission: 1,
+      thickness: 2,
+      ior: 1.5,
+      reflectivity: 0.1,
+      transparent: true,
+    })
 
-    faces.forEach((face) => {
-      const diagGeo = new BoxGeometry(
+    const group = new Group()
+    scene.add(group)
+
+    const createCrystal = () => {
+      const crystalGroup = new Group()
+      const radius = 1.5
+      const cylinderHeight = 4
+      const coneHeight = radius * 1.3
+      const segments = 4
+
+      const cylinderGeometry = new CylinderGeometry(
+        radius,
+        radius,
+        cylinderHeight,
+        segments
+      )
+      const coneGeometry = new ConeGeometry(radius, coneHeight, segments)
+      const cylinder = new Mesh(cylinderGeometry, crystalMaterial)
+      const topCone = new Mesh(coneGeometry, crystalMaterial)
+      topCone.position.y = cylinderHeight / 2 + coneHeight / 2
+      const bottomCone = new Mesh(coneGeometry, crystalMaterial)
+      bottomCone.rotation.x = Math.PI
+      bottomCone.position.y = -(cylinderHeight / 2 + coneHeight / 2)
+
+      crystalGroup.add(cylinder, topCone, bottomCone)
+      return crystalGroup
+    }
+
+    const createNCage = () => {
+      const cageGroup = new Group()
+      const size = 1.4
+      const height = 1
+      const pillarThickness = 0.7
+      const positions = [
+        { x: -size, z: size },
+        { x: size, z: size },
+        { x: size, z: -size },
+        { x: -size, z: -size },
+      ]
+      const pillarGeometry = new BoxGeometry(
+        pillarThickness,
+        height * 2,
+        pillarThickness
+      )
+
+      positions.forEach((pos) => {
+        const mesh = new Mesh(pillarGeometry, cageMaterial)
+        mesh.position.set(pos.x, 0, pos.z)
+        cageGroup.add(mesh)
+      })
+
+      const faces = [
+        { x: 0, z: size, r: 0 },
+        { x: size, z: 0, r: Math.PI / 2 },
+        { x: 0, z: -size, r: Math.PI },
+        { x: -size, z: 0, r: -Math.PI / 2 },
+      ]
+      const width = size * 1.5
+      const shearRate = -(height * 1.2) / width
+      const diagonalGeometry = new BoxGeometry(
         width,
         pillarThickness + 0.1,
         pillarThickness
       )
-      const shearMatrix = new Matrix4().set(
-        1,
-        0,
-        0,
-        0,
-        shearRate,
-        1,
-        0,
-        0,
-        0,
-        0,
-        1,
-        0,
-        0,
-        0,
-        0,
-        1
+      diagonalGeometry.applyMatrix4(
+        new Matrix4().set(
+          1,
+          0,
+          0,
+          0,
+          shearRate,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        )
       )
-      diagGeo.applyMatrix4(shearMatrix)
-      const diagMesh = new Mesh(diagGeo, cageMaterial)
-      diagMesh.rotation.y = face.r
-      diagMesh.position.set(face.x, 0, face.z)
-      cageGroup.add(diagMesh)
-    })
 
-    return cageGroup
+      faces.forEach((face) => {
+        const diagMesh = new Mesh(diagonalGeometry, cageMaterial)
+        diagMesh.rotation.y = face.r
+        diagMesh.position.set(face.x, 0, face.z)
+        cageGroup.add(diagMesh)
+      })
+
+      return cageGroup
+    }
+
+    crystal = createCrystal()
+    cage = createNCage()
+    group.add(crystal, cage)
+    crystal.rotation.y = Math.PI / 4
+    group.scale.set(0.5, 0.5, 0.5)
   }
 
-  const crystal = createCrystal()
-  const cage = createNCage()
-  group.add(crystal, cage)
-  crystal.rotation.y = Math.PI / 4
-  group.scale.set(0.5, 0.5, 0.5)
-
-  let stopStartTime = null
-  let stopStartRotation = null
-  let stopTargetRotation = null
+  isStopping = false
+  stopStartTime = null
+  stopStartRotation = null
+  stopTargetRotation = null
 
   animateFrame = (frameTime) => {
-    if (!isPageVisible) {
+    if (!canRender()) {
       animationId = null
       return
     }
@@ -339,7 +434,30 @@ const initThree = () => {
     }
   }
 
-  animateFrame()
+  const activeRenderer = renderer
+  const activeScene = scene
+  const activeCamera = camera
+
+  if (!canReuseCachedResources) {
+    try {
+      await activeRenderer.compileAsync(activeScene, activeCamera)
+    } catch {
+      // 不支持并行 Shader 编译时由首帧同步编译兜底。
+    }
+  }
+
+  if (
+    isUnmounted ||
+    generation !== runtimeGeneration ||
+    renderer !== activeRenderer
+  ) {
+    return
+  }
+
+  lastFrameTime = null
+  if (canRender() && animationId === null) {
+    animationId = requestAnimationFrame(animateFrame)
+  }
 }
 
 const handleResize = () => {
@@ -362,86 +480,144 @@ const scheduleResize = () => {
   })
 }
 
-const handleVisibilityChange = () => {
-  isPageVisible = document.visibilityState !== 'hidden'
-
-  if (!isPageVisible) {
-    if (animationId) cancelAnimationFrame(animationId)
+const syncRenderLoop = () => {
+  if (!canRender()) {
+    if (animationId !== null) cancelAnimationFrame(animationId)
     animationId = null
     return
   }
 
   lastFrameTime = null
-  if (renderer && animateFrame && !animationId) {
+  if (renderer && animateFrame && animationId === null) {
     animationId = requestAnimationFrame(animateFrame)
   }
+}
+
+const handleVisibilityChange = () => {
+  isPageVisible = document.visibilityState !== 'hidden'
+  syncRenderLoop()
+}
+
+const handleIntersection = ([entry]) => {
+  isInViewport = entry?.isIntersecting ?? false
+  syncRenderLoop()
 }
 
 const stop = () => {
   isStopping = true
-  if (isPageVisible && renderer && animateFrame && !animationId) {
-    animationId = requestAnimationFrame(animateFrame)
-  }
+  syncRenderLoop()
 }
 
-const disposeMaterial = (material) => {
+const disposeMaterial = (material, disposedResources) => {
   Object.values(material).forEach((value) => {
-    if (value && typeof value.dispose === 'function') {
+    if (
+      value &&
+      typeof value.dispose === 'function' &&
+      !disposedResources.has(value)
+    ) {
+      disposedResources.add(value)
       value.dispose()
     }
   })
   material.dispose()
 }
 
-const disposeScene = () => {
-  if (!scene) return
+const disposeScene = (targetScene) => {
+  if (!targetScene) return
+  const disposedGeometries = new Set()
+  const disposedMaterials = new Set()
+  const disposedResources = new Set()
 
-  scene.traverse((object) => {
-    if (object.geometry) object.geometry.dispose()
+  targetScene.traverse((object) => {
+    if (object.geometry && !disposedGeometries.has(object.geometry)) {
+      disposedGeometries.add(object.geometry)
+      object.geometry.dispose()
+    }
 
     if (object.material) {
-      if (Array.isArray(object.material)) {
-        object.material.forEach(disposeMaterial)
-      } else {
-        disposeMaterial(object.material)
-      }
+      const materials = Array.isArray(object.material)
+        ? object.material
+        : [object.material]
+      materials.forEach((material) => {
+        if (disposedMaterials.has(material)) return
+        disposedMaterials.add(material)
+        disposeMaterial(material, disposedResources)
+      })
     }
   })
 
-  scene.clear()
+  targetScene.clear()
+}
+
+const disposeResources = (resources) => {
+  resources.controls?.dispose()
+  resources.composer?.dispose()
+  disposeScene(resources.scene)
+  resources.environmentMap?.dispose()
+  resources.renderer?.renderLists?.dispose()
+
+  if (resources.renderer) {
+    resources.renderer.dispose()
+    resources.renderer.forceContextLoss()
+  }
 }
 
 onMounted(() => {
+  isUnmounted = false
   isPageVisible = document.visibilityState !== 'hidden'
-  initThree()
+  initializationPromise = initThree().catch((error) => {
+    console.warn('3D Logo 初始化失败', error)
+  })
+  if ('IntersectionObserver' in window) {
+    visibilityObserver = new IntersectionObserver(handleIntersection, {
+      root: null,
+      rootMargin: '120px 0px',
+      threshold: 0,
+    })
+    if (container.value) visibilityObserver.observe(container.value)
+  }
   window.addEventListener('resize', scheduleResize, { passive: true })
   document.addEventListener('visibilitychange', handleVisibilityChange)
 })
 
 onUnmounted(() => {
+  isUnmounted = true
+  runtimeGeneration += 1
   window.removeEventListener('resize', scheduleResize)
   document.removeEventListener('visibilitychange', handleVisibilityChange)
+  visibilityObserver?.disconnect()
+  visibilityObserver = null
   if (resizeRafId !== null) cancelAnimationFrame(resizeRafId)
-  if (animationId) cancelAnimationFrame(animationId)
+  if (animationId !== null) cancelAnimationFrame(animationId)
+  resizeRafId = null
+  animationId = null
 
-  if (controls) controls.dispose()
-  if (composer) composer.dispose()
-  disposeScene()
-  if (environmentMap) environmentMap.dispose()
+  if (!renderer) return
 
-  if (renderer) {
-    renderer.domElement?.parentNode?.removeChild(renderer.domElement)
-    renderer.dispose()
-    renderer.forceContextLoss()
+  const resources = getResources()
+  const resourceCacheKey = getResourceCacheKey()
+  resources.controls && (resources.controls.enabled = false)
+  resources.renderer.domElement?.parentNode?.removeChild(
+    resources.renderer.domElement
+  )
+  clearResourceReferences()
+
+  const releaseResources = () => {
+    if (resourceCacheKey) {
+      cacheWebGLResource(
+        resourceCacheKey,
+        resources,
+        disposeResources,
+        RESOURCE_CACHE_TTL
+      )
+      return
+    }
+
+    deferWebGLResourceDisposal(resources, disposeResources)
   }
 
-  renderer = null
-  scene = null
-  camera = null
-  composer = null
-  controls = null
-  environmentMap = null
-  animateFrame = null
+  void Promise.resolve(initializationPromise).finally(releaseResources)
+  initializationPromise = null
 })
 
 defineExpose({

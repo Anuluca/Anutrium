@@ -143,7 +143,7 @@ onBeforeUnmount(() => {
     justify-content: space-between;
     width: 100%;
     color: rgba(255, 255, 255, 0.3);
-    font-family: 'cn-custom', monospace;
+    font-family: 'UnboundedSans', monospace;
     font-size: 0.4rem;
     font-weight: 800;
     line-height: 1;
@@ -161,7 +161,7 @@ onBeforeUnmount(() => {
     width: 100%;
     margin-top: 0;
     color: rgba(255, 255, 255, 0.84);
-    font-family: 'cn-custom', monospace;
+    font-family: 'UnboundedSans', monospace;
     font-size: clamp(0.95rem, 1vw, 1.3rem);
     font-weight: 900;
     line-height: 1;
@@ -215,7 +215,7 @@ onBeforeUnmount(() => {
     width: 100%;
     margin-bottom: clamp(8px, 1.2vh, 16px);
     color: rgba(226, 52, 86, 0.72);
-    font-family: 'cn-custom', monospace;
+    font-family: 'UnboundedSans', monospace;
     font-size: clamp(0.9rem, 1.6vw, 1.8rem);
     font-weight: 700;
 
@@ -228,7 +228,7 @@ onBeforeUnmount(() => {
     display: flex;
     justify-content: flex-start;
     color: rgba(255, 255, 255, 0.94);
-    font-family: 'cn-custom', monospace;
+    font-family: 'UnboundedSans', monospace;
     font-size: clamp(4rem, 10vw, 12rem);
     font-weight: 900;
     letter-spacing: -0.04em;

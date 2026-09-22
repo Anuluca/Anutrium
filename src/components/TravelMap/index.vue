@@ -26,12 +26,10 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
+import { useIntersectionActivation } from '@/composables/useIntersectionActivation'
 import { visualState } from '@/stores'
-import {
-  ensureLeafletStyles,
-  loadGeoJsonBoundary,
-  loadLeaflet,
-} from '@/utils/leafletRuntime'
+import { loadGeoJsonBoundary, loadLeaflet } from '@/utils/leafletRuntime'
+import { getPageScrollElement } from '@/utils/pageScroll'
 
 import type { JourneyItem } from '@/types/flanerie'
 
@@ -48,9 +46,11 @@ const props = withDefaults(
   defineProps<{
     vlogs: JourneyItem[]
     mode?: TravelMapMode
+    active?: boolean
   }>(),
   {
     mode: 'default',
+    active: true,
   }
 )
 const emit = defineEmits<{
@@ -67,20 +67,11 @@ const visitedRegionLayers: any[] = []
 const popupCloseTimers = new Set<number>()
 let isUnmounted = false
 let mapGeneration = 0
+let isNearViewport = false
+let initializationPromise: Promise<void> | null = null
+let boundaryAbortController: AbortController | null = null
 
-const VISITED_REGION_GEOJSON_URLS: Record<string, string> = {
-  beijing: '/geo/visited-regions/beijing.geojson',
-  hunan: '/geo/visited-regions/hunan.geojson',
-  anhui: '/geo/visited-regions/anhui.geojson',
-  chongqing: '/geo/visited-regions/chongqing.geojson',
-  shanghai: '/geo/visited-regions/shanghai.geojson',
-  hubei: '/geo/visited-regions/hubei.geojson',
-  guangdong: '/geo/visited-regions/guangdong.geojson',
-  jiangxi: '/geo/visited-regions/jiangxi.geojson',
-  jiangsu: '/geo/visited-regions/jiangsu.geojson',
-  fujian: '/geo/visited-regions/fujian.geojson',
-  singapore: '/geo/visited-regions/singapore.geojson',
-}
+const VISITED_REGIONS_GEOJSON_URL = '/geo/visited-regions.geojson'
 const mapPlaces = computed<MapPlaceGroup[]>(() => {
   const places = new Map<string, MapPlaceGroup>()
 
@@ -127,33 +118,43 @@ const addVisitedRegionHighlights = async (L: any, map: any) => {
     pane.style.pointerEvents = 'none'
   }
 
-  await Promise.all(
-    Array.from(visitedRegionIds).map(async (regionId) => {
-      const geoJsonUrl = VISITED_REGION_GEOJSON_URLS[regionId]
-      if (!geoJsonUrl) return
+  boundaryAbortController?.abort()
+  const controller = new AbortController()
+  boundaryAbortController = controller
 
-      try {
-        const geoJson = await loadGeoJsonBoundary(geoJsonUrl)
-        if (!geoJson || mapInstance !== map) return
+  try {
+    const boundary = await loadGeoJsonBoundary(
+      VISITED_REGIONS_GEOJSON_URL,
+      controller.signal
+    )
+    if (!boundary || controller.signal.aborted || mapInstance !== map) return
 
-        const regionLayer = L.geoJSON(geoJson, {
-          pane: paneName,
-          interactive: false,
-          className: 'visited-region-highlight',
-          style: {
-            color: '#e23456',
-            weight: 1.4,
-            opacity: 0.68,
-            fillColor: '#e23456',
-            fillOpacity: visualStateStore.theme === 'light' ? 0.07 : 0.13,
-          },
-        }).addTo(map)
-        visitedRegionLayers.push(regionLayer)
-      } catch {
-        // Region highlights are decorative; keep the map usable if a boundary API is unavailable.
-      }
-    })
-  )
+    const visibleBoundary = {
+      ...boundary,
+      features: boundary.features.filter((feature) =>
+        visitedRegionIds.has(String(feature.properties?.regionId || ''))
+      ),
+    }
+    const regionLayer = L.geoJSON(visibleBoundary, {
+      pane: paneName,
+      interactive: false,
+      className: 'visited-region-highlight',
+      style: {
+        color: '#e23456',
+        weight: 1.4,
+        opacity: 0.68,
+        fillColor: '#e23456',
+        fillOpacity: visualStateStore.theme === 'light' ? 0.07 : 0.13,
+      },
+    }).addTo(map)
+    visitedRegionLayers.push(regionLayer)
+  } catch (error) {
+    if (!(error instanceof DOMException && error.name === 'AbortError')) {
+      // Region highlights are decorative; keep the map usable if loading fails.
+    }
+  } finally {
+    if (boundaryAbortController === controller) boundaryAbortController = null
+  }
 }
 
 const renderZoomIcon = (selector: string, variant: 'plus' | 'minus') => {
@@ -192,6 +193,8 @@ const refreshMapSize = () => {
 }
 
 const destroyMap = () => {
+  boundaryAbortController?.abort()
+  boundaryAbortController = null
   popupCloseTimers.forEach((timer) => window.clearTimeout(timer))
   popupCloseTimers.clear()
   mapInstance?.remove()
@@ -211,11 +214,8 @@ const handleMapRevealEnd = (event: AnimationEvent) => {
   refreshMapSize()
 }
 
-const initMap = () => {
+const initMap = (L: any) => {
   if (!mapRef.value) return
-
-  const L = (window as any).L
-  if (!L) return
 
   const map = L.map(mapRef.value, {
     center: [25, 105],
@@ -285,16 +285,25 @@ const initMap = () => {
 
     const popupList = document.createElement('div')
     popupList.className = 'map-place-list'
+    popupList.addEventListener('click', (event) => {
+      const clickedElement = event.target
+      if (!(clickedElement instanceof Element)) return
+
+      const button =
+        clickedElement.closest<HTMLButtonElement>('.map-place-option')
+      const vlogId = button?.dataset.vlogId
+      if (!button || !popupList.contains(button) || !vlogId) return
+
+      emit('select', vlogId)
+      marker.closePopup()
+    })
 
     place.targets.forEach((target) => {
       const button = document.createElement('button')
       button.className = 'map-place-option'
       button.type = 'button'
       button.textContent = target.label
-      button.addEventListener('click', () => {
-        emit('select', target.vlogId)
-        marker.closePopup()
-      })
+      button.dataset.vlogId = target.vlogId
       popupList.appendChild(button)
     })
 
@@ -321,30 +330,69 @@ const initMap = () => {
   })
 }
 
-const recreateMap = async () => {
+const recreateMap = async (L: any) => {
   const generation = ++mapGeneration
   destroyMap()
 
   await nextTick()
   if (isUnmounted || generation !== mapGeneration) return
-  initMap()
+  initMap(L)
 }
 
-onMounted(async () => {
-  isUnmounted = false
-  ensureLeafletStyles()
+const canInitializeMap = () => props.active && isNearViewport && !isUnmounted
 
-  try {
-    await loadLeaflet()
-  } catch {
+const initializeMapWhenNeeded = () => {
+  if (!canInitializeMap() || mapInstance || initializationPromise) return
+
+  initializationPromise = (async () => {
+    let L
+    try {
+      L = await loadLeaflet()
+    } catch {
+      return
+    }
+    if (!canInitializeMap()) return
+    await recreateMap(L)
+  })().finally(() => {
+    initializationPromise = null
+  })
+}
+
+const syncMapActivation = () => {
+  if (!props.active) {
+    if (props.mode === 'background') destroyMap()
     return
   }
-  if (isUnmounted) return
-  await recreateMap()
+  initializeMapWhenNeeded()
+}
+
+const { refresh: observeMapVisibility } = useIntersectionActivation(
+  mapContainerRef,
+  ([entry]) => {
+    isNearViewport = entry?.isIntersecting ?? false
+    if (isNearViewport) syncMapActivation()
+  },
+  {
+    autoStart: false,
+    root: getPageScrollElement,
+    rootMargin: '600px 0px',
+    threshold: 0,
+    onUnsupported: () => {
+      isNearViewport = true
+      syncMapActivation()
+    },
+  }
+)
+
+onMounted(() => {
+  isUnmounted = false
+  observeMapVisibility()
 })
 
+watch(() => props.active, syncMapActivation)
 watch([locale, () => props.vlogs], () => {
-  void recreateMap()
+  if (!mapInstance) return
+  void loadLeaflet().then(recreateMap)
 })
 watch(() => visualStateStore.theme, updateMapTheme)
 
@@ -392,7 +440,7 @@ onUnmounted(() => {
   padding-left: 10px;
   border-left: 10px solid #e23456;
   color: @red;
-  font-family: 'cn-custom', monospace;
+  font-family: 'UnboundedSans', monospace;
   font-size: 0.55rem;
   letter-spacing: 3px;
   opacity: 0.8;
@@ -481,7 +529,7 @@ onUnmounted(() => {
   border-color: rgba(226, 52, 86, 0.3) !important;
   background: rgba(13, 9, 18, 0.9) !important;
   color: #e23456 !important;
-  font-family: 'anton', monospace !important;
+  font-family: 'Anton', monospace !important;
   line-height: 1 !important;
 
   &:hover {

@@ -181,6 +181,7 @@ const roadmapItems = computed<string[]>(() => {
           low-power
           mobile-high-resolution
           transparent
+          resource-cache-key="about-passion-logo"
           :interactive="false"
           aria-hidden="true"
         />
@@ -437,6 +438,8 @@ const roadmapItems = computed<string[]>(() => {
                     :alt="nb.name"
                     loading="lazy"
                     decoding="async"
+                    width="160"
+                    height="160"
                   />
                 </div>
               </div>
@@ -846,7 +849,7 @@ const roadmapItems = computed<string[]>(() => {
   color: @red;
 
   span {
-    font-family: 'cn-custom', 'anton', monospace;
+    font-family: 'UnboundedSans', 'Anton', monospace;
     font-size: 15px;
     font-weight: 900;
     letter-spacing: 0.14em;
@@ -873,13 +876,13 @@ const roadmapItems = computed<string[]>(() => {
   }
 
   strong {
-    font-family: 'cn-custom', 'anton', sans-serif;
+    font-family: 'UnboundedSans', 'Anton', sans-serif;
     font-size: 19px;
   }
 }
 
 .passion-color-code {
-  font-family: 'anton', 'cn-custom', sans-serif;
+  font-family: 'Anton', 'UnboundedSans', sans-serif;
   font-size: clamp(90px, 8vw, 132px);
   font-weight: 900;
   letter-spacing: -0.055em;
@@ -913,7 +916,7 @@ const roadmapItems = computed<string[]>(() => {
   gap: 10px;
   min-height: 32px;
   margin: 0;
-  font-family: 'anton', 'alibaba-puhuiti';
+  font-family: 'Anton', 'alibaba-puhuiti';
   font-size: 1rem;
   font-weight: 900;
   line-height: 1;
@@ -954,7 +957,7 @@ const roadmapItems = computed<string[]>(() => {
   color: rgba(255, 255, 255, 0.72);
   background: rgba(226, 52, 86, 0.035);
   cursor: pointer;
-  font-family: 'alibaba-puhuiti', 'anton', sans-serif;
+  font-family: 'alibaba-puhuiti', 'Anton', sans-serif;
   font-size: 0.72rem;
   font-weight: 900;
   letter-spacing: 1px;
@@ -1157,7 +1160,7 @@ const roadmapItems = computed<string[]>(() => {
   border: 1px solid rgba(255, 255, 255, 0.08);
   color: #fff;
   background: rgba(255, 255, 255, 0.018);
-  font-family: 'anton', 'alibaba-puhuiti', sans-serif;
+  font-family: 'Anton', 'alibaba-puhuiti', sans-serif;
   text-align: center;
 
   > span {
@@ -1172,7 +1175,7 @@ const roadmapItems = computed<string[]>(() => {
     box-shadow: 0 0 18px rgba(226, 52, 86, 0.18);
 
     strong {
-      font-family: 'anton', sans-serif;
+      font-family: 'Anton', sans-serif;
       font-size: clamp(42px, 4.8vw, 64px);
       line-height: 0.95;
       letter-spacing: 1px;
@@ -1191,7 +1194,7 @@ const roadmapItems = computed<string[]>(() => {
 }
 
 .log-side-codename {
-  font-family: 'anton', monospace;
+  font-family: 'Anton', monospace;
   font-size: 0.6rem !important;
   box-shadow: 0 0 40px #ef0030;
   letter-spacing: 2px !important;
@@ -1217,7 +1220,7 @@ const roadmapItems = computed<string[]>(() => {
   align-self: center;
   justify-self: center;
   color: rgba(255, 255, 255, 0.88);
-  font-family: 'anton', monospace;
+  font-family: 'Anton', monospace;
   font-size: 1rem;
   letter-spacing: 0.5px;
   text-align: center;
@@ -1247,7 +1250,7 @@ const roadmapItems = computed<string[]>(() => {
 }
 
 .log-date {
-  font-family: 'anton', monospace;
+  font-family: 'Anton', monospace;
   font-size: 0.78rem;
   letter-spacing: 1px;
   color: rgba(255, 255, 255, 0.7);
@@ -1257,7 +1260,7 @@ const roadmapItems = computed<string[]>(() => {
   padding: 3px 8px 5px;
   color: @red;
   border: 1px solid @red;
-  font-family: 'anton', monospace;
+  font-family: 'Anton', monospace;
   font-size: 0.58rem;
   letter-spacing: 1.5px;
   line-height: 1;
@@ -1503,7 +1506,7 @@ const roadmapItems = computed<string[]>(() => {
   align-self: stretch;
   place-items: center;
   color: rgba(226, 52, 86, 0.78);
-  font-family: 'anton', sans-serif;
+  font-family: 'Anton', sans-serif;
   font-size: clamp(30px, 2.8vw, 46px);
   line-height: 1;
   margin-top: -8px;

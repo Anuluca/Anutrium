@@ -29,18 +29,15 @@
             <span class="collection-section__title">{{ group.title }}</span>
           </div>
           <strong class="collection-section__count">
-            <span>{{ group.collections.length }}</span>
+            <span>{{ group.totalCount }}</span>
             <span>ITEMS</span>
           </strong>
         </header>
 
-        <div
-          class="collection-grid"
-          :class="{ 'is-empty': !group.collections.length }"
-        >
+        <div class="collection-grid" :class="{ 'is-empty': !group.totalCount }">
           <div class="collection-grid__pegboard" aria-hidden="true" />
           <template
-            v-for="(collection, collectionIndex) in group.collections"
+            v-for="(collection, collectionIndex) in group.visibleCollections"
             :key="collection.id"
           >
             <MerchCollectionCard
@@ -59,11 +56,17 @@
             />
             <div
               v-if="
-                shouldRenderRowShelf(collectionIndex, group.collections.length)
+                shouldRenderRowShelf(
+                  collectionIndex,
+                  group.visibleCollections.length
+                )
               "
               class="collection-grid__row-shelf"
               :class="
-                getRowShelfClasses(collectionIndex, group.collections.length)
+                getRowShelfClasses(
+                  collectionIndex,
+                  group.visibleCollections.length
+                )
               "
               :style="getRowShelfStyle(collectionIndex)"
               aria-hidden="true"
@@ -72,11 +75,11 @@
               <span class="collection-grid__row-shelf-base" />
             </div>
           </template>
-          <div v-if="!group.collections.length" class="collection-shelf-empty">
+          <div v-if="!group.totalCount" class="collection-shelf-empty">
             <span>EMPTY DISPLAY</span>
           </div>
           <div
-            v-if="!group.collections.length"
+            v-if="!group.totalCount"
             class="collection-grid__shelf"
             aria-hidden="true"
           >
@@ -84,6 +87,12 @@
             <span class="collection-grid__shelf-base" />
           </div>
         </div>
+        <div
+          v-if="group.hasMore"
+          class="collection-load-sentinel"
+          :data-merch-group="group.id"
+          aria-hidden="true"
+        />
       </section>
     </main>
 
@@ -92,7 +101,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
@@ -101,7 +110,11 @@ import MerchCollectionCard, {
   type MerchCollectionCardData,
 } from '@/components/MerchCollectionCard/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
-import { getPageScrollTop, scrollPageTo } from '@/utils/pageScroll'
+import {
+  getPageScrollElement,
+  getPageScrollTop,
+  scrollPageTo,
+} from '@/utils/pageScroll'
 
 type MerchCategoryId = 'pokemon' | 'tokusatsu' | 'other'
 
@@ -152,8 +165,15 @@ const MERCH_RETURN_SCROLL_KEY = 'anutrium:merch-photography:scroll-top'
 const RETURN_TARGET_HIGHLIGHT_DURATION = 1200
 const TARGET_SHELF_DISTANCE_ROW_INDEX = 2
 const SHELF_DISTANCE_ROW_STEP = 2.82
+const COLLECTION_BATCH_SIZE = 8
+const visibleCollectionCounts = reactive<Record<MerchCategoryId, number>>({
+  pokemon: COLLECTION_BATCH_SIZE,
+  tokusatsu: 0,
+  other: 0,
+})
 let returnTargetTimer: number | undefined
 let isPageUnmounted = false
+let collectionObserver: IntersectionObserver | undefined
 
 interface MerchReturnState {
   collectionId: string
@@ -173,12 +193,76 @@ const collections = computed<MerchCollectionCardData[]>(() =>
 )
 
 const collectionGroups = computed(() =>
-  merchCategoryMeta.map((category) => ({
-    id: category.id,
-    title: locale.value === 'en' ? category.title.en : category.title.zhCn,
-    collections: merchPhotos.value[category.id] || [],
-  }))
+  merchCategoryMeta.map((category) => {
+    const groupCollections = merchPhotos.value[category.id] || []
+    const visibleCount = visibleCollectionCounts[category.id]
+
+    return {
+      id: category.id,
+      title: locale.value === 'en' ? category.title.en : category.title.zhCn,
+      totalCount: groupCollections.length,
+      visibleCollections: groupCollections.slice(0, visibleCount),
+      hasMore: visibleCount < groupCollections.length,
+    }
+  })
 )
+
+const revealCollection = (collectionId: string) => {
+  for (const category of merchCategoryMeta) {
+    const groupCollections = merchPhotos.value[category.id] || []
+    const collectionIndex = groupCollections.findIndex(
+      (collection) => collection.id === collectionId
+    )
+    if (collectionIndex < 0) continue
+
+    visibleCollectionCounts[category.id] = Math.max(
+      visibleCollectionCounts[category.id],
+      collectionIndex + 1
+    )
+    return
+  }
+}
+
+const loadNextCollectionBatch = (groupId: MerchCategoryId) => {
+  const totalCount = merchPhotos.value[groupId]?.length || 0
+  visibleCollectionCounts[groupId] = Math.min(
+    totalCount,
+    visibleCollectionCounts[groupId] + COLLECTION_BATCH_SIZE
+  )
+}
+
+const observeCollectionSentinels = () => {
+  collectionObserver?.disconnect()
+  if (!('IntersectionObserver' in window)) {
+    for (const category of merchCategoryMeta) {
+      visibleCollectionCounts[category.id] =
+        merchPhotos.value[category.id]?.length || 0
+    }
+    return
+  }
+
+  collectionObserver = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue
+        const groupId = (entry.target as HTMLElement).dataset.merchGroup as
+          | MerchCategoryId
+          | undefined
+        if (groupId) loadNextCollectionBatch(groupId)
+      }
+      void nextTick(observeCollectionSentinels)
+    },
+    {
+      root: getPageScrollElement(),
+      rootMargin: '0px 0px -10% 0px',
+      threshold: 0,
+    }
+  )
+
+  document
+    .querySelectorAll<HTMLElement>('.collection-load-sentinel')
+    .forEach((element) => collectionObserver?.observe(element))
+}
 
 const getCollectionIndex = (collectionId: string) =>
   String(
@@ -229,6 +313,7 @@ const waitForAnimationFrames = (count: number) =>
   })
 
 const restoreReturnState = async (returnState: MerchReturnState) => {
+  revealCollection(returnState.collectionId)
   activeReturnedCollectionId.value = returnState.collectionId
   await nextTick()
 
@@ -333,6 +418,7 @@ onMounted(() => {
   document
     .querySelectorAll<HTMLElement>('.collection-card--expanding')
     .forEach((element) => element.remove())
+  void nextTick(observeCollectionSentinels)
 
   const returnState = consumeReturnState()
   if (!returnState) return
@@ -344,12 +430,14 @@ onMounted(() => {
 onUnmounted(() => {
   isPageUnmounted = true
   if (returnTargetTimer) window.clearTimeout(returnTargetTimer)
+  collectionObserver?.disconnect()
+  collectionObserver = undefined
 })
 </script>
 
 <style lang="less" scoped>
 @red: #e23456;
-@mono: 'cn-custom', 'Courier New', monospace;
+@mono: 'UnboundedSans', 'Courier New', monospace;
 @cjk: 'alibaba-puhuiti', sans-serif;
 
 .merch-page {
@@ -405,6 +493,8 @@ onUnmounted(() => {
   position: relative;
   padding: 0;
   perspective: 1200px;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 980px;
   isolation: isolate;
 
   & + & {

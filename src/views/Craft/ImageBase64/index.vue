@@ -23,7 +23,13 @@
           :class="{ 'has-image': dataUrl }"
         >
           <template v-if="dataUrl">
-            <img :src="dataUrl" alt="Preview" class="preview-img" />
+            <img
+              :src="dataUrl"
+              alt="Preview"
+              class="preview-img"
+              loading="eager"
+              decoding="async"
+            />
             <div class="preview-overlay">
               <span>[ 点击或拖拽更换图片 ]</span>
             </div>
@@ -188,7 +194,7 @@ const formatSize = (size: number) => {
 
 .image64-tool {
   color: @text;
-  font-family: 'cn-custom', system-ui, sans-serif;
+  font-family: 'UnboundedSans', system-ui, sans-serif;
 }
 
 .upload-stage,
