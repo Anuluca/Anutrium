@@ -273,53 +273,54 @@ watch(
     left: 0;
     z-index: 99;
     display: block;
-    height: 29PX;
+    height: 29px;
+    zoom: 2;
     backdrop-filter: blur(4px);
     background: linear-gradient(
       to top,
-      var(--mobile-screen-frame-color) 0 6PX,
-      transparent 6PX 8PX,
+      var(--mobile-screen-frame-color) 0 6px,
+      transparent 6px 8px,
       color-mix(
           in srgb,
           var(--mobile-screen-frame-color) 82%,
           transparent
         )
-        8PX 12PX,
-      transparent 12PX 14PX,
+        8px 12px,
+      transparent 12px 14px,
       color-mix(
           in srgb,
           var(--mobile-screen-frame-color) 66%,
           transparent
         )
-        14PX 17PX,
-      transparent 17PX 19PX,
+        14px 17px,
+      transparent 17px 19px,
       color-mix(
           in srgb,
           var(--mobile-screen-frame-color) 50%,
           transparent
         )
-        19PX 21PX,
-      transparent 21PX 23PX,
+        19px 21px,
+      transparent 21px 23px,
       color-mix(
           in srgb,
           var(--mobile-screen-frame-color) 36%,
           transparent
         )
-        23PX 24PX,
-      transparent 24PX 26PX,
+        23px 24px,
+      transparent 24px 26px,
       color-mix(
           in srgb,
           var(--mobile-screen-frame-color) 22%,
           transparent
         )
-        26PX 26.75PX,
-      transparent 26.75PX 28.75PX,
+        26px 26.75px,
+      transparent 26.75px 28.75px,
       color-mix(
           in srgb,
           var(--mobile-screen-frame-color) 12%,
           transparent
         )
-        28.75PX 29.25PX
+        28.75px 29.25px
     );
     pointer-events: none;
   }
