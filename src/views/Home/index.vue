@@ -438,15 +438,17 @@ import MarqueeShowcase from '@/components/MarqueeShowcase/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
 import RandomTypedText from '@/components/RandomTypedText/index.vue'
 import ScrollDownHint from '@/components/ScrollDownHint/index.vue'
-import ToolCard from '@/components/ToolCard/index.vue'
 import ThemeActionButton from '@/components/ThemeActionButton/index.vue'
+import ToolCard from '@/components/ToolCard/index.vue'
 import { RadiantText } from '@/components/ui/radiant-text'
 import { SparklesText } from '@/components/ui/sparkles-text'
+import { homeFlanerieJourneyCardConfig } from '@/config/homeFlanerieJourneyCards'
 import { visualState } from '@/stores'
 import { trackProjectClick, trackToolClick } from '@/utils/analytics'
 import {
   getCardMobileThumbnailUrl,
   getCardThumbnailUrl,
+  getHomeThumbnailUrl,
 } from '@/utils/imageVariant'
 
 import type { ArchiveWork } from '@/types/archive'
@@ -595,6 +597,48 @@ const archiveProjectData = computed(() => {
 
   return { projects, workById }
 })
+const homeImagePreloads = new Set<HTMLImageElement>()
+const getHomeImagePreloadUrls = () => {
+  const useMobileVariant = window.matchMedia('(max-width: 768px)').matches
+  const getCardUrl = useMobileVariant
+    ? getCardMobileThumbnailUrl
+    : getCardThumbnailUrl
+  const homeJourneyIds = new Set<string>(
+    homeFlanerieJourneyCardConfig.map(({ id }) => id)
+  )
+  const urls = [
+    ...newsItems.value.map((item) =>
+      useMobileVariant ? item.mobileImg || item.img : item.img
+    ),
+    ...aboutGalleryItems.value.map((item) => getHomeThumbnailUrl(item.src)),
+    ...archiveProjectData.value.projects.map((project) =>
+      getCardUrl(project.img)
+    ),
+    ...flanerieVlogs.value
+      .filter((journey) => homeJourneyIds.has(journey.id))
+      .map((journey) => getCardUrl(journey.img)),
+    ...homeCraftTools.value.flatMap((tool) => (tool.img ? [tool.img] : [])),
+  ]
+
+  return Array.from(new Set(urls.filter(Boolean)))
+}
+const preloadHomeImages = () => {
+  getHomeImagePreloadUrls().forEach((url) => {
+    const image = new Image()
+    const release = () => {
+      image.onload = null
+      image.onerror = null
+      homeImagePreloads.delete(image)
+    }
+
+    image.decoding = 'async'
+    image.setAttribute('fetchpriority', 'low')
+    image.onload = release
+    image.onerror = release
+    homeImagePreloads.add(image)
+    image.src = url
+  })
+}
 const selectedArchiveWork = ref<ArchiveWork | null>(null)
 const openArchiveProjectDetail = (project: ArchiveProjectMarqueeItem) => {
   const work = archiveProjectData.value.workById.get(project.id)
@@ -2110,6 +2154,7 @@ onBeforeRouteLeave(() => {
 })
 
 onMounted(async () => {
+  preloadHomeImages()
   isPageVisible = document.visibilityState !== 'hidden'
   reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
   heroMotionQuery = window.matchMedia('(hover: hover) and (pointer: fine)')
@@ -2139,6 +2184,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  homeImagePreloads.clear()
   queuedHomePageTransitionIndex = null
   heroInitialEntranceObserver?.disconnect()
   heroInitialEntranceObserver = null

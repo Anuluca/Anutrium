@@ -60,7 +60,6 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-
 import type { RouteLocationRaw } from 'vue-router'
 
 const props = withDefaults(

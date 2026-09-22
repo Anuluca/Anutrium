@@ -271,7 +271,10 @@ watch(
     inset: 0;
     z-index: 20000;
     display: block;
-    border: var(--mobile-screen-frame-size) solid #000;
+    border-color: var(--mobile-screen-frame-color);
+    border-style: solid;
+    border-width: var(--mobile-screen-frame-size)
+      var(--mobile-screen-frame-inline-size);
     box-sizing: border-box;
     box-shadow: inset 0 0 20px rgb(0 0 0 / 40%);
     pointer-events: none;

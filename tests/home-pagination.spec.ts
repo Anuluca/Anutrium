@@ -57,13 +57,10 @@ test('mobile home paging accepts a short slow swipe', async ({
   })
 
   await dispatchSlowTouchSwipe(page, 520, 400)
-  await expect(page.locator('#home-section-about .home-about-copy')).toHaveCount(
-    0
-  )
   await waitForActivePage(page, 'about')
-  await expect(page.locator('#home-section-about .home-about-copy')).toHaveCount(
-    1
-  )
+  await expect(
+    page.locator('#home-section-about .home-about-copy')
+  ).toHaveCount(1)
   await expect(page.locator('.home-page-slide.is-page-entering')).toHaveCount(0)
   await expect(
     page.locator('#home-section-about .dome-gallery__auto-rotation')
@@ -73,14 +70,32 @@ test('mobile home paging accepts a short slow swipe', async ({
   await expect(page.locator('#home-section-about').locator('..')).toHaveClass(
     /is-page-content-fading/
   )
-  await expect(
-    page.locator('#home-section-archive .home-archive-copy')
-  ).toHaveCount(0)
   await waitForActivePage(page, 'archive')
   await expect(
     page.locator('#home-section-archive .home-archive-copy')
   ).toHaveCount(1)
   await expect(page.locator('.home-page-slide.is-page-entering')).toHaveCount(0)
+  const archiveImages = page.locator(
+    '#home-section-archive .archive-project-marquee img'
+  )
+  await expect(archiveImages).toHaveCount(20)
+  expect(
+    await archiveImages.evaluateAll((images) =>
+      images.every((image) => image.getAttribute('loading') === 'eager')
+    )
+  ).toBe(true)
+  await expect
+    .poll(() =>
+      archiveImages.evaluateAll((images) =>
+        images.every(
+          (image) =>
+            image.complete &&
+            image.currentSrc.length > 0 &&
+            image.naturalWidth > 0
+        )
+      )
+    )
+    .toBe(true)
 
   await dispatchSlowTouchSwipe(page, 400, 520)
   await waitForActivePage(page, 'about')
@@ -2045,16 +2060,35 @@ test('page progress component follows ordinary document scrolling', async ({
     const progress = document.querySelector<HTMLElement>(
       '.page-scroll-progress'
     )!
+    const rootStyle = getComputedStyle(document.documentElement)
+    const frameBlockSize =
+      Number.parseFloat(
+        rootStyle.getPropertyValue('--mobile-screen-frame-size')
+      ) || 0
+    const frameInlineSize =
+      Number.parseFloat(
+        rootStyle.getPropertyValue('--mobile-screen-frame-inline-size')
+      ) || 0
+    const menuBounds = menu.getBoundingClientRect()
     const progressBounds = progress.getBoundingClientRect()
 
     return {
-      bottomDelta: Math.abs(progressBounds.bottom - window.innerHeight),
-      topDelta: Math.abs(
-        progressBounds.top - menu.getBoundingClientRect().bottom
+      menuTopDelta: Math.abs(menuBounds.top - frameBlockSize),
+      menuLeftDelta: Math.abs(menuBounds.left - frameInlineSize),
+      menuRightDelta: Math.abs(
+        menuBounds.right - (window.innerWidth - frameInlineSize)
+      ),
+      progressTopDelta: Math.abs(progressBounds.top - menuBounds.bottom),
+      progressRightDelta: Math.abs(
+        progressBounds.right - (window.innerWidth - frameInlineSize)
+      ),
+      progressBottomDelta: Math.abs(
+        progressBounds.bottom - (window.innerHeight - frameBlockSize)
       ),
     }
   })
 
-  expect(geometry.topDelta).toBeLessThanOrEqual(1)
-  expect(geometry.bottomDelta).toBeLessThanOrEqual(1)
+  for (const delta of Object.values(geometry)) {
+    expect(delta).toBeLessThanOrEqual(1)
+  }
 })

@@ -925,12 +925,20 @@ body .el-message-box {
 
 @media screen and (max-aspect-ratio: @ratio-threshold),
   screen and (max-width: 1024px) and (hover: none) and (pointer: coarse) {
-  :root {
+  html:root {
     --mobile-screen-frame-size: calc(8 * 1px);
+    --mobile-screen-frame-inline-size: calc(
+      var(--mobile-screen-frame-size) * 2
+    );
+    --footer-com-mobile-inline-inset: calc(
+      30px + var(--mobile-screen-frame-inline-size) -
+        var(--mobile-screen-frame-size)
+    );
   }
 
   html {
-    padding: var(--mobile-screen-frame-size);
+    padding: var(--mobile-screen-frame-size)
+      var(--mobile-screen-frame-inline-size);
     box-sizing: border-box;
   }
 

@@ -42,8 +42,8 @@ defineExpose({ setProgress })
     var(--page-scroll-progress-top, 3.37rem) +
       var(--page-scroll-progress-offset, 0px)
   );
-  right: 0;
-  bottom: 0;
+  right: var(--mobile-screen-frame-inline-size, 0px);
+  bottom: var(--mobile-screen-frame-size, 0px);
   z-index: 1200;
   width: 4px;
   overflow: hidden;

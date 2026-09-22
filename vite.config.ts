@@ -70,7 +70,7 @@ export default defineConfig({
           },
           {
             urlPattern:
-              /^https:\/\/assets\.anuluca\.com\/.*[?&]image=(?:card-thumb|home-thumb)(?:&|$)/,
+              /^https:\/\/assets\.anuluca\.com\/.*[?&]image=(?:card-thumb|card-mobile|home-thumb)(?:&|$)/,
             handler: 'CacheFirst',
             options: {
               cacheName: 'r2-thumbnails',

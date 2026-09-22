@@ -14,7 +14,7 @@
         class="work-card-image"
         :src="cardImage"
         :alt="work.title"
-        loading="lazy"
+        :loading="imageLoading"
         decoding="async"
         width="768"
         height="576"
@@ -54,11 +54,19 @@ import {
 
 import type { WorkCardItem } from '@/types/archive'
 
-const props = defineProps<{
-  work: WorkCardItem
-  displayMode?: 'always-visible'
-  background?: 'grid'
-}>()
+const props = withDefaults(
+  defineProps<{
+    work: WorkCardItem
+    displayMode?: 'always-visible'
+    background?: 'grid'
+    imageLoading?: 'eager' | 'lazy'
+  }>(),
+  {
+    displayMode: undefined,
+    background: undefined,
+    imageLoading: 'lazy',
+  }
+)
 
 const cardImage = computed(() => getCardThumbnailUrl(props.work.img ?? ''))
 const cardMobileImage = computed(() =>

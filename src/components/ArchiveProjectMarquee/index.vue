@@ -30,6 +30,7 @@
               v-if="copyIndex === 1"
               class="archive-project-marquee__card"
               :work="project"
+              image-loading="eager"
               @select="selectProject"
             />
             <div
@@ -45,7 +46,7 @@
                 <img
                   :src="getCardThumbnailUrl(project.img)"
                   alt=""
-                  loading="lazy"
+                  loading="eager"
                   decoding="async"
                   width="768"
                   height="576"

@@ -53,9 +53,9 @@
     align-items: center;
     position: fixed;
     z-index: 100;
-    top: 0;
-    left: 0;
-    right: 0;
+    top: var(--mobile-screen-frame-size, 0px);
+    left: var(--mobile-screen-frame-inline-size, 0px);
+    right: var(--mobile-screen-frame-inline-size, 0px);
     justify-content: space-between;
     background-color: transparent;
     backface-visibility: hidden !important;
@@ -550,8 +550,8 @@
 
   .mobile-menu-icon {
     position: fixed;
-    right: 0.66667rem;
-    top: 1rem;
+    right: calc(0.66667rem + var(--mobile-screen-frame-inline-size, 0px));
+    top: calc(1rem + var(--mobile-screen-frame-size, 0px));
     width: 2.33333rem;
     height: 2.33333rem;
     border-radius: 0.16667rem;
@@ -1100,7 +1100,10 @@
 
     .mobile-menu-icon {
       display: flex;
-      top: max(0.66667rem, env(safe-area-inset-top));
+      top: calc(
+        max(0.66667rem, env(safe-area-inset-top)) +
+          var(--mobile-screen-frame-size, 0px)
+      );
     }
   }
 }
