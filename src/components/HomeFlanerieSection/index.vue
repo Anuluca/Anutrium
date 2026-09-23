@@ -49,16 +49,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, defineAsyncComponent } from 'vue'
 import { useMediaQuery } from '@vueuse/core'
 
 import BounceCards from '@/components/BounceCards/index.vue'
 import ThemeActionButton from '@/components/ThemeActionButton/index.vue'
-import TravelMap from '@/components/TravelMap/index.vue'
 import VlogCard from '@/components/VlogCard/index.vue'
 import { homeFlanerieJourneyCardConfig } from '@/config/homeFlanerieJourneyCards'
 
 import type { JourneyItem } from '@/types/flanerie'
+
+const TravelMap = defineAsyncComponent(
+  () => import('@/components/TravelMap/index.vue')
+)
 
 const props = withDefaults(
   defineProps<{
@@ -181,7 +184,8 @@ const journeyTransforms = computed(() =>
 
 .home-flanerie-more {
   align-self: flex-start;
-  margin-top: clamp(1rem, 2.2dvh, 1.5rem);
+  margin-top: clamp(0.5rem, 1.1dvh, 0.75rem);
+  margin-bottom: clamp(0.5rem, 1.1dvh, 0.75rem);
   opacity: 0;
 }
 

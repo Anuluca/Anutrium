@@ -95,7 +95,6 @@ const scrollToTop = () => {
     box-shadow 0.25s ease, transform 0.25s ease, right 0.35s ease,
     bottom 0.25s ease;
 
-  &:hover,
   &:focus-visible {
     color: #fff;
     box-shadow: 0 0 18px rgba(203, 15, 53, 0.457);
@@ -103,6 +102,18 @@ const scrollToTop = () => {
 
     .button-arrow.no-rem {
       transform: translate(-50%, -2px) rotate(45deg);
+    }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      color: #fff;
+      box-shadow: 0 0 18px rgba(203, 15, 53, 0.457);
+      transform: translateY(-2px);
+
+      .button-arrow.no-rem {
+        transform: translate(-50%, -2px) rotate(45deg);
+      }
     }
   }
 

@@ -1,9 +1,12 @@
 interface Env {
   STEAM_API_KEY: string
+  GITHUB_TOKEN: string
   STEAM_ID: string
   STEAM_VANITY: string
+  GITHUB_USERNAME: string
   ALLOWED_ORIGINS: string
   CACHE_TTL_SECONDS: string
+  GITHUB_CACHE_TTL_SECONDS: string
 }
 
 interface ExecutionContext {
@@ -38,8 +41,43 @@ interface SteamLevelPayload {
 }
 
 const STEAM_API_ORIGIN = 'https://api.steampowered.com'
+const GITHUB_GRAPHQL_URL = 'https://api.github.com/graphql'
 const PROFILE_CACHE_VERSION = '2'
+const GITHUB_CONTRIBUTIONS_CACHE_VERSION = '1'
 const RECENT_GAME_LIMIT = 3
+
+interface GitHubContributionDay {
+  color: string
+  contributionCount: number
+  contributionLevel:
+    | 'NONE'
+    | 'FIRST_QUARTILE'
+    | 'SECOND_QUARTILE'
+    | 'THIRD_QUARTILE'
+    | 'FOURTH_QUARTILE'
+  date: string
+  weekday: number
+}
+
+interface GitHubContributionWeek {
+  contributionDays: GitHubContributionDay[]
+  firstDay: string
+}
+
+interface GitHubContributionsPayload {
+  data?: {
+    user?: {
+      contributionsCollection: {
+        contributionCalendar: {
+          totalContributions: number
+          weeks: GitHubContributionWeek[]
+        }
+      }
+      login: string
+    } | null
+  }
+  errors?: Array<{ message?: string }>
+}
 
 const fetchWithTimeout = async (
   input: RequestInfo | URL,
@@ -241,6 +279,88 @@ const fetchSteamProfile = async (env: Env) => {
   }
 }
 
+const fetchGitHubContributions = async (env: Env) => {
+  const to = new Date()
+  const from = new Date(to)
+  from.setUTCFullYear(from.getUTCFullYear() - 1)
+
+  const response = await fetchWithTimeout(
+    GITHUB_GRAPHQL_URL,
+    {
+      method: 'POST',
+      headers: {
+        Accept: 'application/vnd.github+json',
+        Authorization: `Bearer ${env.GITHUB_TOKEN}`,
+        'Content-Type': 'application/json',
+        'User-Agent': 'Anutrium-GitHub-Contributions',
+      },
+      body: JSON.stringify({
+        query: `
+          query GitHubContributionCalendar(
+            $username: String!
+            $from: DateTime!
+            $to: DateTime!
+          ) {
+            user(login: $username) {
+              login
+              contributionsCollection(from: $from, to: $to) {
+                contributionCalendar {
+                  totalContributions
+                  weeks {
+                    firstDay
+                    contributionDays {
+                      color
+                      contributionCount
+                      contributionLevel
+                      date
+                      weekday
+                    }
+                  }
+                }
+              }
+            }
+          }
+        `,
+        variables: {
+          username: env.GITHUB_USERNAME,
+          from: from.toISOString(),
+          to: to.toISOString(),
+        },
+      }),
+    },
+    10_000
+  )
+
+  const payload = (await response.json()) as GitHubContributionsPayload
+  if (!response.ok || payload.errors?.length) {
+    throw new Error(
+      payload.errors?.[0]?.message ||
+        `GitHub GraphQL returned ${response.status}`
+    )
+  }
+
+  const user = payload.data?.user
+  if (!user) throw new Error('GitHub user was not found')
+
+  const calendar = user.contributionsCollection.contributionCalendar
+  return {
+    username: user.login,
+    from: from.toISOString(),
+    to: to.toISOString(),
+    totalContributions: calendar.totalContributions,
+    weeks: calendar.weeks.map((week) => ({
+      firstDay: week.firstDay,
+      days: week.contributionDays.map((day) => ({
+        contributionCount: day.contributionCount,
+        contributionLevel: day.contributionLevel,
+        date: day.date,
+        weekday: day.weekday,
+      })),
+    })),
+    updatedAt: new Date().toISOString(),
+  }
+}
+
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext) {
     const url = new URL(request.url)
@@ -272,7 +392,10 @@ export default {
       return withCors(jsonResponse({ ok: true }), origin, allowedOrigins)
     }
 
-    if (url.pathname !== '/profile') {
+    if (
+      url.pathname !== '/profile' &&
+      url.pathname !== '/github/contributions'
+    ) {
       return withCors(
         jsonResponse({ error: 'Not found' }, 404),
         origin,
@@ -280,8 +403,15 @@ export default {
       )
     }
 
-    const cacheUrl = new URL('/profile', url.origin)
-    cacheUrl.searchParams.set('v', PROFILE_CACHE_VERSION)
+    const isGitHubContributionsRequest =
+      url.pathname === '/github/contributions'
+    const cacheUrl = new URL(url.pathname, url.origin)
+    cacheUrl.searchParams.set(
+      'v',
+      isGitHubContributionsRequest
+        ? GITHUB_CONTRIBUTIONS_CACHE_VERSION
+        : PROFILE_CACHE_VERSION
+    )
     const cacheKey = new Request(cacheUrl, { method: 'GET' })
     const cache = (caches as CacheStorage & { default: Cache }).default
     const cachedResponse = await cache.match(cacheKey)
@@ -291,10 +421,17 @@ export default {
     }
 
     try {
-      const body = await fetchSteamProfile(env)
+      const body = isGitHubContributionsRequest
+        ? await fetchGitHubContributions(env)
+        : await fetchSteamProfile(env)
       const cacheTtl = Math.max(
         60,
-        Number.parseInt(env.CACHE_TTL_SECONDS, 10) || 900
+        Number.parseInt(
+          isGitHubContributionsRequest
+            ? env.GITHUB_CACHE_TTL_SECONDS
+            : env.CACHE_TTL_SECONDS,
+          10
+        ) || (isGitHubContributionsRequest ? 21_600 : 900)
       )
       const response = jsonResponse(body, 200, {
         'Cache-Control': `public, max-age=60, s-maxage=${cacheTtl}`,
@@ -309,6 +446,8 @@ export default {
             error:
               error instanceof Error
                 ? error.message
+                : isGitHubContributionsRequest
+                ? 'GitHub contributions request failed'
                 : 'Steam profile request failed',
           },
           502,

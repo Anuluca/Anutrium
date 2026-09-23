@@ -232,12 +232,7 @@
                   />
                   <span>{{ aboutDescription.after }}</span>
                 </p>
-                <p class="home-about-highlight">
-                  {{ aboutHighlight.body
-                  }}<span class="home-about-highlight__source">{{
-                    aboutHighlight.source
-                  }}</span>
-                </p>
+                <div class="home-about-action-spacer" aria-hidden="true" />
                 <ThemeActionButton
                   class="home-about-more"
                   color="#e23456"
@@ -279,7 +274,12 @@
               @select="openFlanerieDetail"
             />
             <div v-else-if="page.id === 'craft'" class="home-craft-copy">
-              <p class="home-craft-subtitle">所想即所做</p>
+              <div class="home-craft-heading">
+                <p class="home-craft-subtitle">想到既做到。</p>
+                <p class="home-craft-description">
+                  借助Agent开发的一些常用工具
+                </p>
+              </div>
               <div class="home-craft-grid">
                 <ToolCard
                   v-for="(tool, toolIndex) in homeCraftTools"
@@ -443,6 +443,7 @@ import ToolCard from '@/components/ToolCard/index.vue'
 import { RadiantText } from '@/components/ui/radiant-text'
 import { SparklesText } from '@/components/ui/sparkles-text'
 import { homeFlanerieJourneyCardConfig } from '@/config/homeFlanerieJourneyCards'
+import { HOME_RETURN_TO_PASSION_EVENT } from '@/config/homeNavigation'
 import { visualState } from '@/stores'
 import { trackProjectClick, trackToolClick } from '@/utils/analytics'
 import {
@@ -459,6 +460,8 @@ import 'swiper/css'
 const WorkDetailModal = defineAsyncComponent(
   () => import('@/components/WorkDetailModal/index.vue')
 )
+const loadHomeFlanerieSection = () =>
+  import('@/components/HomeFlanerieSection/index.vue')
 
 interface NewsItem {
   id: number
@@ -506,9 +509,7 @@ const headerBottom = inject<ComputedRef<number>>(
   'site-header-bottom',
   computed(() => 0)
 )
-const HomeFlanerieSection = defineAsyncComponent(
-  () => import('@/components/HomeFlanerieSection/index.vue')
-)
+const HomeFlanerieSection = defineAsyncComponent(loadHomeFlanerieSection)
 const newsItems = computed<NewsItem[]>(() =>
   (tm('home.dynamic.recommend') as NewsItem[]).map((item) => ({
     ...item,
@@ -559,17 +560,6 @@ const aboutDescription = computed(() => {
     before,
     after: after.join('—'),
   }
-})
-const aboutHighlight = computed(() => {
-  const text = t('home.dynamic.highlight')
-  const source = text.match(/(\s*(?:—+|-{2,})\s*[^—-]+)$/u)
-
-  return source
-    ? {
-        body: text.slice(0, source.index),
-        source: source[1],
-      }
-    : { body: text, source: '' }
 })
 const archiveProjectData = computed(() => {
   const projects: ArchiveProjectMarqueeItem[] = []
@@ -761,6 +751,9 @@ let pendingHeroViewportResize = false
 let reducedMotionQuery: MediaQueryList | null = null
 let heroMotionQuery: MediaQueryList | null = null
 let touchInputQuery: MediaQueryList | null = null
+let homeFlaneriePreloadIdleHandle: number | null = null
+let homeFlaneriePreloadTimer: number | null = null
+let hasHomeFlaneriePreloadStarted = false
 let lastMotionSampleTime = 0
 let isHeroMotionListenerActive = false
 let isHeroMotionEnabled = false
@@ -827,6 +820,45 @@ const HERO_EXIT_FADE_DELAY_PROGRESS = 0.35
 const HERO_EXIT_FADE_DURATION_PROGRESS = 0.6
 const HERO_HEAVY_CONTENT_UNMOUNT_PROGRESS =
   HERO_EXIT_FADE_DELAY_PROGRESS + HERO_EXIT_FADE_DURATION_PROGRESS
+
+const scheduleHomeFlaneriePreload = () => {
+  if (
+    hasHomeFlaneriePreloadStarted ||
+    homeFlaneriePreloadIdleHandle !== null ||
+    homeFlaneriePreloadTimer !== null
+  ) {
+    return
+  }
+
+  const preload = () => {
+    homeFlaneriePreloadIdleHandle = null
+    homeFlaneriePreloadTimer = null
+    hasHomeFlaneriePreloadStarted = true
+    void loadHomeFlanerieSection().catch(() => {
+      hasHomeFlaneriePreloadStarted = false
+    })
+  }
+
+  if (window.requestIdleCallback) {
+    homeFlaneriePreloadIdleHandle = window.requestIdleCallback(preload, {
+      timeout: 2500,
+    })
+    return
+  }
+
+  homeFlaneriePreloadTimer = window.setTimeout(preload, 1200)
+}
+
+const cancelHomeFlaneriePreload = () => {
+  if (homeFlaneriePreloadIdleHandle !== null) {
+    window.cancelIdleCallback?.(homeFlaneriePreloadIdleHandle)
+    homeFlaneriePreloadIdleHandle = null
+  }
+  if (homeFlaneriePreloadTimer !== null) {
+    window.clearTimeout(homeFlaneriePreloadTimer)
+    homeFlaneriePreloadTimer = null
+  }
+}
 
 const areHeroEffectsPaused = computed(
   () =>
@@ -2045,6 +2077,8 @@ const goToHomePage = (index: number) => {
   requestHomePageTransition(index)
 }
 
+const returnToPassion = () => goToHomePage(0)
+
 const goToNextHomePage = () => {
   const nextIndex = Math.min(
     activeHomePageIndex.value + 1,
@@ -2137,8 +2171,10 @@ watch(
 )
 watch(siteEntryActive, () => {
   syncHeroMotionListener()
-  if (siteEntryActive.value) startAuto()
-  else pauseAuto()
+  if (siteEntryActive.value) {
+    startAuto()
+    scheduleHomeFlaneriePreload()
+  } else pauseAuto()
 })
 watch(headerBottom, () => {
   if (isHeroContentInactive.value) scheduleHeroLayoutMeasure()
@@ -2168,9 +2204,13 @@ onMounted(async () => {
   if (heroContentElement.value) {
     heroContentResizeObserver.observe(heroContentElement.value)
   }
-  if (siteEntryActive.value) startAuto()
+  if (siteEntryActive.value) {
+    startAuto()
+    scheduleHomeFlaneriePreload()
+  }
   window.addEventListener('resize', handleHeroResize, { passive: true })
   window.addEventListener('blur', resetHeroSloganMotion)
+  window.addEventListener(HOME_RETURN_TO_PASSION_EVENT, returnToPassion)
   window.addEventListener('wheel', handleHomeWheel, {
     capture: true,
     passive: false,
@@ -2184,6 +2224,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  cancelHomeFlaneriePreload()
   homeImagePreloads.clear()
   queuedHomePageTransitionIndex = null
   heroInitialEntranceObserver?.disconnect()
@@ -2213,6 +2254,7 @@ onUnmounted(() => {
   heroSection.value?.removeEventListener('mousemove', handleHeroMouseMove)
   window.removeEventListener('resize', handleHeroResize)
   window.removeEventListener('blur', resetHeroSloganMotion)
+  window.removeEventListener(HOME_RETURN_TO_PASSION_EVENT, returnToPassion)
   window.removeEventListener('wheel', handleHomeWheel, true)
   setTouchPagingListenerActive(false)
   if (heroLayoutMeasureRafId !== null) {

@@ -1,40 +1,42 @@
 <template>
-  <Transition
-    appear
-    name="mobile-experience-alert"
-    :duration="transitionDuration"
-    @after-leave="emit('closed')"
-  >
-    <div
-      v-if="visible"
-      class="mobile-experience-alert no-rem"
-      :class="{ 'is-en': locale === 'en' }"
+  <Teleport to="body">
+    <Transition
+      appear
+      name="mobile-experience-alert"
+      :duration="transitionDuration"
+      @after-leave="emit('closed')"
     >
-      <div class="el-alert el-alert--error" role="alert">
-        <div class="el-alert__message">
-          <span class="el-alert__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="10" fill="currentColor" />
-              <path d="M11 10h2v7h-2zm0-4h2v2h-2z" fill="#0f0d11" />
-            </svg>
-          </span>
-          <div class="el-alert__content">
-            <span class="el-alert__title">
-              <slot>{{ displayMessage }}</slot>
+      <div
+        v-if="visible"
+        class="mobile-experience-alert no-rem"
+        :class="{ 'is-en': locale === 'en' }"
+      >
+        <div class="el-alert el-alert--error" role="alert">
+          <div class="el-alert__message">
+            <span class="el-alert__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" fill="currentColor" />
+                <path d="M11 10h2v7h-2zm0-4h2v2h-2z" fill="#0f0d11" />
+              </svg>
             </span>
+            <div class="el-alert__content">
+              <span class="el-alert__title">
+                <slot>{{ displayMessage }}</slot>
+              </span>
+            </div>
           </div>
+          <button
+            v-if="closable"
+            class="el-alert__close-btn is-customed"
+            type="button"
+            @click="close"
+          >
+            <slot name="action">{{ displayCloseText }}</slot>
+          </button>
         </div>
-        <button
-          v-if="closable"
-          class="el-alert__close-btn is-customed"
-          type="button"
-          @click="close"
-        >
-          <slot name="action">{{ displayCloseText }}</slot>
-        </button>
       </div>
-    </div>
-  </Transition>
+    </Transition>
+  </Teleport>
 </template>
 
 <script setup lang="ts">

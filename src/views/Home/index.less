@@ -89,6 +89,10 @@
   .home-craft-subtitle {
     animation: homeAboutTextEnter 0.7s ease-out 0.42s both;
   }
+
+  .home-craft-description {
+    animation: homeCraftDescriptionEnter 0.5s ease-out 0.82s both;
+  }
 }
 
 .home-page-swiper.is-page-forward {
@@ -250,7 +254,6 @@
     transform: translate3d(var(--home-indicator-inset), 0, 0) perspective(720px)
       rotateY(var(--home-indicator-rotate-y)) scale(0.96) scaleX(1.45);
     transition-delay: 0s;
-    pointer-events: auto;
   }
 
   &--left {
@@ -274,6 +277,7 @@
 
     .home-page-indicator__button {
       flex-direction: row-reverse;
+      margin-left: auto;
     }
   }
 }
@@ -384,7 +388,7 @@
   align-items: center;
   justify-content: flex-start;
   gap: 0;
-  width: 100%;
+  width: fit-content;
   height: 100%;
   margin: 0;
   padding: 0;
@@ -395,6 +399,7 @@
   text-align: inherit;
   background: transparent;
   cursor: pointer;
+  pointer-events: auto;
   transition: gap var(--home-indicator-motion-duration)
     cubic-bezier(0.2, 0.8, 0.2, 1);
 
@@ -580,8 +585,7 @@
 }
 
 .home-about-intro,
-.home-about-description,
-.home-about-highlight {
+.home-about-description {
   margin: 0;
   color: #fff;
 }
@@ -595,6 +599,7 @@
   font-weight: 900;
   line-height: 1.2;
   text-shadow: 0 0.08em 0.24em rgba(0, 0, 0, 0.72);
+  translate: 0.24em 0;
   pointer-events: auto;
 }
 
@@ -617,13 +622,10 @@
   text-decoration: none;
 }
 
-.home-about-highlight {
+.home-about-action-spacer {
   margin-top: clamp(5.5rem, 14dvh, 11rem);
   font-size: clamp(0.7rem, 0.95vw, 0.9rem);
-  font-style: italic;
-  font-weight: 400;
-  line-height: 1.6;
-  opacity: 0.35;
+  height: 1.6em;
 }
 
 .home-about-more {
@@ -673,13 +675,28 @@
   align-items: center;
 }
 
-.home-craft-subtitle {
+.home-craft-heading {
   flex: 0 0 auto;
   margin: 0 0 clamp(1.25rem, 2.5dvh, 2rem);
+  text-align: center;
+}
+
+.home-craft-subtitle {
+  margin: 0;
   color: #fff;
   font-family: 'alibaba-puhuiti', sans-serif;
   text-align: center;
   white-space: nowrap;
+}
+
+.home-craft-description {
+  margin: clamp(0.4rem, 0.8dvh, 0.65rem) 0 0;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: 'alibaba-puhuiti', sans-serif;
+  font-size: clamp(0.72rem, 0.9vw, 0.88rem);
+  font-weight: 400;
+  line-height: 1.5;
+  opacity: 0;
 }
 
 .home-craft-grid {
@@ -701,6 +718,12 @@
 
 .home-craft-more {
   margin-top: clamp(1rem, 2.2dvh, 1.5rem);
+}
+
+@media screen and (min-aspect-ratio: 1.0001) and (hover: hover) and (pointer: fine) {
+  .home-craft-copy {
+    translate: 0 clamp(-1.75rem, -3dvh, -1rem);
+  }
 }
 
 .home-page-content--flanerie {
@@ -1477,7 +1500,7 @@
     font-size: clamp(1rem, 4vw, 1.3rem);
   }
 
-  .home-about-highlight {
+  .home-about-action-spacer {
     margin-top: clamp(4.5rem, 11dvh, 8rem);
   }
 }
@@ -1504,6 +1527,17 @@
     );
   }
 
+  .home-craft-grid {
+    grid-template-columns: repeat(2, 18rem);
+    grid-template-rows: repeat(2, auto);
+    gap: clamp(1rem, 2dvh, 1.5rem) 1rem;
+    zoom: 0.64;
+  }
+
+  .home-craft-card:nth-child(n + 5) {
+    display: none;
+  }
+
   .home-page-indicator__track {
     top: 50%;
     bottom: auto;
@@ -1513,6 +1547,7 @@
     top: auto;
     bottom: calc(var(--home-mobile-explore-bottom) + 96px);
     height: 54px;
+    opacity: 1;
 
     &--left {
       left: calc(0.3rem - var(--home-mobile-edge-shift));
@@ -1525,6 +1560,44 @@
     }
   }
 
+  .home-corner-lines__corner--bottom-right,
+  .home-corner-lines__corner--bottom-left {
+    opacity: 1;
+  }
+
+  .home-page.main-container.is-craft-footer-visible {
+    .home-page-indicator,
+    .home-corner-lines__corner--bottom-right,
+    .home-corner-lines__corner--bottom-left {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .home-page-indicator {
+      transition: opacity 0.26s ease, visibility 0s linear 0.72s,
+        transform 0.72s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .home-corner-lines__corner--bottom-right,
+    .home-corner-lines__corner--bottom-left {
+      transition: opacity 0.26s ease, visibility 0s linear 0s;
+    }
+
+    .home-page.main-container.is-craft-footer-visible {
+      .home-page-indicator {
+        transition-delay: 0s, 0.26s, 0s;
+      }
+
+      .home-corner-lines__corner--bottom-right,
+      .home-corner-lines__corner--bottom-left {
+        transition-delay: 0s, 0.26s;
+      }
+    }
+  }
+
   .home-about-gallery {
     --home-about-gallery-enter-scale: 0.78;
     --home-about-gallery-rest-scale: 1.5;
@@ -1534,8 +1607,8 @@
     }
   }
 
-  .home-about-highlight__source {
-    display: block;
+  .home-about-action-spacer {
+    height: 3.2em;
   }
 
   .home-archive-heading {
@@ -1605,6 +1678,16 @@
 }
 
 @keyframes homeAboutTextEnter {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes homeCraftDescriptionEnter {
   from {
     opacity: 0;
   }

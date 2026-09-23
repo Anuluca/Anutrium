@@ -48,10 +48,6 @@ const homeDynamic = {
       link: '/archive',
     },
   ],
-  highlight: {
-    zhCn: '正因为有各种各样的想法，世界才会变得更加广阔。——《宝可梦 黑／白》',
-    en: 'The world grows broader because it is filled with so many different ideas. — Pokémon Black and White',
-  },
   aboutGallery: [
     {
       src: 'https://assets.anuluca.com/Logo/1.jpg',

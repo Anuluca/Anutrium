@@ -274,6 +274,7 @@ import BackToTop from '@/components/BackToTop/index.vue'
 import Logo from '@/components/Logo/index.vue'
 import PageScrollProgress from '@/components/PageScrollProgress/index.vue'
 import TextRoll from '@/components/TextRoll/index.vue'
+import { HOME_RETURN_TO_PASSION_EVENT } from '@/config/homeNavigation'
 import { finishRouteCursorLoading, routes, syncSeoMeta } from '@/router'
 import { visualState } from '@/stores'
 import { persistLocale, type SiteLocale } from '@/utils/locale'
@@ -743,6 +744,11 @@ const schedulePageMetricsRefresh = () => {
 }
 
 const returnHome = () => {
+  if (isHomeRoute.value) {
+    window.dispatchEvent(new CustomEvent(HOME_RETURN_TO_PASSION_EVENT))
+    return
+  }
+
   router.push('/')
 }
 

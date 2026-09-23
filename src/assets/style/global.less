@@ -1,5 +1,10 @@
 @import url(./font.less);
 @import url(./variables.less);
+
+:where(button, a[href], [role='button']):focus {
+  outline: none !important;
+}
+
 html {
   scrollbar-gutter: auto;
   height: 100%;

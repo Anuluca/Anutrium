@@ -129,7 +129,7 @@
       transform: translate3d(0, var(--header-scroll-offset), 0) !important;
 
       &::after {
-        border-bottom-color: rgba(66, 66, 66, 0.542);
+        border-bottom-color: rgb(38 38 38 / 54%);
         background: linear-gradient(
           to bottom,
           rgba(5, 2, 6, 0.96) 0%,
@@ -719,7 +719,7 @@
       filter: blur(0.33333rem);
       transition: opacity 0.6s ease, filter 0.4s;
       width: 100vw;
-      height: calc(100vh - 2.66667rem);
+      height: calc(100% + 0.66667rem);
       overflow: hidden;
       border-radius: 0 0 3.33333rem 3.33333rem;
       display: flex;
@@ -949,7 +949,7 @@
 
       &.scroll-layout-active {
         &::after {
-          border-bottom-color: rgba(0, 0, 0, 0.08);
+          border-bottom-color: rgb(38 38 38 / 54%);
           background: linear-gradient(
             to bottom,
             rgba(255, 255, 255, 0.92) 0%,
@@ -1068,14 +1068,14 @@
         }
 
         .current-module-name {
-          top: 0.13333rem;
+          top: 0.06667rem;
           height: 1.33333rem;
           margin-left: 0.46667rem;
           padding-left: 0.4rem;
-          font-size: 0.93333rem;
+          font-size: 1.13333rem;
 
           &--zh {
-            font-size: 1.13333rem;
+            font-size: 1.33333rem;
           }
         }
       }

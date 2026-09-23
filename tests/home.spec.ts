@@ -156,7 +156,7 @@ test('page hero title stays fixed and erases upward without resizing text', asyn
   expect(initial.height).toBeGreaterThan(20)
   expect(initial.overflow).toBe('hidden')
 
-  await page.mouse.wheel(0, 100)
+  await page.evaluate(() => document.body.scrollTo(0, 100))
   await expect
     .poll(
       () =>
@@ -184,6 +184,28 @@ test('page hero title stays fixed and erases upward without resizing text', asyn
   expect(collapsed.maskSize).not.toBe(initial.maskSize)
   expect(collapsed.fontSize).toBe(initial.fontSize)
   expect(collapsed.textTransform).toBe(initial.textTransform)
+
+  await page.evaluate(
+    (scrollTop) => document.body.scrollTo(0, scrollTop),
+    initial.collapseDistance + 1
+  )
+  await expect(page.locator('.page-hero-title')).toHaveClass(/is-collapsed/)
+  await expect(
+    titleViewport.locator('.page-hero-title__char').first()
+  ).toHaveCSS('pointer-events', 'none')
+  expect(
+    await page.locator('.page-hero-title').evaluate((title) => {
+      const character = title.querySelector('.page-hero-title__char')
+      if (!character) return false
+
+      const bounds = character.getBoundingClientRect()
+      const hitTarget = document.elementFromPoint(
+        bounds.left + bounds.width / 2,
+        bounds.top + bounds.height / 2
+      )
+      return !!hitTarget && title.contains(hitTarget)
+    })
+  ).toBe(false)
 
   if (testInfo.project.name.includes('mobile')) {
     expect(initial.collapseDistance).toBeLessThanOrEqual(56)
@@ -705,6 +727,17 @@ test('desktop custom cursor is ready during entry and hides outside viewport', a
   await expect(page.locator('html')).toHaveClass(/\bcustom-cursor-enabled\b/)
 })
 
+test('desktop header suppresses the default focus ring', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name.includes('mobile'))
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+
+  const logoButton = page.locator('.logo-box')
+  await logoButton.focus()
+  await expect(logoButton).toHaveCSS('outline-style', 'none')
+})
+
 test('desktop navigation rolls text without moving route logos', async ({
   page,
 }, testInfo) => {
@@ -1026,8 +1059,8 @@ test('mobile section navigation expands from NAV and closes from the backdrop', 
   })
   expect(navigationAlignment.widthDelta).toBeLessThanOrEqual(1)
   expect(navigationAlignment.centerOffset).toBeLessThanOrEqual(1)
-  expect(navigationAlignment.verticalGap).toBeGreaterThanOrEqual(10)
-  expect(navigationAlignment.verticalGap).toBeLessThanOrEqual(14)
+  expect(navigationAlignment.verticalGap).toBeGreaterThanOrEqual(3)
+  expect(navigationAlignment.verticalGap).toBeLessThanOrEqual(6)
 })
 
 test('mobile header branding keeps its horizontal geometry while scrolling', async ({
@@ -1145,6 +1178,7 @@ test('mobile first-load desktop recommendation is fixed and closable', async ({
       textAlign: getComputedStyle(element.querySelector('.el-alert__content')!)
         .textAlign,
       animationName: style.animationName,
+      parentTagName: element.parentElement!.parentElement!.tagName,
       position: getComputedStyle(element.parentElement!).position,
       shadow: style.boxShadow,
       zIndex: getComputedStyle(element.parentElement!).zIndex,
@@ -1166,6 +1200,7 @@ test('mobile first-load desktop recommendation is fixed and closable', async ({
   expect(alertStyle.iconCount).toBe(1)
   expect(alertStyle.textAlign).toBe('center')
   expect(alertStyle.animationName).toBe('none')
+  expect(alertStyle.parentTagName).toBe('BODY')
   expect(alertStyle.position).toBe('fixed')
   expect(alertStyle.shadow).not.toBe('none')
   expect(alertStyle.zIndex).toBe('10000')
@@ -2340,13 +2375,22 @@ test('mobile menu reuses the footer social link bar', async ({
     .poll(() =>
       menu.evaluate((element) => {
         const panelBounds = element.getBoundingClientRect()
+        const wrapperBounds = element
+          .querySelector<HTMLElement>('.mobile-menu-wrapper')!
+          .getBoundingClientRect()
         const footerBounds = element
           .querySelector<HTMLElement>('.mobile-footer')!
           .getBoundingClientRect()
+        const copyrightBounds = element
+          .querySelector<HTMLElement>('.about-me')!
+          .getBoundingClientRect()
 
         return Math.max(
+          Math.abs(wrapperBounds.bottom - panelBounds.bottom),
           panelBounds.top - footerBounds.top,
-          footerBounds.bottom - panelBounds.bottom
+          footerBounds.bottom - panelBounds.bottom,
+          panelBounds.top - copyrightBounds.top,
+          copyrightBounds.bottom - panelBounds.bottom
         )
       })
     )
@@ -2792,7 +2836,8 @@ test('mobile menu stays above fixed page navigation', async ({
 
   await page.goto('/flanerie/changsha', { waitUntil: 'domcontentloaded' })
   const pageNavigation = page.locator('.detail-sections-nav')
-  await expect(pageNavigation).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
+  const navigationToggle = pageNavigation.locator('.sections-fixed-nav__toggle')
+  await expect(navigationToggle).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
 
   await page.locator('.mobile-menu-icon').click()
   await expect(page.locator('.mobile-menu-panel')).toHaveClass(/\bactive\b/)
@@ -2812,7 +2857,34 @@ test('mobile menu stays above fixed page navigation', async ({
   expect(menuOwnsNavigationPoint).toBe(true)
 
   await page.locator('.mobile-menu-icon').click()
-  await expect(pageNavigation).toBeVisible()
+  await expect(navigationToggle).toBeVisible()
+})
+
+test('mobile detail section navigation uses the shared NAV interaction', async ({
+  page,
+}, testInfo) => {
+  test.skip(!testInfo.project.name.includes('mobile'))
+
+  await page.goto('/flanerie/changsha', { waitUntil: 'domcontentloaded' })
+  const navigation = page.locator('.detail-sections-nav')
+  const toggle = navigation.locator('.sections-fixed-nav__toggle')
+  const items = navigation.locator('.sections-fixed-nav__item')
+
+  await expect(toggle).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
+  await expect(items.first()).toBeHidden()
+  await toggle.click()
+
+  await expect(navigation).toHaveClass(/\bis-mobile-open\b/)
+  await expect(items.first()).toBeVisible()
+  await expect(
+    items.first().locator('.sections-fixed-nav__label')
+  ).toBeVisible()
+  await expect(page.locator('.sections-fixed-nav__backdrop')).toBeVisible()
+
+  await items.last().click()
+  await expect(navigation).not.toHaveClass(/\bis-mobile-open\b/)
+  await expect(page.locator('.sections-fixed-nav__backdrop')).toHaveCount(0)
+  await expect(items.first()).toBeHidden()
 })
 
 test('mobile fixed page navigation hides at the page bottom', async ({

@@ -117,6 +117,14 @@ body.light {
     border-right-color: var(--border-color) !important;
   }
 
+  .availability-github {
+    --github-contribution-empty: rgba(0, 0, 0, 0.07);
+    --github-contribution-1: rgba(47, 117, 72, 0.3);
+    --github-contribution-2: rgba(47, 117, 72, 0.5);
+    --github-contribution-3: rgba(47, 117, 72, 0.72);
+    --github-contribution-4: #2f7548;
+  }
+
   .availability-grid {
     background: rgba(0, 0, 0, 0.018) !important;
   }
@@ -298,11 +306,18 @@ body.light {
     }
   }
 
-  .back-to-top-button.no-rem:hover,
   .back-to-top-button.no-rem:focus-visible {
     color: #e23456 !important;
     background: rgba(255, 255, 255, 0.9) !important;
     box-shadow: 0 10px 26px var(--shadow-color) !important;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .back-to-top-button.no-rem:hover {
+      color: #e23456 !important;
+      background: rgba(255, 255, 255, 0.9) !important;
+      box-shadow: 0 10px 26px var(--shadow-color) !important;
+    }
   }
 
   .modal-wrapper-dialog {

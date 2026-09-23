@@ -192,9 +192,10 @@ const fitTitleToRow = () => {
 }
 
 const syncScrollCollapse = () => {
-  if (!titleClip.value || !titleFullHeight) return
+  if (!titleContainer.value || !titleClip.value || !titleFullHeight) return
 
   const progress = Math.min(1, getPageScrollTop() / collapseDistance)
+  titleContainer.value.classList.toggle('is-collapsed', progress >= 1)
   titleClip.value.style.setProperty(
     '--page-hero-title-visible-ratio',
     `${((1 - progress) * 100).toFixed(2)}%`
@@ -415,6 +416,10 @@ onBeforeUnmount(() => {
     &.is-animating .page-hero-title__char-incoming {
       transform: translate(0);
     }
+  }
+
+  &.is-collapsed .page-hero-title__char {
+    pointer-events: none;
   }
 }
 

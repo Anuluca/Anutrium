@@ -731,6 +731,16 @@ test('home unmounts each previous secondary section when the next one enters', a
         buttonLeft: document
           .querySelector<HTMLElement>('.home-flanerie-more')!
           .getBoundingClientRect().left,
+        buttonMarginBottom: Number.parseFloat(
+          getComputedStyle(
+            document.querySelector<HTMLElement>('.home-flanerie-more')!
+          ).marginBottom
+        ),
+        buttonMarginTop: Number.parseFloat(
+          getComputedStyle(
+            document.querySelector<HTMLElement>('.home-flanerie-more')!
+          ).marginTop
+        ),
         subtitleLeft: document
           .querySelector<HTMLElement>('.home-flanerie-subtitle')!
           .getBoundingClientRect().left,
@@ -740,6 +750,10 @@ test('home unmounts each previous secondary section when the next one enters', a
           flanerieMoreAlignment.buttonLeft - flanerieMoreAlignment.subtitleLeft
         )
       ).toBeLessThanOrEqual(1)
+      expect(flanerieMoreAlignment.buttonMarginTop).toBeCloseTo(
+        flanerieMoreAlignment.buttonMarginBottom,
+        1
+      )
     }
   }
 
@@ -755,12 +769,32 @@ test('home unmounts each previous secondary section when the next one enters', a
     '节拍器',
   ])
   const craftSubtitle = page.locator('.home-craft-subtitle')
-  await expect(craftSubtitle).toHaveText('所想即所做')
+  const craftDescription = page.locator('.home-craft-description')
+  await expect(craftSubtitle).toHaveText('想到既做到。')
+  await expect(craftDescription).toHaveText('借助Agent开发的一些常用工具')
   expect(
     await craftSubtitle.evaluate(
       (element) => getComputedStyle(element).animationName
     )
   ).toContain('homeAboutTextEnter')
+  expect(
+    await craftDescription.evaluate(
+      (element) => getComputedStyle(element).animationName
+    )
+  ).toContain('homeCraftDescriptionEnter')
+  expect(
+    Number.parseFloat(
+      await craftDescription.evaluate(
+        (element) => getComputedStyle(element).animationDelay
+      )
+    )
+  ).toBeGreaterThan(
+    Number.parseFloat(
+      await craftSubtitle.evaluate(
+        (element) => getComputedStyle(element).animationDelay
+      )
+    )
+  )
   await expect(page.getByText('开发中', { exact: true })).toHaveCount(0)
 
   const craftGridGeometry = await craftGrid.evaluate((grid) => {
@@ -774,27 +808,49 @@ test('home unmounts each previous secondary section when the next one enters', a
     )
 
     return {
+      copyTranslate: getComputedStyle(
+        document.querySelector<HTMLElement>('.home-craft-copy')!
+      ).translate,
       centerOffset: Math.abs(
         gridBounds.left + gridBounds.width / 2 - window.innerWidth / 2
       ),
       columnCount: getComputedStyle(grid).gridTemplateColumns.split(' ').length,
-      firstRowTopDelta: Math.max(
-        ...cardBounds
-          .slice(0, 3)
-          .map((bounds) => Math.abs(bounds.top - cardBounds[0].top))
-      ),
-      fourthCardStartsSecondRow: cardBounds[3].top > cardBounds[0].bottom,
-      fourthCardLeftDelta: Math.abs(cardBounds[3].left - cardBounds[0].left),
+      cardBounds: cardBounds.map((bounds) => ({
+        bottom: bounds.bottom,
+        left: bounds.left,
+        top: bounds.top,
+      })),
       gridStartsAfterSubtitle: gridBounds.top > subtitleBounds.bottom,
       cardWidth: getComputedStyle(grid.children[0] as HTMLElement).width,
       textAlign: getComputedStyle(grid.children[0] as HTMLElement).textAlign,
     }
   })
+  const expectedCraftColumns = testInfo.project.name.includes('mobile') ? 2 : 3
+  const firstRowCards = craftGridGeometry.cardBounds.slice(
+    0,
+    expectedCraftColumns
+  )
+  const firstSecondRowCard = craftGridGeometry.cardBounds[expectedCraftColumns]
   expect(craftGridGeometry.centerOffset).toBeLessThanOrEqual(1)
-  expect(craftGridGeometry.columnCount).toBe(3)
-  expect(craftGridGeometry.firstRowTopDelta).toBeLessThanOrEqual(1)
-  expect(craftGridGeometry.fourthCardStartsSecondRow).toBe(true)
-  expect(craftGridGeometry.fourthCardLeftDelta).toBeLessThanOrEqual(1)
+  expect(craftGridGeometry.columnCount).toBe(expectedCraftColumns)
+  expect(
+    Math.max(
+      ...firstRowCards.map((bounds) =>
+        Math.abs(bounds.top - firstRowCards[0].top)
+      )
+    )
+  ).toBeLessThanOrEqual(1)
+  expect(firstSecondRowCard.top).toBeGreaterThan(firstRowCards[0].bottom)
+  expect(
+    Math.abs(firstSecondRowCard.left - firstRowCards[0].left)
+  ).toBeLessThanOrEqual(1)
+  if (testInfo.project.name.includes('mobile')) {
+    expect(craftGridGeometry.copyTranslate).toBe('none')
+  } else {
+    expect(
+      Number.parseFloat(craftGridGeometry.copyTranslate.split(' ')[1])
+    ).toBeLessThan(0)
+  }
   expect(craftGridGeometry.gridStartsAfterSubtitle).toBe(true)
   expect(Number.parseFloat(craftGridGeometry.cardWidth)).toBeLessThan(320)
   expect(craftGridGeometry.textAlign).toBe('left')
@@ -825,6 +881,237 @@ test('home unmounts each previous secondary section when the next one enters', a
   await craftMoreLink.hover()
   await expect(craftMoreLink).toHaveCSS('background-position', '0px 0px')
   await expect(craftMoreLink).toHaveCSS('color', 'rgb(255, 255, 255)')
+})
+
+test('mobile home hides side indicators and lower corners at the footer', async ({
+  page,
+}, testInfo) => {
+  test.skip(!testInfo.project.name.includes('mobile'))
+
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.layout-page')).toHaveClass(/\blayout-show\b/, {
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+
+  await page.mouse.wheel(0, 720)
+  await waitForActivePage(page, 'about')
+  await page
+    .locator('.home-page-indicator--left .home-page-indicator__item--craft')
+    .getByRole('button')
+    .click()
+  await waitForActivePage(page, 'craft')
+
+  const homePage = page.locator('.home-page')
+  const leftIndicator = page.locator('.home-page-indicator--left')
+  const bottomLeftCorner = page.locator(
+    '.home-corner-lines__corner--bottom-left'
+  )
+  await expect(leftIndicator).toHaveCSS(
+    'transition-property',
+    'opacity, visibility, transform'
+  )
+  await expect(bottomLeftCorner).toHaveCSS(
+    'transition-property',
+    'opacity, visibility'
+  )
+  await page.waitForTimeout(750)
+  await homePage.dispatchEvent('pointerdown', {
+    clientY: 650,
+    pointerId: 1,
+    pointerType: 'touch',
+  })
+  await homePage.dispatchEvent('pointermove', {
+    clientY: 520,
+    pointerId: 1,
+    pointerType: 'touch',
+  })
+  await homePage.dispatchEvent('pointerup', {
+    clientY: 520,
+    pointerId: 1,
+    pointerType: 'touch',
+  })
+
+  await page.waitForTimeout(100)
+  const fadingOutOpacity = await leftIndicator.evaluate((element) =>
+    Number.parseFloat(getComputedStyle(element).opacity)
+  )
+  expect(fadingOutOpacity).toBeGreaterThan(0)
+  expect(fadingOutOpacity).toBeLessThan(1)
+  await expect(homePage).toHaveClass(/is-craft-footer-visible/)
+  await expect(leftIndicator).toBeHidden()
+  await expect(page.locator('.home-page-indicator--right')).toBeHidden()
+  await expect(
+    page.locator('.home-corner-lines__corner--top-left')
+  ).toBeVisible()
+  await expect(
+    page.locator('.home-corner-lines__corner--top-right')
+  ).toBeVisible()
+  await expect(
+    page.locator('.home-corner-lines__corner--bottom-left')
+  ).toBeHidden()
+  await expect(
+    page.locator('.home-corner-lines__corner--bottom-right')
+  ).toBeHidden()
+
+  const pageFooter = page.locator('#page-footer-portal > .bottom-text')
+  await page.waitForTimeout(750)
+  await pageFooter.dispatchEvent('pointerdown', {
+    clientY: 420,
+    pointerId: 2,
+    pointerType: 'touch',
+  })
+  await pageFooter.dispatchEvent('pointermove', {
+    clientY: 560,
+    pointerId: 2,
+    pointerType: 'touch',
+  })
+  await pageFooter.dispatchEvent('pointerup', {
+    clientY: 560,
+    pointerId: 2,
+    pointerType: 'touch',
+  })
+
+  await page.waitForTimeout(100)
+  const fadingInOpacity = await leftIndicator.evaluate((element) =>
+    Number.parseFloat(getComputedStyle(element).opacity)
+  )
+  expect(fadingInOpacity).toBeGreaterThan(0)
+  expect(fadingInOpacity).toBeLessThan(1)
+  await expect(homePage).not.toHaveClass(/is-craft-footer-visible/)
+  await expect(leftIndicator).toBeVisible()
+  await expect(bottomLeftCorner).toBeVisible()
+})
+
+test('home title returns the active home module to Passion', async ({
+  page,
+}) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.home-page-swiper')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+  await expect(page.locator('.layout-page')).toHaveClass(/\blayout-show\b/, {
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+
+  await page.locator('.home-page-swiper').evaluate((element) => {
+    const swiper = (
+      element as HTMLElement & {
+        swiper: {
+          allowSlideNext: boolean
+          slideTo: (index: number, speed: number) => void
+        }
+      }
+    ).swiper
+    swiper.allowSlideNext = true
+    swiper.slideTo(1, 0)
+  })
+  await waitForActivePage(page, 'about')
+  await page.locator('.logo-box').click()
+  await expect(page.locator('.home-page-slide--hero')).toHaveClass(
+    /swiper-slide-active/,
+    { timeout: 3_000 }
+  )
+  await expect(page).toHaveURL(/\/$/)
+})
+
+test('home Flanerie spacing and Craft grid follow the responsive layout', async ({
+  page,
+}, testInfo) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  const homeSwiper = page.locator('.home-page-swiper')
+  await expect(homeSwiper).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
+
+  const showPage = async (index: number, id: string) => {
+    await homeSwiper.evaluate((element, targetIndex) => {
+      const swiper = (
+        element as HTMLElement & {
+          swiper: {
+            allowSlideNext: boolean
+            slideTo: (index: number, speed: number) => void
+          }
+        }
+      ).swiper
+      swiper.allowSlideNext = true
+      swiper.slideTo(targetIndex, 0)
+    }, index)
+    await waitForActivePage(page, id)
+  }
+
+  await showPage(3, 'flanerie')
+  const flanerieMargins = await page
+    .locator('.home-flanerie-more')
+    .evaluate((element) => {
+      const style = getComputedStyle(element)
+      return {
+        bottom: Number.parseFloat(style.marginBottom),
+        top: Number.parseFloat(style.marginTop),
+      }
+    })
+  expect(flanerieMargins.top).toBeGreaterThan(0)
+  expect(flanerieMargins.top).toBeCloseTo(flanerieMargins.bottom, 1)
+
+  await showPage(4, 'craft')
+  const craftSubtitle = page.locator('.home-craft-subtitle')
+  const craftDescription = page.locator('.home-craft-description')
+  await expect(craftSubtitle).toHaveText('想到既做到。')
+  await expect(craftDescription).toHaveText('借助Agent开发的一些常用工具')
+  expect(
+    await craftDescription.evaluate(
+      (element) => getComputedStyle(element).animationName
+    )
+  ).toContain('homeCraftDescriptionEnter')
+  const craftEntranceDelays = await page.evaluate(() => ({
+    description: Number.parseFloat(
+      getComputedStyle(
+        document.querySelector<HTMLElement>('.home-craft-description')!
+      ).animationDelay
+    ),
+    title: Number.parseFloat(
+      getComputedStyle(
+        document.querySelector<HTMLElement>('.home-craft-subtitle')!
+      ).animationDelay
+    ),
+  }))
+  expect(craftEntranceDelays.description).toBeGreaterThan(
+    craftEntranceDelays.title
+  )
+  const craftCards = page.locator('.home-craft-card')
+  await expect(craftCards).toHaveCount(4)
+  const craftLayout = await page
+    .locator('.home-craft-grid')
+    .evaluate((grid) => {
+      const copy = document.querySelector<HTMLElement>('.home-craft-copy')!
+      const gridBounds = grid.getBoundingClientRect()
+      const cards = Array.from(
+        grid.querySelectorAll<HTMLElement>('.home-craft-card'),
+        (card) => card.getBoundingClientRect()
+      )
+
+      return {
+        columns: getComputedStyle(grid).gridTemplateColumns.split(' ').length,
+        centerOffset: Math.abs(
+          gridBounds.left + gridBounds.width / 2 - window.innerWidth / 2
+        ),
+        copyTranslate: getComputedStyle(copy).translate,
+        firstRowDelta: Math.abs(cards[0].top - cards[1].top),
+        thirdCardStartsSecondRow: cards[2].top > cards[0].bottom,
+        thirdCardLeftDelta: Math.abs(cards[2].left - cards[0].left),
+      }
+    })
+
+  if (testInfo.project.name.includes('mobile')) {
+    expect(craftLayout.columns).toBe(2)
+    expect(craftLayout.centerOffset).toBeLessThanOrEqual(1)
+    expect(craftLayout.copyTranslate).toBe('none')
+    expect(craftLayout.firstRowDelta).toBeLessThanOrEqual(1)
+    expect(craftLayout.thirdCardStartsSecondRow).toBe(true)
+    expect(craftLayout.thirdCardLeftDelta).toBeLessThanOrEqual(1)
+  } else {
+    expect(craftLayout.columns).toBe(3)
+    expect(
+      Number.parseFloat(craftLayout.copyTranslate.split(' ')[1])
+    ).toBeLessThan(0)
+  }
 })
 
 test('home switches five full-screen pages vertically while marquee stays fixed', async ({
@@ -1047,7 +1334,11 @@ test('home switches five full-screen pages vertically while marquee stays fixed'
 
   expect(initialGeometry.marqueePosition).toBe('fixed')
   expect(initialGeometry.marqueeOpacity).toBe('1')
-  expect(initialGeometry.pageProgressBackground).toBe('rgb(0, 0, 0)')
+  expect(initialGeometry.pageProgressBackground).toBe(
+    testInfo.project.name.includes('mobile')
+      ? 'rgba(0, 0, 0, 0)'
+      : 'rgba(0, 0, 0, 0.5)'
+  )
   expect(initialGeometry.pageProgressFillBackground).toBe('rgb(226, 52, 86)')
   expect(initialGeometry.pageProgressTopDelta).toBeLessThanOrEqual(1)
   expect(initialGeometry.pageProgressBottomDelta).toBeLessThanOrEqual(1)
@@ -1410,7 +1701,7 @@ test('home switches five full-screen pages vertically while marquee stays fixed'
   await expect(scrollDownHint).toBeVisible()
   const aboutIntro = page.locator('.home-about-intro')
   const aboutDescription = page.locator('.home-about-description')
-  const aboutHighlight = page.locator('.home-about-highlight')
+  const aboutActionSpacer = page.locator('.home-about-action-spacer')
   await expect(page.locator('.home-section-title')).toHaveCount(0)
   await expect(page.locator('.home-about-copy')).toHaveCSS(
     'background-color',
@@ -1462,10 +1753,9 @@ test('home switches five full-screen pages vertically while marquee stays fixed'
     )
     .toBe(true)
   await expect(aboutDescription).toHaveCSS('font-weight', '600')
-  await expect(aboutHighlight).toContainText('《宝可梦 黑／白》')
-  await expect(aboutHighlight).toHaveCSS('font-style', 'italic')
-  await expect(aboutHighlight).toHaveCSS('font-weight', '400')
-  await expect(aboutHighlight).toHaveCSS('opacity', '0.35')
+  await expect(page.locator('.home-about-highlight')).toHaveCount(0)
+  await expect(aboutActionSpacer).toBeVisible()
+  await expect(aboutActionSpacer).toHaveText('')
   await expect(randomTypedText).toHaveCSS('color', 'rgb(226, 52, 86)')
   await expect(page.locator('.home-about-copy')).toHaveCSS('z-index', '10')
   await expect(page.locator('.home-about-gallery')).toBeVisible()
@@ -1809,6 +2099,20 @@ test('home switches five full-screen pages vertically while marquee stays fixed'
       pointerType: 'touch',
     })
     await expect(homePage).toHaveClass(/is-craft-footer-visible/)
+    await expect(leftIndicator).toBeHidden()
+    await expect(rightIndicator).toBeHidden()
+    await expect(
+      page.locator('.home-corner-lines__corner--top-left')
+    ).toBeVisible()
+    await expect(
+      page.locator('.home-corner-lines__corner--top-right')
+    ).toBeVisible()
+    await expect(
+      page.locator('.home-corner-lines__corner--bottom-left')
+    ).toBeHidden()
+    await expect(
+      page.locator('.home-corner-lines__corner--bottom-right')
+    ).toBeHidden()
 
     await page.waitForTimeout(750)
     await pageFooter.dispatchEvent('pointerdown', {

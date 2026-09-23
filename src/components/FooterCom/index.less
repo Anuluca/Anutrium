@@ -329,7 +329,7 @@ body.light {
 
     &,
     * {
-      text-shadow: 0 1PX 4PX rgb(0 0 0 / 42%);
+      text-shadow: none !important;
     }
 
     .left,
@@ -343,15 +343,22 @@ body.light {
 
       .expand {
     background-image: none;
-    opacity: 0.8;
+    opacity: 1;
     background-color: transparent;
       }
 
       .expand .marquee-wrap {
         padding-top: 4.5px;
+        opacity: 1 !important;
+        filter: none !important;
 
         b {
           font-size: 18px;
+          opacity: 1;
+        }
+
+        .recommend .recommend-date {
+          color: #fff;
         }
       }
     }

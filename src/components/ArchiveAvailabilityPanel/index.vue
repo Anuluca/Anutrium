@@ -15,6 +15,16 @@
           class="availability-copy__crystal-tip availability-copy__crystal-tip--bottom"
         />
       </span>
+      <GitHubContributionGraph
+        class="availability-github"
+        username="Anuluca"
+        decorative
+        :summary-text="
+          locale === 'en'
+            ? 'contributions in the last year'
+            : 'GITHUB近一年实时贡献图'
+        "
+      />
       <h2 id="availability-title">
         <TypedText
           class="availability-type--title"
@@ -84,6 +94,7 @@ import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Message, Paperclip } from '@element-plus/icons-vue'
 
+import GitHubContributionGraph from '@/components/GitHubContributionGraph/index.vue'
 import TypedText from '@/components/TypedText/index.vue'
 import { trackEvent } from '@/utils/analytics'
 import { confirmWithoutPageShift } from '@/utils/scrollSafeMessageBox'
@@ -232,21 +243,50 @@ const requestResume = async () => {
   border-right: 1px solid rgba(255, 255, 255, 0.09);
 
   h2 {
-    margin: 0 0 0.3rem;
+    position: relative;
+    z-index: 1;
+    width: fit-content;
+    max-width: 58%;
+    margin: 0;
     color: #fff;
     font-family: 'Anton', 'UnboundedSans';
-    font-size: 1rem;
+    font-size: 1.1rem;
     letter-spacing: 0.02em;
     line-height: 1.2;
   }
 
   p {
+    position: relative;
+    z-index: 1;
+    width: fit-content;
     max-width: 720px;
     margin: 0;
     color: rgba(255, 255, 255, 0.48);
     font-family: 'alibaba-puhuiti', sans-serif;
     font-size: 0.4rem;
     line-height: 1.5;
+  }
+}
+
+.availability-github {
+  position: absolute;
+  top: calc(50% + 0.09rem);
+  right: 12px;
+  width: 46%;
+  opacity: 0.72;
+  pointer-events: none;
+  transform: translateY(-50%);
+  mask-image: linear-gradient(90deg, transparent, #000 24%, #000);
+
+  :deep(.github-contribution-graph__summary) {
+    margin-top: 0.12rem;
+    color: rgb(61, 136 ,83);
+    font-size: 0.32rem;
+    line-height: 1;
+    text-align: right;
+    opacity: 0.6;
+    transform: scaleY(0.9);
+    transform-origin: right center;
   }
 }
 
@@ -460,11 +500,22 @@ const requestResume = async () => {
     border-bottom: 1px solid rgba(255, 255, 255, 0.09);
 
     h2 {
-      font-size: 0.95rem;
+      font-size: 1.05rem;
     }
 
     p {
       font-size: 0.55rem;
+    }
+  }
+
+  .availability-github {
+    right: 8px;
+    width: 62%;
+    opacity: 0.46;
+    mask-image: linear-gradient(90deg, transparent, #000 34%, #000);
+
+    :deep(.github-contribution-graph__summary) {
+      font-size: 0.42rem;
     }
   }
 
