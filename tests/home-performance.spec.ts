@@ -8,6 +8,29 @@ test('entry animation rotates and hands off to the SVG logo', async ({
 
   const canvas = page.locator('.entry-overlay-container canvas')
   await expect(canvas).toBeVisible({ timeout: 15_000 })
+  const entryScene = page.locator('.entry-overlay-container .scene-container')
+  await expect
+    .poll(() =>
+      entryScene.evaluate((element) => {
+        const bounds = element.getBoundingClientRect()
+        return Math.min(bounds.width, bounds.height)
+      })
+    )
+    .toBeGreaterThan(500)
+  await expect
+    .poll(() =>
+      entryScene.evaluate((element) => {
+        const bounds = element.getBoundingClientRect()
+        const sceneCanvas = element.querySelector('canvas')!
+        const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5)
+
+        return Math.max(
+          Math.abs(sceneCanvas.width - Math.round(bounds.width * pixelRatio)),
+          Math.abs(sceneCanvas.height - Math.round(bounds.height * pixelRatio))
+        )
+      })
+    )
+    .toBeLessThanOrEqual(1)
   const canvasBounds = await canvas.boundingBox()
   expect(canvasBounds).not.toBeNull()
   await page.waitForTimeout(150)
@@ -593,12 +616,36 @@ test('zodiac rotation starts only after the previous route leaves', async ({
   ).toHaveText('AQUARIUS')
 })
 
+test('home crystal keeps its drawing buffer in sync after the initial responsive layout', async ({
+  page,
+}) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  const canvas = page.locator('.passion-logo canvas')
+  await expect(canvas).toBeVisible({ timeout: 15_000 })
+
+  await expect
+    .poll(() =>
+      canvas.evaluate((element) => {
+        const bounds = element.getBoundingClientRect()
+        const expectedWidth = Math.round(bounds.width * 0.75)
+        const expectedHeight = Math.round(bounds.height * 0.75)
+
+        return Math.max(
+          Math.abs(element.width - expectedWidth),
+          Math.abs(element.height - expectedHeight)
+        )
+      })
+    )
+    .toBeLessThanOrEqual(1)
+})
+
 test('home pauses hidden hero motion and resumes it on return', async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name.includes('mobile'))
   await page.goto('/', { waitUntil: 'domcontentloaded' })
   const hero = page.locator('.home-page-slide--hero')
+  const sloganShell = page.locator('.main-slogan-shell')
   const slogan = page.locator('.main-slogan')
   const recommend = page.locator('.hero-content > .recommend')
   const logo = page.locator('.passion-logo')
@@ -606,42 +653,73 @@ test('home pauses hidden hero motion and resumes it on return', async ({
     timeout: 20_000,
   })
   await expect(hero).not.toHaveClass(/is-hero-initial-entering/)
-  await expect(slogan).toHaveCSS('will-change', 'auto')
+  await expect(sloganShell).toHaveCSS('will-change', 'auto')
   await expect(logo).toHaveCSS('opacity', '0.24')
+  await expect(logo).toHaveCSS('transition-duration', '1.2s, 0.3s')
+  await page.evaluate(() => document.fonts.ready)
+  await logo.evaluate(async (element) => {
+    await Promise.all(
+      element
+        .getAnimations()
+        .map((animation) => animation.finished.catch(() => undefined))
+    )
+  })
   expect(
     await logo.evaluate((element) =>
       Number.parseFloat(getComputedStyle(element).width)
     )
-  ).toBeLessThan(230)
-  const passionHeadingAlignment = await page.evaluate(() => {
-    const logoSvg = document.querySelector<SVGSVGElement>('.passion-logo svg')!
-    const logoBounds = logoSvg.getBBox()
-    const logoRightPoint = logoSvg.createSVGPoint()
-    logoRightPoint.x = logoBounds.x + logoBounds.width
-    logoRightPoint.y = logoBounds.y
+  ).toBeLessThan(1000)
+  const passionCrystalPlacement = await page.evaluate(() => {
+    const logoRect = document
+      .querySelector<HTMLElement>('.passion-logo')!
+      .getBoundingClientRect()
+    const canvasRect = document
+      .querySelector<HTMLCanvasElement>('.passion-logo canvas')!
+      .getBoundingClientRect()
+    const passionWindowRect = document
+      .querySelector<HTMLElement>('.home-page-content--hero')!
+      .getBoundingClientRect()
 
     return {
-      drivenTop: document
-        .querySelector<HTMLElement>('.main-slogan .moto > p')!
-        .getBoundingClientRect().top,
-      logoTop: document
-        .querySelector<HTMLElement>('.passion-logo')!
-        .getBoundingClientRect().top,
-      logoRight: logoRightPoint.matrixTransform(logoSvg.getScreenCTM()!).x,
-      passionRight: document
-        .querySelector<HTMLElement>('.passion-radiant')!
-        .getBoundingClientRect().right,
+      logoCenterX: logoRect.left + logoRect.width / 2,
+      logoCenterY: logoRect.top + logoRect.height / 2,
+      windowCenterX: passionWindowRect.left + passionWindowRect.width / 2,
+      expectedLogoCenterY:
+        passionWindowRect.top + passionWindowRect.height * 0.47,
+      logoWidth: logoRect.width,
+      logoHeight: logoRect.height,
+      canvasWidth: canvasRect.width,
+      canvasHeight: canvasRect.height,
     }
   })
   expect(
     Math.abs(
-      passionHeadingAlignment.logoTop - passionHeadingAlignment.drivenTop
+      passionCrystalPlacement.logoCenterX -
+        passionCrystalPlacement.windowCenterX
     )
   ).toBeLessThanOrEqual(1)
-  const passionLogoVisualRightInset =
-    passionHeadingAlignment.passionRight - passionHeadingAlignment.logoRight
-  expect(passionLogoVisualRightInset).toBeGreaterThan(2)
-  expect(passionLogoVisualRightInset).toBeLessThan(7)
+  expect(
+    Math.abs(
+      passionCrystalPlacement.logoCenterY -
+        passionCrystalPlacement.expectedLogoCenterY
+    )
+  ).toBeLessThanOrEqual(1)
+  expect(
+    Math.abs(
+      passionCrystalPlacement.logoWidth - passionCrystalPlacement.canvasWidth
+    )
+  ).toBeLessThanOrEqual(1)
+  expect(
+    Math.abs(
+      passionCrystalPlacement.logoHeight - passionCrystalPlacement.canvasHeight
+    )
+  ).toBeLessThanOrEqual(1)
+  await page.mouse.move(720, 500)
+  await page.waitForTimeout(350)
+  const crystalPositionBeforeMouse = await logo.evaluate((element) => {
+    const rect = element.getBoundingClientRect()
+    return { left: rect.left, top: rect.top }
+  })
   await page.mouse.move(1000, 300)
   await expect
     .poll(() =>
@@ -650,26 +728,44 @@ test('home pauses hidden hero motion and resumes it on return', async ({
       )
     )
     .toBeGreaterThan(0.1)
+  const crystalPositionAfterMouse = await logo.evaluate((element) => {
+    const rect = element.getBoundingClientRect()
+    return { left: rect.left, top: rect.top }
+  })
+  expect(
+    Math.abs(crystalPositionAfterMouse.left - crystalPositionBeforeMouse.left)
+  ).toBeLessThanOrEqual(1)
+  expect(
+    Math.abs(crystalPositionAfterMouse.top - crystalPositionBeforeMouse.top)
+  ).toBeLessThanOrEqual(1)
 
   await page.locator('.scroll-down-hint').click()
   await expect(hero).toHaveClass(/is-hero-exit-preparing/)
+  await expect(logo).toHaveCSS('transition-duration', '0.6s, 0.125s')
+  await expect(logo).toHaveCSS('transition-delay', '0s, 0.175s')
   expect(await page.locator('.home-about-gallery').count()).toBe(0)
   await expect(logo.locator('.draw-animation')).toHaveCount(0)
   await expect(page.locator('.logo-layer')).toHaveCount(0)
-  await expect(slogan).toHaveCSS('will-change', 'translate, scale, opacity')
+  await expect(sloganShell).toHaveCSS(
+    'will-change',
+    'translate, scale, opacity'
+  )
   await expect(recommend).toHaveCSS('will-change', 'translate, scale, opacity')
-  await expect(slogan).toHaveCSS('transition-duration', '1.2s, 1.2s, 0.42s')
-  await expect(slogan).toHaveCSS('transition-delay', '0s, 0s, 0.245s')
+  await expect(sloganShell).toHaveCSS(
+    'transition-duration',
+    '1.2s, 1.2s, 0.42s'
+  )
+  await expect(sloganShell).toHaveCSS('transition-delay', '0s, 0s, 0.245s')
   await expect(page.locator('.cards-viewport')).toHaveCount(0, {
-    timeout: 700,
+    timeout: 1200,
   })
-  await expect(logo).toHaveCount(0)
+  await expect(logo).toHaveCount(1)
   await expect(page.locator('.sparkles-text')).toHaveCount(0)
   await expect(slogan).toHaveCount(1)
   await expect(page.locator('.home-placeholder-slide--about')).toHaveClass(
     /swiper-slide-active/
   )
-  await expect(slogan).toHaveCSS('scale', '3')
+  await expect(sloganShell).toHaveCSS('scale', '3')
   await expect
     .poll(() =>
       slogan.evaluate((element) =>
@@ -714,13 +810,16 @@ test('home pauses hidden hero motion and resumes it on return', async ({
   await expect(logo).toHaveCount(1)
   await expect(hero).toHaveClass(/is-page-entering/)
   await expect(logo.locator('.draw-animation')).toHaveCount(0)
-  await expect(slogan).toHaveCSS('transition-duration', '1.2s, 1.2s, 0.42s')
-  await expect(slogan).toHaveCSS('transition-delay', '0s, 0s, 0.245s')
+  await expect(sloganShell).toHaveCSS(
+    'transition-duration',
+    '1.2s, 1.2s, 0.42s'
+  )
+  await expect(sloganShell).toHaveCSS('transition-delay', '0s, 0s, 0.245s')
   await expect(hero).not.toHaveClass(/is-hero-return-effects-deferred/)
   await expect(page.locator('.logo-layer')).toHaveCount(0)
   await expect
     .poll(() =>
-      slogan.evaluate((element) => getComputedStyle(element).willChange)
+      sloganShell.evaluate((element) => getComputedStyle(element).willChange)
     )
     .toBe('auto')
   await page.mouse.move(300, 400)

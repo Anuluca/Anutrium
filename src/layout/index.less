@@ -2,7 +2,6 @@
 @primary-blue: #3276fe;
 @primary-pink: #e23456;
 @primary-green: #01dd83;
-@primary-purple: #5d3aba;
 
 @property --header-scroll-progress {
   syntax: '<number>';
@@ -107,14 +106,15 @@
       inset: 0;
       opacity: 0;
       pointer-events: none;
-      border-bottom: 1px solid #f9446862;
+      border-bottom: 1px solid
+        color-mix(in srgb, var(--page-theme-color, #e23456) 38%, transparent);
       background: linear-gradient(
           to bottom,
           rgba(0, 0, 0, 0.88) 0%,
           rgba(0, 0, 0, 0.58) 48%,
           transparent 100%
         ),
-        rgba(226, 52, 87, 0.141);
+        color-mix(in srgb, var(--page-theme-color, #e23456) 14%, transparent);
       box-shadow: 0 5px 14px rgba(0, 0, 0, 0.24);
       transition: opacity 0.18s ease;
     }
@@ -349,7 +349,7 @@
         .define-module-theme(flanerie, @primary-orange);
         .define-module-theme(island, @primary-pink);
         .define-module-theme(craft, @primary-blue);
-        .define-module-theme(about, @primary-purple);
+        .define-module-theme(about, @primary-pink);
         .define-module-theme(flora, @primary-pink);
       }
     }
@@ -537,7 +537,7 @@
         .define-menu-style(FLANERIE, @primary-orange, #e7492dda);
         .define-menu-style(ISLAND, @primary-pink, #E23456c5);
         .define-menu-style(CRAFT, @primary-blue, #6596f9da);
-        .define-menu-style(ABOUT, @primary-purple, #5d3abac3);
+        .define-menu-style(ABOUT, @primary-pink, #e23456c5);
 
         .HOME.is-active {
           .title-box {
@@ -798,7 +798,7 @@
             }
 
             &.ABOUT.active {
-              color: @primary-purple;
+              color: @primary-pink;
             }
           }
         }
@@ -936,14 +936,18 @@
       }
 
       > .header-hover-overlay {
-        border-bottom-color: rgba(226, 52, 86, 0.24);
+        border-bottom-color: color-mix(
+          in srgb,
+          var(--page-theme-color, #e23456) 24%,
+          transparent
+        );
         background: linear-gradient(
             to bottom,
             rgba(255, 255, 255, 0.94) 0%,
             rgba(255, 255, 255, 0.78) 62%,
             rgba(255, 255, 255, 0) 100%
           ),
-          rgba(226, 52, 86, 0.06);
+          color-mix(in srgb, var(--page-theme-color, #e23456) 6%, transparent);
         box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
       }
 

@@ -144,26 +144,6 @@ const merchPhotos = {
         },
       ],
     },
-    // {
-    //   id: '',
-    //   title: {
-    //     zhCn: '',
-    //     en: '',
-    //   },
-    //   subtitle: {
-    //     zhCn: '',
-    //     en: '',
-    //   },
-    //   photos: [
-    //     {
-    //       url: 'https://assets.anuluca.com/Island/picMerch/',
-    //       title: {
-    //         zhCn: '',
-    //         en: '',
-    //       },
-    //     },
-    //   ],
-    // },
     {
       id: 'aceburn',
       title: {
@@ -1027,26 +1007,6 @@ const merchPhotos = {
         },
       ],
     },
-    // {
-    //   id: '',
-    //   title: {
-    //     zhCn: '',
-    //     en: '',
-    //   },
-    //   subtitle: {
-    //     zhCn: '',
-    //     en: '',
-    //   },
-    //   photos: [
-    //     {
-    //       url: 'https://assets.anuluca.com/Island/picMerch/',
-    //       title: {
-    //         zhCn: '',
-    //         en: '',
-    //       },
-    //     },
-    //   ],
-    // },
   ],
   other: [
     {
@@ -1473,26 +1433,6 @@ const merchPhotos = {
         },
       ],
     },
-    // {
-    //   id: '',
-    //   title: {
-    //     zhCn: '',
-    //     en: '',
-    //   },
-    //   subtitle: {
-    //     zhCn: '',
-    //     en: '',
-    //   },
-    //   photos: [
-    //     {
-    //       url: 'https://assets.anuluca.com/Island/picMerch/',
-    //       title: {
-    //         zhCn: '',
-    //         en: '',
-    //       },
-    //     },
-    //   ],
-    // },
   ],
 } as const
 

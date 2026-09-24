@@ -1,10 +1,10 @@
 import { defineStore } from 'pinia'
 
-export type Theme = 'light' | 'dark'
+type Theme = 'light' | 'dark'
 
-export type DeviceType = 'mobile' | 'tablet' | 'desktop'
+type DeviceType = 'mobile' | 'tablet' | 'desktop'
 
-export type ZodiacLayout = 'hero' | 'content'
+type ZodiacLayout = 'hero' | 'content'
 
 export default defineStore('visualState', {
   state: (): {

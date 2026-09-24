@@ -10,7 +10,7 @@ export interface HarborItem {
   path?: string
 }
 
-export interface HarborSection {
+interface HarborSection {
   id: string
   title: string
   subtitle: string

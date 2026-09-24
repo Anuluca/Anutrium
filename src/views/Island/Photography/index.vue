@@ -43,27 +43,7 @@
           preserve-image-colors
         >
           <template #info="{ item: photo }">
-            <div class="photo-info__inner">
-              <span class="photo-info__device">
-                {{ photo.device || '' }}
-              </span>
-              <span
-                class="photo-info__time"
-                :class="{
-                  'photo-info__time--divided': photo.time && photo.location,
-                }"
-              >
-                {{ photo.time || '' }}
-              </span>
-              <span class="photo-info__location">
-                <Location
-                  v-if="photo.location"
-                  class="photo-info__location-icon"
-                  aria-hidden="true"
-                />
-                <span>{{ photo.location || '' }}</span>
-              </span>
-            </div>
+            <MediaPhotoInfo :item="photo" />
           </template>
         </MediaGallery>
 
@@ -116,7 +96,6 @@
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { type LocationQueryRaw, useRoute, useRouter } from 'vue-router'
-import { Location } from '@element-plus/icons-vue'
 
 import CollectionTabs, {
   type CollectionTabItem,
@@ -128,6 +107,7 @@ import FilterRail, {
 import MediaGallery, {
   type GalleryMedia,
 } from '@/components/MediaGallery/index.vue'
+import MediaPhotoInfo from '@/components/MediaPhotoInfo/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
 
 interface PhotographyPhoto extends GalleryMedia {
@@ -356,7 +336,6 @@ watch(
 <style lang="less" scoped>
 @red: #e23456;
 @mono: 'UnboundedSans', 'Courier New', monospace;
-@cjk: 'alibaba-puhuiti', sans-serif;
 
 .photography-page {
   color: #fff;
@@ -435,73 +414,6 @@ watch(
   font-weight: 100;
 }
 
-.photo-info {
-  &__inner {
-    position: relative;
-    z-index: 1;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto;
-    align-items: center;
-    min-height: 28px;
-    padding: 4px 12px 5px;
-    color: #fff;
-    font-family: @cjk;
-    font-size: 0.48rem;
-    line-height: 1.25;
-    text-align: center;
-
-    > span {
-      position: relative;
-      min-width: 0;
-      overflow: hidden;
-      padding: 0 10px;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-  }
-
-  &__device {
-    color: @red;
-    font-family: @mono;
-    font-weight: 800;
-    text-align: left;
-  }
-
-  &__time {
-    padding-right: 16px !important;
-
-    &--divided {
-      background: linear-gradient(
-          rgba(117, 18, 38, 0.9),
-          rgba(117, 18, 38, 0.9)
-        )
-        right center / 8px 1px no-repeat;
-    }
-  }
-
-  &__location {
-    display: inline-flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 4px;
-    overflow: visible !important;
-    padding-left: 8px !important;
-    text-align: right;
-    white-space: normal !important;
-
-    span {
-      overflow-wrap: anywhere;
-    }
-  }
-
-  &__location-icon {
-    flex: 0 0 auto;
-    width: 14px;
-    height: 14px;
-    color: @red;
-  }
-}
-
 .photography-empty {
   display: grid;
   place-items: center;
@@ -565,16 +477,6 @@ watch(
   .library-toolbar {
     padding-right: 5px;
     padding-left: 5px;
-  }
-
-  .photo-info__inner {
-    min-height: 26px;
-    padding: 3px 6px 4px;
-    font-size: 0.4rem;
-
-    > span {
-      padding: 0 5px;
-    }
   }
 }
 </style>

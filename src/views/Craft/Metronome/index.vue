@@ -36,10 +36,7 @@
           />
         </div>
 
-        <div class="corner-img corner--tl" />
-        <div class="corner-img corner--tr" />
-        <div class="corner-img corner--bl" />
-        <div class="corner-img corner--br" />
+        <ToolPanelCorners inset muted />
       </div>
 
       <div class="right-panel metro-controls">
@@ -121,10 +118,7 @@
           <span>第一拍重音</span>
         </label>
 
-        <div class="corner corner--tl" />
-        <div class="corner corner--tr" />
-        <div class="corner corner--bl" />
-        <div class="corner corner--br" />
+        <ToolPanelCorners />
       </div>
     </div>
   </ToolPageLayout>
@@ -134,6 +128,7 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
 import ToolPageLayout from '@/components/ToolPageLayout/index.vue'
+import ToolPanelCorners from '@/components/ToolPanelCorners/index.vue'
 
 const recommendedTools = [{ label: '配色提取器', path: '/colorPalette' }]
 
@@ -277,30 +272,14 @@ onBeforeUnmount(() => {
 </script>
 
 <style lang="less" scoped>
+@import '@/assets/style/tool-tactical.less';
+
 @red: #e8284a;
 @red-dim: rgba(232, 40, 74, 0.15);
 @surface: #140a0c;
 @border: rgba(255, 255, 255, 0.07);
 @text: #ffffff;
 @muted: rgba(255, 255, 255, 0.45);
-
-.font-squish(@origin: center) {
-  font-family: 'STSong', serif;
-  display: inline-block;
-  transform: scaleX(0.9);
-  transform-origin: @origin;
-}
-
-@keyframes tacticalIn {
-  from {
-    opacity: 0;
-    transform: translateY(15px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
 .metronome-tool {
   color: @text;
@@ -346,63 +325,6 @@ onBeforeUnmount(() => {
   background: @surface;
   border: 1px solid @border;
   padding: 30px;
-}
-
-.corner,
-.corner-img {
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  pointer-events: none;
-  z-index: 5;
-
-  &--tl {
-    top: -1px;
-    left: -1px;
-    border-top: 2px solid @red;
-    border-left: 2px solid @red;
-  }
-  &--tr {
-    top: -1px;
-    right: -1px;
-    border-top: 2px solid @red;
-    border-right: 2px solid @red;
-  }
-  &--bl {
-    bottom: -1px;
-    left: -1px;
-    border-bottom: 2px solid @red;
-    border-left: 2px solid @red;
-  }
-  &--br {
-    bottom: -1px;
-    right: -1px;
-    border-bottom: 2px solid @red;
-    border-right: 2px solid @red;
-  }
-
-  &.corner-img {
-    &.corner--tl {
-      top: 10px;
-      left: 10px;
-      border-color: #50505076;
-    }
-    &.corner--tr {
-      top: 10px;
-      right: 10px;
-      border-color: #50505076;
-    }
-    &.corner--bl {
-      bottom: 10px;
-      left: 10px;
-      border-color: #50505076;
-    }
-    &.corner--br {
-      bottom: 10px;
-      right: 10px;
-      border-color: #50505076;
-    }
-  }
 }
 
 .metro-stage {

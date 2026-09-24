@@ -34,8 +34,6 @@ import ToolRecommendationRow, {
   type RecommendedTool,
 } from '@/components/ToolRecommendationRow/index.vue'
 
-export type { RecommendedTool }
-
 withDefaults(
   defineProps<{
     backLabel?: string

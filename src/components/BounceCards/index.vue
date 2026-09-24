@@ -29,7 +29,7 @@ import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { usePreferredReducedMotion } from '@vueuse/core'
 import { gsap } from 'gsap'
 
-export interface BounceCardItem {
+interface BounceCardItem {
   id: string
 }
 

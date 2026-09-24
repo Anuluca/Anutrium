@@ -156,7 +156,7 @@ const DESCRIPTION_ROUTE_GROUPS: Record<string, keyof typeof PAGE_DESCRIPTIONS> =
 const PAGE_THEME_COLORS: Partial<
   Record<keyof typeof PAGE_DESCRIPTIONS, string>
 > = {
-  ABOUT: '#3d2875',
+  ABOUT: '#e23456',
   ARCHIVE: '#5ad480',
   CRAFT: '#244392',
   FLANERIE: '#8a2c1b',
@@ -165,6 +165,8 @@ const PAGE_THEME_COLORS: Partial<
   PET: '#e23456',
 }
 
+const LEGACY_RED_BACKGROUND_GROUPS = new Set(['ABOUT', 'HOME', 'ISLAND'])
+
 interface RouteMeta {
   activeMenu?: string
   updatedAt?: string
@@ -172,19 +174,10 @@ interface RouteMeta {
   titleCn: string
   fullFooter: boolean
   pageFooter: boolean
-  headerIcon?: HeaderIconName
   ifShow: boolean
   noMenu?: boolean
   starBackground?: 'default' | 'deep-black'
 }
-
-export type HeaderIconName =
-  | 'Collection'
-  | 'HomeFilled'
-  | 'MapLocation'
-  | 'Ship'
-  | 'Tools'
-  | 'UserFilled'
 
 type RouteConfig = RouteRecordRaw & {
   name: string
@@ -201,7 +194,6 @@ export const routes: RouteConfig[] = [
       titleCn: '主页',
       fullFooter: false,
       pageFooter: false,
-      headerIcon: 'HomeFilled',
       ifShow: true,
     },
   },
@@ -215,7 +207,6 @@ export const routes: RouteConfig[] = [
       titleCn: '作品集',
       fullFooter: true,
       pageFooter: true,
-      headerIcon: 'Collection',
       ifShow: true,
     },
   },
@@ -229,7 +220,6 @@ export const routes: RouteConfig[] = [
       titleCn: '旅程',
       fullFooter: true,
       pageFooter: true,
-      headerIcon: 'MapLocation',
       ifShow: true,
     },
   },
@@ -259,7 +249,6 @@ export const routes: RouteConfig[] = [
       titleCn: '个人海湾',
       fullFooter: true,
       pageFooter: false,
-      headerIcon: 'Ship',
       ifShow: true,
     },
   },
@@ -393,7 +382,6 @@ export const routes: RouteConfig[] = [
       titleCn: '工具',
       fullFooter: true,
       pageFooter: true,
-      headerIcon: 'Tools',
       ifShow: true,
     },
   },
@@ -407,7 +395,6 @@ export const routes: RouteConfig[] = [
       titleCn: '关于',
       fullFooter: false,
       pageFooter: true,
-      headerIcon: 'UserFilled',
       ifShow: true,
     },
   },
@@ -598,7 +585,6 @@ export const routes: RouteConfig[] = [
       titleCn: '个人海湾',
       fullFooter: true,
       pageFooter: false,
-      headerIcon: 'Ship',
       ifShow: false,
     },
   },
@@ -683,14 +669,17 @@ export const syncSeoMeta = (to: RouteLocationNormalizedLoaded) => {
   setMetaContent('link[rel="canonical"]', seoMeta.canonicalUrl, 'href')
 }
 
-export const getPageThemeColor = (route: RouteLocationNormalizedLoaded) => {
+const getPageThemeGroup = (route: RouteLocationNormalizedLoaded) => {
   const routeName = String(route.name || 'HOME')
   const activeMenuGroup =
     typeof route.meta.activeMenu === 'string'
       ? route.meta.activeMenu.split('/').filter(Boolean)[0]?.toUpperCase()
       : undefined
-  const pageGroup =
-    activeMenuGroup || DESCRIPTION_ROUTE_GROUPS[routeName] || routeName
+  return activeMenuGroup || DESCRIPTION_ROUTE_GROUPS[routeName] || routeName
+}
+
+const getPageThemeColor = (route: RouteLocationNormalizedLoaded) => {
+  const pageGroup = getPageThemeGroup(route)
 
   return (
     PAGE_THEME_COLORS[pageGroup as keyof typeof PAGE_THEME_COLORS] || '#e23456'
@@ -699,10 +688,18 @@ export const getPageThemeColor = (route: RouteLocationNormalizedLoaded) => {
 
 export const syncPageTheme = (route: RouteLocationNormalizedLoaded) => {
   if (typeof document === 'undefined') return
-  document.documentElement.style.setProperty(
-    '--page-theme-color',
-    getPageThemeColor(route)
-  )
+  const rootStyle = document.documentElement.style
+  const pageGroup = getPageThemeGroup(route)
+
+  rootStyle.setProperty('--page-theme-color', getPageThemeColor(route))
+
+  if (LEGACY_RED_BACKGROUND_GROUPS.has(pageGroup)) {
+    rootStyle.setProperty('--page-theme-background-dark', '#65182780')
+    rootStyle.setProperty('--page-theme-background-light', '#711c2d80')
+  } else {
+    rootStyle.removeProperty('--page-theme-background-dark')
+    rootStyle.removeProperty('--page-theme-background-light')
+  }
 }
 
 export const installRouterGuards = (router: Router) => {

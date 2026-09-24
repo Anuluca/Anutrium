@@ -175,7 +175,8 @@ onUnmounted(() => {
   width: 238px;
   box-sizing: border-box;
   padding: 10px;
-  border: 1px solid rgba(226, 52, 86, 0.35);
+  border: 1px solid
+    color-mix(in srgb, var(--page-theme-color, #e23456) 35%, transparent);
   border-radius: 5px;
   color: #d4d4d4;
   background: rgba(8, 7, 10, 0.97);
@@ -266,11 +267,11 @@ onUnmounted(() => {
   &:hover,
   &:focus-visible,
   &.is-copied {
-    color: #e23456;
+    color: var(--page-theme-color, #e23456);
   }
 
   &:focus-visible {
-    outline: 1px solid #e23456;
+    outline: 1px solid var(--page-theme-color, #e23456);
     outline-offset: 2px;
   }
 }

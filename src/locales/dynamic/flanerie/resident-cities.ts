@@ -531,18 +531,6 @@ const residentCities = [
       lat: 30.5928,
       lng: 114.3055,
     },
-    // videos: [
-    //   {
-    //     title: {
-    //       zhCn: 'VLOG',
-    //       en: 'VLOG',
-    //     },
-    //     cover: 'https://assets.anuluca.com/other/videoCover/',
-    //     bvid: '',
-    //     url: 'https://www.bilibili.com/video/',
-    //     orientation: 'landscape',
-    //   },
-    // ],
     photos: [
       {
         location: {
@@ -823,18 +811,6 @@ const residentCities = [
       lat: 23.1291,
       lng: 113.2644,
     },
-    // videos: [
-    //   {
-    //     title: {
-    //       zhCn: 'VLOG',
-    //       en: 'VLOG',
-    //     },
-    //     cover: 'https://assets.anuluca.com/other/videoCover/',
-    //     bvid: '',
-    //     url: 'https://www.bilibili.com/video/',
-    //     orientation: 'landscape',
-    //   },
-    // ],
     photos: [
       {
         location: {

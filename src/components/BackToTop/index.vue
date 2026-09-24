@@ -85,9 +85,9 @@ const scrollToTop = () => {
   overflow: hidden;
   border: 0;
   color: rgba(255, 255, 255, 0.76);
-  border-top: 1px solid #e23456;
-  border-left: 1px solid #e23456;
-  border-right: 1px solid #e23456;
+  border-top: 1px solid var(--page-theme-color, #e23456);
+  border-left: 1px solid var(--page-theme-color, #e23456);
+  border-right: 1px solid var(--page-theme-color, #e23456);
   background-color: rgba(0, 0, 0, 0.32);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.28);
   cursor: pointer;
@@ -97,7 +97,8 @@ const scrollToTop = () => {
 
   &:focus-visible {
     color: #fff;
-    box-shadow: 0 0 18px rgba(203, 15, 53, 0.457);
+    box-shadow: 0 0 18px
+      color-mix(in srgb, var(--page-theme-color, #e23456) 46%, transparent);
     transform: translateY(-2px);
 
     .button-arrow.no-rem {
@@ -108,7 +109,8 @@ const scrollToTop = () => {
   @media (hover: hover) and (pointer: fine) {
     &:hover {
       color: #fff;
-      box-shadow: 0 0 18px rgba(203, 15, 53, 0.457);
+      box-shadow: 0 0 18px
+        color-mix(in srgb, var(--page-theme-color, #e23456) 46%, transparent);
       transform: translateY(-2px);
 
       .button-arrow.no-rem {
@@ -142,7 +144,7 @@ const scrollToTop = () => {
   &::after {
     content: '';
     width: var(--scroll-progress, 0%);
-    background: #e23456;
+    background: var(--page-theme-color, #e23456);
   }
 }
 
@@ -152,9 +154,9 @@ const scrollToTop = () => {
   left: 50%;
   width: 8px;
   height: 8px;
-  color: #e23456;
-  border-top: 2px solid #e23456;
-  border-left: 2px solid #e23456;
+  color: var(--page-theme-color, #e23456);
+  border-top: 2px solid var(--page-theme-color, #e23456);
+  border-left: 2px solid var(--page-theme-color, #e23456);
   transform: translateX(-50%) rotate(45deg);
   transition: border-color 0.25s ease, transform 0.25s ease;
 }

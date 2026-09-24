@@ -51,8 +51,10 @@ const props = withDefaults(
     closable?: boolean
   }>(),
   {
-    modelValue: true,
     closable: true,
+    closeText: undefined,
+    message: undefined,
+    modelValue: true,
   }
 )
 

@@ -30,7 +30,7 @@ export const getPageScrollTop = () => {
   return getPageScrollElement()?.scrollTop || 0
 }
 
-export const getPageScrollHeight = () => {
+const getPageScrollHeight = () => {
   if (typeof window === 'undefined') return 0
   return Math.max(window.innerHeight, getPageScrollElement()?.scrollHeight || 0)
 }
@@ -38,7 +38,7 @@ export const getPageScrollHeight = () => {
 export const getPageMaxScrollTop = () =>
   Math.max(0, getPageScrollHeight() - window.innerHeight)
 
-export const PAGE_END_VISIBILITY_THRESHOLD = 80
+const PAGE_END_VISIBILITY_THRESHOLD = 80
 
 export const isPageAtEnd = (
   scrollTop: number,
@@ -190,7 +190,7 @@ export const addPageResizeListener = (listener: EventListener) => {
   }
 }
 
-export const supportsPageScrollEnd = () =>
+const supportsPageScrollEnd = () =>
   typeof window !== 'undefined' &&
   ('onscrollend' in window || 'onscrollend' in document)
 

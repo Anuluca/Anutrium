@@ -78,7 +78,20 @@ test('mobile home paging accepts a short slow swipe', async ({
   const archiveImages = page.locator(
     '#home-section-archive .archive-project-marquee img'
   )
+  const archiveCards = page.locator(
+    '#home-section-archive .archive-project-marquee .shared-work-card'
+  )
+  const loopCopyCards = page.locator(
+    '#home-section-archive .archive-project-marquee__group[aria-hidden="true"] .shared-work-card'
+  )
   await expect(archiveImages).toHaveCount(20)
+  await expect(archiveCards).toHaveCount(20)
+  await expect(loopCopyCards).toHaveCount(10)
+  expect(
+    await loopCopyCards.evaluateAll((cards) =>
+      cards.every((card) => card.getAttribute('tabindex') === '-1')
+    )
+  ).toBe(true)
   expect(
     await archiveImages.evaluateAll((images) =>
       images.every((image) => image.getAttribute('loading') === 'eager')
@@ -166,7 +179,7 @@ test('home paging pauses the bottom marquee during transitions', async ({
   await waitForActivePage(page, 'flanerie')
   await expect(marquee).not.toHaveClass(/motion-paused/)
   await expect(
-    page.locator('#home-section-flanerie .scroll-section-title')
+    page.locator('#home-section-flanerie .home-flanerie-copy')
   ).toHaveCount(1)
 })
 
@@ -579,7 +592,7 @@ test('home coordinates exits while changing between Passion and About Me', async
 
 test('home unmounts each previous secondary section when the next one enters', async ({
   page,
-}) => {
+}, testInfo) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' })
   await page.goto('/', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.layout-page')).toHaveClass(/\blayout-show\b/, {
@@ -587,7 +600,10 @@ test('home unmounts each previous secondary section when the next one enters', a
   })
   await page.waitForTimeout(1_800)
   await expect(page.locator('.home-corner-lines')).toHaveCount(0)
-  await expect(page.locator('.hero-content')).toHaveCSS('scale', '1.08')
+  await expect(page.locator('.hero-content')).toHaveCSS(
+    'scale',
+    testInfo.project.name.includes('mobile') ? '1' : '1.08'
+  )
 
   await page.mouse.wheel(0, 720)
   await expect(page.locator('.home-corner-lines-enter-active')).toHaveCount(1)
@@ -721,11 +737,11 @@ test('home unmounts each previous secondary section when the next one enters', a
 
     if (nextPage === 'flanerie') {
       const flanerieSubtitle = page.locator('.home-flanerie-subtitle')
-      await expect(flanerieSubtitle).toHaveCSS('animation-duration', '0.7s')
-      await expect(flanerieSubtitle).toHaveCSS('animation-delay', '0.42s')
+      await expect(flanerieSubtitle).toHaveCSS('animation-duration', '0.75s')
+      await expect(flanerieSubtitle).toHaveCSS('animation-delay', '0.2s')
       await expect(flanerieSubtitle).toHaveCSS(
         'animation-timing-function',
-        'ease-out'
+        'cubic-bezier(0.22, 1, 0.36, 1)'
       )
       const flanerieMoreAlignment = await page.evaluate(() => ({
         buttonLeft: document
@@ -776,7 +792,7 @@ test('home unmounts each previous secondary section when the next one enters', a
     await craftSubtitle.evaluate(
       (element) => getComputedStyle(element).animationName
     )
-  ).toContain('homeAboutTextEnter')
+  ).toContain('blurRevealEnter')
   expect(
     await craftDescription.evaluate(
       (element) => getComputedStyle(element).animationName
@@ -1504,9 +1520,8 @@ test('home switches five full-screen pages vertically while marquee stays fixed'
     const recommend = document.querySelector<HTMLElement>(
       '.hero-content > .recommend'
     )!
-    const aboutIntroduction = document.querySelector<HTMLElement>(
-      '.home-about-introduction'
-    )!
+    const aboutIntroduction =
+      document.querySelector<HTMLElement>('.home-about-intro')!
     const aboutGallery = document.querySelector<HTMLElement>(
       '.home-about-gallery'
     )!
@@ -1622,9 +1637,9 @@ test('home switches five full-screen pages vertically while marquee stays fixed'
   expect(transitionState.aboutTop).toBeLessThan(transitionState.viewportHeight)
   expect(transitionState.aboutAnimationDelay).toBe('0s, 0.2s')
   expect(transitionState.aboutTransform).not.toBe('none')
-  expect(transitionState.aboutTextAnimationName).toContain('homeAboutTextEnter')
-  expect(transitionState.aboutTextAnimationDuration).toBe('0.7s')
-  expect(transitionState.aboutTextAnimationDelay).toBe('0.42s')
+  expect(transitionState.aboutTextAnimationName).toContain('blurRevealEnter')
+  expect(transitionState.aboutTextAnimationDuration).toBe('0.75s')
+  expect(transitionState.aboutTextAnimationDelay).toBe('0.2s')
   expect(transitionState.aboutGalleryAnimationName).toContain(
     'homeAboutGalleryScaleEnter'
   )

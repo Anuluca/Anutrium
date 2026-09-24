@@ -8,6 +8,7 @@ import {
 
 const PAGE_LOAD_TIMEOUT = 20_000
 const MAX_GEOMETRY_DELTA = 1
+const MIN_DESKTOP_FOOTER_COM_BOTTOM_GAP = 4
 
 interface TestRouter {
   push: (path: string) => Promise<void>
@@ -209,6 +210,8 @@ test('every PageFooter route keeps its copyright row clear of FooterCom', async 
           copyrightBottom: copyrightRect.bottom,
           contentBottom: contentRect.bottom,
           expectedOffset,
+          footerComBottom: Number.parseFloat(footerComStyle.bottom),
+          footerComBottomGap: window.innerHeight - footerComRect.bottom,
           footerComTop: footerComRect.top,
           footerComVisible,
           footerOffset: Number.parseFloat(
@@ -296,8 +299,8 @@ test('every PageFooter route keeps its copyright row clear of FooterCom', async 
         `${path}: sticky background top edge`
       ).toBeLessThanOrEqual(MAX_GEOMETRY_DELTA)
       expect(
-        Math.abs(geometry.stickyBackgroundBottom),
-        `${path}: sticky background bottom edge`
+        Math.abs(geometry.stickyBackgroundBottom + geometry.footerOffset),
+        `${path}: sticky background must extend behind FooterCom`
       ).toBeLessThanOrEqual(MAX_GEOMETRY_DELTA)
       expect(
         Math.abs(geometry.stickyBackgroundWidth - geometry.viewportWidth),
@@ -357,6 +360,16 @@ test('every PageFooter route keeps its copyright row clear of FooterCom', async 
       ).toBeGreaterThanOrEqual(geometry.contentHeight)
 
       if (geometry.footerComVisible) {
+        if (testInfo.project.name === 'chromium') {
+          expect(
+            geometry.footerComBottom,
+            `${path}: FooterCom bottom position`
+          ).toBeGreaterThan(MIN_DESKTOP_FOOTER_COM_BOTTOM_GAP)
+          expect(
+            geometry.footerComBottomGap,
+            `${path}: FooterCom bottom edge`
+          ).toBeGreaterThan(MIN_DESKTOP_FOOTER_COM_BOTTOM_GAP)
+        }
         expect(
           geometry.copyrightBottom - geometry.footerComTop,
           `${path}: copyright/FooterCom boundary`

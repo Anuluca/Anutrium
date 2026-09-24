@@ -1,5 +1,6 @@
 module.exports = {
   root: true,
+  ignorePatterns: ['worker/worker-configuration.d.ts'],
   env: {
     browser: true,
     node: true,

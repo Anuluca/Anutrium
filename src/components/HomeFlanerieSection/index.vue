@@ -11,7 +11,9 @@
     </div>
 
     <div class="home-flanerie-heading">
-      <p class="home-flanerie-subtitle">{{ subtitle }}</p>
+      <BlurReveal :active="active" class="home-flanerie-subtitle" tag="p">
+        {{ subtitle }}
+      </BlurReveal>
       <ThemeActionButton
         class="home-flanerie-more"
         :color="color"
@@ -52,6 +54,7 @@
 import { computed, defineAsyncComponent } from 'vue'
 import { useMediaQuery } from '@vueuse/core'
 
+import BlurReveal from '@/components/BlurReveal/index.vue'
 import BounceCards from '@/components/BounceCards/index.vue'
 import ThemeActionButton from '@/components/ThemeActionButton/index.vue'
 import VlogCard from '@/components/VlogCard/index.vue'
@@ -122,7 +125,6 @@ const journeyTransforms = computed(() =>
     pointer-events: none;
   }
 
-  &.is-active .home-flanerie-subtitle,
   &.is-active .home-flanerie-more {
     animation: homeFlanerieTextEnter 0.7s ease-out 0.42s both;
   }
@@ -234,7 +236,6 @@ const journeyTransforms = computed(() =>
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .home-flanerie-copy.is-active .home-flanerie-subtitle,
   .home-flanerie-copy.is-active .home-flanerie-more {
     animation-duration: 0.01ms;
     animation-delay: 0s;

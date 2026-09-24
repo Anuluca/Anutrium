@@ -25,15 +25,15 @@ GitHub Token 建议使用仅供此站点使用的 fine-grained personal access t
 `wrangler.jsonc` 已将自定义域名配置为：
 
 ```text
-https://anutrium-steam-api.tilucario.workers.dev
+https://steam-api.anuluca.com
 ```
 
 Cloudflare 账户必须已经接入 `anuluca.com` 域名。部署后验证：
 
 ```bash
-curl https://anutrium-steam-api.tilucario.workers.dev/health
-curl https://anutrium-steam-api.tilucario.workers.dev/profile
-curl https://anutrium-steam-api.tilucario.workers.dev/github/contributions
+curl https://steam-api.anuluca.com/health
+curl https://steam-api.anuluca.com/profile
+curl https://steam-api.anuluca.com/github/contributions
 ```
 
 ## 本地开发

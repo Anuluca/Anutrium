@@ -1,4 +1,4 @@
-export interface ArchiveWorkLink {
+interface ArchiveWorkLink {
   label: string
   url: string
   icon?: string

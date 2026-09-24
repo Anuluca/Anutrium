@@ -216,7 +216,7 @@ const switchPlatform: FooterPlatformItem = {
     width: 0;
     height: 2px;
     border-radius: 1px;
-    background: #e23456;
+    background: var(--page-theme-color, #e23456);
     opacity: 0;
     content: '';
     transform: translateX(-50%);
@@ -226,7 +226,7 @@ const switchPlatform: FooterPlatformItem = {
   &:hover,
   &:focus-visible,
   &.is-active {
-    color: #e23456;
+    color: var(--page-theme-color, #e23456);
 
     &::before {
       opacity: 1;
@@ -244,7 +244,7 @@ const switchPlatform: FooterPlatformItem = {
   }
 
   &:focus-visible {
-    outline: 1px solid #e23456;
+    outline: 1px solid var(--page-theme-color, #e23456);
     outline-offset: 1px;
   }
 }

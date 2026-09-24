@@ -20,40 +20,17 @@
           v-for="copyIndex in repeatCount"
           :key="`${row.id}-${copyIndex}`"
           class="archive-project-marquee__group"
-          :aria-hidden="copyIndex > 1"
+          :aria-hidden="copyIndex > 1 ? 'true' : undefined"
         >
-          <template
+          <WorkCard
             v-for="project in row.projects"
             :key="`${copyIndex}-${project.id}`"
-          >
-            <WorkCard
-              v-if="copyIndex === 1"
-              class="archive-project-marquee__card"
-              :work="project"
-              image-loading="eager"
-              @select="selectProject"
-            />
-            <div
-              v-else
-              class="archive-project-marquee__card archive-project-marquee__card--clone"
-              aria-hidden="true"
-            >
-              <picture>
-                <source
-                  media="(max-width: 768px)"
-                  :srcset="getCardMobileThumbnailUrl(project.img)"
-                />
-                <img
-                  :src="getCardThumbnailUrl(project.img)"
-                  alt=""
-                  loading="eager"
-                  decoding="async"
-                  width="768"
-                  height="576"
-                />
-              </picture>
-            </div>
-          </template>
+            class="archive-project-marquee__card"
+            :tabindex="copyIndex > 1 ? -1 : 0"
+            :work="project"
+            image-loading="eager"
+            @select="selectProject"
+          />
         </div>
       </div>
     </div>
@@ -64,10 +41,6 @@
 import { computed } from 'vue'
 
 import WorkCard from '@/components/WorkCard/index.vue'
-import {
-  getCardMobileThumbnailUrl,
-  getCardThumbnailUrl,
-} from '@/utils/imageVariant'
 
 import type { WorkCardItem } from '@/types/archive'
 
@@ -180,25 +153,6 @@ const projectRows = computed(() => {
 .archive-project-marquee__card {
   flex: 0 0 clamp(9rem, 16vw, 17rem);
   aspect-ratio: 16 / 10;
-}
-
-.archive-project-marquee__card--clone {
-  overflow: hidden;
-  background: #0d0d0e;
-  box-shadow: 0 0.35rem 0.9rem rgba(0, 0, 0, 0.22);
-  pointer-events: none;
-
-  picture,
-  img {
-    display: block;
-    width: 100%;
-    height: 100%;
-  }
-
-  img {
-    object-fit: cover;
-    filter: brightness(0.62);
-  }
 }
 
 .archive-project-marquee:not(.archive-project-marquee--paused)

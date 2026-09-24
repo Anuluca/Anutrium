@@ -6,7 +6,7 @@ export type ImageVariant = 'home-thumb' | 'card-thumb' | 'card-mobile'
  * 标记由 Cloudflare Images 转换流处理的 R2 缩略图。
  * 原图继续保留在 R2；非本站资源保持原样，避免影响外部图片。
  */
-export const getImageVariantUrl = (source: string, variant: ImageVariant) => {
+const getImageVariantUrl = (source: string, variant: ImageVariant) => {
   try {
     const url = new URL(source)
     if (url.origin !== R2_ASSET_ORIGIN) return source

@@ -347,7 +347,7 @@ watch(shouldAnimateCursor, (canAnimate) => {
   height: @follower-size;
   margin-top: -(@follower-size / 2);
   margin-left: -(@follower-size / 2);
-  background-color: #e23456;
+  background-color: var(--page-theme-color, #e23456);
   border-radius: 50%;
   box-shadow: 0 0 20px #ffffff61;
 

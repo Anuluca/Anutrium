@@ -1,4 +1,4 @@
-export const studyNoteTypeMap = {
+const studyNoteTypeMap = {
   frontend: {
     label: {
       zhCn: '前端',
@@ -13,7 +13,7 @@ export const studyNoteTypeMap = {
   },
 } as const
 
-export const studyNoteList = [
+const studyNoteList = [
   {
     id: 'vue-reactivity-notes',
     title: {

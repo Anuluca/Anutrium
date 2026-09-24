@@ -1,6 +1,6 @@
 import type { XiangqiColor, XiangqiPieceType } from 'xiangqi.js'
 
-export const AI_DEPTHS = [3, 5, 7, 9] as const
+const AI_DEPTHS = [3, 5, 7, 9] as const
 export type XiangqiAiDepth = (typeof AI_DEPTHS)[number]
 
 export const AI_TIME_LIMITS: Record<XiangqiAiDepth, number> = {

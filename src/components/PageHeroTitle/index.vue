@@ -67,7 +67,7 @@ const themeColors: Record<string, string> = {
   ARCHIVE: '#2f7548',
   FLANERIE: '#8a2c1b',
   CRAFT: '#244392',
-  ABOUT: '#3d2875',
+  ABOUT: '#e23456',
 }
 const titleColor = computed(
   () => themeColors[String(route.name)] || 'var(--text-color)'

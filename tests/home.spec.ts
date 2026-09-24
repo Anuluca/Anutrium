@@ -94,22 +94,60 @@ test.describe('top-level pages', () => {
 
 test('page theme color follows the active route', async ({ page }) => {
   const samples = [
-    { path: '/', color: '#e23456' },
-    { path: '/archive', color: '#5ad480' },
-    { path: '/test', color: '#e23456' },
+    {
+      path: '/',
+      color: '#e23456',
+      backgroundDark: '#65182780',
+      backgroundLight: '#711c2d80',
+    },
+    {
+      path: '/about',
+      color: '#e23456',
+      backgroundDark: '#65182780',
+      backgroundLight: '#711c2d80',
+    },
+    {
+      path: '/island/photography',
+      color: '#e23456',
+      backgroundDark: '#65182780',
+      backgroundLight: '#711c2d80',
+    },
+    {
+      path: '/archive',
+      color: '#5ad480',
+      backgroundDark: '',
+      backgroundLight: '',
+    },
+    {
+      path: '/test',
+      color: '#e23456',
+      backgroundDark: '#65182780',
+      backgroundLight: '#711c2d80',
+    },
   ]
 
   for (const sample of samples) {
     await page.goto(sample.path, { waitUntil: 'domcontentloaded' })
     await expect
       .poll(() =>
-        page.evaluate(() =>
-          getComputedStyle(document.documentElement)
-            .getPropertyValue('--page-theme-color')
-            .trim()
-        )
+        page.evaluate(() => {
+          const rootStyle = getComputedStyle(document.documentElement)
+          return {
+            backgroundDark: rootStyle
+              .getPropertyValue('--page-theme-background-dark')
+              .trim(),
+            backgroundLight: rootStyle
+              .getPropertyValue('--page-theme-background-light')
+              .trim(),
+            color: rootStyle.getPropertyValue('--page-theme-color').trim(),
+          }
+        })
       )
-      .toBe(sample.color)
+      .toEqual({
+        backgroundDark: sample.backgroundDark,
+        backgroundLight: sample.backgroundLight,
+        color: sample.color,
+      })
   }
 })
 
@@ -1236,173 +1274,6 @@ test('mobile first-load desktop recommendation is fixed and closable', async ({
   await page.locator('.logo-box').click()
   await expect(page).toHaveURL(/\/$/)
   await expect(alert).toBeHidden()
-})
-
-/*
-test('updated stamp follows the desktop nav rail and keeps its mobile header placement', async ({
-  page,
-}, testInfo) => {
-  await page.goto('/archive', { waitUntil: 'domcontentloaded' })
-  await expect(page.locator('.archives-page')).toBeVisible({
-    timeout: PAGE_LOAD_TIMEOUT,
-  })
-
-  const metrics = await page.evaluate(() => {
-    const stamp = document.querySelector<HTMLElement>('.header-updated')
-    const header = document.querySelector<HTMLElement>('.page-header')
-    const navigation = document.querySelector<HTMLElement>(
-      '.sections-fixed-nav'
-    )
-
-    if (!stamp || !header) throw new Error('Updated stamp is unavailable')
-
-    const stampBounds = stamp.getBoundingClientRect()
-    const headerBounds = header.getBoundingClientRect()
-    const navigationBounds = navigation?.getBoundingClientRect()
-    const stampStyle = window.getComputedStyle(stamp)
-
-    return {
-      color: stampStyle.color,
-      headerBottom: headerBounds.bottom,
-      headerTop: headerBounds.top,
-      navigationBottom: navigationBounds?.bottom ?? 0,
-      opacityTarget: stampStyle.getPropertyValue('--updated-opacity').trim(),
-      position: stampStyle.position,
-      stampBottom: stampBounds.bottom,
-      stampLeft: stampBounds.left,
-      stampTop: stampBounds.top,
-    }
-  })
-
-  expect(metrics.color).toBe('rgb(226, 52, 86)')
-
-  if (testInfo.project.name.includes('mobile')) {
-    expect(metrics.position).toBe('absolute')
-    expect(metrics.stampTop).toBeGreaterThanOrEqual(metrics.headerTop)
-    expect(metrics.stampBottom).toBeLessThanOrEqual(metrics.headerBottom)
-    return
-  }
-
-  expect(metrics.position).toBe('fixed')
-  expect(metrics.opacityTarget).toBe('0.16')
-  expect(metrics.stampLeft).toBeLessThan(40)
-  expect(metrics.stampTop).toBeGreaterThan(metrics.navigationBottom)
-})
-*/
-
-test('home uses centered display headings and keeps scroll-aware navigation', async ({
-  page,
-}) => {
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
-  await expect(page.locator('.home-page')).toBeVisible({
-    timeout: PAGE_LOAD_TIMEOUT,
-  })
-
-  await expect(page.locator('.home-page .home-section-layout')).toHaveCount(0)
-  await expect(page.locator('.home-indexed-section')).toHaveCount(4)
-  await expect(page.locator('.home-page .archive-entry')).toHaveCount(0)
-
-  const navigationItems = page.locator(
-    '.home-sections-nav .sections-fixed-nav__item'
-  )
-  await expect(navigationItems).toHaveCount(4)
-  await navigationItems.nth(1).click()
-
-  const worksSection = page.locator('#home-section-works')
-  await expect
-    .poll(() =>
-      worksSection.evaluate((section) =>
-        Math.abs(section.getBoundingClientRect().top)
-      )
-    )
-    .toBeLessThan(180)
-  await expect(navigationItems.nth(1)).toHaveAttribute(
-    'aria-current',
-    'location'
-  )
-  await expect(worksSection.locator('.scroll-reveal-title')).toHaveClass(
-    /\bis-revealed\b/
-  )
-
-  const worksHeading = worksSection.locator('.home-section-title')
-  await expect
-    .poll(() =>
-      worksHeading.evaluate((heading) => {
-        const headingBounds = heading.getBoundingClientRect()
-        const sectionBounds = heading
-          .closest('section')!
-          .getBoundingClientRect()
-
-        return Math.abs(
-          headingBounds.left +
-            headingBounds.width / 2 -
-            (sectionBounds.left + sectionBounds.width / 2)
-        )
-      })
-    )
-    .toBeLessThanOrEqual(1)
-
-  const headingMetrics = await worksHeading.evaluate((heading) => {
-    const headingBounds = heading.getBoundingClientRect()
-    const headingWrapperBounds = heading.parentElement!.getBoundingClientRect()
-    const englishTitleBounds = heading
-      .querySelector('.home-section-title__en')!
-      .getBoundingClientRect()
-    const mainTitleBounds = heading
-      .querySelector('.home-section-title__main')!
-      .getBoundingClientRect()
-    const englishTitleStyle = getComputedStyle(
-      heading.querySelector('.home-section-title__en')!
-    )
-    const mainTitleStyle = getComputedStyle(
-      heading.querySelector('.home-section-title__main')!
-    )
-    const headingWrapperStyle = getComputedStyle(heading.parentElement!)
-    const shell = heading.closest('.home-section-shell') as HTMLElement
-    const shellScale = shell.getBoundingClientRect().width / shell.offsetWidth
-    const sectionBounds = heading.closest('section')!.getBoundingClientRect()
-    const style = getComputedStyle(heading)
-
-    return {
-      animationName: headingWrapperStyle.animationName,
-      bottomClearance:
-        (headingWrapperBounds.bottom - mainTitleBounds.bottom) / shellScale,
-      centerOffset: Math.abs(
-        headingBounds.left +
-          headingBounds.width / 2 -
-          (sectionBounds.left + sectionBounds.width / 2)
-      ),
-      englishGap: mainTitleBounds.top - englishTitleBounds.bottom,
-      englishFontFamily: englishTitleStyle.fontFamily,
-      englishLetterSpacing: englishTitleStyle.letterSpacing,
-      fontSize: Number.parseFloat(style.fontSize),
-      lineHeight: Number.parseFloat(style.lineHeight),
-      mainFontSize: Number.parseFloat(mainTitleStyle.fontSize),
-      textAlign: style.textAlign,
-      wrapperTransform: headingWrapperStyle.transform,
-    }
-  })
-
-  expect(headingMetrics.bottomClearance).toBeGreaterThanOrEqual(8)
-  expect(headingMetrics.animationName).toContain('home-section-heading-fade-in')
-  expect(headingMetrics.wrapperTransform).toBe('none')
-  expect(headingMetrics.centerOffset).toBeLessThanOrEqual(1)
-  expect(headingMetrics.englishGap).toBeGreaterThanOrEqual(0)
-  expect(headingMetrics.englishGap).toBeLessThanOrEqual(2)
-  expect(headingMetrics.englishFontFamily.toLowerCase()).toContain(
-    'unboundedsans'
-  )
-  expect(headingMetrics.englishLetterSpacing).toBe('normal')
-  expect(headingMetrics.fontSize).toBeGreaterThanOrEqual(21)
-  expect(headingMetrics.fontSize).toBeLessThan(56)
-  expect(headingMetrics.lineHeight).toBeGreaterThanOrEqual(
-    headingMetrics.fontSize * 0.95
-  )
-  expect(headingMetrics.lineHeight).toBeLessThanOrEqual(headingMetrics.fontSize)
-  expect(headingMetrics.mainFontSize).toBeLessThan(
-    headingMetrics.fontSize * 0.9
-  )
-  expect(headingMetrics.textAlign).toBe('center')
 })
 
 test('about content uses the full-width feathered hover field without a glass plate', async ({

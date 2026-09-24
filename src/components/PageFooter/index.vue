@@ -403,8 +403,8 @@ onUnmounted(() => {
     font-size: 1.107rem;
     letter-spacing: 0;
     line-height: 1.8rem;
-    color: #e23456;
-    filter: drop-shadow(0 0 10px #e23456);
+    color: var(--page-theme-color, #e23456);
+    filter: drop-shadow(0 0 10px var(--page-theme-color, #e23456));
   }
 }
 
@@ -422,8 +422,12 @@ onUnmounted(() => {
 
   &.logo-hovered {
     color: #000;
-    filter: drop-shadow(0 0 20px #e23456) drop-shadow(0 0 40px #e23456)
-      drop-shadow(0 0 60px rgba(226, 52, 86, 0.5));
+    filter: drop-shadow(0 0 20px var(--page-theme-color, #e23456))
+      drop-shadow(0 0 40px var(--page-theme-color, #e23456))
+      drop-shadow(
+        0 0 60px
+          color-mix(in srgb, var(--page-theme-color, #e23456) 50%, transparent)
+      );
   }
 }
 
@@ -438,7 +442,7 @@ onUnmounted(() => {
   cursor: pointer;
 
   &:focus-visible {
-    outline: 1px solid #e23456;
+    outline: 1px solid var(--page-theme-color, #e23456);
     outline-offset: -36px;
   }
 }
@@ -458,7 +462,7 @@ onUnmounted(() => {
   height: auto;
   padding: var(--page-footer-marquee-gap) 0 0;
   clip-path: inset(0 -100vw);
-  color: #e23456;
+  color: var(--page-theme-color, #e23456);
   font-size: 13px;
   line-height: 20px;
   text-align: center;
@@ -483,7 +487,7 @@ onUnmounted(() => {
     &::before {
       content: '';
       position: absolute;
-      inset: 0 auto 0 50%;
+      inset: 0 auto calc(-1 * var(--footer-com-offset)) 50%;
       z-index: 0;
       width: 100vw;
       background: var(--page-footer-surface-background);
@@ -542,7 +546,7 @@ onUnmounted(() => {
     isolation: isolate;
     box-sizing: border-box;
     padding-bottom: 0;
-    color: #a52b43;
+    color: color-mix(in srgb, var(--page-theme-color, #e23456) 72%, #000);
     background: transparent;
   }
 
@@ -605,7 +609,7 @@ onUnmounted(() => {
 
     &:hover {
       color: #000;
-      background-color: #e23456;
+      background-color: var(--page-theme-color, #e23456);
     }
   }
 }

@@ -56,7 +56,20 @@
   }
 
   &.dark {
-background: radial-gradient(ellipse 100% 105% at 50% -10%, #030202 77%, #65182780 100%), #0a0411;
+    background: radial-gradient(
+        ellipse 100% 105% at 50% -10%,
+        #030202 77%,
+        var(
+            --page-theme-background-dark,
+            color-mix(
+              in srgb,
+              color-mix(in srgb, var(--page-theme-color, #e23456) 45%, #000) 50%,
+              transparent
+            )
+          )
+          100%
+      ),
+      #0a0411;
   }
 
   &.dark.is-deep-black {
@@ -76,7 +89,15 @@ background: radial-gradient(ellipse 100% 105% at 50% -10%, #030202 77%, #6518278
         ellipse 100% 105% at 50% -10%,
         #131313 0,
         #0a060f 77%,
-        #711c2d80 100%
+        var(
+            --page-theme-background-light,
+            color-mix(
+              in srgb,
+              color-mix(in srgb, var(--page-theme-color, #e23456) 45%, #000) 50%,
+              transparent
+            )
+          )
+          100%
       ),
       #0a0411;
   }

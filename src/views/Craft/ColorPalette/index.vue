@@ -42,10 +42,7 @@
         </label>
         <div class="pt-scanlines" />
 
-        <div class="corner-img corner--tl" />
-        <div class="corner-img corner--tr" />
-        <div class="corner-img corner--bl" />
-        <div class="corner-img corner--br" />
+        <ToolPanelCorners inset muted />
       </div>
 
       <div class="right-panel pt-result-area">
@@ -121,10 +118,7 @@
           </div>
         </div>
 
-        <div class="corner corner--tl" />
-        <div class="corner corner--tr" />
-        <div class="corner corner--bl" />
-        <div class="corner corner--br" />
+        <ToolPanelCorners />
       </div>
     </div>
   </ToolPageLayout>
@@ -135,6 +129,7 @@ import { computed, onBeforeUnmount, ref } from 'vue'
 
 import ToolCrystalLogo from '@/components/ToolCrystalLogo/index.vue'
 import ToolPageLayout from '@/components/ToolPageLayout/index.vue'
+import ToolPanelCorners from '@/components/ToolPanelCorners/index.vue'
 
 const previewUrl = ref<string>('')
 const extractedColors = ref<string[]>([])
@@ -305,29 +300,13 @@ onBeforeUnmount(() => {
 </script>
 
 <style lang="less" scoped>
+@import '@/assets/style/tool-tactical.less';
+
 @red: #e8284a;
 @surface: #140a0c;
 @border: rgba(255, 255, 255, 0.07);
 @text: #ffffff;
 @muted: rgba(255, 255, 255, 0.45);
-
-.font-squish(@origin: center) {
-  font-family: 'STSong', serif;
-  display: inline-block;
-  transform: scaleX(0.9);
-  transform-origin: @origin;
-}
-
-@keyframes tacticalIn {
-  0% {
-    opacity: 0;
-    transform: translateY(15px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
 .palette-tool {
   color: @text;
@@ -365,62 +344,6 @@ onBeforeUnmount(() => {
   min-height: 600px;
   display: flex;
   flex-direction: column;
-}
-
-.corner,
-.corner-img {
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  pointer-events: none;
-  z-index: 5;
-  &--tl {
-    top: -1px;
-    left: -1px;
-    border-top: 2px solid @red;
-    border-left: 2px solid @red;
-  }
-  &--tr {
-    top: -1px;
-    right: -1px;
-    border-top: 2px solid @red;
-    border-right: 2px solid @red;
-  }
-  &--bl {
-    bottom: -1px;
-    left: -1px;
-    border-bottom: 2px solid @red;
-    border-left: 2px solid @red;
-  }
-  &--br {
-    bottom: -1px;
-    right: -1px;
-    border-bottom: 2px solid @red;
-    border-right: 2px solid @red;
-  }
-
-  &.corner-img {
-    &.corner--tl {
-      top: 10px;
-      left: 10px;
-      border-color: #50505076;
-    }
-    &.corner--tr {
-      top: 10px;
-      right: 10px;
-      border-color: #50505076;
-    }
-    &.corner--bl {
-      bottom: 10px;
-      left: 10px;
-      border-color: #50505076;
-    }
-    &.corner--br {
-      bottom: 10px;
-      right: 10px;
-      border-color: #50505076;
-    }
-  }
 }
 
 .pt-upload-input {

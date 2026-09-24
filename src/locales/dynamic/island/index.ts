@@ -9,129 +9,16 @@ import experiments from './Works/experiments'
 import illustration from './Works/illustration'
 import trainerCard from './Works/trainerCard'
 
+const createTemporaryLatestPage = () =>
+  ({
+    title: 'TEMP',
+    module: 'TEMP / TEMP',
+    path: '/archive?project=W001',
+    img: 'https://placehold.co/260x180/14070c/e23456?text=TEMP',
+  } as const)
+
 const latestPages = {
-  zhCn: [
-    {
-      title: 'TEMP',
-      module: 'TEMP / TEMP',
-      path: '/archive?project=W001',
-      img: 'https://placehold.co/260x180/14070c/e23456?text=TEMP',
-    },
-    {
-      title: 'TEMP',
-      module: 'TEMP / TEMP',
-      path: '/archive?project=W001',
-      img: 'https://placehold.co/260x180/14070c/e23456?text=TEMP',
-    },
-    {
-      title: 'TEMP',
-      module: 'TEMP / TEMP',
-      path: '/archive?project=W001',
-      img: 'https://placehold.co/260x180/14070c/e23456?text=TEMP',
-    },
-    {
-      title: 'TEMP',
-      module: 'TEMP / TEMP',
-      path: '/archive?project=W001',
-      img: 'https://placehold.co/260x180/14070c/e23456?text=TEMP',
-    },
-    {
-      title: 'TEMP',
-      module: 'TEMP / TEMP',
-      path: '/archive?project=W001',
-      img: 'https://placehold.co/260x180/14070c/e23456?text=TEMP',
-    },
-    {
-      title: 'TEMP',
-      module: 'TEMP / TEMP',
-      path: '/archive?project=W001',
-      img: 'https://placehold.co/260x180/14070c/e23456?text=TEMP',
-    },
-    {
-      title: 'TEMP',
-      module: 'TEMP / TEMP',
-      path: '/archive?project=W001',
-      img: 'https://placehold.co/260x180/14070c/e23456?text=TEMP',
-    },
-    {
-      title: 'TEMP',
-      module: 'TEMP / TEMP',
-      path: '/archive?project=W001',
-      img: 'https://placehold.co/260x180/14070c/e23456?text=TEMP',
-    },
-    {
-      title: 'TEMP',
-      module: 'TEMP / TEMP',
-      path: '/archive?project=W001',
-      img: 'https://placehold.co/260x180/14070c/e23456?text=TEMP',
-    },
-    {
-      title: 'TEMP',
-      module: 'TEMP / TEMP',
-      path: '/archive?project=W001',
-      img: 'https://placehold.co/260x180/14070c/e23456?text=TEMP',
-    },
-    {
-      title: 'TEMP',
-      module: 'TEMP / TEMP',
-      path: '/archive?project=W001',
-      img: 'https://placehold.co/260x180/14070c/e23456?text=TEMP',
-    },
-    {
-      title: 'TEMP',
-      module: 'TEMP / TEMP',
-      path: '/archive?project=W001',
-      img: 'https://placehold.co/260x180/14070c/e23456?text=TEMP',
-    },
-    {
-      title: 'TEMP',
-      module: 'TEMP / TEMP',
-      path: '/archive?project=W001',
-      img: 'https://placehold.co/260x180/14070c/e23456?text=TEMP',
-    },
-    {
-      title: 'TEMP',
-      module: 'TEMP / TEMP',
-      path: '/archive?project=W001',
-      img: 'https://placehold.co/260x180/14070c/e23456?text=TEMP',
-    },
-    {
-      title: 'TEMP',
-      module: 'TEMP / TEMP',
-      path: '/archive?project=W001',
-      img: 'https://placehold.co/260x180/14070c/e23456?text=TEMP',
-    },
-    {
-      title: 'TEMP',
-      module: 'TEMP / TEMP',
-      path: '/archive?project=W001',
-      img: 'https://placehold.co/260x180/14070c/e23456?text=TEMP',
-    },
-    {
-      title: 'TEMP',
-      module: 'TEMP / TEMP',
-      path: '/archive?project=W001',
-      img: 'https://placehold.co/260x180/14070c/e23456?text=TEMP',
-    },
-    {
-      title: 'TEMP',
-      module: 'TEMP / TEMP',
-      path: '/archive?project=W001',
-      img: 'https://placehold.co/260x180/14070c/e23456?text=TEMP',
-    },
-    {
-      title: 'TEMP',
-      module: 'TEMP / TEMP',
-      path: '/archive?project=W001',
-      img: 'https://placehold.co/260x180/14070c/e23456?text=TEMP',
-    },
-    {
-      title: 'TEMP',
-      module: 'TEMP / TEMP',
-      path: '/archive?project=W001',
-      img: 'https://placehold.co/260x180/14070c/e23456?text=TEMP',
-    },
-  ],
+  zhCn: Array.from({ length: 20 }, createTemporaryLatestPage),
   en: [
     {
       title: 'State Grid UAV System',

@@ -311,17 +311,7 @@ const events = [
         orientation: 'landscape',
       },
     ],
-    photos: [
-      // {
-      //   location: {
-      //     zhCn: '城市活动',
-      //     en: 'City Event',
-      //   },
-      //   time: '2023',
-      //   device: 'iPhone 12 mini',
-      //   url: 'https://assets.anuluca.com/Flanerie/events/poke_event2/IMG_0704 (1).jpg',
-      // },
-    ],
+    photos: [],
   },
   {
     id: 'live_jolinPleasure',

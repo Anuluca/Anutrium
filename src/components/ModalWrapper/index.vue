@@ -60,10 +60,12 @@ const props = withDefaults(
     flushDesktop?: boolean
   }>(),
   {
-    width: '1280px',
-    closeTitle: 'Close (ESC)',
     appendToBody: true,
+    closeTitle: 'Close (ESC)',
     flushDesktop: false,
+    themeColor: undefined,
+    title: undefined,
+    width: '1280px',
   }
 )
 

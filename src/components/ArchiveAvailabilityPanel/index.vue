@@ -279,8 +279,8 @@ const requestResume = async () => {
   mask-image: linear-gradient(90deg, transparent, #000 24%, #000);
 
   :deep(.github-contribution-graph__summary) {
-    margin-top: 0.12rem;
-    color: rgb(61, 136 ,83);
+    margin-top: 0.06rem;
+    color: rgb(61 136 83);
     font-size: 0.32rem;
     line-height: 1;
     text-align: right;

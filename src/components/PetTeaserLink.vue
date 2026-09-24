@@ -354,7 +354,7 @@ onUnmounted(() => {
 .pet-teaser {
   --pet-entry-opacity: 0.5;
   --pet-footer-offset: 36px;
-  --pet-wand-color: @primary-color;
+  --pet-wand-color: var(--page-theme-color, @primary-color);
 
   position: fixed;
   right: 0;
@@ -499,7 +499,14 @@ onUnmounted(() => {
   width: 66.6667%;
   height: 36%;
   color: var(--pet-wand-color);
-  filter: drop-shadow(0 0 0.38em rgba(226, 52, 86, 0.34));
+  filter: drop-shadow(
+    0 0 0.38em
+      color-mix(
+        in srgb,
+        var(--page-theme-color, @primary-color) 34%,
+        transparent
+      )
+  );
   transform: rotate(0);
   transform-origin: 100% 12%;
   transition: filter 0.28s ease, transform 0.35s ease;
@@ -566,7 +573,14 @@ onUnmounted(() => {
   }
 
   .pet-teaser__wand {
-    filter: drop-shadow(0 0 0.48em rgba(226, 52, 86, 0.54));
+    filter: drop-shadow(
+      0 0 0.48em
+        color-mix(
+          in srgb,
+          var(--page-theme-color, @primary-color) 54%,
+          transparent
+        )
+    );
   }
 }
 
@@ -586,7 +600,14 @@ onUnmounted(() => {
 
 .pet-teaser--activating {
   .pet-teaser__wand {
-    filter: drop-shadow(0 0 0.56em rgba(226, 52, 86, 0.66));
+    filter: drop-shadow(
+      0 0 0.56em
+        color-mix(
+          in srgb,
+          var(--page-theme-color, @primary-color) 66%,
+          transparent
+        )
+    );
   }
 
   .pet-teaser__ears-window {
@@ -764,7 +785,14 @@ onUnmounted(() => {
 
   .pet-teaser--hovering {
     .pet-teaser__wand {
-      filter: drop-shadow(0 0 0.42em rgba(226, 52, 86, 0.44));
+      filter: drop-shadow(
+        0 0 0.42em
+          color-mix(
+            in srgb,
+            var(--page-theme-color, @primary-color) 44%,
+            transparent
+          )
+      );
       transform: rotate(-1deg);
     }
   }

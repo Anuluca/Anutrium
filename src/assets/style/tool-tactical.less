@@ -1,0 +1,18 @@
+.font-squish(@origin: center) {
+  display: inline-block;
+  font-family: 'STSong', serif;
+  transform: scaleX(0.9);
+  transform-origin: @origin;
+}
+
+@keyframes tacticalIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

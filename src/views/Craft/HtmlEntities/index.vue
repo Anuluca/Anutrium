@@ -32,10 +32,7 @@
           <span>没有匹配的常用转义字符</span>
         </div>
 
-        <div class="corner-img corner--tl" />
-        <div class="corner-img corner--tr" />
-        <div class="corner-img corner--bl" />
-        <div class="corner-img corner--br" />
+        <ToolPanelCorners inset />
       </div>
     </div>
   </ToolPageLayout>
@@ -45,6 +42,7 @@
 import { computed, ref } from 'vue'
 
 import ToolPageLayout from '@/components/ToolPageLayout/index.vue'
+import ToolPanelCorners from '@/components/ToolPanelCorners/index.vue'
 import { showErrorMessage, showSuccessMessage } from '@/utils/elementMessage'
 
 import 'element-plus/es/components/message/style/css'
@@ -263,30 +261,14 @@ const visibleChar = (char: string) => {
 </script>
 
 <style lang="less" scoped>
+@import '@/assets/style/tool-tactical.less';
+
 @red: #e8284a;
 @red-dim: rgba(232, 40, 74, 0.15);
 @border: rgba(255, 255, 255, 0.07);
 @text: #ffffff;
 @muted: rgba(255, 255, 255, 0.45);
 @mono: 'alibaba-puhuiti', monospace;
-
-.font-squish(@origin: center) {
-  font-family: 'STSong', serif;
-  display: inline-block;
-  transform: scaleX(0.9);
-  transform-origin: @origin;
-}
-
-@keyframes tacticalIn {
-  from {
-    opacity: 0;
-    transform: translateY(15px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
 .entity-tool {
   color: @text;
@@ -315,44 +297,6 @@ const visibleChar = (char: string) => {
   background: linear-gradient(150deg, #25252587 0%, rgba(68, 5, 18, 0.35) 100%);
   padding: 30px;
   overflow: hidden;
-}
-
-.corner-img {
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  pointer-events: none;
-  z-index: 5;
-
-  &.corner--tl {
-    top: 10px;
-    left: 10px;
-    border-top: 2px solid @red;
-    border-left: 2px solid @red;
-  }
-
-  &.corner--tr {
-    top: 10px;
-    right: 10px;
-    border-top: 2px solid @red;
-    border-right: 2px solid @red;
-  }
-
-  &.corner--bl {
-    bottom: 10px;
-    left: 10px;
-    border-bottom: 2px solid @red;
-    border-left: 2px solid @red;
-  }
-
-  &.corner--br {
-    right: 10px;
-    bottom: 10px;
-    border-bottom: 2px solid @red;
-    border-right: 2px solid @red;
-  }
-
-  border-color: #50505076;
 }
 
 .entity-stage {

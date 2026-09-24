@@ -29,6 +29,25 @@ test('desktop cursor grows slightly while the pointer is pressed', async ({
   await expect(cursorScale).toHaveCSS('transform', 'none')
 })
 
+test('desktop cursor follows the active main route theme color', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name.includes('mobile'))
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+
+  const cursorShape = page.locator('.cursor-position .cursor-shape')
+  const archiveMenuItem = page.locator('.desktop-menu-item.ARCHIVE')
+  await expect(cursorShape).toBeAttached({ timeout: PAGE_LOAD_TIMEOUT })
+  await expect(cursorShape).toHaveCSS('background-color', 'rgb(226, 52, 86)')
+
+  await expect(archiveMenuItem).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
+  await archiveMenuItem.click()
+  await expect(page.locator('.archives-page')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+  await expect(cursorShape).toHaveCSS('background-color', 'rgb(90, 212, 128)')
+})
+
 test('desktop cursor uses the loading state for the full route transition', async ({
   page,
 }, testInfo) => {

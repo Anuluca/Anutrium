@@ -1,6 +1,6 @@
-export type ContactType = 'TWITTER' | 'WEIBO' | 'BILIBILI' | 'GITHUB' | 'MAIL'
+type ContactType = 'TWITTER' | 'WEIBO' | 'BILIBILI' | 'GITHUB' | 'MAIL'
 
-export interface ContactLink {
+interface ContactLink {
   type: ContactType
   label: string
   href: string

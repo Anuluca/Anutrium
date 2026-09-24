@@ -1,6 +1,6 @@
-export type JourneyCategory = 'visited' | 'resident' | 'activity'
+type JourneyCategory = 'visited' | 'resident' | 'activity'
 
-export interface JourneyLocation {
+interface JourneyLocation {
   id: string
   name: string
   lat: number

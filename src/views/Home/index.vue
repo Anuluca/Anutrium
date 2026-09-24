@@ -48,6 +48,20 @@
           :inert="activeHomePageIndex !== 0"
         >
           <div class="home-page-content home-page-content--hero">
+            <LogoRotating3D
+              id="home-passion-static"
+              class="passion-logo"
+              low-power
+              transparent
+              resource-cache-key="home-passion-crystal"
+              render-mode="edges"
+              edge-color="#E23456"
+              :edge-width="4"
+              rotation-speed="slow"
+              :interactive="false"
+              aria-hidden="true"
+            />
+
             <div ref="heroContentElement" class="hero-content">
               <div
                 ref="recommendElement"
@@ -148,48 +162,43 @@
                 </template>
               </div>
 
-              <div ref="mainSloganElement" class="main-slogan">
-                <div class="moto">
-                  <p>DRIVEN</p>
-                  <p>BY</p>
-                  <p
-                    class="passion-line"
-                    :class="{ 'is-hovering': isPassionHovering }"
-                  >
-                    <SparklesText
-                      v-if="isHeroHeavyContentMounted"
-                      class="passion"
-                      text="PASSION"
-                      :active="isPassionHovering && !areHeroEffectsPaused"
-                      :rotate="false"
-                      :colors="PASSION_SPARKLE_COLORS"
-                      :sparkle-area="PASSION_SPARKLE_AREA"
-                      :sparkle-size="42"
-                      :sparkles-count="10"
-                      @mouseenter="isPassionHovering = true"
-                      @mouseleave="isPassionHovering = false"
+              <div class="main-slogan-shell">
+                <div ref="mainSloganElement" class="main-slogan">
+                  <div class="moto">
+                    <p>DRIVEN</p>
+                    <p>BY</p>
+                    <p
+                      class="passion-line"
+                      :class="{ 'is-hovering': isPassionHovering }"
                     >
-                      <RadiantText
-                        class="passion-radiant"
+                      <SparklesText
+                        v-if="isHeroHeavyContentMounted"
+                        class="passion"
+                        text="PASSION"
                         :active="isPassionHovering && !areHeroEffectsPaused"
-                        :duration="5"
-                        :radiant-width="100"
-                        base-color="#e23456"
-                        radiant-color="#ffffff"
+                        :rotate="false"
+                        :colors="PASSION_SPARKLE_COLORS"
+                        :sparkle-area="PASSION_SPARKLE_AREA"
+                        :sparkle-size="42"
+                        :sparkles-count="10"
+                        @mouseenter="isPassionHovering = true"
+                        @mouseleave="isPassionHovering = false"
                       >
-                        PASSION
-                      </RadiantText>
-                    </SparklesText>
-                    <span v-else class="passion">PASSION</span>
-                  </p>
+                        <RadiantText
+                          class="passion-radiant"
+                          :active="isPassionHovering && !areHeroEffectsPaused"
+                          :duration="5"
+                          :radiant-width="100"
+                          base-color="#e23456"
+                          radiant-color="#ffffff"
+                        >
+                          PASSION
+                        </RadiantText>
+                      </SparklesText>
+                      <span v-else class="passion">PASSION</span>
+                    </p>
+                  </div>
                 </div>
-                <Logo
-                  v-if="isHeroHeavyContentMounted"
-                  id="home-passion-static"
-                  class="passion-logo"
-                  :active="false"
-                  aria-hidden="true"
-                />
               </div>
             </div>
           </div>
@@ -218,11 +227,15 @@
           >
             <div v-if="page.id === 'about'" class="home-about-copy">
               <div class="home-about-introduction">
-                <p class="home-about-intro">
+                <BlurReveal
+                  :active="activeHomePageIndex === index + 1"
+                  class="home-about-intro"
+                  tag="p"
+                >
                   {{ t('home.dynamic.intro.before')
                   }}{{ t('home.dynamic.intro.name')
                   }}{{ t('home.dynamic.intro.after') }}
-                </p>
+                </BlurReveal>
                 <p class="home-about-description">
                   <span>{{ aboutDescription.before }}</span>
                   <RandomTypedText
@@ -252,9 +265,13 @@
                 @select="openArchiveProjectDetail"
               />
               <div class="home-archive-heading">
-                <p class="home-archive-subtitle">
+                <BlurReveal
+                  :active="activeHomePageIndex === index + 1"
+                  class="home-archive-subtitle"
+                  tag="p"
+                >
                   {{ t('home.dynamic.archiveSubtitle') }}
-                </p>
+                </BlurReveal>
                 <ThemeActionButton
                   class="home-archive-more"
                   :color="page.color"
@@ -275,7 +292,13 @@
             />
             <div v-else-if="page.id === 'craft'" class="home-craft-copy">
               <div class="home-craft-heading">
-                <p class="home-craft-subtitle">想到既做到。</p>
+                <BlurReveal
+                  :active="activeHomePageIndex === index + 1"
+                  class="home-craft-subtitle"
+                  tag="p"
+                >
+                  想到既做到。
+                </BlurReveal>
                 <p class="home-craft-description">
                   借助Agent开发的一些常用工具
                 </p>
@@ -432,8 +455,9 @@ import { Swiper, SwiperSlide } from 'swiper/vue'
 import ArchiveProjectMarquee, {
   type ArchiveProjectMarqueeItem,
 } from '@/components/ArchiveProjectMarquee/index.vue'
+import BlurReveal from '@/components/BlurReveal/index.vue'
 import DomeGallery from '@/components/DomeGallery/index.vue'
-import Logo from '@/components/Logo/index.vue'
+import LogoRotating3D from '@/components/Logo_rotating3D/index.vue'
 import MarqueeShowcase from '@/components/MarqueeShowcase/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
 import RandomTypedText from '@/components/RandomTypedText/index.vue'
@@ -442,6 +466,7 @@ import ThemeActionButton from '@/components/ThemeActionButton/index.vue'
 import ToolCard from '@/components/ToolCard/index.vue'
 import { RadiantText } from '@/components/ui/radiant-text'
 import { SparklesText } from '@/components/ui/sparkles-text'
+import { useImagePreloader } from '@/composables/useImagePreloader'
 import { homeFlanerieJourneyCardConfig } from '@/config/homeFlanerieJourneyCards'
 import { HOME_RETURN_TO_PASSION_EVENT } from '@/config/homeNavigation'
 import { visualState } from '@/stores'
@@ -509,6 +534,7 @@ const headerBottom = inject<ComputedRef<number>>(
   'site-header-bottom',
   computed(() => 0)
 )
+const { preloadImages } = useImagePreloader()
 const HomeFlanerieSection = defineAsyncComponent(loadHomeFlanerieSection)
 const newsItems = computed<NewsItem[]>(() =>
   (tm('home.dynamic.recommend') as NewsItem[]).map((item) => ({
@@ -545,6 +571,9 @@ const homeCraftToolIds = [
   'bounce-dynamics',
   'metronome',
 ] as const
+const homeFlanerieJourneyIds = new Set<string>(
+  homeFlanerieJourneyCardConfig.map(({ id }) => id)
+)
 const homeCraftTools = computed<HomeCraftTool[]>(() => {
   const tools = tm('craft.dynamic.tools') as HomeCraftTool[]
   const toolById = new Map(tools.map((tool) => [tool.id, tool]))
@@ -587,47 +616,35 @@ const archiveProjectData = computed(() => {
 
   return { projects, workById }
 })
-const homeImagePreloads = new Set<HTMLImageElement>()
-const getHomeImagePreloadUrls = () => {
-  const useMobileVariant = window.matchMedia('(max-width: 768px)').matches
-  const getCardUrl = useMobileVariant
-    ? getCardMobileThumbnailUrl
-    : getCardThumbnailUrl
-  const homeJourneyIds = new Set<string>(
-    homeFlanerieJourneyCardConfig.map(({ id }) => id)
-  )
-  const urls = [
-    ...newsItems.value.map((item) =>
-      useMobileVariant ? item.mobileImg || item.img : item.img
-    ),
-    ...aboutGalleryItems.value.map((item) => getHomeThumbnailUrl(item.src)),
-    ...archiveProjectData.value.projects.map((project) =>
-      getCardUrl(project.img)
-    ),
-    ...flanerieVlogs.value
-      .filter((journey) => homeJourneyIds.has(journey.id))
-      .map((journey) => getCardUrl(journey.img)),
-    ...homeCraftTools.value.flatMap((tool) => (tool.img ? [tool.img] : [])),
-  ]
+const getHomePageImagePreloadUrls = (pageId: string) => {
+  let cardUrlResolver: typeof getCardThumbnailUrl | null = null
+  const toCardUrl = (source: string) => {
+    cardUrlResolver ??= window.matchMedia('(max-width: 768px)').matches
+      ? getCardMobileThumbnailUrl
+      : getCardThumbnailUrl
+    return cardUrlResolver(source)
+  }
 
-  return Array.from(new Set(urls.filter(Boolean)))
-}
-const preloadHomeImages = () => {
-  getHomeImagePreloadUrls().forEach((url) => {
-    const image = new Image()
-    const release = () => {
-      image.onload = null
-      image.onerror = null
-      homeImagePreloads.delete(image)
-    }
-
-    image.decoding = 'async'
-    image.setAttribute('fetchpriority', 'low')
-    image.onload = release
-    image.onerror = release
-    homeImagePreloads.add(image)
-    image.src = url
-  })
+  switch (pageId) {
+    case 'about':
+      return aboutGalleryItems.value.map((item) =>
+        getHomeThumbnailUrl(item.src)
+      )
+    case 'archive':
+      return archiveProjectData.value.projects.map((project) =>
+        toCardUrl(project.img)
+      )
+    case 'flanerie':
+      return flanerieVlogs.value
+        .filter((journey) => homeFlanerieJourneyIds.has(journey.id))
+        .map((journey) => toCardUrl(journey.img))
+    case 'craft':
+      return homeCraftTools.value.flatMap((tool) =>
+        tool.img ? [tool.img] : []
+      )
+    default:
+      return []
+  }
 }
 const selectedArchiveWork = ref<ArchiveWork | null>(null)
 const openArchiveProjectDetail = (project: ArchiveProjectMarqueeItem) => {
@@ -670,6 +687,10 @@ const homePageIndicatorItems = [
   { id: 'hero', title: 'PASSION' },
   ...placeholderPages,
 ] as const
+const preloadHomePageImages = (pageIndex: number) => {
+  const page = homePageIndicatorItems[pageIndex]
+  if (page) preloadImages(getHomePageImagePreloadUrls(page.id))
+}
 const homeCornerPositions = [
   'top-left',
   'top-right',
@@ -796,8 +817,13 @@ let heroMetrics = {
   halfHeight: 1,
 }
 const HERO_MOTION_SAMPLE_INTERVAL = 80
+const HERO_LEFT_ROTATION_STRENGTH = 24
+const HERO_RIGHT_ROTATION_STRENGTH = 4
 const CRAFT_PAGE_INDEX = homePageIndicatorItems.findIndex(
   (page) => page.id === 'craft'
+)
+const FLANERIE_PAGE_INDEX = homePageIndicatorItems.findIndex(
+  (page) => page.id === 'flanerie'
 )
 const HOME_PAGE_CONTENT_MOTION_DURATION = 600
 const MOBILE_HOME_PAGE_CONTENT_MOTION_DURATION = 260
@@ -834,6 +860,7 @@ const scheduleHomeFlaneriePreload = () => {
     homeFlaneriePreloadIdleHandle = null
     homeFlaneriePreloadTimer = null
     hasHomeFlaneriePreloadStarted = true
+    preloadHomePageImages(FLANERIE_PAGE_INDEX)
     void loadHomeFlanerieSection().catch(() => {
       hasHomeFlaneriePreloadStarted = false
     })
@@ -909,6 +936,21 @@ const homePageStyle = computed(() => ({
   '--home-craft-footer-height': craftFooterHeight.value,
   '--home-marquee-viewport-top': marqueeViewportTop.value,
   '--home-hero-content-duration': `${HERO_CONTENT_TRANSITION_DURATION}ms`,
+  '--home-passion-crystal-enter-duration': `${
+    usesTouchCarousel.value ? 180 : HERO_CONTENT_TRANSITION_DURATION
+  }ms`,
+  '--home-passion-crystal-exit-duration': `${
+    (usesTouchCarousel.value ? 180 : HERO_CONTENT_TRANSITION_DURATION) / 2
+  }ms`,
+  '--home-passion-crystal-enter-fade-duration': `${
+    usesTouchCarousel.value ? 99 : 300
+  }ms`,
+  '--home-passion-crystal-exit-fade-delay': `${
+    usesTouchCarousel.value ? 35 : 175
+  }ms`,
+  '--home-passion-crystal-exit-fade-duration': `${
+    usesTouchCarousel.value ? 40 : 125
+  }ms`,
   '--home-hero-exit-motion-duration': `${
     usesTouchCarousel.value ? 180 : HERO_CONTENT_TRANSITION_DURATION
   }ms`,
@@ -1302,6 +1344,7 @@ const requestHeroPageTransition = (targetIndex = 1) => {
     targetIndex,
     getHomeLastPageIndex(swiper)
   )
+  preloadHomePageImages(resolvedTargetIndex)
   beginHeroPageTransition(swiper, resolvedTargetIndex)
 }
 
@@ -1423,6 +1466,8 @@ const requestHomePageTransition = (targetIndex: number) => {
     )
     return
   }
+
+  preloadHomePageImages(targetIndex)
 
   beginHomePageTransition(targetIndex)
 }
@@ -1691,8 +1736,8 @@ const applySloganTransform = () => {
   )
   setHeroTransformVariables(
     recommendElement.value,
-    sloganRotateX * motionScale,
-    sloganRotateY * motionScale
+    sloganRotateX * 0.72 * motionScale,
+    sloganRotateY * 0.72 * motionScale
   )
 }
 
@@ -1860,8 +1905,13 @@ const handleHeroMouseMove = (event: MouseEvent) => {
 
   const offsetX = (event.clientX - heroMetrics.centerX) / heroMetrics.halfWidth
   const offsetY = (event.clientY - heroMetrics.centerY) / heroMetrics.halfHeight
-  sloganTargetRotateY = Math.max(-1, Math.min(1, offsetX)) * 10
-  sloganTargetRotateX = Math.max(-1, Math.min(1, offsetY)) * -8
+  const normalizedOffsetX = Math.max(-1, Math.min(1, offsetX))
+  const horizontalRotationStrength =
+    normalizedOffsetX < 0
+      ? HERO_LEFT_ROTATION_STRENGTH
+      : HERO_RIGHT_ROTATION_STRENGTH
+  sloganTargetRotateY = normalizedOffsetX * horizontalRotationStrength
+  sloganTargetRotateX = Math.max(-1, Math.min(1, offsetY)) * 8
   startSloganMotion()
 }
 
@@ -2190,7 +2240,6 @@ onBeforeRouteLeave(() => {
 })
 
 onMounted(async () => {
-  preloadHomeImages()
   isPageVisible = document.visibilityState !== 'hidden'
   reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
   heroMotionQuery = window.matchMedia('(hover: hover) and (pointer: fine)')
@@ -2225,7 +2274,6 @@ onMounted(async () => {
 
 onUnmounted(() => {
   cancelHomeFlaneriePreload()
-  homeImagePreloads.clear()
   queuedHomePageTransitionIndex = null
   heroInitialEntranceObserver?.disconnect()
   heroInitialEntranceObserver = null

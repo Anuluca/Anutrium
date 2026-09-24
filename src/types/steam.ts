@@ -1,4 +1,4 @@
-export interface SteamProfile {
+interface SteamProfile {
   steamid: string
   communityvisibilitystate: number
   profilestate?: number

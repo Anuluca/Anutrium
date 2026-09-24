@@ -273,7 +273,13 @@ onUnmounted(() => {
 
       <div class="logo-wrapper" :class="{ 'is-wiping-out': isLogoWipingOut }">
         <div class="blinds-container">
-          <LogoRotating3D ref="logoRotating3DRef" @finished="rotateFinished" />
+          <LogoRotating3D
+            ref="logoRotating3DRef"
+            render-mode="edges"
+            edge-color="#E23456"
+            :edge-width="2"
+            @finished="rotateFinished"
+          />
         </div>
       </div>
       <div

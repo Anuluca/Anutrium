@@ -30,32 +30,40 @@ const aboutDynamic = {
     },
   ],
   changelogs: [
-    // {
-    //   version: 'v1.2',
-    //   date: '2026-08-13',
-    //   title: {
-    //     zhCn: '数据更新、交互设计优化',
-    //     en: '',
-    //   },
-    //   details: [
-    //     {
-    //       zhCn: '新增十二星宿轮盘背景、重做首页、关于页、主要标题组件、次要标题组件、通用页脚组件设计',
-    //       en: '',
-    //     },
-    //     {
-    //       zhCn: '新增旅程：__"蔡依林PLEASURE TOUR"__、__"张学友60+演唱会"__',
-    //       en: '',
-    //     },
-    //     {
-    //       zhCn: '',
-    //       en: '',
-    //     },
-    //     {
-    //       zhCn: '诸多bug修复、细节增补、整体性能优化',
-    //       en: 'Numerous bug fixes, detail refinements, and overall performance improvements.',
-    //     },
-    //   ],
-    // },
+    {
+      version: 'v1.3',
+      date: '2026-09-24',
+      title: {
+        zhCn: '交互设计更新，对性能大幅优化',
+        en: '',
+      },
+      details: [
+        {
+          zhCn: '完成__全站性能优化__：重构关键渲染与资源加载流程，减少首屏等待与运行时开销，提升页面响应速度和滚动流畅度；',
+          en: 'Completed __site-wide performance optimizations__: refactored critical rendering and asset-loading workflows to reduce initial load times and runtime overhead while improving responsiveness and scrolling performance;',
+        },
+        {
+          zhCn: '完成__交互设计更新__：统一导航、页面过渡、模块动效与操作反馈，并优化桌面端和移动端的交互体验；',
+          en: 'Completed an __interaction design update__: unified navigation, page transitions, module animations, and interaction feedback while refining the experience across desktop and mobile;',
+        },
+        {
+          zhCn: '新增十二星宿轮盘背景、重做首页、关于页、主要标题组件、次要标题组件、通用页脚组件设计',
+          en: '',
+        },
+        {
+          zhCn: '新增旅程：__"蔡依林PLEASURE TOUR"__、__"张学友60+演唱会"__',
+          en: '',
+        },
+        {
+          zhCn: '新增花花页面跳转模块',
+          en: '',
+        },
+        {
+          zhCn: '诸多bug修复、细节增补、整体性能优化',
+          en: 'Numerous bug fixes, detail refinements, and overall performance improvements.',
+        },
+      ],
+    },
     {
       version: 'v1.1',
       date: '2026-07-08',

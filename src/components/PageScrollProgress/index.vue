@@ -58,7 +58,7 @@ defineExpose({ setProgress })
     right: 0;
     width: 100%;
     height: 100%;
-    background: #e23456;
+    background: var(--page-theme-color, #e23456);
     transform: scaleY(var(--page-scroll-progress-scale, 0));
     transform-origin: top;
     transition: transform var(--page-scroll-progress-transition-duration, 0ms)

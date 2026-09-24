@@ -645,34 +645,6 @@ const imageLog = [
       },
     ],
   },
-  // {
-  //   id: '',
-  //   title: {
-  //     zhCn: '',
-  //     en: '',
-  //   },
-  //   subtitle: {
-  //     zhCn: '',
-  //     en: '',
-  //   },
-  //   groups: [
-  //     {
-  //       title: {
-  //         zhCn: '',
-  //         en: '',
-  //       },
-  //       photos: [
-  //         {
-  //           url: 'https://assets.anuluca.com/Island/picRecord/',
-  //           title: {
-  //             zhCn: '',
-  //             en: '',
-  //           },
-  //         },
-  //       },
-  //     ],
-  //   ],
-  // },
 ] as const
 
 export default imageLog

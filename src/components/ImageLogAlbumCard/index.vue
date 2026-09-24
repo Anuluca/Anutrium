@@ -50,7 +50,7 @@ import {
   getCardThumbnailUrl,
 } from '@/utils/imageVariant'
 
-export interface ImageLogAlbumCardPhoto {
+interface ImageLogAlbumCardPhoto {
   url: string
   title?: string
 }

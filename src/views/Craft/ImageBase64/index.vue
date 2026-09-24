@@ -44,10 +44,7 @@
         </label>
 
         <div class="pt-scanlines" />
-        <div class="corner-img corner--tl" />
-        <div class="corner-img corner--tr" />
-        <div class="corner-img corner--bl" />
-        <div class="corner-img corner--br" />
+        <ToolPanelCorners inset muted />
       </div>
 
       <div class="right-panel image64-result">
@@ -86,10 +83,7 @@
           ><code>{{ dataUrl || '// NO DATA\n// 请先上传图片...' }}</code></pre>
         </div>
 
-        <div class="corner corner--tl" />
-        <div class="corner corner--tr" />
-        <div class="corner corner--bl" />
-        <div class="corner corner--br" />
+        <ToolPanelCorners />
       </div>
     </div>
   </ToolPageLayout>
@@ -99,6 +93,7 @@
 import { reactive, ref } from 'vue'
 
 import ToolPageLayout from '@/components/ToolPageLayout/index.vue'
+import ToolPanelCorners from '@/components/ToolPanelCorners/index.vue'
 import { showErrorMessage, showSuccessMessage } from '@/utils/elementMessage'
 
 import 'element-plus/es/components/message/style/css'
@@ -166,6 +161,8 @@ const formatSize = (size: number) => {
 </script>
 
 <style lang="less" scoped>
+@import '@/assets/style/tool-tactical.less';
+
 @red: #e8284a;
 @red-dim: rgba(232, 40, 74, 0.15);
 @surface: #140a0c;
@@ -173,24 +170,6 @@ const formatSize = (size: number) => {
 @text: #ffffff;
 @muted: rgba(255, 255, 255, 0.45);
 @mono: 'alibaba-puhuiti', monospace;
-
-.font-squish(@origin: center) {
-  font-family: 'STSong', serif;
-  display: inline-block;
-  transform: scaleX(0.9);
-  transform-origin: @origin;
-}
-
-@keyframes tacticalIn {
-  from {
-    opacity: 0;
-    transform: translateY(15px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
 .image64-tool {
   color: @text;
@@ -236,69 +215,6 @@ const formatSize = (size: number) => {
   background: @surface;
   border: 1px solid @border;
   padding: 30px;
-}
-
-.corner,
-.corner-img {
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  pointer-events: none;
-  z-index: 5;
-
-  &--tl {
-    top: -1px;
-    left: -1px;
-    border-top: 2px solid @red;
-    border-left: 2px solid @red;
-  }
-
-  &--tr {
-    top: -1px;
-    right: -1px;
-    border-top: 2px solid @red;
-    border-right: 2px solid @red;
-  }
-
-  &--bl {
-    bottom: -1px;
-    left: -1px;
-    border-bottom: 2px solid @red;
-    border-left: 2px solid @red;
-  }
-
-  &--br {
-    bottom: -1px;
-    right: -1px;
-    border-bottom: 2px solid @red;
-    border-right: 2px solid @red;
-  }
-
-  &.corner-img {
-    &.corner--tl {
-      top: 10px;
-      left: 10px;
-      border-color: #50505076;
-    }
-
-    &.corner--tr {
-      top: 10px;
-      right: 10px;
-      border-color: #50505076;
-    }
-
-    &.corner--bl {
-      bottom: 10px;
-      left: 10px;
-      border-color: #50505076;
-    }
-
-    &.corner--br {
-      bottom: 10px;
-      right: 10px;
-      border-color: #50505076;
-    }
-  }
 }
 
 .upload-stage {
