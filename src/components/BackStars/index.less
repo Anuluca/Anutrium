@@ -8,9 +8,11 @@
   --chart-primary: rgba(255, 255, 255, 0.76);
   --chart-strong: rgba(255, 255, 255, 0.94);
   --chart-faint: rgba(255, 255, 255, 0.24);
-  --layer-backdrop: 0;
-  --layer-zodiac: 1;
-  --layer-particles: 2;
+  --layer-backdrop-color: 0;
+  --layer-backdrop-gradient: 1;
+  --layer-backdrop-scanlines: 2;
+  --layer-zodiac: 3;
+  --layer-particles: 4;
   --stage-offset-y: calc(-50% + 2vh);
   --stage-offset-y: calc(-50% + 2dvh);
   --stage-opacity: 0.1;
@@ -21,11 +23,10 @@
   box-sizing: border-box;
   overflow: hidden;
   pointer-events: none;
-  background-color: transparent;
+  background-color: #0a0411;
   contain: layout paint style;
   isolation: isolate;
-  transition: --stage-opacity 1.16s cubic-bezier(0.22, 1, 0.36, 1),
-    background-color 4s ease;
+  transition: --stage-opacity 1.16s cubic-bezier(0.22, 1, 0.36, 1);
 
   &.has-background-top-inset {
     clip-path: inset(var(--background-top-inset) 0 0);
@@ -34,7 +35,7 @@
   &::before {
     position: absolute;
     inset: 0;
-    z-index: var(--layer-backdrop);
+    z-index: var(--layer-backdrop-gradient);
     pointer-events: none;
     content: '';
   }
@@ -42,7 +43,7 @@
   &::after {
     position: absolute;
     inset: 0;
-    z-index: var(--layer-backdrop);
+    z-index: var(--layer-backdrop-scanlines);
     pointer-events: none;
     background: repeating-linear-gradient(
       0deg,
@@ -53,14 +54,16 @@
   }
 
   &.dark {
-    background-color: var(
-      --page-theme-background-dark,
-      color-mix(
-        in srgb,
-        color-mix(in srgb, var(--page-theme-color, #e23456) 45%, #000) 50%,
-        #0a0411
-      )
-    );
+    .backdrop-color-base {
+      background-color: var(
+        --page-theme-background-dark,
+        color-mix(
+          in srgb,
+          color-mix(in srgb, var(--page-theme-color, #e23456) 45%, #000) 50%,
+          #0a0411
+        )
+      );
+    }
 
     &::before {
       background: radial-gradient(
@@ -72,9 +75,10 @@
   }
 
   &.dark.is-deep-black {
-    background-color: #030303;
+    .backdrop-color-base {
+      background-color: #030303;
+    }
 
-    &::before,
     &::after {
       background: none;
     }
@@ -84,14 +88,17 @@
     --chart-primary: rgba(255, 255, 255, 0.68);
     --chart-strong: rgba(255, 255, 255, 0.88);
     --chart-faint: rgba(255, 255, 255, 0.2);
-    background-color: var(
-      --page-theme-background-light,
-      color-mix(
-        in srgb,
-        color-mix(in srgb, var(--page-theme-color, #e23456) 45%, #000) 50%,
-        #0a0411
-      )
-    );
+
+    .backdrop-color-base {
+      background-color: var(
+        --page-theme-background-light,
+        color-mix(
+          in srgb,
+          color-mix(in srgb, var(--page-theme-color, #e23456) 45%, #000) 50%,
+          #0a0411
+        )
+      );
+    }
 
     &::before {
       background: radial-gradient(
@@ -130,6 +137,18 @@
   &.is-entry-ready .zodiac-stage {
     animation: zodiac-stage-enter 1s cubic-bezier(0.16, 1, 0.3, 1);
   }
+}
+
+.backdrop-color-base,
+.backdrop-color-transition {
+  position: absolute;
+  inset: 0;
+  z-index: var(--layer-backdrop-color);
+  pointer-events: none;
+}
+
+.backdrop-color-transition {
+  opacity: 0;
 }
 
 .particle-viewport {

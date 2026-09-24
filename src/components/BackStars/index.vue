@@ -107,18 +107,30 @@ const isChartTransitioning = ref(false)
 const isRouteTransitioning = ref(false)
 const isParticleFieldMounted = ref(props.particlesVisible)
 const isParticleFieldVisible = ref(props.particlesVisible)
+const backdropOverlayElement = ref<HTMLElement | null>(null)
+const backdropBaseColor = ref('')
+const backdropOverlayColor = ref('')
 const activeChartTransitions = new Set<string>()
 let resizeRafId: number | null = null
 let particleRevealRafId: number | null = null
 let particleRevealSecondRafId: number | null = null
 let particleRemovalTimer: number | null = null
+let backdropUpdateRafId: number | null = null
+let backdropAnimation: Animation | null = null
+let backdropStyleObserver: MutationObserver | null = null
+let backdropTransitionRevision = 0
+let backdropTargetColor = ''
 const isReducedMotion = ref(false)
 let reducedMotionQuery: MediaQueryList | null = null
 let removePageResizeListener: (() => void) | null = null
 const PARTICLE_VISIBILITY_DURATION = 520
+const BACKDROP_COLOR_TRANSITION_DURATION = 3000
 
 const handleReducedMotionChange = (event: MediaQueryListEvent) => {
   isReducedMotion.value = event.matches
+  if (event.matches && backdropTargetColor) {
+    setBackdropColorImmediately(backdropTargetColor)
+  }
 }
 
 watch(
@@ -143,6 +155,97 @@ const containerStyle = computed(() => ({
 }))
 const PARTICLE_COLOR = '#ffffff'
 const particleQuantity = computed(() => (isMobileViewport.value ? 25 : 100))
+
+const getBackdropTargetColor = () => {
+  if (props.deepBlack) return '#030303'
+
+  const rootStyle = window.getComputedStyle(document.documentElement)
+  const backgroundVariable =
+    props.theme === 'light'
+      ? '--page-theme-background-light'
+      : '--page-theme-background-dark'
+  const explicitBackground = rootStyle
+    .getPropertyValue(backgroundVariable)
+    .trim()
+
+  if (explicitBackground) return explicitBackground
+
+  const themeColor =
+    rootStyle.getPropertyValue('--page-theme-color').trim() || '#e23456'
+  return `color-mix(in srgb, color-mix(in srgb, ${themeColor} 45%, #000) 50%, #0a0411)`
+}
+
+const cancelBackdropAnimation = () => {
+  backdropTransitionRevision += 1
+  backdropAnimation?.cancel()
+  backdropAnimation = null
+}
+
+const setBackdropColorImmediately = (color: string) => {
+  cancelBackdropAnimation()
+  backdropTargetColor = color
+  backdropBaseColor.value = color
+  backdropOverlayColor.value = color
+}
+
+const getCurrentBackdropColor = () => {
+  if (!backdropAnimation || !backdropOverlayElement.value) {
+    return backdropBaseColor.value
+  }
+
+  const opacity = Number.parseFloat(
+    window.getComputedStyle(backdropOverlayElement.value).opacity
+  )
+  if (!Number.isFinite(opacity) || opacity <= 0) return backdropBaseColor.value
+  if (opacity >= 1) return backdropOverlayColor.value
+
+  return `color-mix(in srgb, ${backdropOverlayColor.value} ${(
+    opacity * 100
+  ).toFixed(3)}%, ${backdropBaseColor.value})`
+}
+
+const updateBackdropColor = async (immediate = false) => {
+  const targetColor = getBackdropTargetColor()
+  if (targetColor === backdropTargetColor) return
+
+  if (!backdropBaseColor.value || immediate || isReducedMotion.value) {
+    setBackdropColorImmediately(targetColor)
+    return
+  }
+
+  const currentColor = getCurrentBackdropColor()
+  cancelBackdropAnimation()
+  backdropTargetColor = targetColor
+  backdropBaseColor.value = currentColor
+  backdropOverlayColor.value = targetColor
+  await nextTick()
+
+  const overlay = backdropOverlayElement.value
+  if (!overlay || targetColor !== backdropTargetColor) return
+
+  const revision = backdropTransitionRevision
+  backdropAnimation = overlay.animate([{ opacity: 0 }, { opacity: 1 }], {
+    duration: BACKDROP_COLOR_TRANSITION_DURATION,
+    easing: 'ease',
+    fill: 'forwards',
+  })
+  backdropAnimation.onfinish = async () => {
+    if (revision !== backdropTransitionRevision) return
+    backdropBaseColor.value = targetColor
+    await nextTick()
+    if (revision !== backdropTransitionRevision) return
+    backdropAnimation?.cancel()
+    backdropAnimation = null
+  }
+}
+
+const scheduleBackdropColorUpdate = () => {
+  if (backdropUpdateRafId !== null) return
+  backdropUpdateRafId = window.requestAnimationFrame(() => {
+    backdropUpdateRafId = null
+    void updateBackdropColor()
+  })
+}
 
 const clearParticleRevealFrames = () => {
   if (particleRevealRafId !== null) {
@@ -201,6 +304,10 @@ watch(
     })
   }
 )
+
+watch([() => props.theme, () => props.deepBlack], scheduleBackdropColorUpdate, {
+  flush: 'post',
+})
 
 const updateHeroScale = () => {
   const viewportWidth = window.innerWidth
@@ -272,6 +379,12 @@ onMounted(() => {
   isReducedMotion.value = reducedMotionQuery.matches
   reducedMotionQuery.addEventListener('change', handleReducedMotionChange)
   removePageResizeListener = addPageResizeListener(scheduleHeroScaleUpdate)
+  backdropStyleObserver = new MutationObserver(scheduleBackdropColorUpdate)
+  backdropStyleObserver.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['style'],
+  })
+  void updateBackdropColor(true)
 })
 
 onUnmounted(() => {
@@ -282,11 +395,27 @@ onUnmounted(() => {
   if (resizeRafId !== null) window.cancelAnimationFrame(resizeRafId)
   clearParticleRevealFrames()
   clearParticleRemovalTimer()
+  backdropStyleObserver?.disconnect()
+  backdropStyleObserver = null
+  if (backdropUpdateRafId !== null) {
+    window.cancelAnimationFrame(backdropUpdateRafId)
+  }
+  cancelBackdropAnimation()
 })
 </script>
 
 <template>
   <div :class="containerClass" :style="containerStyle" aria-hidden="true">
+    <div
+      class="backdrop-color-base"
+      :style="{ backgroundColor: backdropBaseColor }"
+    />
+    <div
+      ref="backdropOverlayElement"
+      class="backdrop-color-transition"
+      :style="{ backgroundColor: backdropOverlayColor }"
+    />
+
     <div
       v-if="isParticleFieldMounted"
       class="particle-viewport"

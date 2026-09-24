@@ -97,20 +97,20 @@ test('page theme color follows the active route', async ({ page }) => {
     {
       path: '/',
       color: '#e23456',
-      backgroundDark: '#65182780',
-      backgroundLight: '#711c2d80',
+      backgroundDark: '#380e1c',
+      backgroundLight: '#3e101f',
     },
     {
       path: '/about',
       color: '#e23456',
-      backgroundDark: '#65182780',
-      backgroundLight: '#711c2d80',
+      backgroundDark: '#380e1c',
+      backgroundLight: '#3e101f',
     },
     {
       path: '/island/photography',
       color: '#e23456',
-      backgroundDark: '#65182780',
-      backgroundLight: '#711c2d80',
+      backgroundDark: '#380e1c',
+      backgroundLight: '#3e101f',
     },
     {
       path: '/archive',
@@ -121,8 +121,8 @@ test('page theme color follows the active route', async ({ page }) => {
     {
       path: '/test',
       color: '#e23456',
-      backgroundDark: '#65182780',
-      backgroundLight: '#711c2d80',
+      backgroundDark: '#380e1c',
+      backgroundLight: '#3e101f',
     },
   ]
 

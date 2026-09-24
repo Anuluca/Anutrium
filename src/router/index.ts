@@ -694,8 +694,8 @@ export const syncPageTheme = (route: RouteLocationNormalizedLoaded) => {
   rootStyle.setProperty('--page-theme-color', getPageThemeColor(route))
 
   if (LEGACY_RED_BACKGROUND_GROUPS.has(pageGroup)) {
-    rootStyle.setProperty('--page-theme-background-dark', '#65182780')
-    rootStyle.setProperty('--page-theme-background-light', '#711c2d80')
+    rootStyle.setProperty('--page-theme-background-dark', '#380e1c')
+    rootStyle.setProperty('--page-theme-background-light', '#3e101f')
   } else {
     rootStyle.removeProperty('--page-theme-background-dark')
     rootStyle.removeProperty('--page-theme-background-light')

@@ -31,7 +31,7 @@ const aboutDynamic = {
   ],
   changelogs: [
     {
-      version: 'v1.3',
+      version: 'v1.2',
       date: '2026-09-24',
       title: {
         zhCn: '交互设计更新，对性能大幅优化',
