@@ -597,8 +597,8 @@ test('zodiac rotation starts only after the previous route leaves', async ({
   test.skip(testInfo.project.name.includes('mobile'))
   await page.goto('/', { waitUntil: 'domcontentloaded' })
   await expect(
-    page.locator('.zodiac-sign-face.is-active .zodiac-name')
-  ).toHaveText('LEO', { timeout: 15_000 })
+    page.locator('.zodiac-sign-face.is-active .zodiac-glyph')
+  ).toContainText('♌', { timeout: 15_000 })
   await page.addStyleTag({
     content: '.route-leave-active { transition-duration: 600ms !important; }',
   })
@@ -607,13 +607,13 @@ test('zodiac rotation starts only after the previous route leaves', async ({
   await expect(page.locator('.home-page')).toHaveClass(/route-leave-active/)
   await page.waitForTimeout(120)
   await expect(
-    page.locator('.zodiac-sign-face.is-active .zodiac-name')
-  ).toHaveText('LEO')
+    page.locator('.zodiac-sign-face.is-active .zodiac-glyph')
+  ).toContainText('♌')
 
   await expect(page.locator('.archives-page')).toBeVisible({ timeout: 15_000 })
   await expect(
-    page.locator('.zodiac-sign-face.is-active .zodiac-name')
-  ).toHaveText('AQUARIUS')
+    page.locator('.zodiac-sign-face.is-active .zodiac-glyph')
+  ).toContainText('♒')
 })
 
 test('home crystal keeps its drawing buffer in sync after the initial responsive layout', async ({

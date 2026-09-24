@@ -5,6 +5,7 @@
     :class="{
       'is-craft-footer-visible': isCraftFooterVisible,
       'is-header-transition-staging': isHomeHeaderTransitionStaging,
+      'is-hero-content-inactive': isHeroContentInactive,
     }"
     :style="homePageStyle"
   >

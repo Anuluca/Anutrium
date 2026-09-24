@@ -56,7 +56,7 @@ const props = withDefaults(defineProps<Props>(), {
   topInset: 0,
   entryActive: true,
 })
-const STATIC_CHART_SRC = '/images/zodiac-chart-static.svg?v=20260921-2'
+const STATIC_CHART_SRC = '/images/zodiac-chart-static.svg?v=20260924-1'
 
 const polarPercent = (radius: number, angle: number): CSSProperties => {
   const radians = (angle * Math.PI) / 180
@@ -105,8 +105,6 @@ const heroScale = ref(1)
 const isMobileViewport = ref(false)
 const isChartTransitioning = ref(false)
 const isRouteTransitioning = ref(false)
-const isEntryComplete = ref(false)
-const isHighlightSettled = ref(false)
 const isParticleFieldMounted = ref(props.particlesVisible)
 const isParticleFieldVisible = ref(props.particlesVisible)
 const activeChartTransitions = new Set<string>()
@@ -128,7 +126,6 @@ watch(
   (signId, previousSignId) => {
     if (signId === previousSignId) return
 
-    isHighlightSettled.value = false
     isRouteTransitioning.value = !isReducedMotion.value
 
     const target = getCanonicalRotation(signId)
@@ -144,7 +141,7 @@ const stageStyle = computed(() => ({
 const containerStyle = computed(() => ({
   '--background-top-inset': `${Math.max(0, props.topInset)}px`,
 }))
-const PARTICLE_COLOR = '#e2c28a'
+const PARTICLE_COLOR = '#ffffff'
 const particleQuantity = computed(() => (isMobileViewport.value ? 25 : 100))
 
 const clearParticleRevealFrames = () => {
@@ -255,11 +252,6 @@ const handleChartTransitionEnd = (event: TransitionEvent) => {
   if (key === 'wheel') isRouteTransitioning.value = false
 }
 
-const handleTriangleAnimationEnd = () => {
-  isEntryComplete.value = true
-  isHighlightSettled.value = true
-}
-
 const containerClass = computed(() => [
   'star-container',
   props.theme,
@@ -270,8 +262,6 @@ const containerClass = computed(() => [
     'is-chart-transitioning': isChartTransitioning.value,
     'is-route-transitioning': isRouteTransitioning.value,
     'is-entry-ready': props.entryActive,
-    'is-entry-complete': isEntryComplete.value,
-    'is-highlight-settled': isHighlightSettled.value,
     'has-background-top-inset': props.topInset > 0,
   },
 ])
@@ -310,15 +300,6 @@ onUnmounted(() => {
         :color="PARTICLE_COLOR"
         :refresh="props.entryActive"
       />
-    </div>
-
-    <div class="zodiac-triangle-stage">
-      <span class="zodiac-triangle-geometry">
-        <span
-          class="zodiac-active-triangle"
-          @animationend="handleTriangleAnimationEnd"
-        />
-      </span>
     </div>
 
     <div

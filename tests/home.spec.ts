@@ -911,15 +911,15 @@ test('archive and craft use their exchanged representative zodiac signs', async 
   page,
 }) => {
   const routeSigns = [
-    { path: '/archive', sign: 'AQUARIUS' },
-    { path: '/craft', sign: 'GEMINI' },
+    { path: '/archive', sign: '♒' },
+    { path: '/craft', sign: '♊' },
   ]
 
   for (const routeSign of routeSigns) {
     await page.goto(routeSign.path, { waitUntil: 'domcontentloaded' })
     await expect(
-      page.locator('.zodiac-sign-face.is-active .zodiac-name')
-    ).toHaveText(routeSign.sign, { timeout: PAGE_LOAD_TIMEOUT })
+      page.locator('.zodiac-sign-face.is-active .zodiac-glyph')
+    ).toContainText(routeSign.sign, { timeout: PAGE_LOAD_TIMEOUT })
   }
 })
 
@@ -2879,9 +2879,6 @@ test('particle field stays bounded and uses one Canvas 2D surface', async ({
     const container = canvas.closest('.star-container') as HTMLElement
     const particleViewport = canvas.closest('.particle-viewport') as HTMLElement
     const zodiacStage = container.querySelector('.zodiac-stage') as HTMLElement
-    const triangleStage = container.querySelector(
-      '.zodiac-triangle-stage'
-    ) as HTMLElement
     const haloStyle = getComputedStyle(container, '::before')
 
     return {
@@ -2894,7 +2891,9 @@ test('particle field stays bounded and uses one Canvas 2D surface', async ({
       maxBackingHeight: Math.ceil(rect.height * 1.5),
       particleLayer: Number(getComputedStyle(particleViewport).zIndex),
       zodiacLayer: Number(getComputedStyle(zodiacStage).zIndex),
-      triangleLayer: Number(getComputedStyle(triangleStage).zIndex),
+      highlightSectorCount: container.querySelectorAll(
+        '.zodiac-triangle-stage, .zodiac-triangle-geometry, .zodiac-active-triangle'
+      ).length,
       haloBackground: haloStyle.backgroundImage,
       haloAnimation: haloStyle.animationName,
       haloFilter: haloStyle.filter,
@@ -2909,7 +2908,7 @@ test('particle field stays bounded and uses one Canvas 2D surface', async ({
   expect(metrics.backingWidth).toBeLessThanOrEqual(metrics.maxBackingWidth)
   expect(metrics.backingHeight).toBeLessThanOrEqual(metrics.maxBackingHeight)
   expect(metrics.particleLayer).toBeGreaterThan(metrics.zodiacLayer)
-  expect(metrics.particleLayer).toBeGreaterThan(metrics.triangleLayer)
+  expect(metrics.highlightSectorCount).toBe(0)
   expect(metrics.haloBackground).toContain('repeating-linear-gradient')
   expect(metrics.haloAnimation).toBe('none')
   expect(metrics.haloFilter).toBe('none')
