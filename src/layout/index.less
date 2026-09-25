@@ -333,6 +333,14 @@
         line-height: 1;
         white-space: nowrap;
         pointer-events: none;
+        perspective: 8rem;
+
+        .module-name-character {
+          display: inline-block;
+          backface-visibility: hidden;
+          transform-origin: center;
+          will-change: opacity, transform;
+        }
 
         &--zh {
           font-size: 1.2rem;
@@ -356,12 +364,30 @@
 
     .module-name-enter-active,
     .module-name-leave-active {
-      transition: opacity 0.28s ease;
+      pointer-events: none;
     }
 
-    .module-name-enter-from,
-    .module-name-leave-to {
-      opacity: 0;
+    .module-name-enter-active {
+      z-index: 2;
+
+      .module-name-character {
+        animation: module-name-character-enter 0.32s
+          cubic-bezier(0.16, 1, 0.3, 1) both;
+        animation-delay: var(--module-character-delay);
+        transform-origin: center bottom;
+      }
+    }
+
+    .module-name-leave-active {
+      position: absolute;
+      z-index: 1;
+
+      .module-name-character {
+        animation: module-name-character-leave 0.28s
+          cubic-bezier(0.7, 0, 0.84, 0) both;
+        animation-delay: var(--module-character-delay);
+        transform-origin: center top;
+      }
     }
 
     .desktop-menu {
@@ -908,6 +934,30 @@
   }
 }
 
+@keyframes module-name-character-enter {
+  from {
+    opacity: 0;
+    transform: translateY(105%) rotateX(-85deg);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) rotateX(0);
+  }
+}
+
+@keyframes module-name-character-leave {
+  from {
+    opacity: 1;
+    transform: translateY(0) rotateX(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-105%) rotateX(85deg);
+  }
+}
+
 .router-container {
   position: relative;
   width: 100%;
@@ -1080,6 +1130,10 @@
 
           &--zh {
             font-size: 1.33333rem;
+          }
+
+          &.module-name-leave-active {
+            position: absolute;
           }
         }
       }

@@ -64,9 +64,10 @@
             </span>
           </span>
         </div>
-        <Transition name="module-name" :css="!isHomeRoute">
+        <Transition name="module-name" mode="out-in" :duration="560">
           <span
             v-if="headerPresentation.moduleName"
+            :key="`${locale}:${headerPresentation.moduleName}`"
             :class="[
               'current-module-name',
               { 'current-module-name--zh': locale === 'zhCn' },
@@ -74,7 +75,17 @@
                 `current-module-name--${headerPresentation.moduleTheme}`,
             ]"
           >
-            {{ headerPresentation.moduleName }}
+            <span
+              v-for="(character, index) in splitModuleName(
+                headerPresentation.moduleName
+              )"
+              :key="`${character}:${index}`"
+              class="module-name-character"
+              :style="{
+                '--module-character-delay': `${index * 24}ms`,
+              }"
+              >{{ character === ' ' ? '\u00a0' : character }}</span
+            >
           </span>
         </Transition>
       </button>
@@ -367,6 +378,7 @@ const headerPresentation = computed(() => {
   }
 })
 const isHomeRoute = computed(() => route.name === 'HOME')
+const splitModuleName = (moduleName: string) => Array.from(moduleName)
 const isInnerMenuRoute = computed(
   () =>
     typeof route.meta.activeMenu === 'string' &&

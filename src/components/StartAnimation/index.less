@@ -66,7 +66,32 @@
   }
 
   &.is-wiping-out {
-    animation: logo-wipe-out 0.8s @tech-ease forwards !important;
+    animation: logo-wipe-out 1.14s @tech-ease forwards !important;
+  }
+}
+
+.entry-loading-progress.no-rem {
+  position: absolute;
+  top: calc(50% + min(14vh, 120px) + 68px);
+  left: 50%;
+  z-index: 3;
+  color: transparent;
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', 'Arial Narrow',
+    sans-serif;
+  font-size: clamp(42px, 3.5vw, 56px);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  -webkit-text-stroke: 1px #e23456;
+  letter-spacing: 0;
+  line-height: 1;
+  opacity: 1;
+  scale: 0.85 1;
+  translate: -50% 0;
+  transform-origin: center;
+  transition: opacity 0.52s ease-out;
+
+  &.is-fading {
+    opacity: 0;
   }
 }
 
@@ -82,20 +107,23 @@
   transform-origin: top left;
   translate: calc(50vw - 50%) calc(50vh - 50%);
   scale: 1;
-  transition: opacity 0.54s ease-out, color 0.54s ease;
+  transition: color 0.54s ease;
   will-change: translate, scale, opacity;
 
   &.show {
     opacity: 1;
   }
 
+  &.show:not(.is-docking) {
+    animation: entry-logo-flash-in 0.36s linear both;
+  }
+
   &.is-docking {
     color: var(--text-color);
     translate: var(--entry-logo-target-x) var(--entry-logo-target-y);
     scale: var(--entry-logo-target-scale);
-    transition: translate 1.22s @entry-logo-ease,
-      scale 1.22s @entry-logo-ease, opacity 0.42s ease-out,
-      color 0.54s ease;
+    transition: translate 1.22s @entry-logo-ease, scale 1.22s @entry-logo-ease,
+      opacity 0.42s ease-out, color 0.54s ease;
   }
 
   &.is-hidden {
@@ -118,6 +146,32 @@
   }
   to {
     opacity: 0;
+  }
+}
+
+@keyframes entry-logo-flash-in {
+  0% {
+    opacity: 0;
+  }
+
+  0.1%,
+  16%,
+  32.1%,
+  48%,
+  100% {
+    opacity: 1;
+  }
+
+  16.1%,
+  32%,
+  48.1% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo-wrapper2.show:not(.is-docking) {
+    animation: none;
   }
 }
 

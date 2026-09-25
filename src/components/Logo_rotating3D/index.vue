@@ -114,7 +114,10 @@ const ROTATION_SPEEDS = Object.freeze({
   medium: 0.36,
   fast: 0.6,
 })
-const STOP_DURATION = 700
+const STOP_DURATION = 350
+const FRONT_ROTATION_OFFSET = Math.PI / 4
+const FRONT_ROTATION_INTERVAL = Math.PI / 2
+const START_ROTATION = FRONT_ROTATION_OFFSET + FRONT_ROTATION_INTERVAL / 2
 const MOBILE_BREAKPOINT = 768
 const RESOURCE_CACHE_TTL = 60_000
 const isEdgeRenderMode = () => props.renderMode === 'edges'
@@ -206,8 +209,8 @@ const initThree = async () => {
     assignResources(cachedResources)
     camera.position.set(0, 0, 9)
     camera.lookAt(0, 0, 0)
-    crystal.rotation.y = Math.PI / 4
-    cage.rotation.y = 0
+    crystal.rotation.y = START_ROTATION
+    cage.rotation.y = -(START_ROTATION - FRONT_ROTATION_OFFSET)
     renderer.setPixelRatio(getRendererPixelRatio())
     renderer.setSize(width, height)
     composer?.setSize(width, height)
@@ -429,7 +432,8 @@ const initThree = async () => {
     crystal = createCrystal()
     cage = createNCage()
     group.add(crystal, cage)
-    crystal.rotation.y = Math.PI / 4
+    crystal.rotation.y = START_ROTATION
+    cage.rotation.y = -(START_ROTATION - FRONT_ROTATION_OFFSET)
     group.scale.set(0.5, 0.5, 0.5)
   }
 
@@ -452,22 +456,20 @@ const initThree = async () => {
 
     if (isStopping) {
       if (stopStartTime === null) {
-        const frontRotationOffset = Math.PI / 4
-        const frontRotationInterval = Math.PI / 2
         const completedFrontRotations = Math.floor(
-          (crystal.rotation.y - frontRotationOffset) / frontRotationInterval
+          (crystal.rotation.y - FRONT_ROTATION_OFFSET) / FRONT_ROTATION_INTERVAL
         )
 
         stopStartTime = frameTime
         stopStartRotation = crystal.rotation.y
         stopTargetRotation =
-          frontRotationOffset +
-          (completedFrontRotations + 1) * frontRotationInterval
+          FRONT_ROTATION_OFFSET +
+          (completedFrontRotations + 1) * FRONT_ROTATION_INTERVAL
 
         const inheritedVelocity = getRotationSpeed() * (STOP_DURATION / 1000)
         const minimumStopDistance = inheritedVelocity / 3
         if (stopTargetRotation - stopStartRotation < minimumStopDistance) {
-          stopTargetRotation += frontRotationInterval
+          stopTargetRotation += FRONT_ROTATION_INTERVAL
         }
       }
 
@@ -483,11 +485,11 @@ const initThree = async () => {
         startBasis * stopStartRotation +
         startVelocityBasis * inheritedVelocity +
         endBasis * stopTargetRotation
-      cage.rotation.y = -(crystal.rotation.y - Math.PI / 4)
+      cage.rotation.y = -(crystal.rotation.y - FRONT_ROTATION_OFFSET)
 
       if (progress >= 1) {
         crystal.rotation.y = stopTargetRotation
-        cage.rotation.y = -(stopTargetRotation - Math.PI / 4)
+        cage.rotation.y = -(stopTargetRotation - FRONT_ROTATION_OFFSET)
         cancelAnimationFrame(animationId)
         animationId = null
         emit('finished')

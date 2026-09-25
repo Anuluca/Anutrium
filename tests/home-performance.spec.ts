@@ -8,6 +8,14 @@ test('entry animation rotates and hands off to the SVG logo', async ({
 
   const canvas = page.locator('.entry-overlay-container canvas')
   await expect(canvas).toBeVisible({ timeout: 15_000 })
+  const loadingProgress = page.locator('.entry-loading-progress')
+  await expect(loadingProgress).toBeVisible()
+  await expect(loadingProgress).toHaveCSS('color', 'rgba(0, 0, 0, 0)')
+  await expect(loadingProgress).toHaveCSS(
+    '-webkit-text-stroke-color',
+    'rgb(226, 52, 86)'
+  )
+  await expect(loadingProgress).toHaveCSS('-webkit-text-stroke-width', '1px')
   const entryScene = page.locator('.entry-overlay-container .scene-container')
   await expect
     .poll(() =>
@@ -41,6 +49,24 @@ test('entry animation rotates and hands off to the SVG logo', async ({
 
   const svgLogo = page.locator('.logo-wrapper2')
   await expect(svgLogo).toHaveClass(/show/, { timeout: 5_000 })
+  await expect(page.locator('.logo-wrapper')).toHaveClass(/is-wiping-out/)
+  await expect(loadingProgress).toHaveText('100%')
+  const handoffAnimation = await svgLogo.evaluate((element) => {
+    const style = getComputedStyle(element)
+    return {
+      name: style.animationName,
+      duration: style.animationDuration,
+    }
+  })
+  expect(handoffAnimation.name).toContain('entry-logo-flash-in')
+  expect(handoffAnimation.duration).toBe('0.36s')
+  await expect
+    .poll(() =>
+      loadingProgress.evaluate((element) =>
+        Number.parseFloat(getComputedStyle(element).opacity)
+      )
+    )
+    .toBeLessThan(0.1)
   await expect(svgLogo).toHaveClass(/is-docking/, { timeout: 3_000 })
 })
 
@@ -512,9 +538,7 @@ test('scrolled header excludes only its background region while particles keep m
   expect(secondFrame).not.toBe(firstFrame)
 })
 
-test('route title disappears immediately when returning home', async ({
-  page,
-}) => {
+test('route title flips upward when returning home', async ({ page }) => {
   await page.goto('/archive', { waitUntil: 'domcontentloaded' })
   const moduleName = page.locator('.current-module-name')
   await expect(moduleName).toBeVisible({ timeout: 15_000 })
@@ -526,8 +550,59 @@ test('route title disappears immediately when returning home', async ({
     .locator('.logo-box')
     .evaluate((element) => (element as HTMLButtonElement).click())
   await expect(page).toHaveURL(/\/$/)
-  await page.waitForTimeout(16)
-  expect(await moduleName.count()).toBe(0)
+  await expect(moduleName).toHaveClass(/module-name-leave-active/)
+  expect(
+    await moduleName
+      .locator('.module-name-character')
+      .first()
+      .evaluate((element) => getComputedStyle(element).animationName)
+  ).toContain('module-name-character-leave')
+  await expect(moduleName).toHaveCount(0, { timeout: 1_000 })
+})
+
+test('route title characters flip between module names', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name.includes('mobile'))
+  await page.goto('/archive', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.layout-page')).toHaveClass(/layout-show/, {
+    timeout: 15_000,
+  })
+  await expect(page.locator('.entry-overlay-container')).toHaveCount(0, {
+    timeout: 15_000,
+  })
+
+  await page.locator('.desktop-menu a[href="/about"]').click()
+  await expect(page).toHaveURL(/\/about\/?$/)
+
+  const outgoingName = page.locator(
+    '.current-module-name.module-name-leave-active'
+  )
+  await expect(outgoingName).toBeVisible()
+  await expect(
+    page.locator('.current-module-name.module-name-enter-active')
+  ).toHaveCount(0)
+  expect(
+    await outgoingName
+      .locator('.module-name-character')
+      .first()
+      .evaluate((element) => getComputedStyle(element).animationName)
+  ).toContain('module-name-character-leave')
+
+  await expect(outgoingName).toHaveCount(0, { timeout: 1_000 })
+  const incomingName = page.locator(
+    '.current-module-name.module-name-enter-active'
+  )
+  await expect(incomingName).toBeVisible()
+  expect(
+    await incomingName
+      .locator('.module-name-character')
+      .first()
+      .evaluate((element) => getComputedStyle(element).animationName)
+  ).toContain('module-name-character-enter')
+  await expect(page.locator('.current-module-name')).toHaveCount(1, {
+    timeout: 1_000,
+  })
 })
 
 test('new route mounts only after the previous route unmounts', async ({

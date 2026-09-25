@@ -14,6 +14,8 @@ const logo2DHide = ref(false)
 const isLogoDocking = ref(false)
 const isBackgroundExiting = ref(false)
 const isBackgroundFading = ref(false)
+const loadingProgress = ref(0)
+const isProgressFading = ref(false)
 const logoRotating3DRef = ref()
 const logo2DRef = ref<HTMLElement | null>(null)
 const entryStyle = ref<Record<string, string>>({})
@@ -21,11 +23,14 @@ const timers: number[] = []
 let isUnmounted = false
 let hasStartedIntroExit = false
 let hasEmittedReady = false
+let progressAnimationFrame: number | null = null
+let progressStartedAt: number | null = null
 
-const INTRO_MIN_DURATION = 1600
+const INTRO_MIN_DURATION = 800
+const INTRO_STOP_DURATION = 350
+const INTRO_PROGRESS_DURATION = INTRO_MIN_DURATION + INTRO_STOP_DURATION
 const INTRO_FAILSAFE_DURATION = 4200
 const INTRO_FORCE_HIDE_DURATION = 6200
-const EXIT_LOGO_FADE_DELAY = 340
 const EXIT_DOCK_START_DELAY = 980
 const EXIT_READY_DELAY = 1140
 const EXIT_BACKGROUND_FADE_DELAY = 2280
@@ -45,6 +50,27 @@ const waitWithSchedule = (timeout: number) =>
   new Promise<void>((resolve) => {
     schedule(resolve, timeout)
   })
+
+const updateLoadingProgress = (timestamp: number) => {
+  progressStartedAt ??= timestamp
+  const elapsed = timestamp - progressStartedAt
+  loadingProgress.value = Math.min(
+    99,
+    Math.floor((elapsed / INTRO_PROGRESS_DURATION) * 100)
+  )
+  progressAnimationFrame = window.requestAnimationFrame(updateLoadingProgress)
+}
+
+const completeLoadingProgress = () => {
+  if (progressAnimationFrame !== null) {
+    window.cancelAnimationFrame(progressAnimationFrame)
+    progressAnimationFrame = null
+  }
+  loadingProgress.value = 100
+  schedule(() => {
+    isProgressFading.value = true
+  }, 140)
+}
 
 const emitReady = () => {
   if (hasEmittedReady) return
@@ -188,6 +214,7 @@ const finishIntro = (skipLogoReveal = false) => {
   if (hasStartedIntroExit || isUnmounted) return
 
   hasStartedIntroExit = true
+  completeLoadingProgress()
 
   if (skipLogoReveal) {
     isLogoWipingOut.value = true
@@ -208,10 +235,7 @@ const finishIntro = (skipLogoReveal = false) => {
   }
 
   logo2DShow.value = true
-
-  schedule(() => {
-    isLogoWipingOut.value = true
-  }, EXIT_LOGO_FADE_DELAY)
+  isLogoWipingOut.value = true
 
   schedule(() => {
     void startExitMotion()
@@ -239,6 +263,7 @@ const rotateFinished = () => {
 }
 
 onMounted(() => {
+  progressAnimationFrame = window.requestAnimationFrame(updateLoadingProgress)
   schedule(() => {
     finishIntro(true)
   }, INTRO_FAILSAFE_DURATION)
@@ -253,6 +278,10 @@ onMounted(() => {
 
 onUnmounted(() => {
   isUnmounted = true
+  if (progressAnimationFrame !== null) {
+    window.cancelAnimationFrame(progressAnimationFrame)
+    progressAnimationFrame = null
+  }
   timers.forEach((timer) => window.clearTimeout(timer))
   timers.length = 0
 })
@@ -281,6 +310,13 @@ onUnmounted(() => {
             @finished="rotateFinished"
           />
         </div>
+      </div>
+      <div
+        class="entry-loading-progress no-rem"
+        :class="{ 'is-fading': isProgressFading }"
+        aria-hidden="true"
+      >
+        {{ loadingProgress }}%
       </div>
       <div
         ref="logo2DRef"
