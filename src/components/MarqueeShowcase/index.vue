@@ -212,8 +212,8 @@ onUnmounted(() => {
   display: flex;
   flex: 0 0 auto;
   align-items: center;
-  gap: 60px;
-  padding-right: 60px;
+  gap: 15px;
+  padding-right: 15px;
 }
 
 .marquee-content span {

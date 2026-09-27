@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 
 import Logo from '@/components/Logo/index.vue'
 import LogoRotating3D from '@/components/Logo_rotating3D/index.vue'
@@ -16,6 +16,10 @@ const isBackgroundExiting = ref(false)
 const isBackgroundFading = ref(false)
 const loadingProgress = ref(0)
 const isProgressFading = ref(false)
+const loadingProgressText = computed(() => String(loadingProgress.value))
+const loadingProgressPadding = computed(() =>
+  '0'.repeat(Math.max(0, 3 - loadingProgressText.value.length))
+)
 const logoRotating3DRef = ref()
 const logo2DRef = ref<HTMLElement | null>(null)
 const entryStyle = ref<Record<string, string>>({})
@@ -30,12 +34,20 @@ const INTRO_MIN_DURATION = 800
 const INTRO_STOP_DURATION = 350
 const INTRO_PROGRESS_DURATION = INTRO_MIN_DURATION + INTRO_STOP_DURATION
 const INTRO_FAILSAFE_DURATION = 4200
-const INTRO_FORCE_HIDE_DURATION = 6200
+const EXIT_BACKGROUND_SHRINK_DURATION = 1260
+const EXIT_BACKGROUND_FADE_DURATION = 760
+const INTRO_FORCE_HIDE_DURATION =
+  INTRO_FAILSAFE_DURATION +
+  EXIT_BACKGROUND_SHRINK_DURATION +
+  EXIT_BACKGROUND_FADE_DURATION +
+  320
 const EXIT_DOCK_START_DELAY = 980
 const EXIT_READY_DELAY = 1140
-const EXIT_BACKGROUND_FADE_DELAY = 2280
+const EXIT_BACKGROUND_FADE_DELAY =
+  EXIT_DOCK_START_DELAY + EXIT_BACKGROUND_SHRINK_DURATION
 const EXIT_LOGO_HIDE_DELAY = 2460
-const EXIT_HIDE_DELAY = 3040
+const EXIT_HIDE_DELAY =
+  EXIT_BACKGROUND_FADE_DELAY + EXIT_BACKGROUND_FADE_DURATION
 
 const schedule = (handler: () => void, timeout: number) => {
   const timer = window.setTimeout(() => {
@@ -148,7 +160,6 @@ const getFooterFallbackRect = () => {
     top: height - footerHeight - 10,
     width: Math.max(1, width - 80),
     height: footerHeight,
-    opacity: 0.98,
     radius: '0px',
   }
 }
@@ -163,7 +174,6 @@ const getBackgroundTargetRect = () => {
     top: rect.top,
     width: rect.width,
     height: rect.height,
-    opacity: 0.98,
     radius: style.borderRadius,
   }
 }
@@ -196,7 +206,6 @@ const measureExitTargets = () => {
     '--entry-bg-target-y': `${backgroundRect.top}px`,
     '--entry-bg-target-scale-x': `${backgroundRect.width / width}`,
     '--entry-bg-target-scale-y': `${backgroundRect.height / height}`,
-    '--entry-bg-target-opacity': `${backgroundRect.opacity}`,
     '--entry-bg-target-radius': backgroundRect.radius,
   }
 }
@@ -226,11 +235,11 @@ const finishIntro = (skipLogoReveal = false) => {
 
     schedule(() => {
       isBackgroundFading.value = true
-    }, 980)
+    }, EXIT_BACKGROUND_SHRINK_DURATION)
 
     schedule(() => {
       hideIntro()
-    }, 1680)
+    }, EXIT_BACKGROUND_SHRINK_DURATION + EXIT_BACKGROUND_FADE_DURATION)
     return
   }
 
@@ -316,7 +325,9 @@ onUnmounted(() => {
         :class="{ 'is-fading': isProgressFading }"
         aria-hidden="true"
       >
-        {{ loadingProgress }}%
+        <span v-if="loadingProgressPadding" class="progress-padding">{{
+          loadingProgressPadding
+        }}</span><span>{{ loadingProgressText }}%</span>
       </div>
       <div
         ref="logo2DRef"

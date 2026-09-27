@@ -7,7 +7,6 @@
   --entry-bg-target-y: 0px;
   --entry-bg-target-scale-x: 1;
   --entry-bg-target-scale-y: 1;
-  --entry-bg-target-opacity: 0.98;
   --entry-bg-target-radius: 0px;
   --entry-logo-target-x: 0px;
   --entry-logo-target-y: 0px;
@@ -30,7 +29,7 @@
   background-color: #000000d1;
   border-radius: 0;
   transform-origin: top left;
-  transition: transform 1.26s @entry-bg-ease, opacity 1s ease-out,
+  transition: transform 1.26s @entry-bg-ease,
     border-radius 1.26s @entry-bg-ease;
   will-change: transform, opacity, border-radius;
 }
@@ -38,7 +37,6 @@
 .entry-overlay-container.is-background-exiting {
   .entry-background {
     border-radius: var(--entry-bg-target-radius);
-    opacity: var(--entry-bg-target-opacity);
     transform: translate3d(
         var(--entry-bg-target-x),
         var(--entry-bg-target-y),
@@ -92,6 +90,10 @@
 
   &.is-fading {
     opacity: 0;
+  }
+
+  .progress-padding {
+    opacity: 0.5;
   }
 }
 

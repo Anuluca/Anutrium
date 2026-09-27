@@ -15,7 +15,7 @@
   --layer-particles: 4;
   --stage-offset-y: calc(-50% + 2vh);
   --stage-offset-y: calc(-50% + 2dvh);
-  --stage-opacity: 0.1;
+  --stage-opacity: 0;
   --background-top-inset: 0px;
   position: fixed;
   inset: 0;
@@ -115,10 +115,10 @@
   }
 
   &.is-content-layout {
-    --stage-offset-y: calc(-50% + 37.25vh);
-    --stage-offset-y: calc(-50% + 37.25dvh);
+    --stage-offset-y: calc(-50% + 51vh);
+    --stage-offset-y: calc(-50% + 51dvh);
     --stage-opacity: 0.08;
-    --stage-scale: 0.88;
+    --stage-scale: 1.05;
 
     .particle-field {
       opacity: 0.64;
@@ -166,7 +166,7 @@
   will-change: opacity;
 
   &.is-visible {
-    opacity: 1;
+    opacity: 0.5;
   }
 }
 
@@ -336,7 +336,7 @@
 
 @media screen and (max-width: 768px) {
   .star-container {
-    --stage-opacity: 0.1;
+    --stage-opacity: 0;
     --stage-offset-y: -50%;
   }
 
@@ -346,8 +346,8 @@
   }
 
   .star-container.is-content-layout {
-    --stage-offset-y: -50%;
-    --stage-scale: 1.9;
+    --stage-offset-y: calc(-50% + 14dvh);
+    --stage-scale: 2.22;
   }
 }
 

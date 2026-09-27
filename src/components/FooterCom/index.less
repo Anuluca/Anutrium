@@ -3,9 +3,10 @@
   background-color: transparent;
   position: fixed;
   bottom: 10px;
-  left: var(--footer-com-inline-inset);
+  left: var(--desktop-shell-inline-inset, var(--footer-com-inline-inset));
   width: calc(
-    100vw - var(--footer-com-inline-inset) - var(--footer-com-inline-inset)
+    100vw - var(--desktop-shell-inline-inset, var(--footer-com-inline-inset)) -
+      var(--desktop-shell-inline-inset, var(--footer-com-inline-inset))
   );
   z-index: 100;
   display: flex;

@@ -56,7 +56,7 @@ const props = withDefaults(defineProps<Props>(), {
   topInset: 0,
   entryActive: true,
 })
-const STATIC_CHART_SRC = '/images/zodiac-chart-static.svg?v=20260924-1'
+const STATIC_CHART_SRC = '/images/zodiac-chart-static.svg?v=20260927-1'
 
 const polarPercent = (radius: number, angle: number): CSSProperties => {
   const radians = (angle * Math.PI) / 180

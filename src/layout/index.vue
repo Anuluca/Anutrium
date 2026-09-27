@@ -25,52 +25,68 @@
         @click="returnHome"
       >
         <Logo id="0" class="logo" :active="false" data-entry-logo-target />
-        <div :class="['right', locale]">
-          <p>
-            <span>{{ $t('name[0]') }}</span>
-            <span :class="['name-center', { active: logoActive }]">{{
-              $t('name[1]')
-            }}</span>
-            <span>{{ $t('name[2]') }}</span>
-          </p>
-          <span v-if="locale === 'zhCn'" class="site-subtitle">
-            <span class="site-subtitle-text site-subtitle-text--short">
-              <span>A</span>
-              <span>N</span>
-              <span>U</span>
-              <span>T</span>
-              <span>R</span>
-              <span>I</span>
-              <span>U</span>
-              <span>M</span>
+        <span class="site-title-slot">
+          <div :class="['right', isHomeRoute ? locale : 'en']">
+            <span
+              class="site-main-title-slot"
+              :class="{
+                'site-main-title-slot--shifted':
+                  !isHomeRoute || locale !== 'zhCn',
+              }"
+            >
+              <p>
+                <span>{{ headerSiteTitle[0] }}</span>
+                <span :class="['name-center', { active: logoActive }]">{{
+                  headerSiteTitle[1]
+                }}</span>
+                <span>{{ headerSiteTitle[2] }}</span>
+              </p>
             </span>
-            <span class="site-subtitle-text site-subtitle-text--long">
-              <span>A</span>
-              <span>N</span>
-              <span>U</span>
-              <span>L</span>
-              <span>U</span>
-              <span>C</span>
-              <span>A</span>
-              <span>'</span>
-              <span>S</span>
-              <span class="site-subtitle-space" aria-hidden="true" />
-              <span>A</span>
-              <span>T</span>
-              <span>R</span>
-              <span>I</span>
-              <span>U</span>
-              <span>M</span>
+            <span class="site-subtitle-slot">
+              <Transition name="site-subtitle-slide">
+                <span
+                  v-if="isHomeRoute && locale === 'zhCn'"
+                  class="site-subtitle"
+                >
+                  <span class="site-subtitle-text site-subtitle-text--short">
+                    <span>A</span>
+                    <span>N</span>
+                    <span>U</span>
+                    <span>T</span>
+                    <span>R</span>
+                    <span>I</span>
+                    <span>U</span>
+                    <span>M</span>
+                  </span>
+                  <span class="site-subtitle-text site-subtitle-text--long">
+                    <span>A</span>
+                    <span>N</span>
+                    <span>U</span>
+                    <span>L</span>
+                    <span>U</span>
+                    <span>C</span>
+                    <span>A</span>
+                    <span>'</span>
+                    <span>S</span>
+                    <span class="site-subtitle-space" aria-hidden="true" />
+                    <span>A</span>
+                    <span>T</span>
+                    <span>R</span>
+                    <span>I</span>
+                    <span>U</span>
+                    <span>M</span>
+                  </span>
+                </span>
+              </Transition>
             </span>
-          </span>
-        </div>
+          </div>
+        </span>
         <Transition name="module-name" mode="out-in" :duration="560">
           <span
             v-if="headerPresentation.moduleName"
-            :key="`${locale}:${headerPresentation.moduleName}`"
+            :key="headerPresentation.moduleName"
             :class="[
               'current-module-name',
-              { 'current-module-name--zh': locale === 'zhCn' },
               headerPresentation.moduleTheme &&
                 `current-module-name--${headerPresentation.moduleTheme}`,
             ]"
@@ -304,7 +320,7 @@ const FooterSocialLinks = defineAsyncComponent(
   () => import('@/components/FooterSocialLinks/index.vue')
 )
 
-const { locale } = useI18n()
+const { locale, t } = useI18n()
 const props = defineProps({
   entryActive: {
     type: Boolean,
@@ -330,6 +346,13 @@ const headerLogoReady = ref(false)
 const route = useRoute()
 const router = useRouter()
 const visualStateStore = visualState()
+const isHomeRoute = computed(() => route.name === 'HOME')
+const englishSiteTitle = ['Anu', "luca's A", 'trium'] as const
+const headerSiteTitle = computed(() =>
+  isHomeRoute.value
+    ? [t('name[0]'), t('name[1]'), t('name[2]')]
+    : englishSiteTitle
+)
 
 const normalizeMenuPath = (path: string) =>
   path === '/' ? path : path.replace(/\/+$/, '')
@@ -373,11 +396,10 @@ const headerPresentation = computed(() => {
     contentAligned: !expandedHeaderRoutes.has(routeName),
     moduleName: hiddenModuleTitleRoutes.has(routeName)
       ? ''
-      : String(locale.value === 'en' ? moduleMeta.titleEn : moduleMeta.titleCn),
+      : String(moduleMeta.titleEn),
     moduleTheme: moduleThemeByPath[modulePath] || '',
   }
 })
-const isHomeRoute = computed(() => route.name === 'HOME')
 const splitModuleName = (moduleName: string) => Array.from(moduleName)
 const isInnerMenuRoute = computed(
   () =>

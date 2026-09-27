@@ -2,11 +2,11 @@ const homeDynamic = {
   intro: {
     before: {
       zhCn: '你好，我是',
-      en: "Hi, I'm ",
+      en: "Hi, I'M ",
     },
     name: {
       zhCn: '路卡',
-      en: 'Luca',
+      en: 'LUCA',
     },
     after: {
       zhCn: '。',
@@ -22,28 +22,28 @@ const homeDynamic = {
     en: 'I LIKE EXPERIENCING LOCAL CULTURE AND EVERYDAY LIFE',
   },
   aboutDescription: {
-    zhCn: 'Anutrium记录着我的—，我想把它们留存在网络中。',
-    en: 'Anutrium documents my —, and I want to preserve them on the web.',
+    zhCn: 'Anutrium 是记录着我的—的地方。',
+    en: 'Anutrium is where I document my —.',
   },
   descriptionItem: [
     {
       text: {
         zhCn: '想法',
-        en: 'ideas',
+        en: 'IDEAS',
       },
       link: '/island',
     },
     {
       text: {
         zhCn: '生活片段',
-        en: 'moments in life',
+        en: 'MOMENTS IN LIFE',
       },
       link: '/flanerie',
     },
     {
       text: {
         zhCn: '作品',
-        en: 'works',
+        en: 'WORKS',
       },
       link: '/archive',
     },

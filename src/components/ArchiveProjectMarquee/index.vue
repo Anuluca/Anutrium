@@ -146,8 +146,8 @@ const projectRows = computed(() => {
 .archive-project-marquee__group {
   display: flex;
   flex: none;
-  gap: clamp(0.5rem, 1vw, 1rem);
-  padding-right: clamp(0.5rem, 1vw, 1rem);
+  gap: 0;
+  padding-right: 0;
 }
 
 .archive-project-marquee__card {
