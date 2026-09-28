@@ -283,9 +283,7 @@
             </div>
             <HomeFlanerieSection
               v-else-if="page.id === 'flanerie'"
-              :active="
-                activeHomePageIndex === index + 1 && !isHomePageTransitionActive
-              "
+              :active="activeHomePageIndex === index + 1"
               :color="page.color"
               :subtitle="t('home.dynamic.flanerieSubtitle')"
               :vlogs="flanerieVlogs"
@@ -298,11 +296,8 @@
                   class="home-craft-subtitle"
                   tag="p"
                 >
-                  想到既做到。
+                  想到即做到。
                 </BlurReveal>
-                <p class="home-craft-description">
-                  借助Agent开发的一些常用工具
-                </p>
               </div>
               <div class="home-craft-grid">
                 <ToolCard
@@ -790,7 +785,6 @@ let craftFooterWheelArmTimer: ReturnType<typeof setTimeout> | null = null
 let homePageFadeTimer: ReturnType<typeof setTimeout> | null = null
 let homePageContentExitTimer: ReturnType<typeof setTimeout> | null = null
 let homeHeaderTransitionTimer: ReturnType<typeof setTimeout> | null = null
-let heroInitialEntranceObserver: MutationObserver | null = null
 let heroInitialEntranceTimer: ReturnType<typeof setTimeout> | null = null
 let heroExitPreparationFrameId: number | null = null
 let heroDeferredContentTimer: ReturnType<typeof setTimeout> | null = null
@@ -898,8 +892,6 @@ const areHeroEffectsPaused = computed(
 const startHeroInitialEntrance = () => {
   if (isHeroInitialEntranceReady.value) return
 
-  heroInitialEntranceObserver?.disconnect()
-  heroInitialEntranceObserver = null
   isHeroInitialEntering.value = true
   isHeroInitialEntranceReady.value = true
   isHeroInitialHidden.value = false
@@ -908,29 +900,6 @@ const startHeroInitialEntrance = () => {
     if (!isHeroExitPreparing.value) isHeroMotionPrepared.value = false
     heroInitialEntranceTimer = null
   }, HERO_INITIAL_CONTENT_TRANSITION_DURATION)
-}
-
-const waitForHeroLayoutEntrance = () => {
-  const layoutElement = heroSection.value?.closest('.layout-page')
-  if (!layoutElement) {
-    startHeroInitialEntrance()
-    return
-  }
-
-  if (layoutElement.classList.contains('layout-show')) {
-    startHeroInitialEntrance()
-    return
-  }
-
-  heroInitialEntranceObserver = new MutationObserver(() => {
-    if (layoutElement.classList.contains('layout-show')) {
-      startHeroInitialEntrance()
-    }
-  })
-  heroInitialEntranceObserver.observe(layoutElement, {
-    attributeFilter: ['class'],
-    attributes: true,
-  })
 }
 
 const homePageStyle = computed(() => ({
@@ -2267,7 +2236,7 @@ onMounted(async () => {
   })
   document.addEventListener('visibilitychange', handleVisibilityChange)
   await nextTick()
-  waitForHeroLayoutEntrance()
+  startHeroInitialEntrance()
   if (activeHomePageIndex.value === CRAFT_PAGE_INDEX) {
     window.requestAnimationFrame(connectCraftFooterResizeObserver)
   }
@@ -2276,8 +2245,6 @@ onMounted(async () => {
 onUnmounted(() => {
   cancelHomeFlaneriePreload()
   queuedHomePageTransitionIndex = null
-  heroInitialEntranceObserver?.disconnect()
-  heroInitialEntranceObserver = null
   if (heroInitialEntranceTimer) {
     clearTimeout(heroInitialEntranceTimer)
     heroInitialEntranceTimer = null

@@ -5,7 +5,7 @@ import Logo from '@/components/Logo/index.vue'
 import LogoRotating3D from '@/components/Logo_rotating3D/index.vue'
 import { loadCriticalFont } from '@/utils/fontLoader'
 
-const emit = defineEmits(['finished', 'hidden'])
+const emit = defineEmits(['finished', 'hidden', 'progress-complete'])
 
 const isAnimating = ref(true)
 const isLogoWipingOut = ref(false)
@@ -42,7 +42,6 @@ const INTRO_FORCE_HIDE_DURATION =
   EXIT_BACKGROUND_FADE_DURATION +
   320
 const EXIT_DOCK_START_DELAY = 980
-const EXIT_READY_DELAY = 1140
 const EXIT_BACKGROUND_FADE_DELAY =
   EXIT_DOCK_START_DELAY + EXIT_BACKGROUND_SHRINK_DURATION
 const EXIT_LOGO_HIDE_DELAY = 2460
@@ -79,6 +78,7 @@ const completeLoadingProgress = () => {
     progressAnimationFrame = null
   }
   loadingProgress.value = 100
+  emit('progress-complete')
   schedule(() => {
     isProgressFading.value = true
   }, 140)
@@ -217,6 +217,7 @@ const startExitMotion = async () => {
   measureExitTargets()
   isLogoDocking.value = true
   isBackgroundExiting.value = true
+  emitReady()
 }
 
 const finishIntro = (skipLogoReveal = false) => {
@@ -228,10 +229,6 @@ const finishIntro = (skipLogoReveal = false) => {
   if (skipLogoReveal) {
     isLogoWipingOut.value = true
     void startExitMotion()
-
-    schedule(() => {
-      emitReady()
-    }, 780)
 
     schedule(() => {
       isBackgroundFading.value = true
@@ -249,10 +246,6 @@ const finishIntro = (skipLogoReveal = false) => {
   schedule(() => {
     void startExitMotion()
   }, EXIT_DOCK_START_DELAY)
-
-  schedule(() => {
-    emitReady()
-  }, EXIT_READY_DELAY)
 
   schedule(() => {
     isBackgroundFading.value = true
@@ -316,6 +309,7 @@ onUnmounted(() => {
             render-mode="edges"
             edge-color="#E23456"
             :edge-width="2"
+            transparent
             @finished="rotateFinished"
           />
         </div>
@@ -327,7 +321,8 @@ onUnmounted(() => {
       >
         <span v-if="loadingProgressPadding" class="progress-padding">{{
           loadingProgressPadding
-        }}</span><span>{{ loadingProgressText }}%</span>
+        }}</span
+        ><span>{{ loadingProgressText }}%</span>
       </div>
       <div
         ref="logo2DRef"

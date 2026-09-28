@@ -18,8 +18,8 @@ const homeDynamic = {
     en: 'PROJECTS I CONTRIBUTED TO',
   },
   flanerieSubtitle: {
-    zhCn: '我喜欢体验各地的人文生活',
-    en: 'I LIKE EXPERIENCING LOCAL CULTURE AND EVERYDAY LIFE',
+    zhCn: '我遇见不同的日常',
+    en: 'I ENCOUNTER DIFFERENT WAYS OF LIFE',
   },
   aboutDescription: {
     zhCn: 'Anutrium 是记录着我的—的地方。',

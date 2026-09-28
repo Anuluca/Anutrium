@@ -46,10 +46,11 @@ const route = useRoute()
 const { locale, tm } = useI18n()
 let removeExternalLinkTracking: (() => void) | null = null
 let resizeRafId: number | null = null
-let entryAnimationTimer: number | null = null
+let pageContentRemountTimer: number | null = null
 let cancelScheduledTypekitLoad: (() => void) | null = null
 const entryAnimationReady = ref(false)
 const entryOverlayHidden = ref(false)
+const pageContentActive = ref(true)
 const petTeaserHiddenPaths = new Set(['/pet', '/404', '/island', '/test'])
 const shouldShowPetTeaser = computed(
   () => !petTeaserHiddenPaths.has(route.path)
@@ -155,15 +156,15 @@ function scheduleRootFontSizeUpdate() {
 }
 
 const startAnimationFinished = () => {
-  if (entryAnimationTimer !== null) {
-    window.clearTimeout(entryAnimationTimer)
+  entryAnimationReady.value = true
+  syncSmoothScrollForRoute()
+  if (pageContentRemountTimer !== null) {
+    window.clearTimeout(pageContentRemountTimer)
   }
-
-  entryAnimationTimer = window.setTimeout(() => {
-    entryAnimationReady.value = true
-    syncSmoothScrollForRoute()
-    entryAnimationTimer = null
-  }, 250)
+  pageContentRemountTimer = window.setTimeout(() => {
+    pageContentActive.value = true
+    pageContentRemountTimer = null
+  }, 500)
 }
 
 const syncSmoothScrollForRoute = () => {
@@ -174,6 +175,10 @@ const syncSmoothScrollForRoute = () => {
 
 const startAnimationHidden = () => {
   entryOverlayHidden.value = true
+}
+
+const unmountPageContent = () => {
+  pageContentActive.value = false
 }
 
 onMounted(async () => {
@@ -193,7 +198,9 @@ onMounted(async () => {
 onUnmounted(() => {
   window.removeEventListener('resize', scheduleRootFontSizeUpdate)
   if (resizeRafId !== null) window.cancelAnimationFrame(resizeRafId)
-  if (entryAnimationTimer !== null) window.clearTimeout(entryAnimationTimer)
+  if (pageContentRemountTimer !== null) {
+    window.clearTimeout(pageContentRemountTimer)
+  }
   cancelScheduledTypekitLoad?.()
   removeExternalLinkTracking?.()
   stopSmoothScroll()
@@ -212,9 +219,11 @@ watch(
   <StartAnimation
     @finished="startAnimationFinished"
     @hidden="startAnimationHidden"
+    @progress-complete="unmountPageContent"
   />
   <layout
     :entry-active="entryAnimationReady"
+    :content-active="pageContentActive"
     @route-transition-complete="syncSmoothScrollForRoute"
   />
   <PetTeaserLink

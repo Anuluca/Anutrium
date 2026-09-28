@@ -44,11 +44,12 @@ type MapPlaceGroup = JourneyItem['location'] & {
 
 const props = withDefaults(
   defineProps<{
-    vlogs: JourneyItem[]
+    vlogs?: JourneyItem[]
     mode?: TravelMapMode
     active?: boolean
   }>(),
   {
+    vlogs: () => [],
     mode: 'default',
     active: true,
   }
@@ -172,18 +173,6 @@ const renderZoomControlIcons = () => {
   renderZoomIcon('.leaflet-control-zoom-out', 'minus')
 }
 
-const moveBackgroundControlsToShell = () => {
-  if (props.mode !== 'background') return
-
-  const controlContainer = mapRef.value?.querySelector<HTMLElement>(
-    '.leaflet-control-container'
-  )
-  if (!controlContainer || !mapContainerRef.value) return
-
-  controlContainer.classList.add('travel-map-background-controls')
-  mapContainerRef.value.appendChild(controlContainer)
-}
-
 const refreshMapSize = () => {
   if (!mapInstance) return
 
@@ -233,10 +222,13 @@ const initMap = (L: any) => {
     maxZoom: 8,
   }).addTo(map)
 
-  L.control.zoom({ position: 'bottomright' }).addTo(map)
-  renderZoomControlIcons()
-  moveBackgroundControlsToShell()
+  if (props.mode !== 'background') {
+    L.control.zoom({ position: 'bottomright' }).addTo(map)
+    renderZoomControlIcons()
+  }
   refreshMapSize()
+
+  if (props.mode === 'background') return
 
   void addVisitedRegionHighlights(L, map)
 
@@ -391,7 +383,7 @@ onMounted(() => {
 
 watch(() => props.active, syncMapActivation)
 watch([locale, () => props.vlogs], () => {
-  if (!mapInstance) return
+  if (props.mode === 'background' || !mapInstance) return
   void loadLeaflet().then(recreateMap)
 })
 watch(() => visualStateStore.theme, updateMapTheme)
@@ -417,9 +409,12 @@ onUnmounted(() => {
   margin-bottom: 40px;
   overflow: hidden;
   border: 1px solid @border;
-  background: #0a050f;
   isolation: isolate;
   animation: travelMapClipIn 0.64s cubic-bezier(0.18, 0.84, 0.28, 1) 0.18s both;
+}
+
+.travel-map-shell--default {
+  background: #0a050f;
 }
 
 .travel-map-visual {
@@ -686,42 +681,26 @@ onUnmounted(() => {
 
   .travel-map-visual {
     transform-origin: center;
-    animation: travelMapBackgroundEnter 1.5s cubic-bezier(0.16, 1, 0.3, 1) 0.42s
-      both;
+    transform: translate(9vw, 10dvh) scale(1.75);
+    animation: travelMapBackgroundEnter 1.5s ease-out 0.42s both;
   }
 
   .map-hud-label {
     display: none;
   }
 
-  :deep(.leaflet-bottom.leaflet-right) {
-    right: clamp(5rem, 9vw, 9rem);
-    bottom: clamp(1.25rem, 3dvh, 2.5rem);
-  }
-
-  :deep(.leaflet-control-zoom) {
-    display: flex;
-    width: max-content;
-    border-radius: 0;
-    transform: scale(2);
-    transform-origin: right bottom;
-  }
-
-  :deep(.leaflet-control-zoom a) {
-    border-radius: 0 !important;
-  }
-
-  :deep(.leaflet-control-zoom-in) {
-    border-bottom: 0 !important;
+  :deep(.leaflet-container) {
+    background-color: transparent !important;
+    background-image: radial-gradient(
+      circle,
+      rgba(255, 255, 255, 0.11) 1px,
+      transparent 1.2px
+    ) !important;
+    background-size: 12px 12px !important;
   }
 
   :deep(.leaflet-popup) {
     pointer-events: auto;
-  }
-
-  :deep(.travel-map-background-controls) {
-    opacity: 0;
-    animation: travelMapControlsEnter 0.3s ease-out 0.42s both;
   }
 }
 
@@ -738,36 +717,14 @@ onUnmounted(() => {
 }
 
 @keyframes travelMapBackgroundEnter {
-  0% {
-    opacity: 0;
-    transform: translate(0, 0) scale(1);
-  }
-
-  100% {
-    opacity: 1;
-    transform: translate(9vw, 10dvh) scale(1.75);
-  }
-}
-
-@keyframes travelMapBackgroundEnterMobile {
-  0% {
-    opacity: 0;
-    transform: translate(0, 0) scale(1);
-  }
-
-  100% {
-    opacity: 1;
-    transform: translate(-30vw, 10dvh) scale(1.64);
-  }
-}
-
-@keyframes travelMapControlsEnter {
   from {
     opacity: 0;
+    scale: 1.14;
   }
 
   to {
     opacity: 1;
+    scale: 1;
   }
 }
 
@@ -812,37 +769,7 @@ onUnmounted(() => {
 
   .travel-map-shell--background {
     .travel-map-visual {
-      animation-name: travelMapBackgroundEnterMobile;
-    }
-
-    :deep(.leaflet-bottom.leaflet-right) {
-      top: clamp(4.25rem, 9dvh, 5rem);
-      right: 1rem;
-      bottom: auto;
-    }
-
-    :deep(.leaflet-control-zoom) {
-      transform: none;
-    }
-
-    :deep(.leaflet-control-zoom a) {
-      width: 40px !important;
-      height: 40px !important;
-    }
-
-    :deep(.map-zoom-glyph) {
-      width: 20px;
-      height: 20px;
-
-      &::before {
-        top: 8px;
-        width: 20px;
-      }
-    }
-
-    :deep(.map-zoom-glyph--plus)::after {
-      left: 8px;
-      height: 20px;
+      transform: translate(-30vw, 10dvh) scale(1.64);
     }
   }
 }
@@ -850,6 +777,11 @@ onUnmounted(() => {
 @media (prefers-reduced-motion: reduce) {
   .travel-map-shell {
     clip-path: inset(0 0 0 0);
+    opacity: 1;
+    animation: none;
+  }
+
+  .travel-map-shell--background .travel-map-visual {
     opacity: 1;
     animation: none;
   }

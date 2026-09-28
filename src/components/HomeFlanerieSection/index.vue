@@ -1,17 +1,16 @@
 <template>
   <div class="home-flanerie-copy" :class="{ 'is-active': active }">
     <div class="home-flanerie-map-viewport">
-      <TravelMap
-        class="home-flanerie-map"
-        mode="background"
-        :active="active"
-        :vlogs="vlogs"
-        @select="emit('select', $event)"
-      />
+      <TravelMap class="home-flanerie-map" mode="background" :active="active" />
     </div>
 
     <div class="home-flanerie-heading">
-      <BlurReveal :active="active" class="home-flanerie-subtitle" tag="p">
+      <BlurReveal
+        :active="active"
+        class="home-flanerie-subtitle"
+        :delay="0"
+        tag="p"
+      >
         {{ subtitle }}
       </BlurReveal>
       <ThemeActionButton
@@ -24,16 +23,16 @@
         class="home-flanerie-bounce-cards"
         :items="journeys"
         container-width="min(46rem, 88vw)"
-        container-height="clamp(8rem, 15vw, 12rem)"
+        container-height="var(--home-flanerie-gallery-height)"
         card-width="clamp(8.75rem, 14vw, 12.75rem)"
-        :animation-delay="0.28"
+        :animation-delay="0"
         :animation-stagger="0.09"
         ease-type="elastic.out(1, 0.55)"
         :transform-styles="journeyTransforms"
         :hover-push-distance="36"
         :enable-hover="true"
         :entrance-active="active"
-        content-align="flex-start"
+        content-align="center"
       >
         <template #default="{ item }">
           <VlogCard
@@ -106,27 +105,15 @@ const journeyTransforms = computed(() =>
 
 <style scoped lang="less">
 .home-flanerie-copy {
+  --home-flanerie-gallery-height: clamp(8rem, 15vw, 12rem);
+
   position: absolute;
   inset: 0;
   width: auto;
   height: auto;
 
-  &::after {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    background: linear-gradient(
-      to right,
-      rgba(0, 0, 0, 0.38) 0%,
-      rgba(0, 0, 0, 0.2) 14%,
-      transparent 30%
-    );
-    content: '';
-    pointer-events: none;
-  }
-
   &.is-active .home-flanerie-more {
-    animation: homeFlanerieTextEnter 0.7s ease-out 0.42s both;
+    animation: homeFlanerieTextEnter 0.7s ease-out both;
   }
 }
 
@@ -135,20 +122,6 @@ const journeyTransforms = computed(() =>
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  -webkit-mask-image: linear-gradient(
-    to right,
-    transparent 0%,
-    rgba(0, 0, 0, 0.08) 10%,
-    rgba(0, 0, 0, 0.42) 22%,
-    #000 42%
-  );
-  mask-image: linear-gradient(
-    to right,
-    transparent 0%,
-    rgba(0, 0, 0, 0.08) 10%,
-    rgba(0, 0, 0, 0.42) 22%,
-    #000 42%
-  );
 }
 
 .home-flanerie-map {
@@ -158,14 +131,15 @@ const journeyTransforms = computed(() =>
 
 .home-flanerie-heading {
   position: absolute;
-  top: calc(50% + clamp(0.75rem, 2dvh, 1.5rem));
-  left: calc(50% - clamp(4rem, 10vw, 10rem) - clamp(2.25rem, 4.5vw, 4.5rem));
+  top: calc(50% + 3dvh);
+  left: 50%;
   z-index: 2;
   display: flex;
-  max-width: min(80vw, 76rem);
+  width: min(90vw, 76rem);
+  max-width: min(90vw, 76rem);
   flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
+  align-items: center;
+  text-align: center;
   transform: translate(-50%, -50%);
   pointer-events: none;
 }
@@ -176,26 +150,29 @@ const journeyTransforms = computed(() =>
   margin: 0;
   padding: 0.08em 0;
   color: #fff;
-  font-family: 'alibaba-puhuiti', sans-serif;
-  font-size: clamp(1.8rem, 3.5vw, 3.4rem);
-  font-weight: 900;
+  font-family: 'UnboundedSans', sans-serif;
+  font-size: clamp(2rem, 3.8vw, 3.6rem);
+  font-weight: 400;
   line-height: 1.2;
   opacity: 0;
   text-shadow: 0 0.08em 0.24em rgba(0, 0, 0, 0.72);
 }
 
 .home-flanerie-more {
-  align-self: flex-start;
-  margin-top: clamp(0.5rem, 1.1dvh, 0.75rem);
+  align-self: center;
+  margin-top: 0;
   margin-bottom: clamp(0.5rem, 1.1dvh, 0.75rem);
   opacity: 0;
 }
 
 .home-flanerie-bounce-cards {
-  position: absolute;
-  top: calc(100% - clamp(0.7rem, 1.2dvh, 1rem));
-  left: 0.25rem;
+  position: relative;
   z-index: 1;
+  flex: 0 0 auto;
+  align-self: center;
+  translate: 0 clamp(2.25rem, 6dvh, 3.75rem);
+  scale: 1.5;
+  transform-origin: center;
   pointer-events: auto;
 }
 
@@ -204,34 +181,42 @@ const journeyTransforms = computed(() =>
 }
 
 @media (max-width: 768px) {
+  .home-flanerie-copy {
+    --home-flanerie-gallery-height: clamp(17rem, 76vw, 20rem);
+  }
+
   .home-flanerie-heading {
-    top: clamp(7rem, 16dvh, 8.25rem);
-    right: 1rem;
-    left: 1rem;
-    width: auto;
+    top: calc(50% - 3dvh);
+    right: auto;
+    left: 50%;
+    width: calc(100% - 2rem);
     max-width: none;
-    align-items: flex-start;
-    text-align: left;
-    transform: none;
+    align-items: center;
+    text-align: center;
+    transform: translate(-50%, -50%);
   }
 
   .home-flanerie-subtitle {
     margin-top: 0.75rem;
+    translate: 0 1.5dvh;
+  }
+
+  .home-flanerie-more {
+    translate: 0 1.5dvh;
   }
 
   .home-flanerie-bounce-cards {
     --bounce-card-width: clamp(8.75rem, 40vw, 10.5rem) !important;
 
-    top: calc(100% + 1.5rem);
-    left: 0.5rem;
-    align-items: flex-start;
-    transform: none;
+    align-items: center;
+    translate: 0 clamp(1.25rem, 3dvh, 2rem);
+    scale: 1;
   }
 }
 
 @media (max-aspect-ratio: 1) {
   .home-flanerie-subtitle {
-    font-size: clamp(1.55rem, 7vw, 2.5rem);
+    font-size: clamp(1.7rem, 7.5vw, 2.75rem);
   }
 }
 

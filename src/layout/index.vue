@@ -253,13 +253,14 @@
         <transition
           name="route"
           mode="out-in"
+          :css="!isEntryContentRefreshing"
           @before-leave="lockIslandRouteGeometry"
           @after-leave="completeRouteLeave"
           @after-enter="completeRouteTransition"
           @enter-cancelled="completeRouteTransition"
           @leave-cancelled="completeRouteLeave"
         >
-          <component :is="Component" />
+          <component :is="Component" v-if="props.contentActive" />
         </transition>
       </router-view>
       <div id="page-footer-portal" class="page-footer-portal" />
@@ -325,6 +326,10 @@ const props = defineProps({
   entryActive: {
     type: Boolean,
     default: false,
+  },
+  contentActive: {
+    type: Boolean,
+    default: true,
   },
 })
 const emit = defineEmits<{
@@ -456,8 +461,8 @@ const shouldShowPageScrollProgress = computed(
     isPageScrollable.value
 )
 const isHeaderScrollLayoutActive = ref(false)
+const isEntryContentRefreshing = ref(false)
 let logoTimer: number | null = null
-let layoutTimer: number | null = null
 let islandGeometryUnlockTimer: number | null = null
 let removeRouteGeometryGuard: (() => void) | null = null
 let lockedIslandRouteGeometry: {
@@ -510,10 +515,6 @@ const clearEntryAnimationTimers = () => {
     window.clearTimeout(logoTimer)
     logoTimer = null
   }
-  if (layoutTimer !== null) {
-    window.clearTimeout(layoutTimer)
-    layoutTimer = null
-  }
 }
 
 const startEntryAnimation = () => {
@@ -523,7 +524,7 @@ const startEntryAnimation = () => {
   clearEntryAnimationTimers()
   logoActive.value = true
   headerLogoReady.value = false
-  layoutShow.value = false
+  layoutShow.value = props.contentActive
 
   logoTimer = window.setTimeout(() => {
     headerLogoReady.value = true
@@ -533,11 +534,6 @@ const startEntryAnimation = () => {
       logoTimer = null
     }, ENTRY_LOGO_REVEAL_DURATION)
   }, ENTRY_LOGO_REVEAL_DELAY)
-
-  layoutTimer = window.setTimeout(() => {
-    layoutShow.value = true
-    layoutTimer = null
-  }, 100)
 }
 
 const toggleFullscreen = async () => {
@@ -1008,6 +1004,18 @@ watch(
   (entryActive) => {
     if (entryActive) startEntryAnimation()
   }
+)
+
+watch(
+  () => props.contentActive,
+  (contentActive) => {
+    isEntryContentRefreshing.value = true
+    if (contentActive) layoutShow.value = true
+    void nextTick(() => {
+      isEntryContentRefreshing.value = false
+    })
+  },
+  { flush: 'sync' }
 )
 
 watch(

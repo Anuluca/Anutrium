@@ -142,7 +142,7 @@ onUnmounted(() => {
   user-select: none;
 
   perspective: 1000px;
-  transform: translateY(-120px);
+  transform: translate3d(-100vw, 0, 0);
   transform-origin: center bottom;
 
   -webkit-mask-image: linear-gradient(
@@ -165,12 +165,7 @@ onUnmounted(() => {
   }
 
   &.is-entrance-ready {
-    animation: marqueeWrapperIn 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-
-    .marquee-3d-container {
-      animation: marqueePerspectiveIn 0.9s cubic-bezier(0.16, 1, 0.3, 1)
-        backwards;
-    }
+    animation: marqueeWrapperIn 1.3s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards;
   }
 
   &.is-flat {
@@ -248,21 +243,11 @@ onUnmounted(() => {
 @keyframes marqueeWrapperIn {
   from {
     opacity: 0;
-    transform: translateY(-120px);
+    transform: translate3d(-100vw, 0, 0);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes marqueePerspectiveIn {
-  from {
-    transform: rotateX(20deg);
-  }
-
-  to {
-    transform: rotateX(48deg);
+    transform: translate3d(0, 0, 0);
   }
 }
 
