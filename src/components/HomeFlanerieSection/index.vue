@@ -119,9 +119,13 @@ const journeyTransforms = computed(() =>
 
 .home-flanerie-map-viewport {
   position: absolute;
-  inset: 0;
+  top: 0;
+  bottom: 0;
+  left: 50%;
   z-index: 0;
+  width: 100vw;
   pointer-events: none;
+  transform: translateX(-50%);
 }
 
 .home-flanerie-map {

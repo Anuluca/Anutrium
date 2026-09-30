@@ -332,7 +332,7 @@ watch(
   margin: 0;
   color: #111;
   font-family: 'UnboundedSans', sans-serif;
-  font-size: clamp(1.5rem, 2.5vw, 2.2rem);
+  font-size: clamp(1.9rem, 3.15vw, 2.8rem);
   font-weight: 400;
   line-height: 1;
   letter-spacing: -0.1em;
@@ -380,7 +380,7 @@ watch(
   flex: none;
   color: rgba(17, 17, 17, 0.5);
   font-family: 'UnboundedSans', sans-serif;
-  font-size: clamp(0.46rem, 0.62vw, 0.58rem);
+  font-size: clamp(0.58rem, 0.8vw, 0.75rem);
   font-weight: 400;
   line-height: 1;
   letter-spacing: 0.02em;
@@ -389,7 +389,7 @@ watch(
 }
 
 .shared-vlog-card:not(.is-activity) .vlog-date {
-  font-size: clamp(0.52rem, 0.7vw, 0.64rem);
+  font-size: clamp(0.68rem, 0.92vw, 0.84rem);
 }
 
 .vlog-media-stats {
@@ -426,7 +426,7 @@ watch(
 
 .shared-vlog-card.is-activity {
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: auto minmax(2.65rem, auto);
+  grid-template-rows: auto minmax(2.65rem, 1fr);
   row-gap: clamp(0.1rem, 0.2vw, 0.18rem);
 
   .vlog-img-wrap {
@@ -453,7 +453,7 @@ watch(
     grid-column: 1;
     grid-row: 1 / 3;
     overflow-wrap: anywhere;
-    font-size: clamp(1.08rem, 1.7vw, 1.5rem);
+    font-size: clamp(1.38rem, 2.15vw, 1.92rem);
     line-height: 1.05;
     text-overflow: ellipsis;
     white-space: normal;
@@ -517,15 +517,15 @@ watch(
 
   .vlog-title {
     max-height: calc(100% - 1.15rem);
-    font-size: clamp(1.75rem, 7.2vw, 2.15rem);
+    font-size: clamp(2.2rem, 8.8vw, 2.7rem);
   }
 
   .vlog-date {
-    font-size: clamp(0.4rem, 1.8vw, 0.5rem);
+    font-size: clamp(0.52rem, 2.25vw, 0.65rem);
   }
 
   .shared-vlog-card:not(.is-activity) .vlog-date {
-    font-size: clamp(0.46rem, 2vw, 0.55rem);
+    font-size: clamp(0.6rem, 2.6vw, 0.72rem);
   }
 
   .shared-vlog-card.is-activity {
@@ -539,7 +539,7 @@ watch(
 
     .vlog-title,
     &.has-media-stats .vlog-title {
-      font-size: clamp(1.29rem, 5.55vw, 1.52rem);
+      font-size: clamp(1.62rem, 6.9vw, 1.92rem);
     }
   }
 }
@@ -557,12 +557,12 @@ watch(
 
   .vlog-title {
     max-height: calc(100% - 10cqw);
-    font-size: 13cqw;
+    font-size: 17cqw;
   }
 
   .vlog-date,
   &:not(.is-activity) .vlog-date {
-    font-size: 4.2cqw;
+    font-size: 5.4cqw;
   }
 
   .vlog-media-stats {

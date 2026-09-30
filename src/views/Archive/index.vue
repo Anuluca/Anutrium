@@ -3,39 +3,23 @@
     <PageHeroTitle />
     <ArchiveAvailabilityPanel />
 
-    <section class="works-section">
+    <section
+      v-for="(group, index) in companyGroups"
+      :key="group.company"
+      class="works-section company-works-section"
+      :data-company="group.company"
+    >
       <Sections
-        section-number="1"
-        :title="$t('archive.title01')"
-        title-en="MAIN"
+        :section-number="index + 1"
+        :title="group.company"
+        :title-en="group.companyEn"
       >
         <template #actions>
-          <SectionCount :count="mainWorks.length" label="PROJECTS" />
+          <SectionCount :count="group.works.length" label="PROJECTS" />
         </template>
         <div class="works-grid">
           <WorkCard
-            v-for="work in mainWorks"
-            :key="work.id"
-            :work="work"
-            display-mode="always-visible"
-            @select="openDetail"
-          />
-        </div>
-      </Sections>
-    </section>
-
-    <section class="works-section personal-works-section">
-      <Sections
-        section-number="2"
-        :title="$t('archive.title02')"
-        title-en="PERSONAL"
-      >
-        <template #actions>
-          <SectionCount :count="personalWorks.length" label="PROJECTS" />
-        </template>
-        <div class="works-grid">
-          <WorkCard
-            v-for="work in personalWorks"
+            v-for="work in group.works"
             :key="work.id"
             :work="work"
             display-mode="always-visible"
@@ -47,8 +31,8 @@
 
     <section class="misc-section">
       <Sections
-        section-number="3"
-        :title="$t('archive.title03')"
+        :section-number="companyGroups.length + 1"
+        :title="$t('archive.otherWorksTitle')"
         title-en="OTHER"
       >
         <template #actions>
@@ -91,19 +75,46 @@ import PageFooter from '@/components/PageFooter/index.vue'
 import type { ArchiveWork } from '@/types/archive'
 import { trackProjectClick } from '@/utils/analytics'
 
-const { tm } = useI18n()
+const { messages, tm } = useI18n()
 
-const mainWorks = computed<ArchiveWork[]>(
-  () => tm('archive.dynamic.WebArchives') as ArchiveWork[]
+const works = computed<ArchiveWork[]>(
+  () => tm('archive.dynamic.Works') as ArchiveWork[]
 )
+const englishWorks = computed<ArchiveWork[]>(() => {
+  const englishMessages = messages.value.en as {
+    archive?: { dynamic?: { Works?: ArchiveWork[] } }
+  }
 
-const personalWorks = computed<ArchiveWork[]>(
-  () => tm('archive.dynamic.PersonalArchives') as ArchiveWork[]
-)
+  return englishMessages.archive?.dynamic?.Works || []
+})
 
 const miscWorks = computed<ArchiveWork[]>(
   () => tm('archive.dynamic.MiscWorks') as ArchiveWork[]
 )
+
+const companyGroups = computed(() => {
+  const groups = new Map<
+    string,
+    { company: string; companyEn: string; works: ArchiveWork[] }
+  >()
+
+  works.value.forEach((work, index) => {
+    const companyEn = englishWorks.value[index]?.company || work.company
+    const companyGroup = groups.get(companyEn)
+    if (companyGroup) {
+      companyGroup.works.push(work)
+      return
+    }
+
+    groups.set(companyEn, {
+      company: work.company,
+      companyEn: companyEn.replace(/_/g, ' '),
+      works: [work],
+    })
+  })
+
+  return Array.from(groups.values())
+})
 
 const selectedWork = ref<ArchiveWork | null>(null)
 
@@ -139,7 +150,7 @@ const closeDetail = () => {
   gap: 20px;
 }
 
-.personal-works-section {
+.company-works-section + .company-works-section {
   padding-top: 60px;
 }
 

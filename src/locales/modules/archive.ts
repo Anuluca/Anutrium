@@ -1,15 +1,7 @@
 import dynamic from '../dynamic/archive'
 
 const archive = {
-  title01: {
-    zhCn: '工作项目',
-    en: 'MAIN',
-  },
-  title02: {
-    zhCn: '个人项目',
-    en: 'PERSONAL',
-  },
-  title03: {
+  otherWorksTitle: {
     zhCn: '其他工作项目',
     en: 'OTHER',
   },
@@ -28,22 +20,6 @@ const archive = {
   statusWorkValue: {
     zhCn: '空闲_调整中',
     en: 'AVAILABLE',
-  },
-  statusFreelanceLabel: {
-    zhCn: '自由职业',
-    en: 'FREELANCE',
-  },
-  statusFreelanceValue: {
-    zhCn: '视周期安排',
-    en: 'SCHEDULE BASED',
-  },
-  statusLocationLabel: {
-    zhCn: '工作方式',
-    en: 'WORK MODE',
-  },
-  statusLocationValue: {
-    zhCn: '中国 / 入职',
-    en: 'CHINA / ON-SITE',
   },
   statusCta: {
     zhCn: '发送工作信息',

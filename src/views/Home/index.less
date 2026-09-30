@@ -2,14 +2,13 @@
   --home-passion-marquee-color: #8f2137;
   --home-passion-marquee-opacity: 0.2;
 
-  width: 100vw;
   height: 100vh;
   height: 100dvh;
   min-height: 100vh;
   min-height: 100dvh;
-  margin-left: calc(50% - 50vw);
   padding: 0 !important;
-  overflow: hidden;
+  overflow: visible;
+  clip-path: inset(0 calc(50% - 50vw));
 }
 
 :global(html:has(.home-page)),
@@ -23,7 +22,8 @@
   width: 100%;
   height: 100vh;
   height: 100dvh;
-  overflow: hidden;
+  overflow: visible;
+  contain: layout;
   touch-action: none;
 
   :deep(> .swiper-wrapper) {
@@ -113,7 +113,7 @@
   width: 100%;
   height: 100%;
   min-height: 0;
-  overflow: hidden;
+  overflow: visible;
   box-sizing: border-box;
 }
 
@@ -508,13 +508,15 @@
   position: relative;
   display: block;
   padding: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .home-archive-copy {
   position: relative;
-  width: 100%;
+  left: 50%;
+  width: 100vw;
   height: 100%;
+  transform: translateX(-50%);
 }
 
 .home-archive-copy::after {
@@ -842,14 +844,6 @@
 }
 
 .home-page-slide--hero {
-  &.is-page-entering,
-  &.is-page-leaving,
-  &.is-hero-initial-entering {
-    .hero-section {
-      overflow: visible;
-    }
-  }
-
   .main-slogan-shell,
   .recommend {
     translate: 0 0;
@@ -1118,11 +1112,30 @@
   padding: 11px 20px 30px;
   overflow: hidden;
   z-index: 2;
+  pointer-events: none;
 
   > * {
     position: relative;
     z-index: 1;
   }
+}
+
+.carousel-copy-blur-enter-active,
+.carousel-copy-blur-leave-active {
+  transition: opacity 0.42s ease, filter 0.42s ease;
+  will-change: opacity, filter;
+}
+
+.carousel-copy-blur-enter-from,
+.carousel-copy-blur-leave-to {
+  opacity: 0;
+  filter: blur(10px);
+}
+
+.carousel-copy-blur-enter-to,
+.carousel-copy-blur-leave-from {
+  opacity: 1;
+  filter: blur(0);
 }
 
 .card-top {
@@ -1567,14 +1580,6 @@
   }
 
   .home-page-slide--hero {
-    &.is-page-entering,
-    &.is-page-leaving,
-    &.is-hero-initial-entering {
-      .hero-section {
-        overflow: hidden;
-      }
-    }
-
     .main-slogan-shell,
     .recommend {
       scale: 1;
@@ -1667,9 +1672,14 @@
     );
   }
 
+  .home-craft-copy {
+    width: min(calc(100vw - 3rem), 24rem);
+    justify-self: center;
+  }
+
   .home-craft-grid {
-    width: fit-content;
-    grid-template-columns: repeat(2, 18rem);
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     grid-template-rows: repeat(2, auto);
     gap: clamp(1rem, 2dvh, 1.5rem) 1rem;
     zoom: 0.64;

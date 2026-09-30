@@ -21,10 +21,6 @@
       <DiamondCloseBtn :title="closeTitle" @click="requestClose" />
     </div>
 
-    <div v-if="title" class="modal-external-title" aria-hidden="true">
-      <span>{{ title }}</span>
-    </div>
-
     <div class="corner corner-tl" />
     <div class="corner corner-tr" />
     <div class="corner corner-bl" />
@@ -36,10 +32,36 @@
       <slot />
     </div>
   </ElDialog>
+
+  <Teleport v-if="title && backgroundTitleTarget" :to="backgroundTitleTarget">
+    <div
+      class="modal-background-title"
+      :class="{
+        'modal-background-title--entered': backgroundTitleEntered,
+        'modal-background-title--scrolling': backgroundTitleScrolling,
+        'modal-background-title--visible': backgroundTitleVisible,
+      }"
+      :style="{
+        '--modal-background-title-color':
+          themeColor || 'var(--page-theme-color, #e23456)',
+      }"
+      aria-hidden="true"
+    >
+      <div class="modal-background-title__track">
+        <div
+          v-for="groupIndex in 2"
+          :key="groupIndex"
+          class="modal-background-title__group"
+        >
+          <span v-for="copyIndex in 4" :key="copyIndex">{{ title }}</span>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { nextTick, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { ElDialog } from 'element-plus'
 
 import DiamondCloseBtn from '@/components/DiamondCloseBtn/index.vue'
@@ -76,6 +98,36 @@ const emit = defineEmits<{
 }>()
 
 const dialogVisible = ref(false)
+const backgroundTitleEntered = ref(false)
+const backgroundTitleScrolling = ref(false)
+const backgroundTitleVisible = ref(false)
+const backgroundTitleTarget = shallowRef<HTMLElement | null>(null)
+let backgroundTitleTimer: ReturnType<typeof setTimeout> | undefined
+let backgroundTitleScrollTimer: ReturnType<typeof setTimeout> | undefined
+
+const clearBackgroundTitleTimer = () => {
+  if (backgroundTitleTimer !== undefined) {
+    clearTimeout(backgroundTitleTimer)
+    backgroundTitleTimer = undefined
+  }
+  if (backgroundTitleScrollTimer !== undefined) {
+    clearTimeout(backgroundTitleScrollTimer)
+    backgroundTitleScrollTimer = undefined
+  }
+}
+
+const getDialogElement = () =>
+  [...document.querySelectorAll<HTMLElement>('.modal-wrapper-dialog')].find(
+    (dialog) => dialog.getClientRects().length > 0
+  ) ?? null
+
+const resolveBackgroundTitleTarget = async () => {
+  await nextTick()
+  await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+  const dialog = getDialogElement()
+  backgroundTitleTarget.value =
+    dialog?.closest<HTMLElement>('.el-overlay-dialog') ?? null
+}
 
 watch(
   () => props.modelValue,
@@ -93,6 +145,38 @@ watch(
   { immediate: true }
 )
 
+watch(
+  dialogVisible,
+  async (visible) => {
+    clearBackgroundTitleTimer()
+    backgroundTitleVisible.value = false
+    backgroundTitleScrolling.value = false
+
+    if (visible) {
+      backgroundTitleEntered.value = false
+      await resolveBackgroundTitleTarget()
+      backgroundTitleTimer = setTimeout(async () => {
+        if (!backgroundTitleTarget.value) {
+          await resolveBackgroundTitleTarget()
+        }
+        const dialog = getDialogElement()
+        if (dialogVisible.value && dialog) {
+          backgroundTitleEntered.value = true
+          backgroundTitleVisible.value = true
+          backgroundTitleScrollTimer = setTimeout(() => {
+            if (dialogVisible.value) {
+              backgroundTitleScrolling.value = true
+            }
+          }, 2480)
+        }
+      }, 500)
+    }
+  },
+  { immediate: true }
+)
+
+onBeforeUnmount(clearBackgroundTitleTimer)
+
 useOverlayScrollLock('modal-wrapper', () => dialogVisible.value)
 
 const requestClose = () => {
@@ -104,6 +188,9 @@ const handleDialogClose = () => {
 }
 
 const handleClosed = () => {
+  backgroundTitleEntered.value = false
+  backgroundTitleScrolling.value = false
+  backgroundTitleTarget.value = null
   emit('closed')
 }
 </script>
@@ -123,23 +210,82 @@ const handleClosed = () => {
   opacity: 0.6;
 }
 
-.modal-external-title {
-  position: absolute;
-  bottom: calc(100% + 8px);
-  left: 50%;
-  z-index: 5;
-  color: var(--modal-accent, var(--page-theme-color, #e23456));
+.modal-background-title {
+  position: fixed;
+  top: 50%;
+  left: 0;
+  z-index: 0;
+  width: 100vw;
+  overflow: hidden;
+  color: var(--modal-background-title-color);
   font-family: 'UnboundedSans', sans-serif;
-  font-size: 0.96rem;
-  font-weight: 400;
-  letter-spacing: 1px;
-  line-height: 1;
-  opacity: 0.2;
-  transform: translateX(-50%);
+  font-size: clamp(5rem, 12vw, 12rem);
+  font-weight: 800;
+  letter-spacing: -0.055em;
+  line-height: 0.9;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translate(100%, -50%);
   pointer-events: none;
+  transition: opacity 0.2s ease;
+
+  &--entered {
+    transform: translate(0, -50%);
+    transition: transform 2.48s cubic-bezier(0.18, 0.88, 0.78, 0.985),
+      opacity 0.2s ease;
+  }
+
+  &--visible {
+    opacity: 0.1;
+  }
+
+  &--scrolling {
+    .modal-background-title__track {
+      animation-play-state: running;
+    }
+  }
+}
+
+.modal-background-title__track {
+  display: flex;
+  width: max-content;
+  animation: modalBackgroundTitleMarquee 72s linear infinite;
+  animation-play-state: paused;
+  will-change: transform;
+}
+
+.modal-background-title__group {
+  display: flex;
+  flex: none;
+  gap: 0.32em;
+  padding-right: 0.32em;
 
   span {
-    display: block;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    -webkit-text-stroke-color: var(--modal-background-title-color);
+    -webkit-text-stroke-width: clamp(1px, 0.12vw, 2px);
+  }
+}
+
+@keyframes modalBackgroundTitleMarquee {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (max-width: 768px) {
+  .modal-background-title {
+    top: 0;
+    transform: translateX(100%);
+
+    &--entered {
+      transform: translateX(0);
+    }
   }
 }
 
@@ -187,6 +333,8 @@ const handleClosed = () => {
 .modal-wrapper-dialog {
   --modal-accent: var(--modal-theme-color, var(--page-theme-color, #e23456));
 
+  position: relative;
+  z-index: 1;
   background: #0f0d11 !important;
   border: 1px solid color-mix(in srgb, var(--modal-accent) 35%, transparent) !important;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.85) !important;

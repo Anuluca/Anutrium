@@ -1,5 +1,5 @@
 const archiveDynamic = {
-  WebArchives: [
+  Works: [
     {
       id: 'W001',
       confidential: true,
@@ -11,7 +11,7 @@ const archiveDynamic = {
       time: '2023-12 to 2024-08',
       company: {
         zhCn: '国家电网',
-        en: 'State_Grid_Corporation_of_China',
+        en: 'STATE_GRID',
       },
       tags: ['VUE3', 'ELEMENTPLUS', 'ECHARTS', 'WEBGL', 'SGMAP'],
       img: 'https://assets.anuluca.com/other/G.jpg',
@@ -100,7 +100,7 @@ const archiveDynamic = {
       time: '2024-08 to 2025-03',
       company: {
         zhCn: '国家电网',
-        en: 'State_Grid_Corporation_of_China',
+        en: 'STATE_GRID',
       },
       tags: ['VUE3', 'ELEMENTPLUS', 'ECHARTS', 'WEBGL', 'SGMAP'],
       img: 'https://assets.anuluca.com/other/iShot_2026-06-04_23.49.55.jpg',
@@ -167,7 +167,7 @@ const archiveDynamic = {
       time: '2025-03 to 2026-01',
       company: {
         zhCn: '国家电网',
-        en: 'State_Grid_Corporation_of_China',
+        en: 'STATE_GRID',
       },
       tags: ['VUE3', 'ELEMENTPLUS', 'ECHARTS', 'SGMAP'],
       img: 'https://assets.anuluca.com/other/iShot_2026-06-04_23.48.12.jpg',
@@ -226,7 +226,7 @@ const archiveDynamic = {
       time: '2025-12 to 2025-12',
       company: {
         zhCn: '国家电网',
-        en: 'State_Grid_Corporation_of_China',
+        en: 'STATE_GRID',
       },
       tags: ['Vue2', 'ELEMENTUI', 'SASS', 'ECHARTS', 'TAILWINDCSS'],
       img: 'https://assets.anuluca.com/other/37fdd6dc419b49d785b9cb5d68aa6ef5.jpg',
@@ -321,8 +321,8 @@ const archiveDynamic = {
         },
         {
           label: {
-            zhCn: '腾讯云采访',
-            en: 'Tencent Cloud Interview',
+            zhCn: '腾讯云报道',
+            en: 'Tencent Cloud Report',
           },
           url: 'https://cloud.tencent.com/developer/article/2250951',
           icon: 'Link',
@@ -417,8 +417,6 @@ const archiveDynamic = {
         },
       ],
     },
-  ],
-  PersonalArchives: [
     {
       id: 'P003',
       title: {
@@ -661,7 +659,7 @@ const archiveDynamic = {
       participation: 100,
       company: {
         zhCn: '国家电网',
-        en: 'State Grid',
+        en: 'STATE GRID',
       },
       logo: 'https://assets.anuluca.com/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.jpg',
       description: {
@@ -697,7 +695,7 @@ const archiveDynamic = {
       participation: 100,
       company: {
         zhCn: '国家电网',
-        en: 'State Grid',
+        en: 'STATE GRID',
       },
       tags: ['Vue2', 'ELEMENTUI', 'TAILWINDCSS', 'Vant2'],
       logo: 'https://assets.anuluca.com/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.jpg',
@@ -733,7 +731,7 @@ const archiveDynamic = {
       participation: 30,
       company: {
         zhCn: '国家电网',
-        en: 'State Grid',
+        en: 'STATE GRID',
       },
       logo: 'https://assets.anuluca.com/other/bd315c6034a85edf8db1fead061e1e23dd54574edfa1.jpg',
       description: {

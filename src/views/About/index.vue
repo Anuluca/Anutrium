@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ArrowDown, Setting, StarFilled } from '@element-plus/icons-vue'
 
+import LinkFlowMark from '@/components/LinkFlowMark/index.vue'
 import LogoRotating3D from '@/components/Logo_rotating3D/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
 import PageHeroTitle from '@/components/PageHeroTitle/index.vue'
@@ -450,7 +451,7 @@ const roadmapItems = computed<string[]>(() => {
               <p class="nb-desc">{{ nb.description }}</p>
             </div>
 
-            <span class="nb-return-icon" aria-hidden="true">↵</span>
+            <LinkFlowMark />
           </a>
         </div>
       </div>

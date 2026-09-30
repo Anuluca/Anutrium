@@ -40,6 +40,7 @@
     font-size: 0.76rem;
     line-height: 1;
     text-align: center;
+    transform: translateY(0.08em);
     -webkit-text-stroke: 1px #e23456;
     text-shadow: 0 0 10px rgba(226, 52, 87, 0.27);
   }

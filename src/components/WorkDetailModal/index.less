@@ -215,15 +215,19 @@
 }
 
 .field-label {
-  font-family: 'UnboundedSans', monospace;
-  font-size: 0.5rem;
-  letter-spacing: 2px;
+  width: fit-content;
+  margin-bottom: 0.2rem;
+  background: transparent;
   color: @work-accent;
+  font-family: 'UnboundedSans', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0;
+  line-height: 1.2;
   opacity: 0.8;
 }
 
 .field-val {
-  font-family: 'UnboundedSans', monospace;
+  font-family: 'Anton', sans-serif;
   font-size: 0.7rem;
   color: rgba(255, 255, 255, 0.6);
   letter-spacing: 1px;
@@ -257,7 +261,7 @@
     font-size: 0.75rem;
     font-weight: 700;
     color: rgba(255, 255, 255, 0.5);
-    line-height: 1.7;
+    line-height: 1.45;
   }
 }
 
@@ -274,25 +278,57 @@
 }
 
 .link-item {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 8px 12px;
+  overflow: hidden;
   border: 1px solid @border;
   background: rgba(226, 52, 86, 0.04);
   text-decoration: none;
-  transition: all 0.25s;
+  isolation: isolate;
+  transition: border-color 0.25s;
+
+  &::after {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: @red;
+    content: '';
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  > * {
+    position: relative;
+    z-index: 1;
+  }
 
   &:hover {
-    background: rgba(226, 52, 86, 0.12);
-    border-color: rgba(226, 52, 86, 0.4);
-    transform: translateX(3px);
+    --link-flow-opacity: 0.82;
+    --link-flow-x: 0%;
+
+    border-color: @red;
+
+    &::after {
+      transform: scaleX(1);
+    }
+
+    .link-icon,
+    .link-text {
+      z-index: 2;
+      color: #050505;
+    }
+
   }
 
   .link-icon {
     font-size: 0.9rem;
     flex-shrink: 0;
     color: @red;
+    transition: color 0.25s ease;
   }
 
   .link-text {
@@ -302,20 +338,9 @@
     color: rgba(255, 255, 255, 0.65);
     letter-spacing: 1px;
     flex: 1;
+    transition: color 0.25s ease;
   }
 
-  .link-arrow {
-    font-size: 0.8rem;
-    color: @red;
-    opacity: 0;
-    transition: all 0.25s;
-    transform: translateX(-5px);
-  }
-
-  &:hover .link-arrow {
-    opacity: 1;
-    transform: translateX(0);
-  }
 }
 
 .modal-gallery {
@@ -387,21 +412,6 @@
     pointer-events: none;
   }
 
-  .slide-description {
-    position: absolute;
-    bottom: 20px;
-    left: 20px;
-    right: 60px;
-    font-family: 'STSong';
-    font-weight: 700;
-    font-size: 0.5rem;
-    color: rgba(255, 255, 255, 0.85);
-    letter-spacing: 0.5px;
-    line-height: 1.5;
-    pointer-events: none;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-  }
-
   .slide-scanlines {
     position: absolute;
     inset: 0;
@@ -414,6 +424,41 @@
     pointer-events: none;
     opacity: 0.5;
   }
+}
+
+.gallery-description {
+  position: absolute;
+  right: 60px;
+  bottom: 20px;
+  left: 60px;
+  z-index: 6;
+  color: rgba(255, 255, 255, 0.85);
+  font-family: 'alibaba-puhuiti', sans-serif;
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  line-height: 1.5;
+  text-align: center;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+
+.gallery-copy-blur-enter-active,
+.gallery-copy-blur-leave-active {
+  transition: opacity 0.42s ease, filter 0.42s ease;
+  will-change: opacity, filter;
+}
+
+.gallery-copy-blur-enter-from,
+.gallery-copy-blur-leave-to {
+  opacity: 0;
+  filter: blur(10px);
+}
+
+.gallery-copy-blur-enter-to,
+.gallery-copy-blur-leave-from {
+  opacity: 1;
+  filter: blur(0);
 }
 
 .gallery-btn {
@@ -551,8 +596,8 @@
 
 .details-label {
   font-family: 'UnboundedSans', monospace;
-  font-size: 0.5rem;
-  letter-spacing: 3px;
+  font-size: 0.6rem;
+  letter-spacing: 0;
   color: @work-accent;
   opacity: 0.8;
 }
@@ -560,7 +605,7 @@
 .details-line {
   flex: 1;
   height: 1px;
-  background: linear-gradient(to right, fade(@work-accent, 45%), transparent);
+  background: fade(@work-accent, 45%);
 }
 
 .details-list {
@@ -605,7 +650,7 @@
   font-size: 0.75rem;
   font-weight: 700;
   color: rgba(255, 255, 255, 0.55);
-  line-height: 1.7;
+  line-height: 1.45;
   flex: 1;
 }
 
@@ -811,7 +856,8 @@
     }
   }
 
-  .gallery-slide .slide-description {
+  .gallery-description {
+    left: 76px;
     right: 76px;
     bottom: 24px;
     font-size: 0.7rem;

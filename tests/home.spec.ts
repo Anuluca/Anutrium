@@ -154,6 +154,7 @@ test('page theme color follows the active route', async ({ page }) => {
 test('page hero title stays fixed and erases upward without resizing text', async ({
   page,
 }, testInfo) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/archive', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.archives-page')).toBeVisible({
     timeout: PAGE_LOAD_TIMEOUT,
@@ -923,49 +924,256 @@ test('archive and craft use their exchanged representative zodiac signs', async 
   }
 })
 
-test('archive section headings show their dynamic project totals', async ({
+test('archive groups all primary works by company above miscellaneous work', async ({
   page,
 }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/archive', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.entry-overlay-container')).toHaveCount(0, {
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
   await expect(page.locator('.archives-page')).toBeVisible({
     timeout: PAGE_LOAD_TIMEOUT,
   })
+  await expect(page.locator('.layout-page')).toHaveClass(/\blayout-show\b/, {
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+  await expect(page.locator('.archives-page')).not.toHaveClass(
+    /\broute-enter-active\b/
+  )
 
+  const expectedHeadings = [
+    '国家电网',
+    '文因互联',
+    '江西中烟',
+    'Anuluca',
+    '其他工作项目',
+  ]
+  const expectedCounts = [4, 2, 1, 3, 6]
   const sections = page.locator('.archives-page .home-section-layout')
-  await expect(sections).toHaveCount(3)
+  await expect(sections).toHaveCount(expectedHeadings.length)
 
-  for (let index = 0; index < 3; index += 1) {
+  for (let index = 0; index < expectedHeadings.length; index += 1) {
     const section = sections.nth(index)
     const count = section.locator('.section-count strong')
-    const actual = await section.locator('.shared-work-card').count()
 
-    await section.scrollIntoViewIfNeeded()
-    await expect
-      .poll(() => count.textContent())
-      .toBe(String(actual).padStart(2, '0'))
-    expect(
-      (
-        await count.evaluate((element) => getComputedStyle(element).fontFamily)
-      ).toLowerCase()
-    ).toContain('unboundedsans')
+    await expect(section.locator('.home-section-title__text')).toHaveText(
+      expectedHeadings[index]
+    )
+    await expect(section.locator('.home-section-rail__num')).toHaveText(
+      String(index + 1).padStart(2, '0')
+    )
+    await expect(section.locator('.shared-work-card')).toHaveCount(
+      expectedCounts[index]
+    )
+    await section.evaluate((element) =>
+      element.scrollIntoView({ block: 'center', behavior: 'instant' })
+    )
+    await expect(count).toHaveText(
+      String(expectedCounts[index]).padStart(2, '0')
+    )
   }
 
-  const railAlignment = await sections.first().evaluate((element) => {
-    const contentTop = element
-      .querySelector<HTMLElement>('.home-section-content')!
-      .getBoundingClientRect().top
-    const labelTop = element
-      .querySelector<HTMLElement>('.home-section-rail__label')!
-      .getBoundingClientRect().top
-    const lineStyle = getComputedStyle(element, '::before')
+  for (let index = 0; index < expectedHeadings.length - 1; index += 1) {
+    const cardCompanies = await sections
+      .nth(index)
+      .locator('.work-card-info > small:first-child')
+      .allTextContents()
+    expect(new Set(cardCompanies)).toEqual(new Set([expectedHeadings[index]]))
+  }
+
+  await expect(
+    sections.last().locator('.misc-work-card.shared-work-card')
+  ).toHaveCount(6)
+
+  const englishTitleCenterOffsets = await sections
+    .locator('.home-section-title')
+    .evaluateAll((titles) =>
+      titles.map((title) => {
+        const englishTitle = title.querySelector<HTMLElement>(
+          '.home-section-title__en'
+        )!
+        const titleBounds = title.getBoundingClientRect()
+        const textRange = document.createRange()
+        textRange.selectNodeContents(englishTitle)
+        const textBounds = textRange.getBoundingClientRect()
+
+        return Math.abs(
+          textBounds.left +
+            textBounds.width / 2 -
+            (titleBounds.left + titleBounds.width / 2)
+        )
+      })
+    )
+  expect(Math.max(...englishTitleCenterOffsets)).toBeLessThanOrEqual(1)
+})
+
+test('archive availability keeps one compact status column', async ({
+  page,
+}, testInfo) => {
+  await page.goto('/archive', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.layout-page')).toHaveClass(/\blayout-show\b/, {
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+
+  const items = page.locator('.availability-grid .availability-item')
+  await expect(items).toHaveCount(1)
+  await expect(items.locator(':scope > span')).toHaveText(['个人状态'])
+
+  const panel = page.locator('.availability-panel')
+  await panel.evaluate((element) =>
+    element.getAnimations().forEach((animation) => animation.finish())
+  )
+  const geometry = await panel.evaluate((panel) => {
+    const copyBounds = panel
+      .querySelector<HTMLElement>('.availability-copy')!
+      .getBoundingClientRect()
+    const githubBounds = panel
+      .querySelector<HTMLElement>('.availability-github')!
+      .getBoundingClientRect()
+    const statusBounds = panel
+      .querySelector<HTMLElement>('.availability-grid')!
+      .getBoundingClientRect()
+    const actionBounds = Array.from(
+      panel.querySelectorAll<HTMLElement>('.availability-cta')
+    ).map((element) => element.getBoundingClientRect())
 
     return {
-      labelOffset: Math.abs(labelTop - contentTop),
-      lineGridRow: lineStyle.gridRowStart,
+      actionBounds: actionBounds.map(({ top, width }) => ({ top, width })),
+      githubBottomOverflow: Math.max(
+        0,
+        githubBounds.bottom - copyBounds.bottom
+      ),
+      githubTopOverflow: Math.max(0, copyBounds.top - githubBounds.top),
+      statusTop: statusBounds.top,
+      statusWidth: statusBounds.width,
     }
   })
-  expect(railAlignment.labelOffset).toBeLessThanOrEqual(1)
-  expect(railAlignment.lineGridRow).toBe('2')
+
+  expect(geometry.githubTopOverflow).toBeLessThanOrEqual(1)
+  expect(geometry.githubBottomOverflow).toBeLessThanOrEqual(1)
+
+  if (testInfo.project.name.includes('mobile')) {
+    expect(geometry.actionBounds).toHaveLength(2)
+    for (const action of geometry.actionBounds) {
+      expect(Math.abs(action.top - geometry.statusTop)).toBeLessThanOrEqual(1)
+      expect(Math.abs(action.width - geometry.statusWidth)).toBeLessThanOrEqual(
+        3
+      )
+    }
+  } else {
+    expect(geometry.statusWidth).toBeGreaterThanOrEqual(120)
+    expect(geometry.statusWidth).toBeLessThanOrEqual(150)
+  }
+})
+
+test('section content spans the full width below an equally tall number and title', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/archive', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.layout-page')).toHaveClass(/\blayout-show\b/, {
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+
+  const section = page.locator('.archives-page .home-section-layout').first()
+  await expect(section).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
+  await expect(section.locator('.home-section-rail__label')).toHaveCount(0)
+  const englishTitle = section.locator('.home-section-title__en')
+  await expect(englishTitle).toHaveText('STATE GRID')
+  expect(
+    await englishTitle.evaluate((element) => element.childElementCount)
+  ).toBe(0)
+
+  const geometry = await section.evaluate((element) => {
+    const layoutBounds = element.getBoundingClientRect()
+    const numberBounds = element
+      .querySelector<HTMLElement>('.home-section-rail__num')!
+      .getBoundingClientRect()
+    const titleBounds = element
+      .querySelector<HTMLElement>('.home-section-title')!
+      .getBoundingClientRect()
+    const titleRowBounds = element
+      .querySelector<HTMLElement>('.home-section-title-row')!
+      .getBoundingClientRect()
+    const contentBounds = element
+      .querySelector<HTMLElement>('.home-section-content')!
+      .getBoundingClientRect()
+    const numberStyle = getComputedStyle(
+      element.querySelector<HTMLElement>('.home-section-rail__num')!
+    )
+    const canvasContext = document.createElement('canvas').getContext('2d')!
+    canvasContext.font = `${numberStyle.fontWeight} ${numberStyle.fontSize} ${numberStyle.fontFamily}`
+    const numberGlyphMetrics = canvasContext.measureText('01')
+    const numberGlyphHeight =
+      numberGlyphMetrics.actualBoundingBoxAscent +
+      numberGlyphMetrics.actualBoundingBoxDescent
+
+    return {
+      contentLeftOffset: Math.abs(contentBounds.left - layoutBounds.left),
+      headingCenterOffset: Math.abs(
+        numberBounds.top +
+          numberBounds.height / 2 -
+          (titleBounds.top + titleBounds.height / 2)
+      ),
+      titleCenterOffset:
+        titleBounds.left +
+        titleBounds.width / 2 -
+        (titleRowBounds.left + titleRowBounds.width / 2),
+      headingVisualHeightDelta: Math.abs(
+        numberGlyphHeight + 2 - titleBounds.height
+      ),
+      verticalLineContent: getComputedStyle(element, '::before').content,
+    }
+  })
+
+  expect(geometry.contentLeftOffset).toBeLessThanOrEqual(1)
+  expect(geometry.headingCenterOffset).toBeLessThanOrEqual(1)
+  expect(geometry.headingVisualHeightDelta).toBeLessThanOrEqual(1)
+  expect(Math.abs(geometry.titleCenterOffset)).toBeLessThanOrEqual(1)
+  expect(geometry.verticalLineContent).toBe('none')
+})
+
+test('flanerie section content and cards extend to the shared left edge', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/flanerie', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.layout-page')).toHaveClass(/\blayout-show\b/, {
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+
+  const section = page.locator('.flanerie-page .home-section-layout').first()
+  await expect(section).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
+
+  const geometry = await section.evaluate((element) => {
+    const sectionBounds = element.getBoundingClientRect()
+    const contentBounds = element
+      .querySelector<HTMLElement>('.home-section-content')!
+      .getBoundingClientRect()
+    const cardBounds = element
+      .querySelector<HTMLElement>('.vlog-image-reveal-entry')!
+      .getBoundingClientRect()
+    const titleBounds = element
+      .querySelector<HTMLElement>('.home-section-title')!
+      .getBoundingClientRect()
+    const titleRowBounds = element
+      .querySelector<HTMLElement>('.home-section-title-row')!
+      .getBoundingClientRect()
+
+    return {
+      cardLeftOffset: Math.abs(cardBounds.left - sectionBounds.left),
+      contentLeftOffset: Math.abs(contentBounds.left - sectionBounds.left),
+      titleCenterOffset:
+        titleBounds.left +
+        titleBounds.width / 2 -
+        (titleRowBounds.left + titleRowBounds.width / 2),
+    }
+  })
+
+  expect(geometry.contentLeftOffset).toBeLessThanOrEqual(1)
+  expect(geometry.cardLeftOffset).toBeLessThanOrEqual(1)
+  expect(Math.abs(geometry.titleCenterOffset)).toBeLessThanOrEqual(1)
 })
 
 test('mobile section navigation expands from NAV and closes from the backdrop', async ({
@@ -1866,9 +2074,6 @@ test('archive loads the work detail modal on demand', async ({
   page,
 }, testInfo) => {
   await page.goto('/archive', { waitUntil: 'domcontentloaded' })
-  const englishButton = page.locator('.footer-com .language button').last()
-  await englishButton.click()
-  await expect(englishButton).toBeDisabled()
   const firstWorkCard = page.locator('.works-grid .shared-work-card').first()
 
   await expect(firstWorkCard).toBeAttached({ timeout: PAGE_LOAD_TIMEOUT })
@@ -1878,30 +2083,60 @@ test('archive loads the work detail modal on demand', async ({
   await expect(dialog).toBeVisible({
     timeout: PAGE_LOAD_TIMEOUT,
   })
-  const externalTitle = dialog.locator('.modal-external-title')
-  await expect(externalTitle).toHaveText('PROJECT DETAILS')
-  const externalTitleStyle = await externalTitle.evaluate((element) => ({
-    centerDelta: Math.abs(
-      element.getBoundingClientRect().left +
-        element.getBoundingClientRect().width / 2 -
-        (element.parentElement!.getBoundingClientRect().left +
-          element.parentElement!.getBoundingClientRect().width / 2)
-    ),
-    fontFamily: getComputedStyle(element).fontFamily.toLowerCase(),
-    fontSize: Number.parseFloat(getComputedStyle(element).fontSize),
-    fontWeight: getComputedStyle(element).fontWeight,
-    letterSpacing: getComputedStyle(element).letterSpacing,
-    opacity: getComputedStyle(element).opacity,
-    clipPath: getComputedStyle(element.querySelector<HTMLElement>('span')!)
-      .clipPath,
-  }))
-  expect(externalTitleStyle.centerDelta).toBeLessThanOrEqual(1)
-  expect(externalTitleStyle.fontFamily).toContain('unboundedsans')
-  expect(externalTitleStyle.fontSize).toBeGreaterThan(10)
-  expect(externalTitleStyle.fontWeight).toBe('400')
-  expect(externalTitleStyle.letterSpacing).toBe('1px')
-  expect(externalTitleStyle.opacity).toBe('0.2')
-  expect(externalTitleStyle.clipPath).toBe('none')
+  const backgroundTitle = page.locator('.modal-background-title')
+  await expect(backgroundTitle.locator('span').first()).toHaveText('项目详情')
+  await expect(backgroundTitle).toHaveCSS('opacity', '0.1')
+  await expect(
+    backgroundTitle.locator('.modal-background-title__track')
+  ).toHaveCSS('animation-play-state', 'running')
+  const backgroundTitleStyle = await backgroundTitle.evaluate((element) => {
+    const style = getComputedStyle(element)
+    const track = element.querySelector<HTMLElement>(
+      '.modal-background-title__track'
+    )!
+    const titleText = element.querySelector<HTMLElement>('span')!
+    const titleTextStyle = getComputedStyle(titleText)
+    return {
+      centerDelta: Math.abs(
+        element.getBoundingClientRect().left +
+          element.getBoundingClientRect().width / 2 -
+          (element.parentElement!.getBoundingClientRect().left +
+            element.parentElement!.getBoundingClientRect().width / 2)
+      ),
+      fontFamily: style.fontFamily.toLowerCase(),
+      fontSize: Number.parseFloat(style.fontSize),
+      fontWeight: style.fontWeight,
+      opacity: style.opacity,
+      trackAnimationName: getComputedStyle(track).animationName,
+      trackAnimationPlayState: getComputedStyle(track).animationPlayState,
+      transitionDuration: style.transitionDuration,
+      textFillColor: titleTextStyle.webkitTextFillColor,
+      textStrokeWidth: Number.parseFloat(titleTextStyle.webkitTextStrokeWidth),
+      zIndex: Number.parseInt(style.zIndex, 10),
+      dialogZIndex: Number.parseInt(
+        getComputedStyle(
+          document.querySelector<HTMLElement>('.modal-wrapper-dialog')!
+        ).zIndex,
+        10
+      ),
+    }
+  })
+  expect(backgroundTitleStyle.centerDelta).toBeLessThanOrEqual(1)
+  expect(backgroundTitleStyle.fontFamily).toContain('unboundedsans')
+  expect(backgroundTitleStyle.fontSize).toBeGreaterThan(70)
+  expect(backgroundTitleStyle.fontWeight).toBe('800')
+  expect(backgroundTitleStyle.opacity).toBe('0.1')
+  expect(backgroundTitleStyle.trackAnimationName).toContain(
+    'modalBackgroundTitleMarquee'
+  )
+  expect(backgroundTitleStyle.trackAnimationPlayState).toBe('running')
+  expect(backgroundTitleStyle.transitionDuration).toBe('0.2s')
+  expect(backgroundTitleStyle.textFillColor).toBe('rgba(0, 0, 0, 0)')
+  expect(backgroundTitleStyle.textStrokeWidth).toBeGreaterThanOrEqual(1)
+  expect(backgroundTitleStyle.zIndex).toBeGreaterThanOrEqual(0)
+  expect(backgroundTitleStyle.zIndex).toBeLessThan(
+    backgroundTitleStyle.dialogZIndex
+  )
   await expect(dialog.locator('.aside-company-name')).toBeAttached()
   await expect(
     dialog.locator('.project-share-button.share-button')
@@ -1916,8 +2151,24 @@ test('archive loads the work detail modal on demand', async ({
     const confidentialTitle = element.querySelector<HTMLElement>(
       '.confidential-notice strong'
     )!
+    const fieldLabels = Array.from(
+      element.querySelectorAll<HTMLElement>('.field-label')
+    )
+    const aboutText = element.querySelector<HTMLElement>('.aside-desc p')
+    const detailText = element.querySelector<HTMLElement>('.detail-text')
+    const detailsLabel = element.querySelector<HTMLElement>('.details-label')
+    const detailsLine = element.querySelector<HTMLElement>('.details-line')
+    const fieldValues = Array.from(
+      element.querySelectorAll<HTMLElement>('.field-val')
+    )
+    const linkItem = element.querySelector<HTMLElement>('.link-item')
+    const linkFlowMark = element.querySelector<HTMLElement>('.link-flow-mark')
 
     return {
+      aboutLineHeightRatio: aboutText
+        ? Number.parseFloat(getComputedStyle(aboutText).lineHeight) /
+          Number.parseFloat(getComputedStyle(aboutText).fontSize)
+        : null,
       asideIdCount: element.querySelectorAll('.aside-id').length,
       companyColor: getComputedStyle(companyName).color,
       companyFontSize: Number.parseFloat(
@@ -1928,6 +2179,33 @@ test('archive loads the work detail modal on demand', async ({
       confidentialTitleWeight: confidentialTitle
         ? getComputedStyle(confidentialTitle).fontWeight
         : null,
+      detailLineHeightRatio: detailText
+        ? Number.parseFloat(getComputedStyle(detailText).lineHeight) /
+          Number.parseFloat(getComputedStyle(detailText).fontSize)
+        : null,
+      detailsLabelLetterSpacing: detailsLabel
+        ? getComputedStyle(detailsLabel).letterSpacing
+        : null,
+      detailsLabelFontSize: detailsLabel
+        ? Number.parseFloat(getComputedStyle(detailsLabel).fontSize)
+        : null,
+      detailsLineBackgroundImage: detailsLine
+        ? getComputedStyle(detailsLine).backgroundImage
+        : null,
+      detailsLineCount: element.querySelectorAll('.details-line').length,
+      fieldLabelStyles: fieldLabels.map((label) => ({
+        backgroundColor: getComputedStyle(label).backgroundColor,
+        color: getComputedStyle(label).color,
+        fontSize: Number.parseFloat(getComputedStyle(label).fontSize),
+        letterSpacing: getComputedStyle(label).letterSpacing,
+        marginBottom: getComputedStyle(label).marginBottom,
+        opacity: getComputedStyle(label).opacity,
+      })),
+      fieldValueFonts: fieldValues.map(
+        (value) => getComputedStyle(value).fontFamily
+      ),
+      linkFlowMarkCount: linkFlowMark?.querySelectorAll('path').length ?? 0,
+      linkItemTransform: linkItem ? getComputedStyle(linkItem).transform : null,
       shareBackground: getComputedStyle(shareButton).backgroundImage,
       shareBorderWidth: getComputedStyle(shareButton).borderWidth,
       shareCodeCount: shareButton.querySelectorAll('.share-button__code')
@@ -1937,6 +2215,38 @@ test('archive loads the work detail modal on demand', async ({
   expect(detailChrome.asideIdCount).toBe(0)
   expect(detailChrome.companyColor).toBe('rgb(113, 203, 125)')
   expect(detailChrome.companyFontSize).toBeGreaterThan(12)
+  expect(detailChrome.fieldLabelStyles.length).toBeGreaterThan(0)
+  expect(detailChrome.fieldLabelStyles).toEqual(
+    detailChrome.fieldLabelStyles.map(() => ({
+      backgroundColor: 'rgba(0, 0, 0, 0)',
+      color: 'rgb(113, 203, 125)',
+      fontSize: detailChrome.fieldLabelStyles[0].fontSize,
+      letterSpacing: 'normal',
+      marginBottom: detailChrome.fieldLabelStyles[0].marginBottom,
+      opacity: '0.8',
+    }))
+  )
+  expect(detailChrome.fieldLabelStyles[0].fontSize).toBeGreaterThan(9)
+  expect(
+    Number.parseFloat(detailChrome.fieldLabelStyles[0].marginBottom)
+  ).toBeGreaterThan(3)
+  expect(
+    detailChrome.fieldValueFonts.every((fontFamily) =>
+      fontFamily.toLowerCase().includes('anton')
+    )
+  ).toBe(true)
+  expect(detailChrome.detailsLabelLetterSpacing).toBe('normal')
+  expect(detailChrome.detailsLabelFontSize).toBeGreaterThan(9)
+  expect(detailChrome.detailsLineCount).toBe(1)
+  expect(detailChrome.detailsLineBackgroundImage).toBe('none')
+  expect(detailChrome.linkFlowMarkCount).toBe(2)
+  expect(detailChrome.linkItemTransform).toBe('none')
+  if (detailChrome.aboutLineHeightRatio !== null) {
+    expect(detailChrome.aboutLineHeightRatio).toBeCloseTo(1.45, 2)
+  }
+  if (detailChrome.detailLineHeightRatio !== null) {
+    expect(detailChrome.detailLineHeightRatio).toBeCloseTo(1.45, 2)
+  }
   expect(detailChrome.confidentialKickerCount).toBe(0)
   if (detailChrome.confidentialTitleWeight) {
     expect(detailChrome.confidentialTitleWeight).toBe('700')
@@ -2451,7 +2761,7 @@ test('mobile tool grids use one taller card per row', async ({
   }
 })
 
-test('mobile pages share wider gutters without clipping home overflow', async ({
+test('mobile pages respect route layout gutters without clipping home overflow', async ({
   page,
 }, testInfo) => {
   test.skip(!testInfo.project.name.includes('mobile'))
@@ -2466,15 +2776,26 @@ test('mobile pages share wider gutters without clipping home overflow', async ({
       .locator('.router-container')
       .evaluate((element) => {
         const style = getComputedStyle(element)
+        const bounds = element.getBoundingClientRect()
 
         return {
-          left: Number.parseFloat(style.paddingLeft),
+          left: bounds.left + Number.parseFloat(style.paddingLeft),
+          layout: element.classList.contains('page-layout--main')
+            ? 'main'
+            : 'sub',
           minimumExpected: window.innerWidth * 0.06,
-          right: Number.parseFloat(style.paddingRight),
+          right:
+            window.innerWidth -
+            bounds.right +
+            Number.parseFloat(style.paddingRight),
         }
       })
 
-    expect(gutter.left).toBeGreaterThan(gutter.minimumExpected)
+    if (gutter.layout === 'main') {
+      expect(gutter.left).toBeGreaterThan(0)
+    } else {
+      expect(gutter.left).toBeGreaterThanOrEqual(gutter.minimumExpected - 1)
+    }
     expect(gutter.right).toBeCloseTo(gutter.left, 1)
   }
 
@@ -3432,6 +3753,7 @@ test('about friend links use responsive rows and reveal complete descriptions on
         .querySelector('.nb-heading')!
         .getBoundingClientRect()
       const logoBounds = card.querySelector('.nb-logo')!.getBoundingClientRect()
+      const flowMark = card.querySelector('.link-flow-mark') as SVGElement
 
       return {
         bottom: bounds.bottom,
@@ -3454,6 +3776,7 @@ test('about friend links use responsive rows and reveal complete descriptions on
         ).textAlign,
         host: card.querySelector('.nb-host')?.textContent?.trim() ?? '',
         href: (card as HTMLAnchorElement).href,
+        flowMarkPathCount: flowMark.querySelectorAll('path').length,
         headingCenterY: headingBounds.top + headingBounds.height / 2,
         left: bounds.left,
         logoAlt: logo.alt,
@@ -3513,10 +3836,12 @@ test('about friend links use responsive rows and reveal complete descriptions on
         headingTextAlign,
         host,
         href,
+        flowMarkPathCount,
         logoAlt,
         name,
       }) =>
         Boolean(description && host && href && logoAlt && name) &&
+        flowMarkPathCount === 2 &&
         (isMobile || Math.abs(centeredContentOffset) < 1) &&
         descriptionWhiteSpace === 'normal' &&
         (isMobile
@@ -3549,26 +3874,42 @@ test('about friend links use responsive rows and reveal complete descriptions on
       'inset(0px)'
     )
     await expect(cards.first().locator('.nb-logo')).toHaveCSS('opacity', '0')
+    await expect
+      .poll(() =>
+        cards.first().evaluate((card) => {
+          const heading = card
+            .querySelector('.nb-heading')!
+            .getBoundingClientRect()
+          const logo = card.querySelector('.nb-logo')!.getBoundingClientRect()
+          const offset =
+            heading.top + heading.height / 2 - (logo.top + logo.height / 2)
+          return offset > 6 && offset < 10
+        })
+      )
+      .toBe(true)
     const swappedPositions = await cards.first().evaluate((card) => {
       const heading = card.querySelector('.nb-heading')!.getBoundingClientRect()
       const description = card
         .querySelector('.nb-desc')!
         .getBoundingClientRect()
+      const logo = card.querySelector('.nb-logo')!.getBoundingClientRect()
       return {
         descriptionCenterY: description.top + description.height / 2,
         headingCenterY: heading.top + heading.height / 2,
+        logoCenterY: logo.top + logo.height / 2,
       }
     })
     expect(
-      swappedPositions.headingCenterY - metrics.rows[0].logoCenterY
+      swappedPositions.headingCenterY - swappedPositions.logoCenterY
     ).toBeGreaterThan(6)
     expect(
-      swappedPositions.headingCenterY - metrics.rows[0].logoCenterY
+      swappedPositions.headingCenterY - swappedPositions.logoCenterY
     ).toBeLessThan(10)
     expect(swappedPositions.descriptionCenterY).toBeGreaterThan(
       swappedPositions.headingCenterY
     )
   }
+  await cards.first().hover()
   await expect
     .poll(() =>
       cards
@@ -3576,6 +3917,34 @@ test('about friend links use responsive rows and reveal complete descriptions on
         .evaluate((card) => getComputedStyle(card, '::after').transform)
     )
     .toMatch(/^matrix\(1, 0, 0, 1, 0, 0\)$/)
+  await expect(cards.first().locator('.link-flow-mark')).toHaveCSS(
+    'opacity',
+    '0.82'
+  )
+  const flowMarkGeometry = await cards.first().evaluate((card) => {
+    const cardBounds = card.getBoundingClientRect()
+    const markBounds = card
+      .querySelector('.link-flow-mark')!
+      .getBoundingClientRect()
+    const content = card.querySelector('.nb-centered-content')!
+    const mark = card.querySelector('.link-flow-mark')!
+    const svg = mark.querySelector('svg')!
+    const svgMatrix = svg.getScreenCTM()!
+    return {
+      contentZIndex: Number.parseInt(getComputedStyle(content).zIndex, 10),
+      heightDelta: Math.abs(cardBounds.height - markBounds.height),
+      markZIndex: Number.parseInt(getComputedStyle(mark).zIndex, 10),
+      rightGap: cardBounds.right - markBounds.right,
+      scaleRatio: Math.abs(svgMatrix.a / svgMatrix.d),
+    }
+  })
+  expect(flowMarkGeometry.scaleRatio).toBeCloseTo(1, 2)
+  expect(flowMarkGeometry.contentZIndex).toBeGreaterThan(
+    flowMarkGeometry.markZIndex
+  )
+  expect(flowMarkGeometry.heightDelta).toBeLessThan(1)
+  expect(flowMarkGeometry.rightGap).toBeGreaterThanOrEqual(0)
+  expect(flowMarkGeometry.rightGap).toBeLessThan(10)
 
   for (const card of await cards.all()) {
     await card.hover()

@@ -19,7 +19,6 @@
 
     <aside class="home-section-rail scroll-reveal-title" aria-hidden="true">
       <span class="home-section-rail__num">{{ formattedSectionNumber }}</span>
-      <span class="home-section-rail__label">{{ sectionLabel }}</span>
     </aside>
 
     <div class="home-section-panel">
@@ -27,15 +26,12 @@
         <h2 :id="sectionAnchorId" class="home-section-title">
           <span class="home-section-title__text">{{ title }}</span>
           <span v-if="shouldShowTitleEn" class="home-section-title__en">
-            <span
-              v-for="(character, index) in titleEnCharacters"
-              :key="`${character}-${index}`"
-            >
-              {{ character }}
-            </span>
+            {{ titleEn }}
           </span>
         </h2>
-        <slot v-if="$slots.actions" name="actions" />
+        <div v-if="$slots.actions" class="home-section-actions">
+          <slot name="actions" />
+        </div>
       </div>
 
       <div class="home-section-content scroll-reveal-content">
@@ -77,9 +73,6 @@ const sectionLabel = computed(() => props.titleEn || props.title)
 const shouldShowTitleEn = computed(
   () => locale.value !== 'en' && Boolean(props.titleEn)
 )
-const titleEnCharacters = computed(() =>
-  shouldShowTitleEn.value ? Array.from(props.titleEn || '') : []
-)
 
 const sectionAnchorId = computed(
   () =>
@@ -112,22 +105,16 @@ watch(
 
 <style lang="less" scoped>
 .home-section-layout {
+  --section-heading-height: 2.02rem;
+  --section-number-font-size: 2.2rem;
+
   position: relative;
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr);
   column-gap: 0.7rem;
+  row-gap: 20px;
   min-height: 100%;
-
-  &::before {
-    grid-row: 2;
-    grid-column: 1;
-    width: 1px;
-    height: 100%;
-    justify-self: center;
-    background: var(--border-color-strong);
-    content: '';
-  }
 }
 
 .home-section-content {
@@ -136,53 +123,21 @@ watch(
 }
 
 .home-section-rail {
-  display: grid;
-  grid-row: 1 / span 2;
+  display: flex;
+  grid-row: 1;
   grid-column: 1;
-  grid-template-rows: subgrid;
-  min-height: 180px;
+  align-items: center;
 }
 
 .home-section-rail__num {
   display: block;
-  grid-row: 1;
-  align-self: start;
-  margin-top: 0.15rem;
   color: transparent;
   font-family: 'Anton', monospace;
-  font-size: clamp(1.65rem, 3.3vw, 2.65rem);
-  line-height: 0.9;
+  font-size: var(--section-number-font-size);
+  line-height: 0.875;
   text-align: center;
   -webkit-text-stroke: 1px #e23456;
   text-shadow: 0 0 10px rgba(226, 52, 87, 0.27);
-}
-
-.home-section-rail__label {
-  grid-row: 2;
-  align-self: start;
-  justify-self: center;
-  margin: 0;
-  color: rgba(255, 255, 255, 0.25);
-  font-family: 'UnboundedSans', monospace;
-  font-size: 0.64rem;
-  letter-spacing: 0;
-  text-transform: uppercase;
-  transform: translateX(calc(-50% - 8px));
-  writing-mode: vertical-rl;
-  -webkit-mask-image: repeating-linear-gradient(
-    to right,
-    #000 0,
-    #000 1px,
-    transparent 1px,
-    transparent 3px
-  );
-  mask-image: repeating-linear-gradient(
-    to right,
-    #000 0,
-    #000 1px,
-    transparent 1px,
-    transparent 3px
-  );
 }
 
 .home-section-panel {
@@ -192,7 +147,7 @@ watch(
 
 .home-section-content {
   grid-row: 2;
-  grid-column: 2;
+  grid-column: 1 / -1;
   min-width: 0;
 }
 
@@ -201,7 +156,7 @@ watch(
   width: fit-content;
   max-width: 100%;
   flex-direction: column;
-  align-items: stretch;
+  align-items: center;
   gap: 0.28rem;
   scroll-margin-top: 7rem;
   margin-bottom: 20px;
@@ -215,59 +170,54 @@ watch(
 .home-section-title__text {
   display: block;
   line-height: 1;
+  text-align: center;
 }
 
 .home-section-title__en {
   align-self: center;
-  display: flex;
-  width: calc(100% - 0.2rem);
-  justify-content: space-between;
+  display: block;
+  width: max-content;
+  max-width: 100%;
   color: rgba(255, 255, 255, 0.36);
   font-family: 'UnboundedSans', monospace;
   font-size: 0.34em;
   font-weight: 400;
   letter-spacing: 0;
   line-height: 1;
+  text-align: center;
   text-transform: uppercase;
   white-space: nowrap;
 }
 
 .home-section-title-row {
-  display: flex;
+  display: grid;
   grid-row: 1;
-  grid-column: 2;
-  align-items: flex-start;
-  justify-content: space-between;
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
   gap: 20px;
-  margin-bottom: 20px;
-  padding-top: 10px;
+  margin-bottom: 0;
+  padding-top: 0;
 
   .home-section-title {
-    flex: 0 1 auto;
+    grid-column: 2;
     margin-bottom: 0;
+    justify-self: center;
   }
+}
+
+.home-section-actions {
+  grid-column: 3;
+  justify-self: end;
 }
 
 @media screen and (max-aspect-ratio: @ratio-threshold) {
   .home-section-layout {
+    --section-heading-height: 2.09rem;
+    --section-number-font-size: 2.25rem;
+
     grid-template-columns: max-content minmax(0, 1fr);
     column-gap: 0.8rem;
-    row-gap: 0;
-  }
-
-  .home-section-rail {
-    min-height: 120px;
-  }
-
-  .home-section-rail__num {
-    margin-top: 0;
-    font-size: 2.2rem;
-  }
-
-  .home-section-rail__label {
-    font-size: 0.48rem;
-    letter-spacing: 0;
-    transform: translateX(calc(-50% - 7px));
   }
 
   .home-section-title-row {
@@ -285,12 +235,10 @@ watch(
 // 横屏手机的宽高比会命中桌面规则，这里仅同步标题头部的移动端几何。
 @media screen and (max-width: 1024px) and (hover: none) and (pointer: coarse) {
   .home-section-layout {
-    column-gap: 0.8rem;
-  }
+    --section-heading-height: 2.09rem;
+    --section-number-font-size: 2.25rem;
 
-  .home-section-rail__num {
-    margin-top: 0;
-    font-size: 2.2rem;
+    column-gap: 0.8rem;
   }
 
   .home-section-title-row {
@@ -301,13 +249,6 @@ watch(
       margin-top: -0.04em;
       font-size: 1.35rem;
     }
-  }
-}
-
-@media screen and (max-aspect-ratio: @ratio-threshold),
-  screen and (max-width: 1024px) and (hover: none) and (pointer: coarse) {
-  .home-section-rail__label {
-    transform: translateX(calc(-50% - 7px));
   }
 }
 </style>

@@ -104,8 +104,6 @@ const typingReady = ref(false)
 
 const availabilityItemKeys = [
   ['work', 'statusWorkLabel', 'statusWorkValue'],
-  ['freelance', 'statusFreelanceLabel', 'statusFreelanceValue'],
-  ['location', 'statusLocationLabel', 'statusLocationValue'],
 ] as const
 
 const availabilityItems = computed(() =>
@@ -171,7 +169,7 @@ const requestResume = async () => {
 .availability-panel {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(360px, 1.2fr) minmax(420px, 1fr) 178px;
+  grid-template-columns: minmax(360px, 1fr) clamp(7rem, 10vw, 9rem) 178px;
   align-items: stretch;
   margin: 0 0 24px;
   overflow: visible;
@@ -211,7 +209,7 @@ const requestResume = async () => {
   }
 
   &--en {
-    grid-template-columns: minmax(360px, 1.2fr) minmax(420px, 1fr) 258px;
+    grid-template-columns: minmax(360px, 1fr) clamp(7rem, 10vw, 9rem) 258px;
   }
 }
 
@@ -273,6 +271,7 @@ const requestResume = async () => {
   top: calc(50% + 0.09rem);
   right: 12px;
   width: 46%;
+  max-width: 17rem;
   opacity: 0.72;
   pointer-events: none;
   transform: translateY(-50%);
@@ -352,7 +351,7 @@ const requestResume = async () => {
 .availability-grid {
   display: grid;
   min-width: 0;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   background: rgba(255, 255, 255, 0.012);
 }
 
@@ -471,7 +470,7 @@ const requestResume = async () => {
 
 @media (max-width: 1199px) and (min-width: 769px) {
   .availability-panel {
-    grid-template-columns: minmax(320px, 0.9fr) minmax(420px, 1.1fr);
+    grid-template-columns: minmax(320px, 1fr) 140px;
   }
 
   .availability-actions {
@@ -489,7 +488,7 @@ const requestResume = async () => {
 @media (max-width: 768px) {
   .availability-panel,
   .availability-panel--en {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     margin: 0 0 18px;
   }
 
@@ -539,8 +538,9 @@ const requestResume = async () => {
   }
 
   .availability-grid {
-    min-height: 84px;
-    grid-column: 1 / -1;
+    min-height: 64px;
+    grid-row: 2;
+    grid-column: 1;
     margin-left: 4px;
   }
 
@@ -561,22 +561,26 @@ const requestResume = async () => {
   .availability-actions {
     display: flex;
     min-height: 64px;
-    grid-column: 1 / -1;
+    grid-row: 2;
+    grid-column: 2 / -1;
     align-items: center;
     justify-content: center;
     border-top: 1px solid rgba(90, 212, 128, 0.22);
-    border-left: 0;
+    border-left: 1px solid rgba(90, 212, 128, 0.22);
   }
 
   .availability-cta {
-    width: 100%;
+    width: auto;
+    min-width: 0;
     min-height: 64px;
     padding: 0 16px;
+    flex: 1 1 0;
     font-size: 0.74rem;
   }
 
   .availability-cta--resume {
     border-top: 0;
+    border-left: 1px solid rgba(90, 212, 128, 0.22);
   }
 }
 </style>

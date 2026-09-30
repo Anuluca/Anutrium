@@ -100,6 +100,7 @@
                         class="news-card"
                         type="button"
                         data-magnetic
+                        :aria-label="item.title"
                         :disabled="!item.link"
                         @click="openNewsItem(item)"
                       >
@@ -121,25 +122,34 @@
                           </picture>
                           <div class="card-img-overlay" />
                         </div>
-
-                        <div class="card-content">
-                          <div class="card-top">
-                            <span
-                              class="card-cat"
-                              :class="`card-cat--${item.category.toLowerCase()}`"
-                            >
-                              {{ item.category }}
-                            </span>
-                          </div>
-                          <h3 class="card-title">{{ item.title }}</h3>
-                          <p class="card-subtitle">
-                            <span class="subtitle">{{ item.subtitle }}</span>
-                            <span class="card-date">{{ item.date }}</span>
-                          </p>
-                        </div>
                       </button>
                     </SwiperSlide>
                   </Swiper>
+
+                  <Transition name="carousel-copy-blur">
+                    <div
+                      v-if="activeNewsItem"
+                      :key="activeNewsItem.id"
+                      class="card-content"
+                      aria-live="polite"
+                    >
+                      <div class="card-top">
+                        <span
+                          class="card-cat"
+                          :class="`card-cat--${activeNewsItem.category.toLowerCase()}`"
+                        >
+                          {{ activeNewsItem.category }}
+                        </span>
+                      </div>
+                      <h3 class="card-title">{{ activeNewsItem.title }}</h3>
+                      <p class="card-subtitle">
+                        <span class="subtitle">
+                          {{ activeNewsItem.subtitle }}
+                        </span>
+                        <span class="card-date">{{ activeNewsItem.date }}</span>
+                      </p>
+                    </div>
+                  </Transition>
 
                   <button class="nav-btn nav-btn--next" @click="nextSlide">
                     <span class="nav-triangle" aria-hidden="true" />
@@ -589,25 +599,20 @@ const aboutDescription = computed(() => {
 const archiveProjectData = computed(() => {
   const projects: ArchiveProjectMarqueeItem[] = []
   const workById = new Map<string, ArchiveWork>()
-  const collections = [
-    tm('archive.dynamic.WebArchives') as ArchiveWork[],
-    tm('archive.dynamic.PersonalArchives') as ArchiveWork[],
-  ]
+  const works = tm('archive.dynamic.Works') as ArchiveWork[]
 
-  collections.forEach((works) => {
-    works.forEach((work) => {
-      const img = work.img ?? work.images?.[0]
-      if (!img) return
+  works.forEach((work) => {
+    const img = work.img ?? work.images?.[0]
+    if (!img) return
 
-      projects.push({
-        id: work.id,
-        title: work.title,
-        img,
-        company: work.company,
-        time: work.time,
-      })
-      workById.set(work.id, work)
+    projects.push({
+      id: work.id,
+      title: work.title,
+      img,
+      company: work.company,
+      time: work.time,
     })
+    workById.set(work.id, work)
   })
 
   return { projects, workById }
@@ -712,6 +717,9 @@ const craftFooterHeight = ref('220px')
 const homePageMotionDuration = ref(0)
 const homePageTransitionDuration = ref(HOME_PAGE_TRANSITION_DURATION)
 const activeIndex = ref(0)
+const activeNewsItem = computed(
+  () => newsItems.value[activeIndex.value] ?? newsItems.value[0]
+)
 const activeHomePageIndex = ref(0)
 const activeHomeCornerColor = computed(
   () =>
@@ -1633,6 +1641,10 @@ const handleHomePointerMove = (event: PointerEvent) => {
     didHandleHomePointer = true
   } else if (isCraftFooterVisible.value) {
     setCraftFooterVisible(false)
+    didHandleHomePointer = true
+  } else {
+    consumeHomeGesture(event)
+    requestHomePageTransition(activePage - 1)
     didHandleHomePointer = true
   }
 }

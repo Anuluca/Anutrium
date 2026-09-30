@@ -318,10 +318,19 @@ onUnmounted(() => {
 
 .vlog-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 580px));
-  justify-content: center;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   column-gap: 8px;
   row-gap: 10px;
+}
+
+.vlog-image-reveal-entry {
+  min-width: 0;
+  height: 100%;
+}
+
+.vlog-image-reveal-entry :deep(.shared-vlog-card) {
+  height: 100%;
+  max-width: none;
 }
 
 .vlog-load-sentinel {
@@ -373,8 +382,7 @@ onUnmounted(() => {
   }
 
   .vlog-grid {
-    grid-template-columns: minmax(0, 580px);
-    justify-content: center;
+    grid-template-columns: minmax(0, 1fr);
     column-gap: 8px;
     row-gap: 28px;
   }
@@ -386,8 +394,7 @@ onUnmounted(() => {
 
 @media (min-width: 769px) and (max-width: 1180px) {
   .vlog-grid {
-    grid-template-columns: repeat(2, minmax(0, 540px));
-    justify-content: center;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .vlog-image-reveal-entry.is-vlog-image-revealed :deep(.vlog-img-wrap) {

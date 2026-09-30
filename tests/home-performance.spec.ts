@@ -605,6 +605,77 @@ test('route title characters flip between module names', async ({
   })
 })
 
+test('mobile site title stays anchored while route names switch', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'mobile-chrome')
+  await page.goto('/archive', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.layout-page')).toHaveClass(/layout-show/, {
+    timeout: 15_000,
+  })
+  await expect(page.locator('.current-module-name')).toContainText('ARCHIVE')
+  await expect(page.locator('.name-center')).not.toHaveClass(/active/)
+  await page.evaluate(() => document.fonts.ready)
+  await page.waitForTimeout(1_000)
+
+  const geometry = await page.evaluate(async () => {
+    const app = document.querySelector('#app') as HTMLElement & {
+      __vue_app__?: {
+        config: {
+          globalProperties: {
+            $router: {
+              push: (path: string) => Promise<unknown>
+            }
+          }
+        }
+      }
+    }
+    const router = app.__vue_app__?.config.globalProperties.$router
+    const siteTitle = document.querySelector<HTMLElement>('.site-title-slot')!
+    const samples: number[] = [siteTitle.getBoundingClientRect().left]
+    const outgoingPositions: string[] = []
+    const startedAt = performance.now()
+
+    const navigation = router?.push('/flanerie')
+    await new Promise<void>((resolve) => {
+      const sample = () => {
+        samples.push(siteTitle.getBoundingClientRect().left)
+        const outgoing = document.querySelector<HTMLElement>(
+          '.current-module-name.module-name-leave-active'
+        )
+        if (outgoing) {
+          outgoingPositions.push(getComputedStyle(outgoing).position)
+        }
+
+        if (performance.now() - startedAt >= 1_300) {
+          resolve()
+          return
+        }
+        requestAnimationFrame(sample)
+      }
+      requestAnimationFrame(sample)
+    })
+    await navigation
+
+    return {
+      end: siteTitle.getBoundingClientRect().left,
+      outgoingPositions,
+      samples,
+    }
+  })
+
+  await expect(page).toHaveURL(/\/flanerie\/?$/)
+  await expect(page.locator('.current-module-name')).toContainText('FLÂNERIE')
+  expect(geometry.outgoingPositions.length).toBeGreaterThan(0)
+  expect(new Set(geometry.outgoingPositions)).toEqual(new Set(['relative']))
+
+  const start = geometry.samples[0]
+  const expectedMin = Math.min(start, geometry.end) - 1
+  const expectedMax = Math.max(start, geometry.end) + 1
+  expect(Math.min(...geometry.samples)).toBeGreaterThanOrEqual(expectedMin)
+  expect(Math.max(...geometry.samples)).toBeLessThanOrEqual(expectedMax)
+})
+
 test('new route mounts only after the previous route unmounts', async ({
   page,
 }) => {

@@ -1,6 +1,6 @@
 const bottomLine = {
   intro: 'DRIVEN BY PASSION.',
-  lastUpdate: '2026/09/24',
+  lastUpdate: '2026/09/30',
   recommand: [
     {
       title: {

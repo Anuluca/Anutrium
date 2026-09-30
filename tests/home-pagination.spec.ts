@@ -998,6 +998,44 @@ test('mobile home hides side indicators and lower corners at the footer', async 
   await expect(bottomLeftCorner).toBeVisible()
 })
 
+test('mobile Craft returns to Flanerie after the footer is closed', async ({
+  page,
+}, testInfo) => {
+  test.skip(!testInfo.project.name.includes('mobile'))
+
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.layout-page')).toHaveClass(/\blayout-show\b/, {
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+
+  await page.locator('.home-page-swiper').evaluate((element) => {
+    const swiper = (
+      element as HTMLElement & {
+        swiper: {
+          allowSlideNext: boolean
+          slideTo: (index: number, speed: number) => void
+        }
+      }
+    ).swiper
+    swiper.allowSlideNext = true
+    swiper.slideTo(4, 0)
+  })
+  await waitForActivePage(page, 'craft')
+
+  const homePage = page.locator('.home-page')
+  await page.waitForTimeout(750)
+  await dispatchSlowTouchSwipe(page, 650, 500)
+  await expect(homePage).toHaveClass(/is-craft-footer-visible/)
+
+  await page.waitForTimeout(750)
+  await dispatchSlowTouchSwipe(page, 420, 570)
+  await expect(homePage).not.toHaveClass(/is-craft-footer-visible/)
+
+  await page.waitForTimeout(750)
+  await dispatchSlowTouchSwipe(page, 420, 570)
+  await waitForActivePage(page, 'flanerie')
+})
+
 test('home title returns the active home module to Passion', async ({
   page,
 }) => {
@@ -1128,6 +1166,54 @@ test('home Flanerie spacing and Craft grid follow the responsive layout', async 
       Number.parseFloat(craftLayout.copyTranslate.split(' ')[1])
     ).toBeLessThan(0)
   }
+})
+
+test('mobile home Craft grid remains inside the visual viewport', async ({
+  page,
+}, testInfo) => {
+  test.skip(!testInfo.project.name.includes('mobile'))
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  const homeSwiper = page.locator('.home-page-swiper')
+  await expect(homeSwiper).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
+
+  await homeSwiper.evaluate((element) => {
+    const swiper = (
+      element as HTMLElement & {
+        swiper: {
+          allowSlideNext: boolean
+          slideTo: (index: number, speed: number) => void
+        }
+      }
+    ).swiper
+    swiper.allowSlideNext = true
+    swiper.slideTo(4, 0)
+  })
+  await waitForActivePage(page, 'craft')
+
+  const geometry = await page.locator('.home-craft-grid').evaluate((grid) => {
+    const gridBounds = grid.getBoundingClientRect()
+    const cardBounds = Array.from(
+      grid.querySelectorAll<HTMLElement>('.home-craft-card'),
+      (card) => card.getBoundingClientRect()
+    )
+
+    return {
+      cardLeft: Math.min(...cardBounds.map((bounds) => bounds.left)),
+      cardRight: Math.max(...cardBounds.map((bounds) => bounds.right)),
+      centerOffset: Math.abs(
+        gridBounds.left + gridBounds.width / 2 - window.innerWidth / 2
+      ),
+      gridLeft: gridBounds.left,
+      gridRight: gridBounds.right,
+      viewportWidth: window.innerWidth,
+    }
+  })
+
+  expect(geometry.centerOffset).toBeLessThanOrEqual(1)
+  expect(geometry.gridLeft).toBeGreaterThanOrEqual(0)
+  expect(geometry.cardLeft).toBeGreaterThanOrEqual(0)
+  expect(geometry.gridRight).toBeLessThanOrEqual(geometry.viewportWidth)
+  expect(geometry.cardRight).toBeLessThanOrEqual(geometry.viewportWidth)
 })
 
 test('home switches five full-screen pages vertically while marquee stays fixed', async ({

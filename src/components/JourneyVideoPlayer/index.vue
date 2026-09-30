@@ -46,26 +46,43 @@
             title="关闭视频 (ESC)"
             @click="closeVideo"
           />
-          <iframe
-            v-if="activeVideo.embedUrl"
-            :src="activeVideo.embedUrl"
-            :title="activeVideo.title"
-            allow="autoplay; fullscreen; picture-in-picture"
-            allowfullscreen
-            scrolling="no"
-            frameborder="0"
-            class="no-cursor"
-            sandbox="allow-top-navigation allow-same-origin allow-forms allow-scripts"
-          />
-          <a
-            v-else
-            class="video-modal__fallback"
-            :href="activeVideo.url"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            打开视频
-          </a>
+          <div class="video-modal__stage">
+            <iframe
+              v-if="activeVideo.embedUrl"
+              :src="activeVideo.embedUrl"
+              :title="activeVideo.title"
+              allow="autoplay; fullscreen; picture-in-picture"
+              allowfullscreen
+              scrolling="no"
+              frameborder="0"
+              class="no-cursor"
+              sandbox="allow-top-navigation allow-same-origin allow-forms allow-scripts"
+            />
+            <a
+              v-else
+              class="video-modal__fallback"
+              :href="activeVideo.url"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              打开视频
+            </a>
+          </div>
+
+          <div class="video-modal__info">
+            <strong class="video-modal__title">{{ activeVideo.title }}</strong>
+            <span class="video-modal__bvid">{{ activeVideo.bvid || '' }}</span>
+            <a
+              class="video-modal__source"
+              :href="activeVideo.url"
+              target="_blank"
+              rel="noopener noreferrer"
+              :aria-label="`在 Bilibili 打开 ${activeVideo.title}`"
+            >
+              <span>BILIBILI</span>
+              <TopRight aria-hidden="true" />
+            </a>
+          </div>
         </div>
       </div>
     </Transition>
@@ -74,6 +91,7 @@
 
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { TopRight } from '@element-plus/icons-vue'
 
 import DiamondCloseBtn from '@/components/DiamondCloseBtn/index.vue'
 import { useIntersectionActivation } from '@/composables/useIntersectionActivation'
@@ -259,8 +277,6 @@ onBeforeUnmount(() => {
 .video-item:hover .video-frame,
 .video-item:focus-visible .video-frame {
   border-color: @red;
-  transform: scale(1.025);
-  box-shadow: 0 0 10px rgba(226, 52, 86, 0.48);
 
   img {
     filter: brightness(0.82) saturate(1.08);
@@ -310,16 +326,32 @@ onBeforeUnmount(() => {
   justify-content: center;
   padding: 32px;
   background: rgba(0, 0, 0, 0.86);
-  transition: opacity 0.24s ease;
 }
 
 .video-modal__player {
   position: relative;
   width: 70%;
+  background: transparent;
+  transform-origin: center center;
+
+  &::after {
+    position: absolute;
+    inset: 0;
+    z-index: 999;
+    background: rgba(255, 255, 255, 0.62);
+    content: '';
+    opacity: 0;
+    mix-blend-mode: screen;
+    pointer-events: none;
+  }
+}
+
+.video-modal__stage {
+  position: relative;
+  width: 100%;
   aspect-ratio: 16 / 9;
+  overflow: hidden;
   background: #000;
-  box-shadow: 0 0 60px rgba(226, 52, 86, 0.2);
-  transition: opacity 0.24s ease, transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 
   iframe {
     display: block;
@@ -329,19 +361,93 @@ onBeforeUnmount(() => {
   }
 }
 
-.video-modal-enter-from,
-.video-modal-leave-to {
-  opacity: 0;
+.video-modal__info {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  min-height: 34px;
+  padding: 5px 24px 6px;
+  color: #fff;
+  background: #000;
+  font-family: 'alibaba-puhuiti', sans-serif;
+  font-size: 0.52rem;
+  line-height: 1.25;
 
-  .video-modal__player {
-    opacity: 0;
-    transform: translateY(18px) scale(0.96);
+  > * {
+    min-width: 0;
   }
 }
 
-.video-modal-leave-active .video-modal__player {
-  transition-duration: 0.18s;
-  transition-timing-function: ease-in;
+.video-modal__title {
+  overflow: hidden;
+  padding-right: 20px;
+  color: @red;
+  font-family: 'UnboundedSans', 'Courier New', monospace;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.video-modal__bvid {
+  padding: 0 24px 0 12px;
+  background: linear-gradient(rgba(117, 18, 38, 0.9), rgba(117, 18, 38, 0.9))
+    right center / 8px 1px no-repeat;
+  font-family: 'UnboundedSans', 'Courier New', monospace;
+  white-space: nowrap;
+}
+
+.video-modal__source {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  padding-left: 16px;
+  color: #fff;
+  font-family: 'UnboundedSans', 'Courier New', monospace;
+  font-weight: 700;
+  text-decoration: none;
+  transition: color 0.2s ease;
+
+  svg {
+    width: 15px;
+    height: 15px;
+    color: @red;
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: @red;
+  }
+}
+
+.video-modal-enter-active {
+  transition: opacity 0.46s ease;
+
+  .video-modal__player {
+    animation: anutriumCrtOn 0.46s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+
+    &::after {
+      animation: anutriumCrtFlashOn 0.46s linear forwards;
+    }
+  }
+}
+
+.video-modal-leave-active {
+  transition: opacity 0.42s ease;
+
+  .video-modal__player {
+    animation: anutriumCrtOff 0.42s cubic-bezier(0.2, 1, 0.22, 1) forwards;
+
+    &::after {
+      animation: anutriumCrtFlashOff 0.42s linear forwards;
+    }
+  }
+}
+
+.video-modal-enter-from,
+.video-modal-leave-to {
+  opacity: 0;
 }
 
 .video-modal__player > .video-modal__close {
@@ -379,6 +485,29 @@ onBeforeUnmount(() => {
 
   .video-modal {
     padding: 16px;
+  }
+
+  .video-modal__player {
+    width: 100%;
+  }
+
+  .video-modal__info {
+    grid-template-columns: minmax(0, 1fr) auto;
+    min-height: 26px;
+    padding: 3px 12px 4px;
+    font-size: 0.8rem;
+  }
+
+  .video-modal__title {
+    font-size: 1.04rem;
+  }
+
+  .video-modal__bvid {
+    display: none;
+  }
+
+  .video-modal__source {
+    padding-left: 10px;
   }
 }
 

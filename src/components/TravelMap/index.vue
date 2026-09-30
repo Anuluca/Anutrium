@@ -682,7 +682,8 @@ onUnmounted(() => {
   .travel-map-visual {
     transform-origin: center;
     transform: translate(9vw, 10dvh) scale(1.75);
-    animation: travelMapBackgroundEnter 1.5s ease-out 0.42s both;
+    animation: travelMapBackgroundEnter 1.2s cubic-bezier(0.22, 1, 0.36, 1)
+      0.42s both;
   }
 
   .map-hud-label {
@@ -719,7 +720,7 @@ onUnmounted(() => {
 @keyframes travelMapBackgroundEnter {
   from {
     opacity: 0;
-    scale: 1.14;
+    scale: 1.5;
   }
 
   to {

@@ -171,7 +171,7 @@
                     :start="dialogVisible"
                   />
                 </span>
-                <span class="link-arrow">→</span>
+                <LinkFlowMark />
               </a>
             </div>
           </div>
@@ -208,21 +208,21 @@
 
                 <div class="slide-gradient-overlay" />
 
-                <div
-                  v-if="work.imageDescriptions && work.imageDescriptions[i]"
-                  class="slide-description"
-                >
-                  <TypedText
-                    :text="work.imageDescriptions[i]"
-                    :delay="720"
-                    :speed="18"
-                    :start="dialogVisible"
-                  />
-                </div>
                 <div class="slide-scanlines" />
               </div>
             </div>
           </div>
+
+          <Transition name="gallery-copy-blur">
+            <div
+              v-if="work.imageDescriptions?.[imgIndex]"
+              :key="`${work.id}-${imgIndex}`"
+              class="gallery-description"
+              aria-live="polite"
+            >
+              {{ work.imageDescriptions[imgIndex] }}
+            </div>
+          </Transition>
 
           <button
             v-if="work.images.length > 1"
@@ -339,6 +339,7 @@ import {
 } from '@element-plus/icons-vue'
 import ModalWrapper from '@/components/ModalWrapper/index.vue'
 import CrystalLogo from '@/components/CrystalLogo/index.vue'
+import LinkFlowMark from '@/components/LinkFlowMark/index.vue'
 import SafeImageViewer from '@/components/SafeImageViewer/index.vue'
 import ShareButton from '@/components/ShareButton/index.vue'
 import TypedText from '@/components/TypedText/index.vue'

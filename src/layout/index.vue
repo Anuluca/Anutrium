@@ -154,11 +154,7 @@
       :aria-expanded="isMobileMenuOpen"
       @click="toggleMobileMenu"
     >
-      <div class="hamburger" :class="{ active: isMobileMenuOpen }">
-        <span />
-        <span />
-        <span />
-      </div>
+      <MenuToggleIcon :active="isMobileMenuOpen" />
     </button>
 
     <div
@@ -248,7 +244,11 @@
       </div>
     </div>
 
-    <div ref="routerContainer" class="router-container">
+    <div
+      ref="routerContainer"
+      class="router-container"
+      :class="`page-layout--${activePageLayout}`"
+    >
       <router-view v-slot="{ Component }">
         <transition
           name="route"
@@ -300,10 +300,16 @@ import { Moon, Sunny } from '@element-plus/icons-vue'
 
 import BackToTop from '@/components/BackToTop/index.vue'
 import Logo from '@/components/Logo/index.vue'
+import MenuToggleIcon from '@/components/MenuToggleIcon/index.vue'
 import PageScrollProgress from '@/components/PageScrollProgress/index.vue'
 import TextRoll from '@/components/TextRoll/index.vue'
 import { HOME_RETURN_TO_PASSION_EVENT } from '@/config/homeNavigation'
-import { finishRouteCursorLoading, routes, syncSeoMeta } from '@/router'
+import {
+  finishRouteCursorLoading,
+  type PageLayout,
+  routes,
+  syncSeoMeta,
+} from '@/router'
 import { visualState } from '@/stores'
 import { persistLocale, type SiteLocale } from '@/utils/locale'
 import {
@@ -352,6 +358,8 @@ const route = useRoute()
 const router = useRouter()
 const visualStateStore = visualState()
 const isHomeRoute = computed(() => route.name === 'HOME')
+const resolvePageLayout = (pageLayout: unknown): PageLayout =>
+  pageLayout === 'main' ? 'main' : 'sub'
 const englishSiteTitle = ['Anu', "luca's A", 'trium'] as const
 const headerSiteTitle = computed(() =>
   isHomeRoute.value
@@ -391,14 +399,13 @@ const moduleRouteByPath = new Map(
   routes.map((item) => [normalizeMenuPath(item.path), item])
 )
 const hiddenModuleTitleRoutes = new Set(['HOME', '404', 'TEST'])
-const expandedHeaderRoutes = new Set([...hiddenModuleTitleRoutes, 'PET'])
 const headerPresentation = computed(() => {
   const routeName = String(route.name || '')
   const modulePath = currentRouter.value
   const moduleMeta = moduleRouteByPath.get(modulePath)?.meta || route.meta
 
   return {
-    contentAligned: !expandedHeaderRoutes.has(routeName),
+    contentAligned: resolvePageLayout(route.meta.pageLayout) === 'sub',
     moduleName: hiddenModuleTitleRoutes.has(routeName)
       ? ''
       : String(moduleMeta.titleEn),
@@ -420,6 +427,10 @@ const filterRoutes = routes.filter((item) => {
   return item?.meta?.ifShow
 })
 
+const activePageLayout = ref<PageLayout>(
+  resolvePageLayout(route.meta.pageLayout)
+)
+let pendingPageLayout = activePageLayout.value
 const noMenuShellActive = ref(!!route.meta?.noMenu)
 let pendingNoMenuShell = noMenuShellActive.value
 
@@ -899,6 +910,7 @@ const lockIslandRouteGeometry = (leavingElement: Element) => {
 const unlockIslandRouteGeometry = () => {
   clearIslandGeometryUnlockTimer()
   restoreIslandRouteGeometry()
+  activePageLayout.value = pendingPageLayout
   noMenuShellActive.value = pendingNoMenuShell
   document.body.classList.remove(
     ...islandLeavingClasses,
@@ -1061,6 +1073,7 @@ watch([isMobile, isMobileMenuOpen], ([mobile, menuOpen]) => {
 watch(
   () => route.fullPath,
   () => {
+    pendingPageLayout = resolvePageLayout(route.meta.pageLayout)
     pendingNoMenuShell = !!route.meta?.noMenu
     closeMobileMenu()
     void nextTick(() => {
