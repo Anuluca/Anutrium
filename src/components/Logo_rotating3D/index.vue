@@ -734,7 +734,8 @@ defineExpose({
   background-color: #050505;
   :deep(canvas) {
     background-color: #050505;
-    zoom: 0.5;
+    transform: scale(0.5);
+    transform-origin: center;
   }
 }
 </style>

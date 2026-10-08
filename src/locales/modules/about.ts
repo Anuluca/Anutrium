@@ -17,10 +17,6 @@ const about = {
     zhCn: '更新日志',
     en: 'CHANGELOG',
   },
-  majorOnlyLabel: {
-    zhCn: '只看重大更新',
-    en: 'MAJOR ONLY',
-  },
   majorUpdateLabel: {
     zhCn: '重大更新',
     en: 'MAJOR UPDATE',

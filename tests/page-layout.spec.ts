@@ -131,6 +131,72 @@ for (const route of [
   })
 }
 
+test('desktop sub page header aligns with the visible content edges', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name.includes('mobile'))
+
+  await page.goto('/flanerie', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.layout-page')).toHaveClass(/\blayout-show\b/, {
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+  await expect(page.locator('.entry-overlay-container')).toBeHidden({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+  await expect(page.locator('.flanerie-page')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+  await expect(page.locator('.logo-box .logo svg')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+  await expect(
+    page.locator('.desktop-menu-item:last-child .title-box')
+  ).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
+  await page.evaluate(() => document.fonts.ready)
+
+  const readGeometry = () =>
+    page.evaluate(() => {
+      const content = document.querySelector<HTMLElement>('.main-container')
+      const logo = document.querySelector<SVGSVGElement>('.logo-box .logo svg')
+      const lastMenuLabel = document.querySelector<HTMLElement>(
+        '.desktop-menu-item:last-child .title-box'
+      )
+      if (!content || !logo || !lastMenuLabel) return null
+
+      const contentBounds = content.getBoundingClientRect()
+      const contentStyle = getComputedStyle(content)
+      const logoBounds = logo.getBoundingClientRect()
+      const logoGraphicBounds = logo.getBBox()
+      const logoViewBox = logo.viewBox.baseVal
+      const contentLeft =
+        contentBounds.left + Number.parseFloat(contentStyle.paddingLeft)
+      const contentRight =
+        contentBounds.right - Number.parseFloat(contentStyle.paddingRight)
+      const logoLeft =
+        logoBounds.left +
+        ((logoGraphicBounds.x - logoViewBox.x) / logoViewBox.width) *
+          logoBounds.width
+
+      return {
+        logoDelta: Math.abs(logoLeft - contentLeft),
+        menuDelta: Math.abs(
+          lastMenuLabel.getBoundingClientRect().right - contentRight
+        ),
+      }
+    })
+
+  await expect
+    .poll(
+      async () => (await readGeometry())?.logoDelta ?? Number.POSITIVE_INFINITY
+    )
+    .toBeLessThanOrEqual(MAX_GEOMETRY_DELTA)
+  await expect
+    .poll(
+      async () => (await readGeometry())?.menuDelta ?? Number.POSITIVE_INFINITY
+    )
+    .toBeLessThanOrEqual(MAX_GEOMETRY_DELTA)
+})
+
 test('home hero motion can overflow the inset route container', async ({
   page,
 }) => {

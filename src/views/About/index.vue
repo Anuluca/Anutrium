@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ArrowDown, Setting, StarFilled } from '@element-plus/icons-vue'
+import { onClickOutside } from '@vueuse/core'
 
 import LinkFlowMark from '@/components/LinkFlowMark/index.vue'
 import LogoRotating3D from '@/components/Logo_rotating3D/index.vue'
@@ -29,9 +29,21 @@ interface NeighbourItem {
 }
 
 const { locale, t, tm } = useI18n()
-const activeLogKey = ref<string | null>(null)
-const majorOnly = ref(false)
-const showAllChangelogs = ref(false)
+const activeAboutPanel = ref<'changelog' | 'roadmap' | null>(null)
+const aboutPanelRef = ref<HTMLElement | null>(null)
+const aboutTriggersRef = ref<HTMLElement | null>(null)
+
+onClickOutside(
+  aboutPanelRef,
+  () => {
+    activeAboutPanel.value = null
+  },
+  { ignore: [aboutTriggersRef] }
+)
+
+const toggleAboutPanel = (panel: 'changelog' | 'roadmap') => {
+  activeAboutPanel.value = activeAboutPanel.value === panel ? null : panel
+}
 
 const getNeighborHost = (url: string) => {
   try {
@@ -44,38 +56,6 @@ const getNeighborHost = (url: string) => {
 const changelogs = computed<ChangelogItem[]>(() => {
   return tm('about.dynamic.changelogs') as ChangelogItem[]
 })
-
-const isMajorLog = (log: ChangelogItem) => log.version === 'v1.0'
-
-const filteredChangelogs = computed(() => {
-  return majorOnly.value
-    ? changelogs.value.filter((log) => isMajorLog(log))
-    : changelogs.value
-})
-
-const maxVisibleChangelogs = 3
-const displayedChangelogs = computed(() =>
-  showAllChangelogs.value
-    ? filteredChangelogs.value
-    : filteredChangelogs.value.slice(0, maxVisibleChangelogs + 1)
-)
-const hasMoreChangelogs = computed(
-  () => filteredChangelogs.value.length > maxVisibleChangelogs
-)
-
-const latestLogVersion = computed(() => changelogs.value[0]?.version ?? '')
-
-const getDefaultDetailCount = (log: ChangelogItem) => (isMajorLog(log) ? 4 : 1)
-
-const getDefaultDetails = (log: ChangelogItem) =>
-  log.details.slice(0, getDefaultDetailCount(log))
-
-const getHiddenDetails = (log: ChangelogItem) =>
-  log.details.slice(getDefaultDetailCount(log))
-
-const hasHiddenDetails = (log: ChangelogItem) => {
-  return log.details.length > getDefaultDetailCount(log)
-}
 
 const parseMarkedText = (value: string): MarkedTextSegment[] => {
   const segments: MarkedTextSegment[] = []
@@ -106,24 +86,6 @@ const parseMarkedText = (value: string): MarkedTextSegment[] => {
   }
 
   return segments
-}
-
-const toggleMajorOnly = () => {
-  majorOnly.value = !majorOnly.value
-  activeLogKey.value = null
-  showAllChangelogs.value = false
-}
-
-const toggleChangelogList = () => {
-  showAllChangelogs.value = !showAllChangelogs.value
-}
-
-const toggleLog = (logKey: string) => {
-  activeLogKey.value = activeLogKey.value === logKey ? null : logKey
-}
-
-const toggleLogDetails = (log: ChangelogItem) => {
-  if (hasHiddenDetails(log)) toggleLog(log.version)
 }
 
 const updatePassionCrosshair = (event: MouseEvent) => {
@@ -161,242 +123,173 @@ const roadmapItems = computed<string[]>(() => {
 
 <template>
   <div class="about-page main-container">
-    <section class="about-hero-section">
-      <PageHeroTitle />
+    <div class="about-hero-shell">
+      <section class="about-hero-section">
+        <PageHeroTitle />
 
-      <section
-        class="passion-section no-cursor"
-        :aria-label="t('about.brandColorName')"
-        @mouseenter="showPassionCrosshair"
-        @mousemove="updatePassionCrosshair"
-        @mouseleave="hidePassionCrosshair"
-      >
-        <div class="passion-back" />
-        <LogoRotating3D
-          class="passion-logo-bg"
-          low-power
-          mobile-high-resolution
-          transparent
-          resource-cache-key="about-passion-logo"
-          render-mode="edges"
-          edge-color="#E23456"
-          :edge-width="1"
-          :interactive="false"
-          aria-hidden="true"
-        />
-        <div class="passion-color-field">
-          <div class="passion-content">
-            <div class="passion-brand">
-              <div class="passion-field-name">
-                <strong>PASSION RED</strong>
-                <span v-if="locale !== 'en'">
-                  {{ t('about.brandColorName') }}
-                </span>
-              </div>
-              <div class="passion-color-code"><span>#</span>E23456</div>
+        <section
+          class="passion-section no-cursor"
+          :aria-label="t('about.brandColorName')"
+          @mouseenter="showPassionCrosshair"
+          @mousemove="updatePassionCrosshair"
+          @mouseleave="hidePassionCrosshair"
+        >
+          <div class="passion-back" />
+          <LogoRotating3D
+            class="passion-logo-bg"
+            low-power
+            mobile-high-resolution
+            transparent
+            resource-cache-key="about-passion-logo"
+            render-mode="edges"
+            edge-color="#E23456"
+            :edge-width="1"
+            :interactive="false"
+            aria-hidden="true"
+          />
+          <div class="passion-color-field">
+            <div class="passion-content">
+              <div class="passion-brand">
+                <div class="passion-field-name">
+                  <strong>PASSION RED</strong>
+                  <span v-if="locale !== 'en'">
+                    {{ t('about.brandColorName') }}
+                  </span>
+                </div>
+                <div class="passion-color-code"><span>#</span>E23456</div>
 
-              <div class="passion-field-meta">
-                <span>RGB / 226 · 52 · 86</span>
+                <div class="passion-field-meta">
+                  <span>RGB / 226 · 52 · 86</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        <div class="passion-crosshair" aria-hidden="true" />
+          <div class="passion-crosshair" aria-hidden="true" />
+        </section>
       </section>
 
-      <div class="about-scroll-hint">
-        <span class="about-scroll-hint__text">{{ t('scroll') }}</span>
-        <span class="about-scroll-hint__line" aria-hidden="true" />
-      </div>
-    </section>
-
-    <div class="about-updates-grid">
-      <section class="block changelog-block">
-        <div class="section-header">
-          <h3 class="section-title">
-            <span class="changelog">
-              &lt; {{ t('about.changelogTagLabel') }} /&gt;
-            </span>
-          </h3>
-          <div class="section-line" />
-          <button
-            class="major-filter"
-            type="button"
-            :class="{ 'is-active': majorOnly }"
-            @click="toggleMajorOnly"
-          >
-            <StarFilled class="filter-icon" aria-hidden="true" />
-            {{ t('about.majorOnlyLabel') }}
-          </button>
-        </div>
-
-        <div class="timeline">
-          <div
-            v-for="(log, logIndex) in displayedChangelogs"
-            :key="log.version"
-            class="timeline-item"
-            :style="{
-              '--changelog-enter-delay': `${0.48 + logIndex * 0.09}s`,
-            }"
-            :class="{
-              'is-expanded': activeLogKey === log.version,
-              'is-major': isMajorLog(log),
-              'is-changelog-preview':
-                !showAllChangelogs && logIndex === maxVisibleChangelogs,
-            }"
-          >
-            <div class="axis">
-              <div class="axis-diamond" />
-              <div class="axis-line" />
-            </div>
-
-            <div v-if="isMajorLog(log)" class="log-side is-major">
-              <strong>{{ log.version }}</strong>
-              <span v-if="log.codename" class="log-side-codename">
-                {{ log.codename }}
-              </span>
-              <small>{{ t('about.majorUpdateLabel') }}</small>
-            </div>
-
-            <div
-              class="log-card"
-              :class="{
-                'is-major-card': isMajorLog(log),
-                'is-regular-card': !isMajorLog(log),
-                'is-clickable': hasHiddenDetails(log),
-                'is-expanded': activeLogKey === log.version,
-              }"
-              :role="hasHiddenDetails(log) ? 'button' : undefined"
-              :tabindex="hasHiddenDetails(log) ? 0 : undefined"
-              @click="toggleLogDetails(log)"
-              @keydown.enter.prevent="toggleLogDetails(log)"
-              @keydown.space.prevent="toggleLogDetails(log)"
+      <div class="about-update-dock no-rem">
+        <section
+          v-if="activeAboutPanel"
+          :key="activeAboutPanel"
+          ref="aboutPanelRef"
+          class="about-update-dock__panel"
+          :aria-label="
+            t(
+              activeAboutPanel === 'changelog'
+                ? 'about.changelogTagLabel'
+                : 'about.roadmapTagLabel'
+            )
+          "
+          @keydown.esc.stop="activeAboutPanel = null"
+        >
+          <header class="update-program__bar">
+            <button
+              class="update-program__collapse"
+              type="button"
+              :aria-label="locale === 'en' ? 'Close updates' : '收起更新'"
+              @click="activeAboutPanel = null"
             >
-              <span
-                v-if="!isMajorLog(log)"
-                class="log-inline-version"
-                :class="{ 'is-simple-version': !log.version.includes('-') }"
+              <span aria-hidden="true">×</span>
+            </button>
+            <span class="update-program__path">
+              C:\{{
+                activeAboutPanel === 'changelog' ? 'CHANGELOG' : 'ROADMAP'
+              }}.PROGRAM
+            </span>
+          </header>
+
+          <div class="update-program__body" data-lenis-nested-scroll>
+            <div class="update-program__body-content">
+              <div
+                v-if="activeAboutPanel === 'changelog'"
+                id="about-changelog-panel"
+                class="update-program__entries"
               >
-                {{ log.version }}
-              </span>
-
-              <div class="log-main">
-                <div class="log-head">
-                  <div class="log-title-wrap">
-                    <span class="log-title">{{ log.title }}</span>
-                    <span
-                      v-if="log.version === latestLogVersion"
-                      class="log-latest"
-                    >
-                      {{ t('about.latestLabel') }}
-                    </span>
+                <section
+                  v-for="log in changelogs"
+                  :key="log.version"
+                  class="update-program__entry"
+                >
+                  <div class="update-program__meta">
+                    <strong>{{ log.version }}</strong>
+                    <span v-if="log.codename">{{ log.codename }}</span>
+                    <time :datetime="log.date">{{ log.date }}</time>
                   </div>
-                  <div class="log-right">
-                    <span class="log-date">{{ log.date }}</span>
-                  </div>
-                </div>
-
-                <ul class="log-details">
-                  <li v-for="(item, i) in getDefaultDetails(log)" :key="i">
-                    <span class="li-bullet">◆</span>
-                    <span class="log-detail-text">
-                      <span
-                        v-for="(segment, segmentIndex) in parseMarkedText(item)"
-                        :key="segmentIndex"
-                        :class="{
-                          'log-detail-highlight': segment.highlighted,
-                        }"
-                      >
-                        {{ segment.text }}
-                      </span>
-                    </span>
-                  </li>
-                </ul>
-
-                <div v-if="hasHiddenDetails(log)" class="log-extra">
-                  <ul class="log-details log-details-extra">
+                  <h3>{{ log.title }}</h3>
+                  <ul class="update-program__details">
                     <li
-                      v-for="(item, i) in getHiddenDetails(log)"
-                      :key="`extra-${i}`"
+                      v-for="(item, detailIndex) in log.details"
+                      :key="detailIndex"
                     >
-                      <span class="li-bullet">◆</span>
-                      <span class="log-detail-text">
+                      <span class="update-program__bullet" aria-hidden="true"
+                        >›</span
+                      >
+                      <span>
                         <span
                           v-for="(segment, segmentIndex) in parseMarkedText(
                             item
                           )"
                           :key="segmentIndex"
                           :class="{
-                            'log-detail-highlight': segment.highlighted,
+                            'update-program__highlight': segment.highlighted,
                           }"
+                          >{{ segment.text }}</span
                         >
-                          {{ segment.text }}
-                        </span>
                       </span>
                     </li>
                   </ul>
-                </div>
+                </section>
               </div>
-
-              <ArrowDown
-                v-if="hasHiddenDetails(log)"
-                class="log-expand-icon"
-                aria-hidden="true"
-              />
+              <div
+                v-else
+                id="about-roadmap-panel"
+                class="update-program__entries"
+              >
+                <section
+                  v-for="item in roadmapItems"
+                  :key="item"
+                  class="update-program__entry update-program__entry--roadmap"
+                >
+                  <h3>
+                    <span
+                      v-for="(segment, segmentIndex) in parseMarkedText(item)"
+                      :key="segmentIndex"
+                      :class="{
+                        'update-program__highlight': segment.highlighted,
+                      }"
+                      >{{ segment.text }}</span
+                    >
+                  </h3>
+                </section>
+              </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        <button
-          v-if="hasMoreChangelogs"
-          class="changelog-list-toggle"
-          :class="{ 'is-expanded': showAllChangelogs }"
-          type="button"
-          :aria-expanded="showAllChangelogs"
-          :aria-label="
-            showAllChangelogs ? 'Collapse changelog' : 'Expand changelog'
-          "
-          @click="toggleChangelogList"
-        >
-          <span class="changelog-list-toggle__triangle" aria-hidden="true" />
-        </button>
-      </section>
-
-      <section class="block roadmap-block">
-        <div class="section-header">
-          <h3 class="section-title">
-            <span class="changelog">
-              &lt; {{ t('about.roadmapTagLabel') }} /&gt;
-            </span>
-          </h3>
-          <div class="section-line" />
-        </div>
-
-        <div class="roadmap-tags">
-          <div
-            v-for="(item, roadmapIndex) in roadmapItems"
-            :key="item"
-            class="roadmap-tag"
-            :style="{
-              '--roadmap-enter-delay': `${0.62 + roadmapIndex * 0.1}s`,
-            }"
+        <div ref="aboutTriggersRef" class="about-update-dock__triggers">
+          <button
+            class="about-update-trigger"
+            :class="{ 'is-active': activeAboutPanel === 'changelog' }"
+            type="button"
+            aria-controls="about-changelog-panel"
+            :aria-expanded="activeAboutPanel === 'changelog'"
+            @click="toggleAboutPanel('changelog')"
           >
-            <span class="roadmap-tag__index" aria-hidden="true">
-              {{ String(roadmapIndex + 1).padStart(2, '0') }}
-            </span>
-            <span class="roadmap-tag__text">
-              <span
-                v-for="(segment, segmentIndex) in parseMarkedText(item)"
-                :key="segmentIndex"
-                :class="{ 'roadmap-highlight': segment.highlighted }"
-              >
-                {{ segment.text }}
-              </span>
-            </span>
-            <Setting class="roadmap-tag__gear" aria-hidden="true" />
-          </div>
+            <span>&lt;{{ t('about.changelogTagLabel') }}/&gt;</span>
+          </button>
+          <button
+            class="about-update-trigger"
+            :class="{ 'is-active': activeAboutPanel === 'roadmap' }"
+            type="button"
+            aria-controls="about-roadmap-panel"
+            :aria-expanded="activeAboutPanel === 'roadmap'"
+            @click="toggleAboutPanel('roadmap')"
+          >
+            <span>&lt;{{ t('about.roadmapTagLabel') }}/&gt;</span>
+          </button>
         </div>
-      </section>
+      </div>
     </div>
 
     <section id="about-neighbors" class="block neighbors-block">

@@ -70,6 +70,55 @@ test('entry animation rotates and hands off to the SVG logo', async ({
   await expect(svgLogo).toHaveClass(/is-docking/, { timeout: 3_000 })
 })
 
+test('entry loading progress keeps its spacing on tall desktop viewports', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name.includes('mobile'))
+  await page.setViewportSize({ width: 1600, height: 1200 })
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+
+  const progress = page.locator('.entry-loading-progress')
+  const canvas = page.locator('.entry-overlay-container canvas')
+  await expect(progress).toBeVisible({ timeout: 15_000 })
+  await expect(canvas).toBeVisible({ timeout: 15_000 })
+
+  const geometry = await page.evaluate(() => {
+    const progressBounds = document
+      .querySelector<HTMLElement>('.entry-loading-progress')!
+      .getBoundingClientRect()
+    const canvasElement = document.querySelector<HTMLCanvasElement>(
+      '.entry-overlay-container canvas'
+    )!
+    const canvasBounds = canvasElement.getBoundingClientRect()
+    const canvasStyle = getComputedStyle(canvasElement)
+
+    return {
+      viewport: {
+        width: window.innerWidth,
+        height: window.innerHeight,
+      },
+      progressTop: progressBounds.top,
+      canvas: {
+        left: canvasBounds.left,
+        top: canvasBounds.top,
+        width: canvasBounds.width,
+        height: canvasBounds.height,
+      },
+      canvasTransform: canvasStyle.transform,
+    }
+  })
+
+  expect(geometry.progressTop).toBeCloseTo(
+    geometry.viewport.height * 0.64 + 68,
+    0
+  )
+  expect(geometry.canvasTransform).toBe('matrix(0.5, 0, 0, 0.5, 0, 0)')
+  expect(geometry.canvas.width).toBeCloseTo(geometry.viewport.width / 2, 0)
+  expect(geometry.canvas.height).toBeCloseTo(geometry.viewport.height / 2, 0)
+  expect(geometry.canvas.left).toBeCloseTo(geometry.viewport.width / 4, 0)
+  expect(geometry.canvas.top).toBeCloseTo(geometry.viewport.height / 4, 0)
+})
+
 test('entry SVG logo docks with compositor-only FLIP geometry', async ({
   page,
 }) => {

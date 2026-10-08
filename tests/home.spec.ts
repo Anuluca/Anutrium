@@ -3966,181 +3966,130 @@ test('about friend links use responsive rows and reveal complete descriptions on
   }
 })
 
-test('about page keeps a free-scrolling full-height hero above an aligned 2:1 updates grid', async ({
+test('about updates open in two stages and scroll all entries', async ({
   page,
-}, testInfo) => {
-  test.skip(testInfo.project.name.includes('mobile'))
+}) => {
   await page.goto('/about', { waitUntil: 'domcontentloaded' })
-  await expect(page.locator('.about-updates-grid')).toBeVisible({
+  await expect(page.locator('.layout-page')).toHaveClass(/\blayout-show\b/, {
     timeout: PAGE_LOAD_TIMEOUT,
   })
-  const metrics = await page.locator('.about-updates-grid').evaluate((grid) => {
-    const aboutPage = grid.closest('.about-page')!
-    const animatedBlocks = grid.querySelectorAll(
-      '.changelog-block, .roadmap-block'
-    )
-    animatedBlocks.forEach((block) =>
-      block
-        .getAnimations({ subtree: true })
-        .forEach((animation) => animation.finish())
-    )
-    const bounds = grid.getBoundingClientRect()
-    const heroBounds = aboutPage
-      .querySelector('.about-hero-section')!
-      .getBoundingClientRect()
-    const passionSection = aboutPage.querySelector('.passion-section')!
-    const passionBounds = passionSection.getBoundingClientRect()
-    const passionBack = passionSection.querySelector('.passion-back')!
-    const passionCrosshair = passionSection.querySelector('.passion-crosshair')!
-    const passionContent = passionSection.querySelector('.passion-content')!
-    const passionContentBounds = passionContent.getBoundingClientRect()
-    const passionLogo = passionSection.querySelector(
-      '.passion-logo-bg'
-    ) as HTMLElement
-    const passionLogoBounds = passionLogo.getBoundingClientRect()
-    const scrollHint = aboutPage.querySelector('.about-scroll-hint')!
-    const scrollHintBounds = scrollHint.getBoundingClientRect()
-    const passionCodeFontSize = Number.parseFloat(
-      getComputedStyle(passionSection.querySelector('.passion-color-code')!)
-        .fontSize
-    )
-    const changelog = grid.querySelector('.changelog-block')!
-    const changelogBounds = changelog.getBoundingClientRect()
-    const changelogHeaderBounds = changelog
-      .querySelector('.section-header')!
-      .getBoundingClientRect()
-    const changelogEnglishSize = Number.parseFloat(
-      getComputedStyle(changelog.querySelector('.section-title .changelog')!)
-        .fontSize
-    )
-    const roadmap = grid.querySelector('.roadmap-block')!
-    const roadmapBounds = roadmap.getBoundingClientRect()
-    const roadmapHeaderBounds = roadmap
-      .querySelector('.section-header')!
-      .getBoundingClientRect()
-    const roadmapEnglishSize = Number.parseFloat(
-      getComputedStyle(roadmap.querySelector('.section-title .changelog')!)
-        .fontSize
-    )
-    const roadmapTagLefts = [...roadmap.querySelectorAll('.roadmap-tag')].map(
-      (tag) => tag.getBoundingClientRect().left
-    )
-    const passionBackMask = getComputedStyle(passionBack).maskImage
-    const passionCrosshairMask = getComputedStyle(passionCrosshair).maskImage
-    const passionLogoMask = getComputedStyle(passionLogo).maskImage
-
-    return {
-      changelogEnglishSize,
-      changelogHeaderHeight: changelogHeaderBounds.height,
-      changelogHeaderTop: changelogHeaderBounds.top,
-      changelogTop: changelogBounds.top,
-      columnsRatio: changelogBounds.width / roadmapBounds.width,
-      defaultChangelogCount: grid.querySelectorAll(
-        '.timeline-item:not(.is-changelog-preview)'
-      ).length,
-      heroBottom: heroBounds.bottom,
-      heroHeight: heroBounds.height,
-      heroTop: heroBounds.top,
-      jumpControlCount: aboutPage.querySelectorAll('.about-screen-jump').length,
-      passionBackMask,
-      passionCodeFontSize,
-      passionContentBottomGap:
-        passionBounds.bottom - passionContentBounds.bottom,
-      passionCopyCount: passionSection.querySelectorAll('.passion-copy').length,
-      passionCrosshairMask,
-      passionBottom: passionBounds.bottom,
-      passionHeight: passionBounds.height,
-      passionLogoAspectRatio:
-        passionLogo.offsetWidth / passionLogo.offsetHeight,
-      passionLogoMask,
-      passionLogoTop: passionLogoBounds.top,
-      passionTop: passionBounds.top,
-      passionWidth: passionBounds.width,
-      roadmapEnglishSize,
-      roadmapHeaderHeight: roadmapHeaderBounds.height,
-      roadmapHeaderTop: roadmapHeaderBounds.top,
-      roadmapTagLefts,
-      roadmapTagTitle:
-        roadmap
-          .querySelector('.section-title .changelog')
-          ?.textContent?.trim() ?? '',
-      changelogTagTitle:
-        changelog
-          .querySelector('.section-title .changelog')
-          ?.textContent?.trim() ?? '',
-      roadmapTop: roadmapBounds.top,
-      scrollHintBottom: scrollHintBounds.bottom,
-      scrollHintText: scrollHint.textContent?.trim() ?? '',
-      scrollHintTop: scrollHintBounds.top,
-      updatesDocumentTop: bounds.top + document.body.scrollTop,
-      updatesTop: bounds.top,
-      viewportHeight: window.innerHeight,
-      width: bounds.width,
-      secondaryTitleCount: grid.querySelectorAll('.section-title > .cn').length,
-      previewChangelogCount: grid.querySelectorAll(
-        '.timeline-item.is-changelog-preview'
-      ).length,
-    }
+  await expect(page.locator('.entry-overlay-container')).toBeHidden({
+    timeout: PAGE_LOAD_TIMEOUT,
   })
 
-  expect(metrics.heroHeight).toBeCloseTo(
-    metrics.viewportHeight - metrics.heroTop,
+  const dock = page.locator('.about-update-dock')
+  const changelogTrigger = dock
+    .locator('.about-update-trigger')
+    .filter({ hasText: '更新日志' })
+  const roadmapTrigger = dock
+    .locator('.about-update-trigger')
+    .filter({ hasText: '未来更新' })
+  await expect(changelogTrigger).toBeVisible()
+  await expect(roadmapTrigger).toBeVisible()
+  await expect(
+    dock.locator('.about-update-trigger__index, .about-update-trigger svg')
+  ).toHaveCount(0)
+
+  const initialScrollTop = await page.evaluate(() => document.body.scrollTop)
+  await changelogTrigger.click()
+  await expect(changelogTrigger.locator('span')).toHaveCSS(
+    'text-decoration-line',
+    'underline'
+  )
+  await expect(
+    dock.locator('#about-changelog-panel .update-program__meta > span').first()
+  ).toHaveCSS('text-decoration-line', 'none')
+
+  const panel = dock.locator('.about-update-dock__panel')
+  const body = panel.locator('.update-program__body')
+  const animation = await panel.evaluate((element) => {
+    const barDuration = Number.parseFloat(
+      getComputedStyle(element).animationDuration
+    )
+    const bodyDelay = Number.parseFloat(
+      getComputedStyle(element.querySelector('.update-program__body')!)
+        .animationDelay
+    )
+    return { barDuration, bodyDelay }
+  })
+  expect(animation.barDuration).toBeGreaterThan(0)
+  expect(animation.bodyDelay).toBeGreaterThanOrEqual(animation.barDuration)
+  await expect(panel.locator('.update-program__collapse')).toHaveText('×')
+
+  const titleMetrics = await panel
+    .locator('.update-program__bar')
+    .evaluate((bar) => {
+      const barBounds = bar.getBoundingClientRect()
+      const title = bar.querySelector('.update-program__path')!
+      const titleBounds = title.getBoundingClientRect()
+      return {
+        horizontalOffset: Math.abs(
+          titleBounds.left +
+            titleBounds.width / 2 -
+            (barBounds.left + barBounds.width / 2)
+        ),
+        verticalOffset: Math.abs(
+          titleBounds.top +
+            titleBounds.height / 2 -
+            (barBounds.top + barBounds.height / 2)
+        ),
+        fontFamily: getComputedStyle(title).fontFamily,
+      }
+    })
+  expect(titleMetrics.horizontalOffset).toBeLessThanOrEqual(1)
+  expect(titleMetrics.verticalOffset).toBeLessThanOrEqual(1)
+  expect(titleMetrics.fontFamily).toContain('Anton')
+
+  await body.evaluate(async (element) => {
+    await Promise.all(
+      element.getAnimations().map((animation) => animation.finished)
+    )
+  })
+  await expect(
+    panel.locator('#about-changelog-panel .update-program__entry')
+  ).toHaveCount(5)
+  await expect(
+    panel.locator('#about-changelog-panel .update-program__details li')
+  ).toHaveCount(30)
+  await expect(
+    panel.locator('.update-program__navigation, .update-program__counter')
+  ).toHaveCount(0)
+  await expect(page.getByRole('button', { name: '只看重大更新' })).toHaveCount(
     0
   )
-  expect(metrics.heroBottom).toBeCloseTo(metrics.viewportHeight, 0)
-  expect(metrics.updatesTop).toBeCloseTo(metrics.heroBottom, 0)
-  expect(metrics.jumpControlCount).toBe(0)
-  expect(metrics.scrollHintText).toBe('向下滚动')
-  expect(metrics.scrollHintTop).toBeGreaterThanOrEqual(
-    metrics.passionBottom - 1
-  )
-  expect(metrics.scrollHintBottom).toBeLessThan(metrics.heroBottom)
-  expect(metrics.heroBottom - metrics.scrollHintBottom).toBeGreaterThan(28)
-  expect(metrics.defaultChangelogCount).toBe(3)
-  expect(metrics.previewChangelogCount).toBe(1)
-  expect(metrics.passionBackMask).toContain('linear-gradient')
-  expect(metrics.passionCrosshairMask).toContain('linear-gradient')
-  expect(metrics.passionLogoMask).toBe('none')
-  expect(metrics.passionLogoAspectRatio).toBeCloseTo(1, 2)
-  expect(metrics.passionLogoTop).toBeLessThan(metrics.passionTop)
-  expect(metrics.passionTop).toBeLessThan(metrics.changelogTop)
-  expect(metrics.passionCopyCount).toBe(0)
-  expect(metrics.passionCodeFontSize).toBeGreaterThan(60)
-  expect(metrics.passionContentBottomGap).toBeGreaterThan(40)
-  expect(Math.abs(metrics.changelogTop - metrics.roadmapTop)).toBeLessThan(1)
+
+  const scroll = await body.evaluate((element) => {
+    element.scrollTop = element.scrollHeight
+    return {
+      top: element.scrollTop,
+      maximum: element.scrollHeight - element.clientHeight,
+    }
+  })
+  expect(scroll.maximum).toBeGreaterThan(0)
+  expect(scroll.top).toBeGreaterThan(0)
+
+  await roadmapTrigger.click()
+  const roadmapBody = dock.locator('.update-program__body')
+  await roadmapBody.evaluate(async (element) => {
+    await Promise.all(
+      element.getAnimations().map((animation) => animation.finished)
+    )
+  })
+  await expect(
+    dock.locator('#about-roadmap-panel .update-program__entry')
+  ).toHaveCount(3)
   expect(
-    Math.abs(metrics.changelogHeaderTop - metrics.roadmapHeaderTop)
-  ).toBeLessThan(1)
-  expect(metrics.changelogHeaderTop - metrics.updatesTop).toBeCloseTo(0, 0)
-  expect(metrics.changelogHeaderHeight).toBe(metrics.roadmapHeaderHeight)
-  expect(metrics.changelogEnglishSize).toBe(metrics.roadmapEnglishSize)
-  expect(metrics.secondaryTitleCount).toBe(0)
-  expect(metrics.columnsRatio).toBeCloseTo(2, 1)
-  expect(metrics.passionWidth).toBeCloseTo(metrics.width, 0)
-  expect(metrics.heroBottom - metrics.passionBottom).toBeGreaterThan(65)
-  expect(metrics.heroBottom - metrics.passionBottom).toBeLessThan(100)
-  expect(metrics.passionHeight).toBeGreaterThan(metrics.width / 2.7)
-  expect(new Set(metrics.roadmapTagLefts.map(Math.round)).size).toBe(1)
-  expect(metrics.changelogTagTitle).toBe('< 更新日志 />')
-  expect(metrics.roadmapTagTitle).toBe('< 未来更新 />')
+    Math.abs(
+      (await page.evaluate(() => document.body.scrollTop)) - initialScrollTop
+    )
+  ).toBeLessThanOrEqual(1)
 
-  const passionSection = page.locator('.passion-section')
-  await passionSection.hover({ position: { x: 100, y: 80 } })
-  await expect(passionSection).toHaveClass(/\bis-crosshair-active\b/)
-  const crosshairPosition = await passionSection.evaluate((section) => ({
-    x: Number.parseFloat(section.style.getPropertyValue('--passion-cross-x')),
-    y: Number.parseFloat(section.style.getPropertyValue('--passion-cross-y')),
-  }))
-  expect(Math.abs(crosshairPosition.x - 100)).toBeLessThanOrEqual(1)
-  expect(Math.abs(crosshairPosition.y - 80)).toBeLessThanOrEqual(1)
-  await page.mouse.move(0, 0)
-  await expect(passionSection).not.toHaveClass(/\bis-crosshair-active\b/)
+  await page.mouse.click(5, 5)
+  await expect(panel).toHaveCount(0)
 
-  await page.mouse.wheel(0, 160)
-  await page.waitForTimeout(120)
-  const nativeScrollTop = await page.evaluate(() => document.body.scrollTop)
-  expect(nativeScrollTop).toBeGreaterThan(0)
-  expect(nativeScrollTop).toBeLessThan(metrics.updatesDocumentTop - 40)
+  await roadmapTrigger.click()
+  await panel.locator('.update-program__collapse').click()
+  await expect(panel).toHaveCount(0)
 })
 
 test('about hero keeps its title, passion panel, and screen spacing across viewport sizes', async ({
@@ -4195,15 +4144,13 @@ test('about hero keeps its title, passion panel, and screen spacing across viewp
         const passionMetaStyle = getComputedStyle(
           passionSection.querySelector('.passion-field-meta')!
         )
-        const updates = document.querySelector('.about-updates-grid')!
+        const updates = document.querySelector('.about-hero-shell')!
         const updatesBounds = updates.getBoundingClientRect()
-        const scrollHintBounds = hero
-          .querySelector('.about-scroll-hint')!
-          .getBoundingClientRect()
 
         return {
           heroBottom: heroBounds.bottom,
           heroTop: heroBounds.top,
+          shellBottom: updatesBounds.bottom,
           passionBottom: passionBounds.bottom,
           passionHeight: passionBounds.height,
           passionCanvasScaleX: new DOMMatrixReadOnly(passionCanvasTransform).a,
@@ -4219,8 +4166,7 @@ test('about hero keeps its title, passion panel, and screen spacing across viewp
           passionNameAlignment: passionNameStyle.justifyContent,
           passionNameFontSize,
           passionTop: passionBounds.top,
-          scrollHintBottom: scrollHintBounds.bottom,
-          scrollHintTop: scrollHintBounds.top,
+          scrollHintCount: hero.querySelectorAll('.about-scroll-hint').length,
           secondScreenPaddingTop: Number.parseFloat(
             getComputedStyle(updates).paddingTop
           ),
@@ -4233,7 +4179,8 @@ test('about hero keeps its title, passion panel, and screen spacing across viewp
       })
 
     expect(metrics.heroBottom).toBeCloseTo(metrics.viewportHeight, 0)
-    expect(metrics.updatesTop).toBeCloseTo(metrics.heroBottom, 0)
+    expect(metrics.updatesTop).toBeCloseTo(metrics.heroTop, 0)
+    expect(metrics.shellBottom).toBeCloseTo(metrics.heroBottom, 0)
     expect(metrics.titleTop).toBeGreaterThanOrEqual(metrics.heroTop - 1)
     expect(metrics.titleHeight).toBeGreaterThan(0)
     expect(metrics.passionTop).toBeGreaterThanOrEqual(metrics.titleBottom - 1)
@@ -4248,18 +4195,17 @@ test('about hero keeps its title, passion panel, and screen spacing across viewp
       expect(metrics.passionCodeFontSize).toBeGreaterThan(
         metrics.passionNameFontSize * 4
       )
-      expect(metrics.scrollHintTop - metrics.passionBottom).toBeGreaterThan(18)
     } else {
       expect(metrics.passionLogoCenterLift / viewport.width).toBeCloseTo(
         0.0955,
         2
       )
     }
-    expect(metrics.passionBottom).toBeLessThan(metrics.heroBottom - 25)
-    expect(metrics.scrollHintTop).toBeGreaterThanOrEqual(
-      metrics.passionBottom - 3
+    expect(metrics.heroBottom - metrics.passionBottom).toBeGreaterThanOrEqual(
+      47
     )
-    expect(metrics.scrollHintBottom).toBeLessThan(metrics.heroBottom)
+    expect(metrics.heroBottom - metrics.passionBottom).toBeLessThanOrEqual(49)
+    expect(metrics.scrollHintCount).toBe(0)
     expect(metrics.secondScreenPaddingTop).toBe(0)
   }
 })

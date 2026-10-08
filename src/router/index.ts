@@ -412,7 +412,7 @@ export const routes: RouteConfig[] = [
       titleCn: '关于',
       fullFooter: false,
       pageFooter: true,
-      pageLayout: 'sub',
+      pageLayout: 'main',
       ifShow: true,
     },
   },

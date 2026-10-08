@@ -11,6 +11,10 @@
 
 .layout-page {
   --header-scroll-offset: -0.6rem;
+  --header-inline-padding: 1.33333rem;
+  --header-logo-inline-padding: 1rem;
+  --header-logo-visual-inline-inset: 0.43667rem;
+  --header-menu-item-padding: 0.66667rem;
 
   cursor: url('@/assets/img/dot.svg') 15 15, auto;
   width: 100%;
@@ -46,7 +50,7 @@
 
   .el-menu-layout-all {
     height: 3.33333rem;
-    padding: 1.33333rem;
+    padding: var(--header-inline-padding);
     padding-top: 2.33333rem;
     display: flex;
     align-items: center;
@@ -157,7 +161,7 @@
     }
 
     .logo-box {
-      padding-left: 1rem;
+      padding-left: var(--header-logo-inline-padding);
       padding-top: 0;
       padding-right: 0;
       padding-bottom: 0;
@@ -458,7 +462,7 @@
           justify-content: center;
           align-items: center;
           background-color: transparent;
-          padding: 0.66667rem;
+          padding: var(--header-menu-item-padding);
           white-space: nowrap;
 
           > a {
@@ -643,7 +647,6 @@
     &.scroll-layout-active {
       transform: translate3d(0, var(--header-scroll-offset), 0);
     }
-
   }
 
   .fullscreen {
@@ -968,9 +971,7 @@
     width: calc(
       100vw - var(--main-page-inline-inset) - var(--main-page-inline-inset)
     );
-    margin-left: calc(
-      50% - 50vw + var(--main-page-inline-inset)
-    );
+    margin-left: calc(50% - 50vw + var(--main-page-inline-inset));
     padding-right: 0;
     padding-left: 0;
 
@@ -1097,7 +1098,11 @@
     &.content-aligned {
       .logo-box {
         transform: translate3d(
-          calc(var(--page-inline-gutter) - 0.83333rem),
+          calc(
+            var(--page-inline-gutter) + var(--desktop-shell-inline-inset) -
+              var(--header-inline-padding) - var(--header-logo-inline-padding) -
+              var(--header-logo-visual-inline-inset)
+          ),
           0,
           0
         );
@@ -1105,7 +1110,10 @@
 
       .desktop-menu {
         transform: translate3d(
-          calc(0rem - var(--page-inline-gutter) - 0.41667rem),
+          calc(
+            0rem - var(--page-inline-gutter) - var(--desktop-shell-inline-inset) +
+              var(--header-inline-padding) + var(--header-menu-item-padding)
+          ),
           0,
           0
         );
@@ -1115,8 +1123,8 @@
 }
 
 @media screen and (min-aspect-ratio: 1.0001) and (hover: hover) and (pointer: fine) {
-  .layout-page .el-menu-layout-all .logo-box {
-    padding-left: 0.33333rem;
+  .layout-page .el-menu-layout-all {
+    --header-logo-inline-padding: 0.33333rem;
   }
 }
 
