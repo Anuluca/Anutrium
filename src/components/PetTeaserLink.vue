@@ -7,6 +7,7 @@ import {
 } from '@/utils/imageVariant'
 import {
   addPageResizeListener,
+  addPageScrollListener,
   getPageScrollElement,
   getPageScrollTop,
 } from '@/utils/pageScroll'
@@ -29,9 +30,11 @@ type InteractionState = 'idle' | 'hovering' | 'activating'
 const props = withDefaults(
   defineProps<{
     entryActive?: boolean
+    hideAtTop?: boolean
   }>(),
   {
     entryActive: true,
+    hideAtTop: false,
   }
 )
 const ACTIVATION_DURATION = 650
@@ -40,6 +43,10 @@ const PET_PAGE_URL = 'https://flora-vs-luca.anuluca.com'
 
 const state = ref<InteractionState>('idle')
 const isMobilePageEnd = ref(false)
+const isPageAtTop = ref(true)
+const isHidden = computed(
+  () => isMobilePageEnd.value || (props.hideAtTop && isPageAtTop.value)
+)
 const teaserElement = ref<HTMLElement | null>(null)
 const animationStyle = computed(
   () =>
@@ -53,6 +60,7 @@ let pageEndSentinel: HTMLElement | null = null
 let pageEndObserver: IntersectionObserver | null = null
 let isPageEndIntersecting = false
 let removePageResizeListener: (() => void) | null = null
+let removePageScrollListener: (() => void) | null = null
 let hasNavigated = false
 
 const clearActivationFallback = () => {
@@ -63,11 +71,7 @@ const clearActivationFallback = () => {
 }
 
 const handleMouseEnter = () => {
-  if (
-    !props.entryActive ||
-    isMobilePageEnd.value ||
-    state.value === 'activating'
-  ) {
+  if (!props.entryActive || isHidden.value || state.value === 'activating') {
     return
   }
   state.value = 'hovering'
@@ -92,7 +96,7 @@ const completeActivation = () => {
 const handleActivate = () => {
   if (
     !props.entryActive ||
-    isMobilePageEnd.value ||
+    isHidden.value ||
     state.value === 'activating' ||
     hasNavigated
   ) {
@@ -116,6 +120,7 @@ const handleCatAnimationEnd = (event: AnimationEvent) => {
 }
 
 const updatePageEndState = () => {
+  isPageAtTop.value = getPageScrollTop() <= 1
   isMobilePageEnd.value =
     window.innerWidth <= window.innerHeight &&
     getPageScrollTop() > 0 &&
@@ -164,8 +169,8 @@ watch(
   }
 )
 
-watch(isMobilePageEnd, (isPageEnd) => {
-  if (!isPageEnd) return
+watch(isHidden, (hidden) => {
+  if (!hidden) return
 
   clearActivationFallback()
   state.value = 'idle'
@@ -173,6 +178,7 @@ watch(isMobilePageEnd, (isPageEnd) => {
 
 onMounted(() => {
   removePageResizeListener = addPageResizeListener(handleViewportResize)
+  removePageScrollListener = addPageScrollListener(updatePageEndState)
   observePageEnd()
   updatePageEndState()
 })
@@ -181,6 +187,8 @@ onUnmounted(() => {
   clearActivationFallback()
   removePageResizeListener?.()
   removePageResizeListener = null
+  removePageScrollListener?.()
+  removePageScrollListener = null
   pageEndObserver?.disconnect()
   pageEndSentinel?.remove()
 })
@@ -196,14 +204,13 @@ onUnmounted(() => {
       {
         'pet-teaser--ready': props.entryActive,
         'pet-teaser--page-end': isMobilePageEnd,
+        'pet-teaser--hidden': isHidden,
       },
     ]"
     :style="animationStyle"
     aria-label="前往 Flora vs Luca"
-    :aria-disabled="
-      !props.entryActive || isMobilePageEnd || state === 'activating'
-    "
-    :tabindex="props.entryActive && !isMobilePageEnd ? 0 : -1"
+    :aria-disabled="!props.entryActive || isHidden || state === 'activating'"
+    :tabindex="props.entryActive && !isHidden ? 0 : -1"
     @mouseenter="handleMouseEnter"
     @mouseleave="handleMouseLeave"
     @click="handleActivate"
@@ -290,7 +297,8 @@ onUnmounted(() => {
     }
   }
 
-  &--page-end {
+  &--page-end,
+  &--hidden {
     opacity: 0;
     visibility: hidden;
     pointer-events: none;

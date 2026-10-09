@@ -1,23 +1,27 @@
 import { gsap } from 'gsap'
 import * as THREE from 'three'
 
+import { cursorState } from '@/stores'
 import { loadIslandLucarioModel } from '@/utils/islandLucarioModel'
 import { subscribePointerSamples } from '@/utils/pointerSamples'
 
 import { templeCategories, type TempleCategoryId } from './templeCategories'
+
+export type TempleSelection = TempleCategoryId | 'statue'
 
 interface TempleCallbacks {
   waitForRouteEnter: () => Promise<void>
   completeProgress: () => Promise<void>
   progress: (value: number | null) => void
   ready: () => void
-  select: (id: TempleCategoryId | null) => void
+  select: (id: TempleSelection | null) => void
   settled: () => void
   error: (error: unknown) => void
 }
 
 const MAX_RENDER_PIXELS = 2048 * 2048
 const SCENE_VERTICAL_OFFSET = 0.0125
+const FOCUS_SCREEN_OFFSET = 0.05
 const INNER_OBELISK_ADVANCE = 3
 const INNER_STATUE_RETREAT = 5
 const OBELISK_SCALE = new THREE.Vector3(1.28, 1.22, 1.28)
@@ -25,6 +29,10 @@ const ENTRANCE_SPEED = 1.2
 const ENTRANCE_DURATION = 6.8 / ENTRANCE_SPEED
 const ENTRANCE_PLAYBACK_RATE = 1.2
 const ENTRANCE_DELAY = 1.2
+const INNER_PILLAR_ENTRANCE_DELAY = 1.1 / ENTRANCE_SPEED
+const OUTER_PILLAR_ENTRANCE_DELAY = 1.55 / ENTRANCE_SPEED
+const PILLAR_ENTRANCE_DURATION = 3.2
+const FOCUS_LOOK_UP_DEGREES = 10
 const OBELISK_ENTRANCE_DEPTH = 7.5
 const OBELISK_BASE_TOP = 0.34
 const HOLY_LIGHT_COLOR = '#E23455'
@@ -36,6 +44,17 @@ export function createIslandTemple(
   buttons: Map<string, HTMLElement>,
   callbacks: TempleCallbacks
 ) {
+  const cursorStateStore = cursorState()
+  const statueCursorSource = 'island-statue'
+  const syncStatueCursor = (
+    hit: TempleSelection | undefined,
+    target: EventTarget | null
+  ) => {
+    cursorStateStore.setInteractive(
+      statueCursorSource,
+      !entranceActive && hit === 'statue' && target === renderer.domElement
+    )
+  }
   const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
   renderer.setClearColor(0x000000, 0)
   renderer.outputColorSpace = THREE.SRGBColorSpace
@@ -50,6 +69,12 @@ export function createIslandTemple(
   stage.appendChild(renderer.domElement)
   renderer.domElement.style.visibility = 'hidden'
   stage.style.opacity = '0'
+  // 只移动标题内层，沿用现有裁切容器，让文字从地平线下方升起；外层继续贴合地平线。
+  const heroEntranceText = stage.querySelector<HTMLElement>(
+    '.page-hero-title h1'
+  )
+  if (heroEntranceText)
+    gsap.set(heroEntranceText, { yPercent: 100, opacity: 0 })
   stage.dataset.entranceFinished = 'false'
   stage.dataset.maxFps = '60'
   stage.dataset.pointerSampleMs = String(1000 / 30)
@@ -79,7 +104,7 @@ export function createIslandTemple(
   let ready = false
   let frame: number | undefined
   let lastDraw = 0
-  let selected: TempleCategoryId | null = null
+  let selected: TempleSelection | null = null
   let transition: gsap.core.Timeline | undefined
   let transitionActive = false
   let entranceActive = false
@@ -94,6 +119,19 @@ export function createIslandTemple(
   let projectionDirty = true
   let viewWidth = 0
   let viewHeight = 0
+  const focusFraming = { x: 0 }
+  const applyViewOffset = () => {
+    if (!viewWidth || !viewHeight) return
+    // 调整相机投影，让雕像、碑身、圣光和倒影整体让出菜单空间；点击投影使用同一相机。
+    camera.setViewOffset(
+      viewWidth,
+      viewHeight,
+      -viewWidth * focusFraming.x,
+      -viewHeight * SCENE_VERTICAL_OFFSET,
+      viewWidth,
+      viewHeight
+    )
+  }
   let pointerBounds: DOMRect | undefined
   let pointerBoundsDirty = true
   const stageData = new Map<string, string>()
@@ -348,6 +386,7 @@ export function createIslandTemple(
     capHalo.position.copy(cap.position)
     capHalo.position.y += 0.2
     capHalo.scale.set(2.6, 2.8, 1)
+    capHalo.renderOrder = -0.75
     shaft.add(capHalo)
     for (const [shape, y] of [
       [stepGeometry, 0.065],
@@ -408,6 +447,9 @@ export function createIslandTemple(
     )
     const beam = new THREE.Mesh(beamGeometry, beamMaterial)
     beam.position.y = 8.1
+    // 运镜结束变为水平视角时，光柱与晶体的投影深度相等；固定先画光、后画晶体，
+    // 避免透明排序改用对象 ID 后将加法圣光叠到晶体上，造成最后一帧突然变亮。
+    beam.renderOrder = -0.5
     group.add(beam)
     const poolMaterial = material(
       new THREE.MeshBasicMaterial({
@@ -584,7 +626,7 @@ export function createIslandTemple(
       new THREE.ShaderMaterial({
         uniforms: {
           glowColor: { value: new THREE.Color(HOLY_LIGHT_COLOR) },
-          intensity: { value: 1 },
+          intensity: { value: 0 },
         },
         transparent: true,
         depthWrite: false,
@@ -596,7 +638,7 @@ export function createIslandTemple(
         float cone=1.-smoothstep(width*0.15,width,abs(vUv.x-0.5));
         float fade=smoothstep(0.,0.045,vUv.y)*(1.-smoothstep(0.65,1.,vUv.y));
         float rays=0.8+0.2*pow(0.5+0.5*sin(vUv.x*42.+vUv.y*3.),6.);
-        gl_FragColor=vec4(glowColor,cone*fade*rays*(0.22+0.12*(1.-vUv.y))*intensity);
+        gl_FragColor=vec4(glowColor,cone*fade*rays*(0.44+0.24*(1.-vUv.y))*intensity);
         #include <colorspace_fragment>
       }`,
       })
@@ -705,6 +747,17 @@ export function createIslandTemple(
   const statue = new THREE.Group()
   statue.position.set(0, 3.87, statueZ)
   scene.add(statue)
+  const statueClipPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.52)
+  const statueView = { mix: 0 }
+  const statueSize = new THREE.Vector3()
+  let statueHalfY = statue.position.y
+  let statueFullY = statue.position.y
+  let statueMesh:
+    | THREE.Mesh<THREE.BufferGeometry, THREE.MeshPhysicalMaterial>
+    | undefined
+  let statueWire:
+    | THREE.Mesh<THREE.BufferGeometry, THREE.MeshBasicMaterial>
+    | undefined
   const chromeMaterial = material(
     new THREE.MeshPhysicalMaterial({
       color: 0xe84d6b,
@@ -714,7 +767,8 @@ export function createIslandTemple(
       clearcoat: 0.45,
       clearcoatRoughness: 0.08,
       envMapIntensity: 1.8,
-      clippingPlanes: [new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.52)],
+      transparent: true,
+      clippingPlanes: [statueClipPlane],
     })
   )
   chromeMaterial.onBeforeCompile = (shader) => {
@@ -748,6 +802,19 @@ export function createIslandTemple(
         '#include <begin_vertex>\ntransformed=rotateHead(transformed-headNodPivot,getNodRotation())+headNodPivot;\ntransformed=rotateHead(transformed-headPivot,getHeadRotation())+headPivot;'
       )
   }
+  const wireMaterial = material(
+    new THREE.MeshBasicMaterial({
+      color: HOLY_LIGHT_COLOR,
+      wireframe: true,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+      toneMapped: false,
+      clippingPlanes: [statueClipPlane],
+    })
+  )
+  // 网格复用模型的静态顶点及头部变形，裁切平面数量固定，切换只更新 uniform 和透明度。
+  wireMaterial.onBeforeCompile = chromeMaterial.onBeforeCompile
 
   const screenPoint = new THREE.Vector3()
   const hitPoints = [
@@ -861,6 +928,16 @@ export function createIslandTemple(
         )
       )
     }
+    const statueOnly = selected === 'statue'
+    monuments.visible = !statueOnly
+    ground.visible = !statueOnly
+    reflection.visible = !statueOnly
+    pedestal.visible = !statueOnly
+    statueGlow.visible = !statueOnly
+    chromeMaterial.opacity = 1 - statueView.mix
+    wireMaterial.opacity = statueView.mix
+    if (statueMesh) statueMesh.visible = statueView.mix < 1
+    if (statueWire) statueWire.visible = statueView.mix > 0
     if (!selected && !entranceActive)
       headCurrent.lerp(headTarget, 1 - Math.exp(-elapsed * 18))
     const moving =
@@ -909,13 +986,22 @@ export function createIslandTemple(
         reflectedShafts[index].visible = item.shaft.visible
       }
       monuments.updateMatrixWorld(true)
+      statue.updateMatrixWorld(true)
     }
     // 运镜期间重新检测静止指针，确保悬停与实际投影一致。
-    if (hasPointer && sceneChanged)
-      hovered =
-        raycast({ clientX: lastPointer.x, clientY: lastPointer.y }) || null
+    if (hasPointer && sceneChanged) {
+      const hit = raycast(
+        { clientX: lastPointer.x, clientY: lastPointer.y },
+        true
+      )
+      hovered = hit === 'statue' ? null : hit || null
+      syncStatueCursor(
+        hit,
+        document.elementFromPoint(lastPointer.x, lastPointer.y)
+      )
+    }
     statueHolyLight.visible =
-      statueHolyLight.material.uniforms.intensity.value > 0
+      !statueOnly && statueHolyLight.material.uniforms.intensity.value > 0
     let hoverMoving = false
     for (const item of obelisks) {
       const hoverTarget = hovered === item.category.id ? 1 : 0
@@ -970,6 +1056,11 @@ export function createIslandTemple(
       copy.envMapIntensity = source.envMapIntensity
     }
     setStageData('statueZ', String(statue.position.z))
+    setStageData('statueY', statue.position.y.toFixed(4))
+    setStageData('statueFullY', statueFullY.toFixed(4))
+    setStageData('materialPhase', statueView.mix === 1 ? 'wireframe' : 'chrome')
+    setStageData('statueWireOpacity', statueView.mix.toFixed(3))
+    setStageData('statueClipHeight', String(-statueClipPlane.constant))
     setStageData(
       'statueHolyLight',
       statueHolyLight.material.uniforms.intensity.value.toFixed(3)
@@ -1055,7 +1146,7 @@ export function createIslandTemple(
       setStageData(
         'visibleObelisks',
         obelisks
-          .filter((item) => item.shaft.visible)
+          .filter((item) => monuments.visible && item.shaft.visible)
           .map((item) => item.category.id)
           .join(',')
       )
@@ -1077,7 +1168,13 @@ export function createIslandTemple(
       (6.1 * OBELISK_SCALE.y) /
       (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * 0.68)
     const yaw = -side * THREE.MathUtils.degToRad(category.z < 0 ? 27.5 : 17.5)
-    const forward = new THREE.Vector3(Math.sin(yaw), 0, -Math.cos(yaw))
+    const pitch = THREE.MathUtils.degToRad(FOCUS_LOOK_UP_DEGREES)
+    // 围绕碑身中心降低机位并仰视，仍按同一距离和左右偏移构图；位置与视点一起缓动。
+    const forward = new THREE.Vector3(
+      Math.sin(yaw) * Math.cos(pitch),
+      Math.sin(pitch),
+      -Math.cos(yaw) * Math.cos(pitch)
+    )
     const right = new THREE.Vector3(Math.cos(yaw), 0, Math.sin(yaw))
     const offset =
       side *
@@ -1085,7 +1182,7 @@ export function createIslandTemple(
       distance *
       Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) *
       camera.aspect
-    // 内侧碑仍落在 1/4、3/4 屏；外侧碑向两边留出更多菜单空间，碑身高度保持 68%。
+    // 先按内侧 1/4、3/4 屏、外侧更靠边构图，再统一偏移投影；碑身高度保持 68%。
     const position = new THREE.Vector3(
       category.x,
       3.045 * OBELISK_SCALE.y,
@@ -1097,6 +1194,25 @@ export function createIslandTemple(
       position,
       target: position.clone().addScaledVector(forward, distance),
     }
+  }
+  const fullStatuePose = () => {
+    const halfFov = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))
+    const distance =
+      Math.max(statueSize.y, statueSize.x / camera.aspect) /
+        (2 * halfFov * 0.8) +
+      statueSize.z / 2
+    const target = new THREE.Vector3(0, statueSize.y / 2, statueZ)
+    return {
+      position: target.clone().add(new THREE.Vector3(0, 0, distance)),
+      target,
+    }
+  }
+  const selectedPose = () => {
+    if (selected === 'statue') return fullStatuePose()
+    const item = obelisks.find((item) => item.category.id === selected)
+    return item
+      ? focusPose(item.category)
+      : { position: homePosition, target: homeTarget }
   }
   const entranceProgress = { value: 0 }
   const entranceStart = new THREE.Vector3()
@@ -1112,6 +1228,9 @@ export function createIslandTemple(
   const startEntrance = () => {
     if (reducedMotion) {
       stage.style.opacity = '1'
+      if (heroEntranceText)
+        gsap.set(heroEntranceText, { yPercent: 0, opacity: 1 })
+      statueHolyLight.material.uniforms.intensity.value = 1
       entranceHeadDip.value = HEAD_NOD_DEGREES
       setStageData('entranceFinished', 'true')
       setStageData('entrancePhase', 'complete')
@@ -1144,6 +1263,30 @@ export function createIslandTemple(
       },
     })
     transition.to(stage, { opacity: 1, duration: 2, ease: 'power2.out' }, 0)
+    if (heroEntranceText)
+      transition.to(
+        heroEntranceText,
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: ENTRANCE_DURATION,
+          ease: 'sine.inOut',
+        },
+        0
+      )
+    // 圣光覆盖完整的柱子入场时间段，共用时间轴与播放速率，避免先亮后升或单独补动画。
+    transition.to(
+      statueHolyLight.material.uniforms.intensity,
+      {
+        value: 1,
+        duration:
+          OUTER_PILLAR_ENTRANCE_DELAY +
+          PILLAR_ENTRANCE_DURATION -
+          INNER_PILLAR_ENTRANCE_DELAY,
+        ease: 'sine.inOut',
+      },
+      INNER_PILLAR_ENTRANCE_DELAY
+    )
     transition.to(
       entranceHeadDip,
       {
@@ -1164,8 +1307,11 @@ export function createIslandTemple(
       0
     )
     for (const [index, item] of obelisks.entries()) {
-      const delay = (item.category.z < 0 ? 1.1 : 1.55) / ENTRANCE_SPEED
-      moveShaft(transition, index, 0, 3.2, delay, () =>
+      const delay =
+        item.category.z < 0
+          ? INNER_PILLAR_ENTRANCE_DELAY
+          : OUTER_PILLAR_ENTRANCE_DELAY
+      moveShaft(transition, index, 0, PILLAR_ENTRANCE_DURATION, delay, () =>
         setStageData('entrancePhase', 'pillars')
       )
     }
@@ -1186,21 +1332,11 @@ export function createIslandTemple(
     renderer.setSize(viewWidth, viewHeight, false)
     camera.aspect = viewWidth / viewHeight
     // 偏移投影而非页面容器，场景、倒影和投影点击区域一起下移，导航及离场几何保持原位。
-    camera.setViewOffset(
-      viewWidth,
-      viewHeight,
-      0,
-      -viewHeight * SCENE_VERTICAL_OFFSET,
-      viewWidth,
-      viewHeight
-    )
+    applyViewOffset()
     homePosition.z = Math.max(17.5, 31 / camera.aspect)
     if (entranceActive) applyEntranceCamera()
     else if (!transitionActive) {
-      const active = obelisks.find((item) => item.category.id === selected)
-      const pose = active
-        ? focusPose(active.category)
-        : { position: homePosition, target: homeTarget }
+      const pose = selectedPose()
       camera.position.copy(pose.position)
       lookAt.copy(pose.target)
     }
@@ -1215,7 +1351,7 @@ export function createIslandTemple(
   observer.observe(stage)
   resize()
 
-  const select = (id: TempleCategoryId | null) => {
+  const select = (id: TempleSelection | null) => {
     if (!ready || disposed || entranceActive) return
     const next = selected === id ? null : id
     if (next === selected) return
@@ -1234,9 +1370,7 @@ export function createIslandTemple(
       onUpdate: invalidate,
       onComplete: () => {
         transitionActive = false
-        const pose = item
-          ? focusPose(item.category)
-          : { position: homePosition, target: homeTarget }
+        const pose = selectedPose()
         camera.position.copy(pose.position)
         lookAt.copy(pose.target)
         callbacks.settled()
@@ -1263,9 +1397,31 @@ export function createIslandTemple(
         },
         0
       )
-    const pose = item
-      ? focusPose(item.category)
-      : { position: homePosition, target: homeTarget }
+    const pose = selectedPose()
+    transition.to(
+      statueView,
+      { mix: selected === 'statue' ? 1 : 0, duration, ease: 'power2.inOut' },
+      0
+    )
+    transition.to(
+      statueClipPlane,
+      {
+        constant: selected === 'statue' ? 0.1 : -0.52,
+        duration,
+        ease: 'power3.inOut',
+      },
+      0
+    )
+    transition.to(
+      focusFraming,
+      {
+        x: item ? Math.sign(item.category.x) * FOCUS_SCREEN_OFFSET : 0,
+        duration,
+        ease: 'power3.inOut',
+        onUpdate: applyViewOffset,
+      },
+      0
+    )
     transition.to(
       camera.position,
       {
@@ -1291,6 +1447,7 @@ export function createIslandTemple(
     transition.to(
       statue.position,
       {
+        y: selected === 'statue' ? statueFullY : statueHalfY,
         z: statueZ - (item && item.category.z < 0 ? INNER_STATUE_RETREAT : 0),
         duration,
         ease: 'power3.inOut',
@@ -1334,7 +1491,10 @@ export function createIslandTemple(
   const hitObjects = obelisks.flatMap((item) => [item.body, item.cap])
   const intersections: THREE.Intersection[] = []
   const visibleHitObjects: THREE.Object3D[] = []
-  const raycast = (event: Pick<MouseEvent, 'clientX' | 'clientY'>) => {
+  const raycast = (
+    event: Pick<MouseEvent, 'clientX' | 'clientY'>,
+    includeStatue = false
+  ) => {
     if (entranceActive) return
     // 入场缩放期间实时读取；稳定后缓存边界，指针采样不再反复触发布局计算。
     const entering = !!stage.closest('.route-enter-active')
@@ -1350,20 +1510,46 @@ export function createIslandTemple(
     raycaster.setFromCamera(pointer, camera)
     intersections.length = 0
     visibleHitObjects.length = 0
-    for (const object of hitObjects) {
-      if (object.parent?.visible) visibleHitObjects.push(object)
-    }
-    return raycaster
+    if (selected !== 'statue')
+      for (const object of hitObjects) {
+        if (object.parent?.visible) visibleHitObjects.push(object)
+      }
+    if (includeStatue && statueMesh) visibleHitObjects.push(statueMesh)
+    const hit = raycaster
       .intersectObjects(visibleHitObjects, false, intersections)
-      .find((hit) => hit.point.y >= OBELISK_BASE_TOP * OBELISK_SCALE.y - 0.001)
-      ?.object.userData.category as TempleCategoryId | undefined
+      .find(
+        (hit) =>
+          hit.point.y >=
+          (hit.object === statueMesh
+            ? -statueClipPlane.constant
+            : OBELISK_BASE_TOP * OBELISK_SCALE.y) -
+            0.001
+      )
+    if (!hit) return
+    return hit.object === statueMesh
+      ? 'statue'
+      : (hit.object.userData.category as TempleCategoryId)
   }
   const click = (event: MouseEvent) => {
-    const id = raycast(event)
-    if (id) select(id)
+    if (selected === 'statue') return select(null)
+    const id = raycast(event, true)
+    if (id === 'statue') select(selected ? null : 'statue')
+    else if (id) select(id)
     else if (selected) select(null)
   }
   renderer.domElement.addEventListener('click', click)
+  renderer.domElement.tabIndex = 0
+  const modelKeydown = (event: KeyboardEvent) => {
+    if (event.key === 'Escape' && selected === 'statue') select(null)
+    else if (
+      event.target === renderer.domElement &&
+      (event.key === 'Enter' || event.key === ' ')
+    ) {
+      event.preventDefault()
+      select(selected ? null : 'statue')
+    }
+  }
+  document.addEventListener('keydown', modelKeydown)
   const follow = (event: PointerEvent) => {
     if (!canRender()) return
     hasPointer = true
@@ -1374,7 +1560,9 @@ export function createIslandTemple(
         (event.clientY / innerHeight - 0.5) * 2
       )
       .clampScalar(-1, 1)
-    const nextHover = raycast(event) || null
+    const hit = raycast(event, true)
+    syncStatueCursor(hit, event.target)
+    const nextHover = hit === 'statue' ? null : hit || null
     const hoverChanged = hovered !== nextHover
     hovered = nextHover
     if (!selected && !entranceActive) headTarget.copy(pointerTarget)
@@ -1383,6 +1571,7 @@ export function createIslandTemple(
   let unsubscribe: (() => void) | undefined
   const syncActivity = () => {
     if (document.hidden) {
+      cursorStateStore.setInteractive(statueCursorSource, false)
       entranceDelay?.pause()
       unsubscribe?.()
       unsubscribe = undefined
@@ -1405,9 +1594,11 @@ export function createIslandTemple(
     pointerTarget.set(0, 0)
     if (!selected) headTarget.copy(pointerTarget)
     hovered = null
+    cursorStateStore.setInteractive(statueCursorSource, false)
     invalidate()
   }
   document.documentElement.addEventListener('pointerleave', resetPointer)
+  window.addEventListener('blur', resetPointer)
 
   const prepareRendering = async () => {
     camera.lookAt(lookAt)
@@ -1494,6 +1685,16 @@ export function createIslandTemple(
       statue.position.y = 0.52 - (cropY - metadata.center[1]) * modelScale
       statue.add(mesh)
       reflectedStatue = mirror(statue, 0.42)
+      statueMesh = mesh
+      surface.computeBoundingBox()
+      const bounds = surface.boundingBox!
+      bounds.getSize(statueSize).multiplyScalar(modelScale)
+      statueHalfY = statue.position.y
+      statueFullY = (metadata.center[1] - bounds.min.y) * modelScale
+      statueWire = new THREE.Mesh(surface, wireMaterial)
+      statueWire.position.copy(mesh.position)
+      statueWire.renderOrder = 4
+      statue.add(statueWire)
       for (const [name, value] of Object.entries(metadata.stats))
         stage.dataset[name] = String(value)
       stage.dataset.materialPhase = 'chrome'
@@ -1540,12 +1741,15 @@ export function createIslandTemple(
     select,
     dispose: () => {
       disposed = true
+      cursorStateStore.setInteractive(statueCursorSource, false)
       transition?.kill()
       entranceDelay?.kill()
       unsubscribe?.()
       observer.disconnect()
       document.removeEventListener('visibilitychange', syncActivity)
+      document.removeEventListener('keydown', modelKeydown)
       document.documentElement.removeEventListener('pointerleave', resetPointer)
+      window.removeEventListener('blur', resetPointer)
       renderer.domElement.removeEventListener('click', click)
       if (frame !== undefined) cancelAnimationFrame(frame)
       renderer.domElement.remove()

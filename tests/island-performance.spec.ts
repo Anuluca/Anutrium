@@ -256,6 +256,19 @@ test('temple focus reuses prepared shaders and textures, then stops drawing whil
       })
     }
   }
+  // 柱子聚焦时先退出，再展示全身网格；首次展示也不得编译程序、上传顶点或分配纹理。
+  await stage.locator('canvas').focus()
+  await page.keyboard.press('Enter')
+  await expect(root).toHaveAttribute('data-selected', 'none')
+  await expect(root).toHaveAttribute('data-settled', 'true')
+  await page.keyboard.press('Enter')
+  await expect(root).toHaveAttribute('data-selected', 'statue')
+  await expect(root).toHaveAttribute('data-settled', 'true')
+  await expect(stage).toHaveAttribute('data-material-phase', 'wireframe')
+  const inspected = await read()
+  expect(inspected.programs).toBe(prepared.programs)
+  expect(inspected.allocations).toBe(prepared.allocations)
+  expect(inspected.uploads).toBe(prepared.uploads)
   await page.mouse.move(20, 150)
   await page.waitForTimeout(1000)
   const idle = await read()

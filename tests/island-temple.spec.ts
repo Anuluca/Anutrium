@@ -130,12 +130,24 @@ test('all four categories frame their half of the screen, hide other pillars and
       )
     })
     expect(yaw).toBeCloseTo(index === 1 || index === 2 ? 27.5 : 17.5, 2)
+    const pitch = await stage.evaluate((element) => {
+      const position = element.dataset.cameraPosition!.split(',').map(Number)
+      const target = element.dataset.cameraTarget!.split(',').map(Number)
+      return (
+        Math.atan2(
+          target[1] - position[1],
+          Math.hypot(target[0] - position[0], target[2] - position[2])
+        ) *
+        (180 / Math.PI)
+      )
+    })
+    expect(pitch).toBeCloseTo(10, 2)
     const focused = await page
       .locator(`[data-obelisk="${category.id}"]`)
       .boundingBox()
     const viewport = page.viewportSize()!
     const centerX = focused!.x + focused!.width / 2
-    const expectedCenter = index === 0 || index === 3 ? 0.2 : 0.25
+    const expectedCenter = index === 0 || index === 3 ? 0.15 : 0.2
     expect(
       Math.abs(
         centerX / viewport.width -
@@ -157,6 +169,11 @@ test('all four categories frame their half of the screen, hide other pillars and
     }
     const menu = page.locator('.temple-menu')
     await expect(menu).toHaveClass(/is-visible/)
+    await menu.evaluate(async (element) => {
+      await Promise.all(
+        element.getAnimations().map((animation) => animation.finished)
+      )
+    })
     await expect(menu.locator('h1')).toHaveText(category.title)
     await expect(menu.locator('a')).toHaveCount(2)
     const firstCard = await menu.locator('a').first().boundingBox()
@@ -252,6 +269,7 @@ test('interrupting camera return continues from the current position into anothe
 test('submenu opens existing routes and unimplemented sections open 404', async ({
   page,
 }) => {
+  test.setTimeout(60000)
   await page.locator('[data-obelisk="art"]').click()
   await expect(page.locator('.temple-page')).toHaveAttribute(
     'data-settled',
@@ -392,5 +410,90 @@ test('focus freezes the head, keeps the background sharp and exits through blank
     await expect(root).toHaveAttribute('data-settled', 'true', {
       timeout: 10000,
     })
+  }
+})
+
+test('crystal pixels stay stable when the focus camera settles', async ({
+  page,
+}) => {
+  test.setTimeout(60000)
+  const stage = page.locator('.temple-stage')
+  await page.mouse.move(20, 150)
+  await page.waitForTimeout(1000)
+  // 只控制三维渲染时间，分别采样运镜结束前后；菜单与资源加载沿用浏览器原时钟。
+  await page.evaluate(() => {
+    const clock = { now: performance.now() }
+    ;(
+      window as typeof window & { templeFocusClock: typeof clock }
+    ).templeFocusClock = clock
+    const nativeFrame = requestAnimationFrame.bind(window)
+    performance.now = () => clock.now
+    window.requestAnimationFrame = (callback) =>
+      nativeFrame(() => callback(clock.now))
+  })
+  const advance = async (milliseconds: number) => {
+    await page.evaluate(async (ms) => {
+      ;(
+        window as typeof window & { templeFocusClock: { now: number } }
+      ).templeFocusClock.now += ms
+      await new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+      )
+    }, milliseconds)
+  }
+  const readColor = async (png: Buffer) =>
+    page.evaluate(async (base64) => {
+      const image = new Image()
+      image.src = `data:image/png;base64,${base64}`
+      await image.decode()
+      const canvas = document.createElement('canvas')
+      canvas.width = image.width
+      canvas.height = image.height
+      const context = canvas.getContext('2d', { willReadFrequently: true })!
+      context.drawImage(image, 0, 0)
+      const pixels = context.getImageData(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      ).data
+      const rgb = [0, 0, 0]
+      for (let index = 0; index < pixels.length; index += 4)
+        for (let channel = 0; channel < 3; channel++)
+          rgb[channel] += pixels[index + channel]
+      return rgb.map((value) => value / (pixels.length / 4))
+    }, png.toString('base64'))
+  for (const { id } of categories) {
+    const pillar = page.locator(`[data-obelisk="${id}"]`)
+    await pillar.evaluate((button) => (button as HTMLButtonElement).click())
+    await advance(1600)
+    const bounds = (await pillar.boundingBox())!
+    // 取晶体内部的小区域，排除背景星点、文字和菜单的淡入。
+    const clip = {
+      x: Math.round(bounds.x + bounds.width * 0.47),
+      y: Math.round(bounds.y + bounds.height * 0.1),
+      width: Math.max(8, Math.round(bounds.width * 0.07)),
+      height: Math.max(8, Math.round(bounds.height * 0.035)),
+    }
+    const before = await page.screenshot({ clip })
+    await advance(100)
+    await expect(page.locator('.temple-page')).toHaveAttribute(
+      'data-settled',
+      'true'
+    )
+    const after = await page.screenshot({ clip })
+    const startColor = await readColor(before)
+    const endColor = await readColor(after)
+    expect(
+      Math.max(
+        ...startColor.map((value, index) => Math.abs(value - endColor[index]))
+      )
+    ).toBeLessThan(3)
+    await pillar.evaluate((button) => (button as HTMLButtonElement).click())
+    await advance(1700)
+    await expect(stage).toHaveAttribute(
+      'data-visible-obelisks',
+      'art,creative,notes,otaku'
+    )
   }
 })

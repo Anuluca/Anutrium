@@ -232,6 +232,7 @@ watch(
   <PetTeaserLink
     v-if="shouldShowPetTeaser"
     :entry-active="entryAnimationReady"
+    :hide-at-top="route.path === '/about'"
   />
   <div
     class="footer-bottom-gradient"

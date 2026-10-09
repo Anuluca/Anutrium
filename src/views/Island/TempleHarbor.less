@@ -22,6 +22,46 @@
   min-height: 360px;
   overflow: hidden;
   color: #faf4f5;
+  --temple-menu-shade-direction: to left;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 99;
+    background: linear-gradient(
+      var(--temple-menu-shade-direction),
+      rgba(0, 0, 0, 0.94) 0%,
+      rgba(0, 0, 0, 0.82) 28%,
+      rgba(0, 0, 0, 0.38) 45%,
+      transparent 62%
+    );
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 350ms ease;
+  }
+
+  &:not([data-statue-focused='true']):has(
+      .temple-menu.is-visible:not(.temple-menu-reveal-enter-from):not(
+          .temple-menu-reveal-leave-to
+        )
+    )::after {
+    opacity: 1;
+  }
+
+  &:has(.temple-menu--left)::after {
+    --temple-menu-shade-direction: to right;
+  }
+
+  &[data-statue-focused='true'] {
+    :deep(.page-hero-title),
+    .temple-obelisks,
+    .temple-menu {
+      opacity: 0 !important;
+      visibility: hidden;
+      pointer-events: none;
+    }
+  }
 
   .temple-stage,
   .temple-obelisks {

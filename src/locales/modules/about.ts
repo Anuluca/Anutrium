@@ -26,6 +26,68 @@ const about = {
     zhCn: '未来更新',
     en: 'ROADMAP',
   },
+  crewTagLabel: {
+    zhCn: '制作人员',
+    en: 'CREDITS',
+  },
+  staff: {
+    roles: {
+      originalConcept: {
+        zhCn: '总导演',
+        en: 'GENERAL DIRECTOR',
+      },
+      creativeDirection: {
+        zhCn: '技术架构',
+        en: 'TECHNICAL ARCHITECTURE',
+      },
+      visualDesign: { zhCn: '视觉设计', en: 'VISUAL DESIGN' },
+      engineering: {
+        zhCn: 'WEB 开发',
+        en: 'WEB DEVELOPMENT',
+      },
+      motion: {
+        zhCn: '交互与动态设计',
+        en: 'INTERACTION & MOTION DESIGN',
+      },
+      photography: { zhCn: '摄影与创作', en: 'PHOTOGRAPHY & CREATION' },
+      editorial: {
+        zhCn: '文案与内容编辑',
+        en: 'WRITING & EDITORIAL',
+      },
+      maintenance: {
+        zhCn: '内容维护',
+        en: 'CONTENT MAINTENANCE',
+      },
+    },
+    ai: {
+      zhCn: '人工智能辅助开发',
+      en: 'AI DEVELOPMENT ASSISTANCE',
+    },
+    typefaces: {
+      zhCn: '字体设计鸣谢',
+      en: 'TYPEFACE CREDITS',
+    },
+    unbounded: { zhCn: '标小智无界黑', en: 'Unbounded Sans' },
+    alibaba: { zhCn: '阿里巴巴普惠体', en: 'Alibaba PuHuiTi' },
+    unboundedAuthors: {
+      zhCn: '无界黑项目作者与贡献者',
+      en: 'Unbounded Sans Project Authors',
+    },
+    alibabaAuthors: {
+      zhCn: '阿里巴巴 · 汉仪字库',
+      en: 'Alibaba · Hanyi Fonts',
+    },
+    models: {
+      zhCn: '三维模型资源鸣谢',
+      en: '3D MODEL CREDITS',
+    },
+    lucario: { zhCn: '路卡利欧', en: 'Lucario' },
+    modelSource: { zhCn: '三维模型来源', en: '3D Model Source' },
+    repository: { zhCn: '资源仓库', en: 'Repository' },
+    originalIP: { zhCn: '宝可梦原始知识产权', en: 'Original Pokémon IP' },
+    thanks: { zhCn: '特别鸣谢', en: 'SPECIAL THANKS' },
+    huahua: { zhCn: '花花', en: 'Huahua' },
+  },
   assetCredits: {
     title: { zhCn: '开源素材使用声明', en: '' },
     unbounded: {

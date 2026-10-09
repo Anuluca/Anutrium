@@ -59,6 +59,12 @@ test('entrance frames the statue before raising full-size pillars and enabling i
   }
   await page.goto('/island', { waitUntil: 'domcontentloaded' })
   const stage = page.locator('.temple-stage')
+  const hero = stage.locator('.page-hero-title')
+  const titleRise = () =>
+    hero.locator('h1').evaluate((element) => {
+      const matrix = new DOMMatrixReadOnly(getComputedStyle(element).transform)
+      return matrix.m42 / element.getBoundingClientRect().height
+    })
   await expect(stage).toHaveAttribute('data-entrance-phase', 'statue', {
     timeout: 20000,
   })
@@ -82,6 +88,8 @@ test('entrance frames the statue before raising full-size pillars and enabling i
     Math.abs(Number(await stage.getAttribute('data-shaft-base-gap')))
   ).toBeLessThan(0.0001)
   await expect(stage).toHaveAttribute('data-visible-obelisks', '')
+  await expect(stage).toHaveAttribute('data-statue-holy-light', '0.000')
+  expect(await titleRise()).toBeCloseTo(1, 2)
   await expect(stage).toHaveAttribute(
     'data-monument-y',
     '-7.500,-7.500,-7.500,-7.500'
@@ -124,8 +132,15 @@ test('entrance frames the statue before raising full-size pillars and enabling i
   expect(raisedTarget[0]).toBe(0)
   expect(raisedCamera[1]).toBeLessThan(Number(initialCamera!.split(',')[1]))
   await expect(stage).toHaveAttribute('data-visible-obelisks', '')
+  await expect(stage).toHaveAttribute('data-statue-holy-light', '0.000')
+  const earlyTitleRise = await titleRise()
+  expect(earlyTitleRise).toBeGreaterThan(0)
+  expect(earlyTitleRise).toBeLessThan(1)
   await advance(250 / entranceRate)
   await expect(stage).toHaveAttribute('data-visible-obelisks', 'creative,notes')
+  expect(
+    Number(await stage.getAttribute('data-statue-holy-light'))
+  ).toBeGreaterThan(0)
   expect(
     await stage.evaluate((el) => Number(getComputedStyle(el).opacity))
   ).toBeLessThan(1)
@@ -155,13 +170,26 @@ test('entrance frames the statue before raising full-size pillars and enabling i
     .map(Number)
   expect(heights.every((y) => y > -7.5 && y < 0)).toBe(true)
   expect(heights[1]).toBeGreaterThan(heights[0])
+  const middleHolyLight = Number(
+    await stage.getAttribute('data-statue-holy-light')
+  )
+  expect(middleHolyLight).toBeGreaterThan(0)
+  expect(middleHolyLight).toBeLessThan(1)
+  expect(await titleRise()).toBeLessThan(earlyTitleRise)
   expect(await headPitch()).toBeGreaterThan(initialPitch)
   await expect(page.locator('.temple-obelisk:disabled')).toHaveCount(4)
   await expect(stage).not.toHaveAttribute(
     'data-camera-position',
     initialCamera!
   )
-  await advance(2550 / entranceRate)
+  await advance(1500 / entranceRate)
+  await expect(stage).toHaveAttribute(
+    'data-monument-y',
+    '0.000,0.000,0.000,0.000'
+  )
+  await expect(stage).toHaveAttribute('data-statue-holy-light', '1.000')
+  expect(await titleRise()).toBeGreaterThan(0)
+  await advance(1050 / entranceRate)
   await expect(stage).toHaveAttribute('data-entrance-finished', 'false')
   await advance(50 / entranceRate)
   await expect(stage).toHaveAttribute('data-entrance-finished', 'true')
@@ -177,7 +205,9 @@ test('entrance frames the statue before raising full-size pillars and enabling i
     /^0\.0000,1\.0000,/
   )
   expect(await headPitch()).toBeCloseTo(initialPitch + 10, 2)
-  const hero = page.locator('.temple-stage .page-hero-title')
+  expect(await titleRise()).toBeCloseTo(0, 3)
+  await expect(hero.locator('h1')).toHaveCSS('opacity', '1')
+  await expect(stage).toHaveAttribute('data-statue-holy-light', '1.000')
   await expect(hero).toHaveClass(/is-static/)
   const geometry = await hero.evaluate((element) => {
     const stage = element.parentElement!
@@ -351,4 +381,6 @@ test('reduced motion opens the final scene immediately', async ({ page }) => {
     /^0\.0000,1\.0000,/
   )
   await expect(page.locator('.temple-obelisk:enabled')).toHaveCount(4)
+  await expect(stage).toHaveAttribute('data-statue-holy-light', '1.000')
+  await expect(stage.locator('.page-hero-title h1')).toHaveCSS('opacity', '1')
 })

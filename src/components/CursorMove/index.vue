@@ -9,7 +9,13 @@
     }"
   >
     <div class="cursor-scale" :class="{ 'is-clicked': isClicked }">
-      <div class="cursor-shape" :class="{ 'is-active': isHovering }" />
+      <div
+        class="cursor-shape"
+        :class="{
+          'is-active':
+            isHovering || (!shouldHideCursor && cursorStateStore.isInteractive),
+        }"
+      />
     </div>
   </div>
 </template>

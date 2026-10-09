@@ -1,7 +1,11 @@
 <script lang="ts" setup>
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { onClickOutside } from '@vueuse/core'
+import {
+  onClickOutside,
+  useElementBounding,
+  useResizeObserver,
+} from '@vueuse/core'
 
 import LinkFlowMark from '@/components/LinkFlowMark/index.vue'
 import LogoRotating3D from '@/components/Logo_rotating3D/index.vue'
@@ -29,20 +33,114 @@ interface NeighbourItem {
 }
 
 const { locale, t, tm } = useI18n()
-const activeAboutPanel = ref<'changelog' | 'roadmap' | null>(null)
+const crewRoles = [
+  'originalConcept',
+  'creativeDirection',
+  'visualDesign',
+  'engineering',
+  'motion',
+  'photography',
+  'editorial',
+  'maintenance',
+] as const
+const activeAboutPanel = ref<'changelog' | 'roadmap' | 'crew' | null>(null)
+const visibleAboutPanel = ref<'changelog' | 'roadmap' | 'crew' | null>(null)
+const panelLayout = ref<'changelog' | 'roadmap' | 'crew'>('changelog')
+const crewOpen = computed(() => activeAboutPanel.value === 'crew')
+const passionRef = ref<HTMLElement | null>(null)
+const crewTriggerRef = ref<HTMLElement | null>(null)
+const panelDockRef = ref<HTMLElement | null>(null)
+const heroShellRef = ref<HTMLElement | null>(null)
+const panelAnchorStyle = ref<Record<string, string>>({})
+const { width: panelLayoutWidth, update: updatePanelBounds } =
+  useElementBounding(panelDockRef)
+const { top: passionTop } = useElementBounding(passionRef)
+const { top: crewTriggerTop } = useElementBounding(crewTriggerRef)
+// 保留入口上方的定位，以 passion 区域为基础额外增高约 80px。
+const crewBodyHeight = computed(() =>
+  Math.max(0, crewTriggerTop.value - 16 - passionTop.value - 8 - 28 + 80)
+)
 const aboutPanelRef = ref<HTMLElement | null>(null)
 const aboutTriggersRef = ref<HTMLElement | null>(null)
+let panelLeaving = false
+
+const positionPanelDock = () => {
+  const shell = heroShellRef.value?.getBoundingClientRect()
+  const trigger =
+    panelLayout.value === 'crew'
+      ? crewTriggerRef.value
+      : aboutTriggersRef.value?.querySelector<HTMLElement>(
+          `[aria-controls="about-${panelLayout.value}-panel"]`
+        )
+  if (!shell || !trigger) return
+  const rect = trigger.getBoundingClientRect()
+  panelAnchorStyle.value = {
+    left: panelLayout.value === 'crew' ? 'auto' : `${rect.left - shell.left}px`,
+    right:
+      panelLayout.value === 'crew' ? `${shell.right - rect.right}px` : 'auto',
+    bottom: `${shell.bottom - rect.bottom}px`,
+    height: `${rect.height}px`,
+    width: `${
+      panelLayout.value === 'crew'
+        ? shell.width / 3
+        : Math.min(700, shell.right - rect.left - 8)
+    }px`,
+  }
+}
+
+useResizeObserver(
+  [heroShellRef, aboutTriggersRef, crewTriggerRef],
+  positionPanelDock
+)
+
+const showRequestedPanel = async () => {
+  const panel = activeAboutPanel.value
+  if (!panel) return
+  panelLayout.value = panel
+  await nextTick()
+  if (activeAboutPanel.value !== panel) return
+  positionPanelDock()
+  await nextTick()
+  if (activeAboutPanel.value !== panel) return
+  updatePanelBounds()
+  visibleAboutPanel.value = panel
+}
+
+// 离场结束前保留旧窗口的定位和尺寸，再布置新窗口并触发入场。
+watch(activeAboutPanel, () => {
+  if (panelLeaving) return
+  if (visibleAboutPanel.value) {
+    panelLeaving = true
+    visibleAboutPanel.value = null
+  } else {
+    void showRequestedPanel()
+  }
+})
+
+const finishPanelLeave = () => {
+  panelLeaving = false
+  void showRequestedPanel()
+}
+
+const preparePanelLeave = (element: Element) => {
+  if (activeAboutPanel.value)
+    element.classList.add('about-program-instant-leave')
+}
 
 onClickOutside(
   aboutPanelRef,
   () => {
     activeAboutPanel.value = null
   },
-  { ignore: [aboutTriggersRef] }
+  { ignore: [aboutTriggersRef, crewTriggerRef] }
 )
 
 const toggleAboutPanel = (panel: 'changelog' | 'roadmap') => {
   activeAboutPanel.value = activeAboutPanel.value === panel ? null : panel
+}
+
+const toggleCrew = () => {
+  activeAboutPanel.value = crewOpen.value ? null : 'crew'
 }
 
 const getNeighborHost = (url: string) => {
@@ -123,11 +221,16 @@ const roadmapItems = computed<string[]>(() => {
 
 <template>
   <div class="about-page main-container">
-    <div class="about-hero-shell">
+    <div
+      ref="heroShellRef"
+      class="about-hero-shell"
+      :class="{ 'is-crew-open': crewOpen }"
+    >
       <section class="about-hero-section">
         <PageHeroTitle />
 
         <section
+          ref="passionRef"
           class="passion-section no-cursor"
           :aria-label="t('about.brandColorName')"
           @mouseenter="showPassionCrosshair"
@@ -168,105 +271,229 @@ const roadmapItems = computed<string[]>(() => {
         </section>
       </section>
 
-      <div class="about-update-dock no-rem">
-        <section
-          v-if="activeAboutPanel"
-          :key="activeAboutPanel"
-          ref="aboutPanelRef"
-          class="about-update-dock__panel"
-          :aria-label="
-            t(
-              activeAboutPanel === 'changelog'
-                ? 'about.changelogTagLabel'
-                : 'about.roadmapTagLabel'
-            )
-          "
-          @keydown.esc.stop="activeAboutPanel = null"
+      <div
+        ref="panelDockRef"
+        class="about-update-dock about-panel-dock no-rem"
+        :class="{ 'is-crew-panel': panelLayout === 'crew' }"
+        :style="{
+          ...panelAnchorStyle,
+          '--program-layout-width': `${panelLayoutWidth}px`,
+          ...(panelLayout === 'crew'
+            ? { '--program-open-height': `${crewBodyHeight}px` }
+            : {}),
+        }"
+      >
+        <Transition
+          name="about-program"
+          mode="out-in"
+          @before-leave="preparePanelLeave"
+          @after-leave="finishPanelLeave"
         >
-          <header class="update-program__bar">
-            <button
-              class="update-program__collapse"
-              type="button"
-              :aria-label="locale === 'en' ? 'Close updates' : '收起更新'"
-              @click="activeAboutPanel = null"
-            >
-              <span aria-hidden="true">×</span>
-            </button>
-            <span class="update-program__path">
-              C:\{{
-                activeAboutPanel === 'changelog' ? 'CHANGELOG' : 'ROADMAP'
-              }}.PROGRAM
-            </span>
-          </header>
+          <section
+            v-if="visibleAboutPanel"
+            :key="visibleAboutPanel"
+            ref="aboutPanelRef"
+            class="about-update-dock__panel"
+            :aria-label="
+              t(
+                visibleAboutPanel === 'changelog'
+                  ? 'about.changelogTagLabel'
+                  : visibleAboutPanel === 'roadmap'
+                  ? 'about.roadmapTagLabel'
+                  : 'about.crewTagLabel'
+              )
+            "
+            @keydown.esc.stop="activeAboutPanel = null"
+          >
+            <header class="update-program__bar">
+              <button
+                class="update-program__collapse"
+                type="button"
+                :aria-label="locale === 'en' ? 'Close updates' : '收起更新'"
+                @click="activeAboutPanel = null"
+              >
+                <span aria-hidden="true">×</span>
+              </button>
+              <span class="update-program__path">
+                C:\{{
+                  visibleAboutPanel === 'changelog'
+                    ? 'CHANGELOG'
+                    : visibleAboutPanel === 'roadmap'
+                    ? 'ROADMAP'
+                    : 'CREDITS'
+                }}
+              </span>
+            </header>
 
-          <div class="update-program__body" data-lenis-nested-scroll>
-            <div class="update-program__body-content">
+            <div class="update-program__body">
               <div
-                v-if="activeAboutPanel === 'changelog'"
-                id="about-changelog-panel"
-                class="update-program__entries"
+                class="update-program__body-content"
+                data-lenis-nested-scroll
               >
-                <section
-                  v-for="log in changelogs"
-                  :key="log.version"
-                  class="update-program__entry"
+                <div
+                  v-if="visibleAboutPanel === 'changelog'"
+                  id="about-changelog-panel"
+                  class="update-program__entries"
                 >
-                  <div class="update-program__meta">
-                    <strong>{{ log.version }}</strong>
-                    <span v-if="log.codename">{{ log.codename }}</span>
-                    <time :datetime="log.date">{{ log.date }}</time>
-                  </div>
-                  <h3>{{ log.title }}</h3>
-                  <ul class="update-program__details">
-                    <li
-                      v-for="(item, detailIndex) in log.details"
-                      :key="detailIndex"
-                    >
-                      <span class="update-program__bullet" aria-hidden="true"
-                        >›</span
+                  <section
+                    v-for="log in changelogs"
+                    :key="log.version"
+                    class="update-program__entry"
+                  >
+                    <div class="update-program__meta">
+                      <strong>{{ log.version }}</strong>
+                      <span v-if="log.codename">{{ log.codename }}</span>
+                      <time :datetime="log.date">{{ log.date }}</time>
+                    </div>
+                    <h3>{{ log.title }}</h3>
+                    <ul class="update-program__details">
+                      <li
+                        v-for="(item, detailIndex) in log.details"
+                        :key="detailIndex"
                       >
-                      <span>
-                        <span
-                          v-for="(segment, segmentIndex) in parseMarkedText(
-                            item
-                          )"
-                          :key="segmentIndex"
-                          :class="{
-                            'update-program__highlight': segment.highlighted,
-                          }"
-                          >{{ segment.text }}</span
+                        <span class="update-program__bullet" aria-hidden="true"
+                          >›</span
                         >
-                      </span>
-                    </li>
-                  </ul>
-                </section>
-              </div>
-              <div
-                v-else
-                id="about-roadmap-panel"
-                class="update-program__entries"
-              >
-                <section
-                  v-for="item in roadmapItems"
-                  :key="item"
-                  class="update-program__entry update-program__entry--roadmap"
+                        <span>
+                          <span
+                            v-for="(segment, segmentIndex) in parseMarkedText(
+                              item
+                            )"
+                            :key="segmentIndex"
+                            :class="{
+                              'update-program__highlight': segment.highlighted,
+                            }"
+                            >{{ segment.text }}</span
+                          >
+                        </span>
+                      </li>
+                    </ul>
+                  </section>
+                </div>
+                <div
+                  v-else-if="visibleAboutPanel === 'roadmap'"
+                  id="about-roadmap-panel"
+                  class="update-program__entries"
                 >
-                  <h3>
-                    <span
-                      v-for="(segment, segmentIndex) in parseMarkedText(item)"
-                      :key="segmentIndex"
-                      :class="{
-                        'update-program__highlight': segment.highlighted,
-                      }"
-                      >{{ segment.text }}</span
+                  <section
+                    v-for="item in roadmapItems"
+                    :key="item"
+                    class="update-program__entry update-program__entry--roadmap"
+                  >
+                    <h3>
+                      <span
+                        v-for="(segment, segmentIndex) in parseMarkedText(item)"
+                        :key="segmentIndex"
+                        :class="{
+                          'update-program__highlight': segment.highlighted,
+                        }"
+                        >{{ segment.text }}</span
+                      >
+                    </h3>
+                  </section>
+                </div>
+                <div v-else id="about-crew-content" class="staff-credits">
+                  <header class="staff-credits__intro">
+                    <h2>STAFF &amp; CREDITS</h2>
+                  </header>
+                  <div class="staff-credits__group">
+                    <section
+                      v-for="role in crewRoles"
+                      :key="role"
+                      class="staff-credits__role"
                     >
-                  </h3>
-                </section>
+                      <h3>{{ t(`about.staff.roles.${role}`) }}</h3>
+                      <p>Anuluca</p>
+                    </section>
+                  </div>
+                  <section class="staff-credits__group">
+                    <h3>{{ t('about.staff.ai') }}</h3>
+                    <p>OpenAI Codex</p>
+                  </section>
+                  <section class="staff-credits__group">
+                    <h3>{{ t('about.staff.typefaces') }}</h3>
+                    <div class="staff-credits__font-list">
+                      <p class="staff-credits__font-entry">
+                        <strong class="staff-credits__typeface">{{
+                          t('about.staff.unbounded')
+                        }}</strong>
+                        <a
+                          class="staff-credits__author"
+                          href="https://github.com/maoken-fonts/unbounded-sans#致谢-acknowledgement"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          >{{ t('about.staff.unboundedAuthors') }}</a
+                        >
+                      </p>
+                      <p class="staff-credits__font-entry">
+                        <strong
+                          class="staff-credits__typeface staff-credits__typeface--anton"
+                          >Anton</strong
+                        >
+                        <a
+                          class="staff-credits__author"
+                          href="https://fonts.google.com/specimen/Anton"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          >Vernon Adams</a
+                        >
+                      </p>
+                      <p class="staff-credits__font-entry">
+                        <strong
+                          class="staff-credits__typeface staff-credits__typeface--alibaba"
+                          >{{ t('about.staff.alibaba') }}</strong
+                        >
+                        <a
+                          class="staff-credits__author"
+                          href="https://www.hanyi.com.cn/weixin/h5/customizedfont/aliBaBa.php"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          >{{ t('about.staff.alibabaAuthors') }}</a
+                        >
+                      </p>
+                    </div>
+                  </section>
+                  <section class="staff-credits__group">
+                    <h3>{{ t('about.staff.models') }}</h3>
+                    <p class="staff-credits__model-details">
+                      <strong class="staff-credits__model-name">{{
+                        t('about.staff.lucario')
+                      }}</strong
+                      ><br />{{ t('about.staff.modelSource') }}: Pokémon 3D
+                      API<br />{{ t('about.staff.repository') }}:
+                      <a
+                        href="https://github.com/Pokemon-3D-api/assets"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        >Pokemon-3D-api/assets</a
+                      >
+                    </p>
+                    <p class="staff-credits__model-details">
+                      {{ t('about.staff.originalIP') }}:<br />Nintendo ·
+                      Creatures Inc. · GAME FREAK inc.
+                    </p>
+                  </section>
+                  <section class="staff-credits__group">
+                    <h3>{{ t('about.staff.thanks') }}</h3>
+                    <p>{{ t('about.staff.huahua') }}</p>
+                    <p class="staff-credits__audience">
+                      <span class="staff-credits__audience-text">AND YOU</span>
+                      <span class="staff-credits__bloom" aria-hidden="true"
+                        >AND YOU</span
+                      >
+                      <span class="staff-credits__bloom" aria-hidden="true"
+                        >AND YOU</span
+                      >
+                    </p>
+                  </section>
+                  <p class="staff-credits__closing">DRIVEN BY PASSION.</p>
+                </div>
               </div>
             </div>
-          </div>
-        </section>
-
+          </section>
+        </Transition>
+      </div>
+      <div class="about-update-dock no-rem">
         <div ref="aboutTriggersRef" class="about-update-dock__triggers">
           <button
             class="about-update-trigger"
@@ -276,7 +503,7 @@ const roadmapItems = computed<string[]>(() => {
             :aria-expanded="activeAboutPanel === 'changelog'"
             @click="toggleAboutPanel('changelog')"
           >
-            <span>&lt;{{ t('about.changelogTagLabel') }}/&gt;</span>
+            <span>&lt; {{ t('about.changelogTagLabel') }} /&gt;</span>
           </button>
           <button
             class="about-update-trigger"
@@ -286,10 +513,21 @@ const roadmapItems = computed<string[]>(() => {
             :aria-expanded="activeAboutPanel === 'roadmap'"
             @click="toggleAboutPanel('roadmap')"
           >
-            <span>&lt;{{ t('about.roadmapTagLabel') }}/&gt;</span>
+            <span>&lt; {{ t('about.roadmapTagLabel') }} /&gt;</span>
           </button>
         </div>
       </div>
+      <button
+        ref="crewTriggerRef"
+        class="about-crew-trigger no-rem"
+        :class="{ 'is-active': crewOpen }"
+        type="button"
+        aria-controls="about-crew-content"
+        :aria-expanded="crewOpen"
+        @click="toggleCrew"
+      >
+        <span>&lt; {{ t('about.crewTagLabel') }} /&gt;</span>
+      </button>
     </div>
 
     <section id="about-neighbors" class="block neighbors-block">

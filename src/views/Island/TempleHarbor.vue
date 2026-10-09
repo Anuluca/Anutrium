@@ -14,11 +14,12 @@ import LoadingPercentage from '@/components/LoadingPercentage/index.vue'
 import PageHeroTitle from '@/components/PageHeroTitle/index.vue'
 import { setSmoothScrollLocked } from '@/utils/smoothScroll'
 
+import type { TempleSelection } from './islandTempleScene'
 import { templeCategories, type TempleCategoryId } from './templeCategories'
 
 const stage = ref<HTMLElement | null>(null)
 const status = ref<'loading' | 'ready' | 'error'>('loading')
-const selected = ref<TempleCategoryId | null>(null)
+const selected = ref<TempleSelection | null>(null)
 const menuCategory = ref<TempleCategoryId | null>(null)
 const settled = ref(false)
 const preparationProgress = ref<number | null>(0)
@@ -47,7 +48,7 @@ const category = computed(() =>
 )
 const buttons = new Map<string, HTMLElement>()
 let scene:
-  | { select: (id: TempleCategoryId | null) => void; dispose: () => void }
+  | { select: (id: TempleSelection | null) => void; dispose: () => void }
   | undefined
 let disposed = false
 const routeEntryActive = inject<Ref<boolean>>('route-entry-active', ref(false))
@@ -123,9 +124,10 @@ onMounted(async () => {
       select: (id) => {
         selected.value = id
         settled.value = false
+        if (id === 'statue') menuCategory.value = null
       },
       settled: () => {
-        menuCategory.value = selected.value
+        menuCategory.value = selected.value === 'statue' ? null : selected.value
         settled.value = true
       },
       error: (error) => {
@@ -162,6 +164,7 @@ onUnmounted(() => {
     data-route-shell="island-pc"
     aria-label="个人海湾"
     :data-selected="selected || 'none'"
+    :data-statue-focused="selected === 'statue'"
     :data-settled="settled"
   >
     <div
