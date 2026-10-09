@@ -51,8 +51,8 @@ const island = {
       },
       merchPhotos: {
         title: {
-          zhCn: '周边摄影',
-          en: 'MERCH PHOTOGRAPHY',
+          zhCn: '收藏品',
+          en: 'COLLECTIBLES',
         },
         tagline: {
           zhCn: '现在不怎么买了。',

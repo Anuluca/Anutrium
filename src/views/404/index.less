@@ -19,18 +19,29 @@
       position: absolute;
       top: 0;
       right: 0;
-      width: 512px;
-      height: 478px;
+      width: 394px;
+      height: 369px;
       opacity: 0;
-      background-size: cover;
-      background-image: url('https://assets.anuluca.com/other/porygon.png');
-      transition: width 1s ease, height 1s ease, opacity 2s ease;
+      color: var(--text-color);
+      transform: scale(2.2);
+      transform-origin: top right;
+      transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
+
+      svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      .porygon__draw-mask > * {
+        stroke-dashoffset: var(--draw-length);
+      }
     }
 
     .show-text {
       position: absolute;
       bottom: 0;
-      left: 0;
+      left: 40px;
       font-family: 'UnboundedSans';
 
       p {
@@ -76,9 +87,12 @@
 
   &.is-entered {
     .porygon {
-      width: 394px;
-      height: 369px;
       opacity: 1;
+      transform: scale(1);
+
+      .porygon__draw-mask > * {
+        animation: porygonDraw 0.9s ease-in-out var(--draw-delay) both;
+      }
     }
 
     .show-text p.last-show-text {
@@ -110,13 +124,29 @@
           }
         }
 
-        &:nth-child(2) {
-          font-size: 15px !important;
-          line-height: 14px !important;
-          margin-top: -10px;
-        }
       }
     }
+  }
+}
+
+@keyframes porygonDraw {
+  from {
+    stroke-dashoffset: var(--draw-length);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .not-found-page .porygon {
+    transform: none;
+    transition: none;
+  }
+
+  .not-found-page.is-entered .porygon .porygon__draw-mask > * {
+    animation: none;
+    stroke-dashoffset: 0;
   }
 }
 

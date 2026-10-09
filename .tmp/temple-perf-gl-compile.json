@@ -1,0 +1,58 @@
+[
+  {
+    "method": "getProgramInfoLog",
+    "duration": 5.700000047683716
+  },
+  {
+    "method": "getProgramInfoLog",
+    "duration": 7.899999976158142
+  },
+  {
+    "method": "getProgramInfoLog",
+    "duration": 7.5
+  },
+  {
+    "method": "getShaderInfoLog",
+    "duration": 1.8000000715255737
+  },
+  {
+    "method": "getProgramInfoLog",
+    "duration": 6.700000047683716
+  },
+  {
+    "method": "getShaderInfoLog",
+    "duration": 1.6999999284744263
+  },
+  {
+    "method": "getProgramInfoLog",
+    "duration": 6.700000047683716
+  },
+  {
+    "method": "getProgramInfoLog",
+    "duration": 1.2000000476837158
+  },
+  {
+    "method": "getProgramInfoLog",
+    "duration": 1.0999999046325684
+  },
+  {
+    "method": "getProgramInfoLog",
+    "duration": 5.200000047683716
+  },
+  {
+    "method": "getProgramInfoLog",
+    "duration": 5.5
+  },
+  {
+    "method": "getProgramInfoLog",
+    "duration": 5.800000071525574
+  },
+  {
+    "method": "getProgramInfoLog",
+    "duration": 5.899999976158142
+  },
+  {
+    "method": "getProgramInfoLog",
+    "duration": 1.7000000476837158
+  }
+]

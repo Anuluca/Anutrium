@@ -1,0 +1,4219 @@
+[
+  {
+    "label": "default-pointer",
+    "duration": 1845.1000000238419,
+    "rafCount": 230,
+    "p50Gap": 6.299999952316284,
+    "p95Gap": 6.800000071525574,
+    "maxGap": 144.10000002384186,
+    "draws": 6864,
+    "records": [
+      {
+        "phase": "default-pointer",
+        "time": 40782.800000071526,
+        "cpuMs": 1.5,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 40797.800000071526,
+        "cpuMs": 1,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 40943.300000071526,
+        "cpuMs": 0.7999999523162842,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 40960.200000047684,
+        "cpuMs": 0.8999999761581421,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 40978.60000002384,
+        "cpuMs": 0.7000000476837158,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41095.700000047684,
+        "cpuMs": 1,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41185.800000071526,
+        "cpuMs": 0.9000000953674316,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41203.800000071526,
+        "cpuMs": 0.7000000476837158,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41222.700000047684,
+        "cpuMs": 0.8000000715255737,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41240.700000047684,
+        "cpuMs": 0.8000000715255737,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41260.10000002384,
+        "cpuMs": 0.7000000476837158,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41278.300000071526,
+        "cpuMs": 0.6000000238418579,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41297.39999997616,
+        "cpuMs": 0.6999999284744263,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41316.300000071526,
+        "cpuMs": 0.7000000476837158,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41335.200000047684,
+        "cpuMs": 0.8000000715255737,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41354,
+        "cpuMs": 0.7999999523162842,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41372.5,
+        "cpuMs": 0.8999999761581421,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41391.5,
+        "cpuMs": 0.7999999523162842,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41410.5,
+        "cpuMs": 0.8999999761581421,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41428.89999997616,
+        "cpuMs": 0.5999999046325684,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41447.700000047684,
+        "cpuMs": 0.7000000476837158,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41466.39999997616,
+        "cpuMs": 0.7999999523162842,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41485.300000071526,
+        "cpuMs": 0.8000000715255737,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41504.300000071526,
+        "cpuMs": 1.2000000476837158,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41523.800000071526,
+        "cpuMs": 1.600000023841858,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41542.700000047684,
+        "cpuMs": 1.5,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41561.300000071526,
+        "cpuMs": 1.4000000953674316,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41580.5,
+        "cpuMs": 1.600000023841858,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41597.800000071526,
+        "cpuMs": 0.7000000476837158,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41617.700000047684,
+        "cpuMs": 1.399999976158142,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41635.800000071526,
+        "cpuMs": 1,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41655.200000047684,
+        "cpuMs": 1.7000000476837158,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41674.39999997616,
+        "cpuMs": 1.899999976158142,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41693,
+        "cpuMs": 1.6999999284744263,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41710.60000002384,
+        "cpuMs": 0.8999999761581421,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41729.10000002384,
+        "cpuMs": 0.7999999523162842,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41747.89999997616,
+        "cpuMs": 0.8999999761581421,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41767.10000002384,
+        "cpuMs": 1.2000000476837158,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41785.700000047684,
+        "cpuMs": 1.100000023841858,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41804.300000071526,
+        "cpuMs": 0.8000000715255737,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41823.5,
+        "cpuMs": 1.1999999284744263,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41842,
+        "cpuMs": 1,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41860.300000071526,
+        "cpuMs": 0.8000000715255737,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41879.39999997616,
+        "cpuMs": 0.8999999761581421,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41898,
+        "cpuMs": 1.100000023841858,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41916.5,
+        "cpuMs": 0.7999999523162842,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41935.300000071526,
+        "cpuMs": 0.8000000715255737,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41954.10000002384,
+        "cpuMs": 0.8999999761581421,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41973.300000071526,
+        "cpuMs": 1.2000000476837158,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 41990.700000047684,
+        "cpuMs": 0.7000000476837158,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 42010.10000002384,
+        "cpuMs": 0.7000000476837158,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 42028.89999997616,
+        "cpuMs": 0.5999999046325684,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 42048.10000002384,
+        "cpuMs": 1.2000000476837158,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 42066.700000047684,
+        "cpuMs": 1,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 42086.300000071526,
+        "cpuMs": 1.3000000715255737,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 42105,
+        "cpuMs": 1.600000023841858,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 42123.300000071526,
+        "cpuMs": 1.3000000715255737,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 42140.60000002384,
+        "cpuMs": 0.7000000476837158,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 42160.39999997616,
+        "cpuMs": 0.7999999523162842,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 42180.200000047684,
+        "cpuMs": 1.600000023841858,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 42198.10000002384,
+        "cpuMs": 0.8999999761581421,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 42217.89999997616,
+        "cpuMs": 1.899999976158142,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 42235.200000047684,
+        "cpuMs": 0.8999999761581421,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 42254.5,
+        "cpuMs": 0.7999999523162842,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 42273.10000002384,
+        "cpuMs": 0.6000000238418579,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 42291.60000002384,
+        "cpuMs": 0.7999999523162842,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 42311,
+        "cpuMs": 1.1999999284744263,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 42329,
+        "cpuMs": 0.6000000238418579,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 42347.60000002384,
+        "cpuMs": 0.6000000238418579,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 42367.200000047684,
+        "cpuMs": 1.100000023841858,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 42385.60000002384,
+        "cpuMs": 0.8999999761581421,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 42404.10000002384,
+        "cpuMs": 0.8999999761581421,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 42422.700000047684,
+        "cpuMs": 0.7000000476837158,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 42442,
+        "cpuMs": 1.399999976158142,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 42461.39999997616,
+        "cpuMs": 1.2999999523162842,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 42480.200000047684,
+        "cpuMs": 1.3000000715255737,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 42499.200000047684,
+        "cpuMs": 1.600000023841858,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "default-pointer",
+        "time": 42516.800000071526,
+        "cpuMs": 0.8000000715255737,
+        "draws": 88,
+        "programs": 22,
+        "selected": null,
+        "blur": 0
+      }
+    ],
+    "longTasks": [],
+    "gpu": [
+      {
+        "phase": "default-pointer",
+        "gpuMs": 5.504874
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 2.531958
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 8.61625
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.655166
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.961541
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 3.255374
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.734166
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.538999
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.528125
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.454124
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.705
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.485166
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.484041
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.506625
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.50925
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.516541
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.599624
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.57775
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.694249
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 2.079749
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.921708
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 2.21325
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.871374
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.961416
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.918875
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 4.639124
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.69075
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.705124
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 2.149124
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 2.714124
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 2.189958
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.9315
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 2.221291
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 2.182625
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 2.862749
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 2.135875
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.887999
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.991208
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.950291
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.940874
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.731999
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.751124
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.639583
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.53775
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.587125
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.517875
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.543249
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.546666
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.875291
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.659499
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.698874
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 2.811499
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.970583
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 2.206041
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.894541
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 4.676541
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.981166
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 2.006708
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.859041
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 2.072458
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 3.263625
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 4.662499
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.911708
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 3.024125
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.908499
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.5335
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.55575
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.53975
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.455583
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.455125
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.422791
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.414208
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.454125
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.420749
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.614291
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.51025
+      },
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.635291
+      }
+    ],
+    "mainThread": {
+      "LayoutCount": 1,
+      "RecalcStyleCount": 232,
+      "LayoutDuration": 0.000094,
+      "RecalcStyleDuration": 0.030324,
+      "ScriptDuration": 0.13706,
+      "TaskDuration": 0.289548
+    }
+  },
+  {
+    "label": "first-focus",
+    "duration": 2203.2000000476837,
+    "rafCount": 122,
+    "p50Gap": 6.200000047683716,
+    "p95Gap": 7.899999976158142,
+    "maxGap": 1356.2999999523163,
+    "draws": 1350,
+    "records": [
+      {
+        "phase": "first-focus",
+        "time": 42629.300000071526,
+        "cpuMs": 0.8000000715255737,
+        "draws": 88,
+        "programs": 22,
+        "selected": "creative",
+        "blur": 0.000001
+      },
+      {
+        "phase": "first-focus",
+        "time": 42648.200000047684,
+        "cpuMs": 0.8000000715255737,
+        "draws": 88,
+        "programs": 22,
+        "selected": "creative",
+        "blur": 0.000038
+      },
+      {
+        "phase": "first-focus",
+        "time": 42666.300000071526,
+        "cpuMs": 0.6000000238418579,
+        "draws": 88,
+        "programs": 22,
+        "selected": "creative",
+        "blur": 0.000176
+      },
+      {
+        "phase": "first-focus",
+        "time": 42685.10000002384,
+        "cpuMs": 0.6000000238418579,
+        "draws": 88,
+        "programs": 22,
+        "selected": "creative",
+        "blur": 0.000486
+      },
+      {
+        "phase": "first-focus",
+        "time": 44051.39999997616,
+        "cpuMs": 1348.1999999284744,
+        "draws": 89,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.001038
+      },
+      {
+        "phase": "first-focus",
+        "time": 44055.200000047684,
+        "cpuMs": 0.8999999761581421,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "first-focus",
+        "time": 44081.700000047684,
+        "cpuMs": 0.8000000715255737,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "first-focus",
+        "time": 44181.300000071526,
+        "cpuMs": 0.6000000238418579,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "first-focus",
+        "time": 44197.89999997616,
+        "cpuMs": 0.6999999284744263,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "first-focus",
+        "time": 44216.800000071526,
+        "cpuMs": 0.7000000476837158,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "first-focus",
+        "time": 44235.5,
+        "cpuMs": 0.7999999523162842,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "first-focus",
+        "time": 44254.39999997616,
+        "cpuMs": 0.6999999284744263,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "first-focus",
+        "time": 44273,
+        "cpuMs": 0.6999999284744263,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "first-focus",
+        "time": 44291.800000071526,
+        "cpuMs": 0.8000000715255737,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      }
+    ],
+    "longTasks": [
+      {
+        "start": 42703,
+        "duration": 1350
+      }
+    ],
+    "gpu": [
+      {
+        "phase": "default-pointer",
+        "gpuMs": 1.870124
+      },
+      {
+        "phase": "first-focus",
+        "gpuMs": 1.537083
+      },
+      {
+        "phase": "first-focus",
+        "gpuMs": 1.7315
+      },
+      {
+        "phase": "first-focus",
+        "gpuMs": 2.278125
+      },
+      {
+        "phase": "first-focus",
+        "gpuMs": 1.866625
+      },
+      {
+        "phase": "first-focus",
+        "gpuMs": 6.58875
+      },
+      {
+        "phase": "first-focus",
+        "gpuMs": 2.964291
+      },
+      {
+        "phase": "first-focus",
+        "gpuMs": 4.395333
+      },
+      {
+        "phase": "first-focus",
+        "gpuMs": 9.404333
+      },
+      {
+        "phase": "first-focus",
+        "gpuMs": 2.322249
+      },
+      {
+        "phase": "first-focus",
+        "gpuMs": 2.270041
+      },
+      {
+        "phase": "first-focus",
+        "gpuMs": 2.456458
+      },
+      {
+        "phase": "first-focus",
+        "gpuMs": 2.252249
+      },
+      {
+        "phase": "first-focus",
+        "gpuMs": 2.660583
+      },
+      {
+        "phase": "first-focus",
+        "gpuMs": 5.633041
+      }
+    ],
+    "mainThread": {
+      "LayoutCount": 12,
+      "RecalcStyleCount": 138,
+      "LayoutDuration": 0.0011500000000000002,
+      "RecalcStyleDuration": 0.018618,
+      "ScriptDuration": 1.372536,
+      "TaskDuration": 1.443911
+    }
+  },
+  {
+    "label": "focused-idle",
+    "duration": 1801.8999999761581,
+    "rafCount": 268,
+    "p50Gap": 6.200000047683716,
+    "p95Gap": 6.800000071525574,
+    "maxGap": 139.20000004768372,
+    "draws": 0,
+    "records": [],
+    "longTasks": [],
+    "gpu": [],
+    "mainThread": {
+      "LayoutCount": 4,
+      "RecalcStyleCount": 268,
+      "LayoutDuration": 0.007929,
+      "RecalcStyleDuration": 0.02174600000000001,
+      "ScriptDuration": 0.010357999999999867,
+      "TaskDuration": 0.13496400000000008
+    }
+  },
+  {
+    "label": "focused-pointer-blank",
+    "duration": 1803.0999999046326,
+    "rafCount": 289,
+    "p50Gap": 6.200000047683716,
+    "p95Gap": 8.199999928474426,
+    "maxGap": 9.300000071525574,
+    "draws": 5757,
+    "records": [
+      {
+        "phase": "focused-pointer-blank",
+        "time": 46744.39999997616,
+        "cpuMs": 2.399999976158142,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 46761.200000047684,
+        "cpuMs": 1,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 46780.10000002384,
+        "cpuMs": 1.100000023841858,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 46799,
+        "cpuMs": 1.600000023841858,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 46817.700000047684,
+        "cpuMs": 1,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 46835.700000047684,
+        "cpuMs": 1.100000023841858,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 46854.39999997616,
+        "cpuMs": 1.0999999046325684,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 46873.39999997616,
+        "cpuMs": 0.7999999523162842,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 46893.300000071526,
+        "cpuMs": 1.5,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 46912.10000002384,
+        "cpuMs": 1.399999976158142,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 46930.89999997616,
+        "cpuMs": 1.5999999046325684,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 46949.89999997616,
+        "cpuMs": 1.5999999046325684,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 46968.5,
+        "cpuMs": 1.5,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 46987.5,
+        "cpuMs": 1.899999976158142,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 47006.39999997616,
+        "cpuMs": 2,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 47024.89999997616,
+        "cpuMs": 1.6999999284744263,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 47042.89999997616,
+        "cpuMs": 1.5999999046325684,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 47062.39999997616,
+        "cpuMs": 1.6999999284744263,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 47080.800000071526,
+        "cpuMs": 1.4000000953674316,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 47100,
+        "cpuMs": 1.7999999523162842,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 47117.200000047684,
+        "cpuMs": 0.7000000476837158,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 47135.800000071526,
+        "cpuMs": 0.6000000238418579,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 47154.5,
+        "cpuMs": 0.6000000238418579,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 47173.10000002384,
+        "cpuMs": 0.5,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 47192.10000002384,
+        "cpuMs": 0.7999999523162842,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 47229.800000071526,
+        "cpuMs": 0.8000000715255737,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 47248.800000071526,
+        "cpuMs": 1,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 47267.39999997616,
+        "cpuMs": 0.8999999761581421,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 47286.200000047684,
+        "cpuMs": 0.8999999761581421,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 47305,
+        "cpuMs": 0.8999999761581421,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 47323.200000047684,
+        "cpuMs": 0.6000000238418579,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 47342.39999997616,
+        "cpuMs": 0.6999999284744263,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 47360.800000071526,
+        "cpuMs": 0.5,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 47380.60000002384,
+        "cpuMs": 1.399999976158142,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 47399.200000047684,
+        "cpuMs": 1.3000000715255737,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 47418.10000002384,
+        "cpuMs": 1.399999976158142,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 47437,
+        "cpuMs": 1.600000023841858,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 47456,
+        "cpuMs": 1.7999999523162842,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 47474.800000071526,
+        "cpuMs": 1.8000000715255737,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 47493.60000002384,
+        "cpuMs": 1.899999976158142,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 47512.10000002384,
+        "cpuMs": 1.5,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 47531.60000002384,
+        "cpuMs": 2.100000023841858,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 47550.10000002384,
+        "cpuMs": 2,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 47568.200000047684,
+        "cpuMs": 1.399999976158142,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 47588,
+        "cpuMs": 2.399999976158142,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 47605.700000047684,
+        "cpuMs": 1.399999976158142,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 47625.60000002384,
+        "cpuMs": 2.299999952316284,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 47643.800000071526,
+        "cpuMs": 1.8000000715255737,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 47662.39999997616,
+        "cpuMs": 1.6999999284744263,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 48299.5,
+        "cpuMs": 1.399999976158142,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 48318,
+        "cpuMs": 1.100000023841858,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 48336.200000047684,
+        "cpuMs": 0.7000000476837158,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 48354.89999997616,
+        "cpuMs": 0.6999999284744263,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 48372.89999997616,
+        "cpuMs": 0.6999999284744263,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 48393.60000002384,
+        "cpuMs": 1.600000023841858,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 48412.200000047684,
+        "cpuMs": 1.5,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "time": 48430.300000071526,
+        "cpuMs": 1.4000000953674316,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      }
+    ],
+    "longTasks": [],
+    "gpu": [
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 6.204499
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.562624
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.510583
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.318583
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.259249
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.243666
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.567125
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.659875
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.209124
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.215125
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.19925
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.253125
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.221249
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 4.674583
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.283708
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 4.961208
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.238124
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 3.352333
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.197333
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.376083
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.619375
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.719874
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.718249
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.510874
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 3.1895
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.895833
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.971374
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 4.609999
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.27675
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.647333
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.527416
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.446875
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.500583
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.208624
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.191249
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.219083
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.199833
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.234708
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.255916
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.301791
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.196833
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.27575
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.348624
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.375583
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 3.4315
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.386666
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 4.517875
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.294541
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.977583
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.537666
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.459625
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.628333
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.523874
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.437791
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.235708
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.218874
+      },
+      {
+        "phase": "focused-pointer-blank",
+        "gpuMs": 2.202125
+      }
+    ],
+    "mainThread": {
+      "LayoutCount": 0,
+      "RecalcStyleCount": 290,
+      "LayoutDuration": 0,
+      "RecalcStyleDuration": 0.04465799999999999,
+      "ScriptDuration": 0.13766200000000017,
+      "TaskDuration": 0.4109069999999999
+    }
+  },
+  {
+    "label": "exit",
+    "duration": 2004.8000000715256,
+    "rafCount": 270,
+    "p50Gap": 6.200000047683716,
+    "p95Gap": 9.399999976158142,
+    "maxGap": 120.89999997615814,
+    "draws": 7152,
+    "records": [
+      {
+        "phase": "exit",
+        "time": 48449,
+        "cpuMs": 0.6999999284744263,
+        "draws": 101,
+        "programs": 38,
+        "selected": null,
+        "blur": 1
+      },
+      {
+        "phase": "exit",
+        "time": 48467.60000002384,
+        "cpuMs": 1,
+        "draws": 101,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.99998
+      },
+      {
+        "phase": "exit",
+        "time": 48486.200000047684,
+        "cpuMs": 0.8999999761581421,
+        "draws": 101,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.999877
+      },
+      {
+        "phase": "exit",
+        "time": 48505.700000047684,
+        "cpuMs": 1.8000000715255737,
+        "draws": 101,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.999634
+      },
+      {
+        "phase": "exit",
+        "time": 48523.60000002384,
+        "cpuMs": 0.7000000476837158,
+        "draws": 101,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.999143
+      },
+      {
+        "phase": "exit",
+        "time": 48542.300000071526,
+        "cpuMs": 0.6000000238418579,
+        "draws": 101,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.998378
+      },
+      {
+        "phase": "exit",
+        "time": 48561.10000002384,
+        "cpuMs": 0.6000000238418579,
+        "draws": 101,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.99725
+      },
+      {
+        "phase": "exit",
+        "time": 48579.700000047684,
+        "cpuMs": 0.6000000238418579,
+        "draws": 101,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.995702
+      },
+      {
+        "phase": "exit",
+        "time": 48598.5,
+        "cpuMs": 0.6000000238418579,
+        "draws": 101,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.993648
+      },
+      {
+        "phase": "exit",
+        "time": 48617.10000002384,
+        "cpuMs": 0.5,
+        "draws": 101,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.991042
+      },
+      {
+        "phase": "exit",
+        "time": 48636.10000002384,
+        "cpuMs": 0.6000000238418579,
+        "draws": 101,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.987767
+      },
+      {
+        "phase": "exit",
+        "time": 48654.800000071526,
+        "cpuMs": 0.7000000476837158,
+        "draws": 101,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.983825
+      },
+      {
+        "phase": "exit",
+        "time": 48673.5,
+        "cpuMs": 0.6000000238418579,
+        "draws": 101,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.979115
+      },
+      {
+        "phase": "exit",
+        "time": 48692.200000047684,
+        "cpuMs": 0.6000000238418579,
+        "draws": 101,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.973569
+      },
+      {
+        "phase": "exit",
+        "time": 48710.800000071526,
+        "cpuMs": 0.8000000715255737,
+        "draws": 101,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.967267
+      },
+      {
+        "phase": "exit",
+        "time": 48729.10000002384,
+        "cpuMs": 0.6000000238418579,
+        "draws": 101,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.959909
+      },
+      {
+        "phase": "exit",
+        "time": 48748.800000071526,
+        "cpuMs": 0.7000000476837158,
+        "draws": 101,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.951139
+      },
+      {
+        "phase": "exit",
+        "time": 48767.60000002384,
+        "cpuMs": 0.7999999523162842,
+        "draws": 101,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.941557
+      },
+      {
+        "phase": "exit",
+        "time": 48786.200000047684,
+        "cpuMs": 0.8000000715255737,
+        "draws": 101,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.930736
+      },
+      {
+        "phase": "exit",
+        "time": 48805.10000002384,
+        "cpuMs": 0.7999999523162842,
+        "draws": 101,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.918587
+      },
+      {
+        "phase": "exit",
+        "time": 48823.60000002384,
+        "cpuMs": 0.6000000238418579,
+        "draws": 101,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.905321
+      },
+      {
+        "phase": "exit",
+        "time": 48842.300000071526,
+        "cpuMs": 0.6000000238418579,
+        "draws": 101,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.890521
+      },
+      {
+        "phase": "exit",
+        "time": 48860.5,
+        "cpuMs": 0.6000000238418579,
+        "draws": 101,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.874796
+      },
+      {
+        "phase": "exit",
+        "time": 48879.800000071526,
+        "cpuMs": 0.7000000476837158,
+        "draws": 100,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.856549
+      },
+      {
+        "phase": "exit",
+        "time": 48898.700000047684,
+        "cpuMs": 0.8000000715255737,
+        "draws": 103,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.837256
+      },
+      {
+        "phase": "exit",
+        "time": 48917.300000071526,
+        "cpuMs": 0.6000000238418579,
+        "draws": 103,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.816073
+      },
+      {
+        "phase": "exit",
+        "time": 48935.300000071526,
+        "cpuMs": 0.6000000238418579,
+        "draws": 103,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.794386
+      },
+      {
+        "phase": "exit",
+        "time": 48954.700000047684,
+        "cpuMs": 0.6000000238418579,
+        "draws": 103,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.768892
+      },
+      {
+        "phase": "exit",
+        "time": 48973.5,
+        "cpuMs": 0.6999999284744263,
+        "draws": 103,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.742543
+      },
+      {
+        "phase": "exit",
+        "time": 48992.5,
+        "cpuMs": 0.7999999523162842,
+        "draws": 103,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.714107
+      },
+      {
+        "phase": "exit",
+        "time": 49011.10000002384,
+        "cpuMs": 0.6000000238418579,
+        "draws": 103,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.683817
+      },
+      {
+        "phase": "exit",
+        "time": 49029.89999997616,
+        "cpuMs": 0.6999999284744263,
+        "draws": 101,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.651282
+      },
+      {
+        "phase": "exit",
+        "time": 49048.5,
+        "cpuMs": 0.6999999284744263,
+        "draws": 101,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.616779
+      },
+      {
+        "phase": "exit",
+        "time": 49067.39999997616,
+        "cpuMs": 0.6999999284744263,
+        "draws": 101,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.57987
+      },
+      {
+        "phase": "exit",
+        "time": 49085.89999997616,
+        "cpuMs": 0.5999999046325684,
+        "draws": 101,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.540878
+      },
+      {
+        "phase": "exit",
+        "time": 49104.700000047684,
+        "cpuMs": 0.6000000238418579,
+        "draws": 101,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.499318
+      },
+      {
+        "phase": "exit",
+        "time": 49123.5,
+        "cpuMs": 0.6999999284744263,
+        "draws": 101,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.458049
+      },
+      {
+        "phase": "exit",
+        "time": 49142.200000047684,
+        "cpuMs": 0.6000000238418579,
+        "draws": 101,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.418715
+      },
+      {
+        "phase": "exit",
+        "time": 49265.700000047684,
+        "cpuMs": 0.8000000715255737,
+        "draws": 97,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.221859
+      },
+      {
+        "phase": "exit",
+        "time": 49279.89999997616,
+        "cpuMs": 0.6999999284744263,
+        "draws": 97,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.197919
+      },
+      {
+        "phase": "exit",
+        "time": 49400.700000047684,
+        "cpuMs": 0.7000000476837158,
+        "draws": 97,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.085197
+      },
+      {
+        "phase": "exit",
+        "time": 49417.300000071526,
+        "cpuMs": 0.6000000238418579,
+        "draws": 97,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.072728
+      },
+      {
+        "phase": "exit",
+        "time": 49533.39999997616,
+        "cpuMs": 0.6999999284744263,
+        "draws": 89,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.022657
+      },
+      {
+        "phase": "exit",
+        "time": 49548.700000047684,
+        "cpuMs": 0.7000000476837158,
+        "draws": 89,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.017478
+      },
+      {
+        "phase": "exit",
+        "time": 49567.200000047684,
+        "cpuMs": 0.5,
+        "draws": 89,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.013337
+      },
+      {
+        "phase": "exit",
+        "time": 49586.10000002384,
+        "cpuMs": 0.6000000238418579,
+        "draws": 89,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.009875
+      },
+      {
+        "phase": "exit",
+        "time": 49604.700000047684,
+        "cpuMs": 0.5,
+        "draws": 89,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.00707
+      },
+      {
+        "phase": "exit",
+        "time": 49623.60000002384,
+        "cpuMs": 0.6000000238418579,
+        "draws": 89,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.004865
+      },
+      {
+        "phase": "exit",
+        "time": 49642.39999997616,
+        "cpuMs": 0.6999999284744263,
+        "draws": 89,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.003166
+      },
+      {
+        "phase": "exit",
+        "time": 49661.10000002384,
+        "cpuMs": 0.6000000238418579,
+        "draws": 89,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.001917
+      },
+      {
+        "phase": "exit",
+        "time": 49679.800000071526,
+        "cpuMs": 0.5,
+        "draws": 89,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.001053
+      },
+      {
+        "phase": "exit",
+        "time": 49698.700000047684,
+        "cpuMs": 0.7000000476837158,
+        "draws": 88,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.000495
+      },
+      {
+        "phase": "exit",
+        "time": 49717.5,
+        "cpuMs": 0.6000000238418579,
+        "draws": 88,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.000182
+      },
+      {
+        "phase": "exit",
+        "time": 49736.300000071526,
+        "cpuMs": 0.8000000715255737,
+        "draws": 88,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.000039
+      },
+      {
+        "phase": "exit",
+        "time": 49755,
+        "cpuMs": 0.6999999284744263,
+        "draws": 88,
+        "programs": 38,
+        "selected": null,
+        "blur": 0.000002
+      },
+      {
+        "phase": "exit",
+        "time": 49773.60000002384,
+        "cpuMs": 0.5,
+        "draws": 88,
+        "programs": 38,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "exit",
+        "time": 49792.39999997616,
+        "cpuMs": 0.5999999046325684,
+        "draws": 88,
+        "programs": 38,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "exit",
+        "time": 49811.5,
+        "cpuMs": 0.7999999523162842,
+        "draws": 88,
+        "programs": 38,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "exit",
+        "time": 49829.39999997616,
+        "cpuMs": 0.6999999284744263,
+        "draws": 88,
+        "programs": 38,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "exit",
+        "time": 49848.700000047684,
+        "cpuMs": 0.6000000238418579,
+        "draws": 88,
+        "programs": 38,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "exit",
+        "time": 49867.700000047684,
+        "cpuMs": 0.6000000238418579,
+        "draws": 88,
+        "programs": 38,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "exit",
+        "time": 49886.300000071526,
+        "cpuMs": 0.7000000476837158,
+        "draws": 88,
+        "programs": 38,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "exit",
+        "time": 49905.10000002384,
+        "cpuMs": 0.7999999523162842,
+        "draws": 88,
+        "programs": 38,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "exit",
+        "time": 49923.89999997616,
+        "cpuMs": 0.7999999523162842,
+        "draws": 88,
+        "programs": 38,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "exit",
+        "time": 49942.5,
+        "cpuMs": 0.6999999284744263,
+        "draws": 88,
+        "programs": 38,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "exit",
+        "time": 49961.39999997616,
+        "cpuMs": 0.7999999523162842,
+        "draws": 88,
+        "programs": 38,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "exit",
+        "time": 49979.5,
+        "cpuMs": 0.7999999523162842,
+        "draws": 88,
+        "programs": 38,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "exit",
+        "time": 49998.700000047684,
+        "cpuMs": 0.6000000238418579,
+        "draws": 88,
+        "programs": 38,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "exit",
+        "time": 50016.800000071526,
+        "cpuMs": 0.7000000476837158,
+        "draws": 88,
+        "programs": 38,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "exit",
+        "time": 50036.60000002384,
+        "cpuMs": 0.8999999761581421,
+        "draws": 88,
+        "programs": 38,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "exit",
+        "time": 50055.39999997616,
+        "cpuMs": 0.8999999761581421,
+        "draws": 88,
+        "programs": 38,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "exit",
+        "time": 50073.700000047684,
+        "cpuMs": 1,
+        "draws": 88,
+        "programs": 38,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "exit",
+        "time": 50093.10000002384,
+        "cpuMs": 1.100000023841858,
+        "draws": 88,
+        "programs": 38,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "exit",
+        "time": 50111.800000071526,
+        "cpuMs": 0.9000000953674316,
+        "draws": 88,
+        "programs": 38,
+        "selected": null,
+        "blur": 0
+      },
+      {
+        "phase": "exit",
+        "time": 50130.89999997616,
+        "cpuMs": 1.399999976158142,
+        "draws": 88,
+        "programs": 38,
+        "selected": null,
+        "blur": 0
+      }
+    ],
+    "longTasks": [],
+    "gpu": [
+      {
+        "phase": "exit",
+        "gpuMs": 2.275499
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.659958
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.537499
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 3.512791
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.491666
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 4.98475
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.236125
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.4445
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.217291
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.453249
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.201791
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.223249
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.493
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.492333
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 3.3505
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 3.293625
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 3.361499
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 3.302166
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 4.458333
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.456208
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 4.704
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 3.327666
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.381666
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.293749
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.299041
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.287499
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.304541
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.289208
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.3565
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.284
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.327666
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.282166
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.28625
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.233708
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.359333
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 4.476874
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.256624
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 4.441666
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 4.329249
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.811291
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 3.986625
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.614874
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.958458
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.608124
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.574333
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 4.637666
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.360708
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 4.725999
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.47375
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 4.535583
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.353625
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 1.382625
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.607375
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 3.855749
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 1.373166
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 1.361125
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 1.358666
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 1.364708
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 1.352708
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 1.37275
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 1.375374
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 1.352249
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 1.440874
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 1.425208
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 1.4565
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 1.515
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 1.603166
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 1.743416
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 1.758249
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.04525
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.157625
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.568874
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 2.704125
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 3.78675
+      },
+      {
+        "phase": "exit",
+        "gpuMs": 1.7175
+      }
+    ],
+    "mainThread": {
+      "LayoutCount": 72,
+      "RecalcStyleCount": 394,
+      "LayoutDuration": 0.00226,
+      "RecalcStyleDuration": 0.103888,
+      "ScriptDuration": 0.09842799999999996,
+      "TaskDuration": 0.29531799999999997
+    }
+  },
+  {
+    "label": "warm-focus",
+    "duration": 2202.3000000715256,
+    "rafCount": 353,
+    "p50Gap": 6.200000047683716,
+    "p95Gap": 9.300000071525574,
+    "maxGap": 11.800000071525574,
+    "draws": 8646,
+    "records": [
+      {
+        "phase": "warm-focus",
+        "time": 50461.800000071526,
+        "cpuMs": 0.9000000953674316,
+        "draws": 88,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0
+      },
+      {
+        "phase": "warm-focus",
+        "time": 50480.39999997616,
+        "cpuMs": 0.8999999761581421,
+        "draws": 88,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.000014
+      },
+      {
+        "phase": "warm-focus",
+        "time": 50500.300000071526,
+        "cpuMs": 1.7000000476837158,
+        "draws": 88,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.000102
+      },
+      {
+        "phase": "warm-focus",
+        "time": 50518.89999997616,
+        "cpuMs": 1.5,
+        "draws": 88,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.000334
+      },
+      {
+        "phase": "warm-focus",
+        "time": 50535.700000047684,
+        "cpuMs": 0.7000000476837158,
+        "draws": 88,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.000757
+      },
+      {
+        "phase": "warm-focus",
+        "time": 50555.5,
+        "cpuMs": 1.100000023841858,
+        "draws": 89,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.001496
+      },
+      {
+        "phase": "warm-focus",
+        "time": 50574,
+        "cpuMs": 0.7999999523162842,
+        "draws": 89,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.00257
+      },
+      {
+        "phase": "warm-focus",
+        "time": 50592.39999997616,
+        "cpuMs": 0.5,
+        "draws": 89,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.004055
+      },
+      {
+        "phase": "warm-focus",
+        "time": 50611.60000002384,
+        "cpuMs": 0.8999999761581421,
+        "draws": 89,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.006048
+      },
+      {
+        "phase": "warm-focus",
+        "time": 50630.300000071526,
+        "cpuMs": 0.7000000476837158,
+        "draws": 89,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.008575
+      },
+      {
+        "phase": "warm-focus",
+        "time": 50648.800000071526,
+        "cpuMs": 1,
+        "draws": 89,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.011667
+      },
+      {
+        "phase": "warm-focus",
+        "time": 50667.89999997616,
+        "cpuMs": 0.7999999523162842,
+        "draws": 89,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.01556
+      },
+      {
+        "phase": "warm-focus",
+        "time": 50685.5,
+        "cpuMs": 0.6000000238418579,
+        "draws": 89,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.019996
+      },
+      {
+        "phase": "warm-focus",
+        "time": 50705,
+        "cpuMs": 0.6000000238418579,
+        "draws": 89,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.025639
+      },
+      {
+        "phase": "warm-focus",
+        "time": 50723.800000071526,
+        "cpuMs": 0.6000000238418579,
+        "draws": 89,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.031964
+      },
+      {
+        "phase": "warm-focus",
+        "time": 50742.700000047684,
+        "cpuMs": 0.6000000238418579,
+        "draws": 89,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.039293
+      },
+      {
+        "phase": "warm-focus",
+        "time": 50760.800000071526,
+        "cpuMs": 0.5,
+        "draws": 89,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.047428
+      },
+      {
+        "phase": "warm-focus",
+        "time": 50780.10000002384,
+        "cpuMs": 0.6000000238418579,
+        "draws": 89,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.057042
+      },
+      {
+        "phase": "warm-focus",
+        "time": 50798,
+        "cpuMs": 0.6000000238418579,
+        "draws": 89,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.067336
+      },
+      {
+        "phase": "warm-focus",
+        "time": 50816.800000071526,
+        "cpuMs": 0.6000000238418579,
+        "draws": 89,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.07913
+      },
+      {
+        "phase": "warm-focus",
+        "time": 50836.200000047684,
+        "cpuMs": 0.5,
+        "draws": 89,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.092818
+      },
+      {
+        "phase": "warm-focus",
+        "time": 50854.200000047684,
+        "cpuMs": 0.5,
+        "draws": 89,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.106777
+      },
+      {
+        "phase": "warm-focus",
+        "time": 50873,
+        "cpuMs": 0.5,
+        "draws": 89,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.122693
+      },
+      {
+        "phase": "warm-focus",
+        "time": 50891.60000002384,
+        "cpuMs": 0.5,
+        "draws": 89,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.140213
+      },
+      {
+        "phase": "warm-focus",
+        "time": 50911.10000002384,
+        "cpuMs": 0.3999999761581421,
+        "draws": 89,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.159964
+      },
+      {
+        "phase": "warm-focus",
+        "time": 50929.89999997616,
+        "cpuMs": 0.5,
+        "draws": 89,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.180795
+      },
+      {
+        "phase": "warm-focus",
+        "time": 50948.60000002384,
+        "cpuMs": 0.5,
+        "draws": 89,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.203235
+      },
+      {
+        "phase": "warm-focus",
+        "time": 50967.300000071526,
+        "cpuMs": 0.5,
+        "draws": 89,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.227593
+      },
+      {
+        "phase": "warm-focus",
+        "time": 50986.300000071526,
+        "cpuMs": 0.6000000238418579,
+        "draws": 89,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.253824
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51004.200000047684,
+        "cpuMs": 0.5,
+        "draws": 89,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.280758
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51023.60000002384,
+        "cpuMs": 0.5,
+        "draws": 89,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.312015
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51042.39999997616,
+        "cpuMs": 0.5,
+        "draws": 92,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.344091
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51061.300000071526,
+        "cpuMs": 0.6000000238418579,
+        "draws": 95,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.378482
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51080,
+        "cpuMs": 0.3999999761581421,
+        "draws": 95,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.41489
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51098.700000047684,
+        "cpuMs": 0.6000000238418579,
+        "draws": 96,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.453562
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51117.5,
+        "cpuMs": 0.5,
+        "draws": 96,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.494791
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51136.10000002384,
+        "cpuMs": 0.5,
+        "draws": 97,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.53657
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51155,
+        "cpuMs": 0.5,
+        "draws": 97,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.576013
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51173.60000002384,
+        "cpuMs": 0.6000000238418579,
+        "draws": 97,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.61296
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51192.60000002384,
+        "cpuMs": 0.5,
+        "draws": 97,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.647875
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51211.300000071526,
+        "cpuMs": 0.7000000476837158,
+        "draws": 97,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.680457
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51230.10000002384,
+        "cpuMs": 0.5,
+        "draws": 97,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.710964
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51248.10000002384,
+        "cpuMs": 0.6000000238418579,
+        "draws": 97,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.73858
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51267.800000071526,
+        "cpuMs": 0.7000000476837158,
+        "draws": 97,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.766301
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51286.300000071526,
+        "cpuMs": 0.6000000238418579,
+        "draws": 97,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.790847
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51305.200000047684,
+        "cpuMs": 0.7000000476837158,
+        "draws": 97,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.813847
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51324,
+        "cpuMs": 0.7999999523162842,
+        "draws": 97,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.835095
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51342.800000071526,
+        "cpuMs": 0.8000000715255737,
+        "draws": 97,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.854662
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51360.800000071526,
+        "cpuMs": 0.6000000238418579,
+        "draws": 100,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.871884
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51379.5,
+        "cpuMs": 0.6999999284744263,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.88836
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51398.800000071526,
+        "cpuMs": 0.6000000238418579,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.903814
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51417.5,
+        "cpuMs": 0.5,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.917293
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51436.300000071526,
+        "cpuMs": 0.5,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.929573
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51455,
+        "cpuMs": 0.5,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.940463
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51473.800000071526,
+        "cpuMs": 0.6000000238418579,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.950169
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51492.60000002384,
+        "cpuMs": 0.6000000238418579,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.958757
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51510.700000047684,
+        "cpuMs": 0.5,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.966109
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51530.10000002384,
+        "cpuMs": 0.5,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.972891
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51549,
+        "cpuMs": 0.6999999284744263,
+        "draws": 103,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.978563
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51566.89999997616,
+        "cpuMs": 0.5,
+        "draws": 103,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.983217
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51586.39999997616,
+        "cpuMs": 0.6999999284744263,
+        "draws": 103,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.9874
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51605.300000071526,
+        "cpuMs": 0.7000000476837158,
+        "draws": 103,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.990727
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51623.800000071526,
+        "cpuMs": 0.5,
+        "draws": 103,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.99341
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51642.700000047684,
+        "cpuMs": 0.6000000238418579,
+        "draws": 103,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.995508
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51661.39999997616,
+        "cpuMs": 0.5999999046325684,
+        "draws": 103,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.997113
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51680.10000002384,
+        "cpuMs": 0.6000000238418579,
+        "draws": 100,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.998276
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51698,
+        "cpuMs": 0.5,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.999055
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51717.700000047684,
+        "cpuMs": 0.6000000238418579,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.999581
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51736.60000002384,
+        "cpuMs": 0.7000000476837158,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.999858
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51754.800000071526,
+        "cpuMs": 0.7000000476837158,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 0.999972
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51774.10000002384,
+        "cpuMs": 0.7000000476837158,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51792,
+        "cpuMs": 0.6000000238418579,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51811.700000047684,
+        "cpuMs": 0.8999999761581421,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51830.60000002384,
+        "cpuMs": 0.8999999761581421,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51849.200000047684,
+        "cpuMs": 0.8999999761581421,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51867.89999997616,
+        "cpuMs": 0.6999999284744263,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51886.700000047684,
+        "cpuMs": 0.8999999761581421,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51905.200000047684,
+        "cpuMs": 0.7000000476837158,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51923.300000071526,
+        "cpuMs": 0.7000000476837158,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51942.800000071526,
+        "cpuMs": 0.7000000476837158,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51960.800000071526,
+        "cpuMs": 0.7000000476837158,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "warm-focus",
+        "time": 51981.39999997616,
+        "cpuMs": 1.5,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "warm-focus",
+        "time": 52000.10000002384,
+        "cpuMs": 1.399999976158142,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "warm-focus",
+        "time": 52017.800000071526,
+        "cpuMs": 0.9000000953674316,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "warm-focus",
+        "time": 52036.800000071526,
+        "cpuMs": 0.8000000715255737,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "warm-focus",
+        "time": 52056.5,
+        "cpuMs": 1.5,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "warm-focus",
+        "time": 52075.10000002384,
+        "cpuMs": 1.2999999523162842,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "warm-focus",
+        "time": 52094,
+        "cpuMs": 1.5,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "warm-focus",
+        "time": 52112.60000002384,
+        "cpuMs": 1.399999976158142,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      },
+      {
+        "phase": "warm-focus",
+        "time": 52130.5,
+        "cpuMs": 0.7999999523162842,
+        "draws": 101,
+        "programs": 38,
+        "selected": "creative",
+        "blur": 1
+      }
+    ],
+    "longTasks": [],
+    "gpu": [
+      {
+        "phase": "warm-focus",
+        "gpuMs": 1.877166
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 1.870375
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.064875
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.014583
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.175624
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 3.349749
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 3.668749
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 3.910333
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 3.458999
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 7.3625
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 3.279708
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.907333
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.951125
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 5.536166
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.642166
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 3.899249
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 3.630249
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.414083
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 3.391499
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.850166
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.489333
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.334624
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.581666
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.283375
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 4.623875
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.29125
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.690541
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.284083
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.340041
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.331958
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 4.769999
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.289625
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 4.536374
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.324624
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.401041
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.313999
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.370875
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.333999
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.341458
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.393
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 3.426374
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 3.256333
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 3.289999
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 3.412999
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 3.559791
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 4.772125
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.45425
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.5275
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 3.422625
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.849249
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.385666
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.277958
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.32425
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.265874
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.31825
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.307374
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.332874
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.280666
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.332624
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.237875
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.512708
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.27175
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.292874
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.2215
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 4.616041
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.267416
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.28825
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 3.385208
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.361124
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 3.321
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.839333
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.303833
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.317541
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 3.796624
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.338875
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.465458
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.296166
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.326624
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.61125
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.264666
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.212416
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 4.386833
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.554916
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.400125
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.223499
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.486124
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.482999
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.297041
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.650124
+      },
+      {
+        "phase": "warm-focus",
+        "gpuMs": 2.484875
+      }
+    ],
+    "mainThread": {
+      "LayoutCount": 89,
+      "RecalcStyleCount": 510,
+      "LayoutDuration": 0.0031469999999999988,
+      "RecalcStyleDuration": 0.134657,
+      "ScriptDuration": 0.1181319999999999,
+      "TaskDuration": 0.38095599999999985
+    }
+  }
+]

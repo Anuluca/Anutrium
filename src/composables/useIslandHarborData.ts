@@ -74,16 +74,9 @@ export const useIslandHarborData = () => {
         >
       ).flat().length
   )
-  const imageLogAlbumCount = computed(
-    () => (tm('island.modules.photography.imageLog.data') as unknown[]).length
-  )
   const illustrationItemCount = computed(
     () =>
       (tm('island.modules.works.illustration.data.photos') as unknown[]).length
-  )
-  const trainerCardItemCount = computed(
-    () =>
-      (tm('island.modules.works.trainerCard.data.photos') as unknown[]).length
   )
   const studyNoteList = computed(
     () =>
@@ -100,10 +93,10 @@ export const useIslandHarborData = () => {
 
   const harborSections: HarborSection[] = [
     {
-      id: 'photography',
-      title: '影像',
-      subtitle: 'PHOTOGRAPHY',
-      progress: '52%',
+      id: 'works',
+      title: '创作',
+      subtitle: 'WORKS',
+      progress: '78%',
       items: [
         {
           title: '摄影作品',
@@ -117,36 +110,6 @@ export const useIslandHarborData = () => {
           path: '/island/photography',
         },
         {
-          title: '周边摄影',
-          subtitle: 'MERCH PHOTOS',
-          get count() {
-            return `${merchCollectionCount.value} COLLECTIONS`
-          },
-          get img() {
-            return t('island.modules.photography.merchPhotos.img')
-          },
-          path: '/island/merch-photography',
-        },
-        {
-          title: '图像记录',
-          subtitle: 'IMAGE LOG',
-          get count() {
-            return `${imageLogAlbumCount.value} ALBUMS`
-          },
-          get img() {
-            return t('island.modules.photography.imageLog.img')
-          },
-          path: '/island/image-log',
-        },
-      ],
-    },
-    {
-      id: 'works',
-      title: '创作',
-      subtitle: 'WORKS',
-      progress: '78%',
-      items: [
-        {
           title: '绘画',
           subtitle: 'ILLUSTRATION',
           get count() {
@@ -156,17 +119,6 @@ export const useIslandHarborData = () => {
             return t('island.modules.works.illustration.img')
           },
           path: '/island/illustration',
-        },
-        {
-          title: '训练家卡',
-          subtitle: 'TRAINER CARD',
-          get count() {
-            return `${trainerCardItemCount.value} ITEMS`
-          },
-          get img() {
-            return t('island.modules.works.trainerCard.img')
-          },
-          path: '/island/trainer-card',
         },
         {
           title: '实验',
@@ -208,9 +160,9 @@ export const useIslandHarborData = () => {
       ],
     },
     {
-      id: 'games',
-      title: '游戏档案',
-      subtitle: 'GAMES',
+      id: 'interests',
+      title: '宅',
+      subtitle: 'OTAKU',
       progress: '72%',
       items: [
         {
@@ -218,6 +170,17 @@ export const useIslandHarborData = () => {
           subtitle: 'GAME LIBRARY',
           count: '0 GAMES',
           img: developingPlaceholder,
+        },
+        {
+          title: '收藏品',
+          subtitle: 'COLLECTIBLES',
+          get count() {
+            return `${merchCollectionCount.value} COLLECTIONS`
+          },
+          get img() {
+            return t('island.modules.photography.merchPhotos.img')
+          },
+          path: '/island/merch-photography',
         },
       ],
     },

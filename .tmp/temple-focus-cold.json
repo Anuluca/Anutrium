@@ -1,0 +1,149 @@
+{
+  "label": "cold-focus-trace",
+  "duration": 2401.6999999284744,
+  "rafCount": 128,
+  "p50Gap": 6.200000047683716,
+  "p95Gap": 7.899999976158142,
+  "maxGap": 1510.6999999284744,
+  "draws": 933,
+  "records": [
+    {
+      "phase": "cold-focus-trace",
+      "time": 7870.800000071526,
+      "cpuMs": 1.3000000715255737,
+      "draws": 88,
+      "programs": 22,
+      "selected": "creative",
+      "blur": 0
+    },
+    {
+      "phase": "cold-focus-trace",
+      "time": 7887.800000071526,
+      "cpuMs": 1,
+      "draws": 88,
+      "programs": 22,
+      "selected": "creative",
+      "blur": 0.00001
+    },
+    {
+      "phase": "cold-focus-trace",
+      "time": 7906.600000023842,
+      "cpuMs": 1.1999999284744263,
+      "draws": 88,
+      "programs": 22,
+      "selected": "creative",
+      "blur": 0.00009
+    },
+    {
+      "phase": "cold-focus-trace",
+      "time": 7924.900000095367,
+      "cpuMs": 1.2000000476837158,
+      "draws": 88,
+      "programs": 22,
+      "selected": "creative",
+      "blur": 0.000297
+    },
+    {
+      "phase": "cold-focus-trace",
+      "time": 7943.800000071526,
+      "cpuMs": 0.8000000715255737,
+      "draws": 88,
+      "programs": 22,
+      "selected": "creative",
+      "blur": 0.000728
+    },
+    {
+      "phase": "cold-focus-trace",
+      "time": 9464.200000047684,
+      "cpuMs": 1502.5,
+      "draws": 89,
+      "programs": 38,
+      "selected": "creative",
+      "blur": 0.001426
+    },
+    {
+      "phase": "cold-focus-trace",
+      "time": 9468.600000023842,
+      "cpuMs": 1.5,
+      "draws": 101,
+      "programs": 38,
+      "selected": "creative",
+      "blur": 1
+    },
+    {
+      "phase": "cold-focus-trace",
+      "time": 9488.5,
+      "cpuMs": 0.8999999761581421,
+      "draws": 101,
+      "programs": 38,
+      "selected": "creative",
+      "blur": 1
+    },
+    {
+      "phase": "cold-focus-trace",
+      "time": 9604.700000047684,
+      "cpuMs": 1.100000023841858,
+      "draws": 101,
+      "programs": 38,
+      "selected": "creative",
+      "blur": 1
+    },
+    {
+      "phase": "cold-focus-trace",
+      "time": 9619.400000095367,
+      "cpuMs": 1,
+      "draws": 101,
+      "programs": 38,
+      "selected": "creative",
+      "blur": 1
+    }
+  ],
+  "longTasks": [
+    {
+      "start": 7961.400000095367,
+      "duration": 1505
+    }
+  ],
+  "gpu": [
+    {
+      "phase": "cold-focus-trace",
+      "gpuMs": 1.671416
+    },
+    {
+      "phase": "cold-focus-trace",
+      "gpuMs": 1.416166
+    },
+    {
+      "phase": "cold-focus-trace",
+      "gpuMs": 1.396541
+    },
+    {
+      "phase": "cold-focus-trace",
+      "gpuMs": 1.398
+    },
+    {
+      "phase": "cold-focus-trace",
+      "gpuMs": 1.413874
+    },
+    {
+      "phase": "cold-focus-trace",
+      "gpuMs": 6.762124
+    },
+    {
+      "phase": "cold-focus-trace",
+      "gpuMs": 4.889708
+    },
+    {
+      "phase": "cold-focus-trace",
+      "gpuMs": 2.531916
+    },
+    {
+      "phase": "cold-focus-trace",
+      "gpuMs": 2.844625
+    },
+    {
+      "phase": "cold-focus-trace",
+      "gpuMs": 3.246583
+    }
+  ]
+}

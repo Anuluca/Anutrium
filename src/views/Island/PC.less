@@ -29,11 +29,6 @@
   background: #050105;
 }
 
-:global(body.island-pc-shell .cursor-position),
-:global(body.island-pc-shell-leaving .cursor-position) {
-  mix-blend-mode: normal;
-}
-
 :global(body.island-pc-shell .router-container),
 :global(body.island-pc-shell-leaving .router-container) {
   width: 100vw;
@@ -920,7 +915,7 @@
   position: relative;
   z-index: 2;
   display: grid;
-  grid-template-columns: 0.95fr 1.82fr 1.24fr 1.42fr;
+  grid-template-columns: 1.82fr 1.24fr 1.42fr;
   align-items: stretch;
   min-height: 0;
   height: 100%;
@@ -1000,7 +995,6 @@
         transform: scale(3.2);
       }
     }
-
   }
 
   &:last-child {
@@ -1151,22 +1145,14 @@
   min-height: 0;
   height: 100%;
 
-  &--photography,
-  &--notes {
-    grid-template-rows: repeat(3, minmax(0, 1fr));
-  }
-
-  &--notes {
+  &--notes,
+  &--interests {
     grid-template-rows: repeat(2, minmax(0, 1fr));
   }
 
   &--works {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     grid-template-rows: repeat(2, minmax(0, 1fr));
-  }
-
-  &--games {
-    grid-template-rows: minmax(0, 1fr);
   }
 }
 
@@ -1192,12 +1178,12 @@
   }
 }
 
-.port-panel--games .bay-card {
+.port-panel--interests .bay-card {
   min-height: 0;
 }
 
-// 仅调整影像区“周边摄影”封面的取景位置。
-.card-grid--photography .bay-card:nth-child(2) img {
+// 仅调整“收藏品”封面的取景位置。
+.card-grid--interests .bay-card:nth-child(2) img {
   object-position: center 26%;
 }
 
@@ -1675,14 +1661,13 @@
   }
 
   .card-grid,
-  .card-grid--photography,
   .card-grid--notes,
-  .card-grid--games {
+  .card-grid--interests {
     grid-template-rows: auto;
   }
 
   .bay-card,
-  .port-panel--games .bay-card {
+  .port-panel--interests .bay-card {
     min-height: 210px;
   }
 }

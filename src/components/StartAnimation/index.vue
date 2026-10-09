@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref } from 'vue'
 
+import LoadingPercentage from '@/components/LoadingPercentage/index.vue'
 import Logo from '@/components/Logo/index.vue'
 import LogoRotating3D from '@/components/Logo_rotating3D/index.vue'
 import { loadCriticalFont } from '@/utils/fontLoader'
@@ -16,10 +17,6 @@ const isBackgroundExiting = ref(false)
 const isBackgroundFading = ref(false)
 const loadingProgress = ref(0)
 const isProgressFading = ref(false)
-const loadingProgressText = computed(() => String(loadingProgress.value))
-const loadingProgressPadding = computed(() =>
-  '0'.repeat(Math.max(0, 3 - loadingProgressText.value.length))
-)
 const logoRotating3DRef = ref()
 const logo2DRef = ref<HTMLElement | null>(null)
 const entryStyle = ref<Record<string, string>>({})
@@ -314,16 +311,11 @@ onUnmounted(() => {
           />
         </div>
       </div>
-      <div
-        class="entry-loading-progress no-rem"
-        :class="{ 'is-fading': isProgressFading }"
+      <LoadingPercentage
+        :progress="loadingProgress"
+        :fading="isProgressFading"
         aria-hidden="true"
-      >
-        <span v-if="loadingProgressPadding" class="progress-padding">{{
-          loadingProgressPadding
-        }}</span
-        ><span>{{ loadingProgressText }}%</span>
-      </div>
+      />
       <div
         ref="logo2DRef"
         :class="{

@@ -17,6 +17,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { cursorState } from '@/stores'
+import { subscribePointerSamples } from '@/utils/pointerSamples'
 
 const props = defineProps({
   enabled: {
@@ -49,6 +50,7 @@ const ease = 0.1
 const settleThreshold = 0.35
 let animationFrameId = null
 let hasPointerListeners = false
+let unsubscribePointerSamples = null
 let finePointerQuery = null
 let latestPointerX = 0
 let latestPointerY = 0
@@ -206,7 +208,7 @@ const handleVisibilityChange = () => {
 const addPointerListeners = () => {
   if (hasPointerListeners) return
 
-  window.addEventListener('pointermove', onPointerMove, { passive: true })
+  unsubscribePointerSamples = subscribePointerSamples(onPointerMove)
   window.addEventListener('pointerover', onPointerOver, { passive: true })
   window.addEventListener('pointerout', onPointerOut, { passive: true })
   window.addEventListener('pointerdown', onPointerDown, true)
@@ -223,7 +225,8 @@ const addPointerListeners = () => {
 const removePointerListeners = () => {
   if (!hasPointerListeners) return
 
-  window.removeEventListener('pointermove', onPointerMove)
+  unsubscribePointerSamples?.()
+  unsubscribePointerSamples = null
   window.removeEventListener('pointerover', onPointerOver)
   window.removeEventListener('pointerout', onPointerOut)
   window.removeEventListener('pointerdown', onPointerDown, true)

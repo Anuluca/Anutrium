@@ -1,0 +1,782 @@
+/* eslint-disable simple-import-sort/imports */
+import type {
+  RouteLocationNormalizedLoaded,
+  RouteRecordRaw,
+  Router,
+} from 'vue-router'
+import NProgress from 'nprogress'
+
+import i18n from '../locales'
+import { ensureRouteMessages } from '../locales/routeMessages'
+import { cursorState } from '../stores'
+import { ROUTE_CURSOR_LOADING_SOURCE } from '../stores/cursorState'
+
+import 'nprogress/nprogress.css'
+
+const ROUTE_CONFIG = {
+  DEFAULT_PATH: '/',
+  NOT_FOUND_PATH: '/404',
+  SITE_URL: 'https://anuluca.com',
+} as const
+const routeComponentLoads = new Map<string, Promise<unknown>>()
+let routeCursorFallbackTimer: number | null = null
+
+export const finishRouteCursorLoading = () => {
+  if (typeof window !== 'undefined' && routeCursorFallbackTimer !== null) {
+    window.clearTimeout(routeCursorFallbackTimer)
+    routeCursorFallbackTimer = null
+  }
+  cursorState().stopLoading(ROUTE_CURSOR_LOADING_SOURCE)
+}
+
+const preloadRouteComponent = async (routeName: unknown) => {
+  if (typeof routeName !== 'string') return
+
+  const targetRoute = routeByName.get(routeName)
+  if (
+    !targetRoute ||
+    !('component' in targetRoute) ||
+    typeof targetRoute.component !== 'function'
+  ) {
+    return
+  }
+
+  const cacheKey = targetRoute.name
+  const componentLoader = targetRoute.component as () => Promise<unknown>
+  const cachedLoad = routeComponentLoads.get(cacheKey)
+  if (cachedLoad) return cachedLoad
+
+  const componentLoad = Promise.resolve(componentLoader()).catch((error) => {
+    routeComponentLoads.delete(cacheKey)
+    throw error
+  })
+  routeComponentLoads.set(cacheKey, componentLoad)
+  return componentLoad
+}
+
+const installRouteIntentPreload = (router: Router) => {
+  const preloadFromEvent = (event: Event) => {
+    const connection = (
+      navigator as Navigator & {
+        connection?: { effectiveType?: string; saveData?: boolean }
+      }
+    ).connection
+    if (
+      connection?.saveData ||
+      connection?.effectiveType === 'slow-2g' ||
+      connection?.effectiveType === '2g'
+    ) {
+      return
+    }
+
+    if (event instanceof PointerEvent && event.pointerType === 'touch') return
+
+    const target = event.target
+    if (!(target instanceof Element)) return
+
+    const anchor = target.closest<HTMLAnchorElement>('a[href]')
+    if (
+      !anchor ||
+      anchor.target === '_blank' ||
+      anchor.hasAttribute('download')
+    ) {
+      return
+    }
+
+    const url = new URL(anchor.href, window.location.href)
+    if (url.origin !== window.location.origin) return
+
+    const resolvedRoute = router.resolve(
+      `${url.pathname}${url.search}${url.hash}`
+    )
+    void Promise.all([
+      preloadRouteComponent(resolvedRoute.name),
+      ensureRouteMessages(resolvedRoute.name),
+    ]).catch(() => undefined)
+  }
+
+  document.addEventListener('pointerover', preloadFromEvent, {
+    passive: true,
+    capture: true,
+  })
+  document.addEventListener('focusin', preloadFromEvent, true)
+}
+
+const PAGE_DESCRIPTIONS: Record<string, { zhCn: string; en: string }> = {
+  HOME: {
+    zhCn: 'Anutrium 是前端工程师 Anuluca 的个人网站，记录作品、创意工具、生活记录与设计实践。',
+    en: 'Anutrium is the portfolio of frontend engineer Anuluca, featuring web projects, creative tools, travel logs, and design experiments.',
+  },
+  ARCHIVE: {
+    zhCn: '浏览 Anuluca 的主要项目与个人项目，包括 Vue、React、TypeScript、Three.js、WebGL 与数据可视化实践。',
+    en: 'Explore Anuluca’s main and personal projects across Vue, React, TypeScript, Three.js, WebGL, and data visualization.',
+  },
+  FLANERIE: {
+    zhCn: 'Anuluca 的旅行影像、摄影与城市漫游记录。',
+    en: 'Travel films, photography, and city wandering logs by Anuluca.',
+  },
+  CRAFT: {
+    zhCn: '由 Anuluca 设计与开发的前端创意工具和交互实验。',
+    en: 'Frontend utilities and interactive experiments designed and built by Anuluca.',
+  },
+  ABOUT: {
+    zhCn: '了解前端工程师 Anuluca 的经历、技能与设计理念。',
+    en: 'About Anuluca, a frontend engineer: experience, skills, and design approach.',
+  },
+  ISLAND: {
+    zhCn: 'Anuluca 的个人内容与兴趣空间。',
+    en: 'A personal space for Anuluca’s interests and collected fragments.',
+  },
+  PET: {
+    zhCn: '花花庭院：花花的沉浸式宠物角色档案。',
+    en: 'Floratrium, an immersive character profile for Huahua.',
+  },
+}
+
+const DESCRIPTION_ROUTE_GROUPS: Record<string, keyof typeof PAGE_DESCRIPTIONS> =
+  {
+    FLANERIE_DETAIL: 'FLANERIE',
+    COLORPALETTE: 'CRAFT',
+    EASESTUDIO: 'CRAFT',
+    METRONOME: 'CRAFT',
+    BOUNCEDYNAMICS: 'CRAFT',
+    HTMLENTITIES: 'CRAFT',
+    BASE64CODEC: 'CRAFT',
+    IMAGEBASE64: 'CRAFT',
+    SLEEPING_DOGS_BULLS_AND_COWS: 'ISLAND',
+    SLEEPING_DOGS_SAFETY_BOX: 'ISLAND',
+    TEST: 'ISLAND',
+    ISLAND_IMAGE_LOG: 'ISLAND',
+    ISLAND_IMAGE_LOG_DETAIL: 'ISLAND',
+    ISLAND_ILLUSTRATION: 'ISLAND',
+    ISLAND_STUDY_NOTES: 'ISLAND',
+    ISLAND_TRAINER_CARD: 'ISLAND',
+  }
+
+const PAGE_THEME_COLORS: Partial<
+  Record<keyof typeof PAGE_DESCRIPTIONS, string>
+> = {
+  ABOUT: '#e23456',
+  ARCHIVE: '#5ad480',
+  CRAFT: '#244392',
+  FLANERIE: '#8a2c1b',
+  HOME: '#e23456',
+  ISLAND: '#e23456',
+  PET: '#e23456',
+}
+
+const LEGACY_RED_BACKGROUND_GROUPS = new Set(['ABOUT', 'HOME', 'ISLAND'])
+
+export type PageLayout = 'main' | 'sub'
+
+interface RouteMeta {
+  activeMenu?: string
+  updatedAt?: string
+  titleEn: string
+  titleCn: string
+  fullFooter: boolean
+  pageFooter: boolean
+  pageLayout: PageLayout
+  ifShow: boolean
+  noMenu?: boolean
+  starBackground?: 'default' | 'deep-black'
+}
+
+type RouteConfig = RouteRecordRaw & {
+  name: string
+  meta: RouteMeta
+}
+
+export const routes: RouteConfig[] = [
+  {
+    path: ROUTE_CONFIG.DEFAULT_PATH,
+    name: 'HOME',
+    component: () => import('@/views/Home/index.vue'),
+    meta: {
+      titleEn: 'HOME',
+      titleCn: '主页',
+      fullFooter: false,
+      pageFooter: false,
+      pageLayout: 'main',
+      ifShow: true,
+    },
+  },
+  {
+    path: '/archive',
+    name: 'ARCHIVE',
+    component: () => import('@/views/Archive/index.vue'),
+    meta: {
+      updatedAt: '2026-07-06',
+      titleEn: 'ARCHIVE',
+      titleCn: '作品集',
+      fullFooter: true,
+      pageFooter: true,
+      pageLayout: 'sub',
+      ifShow: true,
+    },
+  },
+  {
+    path: '/flanerie',
+    name: 'FLANERIE',
+    component: () => import('@/views/Flânerie/index.vue'),
+    meta: {
+      updatedAt: '2026-07-18',
+      titleEn: 'FLÂNERIE',
+      titleCn: '旅程',
+      fullFooter: true,
+      pageFooter: true,
+      pageLayout: 'sub',
+      ifShow: true,
+    },
+  },
+  {
+    path: '/flanerie/:vlogId',
+    name: 'FLANERIE_DETAIL',
+    component: () => import('@/views/Flânerie/Detail/index.vue'),
+    meta: {
+      activeMenu: '/flanerie',
+      titleEn: 'FLÂNERIE',
+      titleCn: '旅程',
+      fullFooter: true,
+      pageFooter: true,
+      pageLayout: 'sub',
+      ifShow: false,
+      noMenu: false,
+      starBackground: 'deep-black',
+    },
+  },
+
+  {
+    path: '/island',
+    name: 'ISLAND',
+    component: () => import('@/views/Island/Lucario.vue'),
+    meta: {
+      updatedAt: '2026-10-08',
+      starBackground: 'deep-black',
+      titleEn: 'ISLAND',
+      titleCn: '个人海湾',
+      fullFooter: false,
+      pageFooter: false,
+      pageLayout: 'main',
+      ifShow: true,
+    },
+  },
+  {
+    path: '/island/photography',
+    name: 'ISLAND_PHOTOGRAPHY',
+    component: () => import('@/views/Island/Photography/index.vue'),
+    meta: {
+      activeMenu: '/island',
+      titleEn: 'PHOTOGRAPHY',
+      titleCn: '摄影作品',
+      fullFooter: true,
+      pageFooter: true,
+      pageLayout: 'sub',
+      ifShow: false,
+      noMenu: false,
+      starBackground: 'deep-black',
+    },
+  },
+  {
+    path: '/island/merch-photography',
+    name: 'ISLAND_MERCH_PHOTOGRAPHY',
+    component: () => import('@/views/Island/MerchPhotography/index.vue'),
+    meta: {
+      activeMenu: '/island',
+      titleEn: 'COLLECTIBLES',
+      titleCn: '收藏品',
+      fullFooter: true,
+      pageFooter: true,
+      pageLayout: 'sub',
+      ifShow: false,
+      noMenu: false,
+      starBackground: 'deep-black',
+    },
+  },
+  {
+    path: '/island/merch-photography/:collectionId',
+    name: 'ISLAND_MERCH_PHOTOGRAPHY_DETAIL',
+    component: () => import('@/views/Island/MerchPhotography/Detail/index.vue'),
+    meta: {
+      activeMenu: '/island',
+      titleEn: 'COLLECTIBLES',
+      titleCn: '收藏品',
+      fullFooter: true,
+      pageFooter: true,
+      pageLayout: 'sub',
+      ifShow: false,
+      noMenu: false,
+      starBackground: 'deep-black',
+    },
+  },
+  {
+    path: '/island/image-log',
+    name: 'ISLAND_IMAGE_LOG',
+    component: () => import('@/views/Island/ImageLog/index.vue'),
+    meta: {
+      activeMenu: '/island',
+      titleEn: 'IMAGE LOG',
+      titleCn: '图像记录',
+      fullFooter: true,
+      pageFooter: true,
+      pageLayout: 'sub',
+      ifShow: false,
+      noMenu: false,
+      starBackground: 'deep-black',
+    },
+  },
+  {
+    path: '/island/image-log/:albumId',
+    name: 'ISLAND_IMAGE_LOG_DETAIL',
+    component: () => import('@/views/Island/ImageLog/Detail/index.vue'),
+    meta: {
+      activeMenu: '/island',
+      titleEn: 'IMAGE LOG',
+      titleCn: '图像记录',
+      fullFooter: true,
+      pageFooter: true,
+      pageLayout: 'sub',
+      ifShow: false,
+      noMenu: false,
+      starBackground: 'deep-black',
+    },
+  },
+  {
+    path: '/island/illustration',
+    name: 'ISLAND_ILLUSTRATION',
+    component: () => import('@/views/Island/WorksGallery/index.vue'),
+    meta: {
+      activeMenu: '/island',
+      titleEn: 'ILLUSTRATION',
+      titleCn: '绘画',
+      fullFooter: true,
+      pageFooter: true,
+      pageLayout: 'sub',
+      ifShow: false,
+      noMenu: false,
+      starBackground: 'deep-black',
+    },
+  },
+  {
+    path: '/island/trainer-card',
+    name: 'ISLAND_TRAINER_CARD',
+    component: () => import('@/views/Island/WorksGallery/index.vue'),
+    meta: {
+      activeMenu: '/island',
+      titleEn: 'TRAINER CARD',
+      titleCn: '训练家卡',
+      fullFooter: true,
+      pageFooter: true,
+      pageLayout: 'sub',
+      ifShow: false,
+      noMenu: false,
+      starBackground: 'deep-black',
+    },
+  },
+  {
+    path: '/island/study-notes',
+    name: 'ISLAND_STUDY_NOTES',
+    component: () => import('@/views/Island/StudyNotes/index.vue'),
+    meta: {
+      activeMenu: '/island',
+      titleEn: 'STUDY NOTES',
+      titleCn: '学习笔记',
+      fullFooter: true,
+      pageFooter: true,
+      pageLayout: 'sub',
+      ifShow: false,
+      noMenu: false,
+      starBackground: 'deep-black',
+    },
+  },
+  {
+    path: '/craft',
+    name: 'CRAFT',
+    component: () => import('@/views/Craft/index.vue'),
+    meta: {
+      updatedAt: '2026-07-08',
+      titleEn: 'CRAFT',
+      titleCn: '工具',
+      fullFooter: true,
+      pageFooter: true,
+      pageLayout: 'sub',
+      ifShow: true,
+    },
+  },
+  {
+    path: '/about',
+    name: 'ABOUT',
+    component: () => import('@/views/About/index.vue'),
+    meta: {
+      updatedAt: '2026-07-11',
+      titleEn: 'ABOUT',
+      titleCn: '关于',
+      fullFooter: false,
+      pageFooter: true,
+      pageLayout: 'main',
+      ifShow: true,
+    },
+  },
+  {
+    path: '/404',
+    name: '404',
+    component: () => import('@/views/404/index.vue'),
+    meta: {
+      titleEn: '404',
+      titleCn: '404',
+      fullFooter: false,
+      pageFooter: false,
+      pageLayout: 'main',
+      ifShow: false,
+    },
+  },
+  {
+    path: '/pet',
+    name: 'PET',
+    component: () => import('@/views/Flora/index.vue'),
+    meta: {
+      titleEn: 'Floratrium',
+      titleCn: '花花庭院',
+      fullFooter: false,
+      pageFooter: false,
+      pageLayout: 'sub',
+      ifShow: false,
+    },
+  },
+  {
+    path: '/colorPalette',
+    name: 'COLORPALETTE',
+    component: () => import('@/views/Craft/ColorPalette/index.vue'),
+    meta: {
+      titleEn: 'COLOR EXTRACTOR',
+      titleCn: '配色提取器',
+      fullFooter: true,
+      pageFooter: true,
+      pageLayout: 'sub',
+      ifShow: false,
+      noMenu: true,
+    },
+  },
+  {
+    path: '/easeStudio',
+    name: 'EASESTUDIO',
+    component: () => import('@/views/Craft/EaseStudio/index.vue'),
+    meta: {
+      titleEn: 'EASE STUDIO',
+      titleCn: '可视化贝塞尔曲线调整',
+      fullFooter: true,
+      pageFooter: true,
+      pageLayout: 'sub',
+      ifShow: false,
+      noMenu: true,
+    },
+  },
+  {
+    path: '/metronome',
+    name: 'METRONOME',
+    component: () => import('@/views/Craft/Metronome/index.vue'),
+    meta: {
+      titleEn: 'METRONOME',
+      titleCn: '节拍器',
+      fullFooter: true,
+      pageFooter: true,
+      pageLayout: 'sub',
+      ifShow: false,
+      noMenu: true,
+    },
+  },
+  {
+    path: '/bounceDynamics',
+    name: 'BOUNCEDYNAMICS',
+    component: () => import('@/views/Craft/BounceDynamics/index.vue'),
+    meta: {
+      titleEn: 'BOUNCING BALL',
+      titleCn: '弹力球',
+      fullFooter: true,
+      pageFooter: true,
+      pageLayout: 'sub',
+      ifShow: false,
+      noMenu: true,
+    },
+  },
+  {
+    path: '/htmlEntities',
+    name: 'HTMLENTITIES',
+    component: () => import('@/views/Craft/HtmlEntities/index.vue'),
+    meta: {
+      titleEn: 'HTML ENTITIES',
+      titleCn: 'HTML常用转义字符',
+      fullFooter: true,
+      pageFooter: true,
+      pageLayout: 'sub',
+      ifShow: false,
+      noMenu: true,
+    },
+  },
+  {
+    path: '/base64Codec',
+    name: 'BASE64CODEC',
+    component: () => import('@/views/Craft/Base64Codec/index.vue'),
+    meta: {
+      titleEn: 'BASE64 CODEC',
+      titleCn: 'Base64加解密',
+      fullFooter: true,
+      pageFooter: true,
+      pageLayout: 'sub',
+      ifShow: false,
+      noMenu: true,
+    },
+  },
+  {
+    path: '/imageBase64',
+    name: 'IMAGEBASE64',
+    component: () => import('@/views/Craft/ImageBase64/index.vue'),
+    meta: {
+      titleEn: 'IMAGE BASE64',
+      titleCn: '图片转Base64',
+      fullFooter: true,
+      pageFooter: true,
+      pageLayout: 'sub',
+      ifShow: false,
+      noMenu: true,
+    },
+  },
+  {
+    path: '/ai-playground/arknightxpersona3reload',
+    name: 'ARKNIGHT_PERSONA_RELOAD',
+    component: () => import('@/views/AiPlayground/ArknightPersona/index.vue'),
+    meta: {
+      titleEn: 'ARKNIGHTS × PERSONA 3 RELOAD',
+      titleCn: 'GPT-6-Astra前端UI复刻',
+      fullFooter: true,
+      pageFooter: true,
+      pageLayout: 'sub',
+      ifShow: false,
+      noMenu: true,
+      starBackground: 'deep-black',
+    },
+  },
+  {
+    path: '/games/sleepingdogs/bullsAndCows',
+    name: 'SLEEPING_DOGS_BULLS_AND_COWS',
+    component: () =>
+      import('@/views/Games/SleepingDogs/BullsAndCows/index.vue'),
+    meta: {
+      activeMenu: '/island',
+      titleEn: '猜数字',
+      titleCn: '猜数字',
+      fullFooter: true,
+      pageFooter: true,
+      pageLayout: 'sub',
+      ifShow: false,
+      noMenu: true,
+      starBackground: 'deep-black',
+    },
+  },
+  {
+    path: '/games/sleepingdogs/saftybox',
+    name: 'SLEEPING_DOGS_SAFETY_BOX',
+    component: () => import('@/views/Games/SleepingDogs/SafetyBox/index.vue'),
+    meta: {
+      activeMenu: '/island',
+      titleEn: '保险箱小游戏',
+      titleCn: '保险箱小游戏',
+      fullFooter: true,
+      pageFooter: true,
+      pageLayout: 'sub',
+      ifShow: false,
+      noMenu: true,
+      starBackground: 'deep-black',
+    },
+  },
+  {
+    path: '/games/chineseChessCardGames/chineseChess',
+    name: 'CHINESE_CHESS',
+    component: () =>
+      import('@/views/Games/ChineseChessCardGames/ChineseChess/index.vue'),
+    meta: {
+      activeMenu: '/island',
+      titleEn: '中国象棋',
+      titleCn: '中国象棋',
+      fullFooter: true,
+      pageFooter: true,
+      pageLayout: 'sub',
+      ifShow: false,
+      noMenu: true,
+      starBackground: 'deep-black',
+    },
+  },
+  {
+    path: '/test',
+    name: 'TEST',
+    component: () => import('@/views/Island/index.vue'),
+    meta: {
+      activeMenu: '/island',
+      updatedAt: '2026-07-18',
+      titleEn: 'ISLAND',
+      titleCn: '个人海湾',
+      fullFooter: true,
+      pageFooter: false,
+      pageLayout: 'sub',
+      ifShow: false,
+    },
+  },
+]
+
+const routeByName = new Map(routes.map((route) => [route.name, route]))
+
+NProgress.configure({
+  easing: 'ease',
+  speed: 220,
+  showSpinner: false,
+  trickleSpeed: 120,
+  minimum: 0.3,
+})
+
+const setMetaContent = (
+  selector: string,
+  content: string,
+  attribute = 'content'
+) => {
+  const element = document.head.querySelector(selector)
+  if (element) element.setAttribute(attribute, content)
+}
+
+export type SeoLocale = 'zhCn' | 'en'
+
+interface VlogSeoItem {
+  id: string
+  title: string
+}
+
+export const getSeoMeta = (
+  to: RouteLocationNormalizedLoaded,
+  locale: SeoLocale,
+  vlogs: VlogSeoItem[]
+) => {
+  const routeName = String(to.name || 'HOME')
+  const vlogId =
+    typeof to.params.vlogId === 'string' ? to.params.vlogId : undefined
+  const vlogTitle = vlogId
+    ? vlogs.find((vlog) => vlog.id === vlogId)?.title
+    : undefined
+  const pageTitle = vlogTitle || String(to.meta.titleEn || 'HOME')
+  const siteTitle = locale === 'en' ? 'Anutrium by Anuluca' : 'Anutrium'
+  const descriptionRouteName = DESCRIPTION_ROUTE_GROUPS[routeName] || routeName
+  const description =
+    PAGE_DESCRIPTIONS[descriptionRouteName]?.[locale] ||
+    PAGE_DESCRIPTIONS.HOME[locale]
+  const canonicalUrl = `${ROUTE_CONFIG.SITE_URL}${
+    to.path === '/' ? '/' : to.path.replace(/\/$/, '')
+  }`
+
+  return {
+    title: `${pageTitle} | ${siteTitle}`,
+    description,
+    canonicalUrl,
+    lang: locale === 'en' ? 'en' : 'zh-CN',
+    openGraphLocale: locale === 'en' ? 'en_US' : 'zh_CN',
+  }
+}
+
+export const syncSeoMeta = (to: RouteLocationNormalizedLoaded) => {
+  if (typeof document === 'undefined') return
+
+  const locale = i18n.global.locale.value === 'en' ? 'en' : 'zhCn'
+  const translateMessage = i18n.global.tm as (key: string) => unknown
+  const vlogs =
+    typeof to.params.vlogId === 'string'
+      ? (translateMessage('flanerie.dynamic.vlogs') as VlogSeoItem[])
+      : []
+  const seoMeta = getSeoMeta(to, locale, vlogs)
+
+  document.title = seoMeta.title
+  document.documentElement.lang = seoMeta.lang
+  setMetaContent('meta[name="description"]', seoMeta.description)
+  setMetaContent('meta[property="og:title"]', seoMeta.title)
+  setMetaContent('meta[property="og:description"]', seoMeta.description)
+  setMetaContent('meta[property="og:url"]', seoMeta.canonicalUrl)
+  setMetaContent('meta[property="og:locale"]', seoMeta.openGraphLocale)
+  setMetaContent('meta[name="twitter:title"]', seoMeta.title)
+  setMetaContent('meta[name="twitter:description"]', seoMeta.description)
+  setMetaContent('link[rel="canonical"]', seoMeta.canonicalUrl, 'href')
+}
+
+const getPageThemeGroup = (route: RouteLocationNormalizedLoaded) => {
+  const routeName = String(route.name || 'HOME')
+  const activeMenuGroup =
+    typeof route.meta.activeMenu === 'string'
+      ? route.meta.activeMenu.split('/').filter(Boolean)[0]?.toUpperCase()
+      : undefined
+  return activeMenuGroup || DESCRIPTION_ROUTE_GROUPS[routeName] || routeName
+}
+
+const getPageThemeColor = (route: RouteLocationNormalizedLoaded) => {
+  const pageGroup = getPageThemeGroup(route)
+
+  return (
+    PAGE_THEME_COLORS[pageGroup as keyof typeof PAGE_THEME_COLORS] || '#e23456'
+  )
+}
+
+export const syncPageTheme = (route: RouteLocationNormalizedLoaded) => {
+  if (typeof document === 'undefined') return
+  const rootStyle = document.documentElement.style
+  const pageGroup = getPageThemeGroup(route)
+
+  rootStyle.setProperty('--page-theme-color', getPageThemeColor(route))
+
+  if (LEGACY_RED_BACKGROUND_GROUPS.has(pageGroup)) {
+    rootStyle.setProperty('--page-theme-background-dark', '#380e1c')
+    rootStyle.setProperty('--page-theme-background-light', '#3e101f')
+  } else {
+    rootStyle.removeProperty('--page-theme-background-dark')
+    rootStyle.removeProperty('--page-theme-background-light')
+  }
+}
+
+export const installRouterGuards = (router: Router) => {
+  if (typeof document !== 'undefined') installRouteIntentPreload(router)
+
+  router.beforeEach(async (to, from) => {
+    if (!router.hasRoute(to.name)) {
+      if (to.path !== ROUTE_CONFIG.NOT_FOUND_PATH) {
+        return { path: ROUTE_CONFIG.NOT_FOUND_PATH }
+      }
+    }
+
+    if (typeof document !== 'undefined') {
+      if (from.matched.length > 0 && to.fullPath !== from.fullPath) {
+        finishRouteCursorLoading()
+        cursorState().startLoading(ROUTE_CURSOR_LOADING_SOURCE)
+      }
+      NProgress.start()
+      void preloadRouteComponent(to.name).catch(() => undefined)
+    }
+
+    await ensureRouteMessages(to.name)
+    return true
+  })
+
+  router.afterEach((to, _from, failure) => {
+    if (typeof window === 'undefined') return
+
+    NProgress.done()
+    if (failure) {
+      finishRouteCursorLoading()
+      return
+    }
+
+    routeCursorFallbackTimer = window.setTimeout(finishRouteCursorLoading, 1500)
+
+    syncSeoMeta(to)
+    syncPageTheme(to)
+  })
+
+  router.onError(() => {
+    if (typeof window === 'undefined') return
+
+    NProgress.done()
+    finishRouteCursorLoading()
+  })
+}

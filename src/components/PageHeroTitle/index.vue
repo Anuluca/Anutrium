@@ -2,6 +2,7 @@
   <div
     ref="titleContainer"
     class="page-hero-title"
+    :class="{ 'is-static': props.static }"
     :style="{ '--page-hero-title-color': titleColor }"
   >
     <div ref="titleClip" class="page-hero-title__clip">
@@ -37,6 +38,13 @@ import { useRoute } from 'vue-router'
 import { addPageScrollListener, getPageScrollTop } from '@/utils/pageScroll'
 
 const route = useRoute()
+const props = withDefaults(
+  defineProps<{ static?: boolean; color?: string }>(),
+  {
+    static: false,
+    color: '',
+  }
+)
 const title = computed(() =>
   String(route.meta.titleEn || route.name || '').toUpperCase()
 )
@@ -70,7 +78,7 @@ const themeColors: Record<string, string> = {
   ABOUT: '#e23456',
 }
 const titleColor = computed(
-  () => themeColors[String(route.name)] || 'var(--text-color)'
+  () => props.color || themeColors[String(route.name)] || 'var(--text-color)'
 )
 const titleContainer = ref<HTMLElement | null>(null)
 const titleClip = ref<HTMLElement | null>(null)
@@ -142,7 +150,7 @@ const getNextCharacterIndex = () => {
 
 const scheduleCharacterAnimation = () => {
   clearCharacterAnimationSchedule()
-  if (!reducedMotionQuery || reducedMotionQuery.matches) return
+  if (props.static || !reducedMotionQuery || reducedMotionQuery.matches) return
 
   const delay =
     characterAnimationDelay.min +
@@ -192,6 +200,7 @@ const fitTitleToRow = () => {
 }
 
 const syncScrollCollapse = () => {
+  if (props.static) return
   if (!titleContainer.value || !titleClip.value || !titleFullHeight) return
 
   const progress = Math.min(1, getPageScrollTop() / collapseDistance)
@@ -242,13 +251,15 @@ watch(title, () => {
 
 onMounted(() => {
   isMounted = true
-  prepareCharacterDirections()
-  reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-  reducedMotionQuery.addEventListener('change', handleReducedMotionChange)
-  scheduleCharacterAnimation()
+  if (!props.static) {
+    prepareCharacterDirections()
+    reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+    reducedMotionQuery.addEventListener('change', handleReducedMotionChange)
+    scheduleCharacterAnimation()
+    removeScrollListener = addPageScrollListener(syncScrollCollapse)
+  }
   resizeObserver = new ResizeObserver(scheduleTitleGeometry)
   if (titleContainer.value) resizeObserver.observe(titleContainer.value)
-  removeScrollListener = addPageScrollListener(syncScrollCollapse)
 
   nextTick(scheduleTitleGeometry)
   document.fonts?.ready.then(() => {
@@ -420,6 +431,15 @@ onBeforeUnmount(() => {
 
   &.is-collapsed .page-hero-title__char {
     pointer-events: none;
+  }
+
+  &.is-static .page-hero-title__char {
+    pointer-events: none;
+    transition: none;
+
+    .page-hero-title__char-incoming {
+      display: none;
+    }
   }
 }
 

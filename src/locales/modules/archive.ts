@@ -18,7 +18,7 @@ const archive = {
     en: 'OPENINGS',
   },
   statusWorkValue: {
-    zhCn: '空闲_调整中',
+    zhCn: '空闲',
     en: 'AVAILABLE',
   },
   statusCta: {

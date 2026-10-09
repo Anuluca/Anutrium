@@ -57,7 +57,7 @@ const pageRoutes = [
   {
     path: '/island/merch-photography',
     selector: '.merch-page',
-    title: /MERCH PHOTOGRAPHY|周边摄影/,
+    title: /COLLECTIBLES|收藏品/,
   },
   {
     path: '/island/illustration',
@@ -2321,7 +2321,9 @@ test('archive loads the work detail modal on demand', async ({
   }
 })
 
-test('personal bay menu entry redirects to 404', async ({ page }, testInfo) => {
+test('personal bay menu entry opens the Lucario page', async ({
+  page,
+}, testInfo) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.home-page')).toBeVisible({
     timeout: PAGE_LOAD_TIMEOUT,
@@ -2334,8 +2336,8 @@ test('personal bay menu entry redirects to 404', async ({ page }, testInfo) => {
     await page.locator('.menu-box a[href="/island"]').click()
   }
 
-  await expect(page).toHaveURL(/\/404$/)
-  await expect(page.locator('.not-found-page')).toBeVisible()
+  await expect(page).toHaveURL(/\/island$/)
+  await expect(page.locator('.lucario-page')).toBeVisible()
 })
 
 test('404 page remains locked at the top', async ({ page }) => {
@@ -2468,7 +2470,10 @@ test('desktop personal bay releases temporary compositor layers after entrance',
 
   await page.setViewportSize({ width: 1920, height: 900 })
   await page.goto('/test', { waitUntil: 'domcontentloaded' })
-  await expect(page.locator('.port-panel')).toHaveCount(4, {
+  await expect(page.locator('.footer-bottom-gradient--ready')).toBeAttached()
+  await page.mouse.move(960, 450)
+  await expect(page.locator('.cursor-position')).toBeAttached()
+  await expect(page.locator('.port-panel')).toHaveCount(3, {
     timeout: PAGE_LOAD_TIMEOUT,
   })
   await page.waitForTimeout(1_600)
@@ -2491,11 +2496,11 @@ test('desktop personal bay releases temporary compositor layers after entrance',
     ),
   }))
 
-  expect(renderingState.cursorBlendMode).toBe('normal')
+  expect(renderingState.cursorBlendMode).toBe('difference')
   expect(renderingState.latestClipPath).toBe('none')
-  expect(renderingState.panelClipPaths).toEqual(Array(4).fill('none'))
-  expect(renderingState.panelTransforms).toEqual(Array(4).fill('none'))
-  expect(renderingState.portLineFilters).toEqual(Array(4).fill('none'))
+  expect(renderingState.panelClipPaths).toEqual(Array(3).fill('none'))
+  expect(renderingState.panelTransforms).toEqual(Array(3).fill('none'))
+  expect(renderingState.portLineFilters).toEqual(Array(3).fill('none'))
 })
 
 test('mobile menu locks background scrolling', async ({ page }, testInfo) => {
@@ -3525,18 +3530,38 @@ test('merch photography detail page renders', async ({ page }) => {
   await expect(page.locator('.merch-detail-page')).toBeVisible({
     timeout: PAGE_LOAD_TIMEOUT,
   })
-  await expect(page).toHaveTitle(/MERCH PHOTOGRAPHY|周边摄影/)
+  await expect(page).toHaveTitle(/COLLECTIBLES|收藏品/)
 })
 
 test('personal bay work cards match their gallery item counts', async ({
   page,
 }) => {
-  const workModules = [
-    { title: '绘画', path: '/island/illustration' },
-    { title: '训练家卡', path: '/island/trainer-card' },
-  ]
+  const workModules = [{ title: '绘画', path: '/island/illustration' }]
 
   await page.goto('/test', { waitUntil: 'domcontentloaded' })
+
+  const works = page.locator(
+    '.port-panel--works:visible, .mobile-port--works:visible'
+  )
+  const interests = page.locator(
+    '.port-panel--interests:visible, .mobile-port--interests:visible'
+  )
+  await expect(works.getByRole('button', { name: /摄影作品/ })).toHaveCount(1)
+  await expect(interests.getByRole('button', { name: /收藏品/ })).toHaveCount(1)
+  await expect(interests.getByText('宅', { exact: true })).toHaveCount(1)
+  await expect(interests.locator('button strong')).toHaveText([
+    '游戏库',
+    '收藏品',
+  ])
+  await expect(
+    page.locator('.port-panel--photography, .mobile-port--photography')
+  ).toHaveCount(0)
+
+  await expect(
+    page
+      .locator('.bay-card:visible, .mobile-bay-card:visible')
+      .filter({ hasText: /图像记录|训练家卡/ })
+  ).toHaveCount(0)
 
   for (const workModule of workModules) {
     const card = page

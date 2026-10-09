@@ -166,7 +166,7 @@
   will-change: opacity;
 
   &.is-visible {
-    opacity: 0.5;
+    opacity: 0.65;
   }
 }
 
@@ -195,6 +195,12 @@
   z-index: var(--layer-zodiac);
   color: var(--chart-primary);
   transition: transform 1.16s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.zodiac-gradient-layer,
+.zodiac-artwork {
+  position: absolute;
+  inset: 0;
 }
 
 .zodiac-static-art {
@@ -348,6 +354,49 @@
   .star-container.is-content-layout {
     --stage-offset-y: calc(-50% + 14dvh);
     --stage-scale: 2.22;
+  }
+}
+
+// 星盘整体着色后沿竖直方向减弱亮度；遮罩不跟随内部星座轮盘旋转。
+.star-container.is-red-layout {
+  --chart-primary: rgba(226, 52, 86, 0.76);
+  --chart-strong: #e23456;
+  --chart-faint: rgba(226, 52, 86, 0.24);
+  --stage-offset-y: -50%;
+  --stage-opacity: 0.6;
+
+  .particle-viewport.is-visible {
+    opacity: 1;
+  }
+
+  .zodiac-stage {
+    --stage-scale: var(--hero-scale);
+  }
+
+  // 旋转后的菱形宽度为星盘的 √2 倍，遮罩必须覆盖其溢出部分。
+  .zodiac-gradient-layer {
+    inset: -25%;
+    // 遮罩比星盘大 1.5 倍：星盘自下而上 80% 处对应遮罩的 70% 处。
+    mask-image: linear-gradient(to top, #000 70%, rgba(0, 0, 0, 0.08) 83.333%);
+    -webkit-mask-image: linear-gradient(
+      to top,
+      #000 70%,
+      rgba(0, 0, 0, 0.08) 83.333%
+    );
+  }
+
+  .zodiac-artwork {
+    inset: calc(100% / 6);
+  }
+
+  .zodiac-static-art--tinted {
+    background-color: #e23456;
+    mask-image: var(--static-chart-mask);
+    -webkit-mask-image: var(--static-chart-mask);
+    mask-size: contain;
+    -webkit-mask-size: contain;
+    mask-repeat: no-repeat;
+    -webkit-mask-repeat: no-repeat;
   }
 }
 

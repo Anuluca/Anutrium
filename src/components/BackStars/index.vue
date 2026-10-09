@@ -26,7 +26,7 @@ type ZodiacSignId =
   | 'aquarius'
   | 'pisces'
 
-type ZodiacLayout = 'hero' | 'content'
+type ZodiacLayout = 'hero' | 'content' | 'red'
 
 interface Props {
   theme?: 'light' | 'dark'
@@ -35,6 +35,7 @@ interface Props {
   activeSign?: ZodiacSignId
   layout?: ZodiacLayout
   particlesVisible?: boolean
+  particleFps?: number
   topInset?: number
   entryActive?: boolean
 }
@@ -53,6 +54,7 @@ const props = withDefaults(defineProps<Props>(), {
   activeSign: 'leo',
   layout: 'hero',
   particlesVisible: true,
+  particleFps: 60,
   topInset: 0,
   entryActive: true,
 })
@@ -153,8 +155,13 @@ const stageStyle = computed(() => ({
 const containerStyle = computed(() => ({
   '--background-top-inset': `${Math.max(0, props.topInset)}px`,
 }))
-const PARTICLE_COLOR = '#ffffff'
-const particleQuantity = computed(() => (isMobileViewport.value ? 25 : 100))
+const themeParticleColor = ref('#e23456')
+const particleColor = computed(() =>
+  props.layout === 'red' ? themeParticleColor.value : '#ffffff'
+)
+const particleQuantity = computed(() =>
+  Math.round((isMobileViewport.value ? 25 : 100) * 1.3)
+)
 
 const getBackdropTargetColor = () => {
   if (props.deepBlack) return '#030303'
@@ -205,6 +212,11 @@ const getCurrentBackdropColor = () => {
 }
 
 const updateBackdropColor = async (immediate = false) => {
+  themeParticleColor.value =
+    window
+      .getComputedStyle(document.documentElement)
+      .getPropertyValue('--page-theme-color')
+      .trim() || '#e23456'
   const targetColor = getBackdropTargetColor()
   if (targetColor === backdropTargetColor) return
 
@@ -366,6 +378,7 @@ const containerClass = computed(() => [
     'menu-hidden': props.isTextMenu,
     'is-deep-black': props.deepBlack,
     'is-content-layout': props.layout === 'content',
+    'is-red-layout': props.layout === 'red',
     'is-chart-transitioning': isChartTransitioning.value,
     'is-route-transitioning': isRouteTransitioning.value,
     'is-entry-ready': props.entryActive,
@@ -426,7 +439,9 @@ onUnmounted(() => {
         class="particle-field"
         :active="props.entryActive && isParticleFieldVisible"
         :quantity="particleQuantity"
-        :color="PARTICLE_COLOR"
+        :max-fps="props.particleFps"
+        :color="particleColor"
+        :opaque="props.layout === 'red'"
         :refresh="props.entryActive"
       />
     </div>
@@ -438,43 +453,53 @@ onUnmounted(() => {
       @transitionend="handleChartTransitionEnd"
       @transitioncancel="handleChartTransitionEnd"
     >
-      <img
-        class="zodiac-static-art"
-        :src="STATIC_CHART_SRC"
-        alt=""
-        draggable="false"
-        decoding="async"
-        fetchpriority="high"
-        width="1000"
-        height="1000"
-        loading="eager"
-      />
+      <div class="zodiac-gradient-layer">
+        <div class="zodiac-artwork">
+          <span
+            v-if="props.layout === 'red'"
+            class="zodiac-static-art zodiac-static-art--tinted"
+            :style="{ '--static-chart-mask': `url('${STATIC_CHART_SRC}')` }"
+          />
+          <img
+            v-else
+            class="zodiac-static-art"
+            :src="STATIC_CHART_SRC"
+            alt=""
+            draggable="false"
+            decoding="async"
+            fetchpriority="high"
+            width="1000"
+            height="1000"
+            loading="eager"
+          />
 
-      <div class="zodiac-html-wheel">
-        <span
-          v-for="(style, index) in sectorStyles"
-          :key="`sector-${index}`"
-          class="zodiac-sector-line"
-          :style="style"
-        />
+          <div class="zodiac-html-wheel">
+            <span
+              v-for="(style, index) in sectorStyles"
+              :key="`sector-${index}`"
+              class="zodiac-sector-line"
+              :style="style"
+            />
 
-        <div
-          v-for="sign in zodiacSigns"
-          :key="sign.id"
-          class="zodiac-sign-position"
-          :style="sign.positionStyle"
-        >
-          <div
-            class="zodiac-sign-face"
-            :class="{ 'is-active': sign.id === props.activeSign }"
-            :style="sign.faceStyle"
-          >
-            <span class="zodiac-glyph">{{ sign.glyph }}</span>
+            <div
+              v-for="sign in zodiacSigns"
+              :key="sign.id"
+              class="zodiac-sign-position"
+              :style="sign.positionStyle"
+            >
+              <div
+                class="zodiac-sign-face"
+                :class="{ 'is-active': sign.id === props.activeSign }"
+                :style="sign.faceStyle"
+              >
+                <span class="zodiac-glyph">{{ sign.glyph }}</span>
+              </div>
+            </div>
           </div>
+
+          <span class="zodiac-diamond-frame" />
         </div>
       </div>
-
-      <span class="zodiac-diamond-frame" />
     </div>
   </div>
 </template>

@@ -79,9 +79,10 @@ watch(
   { flush: 'sync' }
 )
 
-const zodiacLayout = computed(() =>
-  currentRouter.value === '/' ? visualStateStore.zodiacLayout : 'content'
-)
+const zodiacLayout = computed(() => {
+  if (currentRouter.value === '/island') return 'red'
+  return currentRouter.value === '/' ? visualStateStore.zodiacLayout : 'content'
+})
 const particlesVisible = computed(
   () => currentRouter.value !== '/' || visualStateStore.homeStarfieldVisible
 )
@@ -96,6 +97,7 @@ const particlesVisible = computed(
       :active-sign="activeSign"
       :layout="zodiacLayout"
       :particles-visible="particlesVisible"
+      :particle-fps="currentRouter === '/island' ? 12 : 60"
       :top-inset="visualStateStore.backgroundTopInset"
       :entry-active="props.entryActive"
     />

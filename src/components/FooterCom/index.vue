@@ -42,6 +42,8 @@ const isInternalHref = (href: string) =>
 const isMotionPaused = ref(false)
 const footerExpanded = ref(false)
 const marqueeTrack = ref<HTMLElement | null>(null)
+const marqueeViewport = ref<HTMLElement | null>(null)
+const marqueeCopies = ref(2)
 const marqueeDuration = ref('24s')
 const marqueeDistance = ref('0px')
 let footerAnimationTimer: number | null = null
@@ -58,7 +60,10 @@ onMounted(() => {
     scheduleMarqueeUpdate()
     if (marqueeTrack.value && 'ResizeObserver' in window) {
       marqueeResizeObserver = new ResizeObserver(scheduleMarqueeUpdate)
-      marqueeResizeObserver.observe(marqueeTrack.value)
+      const content = marqueeTrack.value.firstElementChild
+      if (content) marqueeResizeObserver.observe(content)
+      if (marqueeViewport.value)
+        marqueeResizeObserver.observe(marqueeViewport.value)
     }
   })
   if (props.entryActive) {
@@ -88,8 +93,14 @@ const updateMotionState = () => {
 }
 
 const updateMarqueeDuration = () => {
-  const contentWidth = (marqueeTrack.value?.scrollWidth ?? 0) / 2
+  const contentWidth =
+    marqueeTrack.value?.firstElementChild?.getBoundingClientRect().width ?? 0
   if (!contentWidth) return
+
+  const viewportWidth =
+    marqueeViewport.value?.getBoundingClientRect().width ?? 0
+  // 移出完整一轮后，剩余副本仍须覆盖可见区域；单轮宽度保留小数，避免循环接缝抖动。
+  marqueeCopies.value = Math.max(2, Math.ceil(viewportWidth / contentWidth) + 1)
 
   const duration = Math.min(52, Math.max(12, contentWidth / 46))
   marqueeDuration.value = `${duration.toFixed(2)}s`
@@ -199,7 +210,7 @@ watch(locale, () => nextTick(scheduleMarqueeUpdate))
       </div>
     </div>
 
-    <div class="center">
+    <div ref="marqueeViewport" class="center">
       <div class="expand">
         <div
           ref="marqueeTrack"
@@ -210,10 +221,10 @@ watch(locale, () => nextTick(scheduleMarqueeUpdate))
           }"
         >
           <div
-            v-for="copy in 2"
+            v-for="copy in marqueeCopies"
             :key="copy"
             class="marquee-content"
-            :aria-hidden="copy === 2 ? 'true' : undefined"
+            :aria-hidden="copy > 1 ? 'true' : undefined"
           >
             <span class="recommend">
               <component
@@ -223,22 +234,14 @@ watch(locale, () => nextTick(scheduleMarqueeUpdate))
                 class="recommend-link"
                 :to="isInternalHref(item.href) ? item.href : undefined"
                 :href="isInternalHref(item.href) ? undefined : item.href"
-                :tabindex="copy === 2 ? -1 : undefined"
+                :tabindex="copy > 1 ? -1 : undefined"
               >
-                「
-                <span
-                  :style="{
-                    color: item.color || '#5F9DDD',
-                    fontWeight: 600,
-                  }"
+                <span class="recommend-title"
                   >{{ item.title }}{{ item.sort ? `/${item.sort}` : '' }}</span
                 >
-                」
                 <span class="recommend-date">{{ item.date }}</span>
-                &nbsp;
               </component>
             </span>
-            <b>{{ bottomLineData.intro }}</b>
           </div>
         </div>
       </div>

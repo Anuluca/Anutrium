@@ -1,0 +1,1 @@
+const t=(t,a)=>{try{const r=new URL(t);return"https://assets.anuluca.com"!==r.origin?t:(r.searchParams.set("image",a),r.toString())}catch{return t}},a=a=>t(a,"home-thumb"),r=a=>t(a,"card-thumb"),s=a=>t(a,"card-mobile");export{s as a,r as b,a as g};

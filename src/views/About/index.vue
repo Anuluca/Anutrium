@@ -348,6 +348,59 @@ const roadmapItems = computed<string[]>(() => {
           </a>
         </div>
       </div>
+      <div class="asset-credits">
+        <h4>{{ t('about.assetCredits.title') }}</h4>
+        <p>
+          {{ t('about.assetCredits.unbounded') }}
+          <a
+            href="https://github.com/maoken-fonts/unbounded-sans"
+            target="_blank"
+            rel="noopener noreferrer"
+            >{{ t('about.assetCredits.source') }}</a
+          >
+          ·
+          <a
+            href="https://github.com/maoken-fonts/unbounded-sans/blob/main/OFL.txt"
+            target="_blank"
+            rel="noopener noreferrer"
+            >{{ t('about.assetCredits.license') }}</a
+          >
+        </p>
+        <p>
+          {{ t('about.assetCredits.anton') }}
+          <a
+            href="https://fonts.google.com/specimen/Anton"
+            target="_blank"
+            rel="noopener noreferrer"
+            >{{ t('about.assetCredits.source') }}</a
+          >
+          ·
+          <a
+            href="https://github.com/google/fonts/blob/main/ofl/anton/OFL.txt"
+            target="_blank"
+            rel="noopener noreferrer"
+            >{{ t('about.assetCredits.license') }}</a
+          >
+        </p>
+        <p>
+          {{ t('about.assetCredits.alibaba') }}
+          <a
+            href="https://supplier.alibaba.com/us/news/PX909446.htm"
+            target="_blank"
+            rel="noopener noreferrer"
+            >{{ t('about.assetCredits.official') }}</a
+          >
+        </p>
+        <p>
+          {{ t('about.assetCredits.lucario') }}
+          <a
+            href="https://github.com/Pokemon-3D-api/assets#%EF%B8%8F-license--credits"
+            target="_blank"
+            rel="noopener noreferrer"
+            >{{ t('about.assetCredits.modelSource') }}</a
+          >
+        </p>
+      </div>
     </section>
 
     <PageFooter />

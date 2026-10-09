@@ -6,6 +6,8 @@ interface Props {
   quantity?: number
   color?: string
   refresh?: boolean
+  maxFps?: number
+  opaque?: boolean
 }
 
 interface Particle {
@@ -28,6 +30,8 @@ const props = withDefaults(defineProps<Props>(), {
   quantity: 100,
   color: '#ffffff',
   refresh: false,
+  maxFps: 60,
+  opaque: false,
 })
 
 const canvasElement = ref<HTMLCanvasElement | null>(null)
@@ -50,6 +54,7 @@ let canvasHeight = 1
 let particles: Particle[] = []
 let context: CanvasRenderingContext2D | null = null
 let animationFrameId: number | null = null
+let frameTimer: ReturnType<typeof setTimeout> | null = null
 let resizeObserver: ResizeObserver | null = null
 let intersectionObserver: IntersectionObserver | null = null
 let reducedMotionQuery: MediaQueryList | null = null
@@ -57,6 +62,7 @@ let lastFrameTime = 0
 let particleTextures: ParticleTexture[] = []
 let particleTexturePixelRatio = 0
 const PARTICLE_RADII = [0.65, 1, 1.45, 2.1] as const
+const PARTICLE_DRIFT_SPEED = 0.09
 
 const rebuildParticleTextures = (pixelRatio: number) => {
   if (typeof document === 'undefined') return
@@ -85,8 +91,8 @@ const createParticle = (width: number, height: number): Particle => ({
   alpha: 0.16 + Math.random() * 0.52,
   phase: Math.random() * Math.PI * 2,
   textureIndex: Math.floor(Math.random() * PARTICLE_RADII.length),
-  velocityX: (Math.random() - 0.5) * 0.06,
-  velocityY: (Math.random() - 0.5) * 0.06,
+  velocityX: (Math.random() - 0.5) * PARTICLE_DRIFT_SPEED,
+  velocityY: (Math.random() - 0.5) * PARTICLE_DRIFT_SPEED,
   x: Math.random() * width,
   y: Math.random() * height,
 })
@@ -155,7 +161,7 @@ const drawParticles = (frameTime: number, shouldMove: boolean) => {
     const texture = particleTextures[particle.textureIndex]
     if (!texture) continue
 
-    context.globalAlpha = particle.alpha * flicker
+    context.globalAlpha = props.opaque ? 1 : particle.alpha * flicker
     context.drawImage(
       texture.canvas,
       particle.x - texture.size / 2,
@@ -169,6 +175,8 @@ const drawParticles = (frameTime: number, shouldMove: boolean) => {
 }
 
 const stopAnimation = () => {
+  if (frameTimer !== null) clearTimeout(frameTimer)
+  frameTimer = null
   if (animationFrameId === null) return
   window.cancelAnimationFrame(animationFrameId)
   animationFrameId = null
@@ -180,7 +188,14 @@ const animate = (frameTime: number) => {
 
   drawParticles(frameTime, true)
   lastFrameTime = frameTime
-  animationFrameId = window.requestAnimationFrame(animate)
+  if (props.maxFps < 60) {
+    frameTimer = setTimeout(() => {
+      frameTimer = null
+      animationFrameId = window.requestAnimationFrame(animate)
+    }, 1000 / Math.max(1, props.maxFps))
+  } else {
+    animationFrameId = window.requestAnimationFrame(animate)
+  }
 }
 
 const syncAnimation = () => {
@@ -202,7 +217,7 @@ const handleReducedMotionChange = (event: MediaQueryListEvent) => {
   isReducedMotion.value = event.matches
 }
 
-watch(motionState, syncAnimation)
+watch([motionState, () => props.maxFps], syncAnimation)
 watch(
   () => [props.quantity, props.refresh],
   () => {
@@ -211,7 +226,7 @@ watch(
   }
 )
 watch(
-  () => props.color,
+  () => [props.color, props.opaque],
   () => {
     rebuildParticleTextures(Math.min(window.devicePixelRatio || 1, 1.5))
     drawParticles(performance.now(), false)
@@ -258,6 +273,7 @@ onUnmounted(() => {
     data-renderer="canvas-2d"
     :data-motion-state="motionState"
     :data-particle-count="renderedParticleCount"
+    :data-max-fps="props.maxFps"
   />
 </template>
 

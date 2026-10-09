@@ -1,0 +1,20 @@
+[
+  {
+    "label": "three-pass-half-resolution",
+    "mean": 12.271270942857143,
+    "p50": 12.465458,
+    "p95": 18.452666
+  },
+  {
+    "label": "two-pass-skip-sharp",
+    "mean": 9.57759957142857,
+    "p50": 9.853708,
+    "p95": 15.389499
+  },
+  {
+    "label": "two-pass-unconditional-kernel",
+    "mean": 10.443114914285715,
+    "p50": 9.340499,
+    "p95": 18.959333
+  }
+]

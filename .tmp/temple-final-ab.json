@@ -1,0 +1,90 @@
+[
+  {
+    "version": "before",
+    "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+    "canvas": [
+      5760,
+      3240
+    ],
+    "gpu": {
+      "samples": 40,
+      "mean": 35.4358495,
+      "p50": 32.941041,
+      "p95": 54.374708
+    },
+    "cpu": {
+      "samples": 40,
+      "mean": 2.5800000011920927,
+      "p50": 2.5999999046325684,
+      "p95": 3.4000000953674316
+    },
+    "programs": 38,
+    "errors": []
+  },
+  {
+    "version": "after",
+    "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+    "canvas": [
+      2730,
+      1536
+    ],
+    "gpu": {
+      "samples": 40,
+      "mean": 9.904937050000001,
+      "p50": 9.1055,
+      "p95": 17.837916
+    },
+    "cpu": {
+      "samples": 40,
+      "mean": 2.05,
+      "p50": 2,
+      "p95": 3
+    },
+    "programs": 38,
+    "errors": []
+  },
+  {
+    "version": "before",
+    "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+    "canvas": [
+      5760,
+      3240
+    ],
+    "gpu": {
+      "samples": 40,
+      "mean": 39.404828675,
+      "p50": 36.1755,
+      "p95": 62.392874
+    },
+    "cpu": {
+      "samples": 40,
+      "mean": 0.8474999994039536,
+      "p50": 0.7999999523162842,
+      "p95": 1.3000000715255737
+    },
+    "programs": 38,
+    "errors": []
+  },
+  {
+    "version": "after",
+    "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+    "canvas": [
+      2730,
+      1536
+    ],
+    "gpu": {
+      "samples": 40,
+      "mean": 9.64417985,
+      "p50": 9.327,
+      "p95": 17.772875
+    },
+    "cpu": {
+      "samples": 40,
+      "mean": 2.005000016093254,
+      "p50": 2,
+      "p95": 3
+    },
+    "programs": 38,
+    "errors": []
+  }
+]

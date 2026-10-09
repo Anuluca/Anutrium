@@ -1,0 +1,1067 @@
+{
+  "label": "optimized-first-focus",
+  "duration": 2201.399999976158,
+  "rafCount": 272,
+  "p50Gap": 6.400000095367432,
+  "p95Gap": 15.899999976158142,
+  "maxGap": 50.200000047683716,
+  "draws": null,
+  "records": [
+    {
+      "phase": "optimized-first-focus",
+      "time": 2943.2000000476837,
+      "cpuMs": 1.4000000953674316,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 2961.5,
+      "cpuMs": 1.600000023841858,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.000012
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 2979.5,
+      "cpuMs": 0.8999999761581421,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.000093
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 2997.2999999523163,
+      "cpuMs": 0.7999999523162842,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.000299
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3016.2000000476837,
+      "cpuMs": 1,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.000716
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3036.2000000476837,
+      "cpuMs": 2.100000023841858,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.001408
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3055.100000023842,
+      "cpuMs": 1.3000000715255737,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.002489
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3073.899999976158,
+      "cpuMs": 1.600000023841858,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.003928
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3091.7000000476837,
+      "cpuMs": 0.9000000953674316,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.005834
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3110.100000023842,
+      "cpuMs": 1.100000023841858,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.008276
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3129.399999976158,
+      "cpuMs": 1,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.011501
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3148.2999999523163,
+      "cpuMs": 1,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.015292
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3166.7999999523163,
+      "cpuMs": 0.8999999761581421,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.019863
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3185.5,
+      "cpuMs": 1.100000023841858,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.025017
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3207,
+      "cpuMs": 1,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.031494
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3223.2999999523163,
+      "cpuMs": 1,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.038506
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3242.7999999523163,
+      "cpuMs": 1.5,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.047051
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3267.2999999523163,
+      "cpuMs": 1.0999999046325684,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.059812
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3286.7000000476837,
+      "cpuMs": 0.8000000715255737,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.070735
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3308.399999976158,
+      "cpuMs": 0.8999999761581421,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.082913
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3327.399999976158,
+      "cpuMs": 0.7999999523162842,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.09649
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3351,
+      "cpuMs": 0.7999999523162842,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.116735
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3369.2000000476837,
+      "cpuMs": 0.8000000715255737,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.133037
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3399.2999999523163,
+      "cpuMs": 0.8999999761581421,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.165339
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3417.399999976158,
+      "cpuMs": 1.100000023841858,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.186624
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3435.2000000476837,
+      "cpuMs": 1,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.208772
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3454.600000023842,
+      "cpuMs": 0.8999999761581421,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.234384
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3473.2000000476837,
+      "cpuMs": 0.8000000715255737,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.260388
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3498,
+      "cpuMs": 1.2000000476837158,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.298764
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3517.5,
+      "cpuMs": 1.100000023841858,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.330975
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3541,
+      "cpuMs": 0.8999999761581421,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.364316
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3562.2000000476837,
+      "cpuMs": 0.7000000476837158,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.412487
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3584.5,
+      "cpuMs": 0.7999999523162842,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.451011
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3603.600000023842,
+      "cpuMs": 0.7000000476837158,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.504758
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3623.399999976158,
+      "cpuMs": 0.7999999523162842,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.547289
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3648.100000023842,
+      "cpuMs": 0.8000000715255737,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.598411
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3668.899999976158,
+      "cpuMs": 0.6999999284744263,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.634025
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3697.5,
+      "cpuMs": 1,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.677751
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3711.899999976158,
+      "cpuMs": 0.8999999761581421,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.709067
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3732.2999999523163,
+      "cpuMs": 0.6999999284744263,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.737399
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3758.899999976158,
+      "cpuMs": 1,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.773078
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3775.100000023842,
+      "cpuMs": 0.8999999761581421,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.796516
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3795,
+      "cpuMs": 0.6000000238418579,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.819781
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3816.5,
+      "cpuMs": 0.7999999523162842,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.839929
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3833.2999999523163,
+      "cpuMs": 0.6999999284744263,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.859592
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3856.399999976158,
+      "cpuMs": 0.6999999284744263,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.882575
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3874.2999999523163,
+      "cpuMs": 0.7999999523162842,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.898021
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3894.399999976158,
+      "cpuMs": 0.8999999761581421,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.911621
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3915.100000023842,
+      "cpuMs": 0.6000000238418579,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.924793
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3932.2999999523163,
+      "cpuMs": 1.0999999046325684,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.936242
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3954.2000000476837,
+      "cpuMs": 0.7000000476837158,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.949432
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 3974.7999999523163,
+      "cpuMs": 0.6999999284744263,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.958239
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 4000.2000000476837,
+      "cpuMs": 0.7000000476837158,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.968181
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 4023.2999999523163,
+      "cpuMs": 0.6999999284744263,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.976436
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 4042.2000000476837,
+      "cpuMs": 0.6000000238418579,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.981557
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 4063,
+      "cpuMs": 0.8999999761581421,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.985877
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 4081.100000023842,
+      "cpuMs": 1.3000000715255737,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.989463
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 4098.200000047684,
+      "cpuMs": 0.6000000238418579,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.992399
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 4120.899999976158,
+      "cpuMs": 1.7999999523162842,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.994709
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 4137.100000023842,
+      "cpuMs": 0.7000000476837158,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.996471
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 4159.200000047684,
+      "cpuMs": 1.3000000715255737,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.997857
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 4182.5,
+      "cpuMs": 1.899999976158142,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.999034
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 4199.700000047684,
+      "cpuMs": 0.9000000953674316,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.999557
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 4217.399999976158,
+      "cpuMs": 1.1999999284744263,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.999845
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 4238.600000023842,
+      "cpuMs": 0.8000000715255737,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 0.999969
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 4260.899999976158,
+      "cpuMs": 0.6999999284744263,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 1
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 4280.600000023842,
+      "cpuMs": 1.8000000715255737,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 1
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 4309.399999976158,
+      "cpuMs": 2.299999952316284,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 1
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 4323.5,
+      "cpuMs": 1,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 1
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 4341.600000023842,
+      "cpuMs": 0.8999999761581421,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 1
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 4367.600000023842,
+      "cpuMs": 0.8000000715255737,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 1
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 4384.799999952316,
+      "cpuMs": 0.7999999523162842,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 1
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 4405.799999952316,
+      "cpuMs": 0.8999999761581421,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 1
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 4430,
+      "cpuMs": 0.7999999523162842,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 1
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 4448.299999952316,
+      "cpuMs": 0.6999999284744263,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 1
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 4469,
+      "cpuMs": 0.8999999761581421,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 1
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 4522.399999976158,
+      "cpuMs": 1.100000023841858,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 1
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 4560.5,
+      "cpuMs": 0.8999999761581421,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 1
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 4597.299999952316,
+      "cpuMs": 1.5,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 1
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 4610.899999976158,
+      "cpuMs": 0.7999999523162842,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 1
+    },
+    {
+      "phase": "optimized-first-focus",
+      "time": 4629.399999976158,
+      "cpuMs": 0.6000000238418579,
+      "draws": 0,
+      "programs": 39,
+      "selected": "creative",
+      "blur": 1
+    }
+  ],
+  "longTasks": [],
+  "gpu": [
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 1.985916
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 2.094041
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 1.822
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 3.209416
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 2.85275
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 6.000083
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 6.859375
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 4.949416
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 6.958541
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 8.311041
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 11.717374
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 7.954624
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 8.652333
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 5.900791
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 5.89925
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 8.191
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 5.159124
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 5.7335
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 8.773375
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 9.820208
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 6.00125
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 7.715375
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 4.258833
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 3.975458
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 9.6085
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 10.203
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 6.030791
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 5.539
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 8.256624
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 5.963
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 5.196374
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 3.720124
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 11.056583
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 8.713791
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 5.065375
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 5.584375
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 10.133374
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 6.898416
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 7.114
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 8.10275
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 6.44475
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 10.972541
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 5.061625
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 6.630583
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 6.069124
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 8.300041
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 5.031625
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 6.043875
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 4.144874
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 4.886708
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 6.195249
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 5.004624
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 5.085208
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 6.727125
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 5.314083
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 6.248875
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 4.780583
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 5.011125
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 10.086375
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 6.293124
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 5.847875
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 8.364625
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 7.627874
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 7.269999
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 6.061249
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 5.908249
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 10.155833
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 7.444249
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 7.895625
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 6.205541
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 6.76575
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 5.526375
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 12.364999
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 7.314333
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 6.901541
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 6.891374
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 8.302749
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 7.147791
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 6.508499
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 6.773041
+    },
+    {
+      "phase": "optimized-first-focus",
+      "gpuMs": 6.344624
+    }
+  ]
+}

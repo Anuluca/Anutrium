@@ -41,6 +41,7 @@ declare module '@vue/runtime-core' {
     JourneyVideoPlayer: typeof import('./src/components/JourneyVideoPlayer/index.vue')['default']
     KeyboardMouseIcon: typeof import('./src/components/GamePageLayout/KeyboardMouseIcon.vue')['default']
     LinkFlowMark: typeof import('./src/components/LinkFlowMark/index.vue')['default']
+    LoadingPercentage: typeof import('./src/components/LoadingPercentage/index.vue')['default']
     Logo: typeof import('./src/components/Logo/index.vue')['default']
     Logo_rotating3D: typeof import('./src/components/Logo_rotating3D/index.vue')['default']
     MarqueeShowcase: typeof import('./src/components/MarqueeShowcase/index.vue')['default']

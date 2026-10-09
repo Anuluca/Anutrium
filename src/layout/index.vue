@@ -254,6 +254,7 @@
           name="route"
           mode="out-in"
           :css="!isEntryContentRefreshing"
+          @before-enter="beginRouteEnter"
           @before-leave="lockIslandRouteGeometry"
           @after-leave="completeRouteLeave"
           @after-enter="completeRouteTransition"
@@ -342,6 +343,8 @@ const emit = defineEmits<{
   routeTransitionComplete: []
 }>()
 const headerBottom = ref(0)
+const routeEntryActive = ref(false)
+provide('route-entry-active', routeEntryActive)
 provide(
   'site-entry-active',
   computed(() => props.entryActive)
@@ -932,7 +935,12 @@ const completeRouteLeave = () => {
   visualStateStore.markRouteLeaveComplete()
 }
 
+const beginRouteEnter = () => {
+  routeEntryActive.value = true
+}
+
 const completeRouteTransition = () => {
+  routeEntryActive.value = false
   unlockIslandRouteGeometry()
   finishRouteCursorLoading()
   emit('routeTransitionComplete')

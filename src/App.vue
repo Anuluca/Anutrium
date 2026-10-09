@@ -164,7 +164,7 @@ const startAnimationFinished = () => {
   pageContentRemountTimer = window.setTimeout(() => {
     pageContentActive.value = true
     pageContentRemountTimer = null
-  }, 500)
+  }, 900)
 }
 
 const syncSmoothScrollForRoute = () => {
@@ -178,6 +178,7 @@ const startAnimationHidden = () => {
 }
 
 const unmountPageContent = () => {
+  if (route.path === '/island') return
   pageContentActive.value = false
 }
 
@@ -223,7 +224,9 @@ watch(
   />
   <layout
     :entry-active="entryAnimationReady"
-    :content-active="pageContentActive"
+    :content-active="
+      pageContentActive && (entryAnimationReady || route.path !== '/island')
+    "
     @route-transition-complete="syncSmoothScrollForRoute"
   />
   <PetTeaserLink
