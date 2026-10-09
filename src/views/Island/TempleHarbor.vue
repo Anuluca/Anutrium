@@ -208,42 +208,48 @@ onUnmounted(() => {
           <h1>{{ category.title }}</h1>
           <i />
         </header>
-        <RouterLink
-          v-for="item in category.items"
-          :key="item.title"
-          :to="item.path"
-          class="temple-menu-item"
-          :tabindex="settled ? 0 : -1"
-        >
-          <img
-            class="temple-menu-cover"
-            :src="item.cover"
-            alt=""
-            width="760"
-            height="480"
-            loading="lazy"
-            decoding="async"
-            :style="
-              item.title === '收藏品'
-                ? { objectPosition: 'center 26%' }
-                : undefined
-            "
-          />
-          <span class="temple-menu-caption">
-            <span class="temple-menu-copy">
-              <strong>{{ item.title }}</strong>
-              <small>{{ item.english }}</small>
+        <div class="temple-menu-cards">
+          <RouterLink
+            v-for="item in category.items"
+            :key="item.title"
+            :to="item.path"
+            class="temple-menu-item"
+            :tabindex="settled ? 0 : -1"
+          >
+            <img
+              class="temple-menu-cover"
+              :src="item.cover"
+              alt=""
+              width="760"
+              height="480"
+              loading="lazy"
+              decoding="async"
+              :style="
+                item.title === '收藏品'
+                  ? { objectPosition: 'center 26%' }
+                  : undefined
+              "
+            />
+            <span class="temple-menu-caption">
+              <span class="temple-menu-copy">
+                <strong>{{ item.title }}</strong>
+                <small>{{ item.english }}</small>
+              </span>
+              <svg
+                class="temple-menu-arrow"
+                viewBox="0 0 12 20"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="m3 4 6 6-6 6"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                />
+              </svg>
             </span>
-            <svg
-              class="temple-menu-arrow"
-              viewBox="0 0 12 20"
-              fill="none"
-              aria-hidden="true"
-            >
-              <path d="m3 4 6 6-6 6" stroke="currentColor" stroke-width="1.5" />
-            </svg>
-          </span>
-        </RouterLink>
+          </RouterLink>
+        </div>
       </section>
     </Transition>
     <p v-if="status === 'error'" class="lucario-status" role="alert">

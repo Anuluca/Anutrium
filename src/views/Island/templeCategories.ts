@@ -6,8 +6,9 @@ const photographyCover =
   'https://assets.anuluca.com/Island/picWork/normal/DSC00812-01-01.jpeg'
 const placeholderCover = createIslandPlaceholder('WIP')
 const studyNoteCover =
-  studyNotes.list.find((note) => 'image' in note)?.image ||
-  createIslandPlaceholder('STUDY NOTES')
+  studyNotes.list
+    .map((note) => ('image' in note ? note.image : undefined))
+    .find(Boolean) || createIslandPlaceholder('STUDY NOTES')
 
 export const templeCategories = [
   {

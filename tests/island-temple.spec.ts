@@ -159,6 +159,10 @@ test('all four categories frame their half of the screen, hide other pillars and
     await expect(menu).toHaveClass(/is-visible/)
     await expect(menu.locator('h1')).toHaveText(category.title)
     await expect(menu.locator('a')).toHaveCount(2)
+    const firstCard = await menu.locator('a').first().boundingBox()
+    const secondCard = await menu.locator('a').last().boundingBox()
+    expect(Math.abs(firstCard!.y - secondCard!.y)).toBeLessThanOrEqual(1)
+    expect(secondCard!.x).toBeGreaterThan(firstCard!.x + firstCard!.width)
     for (const [itemIndex, title] of category.items.entries()) {
       await expect(menu.locator('a').nth(itemIndex)).toContainText(title)
       await expect(menu.locator('a').nth(itemIndex)).toHaveAttribute(

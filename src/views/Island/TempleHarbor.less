@@ -121,10 +121,16 @@
     transform: translateY(-42%);
   }
 
+  .temple-menu-cards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
   .temple-menu-item {
     display: block;
     overflow: hidden;
-    margin-top: 14px;
+    min-width: 0;
     border: 1px solid rgba(226, 52, 86, 0.24);
     border-left: 2px solid #d62349;
     background: rgba(23, 3, 10, 0.74);
@@ -159,7 +165,8 @@
   .temple-menu-copy {
     display: grid;
     gap: 5px;
-    padding: 14px 20px;
+    min-width: 0;
+    padding: 14px 16px;
     strong {
       font: 700 clamp(16px, 1.1vw, 21px) / 1.2 'alibaba-puhuiti', sans-serif;
     }

@@ -1,6 +1,10 @@
 module.exports = {
   root: true,
-  ignorePatterns: ['worker/worker-configuration.d.ts'],
+  ignorePatterns: [
+    'worker/worker-configuration.d.ts',
+    // Three.js 提供的第三方 Draco 解码器，不对生成代码执行项目规则或自动修复。
+    'public/draco/**',
+  ],
   env: {
     browser: true,
     node: true,
