@@ -160,8 +160,12 @@ export async function prepareLucarioGeometry() {
       string,
       InstanceType<typeof THREE.Vector3>
     >()
+    // 裁切交点先以双精度计算，随后写入 Float32 顶点缓冲区。
+    // 查表键必须先统一到缓冲区精度，否则五位小数的舍入边界会让下巴交点丢失权重和法线。
     const vertexKey = (x: number, y: number, z: number) =>
-      `${x.toFixed(5)},${y.toFixed(5)},${z.toFixed(5)}`
+      `${Math.fround(x).toFixed(5)},${Math.fround(y).toFixed(5)},${Math.fround(
+        z
+      ).toFixed(5)}`
     const tailBones = new Set<InstanceType<typeof THREE.Object3D>>()
     tail?.traverse((bone) => tailBones.add(bone))
     let originalFaces = 0

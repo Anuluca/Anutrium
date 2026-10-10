@@ -2,6 +2,7 @@
   <button
     type="button"
     class="shared-work-card"
+    :style="{ '--work-card-accent': pageThemeColors.ARCHIVE }"
     :class="{
       'shared-work-card--always-visible': displayMode === 'always-visible',
       'shared-work-card--grid-background': background === 'grid',
@@ -47,6 +48,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import { pageThemeColors } from '@/config/pageThemes'
 import {
   getCardMobileThumbnailUrl,
   getCardThumbnailUrl,
@@ -160,7 +162,7 @@ const emit = defineEmits<{
 }
 
 .work-card-info small {
-  color: #54a86c;
+  color: var(--work-card-accent);
   font-family: 'UnboundedSans', sans-serif;
   font-size: clamp(0.38rem, 0.48vw, 0.5rem);
   font-weight: 400;
@@ -218,7 +220,7 @@ const emit = defineEmits<{
   z-index: 3;
   width: 0.25rem;
   height: 0.25rem;
-  background: #54a86c;
+  background: var(--work-card-accent);
   opacity: 0;
   transform: scale(0);
   transition: opacity 160ms ease-out, transform 180ms ease-out;
@@ -272,7 +274,11 @@ const emit = defineEmits<{
 }
 
 .shared-work-card--grid-background {
-  background: linear-gradient(135deg, rgba(84, 168, 108, 0.12), transparent 42%),
+  background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--work-card-accent) 12%, transparent),
+      transparent 42%
+    ),
     linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
     linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
     rgba(13, 9, 18, 0.78);

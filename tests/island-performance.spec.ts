@@ -89,7 +89,7 @@ test('island stops idle GPU work, uses static buffers and reuses downloaded asse
   const errors: string[] = []
   page.on('pageerror', (error) => errors.push(error.message))
   page.on('request', (request) => assets.push(new URL(request.url()).pathname))
-  await page.goto('/island', { waitUntil: 'domcontentloaded' })
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
   const stage = page.locator('.lucario-stage')
   await expect(stage).toHaveAttribute('aria-busy', 'false', { timeout: 20000 })
   await expect(stage).toHaveAttribute('data-entrance-finished', 'true', {
@@ -157,30 +157,24 @@ test('island stops idle GPU work, uses static buffers and reuses downloaded asse
     assets.filter((path) => /lucario\.glb|draco|meshopt_simplifier/.test(path))
   ).toEqual([])
 
-  if (viewport.width <= 768) await page.locator('.mobile-menu-icon').click()
-  await page
-    .locator(
-      viewport.width <= 768
-        ? '.mobile-menu-items a[href="/craft"]'
-        : '.menu-box a[href="/craft"]'
-    )
-    .click()
-  await expect(page.locator('.craft-page')).toBeVisible()
-  await expect(page.locator('.craft-page')).not.toHaveClass(
+  await page.evaluate(() =>
+    (
+      document.querySelector('.layout-page') as any
+    ).__vueParentComponent.proxy.$router.push('/about')
+  )
+  await expect(page.locator('.about-page')).toBeVisible()
+  await expect(page.locator('.about-page')).not.toHaveClass(
     /route-enter-active/
   )
   await expect(page.locator('.particles-bg')).toHaveAttribute(
     'data-max-fps',
     '60'
   )
-  if (viewport.width <= 768) await page.locator('.mobile-menu-icon').click()
-  await page
-    .locator(
-      viewport.width <= 768
-        ? '.mobile-menu-items a[href="/island"]'
-        : '.menu-box a[href="/island"]'
-    )
-    .click()
+  await page.evaluate(() =>
+    (
+      document.querySelector('.layout-page') as any
+    ).__vueParentComponent.proxy.$router.push('/')
+  )
   await expect(stage).toHaveAttribute('aria-busy', 'false', { timeout: 20000 })
   for (const filename of [
     'lucario-island.bin',
@@ -199,7 +193,7 @@ test('sampled pointer preserves the final position and cancels pending work', as
   page,
 }) => {
   await page.goto('/craft', { waitUntil: 'domcontentloaded' })
-  await expect(page.locator('.craft-page')).toBeVisible()
+  await expect(page.locator('.about-page')).toBeVisible()
   const result = await page.evaluate(async () => {
     const moduleURL = '/src/utils/pointerSamples.ts'
     const { subscribePointerSamples } = await import(
@@ -228,7 +222,7 @@ test('temple focus reuses prepared shaders and textures, then stops drawing whil
 }, testInfo) => {
   test.skip(testInfo.project.name.includes('mobile'), '桌面神殿渲染路径')
   test.setTimeout(60000)
-  await page.goto('/island', { waitUntil: 'domcontentloaded' })
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
   const stage = page.locator('.temple-stage')
   const root = page.locator('.temple-page')
   await expect(stage).toHaveAttribute('aria-busy', 'false', { timeout: 20000 })
@@ -241,7 +235,7 @@ test('temple focus reuses prepared shaders and textures, then stops drawing whil
     }))
   const prepared = await read()
   expect(prepared.programs).toBeGreaterThan(0)
-  for (const id of ['creative', 'notes', 'art', 'otaku']) {
+  for (const id of ['flanerie', 'archive']) {
     await page.locator(`[data-obelisk="${id}"]`).click()
     await expect(root).toHaveAttribute('data-settled', 'true', {
       timeout: 10000,
@@ -249,7 +243,7 @@ test('temple focus reuses prepared shaders and textures, then stops drawing whil
     const focused = await read()
     expect(focused.programs).toBe(prepared.programs)
     expect(focused.allocations).toBe(prepared.allocations)
-    if (id !== 'otaku') {
+    if (id !== 'archive') {
       await page.locator(`[data-obelisk="${id}"]`).click()
       await expect(root).toHaveAttribute('data-settled', 'true', {
         timeout: 10000,
@@ -270,11 +264,18 @@ test('temple focus reuses prepared shaders and textures, then stops drawing whil
   expect(inspected.allocations).toBe(prepared.allocations)
   expect(inspected.uploads).toBe(prepared.uploads)
   await page.mouse.move(20, 150)
-  await page.waitForTimeout(1000)
+  await page.waitForTimeout(1800)
   const idle = await read()
-  await page.mouse.move(35, 180)
   await page.waitForTimeout(500)
   expect((await read()).draws).toBe(idle.draws)
+  await page.mouse.move(300, 200)
+  await page.waitForTimeout(1500)
+  const followed = await read()
+  expect(followed.draws).toBeGreaterThan(idle.draws)
+  expect(followed.programs).toBe(prepared.programs)
+  expect(followed.uploads).toBe(prepared.uploads)
+  await page.waitForTimeout(500)
+  expect((await read()).draws).toBe(followed.draws)
 })
 
 test('large desktop temple keeps its canvas within the render pixel budget', async ({
@@ -282,7 +283,7 @@ test('large desktop temple keeps its canvas within the render pixel budget', asy
 }, testInfo) => {
   test.skip(testInfo.project.name.includes('mobile'), '桌面大屏像素预算')
   await page.setViewportSize({ width: 3840, height: 2160 })
-  await page.goto('/island', { waitUntil: 'domcontentloaded' })
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.temple-stage')).toHaveAttribute(
     'aria-busy',
     'false',
@@ -342,7 +343,7 @@ test('leaving during shader preparation cancels rendering and releases resources
       return parameter.call(this, program, name)
     }
   })
-  await page.goto('/island', { waitUntil: 'domcontentloaded' })
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
   await expect
     .poll(() =>
       page.evaluate(
@@ -368,8 +369,12 @@ test('leaving during shader preparation cancels rendering and releases resources
     () =>
       (window as typeof window & { islandGpu: Counters }).islandGpu.listeners
   )
-  await page.locator('.menu-box a[href="/craft"]').click()
-  await expect(page.locator('.craft-page')).toBeVisible()
+  await page.evaluate(() =>
+    (
+      document.querySelector('.layout-page') as any
+    ).__vueParentComponent.proxy.$router.push('/about')
+  )
+  await expect(page.locator('.about-page')).toBeVisible()
   await expect(page.locator('.temple-page')).toHaveCount(0)
   await page.evaluate(() => {
     ;(
@@ -409,7 +414,7 @@ test('leaving during shader preparation cancels rendering and releases resources
 test('hidden island cancels pending pointer updates and rendering, then resumes', async ({
   page,
 }) => {
-  await page.goto('/island', { waitUntil: 'domcontentloaded' })
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.lucario-stage')).toHaveAttribute(
     'aria-busy',
     'false',

@@ -2,26 +2,38 @@
   <span
     ref="progressElement"
     class="page-scroll-progress no-rem"
+    :class="{ 'is-embedded': props.embedded }"
     :style="{ '--page-scroll-progress-top': `${props.top}px` }"
     aria-hidden="true"
   />
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+import { useEventListener, useResizeObserver } from '@vueuse/core'
 
 const props = withDefaults(
   defineProps<{
     top?: number
+    embedded?: boolean
+    scrollTarget?: HTMLElement | null
   }>(),
   {
     top: 0,
+    embedded: false,
+    scrollTarget: null,
   }
 )
 
 const progressElement = ref<HTMLElement | null>(null)
+const targetContent = ref<HTMLElement | SVGElement | null>(null)
+let maxScroll = 0
+let previousProgress: number | null = null
 const setProgress = (progress: number) => {
+  if (!progressElement.value) return
   const normalizedProgress = Math.min(100, Math.max(0, progress))
+  if (normalizedProgress === previousProgress) return
+  previousProgress = normalizedProgress
   progressElement.value?.style.setProperty(
     '--page-scroll-progress',
     `${normalizedProgress}%`
@@ -31,6 +43,38 @@ const setProgress = (progress: number) => {
     `${normalizedProgress / 100}`
   )
 }
+
+const updateTargetProgress = () => {
+  const target = props.scrollTarget
+  if (!target) return
+  setProgress(maxScroll > 0 ? (target.scrollTop / maxScroll) * 100 : 0)
+}
+
+const measureTarget = () => {
+  const target = props.scrollTarget
+  maxScroll = target
+    ? Math.max(0, target.scrollHeight - target.clientHeight)
+    : 0
+  updateTargetProgress()
+}
+
+useEventListener(() => props.scrollTarget, 'scroll', updateTargetProgress, {
+  passive: true,
+})
+useResizeObserver([() => props.scrollTarget, targetContent], measureTarget)
+watch(
+  () => props.scrollTarget,
+  (target) => {
+    targetContent.value =
+      (target?.firstElementChild as HTMLElement | SVGElement | null) ?? null
+    measureTarget()
+  },
+  { immediate: true, flush: 'post' }
+)
+watch(progressElement, () => {
+  previousProgress = null
+  measureTarget()
+})
 
 defineExpose({ setProgress })
 </script>
@@ -50,6 +94,14 @@ defineExpose({ setProgress })
   background: rgba(0, 0, 0, 0.5);
   pointer-events: none;
   transition: top 0.24s ease;
+
+  &.is-embedded {
+    --page-scroll-progress-transition-duration: 0ms;
+    position: absolute;
+    inset: 0 0 0 auto;
+    z-index: 2;
+    transition: none;
+  }
 
   &::after {
     content: '';

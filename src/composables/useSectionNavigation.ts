@@ -24,6 +24,7 @@ export interface SectionNavigationItem {
 }
 
 interface SectionNavigationOptions {
+  enabled?: () => boolean
   eventName: string
   itemSelector: string
   sectionRef: Ref<HTMLElement | null>
@@ -57,6 +58,7 @@ export const toSectionAnchorSlug = (value: string | number) => {
 }
 
 export const useSectionNavigation = ({
+  enabled = () => true,
   eventName,
   itemSelector,
   sectionRef,
@@ -189,6 +191,7 @@ export const useSectionNavigation = ({
   }
 
   const refreshNavigation = () => {
+    if (!enabled()) return
     const root = getNavigationRoot()
     if (!root || !sectionRef.value) return
 
@@ -246,6 +249,7 @@ export const useSectionNavigation = ({
   }
 
   onMounted(() => {
+    if (!enabled()) return
     isClient.value = true
     window.addEventListener(eventName, refreshNavigation)
     nextTick(announceNavigationRefresh)

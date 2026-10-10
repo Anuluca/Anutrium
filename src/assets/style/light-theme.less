@@ -90,7 +90,11 @@ body.light {
       linear-gradient(90deg, rgba(0, 0, 0, 0.035) 1px, transparent 1px),
       radial-gradient(
         circle at 68% 24%,
-        rgba(226, 52, 86, 0.1),
+        color-mix(
+          in srgb,
+          var(--availability-accent, #e23456) 10%,
+          transparent
+        ),
         transparent 34%
       ),
       rgba(255, 255, 255, 0.86) !important;
@@ -103,10 +107,22 @@ body.light {
 
   .availability-github {
     --github-contribution-empty: rgba(0, 0, 0, 0.07);
-    --github-contribution-1: rgba(47, 117, 72, 0.3);
-    --github-contribution-2: rgba(47, 117, 72, 0.5);
-    --github-contribution-3: rgba(47, 117, 72, 0.72);
-    --github-contribution-4: #2f7548;
+    --github-contribution-1: color-mix(
+      in srgb,
+      var(--availability-accent, #2f7548) 30%,
+      transparent
+    );
+    --github-contribution-2: color-mix(
+      in srgb,
+      var(--availability-accent, #2f7548) 50%,
+      transparent
+    );
+    --github-contribution-3: color-mix(
+      in srgb,
+      var(--availability-accent, #2f7548) 72%,
+      transparent
+    );
+    --github-contribution-4: var(--availability-accent, #2f7548);
   }
 
   .availability-grid {
@@ -367,13 +383,13 @@ body.light {
   }
 
   .footer-com {
-    background-color: rgba(255, 255, 255, 0.86) !important;
+    background-color: transparent !important;
     border-color: rgba(0, 0, 0, 0.08) !important;
     border-block-color: transparent !important;
     box-shadow: none !important;
 
     .center .expand {
-      background-color: rgb(235 235 235 / 50%) !important;
+      background-color: transparent !important;
       background-image: radial-gradient(
         circle,
         rgb(52 62 59 / 6%) 0.5px,
@@ -708,9 +724,17 @@ body.light {
   .availability-cta:hover,
   .major-filter.is-active,
   .show-more-btn:hover {
-    border-color: #e23456 !important;
-    background: rgba(226, 52, 86, 0.12) !important;
-    color: #e23456 !important;
+    border-color: var(--availability-accent, #e23456) !important;
+    background: color-mix(
+      in srgb,
+      var(--availability-accent, #e23456) 12%,
+      transparent
+    ) !important;
+    color: var(--availability-accent, #e23456) !important;
+  }
+
+  .availability-cta {
+    color: var(--availability-accent) !important;
   }
 
   .map-container {
@@ -870,27 +894,33 @@ body.light {
     .details-label,
     .detail-index,
     .project-share-button.share-button {
-      color: #71cb7d !important;
+      color: var(--modal-accent) !important;
     }
 
     .details-line {
       background: linear-gradient(
         to right,
-        rgb(113 203 125 / 45%),
+        color-mix(in srgb, var(--modal-accent) 45%, transparent),
         transparent
       ) !important;
     }
 
     .aside-content::-webkit-scrollbar-thumb,
     .details-list::-webkit-scrollbar-thumb {
-      background: #71cb7d !important;
+      background: var(--modal-accent) !important;
     }
 
     .project-share-button.share-button:hover,
     .project-share-button.share-button:focus-visible,
     .project-share-button.share-button--copied {
-      color: #e23456 !important;
+      color: var(--modal-accent) !important;
       background: transparent !important;
+    }
+
+    .gallery-btn,
+    .gallery-btn:hover {
+      color: var(--modal-accent) !important;
+      border-color: var(--modal-accent) !important;
     }
   }
 

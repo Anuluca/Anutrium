@@ -1,7 +1,5 @@
 @red: #e23456;
 @border: rgba(255, 255, 255, 0.07);
-@text-dim: rgba(255, 255, 255, 0.4);
-@card-bg: rgba(255, 255, 255, 0.025);
 
 @font-face {
   font-family: 'AboutProgramMono';
@@ -91,8 +89,6 @@
 
 .block {
   margin-bottom: 50px;
-  content-visibility: auto;
-  contain-intrinsic-size: 760px;
 }
 
 .passion-section {
@@ -265,6 +261,8 @@
 .passion-back {
   position: absolute;
   inset: 0;
+  // 扫描线只在背景内移动，避免动画越界改变页面的可滚动高度。
+  overflow: clip;
   background-color: rgba(0, 0, 0, 0.6);
   filter: saturate(0) sepia(1) saturate(3.2) hue-rotate(310deg) brightness(0.95)
     contrast(1.02);
@@ -484,23 +482,6 @@
   background: @border;
   margin-left: 8px;
   align-self: center;
-}
-
-.neighbors-block {
-  opacity: 0;
-  animation: neighborsBlockIn 0.56s cubic-bezier(0.16, 1, 0.3, 1) 1.16s both;
-}
-
-@keyframes neighborsBlockIn {
-  from {
-    opacity: 0;
-    transform: translateY(18px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 .neighbors-grid {
@@ -1060,12 +1041,6 @@
     animation: none;
     transform: var(--passion-logo-rest-transform);
   }
-
-  .neighbors-block {
-    opacity: 1;
-    animation: none;
-    transform: none;
-  }
 }
 
 .about-update-dock.no-rem {
@@ -1102,6 +1077,7 @@
     .update-program__body-content {
       left: auto;
       right: 0;
+      padding-top: 48px;
       padding-inline: clamp(10px, 2vw, 24px);
     }
   }
@@ -1176,7 +1152,6 @@
   .about-program-enter-active,
   .about-program-leave-active {
     transition: width 0.35s linear, height 0.35s linear;
-    animation: about-program-flicker 0.18s steps(1, end) 0.17s;
   }
 
   .about-program-leave-active {
@@ -1253,8 +1228,6 @@
     overscroll-behavior: contain;
     border: 1px solid var(--program-accent);
     border-top: 0;
-    scrollbar-width: thin;
-    scrollbar-color: var(--program-accent) var(--program-surface);
   }
 
   .update-program__body-content {
@@ -1265,12 +1238,16 @@
     height: var(--program-open-height);
     overflow: auto;
     overscroll-behavior: contain;
-    scrollbar-width: thin;
-    scrollbar-color: var(--program-accent) var(--program-surface);
+    scrollbar-width: none;
     padding: 18px 36px 30px;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
 
   .staff-credits {
+    opacity: 0;
     color: #d9d9d3;
     font-family: 'alibaba-puhuiti', sans-serif;
     font-size: 24px;
@@ -1278,6 +1255,11 @@
     line-height: 1.35;
     overflow-wrap: anywhere;
     text-align: center;
+
+    &.is-entered {
+      opacity: 1;
+      animation: staff-credits-entrance 0.45s linear;
+    }
 
     h2,
     h3,
@@ -1537,6 +1519,11 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .staff-credits.is-entered {
+      opacity: 1;
+      animation: none;
+    }
+
     .staff-credits__bloom {
       display: none;
       animation: none;
@@ -1550,6 +1537,34 @@
   }
 }
 
+@keyframes staff-credits-entrance {
+  0% {
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.25;
+  }
+  18% {
+    opacity: 0.06;
+  }
+  35% {
+    opacity: 0.6;
+  }
+  42% {
+    opacity: 0.18;
+  }
+  60% {
+    opacity: 0.85;
+  }
+  68% {
+    opacity: 0.3;
+  }
+  85%,
+  100% {
+    opacity: 1;
+  }
+}
+
 @keyframes staff-audience-bloom {
   from {
     opacity: 0.45;
@@ -1559,20 +1574,5 @@
   to {
     opacity: 0;
     transform: scale(1.5);
-  }
-}
-
-@keyframes about-program-flicker {
-  0%,
-  33.333%,
-  66.666%,
-  100% {
-    opacity: 1;
-  }
-
-  16.666%,
-  50%,
-  83.333% {
-    opacity: 0.25;
   }
 }

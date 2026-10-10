@@ -1,6 +1,157 @@
-@red: #e23456;
-@work-accent: #71cb7d;
+@work-accent: var(--modal-accent);
 @border: rgba(255, 255, 255, 0.08);
+
+.work-detail-inline {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  color: #fff;
+  transform-origin: 100% 0;
+  perspective: 1200px;
+
+  &::after {
+    position: absolute;
+    inset: 0;
+    z-index: 999;
+    background: rgba(255, 255, 255, 0.62);
+    content: '';
+    opacity: 0;
+    mix-blend-mode: screen;
+    pointer-events: none;
+  }
+
+  &.work-detail-panel-enter-active {
+    animation: anutriumCrtOn 0.46s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+
+    &::after {
+      animation: anutriumCrtFlashOn 0.46s linear forwards;
+    }
+    .modal-body {
+      animation: galleryVertical3dIn 0.46s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+  }
+  &.work-detail-panel-leave-active {
+    pointer-events: none;
+    animation: anutriumCrtOff 0.42s cubic-bezier(0.2, 1, 0.22, 1) forwards;
+
+    &::after {
+      animation: anutriumCrtFlashOff 0.42s linear forwards;
+    }
+    .modal-body {
+      animation: galleryVertical3dIn 0.42s cubic-bezier(0.7, 0, 0.84, 0) reverse
+        both;
+    }
+  }
+  .modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 24px 0;
+    box-sizing: border-box;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: @work-accent transparent;
+    background: rgba(5, 2, 8, 0.9);
+    transform-origin: center top;
+    backface-visibility: hidden;
+  }
+  // Flatten only the inline layout so shared modal content can be reordered.
+  .modal-aside,
+  .aside-fixed,
+  .aside-content,
+  .modal-gallery {
+    display: contents;
+  }
+  .aside-company,
+  .aside-divider,
+  .aside-title,
+  .aside-summary,
+  .aside-desc,
+  .aside-links,
+  .confidential-notice,
+  .gallery-carousel,
+  .gallery-empty,
+  .details-section,
+  .details-list {
+    flex: none;
+  }
+  .aside-company {
+    order: 0;
+  }
+  .aside-divider {
+    order: 1;
+  }
+  .gallery-carousel,
+  .gallery-empty {
+    order: 2;
+    animation: none;
+  }
+  .aside-title {
+    order: 3;
+  }
+  .aside-summary {
+    order: 4;
+    display: grid;
+    grid-template-columns: max-content max-content minmax(0, 1fr);
+    column-gap: 32px;
+    align-items: start;
+    .aside-tags {
+      grid-column: 3;
+      min-width: 0;
+    }
+  }
+  .aside-desc {
+    order: 5;
+  }
+  .aside-links {
+    order: 6;
+  }
+  .links-list {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .link-item {
+    flex: 1 1 calc(25% - 6px);
+    box-sizing: border-box;
+  }
+  .link-item,
+  .link-text {
+    min-width: 0;
+  }
+  .gallery-track-wrap,
+  .gallery-empty {
+    height: auto;
+    aspect-ratio: 16 / 9;
+  }
+  .gallery-slide img {
+    object-fit: contain;
+  }
+  .details-section {
+    order: 7;
+    padding: 20px 0 0;
+  }
+  .details-list {
+    overflow: visible;
+  }
+  .confidential-notice {
+    order: 8;
+    margin-top: 0;
+  }
+  .modal-crystal-logo {
+    position: static;
+    order: 1;
+    margin: 12px 24px;
+  }
+}
+
+.aside-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
 
 .modal-crystal-logo {
   position: absolute;
@@ -25,13 +176,13 @@
   margin-top: 18px;
   padding: 14px 14px 14px 17px;
   overflow: hidden;
-  border: 1px solid rgba(226, 52, 86, 0.34);
+  border: 1px solid color-mix(in srgb, @work-accent 34%, transparent);
   background: repeating-linear-gradient(
       -45deg,
-      rgba(226, 52, 86, 0.04) 0 8px,
+      color-mix(in srgb, @work-accent 4%, transparent) 0 8px,
       transparent 8px 16px
     ),
-    rgba(226, 52, 86, 0.055);
+    color-mix(in srgb, @work-accent 5.5%, transparent);
 
   &::before {
     content: '';
@@ -40,8 +191,8 @@
     bottom: 0;
     left: 0;
     width: 3px;
-    background: @red;
-    box-shadow: 0 0 12px rgba(226, 52, 86, 0.55);
+    background: @work-accent;
+    box-shadow: 0 0 12px color-mix(in srgb, @work-accent 55%, transparent);
     z-index: 2;
   }
 
@@ -54,7 +205,7 @@
       transparent 36%,
       rgba(255, 255, 255, 0.025) 42%,
       rgba(255, 255, 255, 0.2) 49%,
-      rgba(226, 52, 86, 0.08) 53%,
+      color-mix(in srgb, @work-accent 8%, transparent) 53%,
       transparent 61%
     );
     mix-blend-mode: screen;
@@ -70,7 +221,7 @@
     top: 50%;
     left: 50%;
     z-index: 0;
-    color: @red;
+    color: @work-accent;
     font-size: 3.4rem;
     opacity: 0.28;
     pointer-events: none;
@@ -285,7 +436,7 @@
   padding: 8px 12px;
   overflow: hidden;
   border: 1px solid @border;
-  background: rgba(226, 52, 86, 0.04);
+  background: color-mix(in srgb, @work-accent 4%, transparent);
   text-decoration: none;
   isolation: isolate;
   transition: border-color 0.25s;
@@ -294,7 +445,7 @@
     position: absolute;
     inset: 0;
     z-index: 0;
-    background: @red;
+    background: @work-accent;
     content: '';
     transform: scaleX(0);
     transform-origin: left center;
@@ -310,7 +461,7 @@
     --link-flow-opacity: 0.82;
     --link-flow-x: 0%;
 
-    border-color: @red;
+    border-color: @work-accent;
 
     &::after {
       transform: scaleX(1);
@@ -321,13 +472,12 @@
       z-index: 2;
       color: #050505;
     }
-
   }
 
   .link-icon {
     font-size: 0.9rem;
     flex-shrink: 0;
-    color: @red;
+    color: @work-accent;
     transition: color 0.25s ease;
   }
 
@@ -340,7 +490,6 @@
     flex: 1;
     transition: color 0.25s ease;
   }
-
 }
 
 .modal-gallery {
@@ -469,7 +618,7 @@
   width: 36px;
   height: 36px;
   border: 0;
-  color: @red;
+  color: @work-accent;
   background: transparent;
   display: flex;
   align-items: center;
@@ -494,7 +643,7 @@
   }
 
   &:hover:not(:disabled) {
-    color: @red;
+    color: @work-accent;
 
     .gallery-btn__triangle {
       transform: scale(1.25);
@@ -536,7 +685,7 @@
   transition: background 0.3s;
 
   &.active {
-    background: @red;
+    background: @work-accent;
   }
   &:hover:not(.active) {
     background: rgba(255, 255, 255, 0.3);
@@ -555,7 +704,7 @@
   .counter-cur {
     font-family: 'Anton', monospace;
     font-size: 1rem;
-    color: @red;
+    color: @work-accent;
     letter-spacing: 1px;
   }
   .counter-sep,
@@ -605,7 +754,7 @@
 .details-line {
   flex: 1;
   height: 1px;
-  background: fade(@work-accent, 45%);
+  background: color-mix(in srgb, @work-accent 45%, transparent);
 }
 
 .details-list {
@@ -870,6 +1019,15 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .work-detail-inline.work-detail-panel-enter-active,
+  .work-detail-inline.work-detail-panel-leave-active,
+  .work-detail-inline.work-detail-panel-enter-active::after,
+  .work-detail-inline.work-detail-panel-leave-active::after,
+  .work-detail-inline.work-detail-panel-enter-active .modal-body,
+  .work-detail-inline.work-detail-panel-leave-active .modal-body {
+    animation: none;
+  }
+
   .gallery-carousel {
     opacity: 1;
     animation: none;

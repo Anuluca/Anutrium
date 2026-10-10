@@ -1,12 +1,18 @@
 <script setup lang="ts">
-import { nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import LoadingPercentage from '@/components/LoadingPercentage/index.vue'
 import Logo from '@/components/Logo/index.vue'
 import LogoRotating3D from '@/components/Logo_rotating3D/index.vue'
+import { useSiteLoading } from '@/stores/siteLoading'
 import { loadCriticalFont } from '@/utils/fontLoader'
 
-const emit = defineEmits(['finished', 'hidden', 'progress-complete'])
+const emit = defineEmits([
+  'finished',
+  'scene-ready',
+  'hidden',
+  'progress-complete',
+])
 
 const isAnimating = ref(true)
 const isLogoWipingOut = ref(false)
@@ -15,8 +21,22 @@ const logo2DHide = ref(false)
 const isLogoDocking = ref(false)
 const isBackgroundExiting = ref(false)
 const isBackgroundFading = ref(false)
-const loadingProgress = ref(0)
+const siteLoading = useSiteLoading()
+const introProgress = ref(0)
+const loadingProgress = computed(() => {
+  if (!siteLoading.tasks.size) return introProgress.value
+  // 20% 为入口动画，80% 为页面真实准备阶段；百分比不是下载字节比例。
+  const value = Math.floor(
+    introProgress.value * 0.2 + siteLoading.progress * 0.8
+  )
+  return siteLoading.pending ? Math.min(99, value) : value
+})
 const isProgressFading = ref(false)
+const compactVisible = ref(false)
+const compactFading = ref(false)
+let compactRevision = 0
+let introReady = false
+let skipLogoReveal = false
 const logoRotating3DRef = ref()
 const logo2DRef = ref<HTMLElement | null>(null)
 const entryStyle = ref<Record<string, string>>({})
@@ -33,11 +53,6 @@ const INTRO_PROGRESS_DURATION = INTRO_MIN_DURATION + INTRO_STOP_DURATION
 const INTRO_FAILSAFE_DURATION = 4200
 const EXIT_BACKGROUND_SHRINK_DURATION = 1260
 const EXIT_BACKGROUND_FADE_DURATION = 760
-const INTRO_FORCE_HIDE_DURATION =
-  INTRO_FAILSAFE_DURATION +
-  EXIT_BACKGROUND_SHRINK_DURATION +
-  EXIT_BACKGROUND_FADE_DURATION +
-  320
 const EXIT_DOCK_START_DELAY = 980
 const EXIT_BACKGROUND_FADE_DELAY =
   EXIT_DOCK_START_DELAY + EXIT_BACKGROUND_SHRINK_DURATION
@@ -60,9 +75,11 @@ const waitWithSchedule = (timeout: number) =>
   })
 
 const updateLoadingProgress = (timestamp: number) => {
+  progressAnimationFrame = null
+  if (introReady) return
   progressStartedAt ??= timestamp
   const elapsed = timestamp - progressStartedAt
-  loadingProgress.value = Math.min(
+  introProgress.value = Math.min(
     99,
     Math.floor((elapsed / INTRO_PROGRESS_DURATION) * 100)
   )
@@ -74,7 +91,7 @@ const completeLoadingProgress = () => {
     window.cancelAnimationFrame(progressAnimationFrame)
     progressAnimationFrame = null
   }
-  loadingProgress.value = 100
+  introProgress.value = 100
   emit('progress-complete')
   schedule(() => {
     isProgressFading.value = true
@@ -97,11 +114,14 @@ const hideIntro = () => {
 
 const forceHideIntro = () => {
   if (isUnmounted || !isAnimating.value) return
+  // 入口动画兜底只处理动画故障，不越过仍在下载或预热的页面资源。
+  if (siteLoading.pending) return
 
   isLogoWipingOut.value = true
   isBackgroundExiting.value = true
   isBackgroundFading.value = true
   emitReady()
+  emit('scene-ready')
   hideIntro()
 }
 
@@ -215,6 +235,10 @@ const startExitMotion = async () => {
   isLogoDocking.value = true
   isBackgroundExiting.value = true
   emitReady()
+  schedule(
+    () => emit('scene-ready'),
+    (EXIT_BACKGROUND_SHRINK_DURATION + EXIT_BACKGROUND_FADE_DURATION) / 2
+  )
 }
 
 const finishIntro = (skipLogoReveal = false) => {
@@ -222,6 +246,13 @@ const finishIntro = (skipLogoReveal = false) => {
 
   hasStartedIntroExit = true
   completeLoadingProgress()
+  // 资源准备可能超过入口动画时长，退场兜底必须从实际完成时开始计时。
+  schedule(
+    forceHideIntro,
+    (skipLogoReveal
+      ? EXIT_BACKGROUND_SHRINK_DURATION + EXIT_BACKGROUND_FADE_DURATION
+      : EXIT_HIDE_DELAY) + 320
+  )
 
   if (skipLogoReveal) {
     isLogoWipingOut.value = true
@@ -257,16 +288,44 @@ const finishIntro = (skipLogoReveal = false) => {
   }, EXIT_HIDE_DELAY)
 }
 
-const rotateFinished = () => {
-  finishIntro()
+const tryFinishIntro = () => {
+  if (introReady && !siteLoading.pending) finishIntro(skipLogoReveal)
 }
+
+const rotateFinished = () => {
+  introReady = true
+  introProgress.value = 100
+  tryFinishIntro()
+}
+
+watch(() => siteLoading.pending, tryFinishIntro)
+// 首次入口保留完整 Logo 过渡；之后的页面准备复用同一模块的简化百分比。
+watch(
+  [isAnimating, () => siteLoading.pending, () => siteLoading.batch],
+  ([animating, pending]) => {
+    const revision = ++compactRevision
+    if (animating) return
+    if (pending) {
+      compactVisible.value = true
+      compactFading.value = false
+    } else if (compactVisible.value) {
+      compactFading.value = true
+      schedule(() => {
+        if (revision === compactRevision) compactVisible.value = false
+      }, 600)
+    }
+  },
+  { flush: 'sync' }
+)
 
 onMounted(() => {
   progressAnimationFrame = window.requestAnimationFrame(updateLoadingProgress)
   schedule(() => {
-    finishIntro(true)
+    introReady = true
+    introProgress.value = 100
+    skipLogoReveal = true
+    tryFinishIntro()
   }, INTRO_FAILSAFE_DURATION)
-  schedule(forceHideIntro, INTRO_FORCE_HIDE_DURATION)
 
   void loadCriticalFont()
   waitWithSchedule(INTRO_MIN_DURATION).then(() => {
@@ -328,7 +387,25 @@ onUnmounted(() => {
         <Logo v-if="logo2DShow" ref="logoRef" class="logo" />
       </div>
     </div>
+    <LoadingPercentage
+      v-if="!isAnimating && compactVisible"
+      :key="siteLoading.batch"
+      class="site-loading-progress"
+      :progress="siteLoading.progress"
+      :animate="siteLoading.pending"
+      :fading="compactFading"
+      aria-label="网站加载进度"
+    />
   </Teleport>
 </template>
 
 <style lang="less" scoped src="./index.less" />
+
+<style lang="less" scoped>
+.entry-loading-progress.site-loading-progress.no-rem {
+  position: fixed;
+  top: 50%;
+  z-index: 1001;
+  translate: -50% -50%;
+}
+</style>

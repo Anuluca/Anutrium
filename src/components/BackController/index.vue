@@ -3,31 +3,22 @@ import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 import BackStars from '@/components/BackStars/index.vue'
+import { templeCategories } from '@/config/templeNavigation'
+import type { ZodiacSignId } from '@/config/zodiacThemes'
 import { visualState } from '@/stores'
-
-type ZodiacSignId =
-  | 'aries'
-  | 'taurus'
-  | 'gemini'
-  | 'cancer'
-  | 'leo'
-  | 'virgo'
-  | 'libra'
-  | 'scorpio'
-  | 'sagittarius'
-  | 'capricorn'
-  | 'aquarius'
-  | 'pisces'
+import { useTempleNavigation } from '@/stores/templeNavigation'
 
 const route = useRoute()
 const visualStateStore = visualState()
+const navigation = useTempleNavigation()
 const props = withDefaults(defineProps<{ entryActive?: boolean }>(), {
   entryActive: true,
 })
 
 const currentRouter = computed(() => route.path)
+const isTempleRoute = computed(() => route.name === 'HOME')
 
-const isTextMenu = computed(() => currentRouter.value !== '/')
+const isTextMenu = computed(() => currentRouter.value !== '/test2')
 const useDeepBlackBackground = computed(
   () => route.meta.starBackground === 'deep-black'
 )
@@ -44,12 +35,19 @@ const craftRouteNames = new Set([
 ])
 
 const requestedActiveSign = computed<ZodiacSignId>(() => {
+  if (isTempleRoute.value) {
+    return (
+      templeCategories.find((item) => item.id === navigation.selected)
+        ?.zodiacSign || 'pisces'
+    )
+  }
   const routeName = String(route.name || '')
   const redirectedPath = route.redirectedFrom?.path || ''
 
   if (routeName === 'ARCHIVE') return 'aquarius'
   if (routeName.startsWith('FLANERIE')) return 'sagittarius'
   if (
+    routeName === 'HOME' ||
     routeName.startsWith('ISLAND') ||
     routeName === 'TEST' ||
     redirectedPath.startsWith('/island')
@@ -57,7 +55,7 @@ const requestedActiveSign = computed<ZodiacSignId>(() => {
     return 'pisces'
   }
   if (craftRouteNames.has(routeName)) return 'gemini'
-  if (routeName === 'ABOUT') return 'virgo'
+  if (routeName === 'ABOUT') return 'pisces'
   return 'leo'
 })
 const activeSign = ref<ZodiacSignId>(requestedActiveSign.value)
@@ -72,19 +70,32 @@ watch(
 )
 
 watch(
+  [() => navigation.selected, () => navigation.aboutOpen],
+  () => {
+    // 模块切换直接旋转；真正的路由切换仍等待原有离场信号。
+    if (isTempleRoute.value) activeSign.value = requestedActiveSign.value
+  },
+  { flush: 'sync' }
+)
+
+watch(
   () => visualStateStore.routeLeaveRevision,
   () => {
-    activeSign.value = pendingActiveSign
+    if (route.name !== 'ABOUT') activeSign.value = pendingActiveSign
   },
   { flush: 'sync' }
 )
 
 const zodiacLayout = computed(() => {
-  if (currentRouter.value === '/island') return 'red'
-  return currentRouter.value === '/' ? visualStateStore.zodiacLayout : 'content'
+  if (isTempleRoute.value)
+    return navigation.selected ? 'content' : 'red'
+  return currentRouter.value === '/test2'
+    ? visualStateStore.zodiacLayout
+    : 'content'
 })
 const particlesVisible = computed(
-  () => currentRouter.value !== '/' || visualStateStore.homeStarfieldVisible
+  () =>
+    currentRouter.value !== '/test2' || visualStateStore.homeStarfieldVisible
 )
 </script>
 
@@ -96,8 +107,9 @@ const particlesVisible = computed(
       :deep-black="useDeepBlackBackground"
       :active-sign="activeSign"
       :layout="zodiacLayout"
+      :tinted="isTempleRoute"
       :particles-visible="particlesVisible"
-      :particle-fps="currentRouter === '/island' ? 12 : 60"
+      :particle-fps="isTempleRoute ? 12 : 60"
       :top-inset="visualStateStore.backgroundTopInset"
       :entry-active="props.entryActive"
     />

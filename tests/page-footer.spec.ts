@@ -519,8 +519,13 @@ test('footer modal preserves the page position while open and after closing', as
         .trim(),
     }
   })
-  expect(modalTheme.dialogAccent).toBe('#3d2875')
-  expect(modalTheme.closeAccent).toBe('#3d2875')
+  const pageAccent = await page.evaluate(() =>
+    getComputedStyle(document.documentElement)
+      .getPropertyValue('--page-theme-color')
+      .trim()
+  )
+  expect(modalTheme.dialogAccent).toBe(pageAccent)
+  expect(modalTheme.closeAccent).toBe(pageAccent)
 
   expectPagePositionToMatch(
     await readPagePosition(page, '.about-page'),

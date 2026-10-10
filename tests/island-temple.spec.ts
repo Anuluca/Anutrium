@@ -1,30 +1,8 @@
 import { expect, test } from '@playwright/test'
 
 const categories = [
-  {
-    id: 'art',
-    title: 'ART',
-    items: ['摄影', '绘画'],
-    paths: ['/island/photography', '/island/illustration'],
-  },
-  {
-    id: 'creative',
-    title: 'CREATIVE',
-    items: ['实验室', '设计小屋'],
-    paths: ['/404', '/404'],
-  },
-  {
-    id: 'notes',
-    title: 'NOTES',
-    items: ['学习笔记', '杂谈'],
-    paths: ['/island/study-notes', '/404'],
-  },
-  {
-    id: 'otaku',
-    title: 'OTAKU',
-    items: ['游戏库', '收藏品'],
-    paths: ['/404', '/island/merch-photography'],
-  },
+  { id: 'archive', title: '作品集' },
+  { id: 'flanerie', title: '旅程' },
 ]
 
 test.beforeEach(async ({ page }, testInfo) => {
@@ -32,7 +10,7 @@ test.beforeEach(async ({ page }, testInfo) => {
     testInfo.project.name.includes('mobile'),
     '桌面神殿，手机保留原有模型页'
   )
-  await page.goto('/island', { waitUntil: 'domcontentloaded' })
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.temple-stage')).toHaveAttribute(
     'aria-busy',
     'false',
@@ -174,31 +152,27 @@ test('all four categories frame their half of the screen, hide other pillars and
         element.getAnimations().map((animation) => animation.finished)
       )
     })
-    await expect(menu.locator('h1')).toHaveText(category.title)
-    await expect(menu.locator('a')).toHaveCount(2)
-    const firstCard = await menu.locator('a').first().boundingBox()
-    const secondCard = await menu.locator('a').last().boundingBox()
-    expect(Math.abs(firstCard!.y - secondCard!.y)).toBeLessThanOrEqual(1)
-    expect(secondCard!.x).toBeGreaterThan(firstCard!.x + firstCard!.width)
-    for (const [itemIndex, title] of category.items.entries()) {
-      await expect(menu.locator('a').nth(itemIndex)).toContainText(title)
-      await expect(menu.locator('a').nth(itemIndex)).toHaveAttribute(
-        'href',
-        category.paths[itemIndex]
-      )
-      const card = menu.locator('a').nth(itemIndex)
-      await expect(card.locator('img')).toHaveAttribute('src', /^https:\/\//)
-      const cover = await card.locator('img').boundingBox()
-      const caption = await card.locator('.temple-menu-caption').boundingBox()
-      expect(cover!.y + cover!.height).toBeLessThanOrEqual(caption!.y + 1)
-    }
+    await expect(menu.locator('header > h1')).toHaveText(category.title)
+    if (index === 0)
+      await expect(menu.locator('.shared-work-card').first()).toBeVisible()
+    else if (index === 1)
+      await expect(menu.locator('.travel-map-shell')).toBeVisible()
+
     const bounds = await menu.boundingBox()
-    expect(Math.abs(bounds!.width - viewport.width / 3)).toBeLessThanOrEqual(1)
+    const shade = await root.evaluate(
+      (element) => getComputedStyle(element, '::after').backgroundImage
+    )
+    expect(shade).toContain(index < 2 ? 'to left' : 'to right')
+    expect(
+      Math.abs(bounds!.width - viewport.width * 0.442)
+    ).toBeLessThanOrEqual(1)
     const sideMargin =
       index < 2 ? viewport.width - bounds!.x - bounds!.width : bounds!.x
     expect(Math.abs(sideMargin - viewport.width * 0.058)).toBeLessThanOrEqual(1)
     if (index < 2)
-      expect(bounds!.x).toBeGreaterThan(page.viewportSize()!.width / 2)
+      expect(bounds!.x).toBeGreaterThanOrEqual(
+        page.viewportSize()!.width / 2 - 1
+      )
     else
       expect(bounds!.x + bounds!.width).toBeLessThan(
         page.viewportSize()!.width / 2
@@ -215,7 +189,7 @@ test('all four categories frame their half of the screen, hide other pillars and
     await expect(stage).toHaveAttribute('data-statue-holy-light', '1.000')
     await expect(stage).toHaveAttribute(
       'data-visible-obelisks',
-      'art,creative,notes,otaku'
+      'archive,flanerie,pokeyard,island'
     )
     await expect(page.locator('.temple-obelisk:visible')).toHaveCount(4)
   }
@@ -227,10 +201,10 @@ test('interrupting camera return continues from the current position into anothe
 }) => {
   const stage = page.locator('.temple-stage')
   const initialCamera = await stage.getAttribute('data-camera-position')
-  await page.locator('[data-obelisk="creative"]').click()
+  await page.locator('[data-obelisk="flanerie"]').click()
   await page.waitForTimeout(550)
   await page
-    .locator('[data-obelisk="creative"]')
+    .locator('[data-obelisk="flanerie"]')
     .evaluate((button) => (button as HTMLButtonElement).click())
   await page.waitForTimeout(200)
   const distance = await stage.evaluate(async (element) => {
@@ -239,7 +213,7 @@ test('interrupting camera return continues from the current position into anothe
     const before = read()
     // 同一个浏览器任务内切换并采样下一帧，排除自动化工具等待焦点带来的时间间隔。
     ;(
-      document.querySelector('[data-obelisk="notes"]') as HTMLButtonElement
+      document.querySelector('[data-obelisk="archive"]') as HTMLButtonElement
     ).click()
     await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
     const after = read()
@@ -255,43 +229,28 @@ test('interrupting camera return continues from the current position into anothe
     'true',
     { timeout: 10000 }
   )
-  await expect(page.locator('.temple-menu h1')).toHaveText('NOTES')
-  await expect(page.locator('[data-obelisk="notes"]')).toHaveAttribute(
+  await expect(page.locator('.temple-menu header > h1')).toHaveText('作品集')
+  await expect(page.locator('[data-obelisk="archive"]')).toHaveAttribute(
     'aria-pressed',
     'true'
   )
-  await expect(page.locator('[data-obelisk="creative"]')).toHaveAttribute(
+  await expect(page.locator('[data-obelisk="flanerie"]')).toHaveAttribute(
     'aria-pressed',
     'false'
   )
 })
 
-test('submenu opens existing routes and unimplemented sections open 404', async ({
+test('portfolio focus embeds the existing project detail interaction', async ({
   page,
 }) => {
-  test.setTimeout(60000)
-  await page.locator('[data-obelisk="art"]').click()
+  await page.locator('[data-obelisk="archive"]').click()
   await expect(page.locator('.temple-page')).toHaveAttribute(
     'data-settled',
-    'true',
-    { timeout: 10000 }
+    'true'
   )
-  await page.locator('.temple-menu a').first().click()
-  await expect(page).toHaveURL(/\/island\/photography$/)
-  await page.goto('/island', { waitUntil: 'domcontentloaded' })
-  await expect(page.locator('.temple-stage')).toHaveAttribute(
-    'aria-busy',
-    'false',
-    { timeout: 20000 }
-  )
-  await page.locator('[data-obelisk="creative"]').click()
-  await expect(page.locator('.temple-page')).toHaveAttribute(
-    'data-settled',
-    'true',
-    { timeout: 10000 }
-  )
-  await page.locator('.temple-menu a').first().click()
-  await expect(page).toHaveURL(/\/404$/)
+  await page.locator('.temple-menu .shared-work-card').first().click()
+  await expect(page.locator('.el-dialog')).toBeVisible()
+  await expect(page).toHaveURL(/\/$/)
 })
 
 test('model loading is silent and does not expose interactive controls before it is ready', async ({
@@ -331,7 +290,7 @@ test('hover fades in the crystal and its halo without a top beam or camera movem
 }) => {
   const stage = page.locator('.temple-stage')
   const home = await stage.getAttribute('data-camera-position')
-  await page.locator('[data-obelisk="creative"]').hover()
+  await page.locator('[data-obelisk="flanerie"]').hover()
   await page.waitForTimeout(80)
   const partialGlow = Number(
     (await stage.getAttribute('data-cap-glow'))!.split(',')[1]
@@ -367,7 +326,7 @@ test('hover fades in the crystal and its halo without a top beam or camera movem
   )
 })
 
-test('focus freezes the head, keeps the background sharp and exits through blank scene or menu space', async ({
+test('focus aims and holds the head, keeps the background sharp and exits through blank scene or menu space', async ({
   page,
 }) => {
   test.setTimeout(60000)
@@ -376,9 +335,12 @@ test('focus freezes the head, keeps the background sharp and exits through blank
   const backgroundFilter = await page
     .locator('.zodiac-stage')
     .evaluate((element) => getComputedStyle(element).filter)
-  await page.locator('[data-obelisk="creative"]').click()
+  await page.locator('[data-obelisk="flanerie"]').click()
   await expect(root).toHaveAttribute('data-settled', 'true', { timeout: 10000 })
+  await expect(stage).toHaveAttribute('data-head-aim', 'flanerie')
+  await page.waitForTimeout(800)
   const pose = await stage.getAttribute('data-head-rotation')
+  expect(Number(pose!.split(',')[1])).toBeLessThan(-0.35)
   await page.mouse.move(1200, 200)
   await page.waitForTimeout(600)
   await expect(stage).toHaveAttribute('data-head-rotation', pose!)
@@ -395,17 +357,17 @@ test('focus freezes the head, keeps the background sharp and exits through blank
   )
   await page.mouse.move(1100, 170)
   await expect(stage).not.toHaveAttribute('data-head-rotation', pose!)
-  for (const outer of ['art', 'otaku']) {
+  for (const outer of ['archive']) {
     await page.locator(`[data-obelisk="${outer}"]`).click()
     await expect(root).toHaveAttribute('data-settled', 'true', {
       timeout: 10000,
     })
     await expect(stage).toHaveAttribute('data-visible-obelisks', outer)
     await expect(stage).toHaveAttribute('data-statue-visible', 'true')
-    for (const inner of ['creative', 'notes']) {
+    for (const inner of ['flanerie', 'island']) {
       await expect(page.locator(`[data-obelisk="${inner}"]`)).toBeHidden()
     }
-    await page.locator('.temple-menu h1').click()
+    await page.locator('.temple-menu header > h1').click()
     await expect(root).toHaveAttribute('data-selected', 'none')
     await expect(root).toHaveAttribute('data-settled', 'true', {
       timeout: 10000,
@@ -493,7 +455,7 @@ test('crystal pixels stay stable when the focus camera settles', async ({
     await advance(1700)
     await expect(stage).toHaveAttribute(
       'data-visible-obelisks',
-      'art,creative,notes,otaku'
+      'archive,flanerie,pokeyard,island'
     )
   }
 })

@@ -17,6 +17,15 @@ const getSessionStorage = () => {
   }
 }
 
+// 查询而不消费：主页2先恢复聚焦，旅程内容挂载后再消费滚动位置。
+export const hasJourneyReturnState = () => {
+  const storage = getSessionStorage()
+  return (
+    storage?.getItem(JOURNEY_RETURN_FLAG_KEY) === 'true' &&
+    Boolean(storage.getItem(JOURNEY_RETURN_VLOG_KEY))
+  )
+}
+
 export const rememberJourneySelection = (vlogId: string, scrollTop: number) => {
   const storage = getSessionStorage()
   if (!storage) return

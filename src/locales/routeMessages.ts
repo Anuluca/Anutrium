@@ -20,7 +20,8 @@ const messageLoaders: Record<MessageDomain, () => Promise<MessageModule>> = {
 }
 
 const routeMessageDomains: Record<string, MessageDomain[]> = {
-  HOME: ['home', 'archive', 'craft', 'flanerie'],
+  TEST2: ['home', 'archive', 'craft', 'flanerie'],
+  HOME: ['archive', 'flanerie', 'about'],
   ARCHIVE: ['archive'],
   FLANERIE: ['flanerie'],
   FLANERIE_DETAIL: ['flanerie'],

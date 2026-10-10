@@ -1,14 +1,13 @@
 <template>
-  <ModalWrapper
-    v-model="dialogVisible"
-    width="1480px"
-    :theme-color="themeColor"
-    :title="t('workDetailModal.title')"
-    flush-desktop
+  <component
+    :is="inline ? 'section' : ModalWrapper"
+    v-bind="wrapperProps"
+    @update:model-value="dialogVisible = $event"
     @close="handleClose"
   >
     <div v-if="work?.crystal" class="modal-crystal-logo">
       <CrystalLogo
+        :theme-color="props.themeColor || pageThemeColors.ARCHIVE"
         :image="work.crystal.image"
         :links="work.crystal.links"
         :text="work.crystal.text"
@@ -56,8 +55,8 @@
               :show-label="false"
               icon-only
               :style="{
-                '--share-button-icon-color': '#71CB7D',
-                '--share-button-icon-hover-color': '#E23456',
+                '--share-button-icon-color': 'var(--modal-accent)',
+                '--share-button-icon-hover-color': 'var(--modal-accent)',
               }"
             />
           </div>
@@ -75,43 +74,45 @@
         </div>
 
         <div class="aside-content" data-lenis-nested-scroll>
-          <div v-if="work.time" class="aside-field">
-            <span class="field-label">TIME</span>
-            <span class="field-val">
-              <TypedText
-                :text="work.time"
-                :delay="620"
-                :speed="26"
-                :start="dialogVisible"
-              />
-            </span>
-          </div>
-
-          <div v-if="participationText" class="aside-field">
-            <span class="field-label">{{
-              t('workDetailModal.participation')
-            }}</span>
-            <span class="field-val">
-              <TypedText
-                :text="participationText"
-                :delay="680"
-                :speed="34"
-                :start="dialogVisible"
-              />
-            </span>
-          </div>
-
-          <div v-if="work.tags?.length" class="aside-field aside-tags">
-            <span class="field-label">STACK</span>
-            <div class="tags-wrap">
-              <span v-for="(tag, index) in work.tags" :key="tag" class="tag">
+          <div class="aside-summary">
+            <div v-if="work.time" class="aside-field">
+              <span class="field-label">TIME</span>
+              <span class="field-val">
                 <TypedText
-                  :text="tag"
-                  :delay="720 + index * 55"
-                  :speed="28"
+                  :text="work.time"
+                  :delay="620"
+                  :speed="26"
                   :start="dialogVisible"
                 />
               </span>
+            </div>
+
+            <div v-if="participationText" class="aside-field">
+              <span class="field-label">{{
+                t('workDetailModal.participation')
+              }}</span>
+              <span class="field-val">
+                <TypedText
+                  :text="participationText"
+                  :delay="680"
+                  :speed="34"
+                  :start="dialogVisible"
+                />
+              </span>
+            </div>
+
+            <div v-if="work.tags?.length" class="aside-field aside-tags">
+              <span class="field-label">STACK</span>
+              <div class="tags-wrap">
+                <span v-for="(tag, index) in work.tags" :key="tag" class="tag">
+                  <TypedText
+                    :text="tag"
+                    :delay="720 + index * 55"
+                    :speed="28"
+                    :start="dialogVisible"
+                  />
+                </span>
+              </div>
             </div>
           </div>
 
@@ -171,7 +172,11 @@
                     :start="dialogVisible"
                   />
                 </span>
-                <LinkFlowMark />
+                <LinkFlowMark
+                  :style="{
+                    color: 'color-mix(in srgb, var(--modal-accent) 64%, #000)',
+                  }"
+                />
               </a>
             </div>
           </div>
@@ -322,12 +327,13 @@
         </div>
       </div>
     </div>
-  </ModalWrapper>
+  </component>
 </template>
 
 <script setup lang="ts">
 /* eslint-disable simple-import-sort/imports */
 import { computed, ref, watch, type Component } from 'vue'
+import { useEventListener } from '@vueuse/core'
 import { ElIcon } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import {
@@ -343,6 +349,7 @@ import LinkFlowMark from '@/components/LinkFlowMark/index.vue'
 import SafeImageViewer from '@/components/SafeImageViewer/index.vue'
 import ShareButton from '@/components/ShareButton/index.vue'
 import TypedText from '@/components/TypedText/index.vue'
+import { pageThemeColors } from '@/config/pageThemes'
 import type { ArchiveWork } from '@/types/archive'
 
 import 'element-plus/es/components/icon/style/css'
@@ -351,11 +358,30 @@ const props = defineProps<{
   work: ArchiveWork | null
   visible: boolean
   themeColor?: string
+  inline?: boolean
 }>()
 const emit = defineEmits<{ close: [] }>()
 const { locale, t } = useI18n()
 
 const dialogVisible = ref(false)
+const wrapperProps = computed(() =>
+  props.inline
+    ? {
+        class: 'work-detail-inline',
+        role: 'region',
+        'aria-label': props.work?.title,
+        style: {
+          '--modal-accent': props.themeColor || pageThemeColors.ARCHIVE,
+        },
+      }
+    : {
+        modelValue: dialogVisible.value,
+        width: '1480px',
+        themeColor: props.themeColor || pageThemeColors.ARCHIVE,
+        title: t('workDetailModal.title'),
+        flushDesktop: true,
+      }
+)
 const animationRun = ref(0)
 
 const imgIndex = ref(0)
@@ -428,6 +454,28 @@ const openImageViewer = (index: number) => {
 const closeImageViewer = () => {
   showImageViewer.value = false
 }
+
+useEventListener(
+  typeof document === 'undefined' ? undefined : document,
+  'keydown',
+  (event: KeyboardEvent) => {
+    if (!props.inline || !dialogVisible.value || event.key !== 'Escape') return
+    if (
+      document.querySelector('.about-overlay') ||
+      Array.from(
+        document.querySelectorAll<HTMLElement>(
+          '.el-dialog, .el-message-box, .el-image-viewer__wrapper'
+        )
+      ).some((element) => element.getClientRects().length > 0)
+    )
+      return
+    // 先关闭侧栏详情，避免同一次 Esc 同时触发场景的退出聚焦。
+    event.preventDefault()
+    event.stopImmediatePropagation()
+    handleClose()
+  },
+  { capture: true }
+)
 </script>
 
 <style src="./index.less" lang="less" scoped />

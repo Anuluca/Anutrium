@@ -2,7 +2,7 @@
   <div v-if="vlog" class="flr-page main-container">
     <DetailPageHeader
       back-label="FLANERIE"
-      back-path="/flanerie"
+      :back-path="journeyBackPath"
       :title="vlog.title"
     />
 
@@ -95,6 +95,11 @@ import type { JourneyItem, JourneyPhoto, JourneyVideo } from '@/types/flanerie'
 const router = useRouter()
 const route = useRoute()
 const { t, tm } = useI18n()
+const journeyBackPath = computed(() =>
+  ['home', 'home2'].includes(String(route.query.from))
+    ? '/?module=flanerie'
+    : '/flanerie'
+)
 
 interface VideoItem extends JourneyVideo {
   embedUrl?: string
@@ -146,7 +151,11 @@ const setPage = (page: number) => {
 }
 
 onBeforeRouteLeave((to) => {
-  if (to.name === 'FLANERIE') markJourneyReturn(vlogId.value)
+  if (
+    to.name === 'FLANERIE' ||
+    (to.name === 'HOME' && ['home', 'home2'].includes(String(route.query.from)))
+  )
+    markJourneyReturn(vlogId.value)
 })
 
 watch(

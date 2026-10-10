@@ -94,12 +94,12 @@ export const useIslandHarborData = () => {
   const harborSections: HarborSection[] = [
     {
       id: 'works',
-      title: '创作',
-      subtitle: 'WORKS',
+      title: '艺术',
+      subtitle: 'ART',
       progress: '78%',
       items: [
         {
-          title: '摄影作品',
+          title: '摄影',
           subtitle: 'PHOTO WORKS',
           get count() {
             return `${photographyPhotoCount.value} PICS`
@@ -120,15 +120,30 @@ export const useIslandHarborData = () => {
           },
           path: '/island/illustration',
         },
+      ],
+    },
+    {
+      id: 'creative',
+      title: '创意',
+      subtitle: 'CREATIVE',
+      progress: '0%',
+      items: [
         {
-          title: '实验',
-          subtitle: 'EXPERIMENTS',
+          title: '工具箱',
+          subtitle: 'TOOLBOX',
+          count: '7 TOOLS',
+          img: createIslandPlaceholder('TOOLBOX'),
+          path: '/craft',
+        },
+        {
+          title: '设计创作',
+          subtitle: 'DESIGN',
           count: '0 ITEMS',
           img: developingPlaceholder,
         },
         {
-          title: '设计小物',
-          subtitle: 'DESIGN GOODS',
+          title: '实验室',
+          subtitle: 'LABORATORY',
           count: '0 ITEMS',
           img: developingPlaceholder,
         },
@@ -136,7 +151,7 @@ export const useIslandHarborData = () => {
     },
     {
       id: 'notes',
-      title: '札记',
+      title: '笔记',
       subtitle: 'NOTES',
       progress: '46%',
       items: [
@@ -152,7 +167,7 @@ export const useIslandHarborData = () => {
           path: '/island/study-notes',
         },
         {
-          title: '文章杂谈',
+          title: '杂谈',
           subtitle: 'ESSAYS & TALKS',
           count: '0 ARTICLES',
           img: developingPlaceholder,

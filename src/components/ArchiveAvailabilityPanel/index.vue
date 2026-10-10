@@ -1,6 +1,7 @@
 <template>
   <section
     class="availability-panel"
+    :style="{ '--availability-accent': pageThemeColors.ARCHIVE }"
     :class="{ 'availability-panel--en': locale === 'en' }"
     aria-labelledby="availability-title"
     @animationend="startTyping"
@@ -45,24 +46,6 @@
       </p>
     </div>
 
-    <div class="availability-grid">
-      <div
-        v-for="item in availabilityItems"
-        :key="item.id"
-        class="availability-item"
-      >
-        <span>{{ item.label }}</span>
-        <strong>
-          <TypedText
-            :text="item.value"
-            :delay="item.delay"
-            :speed="30"
-            :start="typingReady"
-          />
-        </strong>
-      </div>
-    </div>
-
     <div class="availability-actions">
       <a
         class="availability-cta"
@@ -90,30 +73,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Message, Paperclip } from '@element-plus/icons-vue'
 
 import GitHubContributionGraph from '@/components/GitHubContributionGraph/index.vue'
 import TypedText from '@/components/TypedText/index.vue'
+import { pageThemeColors } from '@/config/pageThemes'
 import { trackEvent } from '@/utils/analytics'
 import { confirmWithoutPageShift } from '@/utils/scrollSafeMessageBox'
 
 const { locale, t } = useI18n()
 const typingReady = ref(false)
-
-const availabilityItemKeys = [
-  ['work', 'statusWorkLabel', 'statusWorkValue'],
-] as const
-
-const availabilityItems = computed(() =>
-  availabilityItemKeys.map(([id, labelKey, valueKey], index) => ({
-    id,
-    label: t(`archive.${labelKey}`),
-    value: t(`archive.${valueKey}`),
-    delay: 760 + index * 220,
-  }))
-)
 
 const startTyping = (event: AnimationEvent) => {
   if (
@@ -169,12 +140,17 @@ const requestResume = async () => {
 .availability-panel {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(360px, 1fr) clamp(7rem, 10vw, 9rem) 178px;
+  grid-template-columns: minmax(360px, 1fr) 178px;
   align-items: stretch;
   margin: 0 0 24px;
   overflow: visible;
-  border: 1px solid rgba(90, 212, 128, 0.34);
-  background: linear-gradient(90deg, rgba(90, 212, 128, 0.09), transparent 34%),
+  border: 1px solid
+    color-mix(in srgb, var(--availability-accent) 34%, transparent);
+  background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--availability-accent) 9%, transparent),
+      transparent 34%
+    ),
     repeating-linear-gradient(
       90deg,
       rgba(255, 255, 255, 0.018) 0 1px,
@@ -190,8 +166,9 @@ const requestResume = async () => {
     inset: 0 auto 0 0;
     z-index: 2;
     width: 3px;
-    background: #5ad480;
-    box-shadow: 0 0 18px rgba(90, 212, 128, 0.4);
+    background: var(--availability-accent);
+    box-shadow: 0 0 18px
+      color-mix(in srgb, var(--availability-accent) 40%, transparent);
     content: '';
     pointer-events: none;
   }
@@ -203,13 +180,13 @@ const requestResume = async () => {
     z-index: 2;
     width: 28%;
     height: 1px;
-    background: linear-gradient(90deg, #5ad480, transparent);
+    background: linear-gradient(90deg, var(--availability-accent), transparent);
     content: '';
     pointer-events: none;
   }
 
   &--en {
-    grid-template-columns: minmax(360px, 1fr) clamp(7rem, 10vw, 9rem) 258px;
+    grid-template-columns: minmax(360px, 1fr) 258px;
   }
 }
 
@@ -266,7 +243,23 @@ const requestResume = async () => {
   }
 }
 
-.availability-github {
+.availability-panel .availability-github {
+  --github-contribution-1: color-mix(
+    in srgb,
+    var(--availability-accent) 28%,
+    transparent
+  );
+  --github-contribution-2: color-mix(
+    in srgb,
+    var(--availability-accent) 48%,
+    transparent
+  );
+  --github-contribution-3: color-mix(
+    in srgb,
+    var(--availability-accent) 70%,
+    transparent
+  );
+  --github-contribution-4: var(--availability-accent);
   position: absolute;
   top: calc(50% + 0.09rem);
   right: 12px;
@@ -279,7 +272,7 @@ const requestResume = async () => {
 
   :deep(.github-contribution-graph__summary) {
     margin-top: 0.06rem;
-    color: rgb(61 136 83);
+    color: color-mix(in srgb, var(--availability-accent) 64%, #000);
     font-size: 0.32rem;
     line-height: 1;
     text-align: right;
@@ -321,8 +314,8 @@ const requestResume = async () => {
   position: absolute;
   background: repeating-linear-gradient(
     to bottom,
-    #5ad480 0,
-    #5ad480 1px,
+    var(--availability-accent) 0,
+    var(--availability-accent) 1px,
     transparent 1px,
     transparent 4px
   );
@@ -348,61 +341,11 @@ const requestResume = async () => {
   }
 }
 
-.availability-grid {
-  display: grid;
-  min-width: 0;
-  grid-template-columns: minmax(0, 1fr);
-  background: rgba(255, 255, 255, 0.012);
-}
-
-.availability-item {
-  position: relative;
-  display: flex;
-  min-width: 0;
-  padding: 12px 14px;
-  flex-direction: column;
-  justify-content: center;
-  gap: 6px;
-
-  & + & {
-    border-left: 1px solid rgba(255, 255, 255, 0.09);
-  }
-
-  &::after {
-    position: absolute;
-    right: 7px;
-    bottom: 7px;
-    width: 4px;
-    height: 4px;
-    border-right: 1px solid rgba(90, 212, 128, 0.45);
-    border-bottom: 1px solid rgba(90, 212, 128, 0.45);
-    content: '';
-  }
-
-  > span {
-    color: rgba(255, 255, 255, 0.3);
-    font-family: 'alibaba-puhuiti', sans-serif;
-    font-size: 0.42rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-
-  > strong {
-    overflow: hidden;
-    color: rgba(255, 255, 255, 0.88);
-    font-family: 'alibaba-puhuiti', sans-serif;
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-}
-
 .availability-actions {
   display: grid;
   min-width: 0;
-  border-left: 1px solid rgba(90, 212, 128, 0.28);
+  border-left: 1px solid
+    color-mix(in srgb, var(--availability-accent) 28%, transparent);
 }
 
 .availability-cta {
@@ -410,8 +353,12 @@ const requestResume = async () => {
   align-items: center;
   justify-content: center;
   padding: 0 16px;
-  color: #5ad480;
-  background: linear-gradient(135deg, rgba(90, 212, 128, 0.09), transparent);
+  color: var(--availability-accent);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--availability-accent) 9%, transparent),
+    transparent
+  );
   font-family: 'alibaba-puhuiti', sans-serif;
   font-size: 0.54rem;
   font-weight: 900;
@@ -422,8 +369,8 @@ const requestResume = async () => {
 
   &:hover,
   &:focus-visible {
-    color: #071009;
-    background: #5ad480;
+    color: #070b10;
+    background: var(--availability-accent);
     outline: none;
   }
 }
@@ -446,7 +393,8 @@ const requestResume = async () => {
   appearance: none;
   cursor: pointer;
   border: 0;
-  border-top: 1px solid rgba(90, 212, 128, 0.22);
+  border-top: 1px solid
+    color-mix(in srgb, var(--availability-accent) 22%, transparent);
 }
 
 @keyframes availabilityCrtOn {
@@ -469,14 +417,16 @@ const requestResume = async () => {
 }
 
 @media (max-width: 1199px) and (min-width: 769px) {
-  .availability-panel {
-    grid-template-columns: minmax(320px, 1fr) 140px;
+  .availability-panel,
+  .availability-panel--en {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .availability-actions {
     min-height: 48px;
     grid-column: 1 / -1;
-    border-top: 1px solid rgba(90, 212, 128, 0.22);
+    border-top: 1px solid
+      color-mix(in srgb, var(--availability-accent) 22%, transparent);
     border-left: 0;
   }
 
@@ -488,7 +438,7 @@ const requestResume = async () => {
 @media (max-width: 768px) {
   .availability-panel,
   .availability-panel--en {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
     margin: 0 0 18px;
   }
 
@@ -507,7 +457,7 @@ const requestResume = async () => {
     }
   }
 
-  .availability-github {
+  .availability-panel .availability-github {
     right: 8px;
     width: 62%;
     opacity: 0.46;
@@ -537,36 +487,16 @@ const requestResume = async () => {
     }
   }
 
-  .availability-grid {
-    min-height: 64px;
-    grid-row: 2;
-    grid-column: 1;
-    margin-left: 4px;
-  }
-
-  .availability-item {
-    align-items: center;
-    padding: 9px 6px;
-    text-align: center;
-
-    span {
-      font-size: 0.62rem;
-    }
-
-    strong {
-      font-size: 0.55rem;
-    }
-  }
-
   .availability-actions {
     display: flex;
     min-height: 64px;
     grid-row: 2;
-    grid-column: 2 / -1;
+    grid-column: 1 / -1;
     align-items: center;
     justify-content: center;
-    border-top: 1px solid rgba(90, 212, 128, 0.22);
-    border-left: 1px solid rgba(90, 212, 128, 0.22);
+    border-top: 1px solid
+      color-mix(in srgb, var(--availability-accent) 22%, transparent);
+    border-left: 0;
   }
 
   .availability-cta {
@@ -580,7 +510,8 @@ const requestResume = async () => {
 
   .availability-cta--resume {
     border-top: 0;
-    border-left: 1px solid rgba(90, 212, 128, 0.22);
+    border-left: 1px solid
+      color-mix(in srgb, var(--availability-accent) 22%, transparent);
   }
 }
 </style>

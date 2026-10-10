@@ -1,5 +1,9 @@
 <template>
-  <div ref="rootRef" class="crystal-logo">
+  <div
+    ref="rootRef"
+    class="crystal-logo"
+    :style="{ '--crystal-accent': props.themeColor }"
+  >
     <button
       ref="triggerRef"
       class="crystal-trigger no-cursor"
@@ -103,6 +107,7 @@ const props = withDefaults(
     imageAlt?: string
     links?: CrystalLink[]
     text?: string
+    themeColor?: string
   }>(),
   {
     ariaLabel: 'Open crystal details',
@@ -110,6 +115,7 @@ const props = withDefaults(
     imageAlt: 'Crystal detail image',
     links: () => [],
     text: '',
+    themeColor: '#e23456',
   }
 )
 
@@ -141,6 +147,8 @@ const hasContent = computed(
     normalizedLinks.value.length > 0
 )
 const popoverStyle = computed(() => ({
+  // 弹出内容传送到 body 后，显式保留实例主题。
+  '--crystal-accent': props.themeColor,
   bottom: `${popoverPosition.value.bottom}px`,
   left: `${popoverPosition.value.left}px`,
 }))
@@ -265,8 +273,12 @@ watch(hasContent, (hasValue) => {
   &:hover,
   &:focus-visible,
   &.is-open {
-    filter: drop-shadow(0 0 10px #e23456) drop-shadow(0 0 20px #e23456)
-      drop-shadow(0 0 30px rgba(226, 52, 86, 0.5));
+    filter: drop-shadow(0 0 10px var(--crystal-accent, #e23456))
+      drop-shadow(0 0 20px var(--crystal-accent, #e23456))
+      drop-shadow(
+        0 0 30px
+          color-mix(in srgb, var(--crystal-accent, #e23456) 50%, transparent)
+      );
     outline: none;
 
     .crystal-shape {
@@ -285,7 +297,7 @@ watch(hasContent, (hasValue) => {
   width: 20px;
   height: 40px;
   overflow: hidden;
-  background-color: #e23456;
+  background-color: var(--crystal-accent, #e23456);
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
   transition: background-color 0.3s ease;
 
@@ -314,8 +326,13 @@ watch(hasContent, (hasValue) => {
   width: min(380px, calc(100vw - 24px));
   max-height: min(560px, calc(100vh - 40px));
   padding: 14px 14px 12px;
-  border: 1px solid rgba(226, 52, 86, 0.58);
-  background: linear-gradient(145deg, rgba(226, 52, 86, 0.12), transparent 42%),
+  border: 1px solid
+    color-mix(in srgb, var(--crystal-accent, #e23456) 58%, transparent);
+  background: linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--crystal-accent, #e23456) 12%, transparent),
+      transparent 42%
+    ),
     rgba(8, 5, 10, 0.97);
   box-shadow: 0 18px 48px rgba(0, 0, 0, 0.72);
   box-sizing: border-box;
@@ -340,7 +357,8 @@ watch(hasContent, (hasValue) => {
 
   &::before {
     bottom: -9px;
-    border-top: 9px solid rgba(226, 52, 86, 0.72);
+    border-top: 9px solid
+      color-mix(in srgb, var(--crystal-accent, #e23456) 72%, transparent);
   }
 
   &::after {
@@ -376,7 +394,7 @@ watch(hasContent, (hasValue) => {
   align-items: center;
   gap: 8px;
   margin: 0 6px 8px;
-  color: #e23456;
+  color: var(--crystal-accent, #e23456);
   font-family: 'UnboundedSans', monospace;
   font-size: 11px;
   font-weight: 700;
@@ -385,7 +403,11 @@ watch(hasContent, (hasValue) => {
 
   &::after {
     height: 1px;
-    background: rgba(226, 52, 86, 0.36);
+    background: color-mix(
+      in srgb,
+      var(--crystal-accent, #e23456) 36%,
+      transparent
+    );
     content: '';
     flex: 1;
   }
@@ -415,14 +437,19 @@ watch(hasContent, (hasValue) => {
   &::after {
     position: absolute;
     inset: 0;
-    border: 1px solid rgba(226, 52, 86, 0.18);
+    border: 1px solid
+      color-mix(in srgb, var(--crystal-accent, #e23456) 18%, transparent);
     content: '';
     pointer-events: none;
   }
 
   &:hover,
   &:focus-visible {
-    border-color: rgba(226, 52, 86, 0.65);
+    border-color: color-mix(
+      in srgb,
+      var(--crystal-accent, #e23456) 65%,
+      transparent
+    );
     outline: none;
 
     img {
@@ -436,7 +463,11 @@ watch(hasContent, (hasValue) => {
   margin: 0 0 12px;
   padding: 11px 12px;
   color: rgba(255, 255, 255, 0.86);
-  background: rgba(226, 52, 86, 0.16);
+  background: color-mix(
+    in srgb,
+    var(--crystal-accent, #e23456) 16%,
+    transparent
+  );
   font-family: 'alibaba-puhuiti', sans-serif;
   font-size: 16px;
   font-weight: 700;
@@ -445,7 +476,8 @@ watch(hasContent, (hasValue) => {
 }
 
 .popover-image + .popover-text {
-  border-top: 1px solid rgba(226, 52, 86, 0.48);
+  border-top: 1px solid
+    color-mix(in srgb, var(--crystal-accent, #e23456) 48%, transparent);
 }
 
 .popover-image:last-child,
@@ -474,9 +506,17 @@ watch(hasContent, (hasValue) => {
 
     &:hover,
     &:focus-visible {
-      border-color: rgba(226, 52, 86, 0.68);
-      color: #e23456;
-      background: rgba(226, 52, 86, 0.08);
+      border-color: color-mix(
+        in srgb,
+        var(--crystal-accent, #e23456) 68%,
+        transparent
+      );
+      color: var(--crystal-accent, #e23456);
+      background: color-mix(
+        in srgb,
+        var(--crystal-accent, #e23456) 8%,
+        transparent
+      );
       outline: none;
     }
   }

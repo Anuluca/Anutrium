@@ -5,6 +5,12 @@ import type {
   Router,
 } from 'vue-router'
 import NProgress from 'nprogress'
+import { pageThemeColors } from '@/config/pageThemes'
+import {
+  templeModuleAtPath,
+  templeParentModule,
+} from '@/config/templeNavigation'
+import { useTempleNavigation } from '@/stores/templeNavigation'
 
 import i18n from '../locales'
 import { ensureRouteMessages } from '../locales/routeMessages'
@@ -107,6 +113,10 @@ const PAGE_DESCRIPTIONS: Record<string, { zhCn: string; en: string }> = {
     zhCn: 'Anutrium 是前端工程师 Anuluca 的个人网站，记录作品、创意工具、生活记录与设计实践。',
     en: 'Anutrium is the portfolio of frontend engineer Anuluca, featuring web projects, creative tools, travel logs, and design experiments.',
   },
+  TEST2: {
+    zhCn: 'Anutrium 原主页的交互与内容实验。',
+    en: 'Interactive experiments from the original Anutrium homepage.',
+  },
   ARCHIVE: {
     zhCn: '浏览 Anuluca 的主要项目与个人项目，包括 Vue、React、TypeScript、Three.js、WebGL 与数据可视化实践。',
     en: 'Explore Anuluca’s main and personal projects across Vue, React, TypeScript, Three.js, WebGL, and data visualization.',
@@ -153,19 +163,12 @@ const DESCRIPTION_ROUTE_GROUPS: Record<string, keyof typeof PAGE_DESCRIPTIONS> =
     ISLAND_TRAINER_CARD: 'ISLAND',
   }
 
-const PAGE_THEME_COLORS: Partial<
-  Record<keyof typeof PAGE_DESCRIPTIONS, string>
-> = {
-  ABOUT: '#e23456',
-  ARCHIVE: '#5ad480',
-  CRAFT: '#244392',
-  FLANERIE: '#8a2c1b',
-  HOME: '#e23456',
-  ISLAND: '#e23456',
-  PET: '#e23456',
-}
-
-const LEGACY_RED_BACKGROUND_GROUPS = new Set(['ABOUT', 'HOME', 'ISLAND'])
+const LEGACY_RED_BACKGROUND_GROUPS = new Set([
+  'ABOUT',
+  'HOME',
+  'TEST2',
+  'ISLAND',
+])
 
 export type PageLayout = 'main' | 'sub'
 
@@ -189,44 +192,16 @@ type RouteConfig = RouteRecordRaw & {
 
 export const routes: RouteConfig[] = [
   {
-    path: ROUTE_CONFIG.DEFAULT_PATH,
-    name: 'HOME',
-    component: () => import('@/views/Home/index.vue'),
+    path: '/test2',
+    name: 'TEST2',
+    component: () => import('@/views/Test2/index.vue'),
     meta: {
-      titleEn: 'HOME',
-      titleCn: '主页',
+      titleEn: 'TEST2',
+      titleCn: 'test2',
       fullFooter: false,
       pageFooter: false,
       pageLayout: 'main',
-      ifShow: true,
-    },
-  },
-  {
-    path: '/archive',
-    name: 'ARCHIVE',
-    component: () => import('@/views/Archive/index.vue'),
-    meta: {
-      updatedAt: '2026-07-06',
-      titleEn: 'ARCHIVE',
-      titleCn: '作品集',
-      fullFooter: true,
-      pageFooter: true,
-      pageLayout: 'sub',
-      ifShow: true,
-    },
-  },
-  {
-    path: '/flanerie',
-    name: 'FLANERIE',
-    component: () => import('@/views/Flânerie/index.vue'),
-    meta: {
-      updatedAt: '2026-07-18',
-      titleEn: 'FLÂNERIE',
-      titleCn: '旅程',
-      fullFooter: true,
-      pageFooter: true,
-      pageLayout: 'sub',
-      ifShow: true,
+      ifShow: false,
     },
   },
   {
@@ -247,14 +222,15 @@ export const routes: RouteConfig[] = [
   },
 
   {
-    path: '/island',
-    name: 'ISLAND',
-    component: () => import('@/views/Island/Lucario.vue'),
+    path: '/:module(archive|flanerie|island|pokeyard)?',
+    alias: ['/home2'],
+    name: 'HOME',
+    component: () => import('@/views/Home/index.vue'),
     meta: {
       updatedAt: '2026-10-08',
       starBackground: 'default',
-      titleEn: 'ISLAND',
-      titleCn: '个人海湾',
+      titleEn: 'HOME',
+      titleCn: '主页',
       fullFooter: false,
       pageFooter: false,
       pageLayout: 'main',
@@ -400,7 +376,7 @@ export const routes: RouteConfig[] = [
       fullFooter: true,
       pageFooter: true,
       pageLayout: 'sub',
-      ifShow: true,
+      ifShow: false,
     },
   },
   {
@@ -711,20 +687,23 @@ const getPageThemeGroup = (route: RouteLocationNormalizedLoaded) => {
   return activeMenuGroup || DESCRIPTION_ROUTE_GROUPS[routeName] || routeName
 }
 
-const getPageThemeColor = (route: RouteLocationNormalizedLoaded) => {
-  const pageGroup = getPageThemeGroup(route)
-
-  return (
-    PAGE_THEME_COLORS[pageGroup as keyof typeof PAGE_THEME_COLORS] || '#e23456'
-  )
-}
-
-export const syncPageTheme = (route: RouteLocationNormalizedLoaded) => {
+export const syncPageTheme = (
+  route: RouteLocationNormalizedLoaded,
+  moduleGroup?: string
+) => {
   if (typeof document === 'undefined') return
   const rootStyle = document.documentElement.style
-  const pageGroup = getPageThemeGroup(route)
+  const pageGroup = moduleGroup || getPageThemeGroup(route)
+  if (pageGroup === 'ABOUT') {
+    if (!rootStyle.getPropertyValue('--page-theme-color'))
+      rootStyle.setProperty('--page-theme-color', pageThemeColors.HOME)
+    return
+  }
 
-  rootStyle.setProperty('--page-theme-color', getPageThemeColor(route))
+  rootStyle.setProperty(
+    '--page-theme-color',
+    pageThemeColors[pageGroup] || '#e23456'
+  )
 
   if (LEGACY_RED_BACKGROUND_GROUPS.has(pageGroup)) {
     rootStyle.setProperty('--page-theme-background-dark', '#380e1c')
@@ -754,6 +733,29 @@ export const installRouterGuards = (router: Router) => {
       void preloadRouteComponent(to.name).catch(() => undefined)
     }
 
+    const navigation = useTempleNavigation()
+    if (from.name === 'HOME' && to.name !== 'HOME') {
+      navigation.returnModule = navigation.selected
+      navigation.returnExpanded = navigation.expanded
+    }
+    if (to.name === 'HOME') {
+      const explicitModule =
+        templeModuleAtPath(to.path) ||
+        templeModuleAtPath(`/${String(to.query.module || '')}`)
+      navigation.entryModule =
+        explicitModule ||
+        (from.name && from.name !== 'HOME'
+          ? navigation.returnModule || templeParentModule(from.path)
+          : null)
+      navigation.simpleEntrance =
+        !!navigation.entryModule || (!!from.name && from.name !== 'HOME')
+      if (
+        from.name === 'HOME' &&
+        explicitModule !== navigation.selected &&
+        (to.path !== from.path || to.query.module !== from.query.module)
+      )
+        navigation.request(explicitModule)
+    }
     await ensureRouteMessages(to.name)
     return true
   })
@@ -770,7 +772,13 @@ export const installRouterGuards = (router: Router) => {
     routeCursorFallbackTimer = window.setTimeout(finishRouteCursorLoading, 1500)
 
     syncSeoMeta(to)
-    syncPageTheme(to)
+    const navigation = useTempleNavigation()
+    syncPageTheme(
+      to,
+      to.name === 'HOME'
+        ? (navigation.selected || navigation.entryModule)?.toUpperCase()
+        : undefined
+    )
   })
 
   router.onError(() => {

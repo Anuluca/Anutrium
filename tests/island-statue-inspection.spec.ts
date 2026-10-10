@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 test.beforeEach(async ({ page }, testInfo) => {
   test.skip(testInfo.project.name.includes('mobile'), '全身展示用于桌面神殿')
-  await page.goto('/island', { waitUntil: 'domcontentloaded' })
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.temple-stage')).toHaveAttribute(
     'aria-busy',
     'false',
@@ -45,13 +45,29 @@ test('clicking the statue smoothly reveals its full wireframe and restores the t
   const viewport = page.viewportSize()!
   await page.mouse.move(viewport.width / 2, viewport.height / 2)
   await expect(page.locator('.cursor-shape')).toHaveClass(/\bis-active\b/)
+  for (let i = 0; i < 10; i++) await advance(100)
+  expect(
+    Number(await stage.getAttribute('data-statue-holy-scale'))
+  ).toBeGreaterThan(1.25)
+  expect(Number(await stage.getAttribute('data-statue-sheen'))).toBeGreaterThan(
+    2.4
+  )
   await page.mouse.move(20, 150)
   await expect(page.locator('.cursor-shape')).not.toHaveClass(/\bis-active\b/)
   await canvas.click({
     position: { x: viewport.width / 2, y: viewport.height / 2 },
   })
   await expect(root).toHaveAttribute('data-selected', 'statue')
-  await advance(600)
+  await advance(200)
+  expect(
+    Number(await stage.getAttribute('data-statue-clip-height'))
+  ).toBeLessThan(
+    Number(halfY) - Number(await stage.getAttribute('data-statue-full-y'))
+  )
+  const reveal = Number(await stage.getAttribute('data-temple-reveal'))
+  expect(reveal).toBeGreaterThan(0)
+  expect(reveal).toBeLessThan(1)
+  await advance(400)
   const halfway = Number(await stage.getAttribute('data-statue-wire-opacity'))
   expect(halfway).toBeGreaterThan(0)
   expect(halfway).toBeLessThan(1)
@@ -68,7 +84,7 @@ test('clicking the statue smoothly reveals its full wireframe and restores the t
     await stage.getAttribute('data-statue-full-y')
   )
   await expect(page.locator('.temple-obelisk:visible')).toHaveCount(0)
-  await expect(stage.locator('.page-hero-title')).toBeHidden()
+  await expect(stage.locator('.temple-backdrop')).toBeHidden()
   await expect(page.locator('.el-menu-layout-all')).toBeVisible()
   await expect(page.locator('.logo-box')).toBeVisible()
   await expect(page.locator('.footer-com')).toBeVisible()
@@ -82,8 +98,57 @@ test('clicking the statue smoothly reveals its full wireframe and restores the t
   await expect(page.locator('.particle-viewport')).toBeVisible()
   await page.screenshot({ path: 'test-results/island-statue-full-wire.png' })
 
+  const neutralHead = await stage.getAttribute('data-head-rotation')
+  await page.mouse.move(viewport.width * 0.85, viewport.height * 0.25)
+  for (let i = 0; i < 15; i++) await advance(100)
+  await expect(stage).not.toHaveAttribute('data-head-rotation', neutralHead!)
+  const body = (await stage.getAttribute('data-statue-body-rotation'))!
+    .split(',')
+    .map(Number)
+  expect(Math.abs(body[1])).toBeGreaterThan(0.03)
+  expect(body[0]).toBe(0)
+  expect(body[2]).toBe(0)
+  const headBeforeVerticalMove = await stage.getAttribute('data-head-rotation')
+  await page.mouse.move(viewport.width * 0.85, viewport.height * 0.8)
+  for (let i = 0; i < 10; i++) await advance(100)
+  await expect(stage).not.toHaveAttribute(
+    'data-head-rotation',
+    headBeforeVerticalMove!
+  )
+  const bodyAfterVerticalMove = (await stage.getAttribute(
+    'data-statue-body-rotation'
+  ))!
+    .split(',')
+    .map(Number)
+  expect(bodyAfterVerticalMove[0]).toBe(0)
+  expect(bodyAfterVerticalMove[1]).toBeCloseTo(body[1], 4)
+  expect(bodyAfterVerticalMove[2]).toBe(0)
+  await expect(stage).toHaveAttribute('data-head-nod-angle', '10.000')
+  const fullCamera = await stage.getAttribute('data-camera-position')
+  const angledHead = (await stage.getAttribute('data-head-rotation'))!
+    .split(',')
+    .map(Number)
   await canvas.click({ position: { x: 20, y: viewport.height / 2 } })
-  await advance(1700)
+  await advance(200)
+  await expect(stage).toHaveAttribute('data-camera-position', fullCamera!)
+  const returningHead = (await stage.getAttribute('data-head-rotation'))!
+    .split(',')
+    .map(Number)
+  expect(Math.abs(returningHead[1])).toBeLessThan(Math.abs(angledHead[1]))
+  expect(Math.abs(returningHead[1])).toBeGreaterThan(0.001)
+  await expect(stage).toHaveAttribute('data-statue-depth-test', 'true')
+  await advance(200)
+  const restingHead = (await stage.getAttribute('data-head-rotation'))!
+    .split(',')
+    .map(Number)
+  expect(restingHead[0]).toBeCloseTo(Math.sin((7 * Math.PI) / 360), 5)
+  expect(restingHead[1]).toBeCloseTo(0, 5)
+  await expect(stage).toHaveAttribute('data-head-nod-angle', '10.000')
+  await advance(1000)
+  const returnClip = Number(await stage.getAttribute('data-statue-clip-height'))
+  expect(returnClip).toBeGreaterThan(0.1)
+  expect(returnClip).toBeLessThan(0.52)
+  await advance(700)
   await expect(root).toHaveAttribute('data-selected', 'none')
   await expect(stage).toHaveAttribute('data-camera-position', home!)
   await expect(stage).toHaveAttribute('data-statue-y', halfY!)
@@ -93,13 +158,13 @@ test('clicking the statue smoothly reveals its full wireframe and restores the t
   await expect(page.locator('.temple-obelisk:visible')).toHaveCount(4)
   await expect(page.locator('.el-menu-layout-all')).toBeVisible()
   await expect(page.locator('.footer-com')).toBeVisible()
-  await expect(stage.locator('.page-hero-title')).toBeVisible()
+  await expect(stage.locator('.temple-backdrop')).toBeVisible()
   await canvas.focus()
   await page.keyboard.press('Enter')
   await advance(1700)
   await expect(root).toHaveAttribute('data-selected', 'statue')
   await page.keyboard.press('Escape')
-  await advance(1700)
+  await advance(2100)
   await expect(root).toHaveAttribute('data-selected', 'none')
 })
 
@@ -107,7 +172,7 @@ test('clicking the statue exits pillar focus and inspection leaves without shift
   page,
 }) => {
   const root = page.locator('.temple-page')
-  await page.locator('[data-obelisk="creative"]').click()
+  await page.locator('[data-obelisk="flanerie"]').click()
   await expect(root).toHaveAttribute('data-settled', 'true')
   const viewport = page.viewportSize()!
   await page.mouse.move(viewport.width * 0.43, viewport.height * 0.5)

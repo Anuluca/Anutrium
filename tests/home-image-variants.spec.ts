@@ -6,7 +6,7 @@ const mobileCardPattern = /[?&]image=card-mobile/
 test('home hero carousel selects the card thumbnail for each viewport', async ({
   page,
 }, testInfo) => {
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.home-page-slide--hero')).not.toHaveClass(
     /is-hero-initial-hidden/,
     { timeout: 20_000 }

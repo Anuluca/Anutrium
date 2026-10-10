@@ -4,7 +4,7 @@ test('entry animation rotates and hands off to the SVG logo', async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name.includes('mobile'))
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
 
   const canvas = page.locator('.entry-overlay-container canvas')
   await expect(canvas).toBeVisible({ timeout: 15_000 })
@@ -75,7 +75,7 @@ test('entry loading progress keeps its spacing on tall desktop viewports', async
 }, testInfo) => {
   test.skip(testInfo.project.name.includes('mobile'))
   await page.setViewportSize({ width: 1600, height: 1200 })
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
 
   const progress = page.locator('.entry-loading-progress')
   const canvas = page.locator('.entry-overlay-container canvas')
@@ -122,7 +122,7 @@ test('entry loading progress keeps its spacing on tall desktop viewports', async
 test('entry SVG logo docks with compositor-only FLIP geometry', async ({
   page,
 }) => {
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
 
   const svgLogo = page.locator('.logo-wrapper2')
   await expect(svgLogo).toHaveClass(/show/, { timeout: 15_000 })
@@ -230,7 +230,7 @@ test('mobile entry background compresses downward into the footer target', async
   page,
 }, testInfo) => {
   test.skip(!testInfo.project.name.includes('mobile'))
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
 
   const overlay = page.locator('.entry-overlay-container')
   await expect(overlay).toHaveClass(/is-background-exiting/, {
@@ -291,7 +291,7 @@ test('header loads the custom CJK font and uses semantic native navigation', asy
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name.includes('mobile'))
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
 
   await expect(page.locator('.entry-overlay-container')).toHaveCount(0, {
     timeout: 15_000,
@@ -309,7 +309,9 @@ test('header loads the custom CJK font and uses semantic native navigation', asy
       ),
       cjkFontRequested: performance
         .getEntriesByType('resource')
-        .some((entry) => entry.name.includes('unboundedsans-cjk-site.woff2')),
+        .some((entry) =>
+          entry.name.includes('/fonts/unbounded/unboundedsans-u')
+        ),
       menuTag: menu?.tagName,
       menuItemTag: menuItem?.tagName,
     }
@@ -326,7 +328,7 @@ test('header loads the custom CJK font and uses semantic native navigation', asy
 test('critical font preload does not register an unrestricted duplicate face after reload', async ({
   page,
 }) => {
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.entry-overlay-container')).toHaveCount(0, {
     timeout: 15_000,
   })
@@ -443,7 +445,7 @@ test('desktop header preserves its route insets without animating layout', async
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name.includes('mobile'))
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.entry-overlay-container')).toHaveCount(0, {
     timeout: 15_000,
   })
@@ -790,7 +792,7 @@ test('zodiac rotation starts only after the previous route leaves', async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name.includes('mobile'))
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
   await expect(
     page.locator('.zodiac-sign-face.is-active .zodiac-glyph')
   ).toContainText('♌', { timeout: 15_000 })
@@ -814,7 +816,7 @@ test('zodiac rotation starts only after the previous route leaves', async ({
 test('home crystal keeps its drawing buffer in sync after the initial responsive layout', async ({
   page,
 }) => {
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
   const canvas = page.locator('.passion-logo canvas')
   await expect(canvas).toBeVisible({ timeout: 15_000 })
 
@@ -838,7 +840,7 @@ test('home pauses hidden hero motion and resumes it on return', async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name.includes('mobile'))
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
   const hero = page.locator('.home-page-slide--hero')
   const sloganShell = page.locator('.main-slogan-shell')
   const slogan = page.locator('.main-slogan')
@@ -1030,7 +1032,7 @@ test('home pauses hidden hero motion and resumes it on return', async ({
 test('home paging settles on every screen after motion optimization', async ({
   page,
 }, testInfo) => {
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.home-page-slide--hero')).not.toHaveClass(
     /is-hero-initial-hidden/,
     { timeout: 20_000 }

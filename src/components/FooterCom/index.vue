@@ -21,12 +21,14 @@ interface BottomLineItem {
 interface BottomLineData {
   intro: string
   lastUpdate: string
+  rants: string[]
   recommand: BottomLineItem[]
 }
 
-const props = withDefaults(defineProps<{ entryActive?: boolean }>(), {
-  entryActive: false,
-})
+const props = withDefaults(
+  defineProps<{ entryActive?: boolean; entryOverlayActive?: boolean }>(),
+  { entryActive: false, entryOverlayActive: false }
+)
 
 const { locale, tm } = useI18n()
 const router = useRouter()
@@ -36,17 +38,23 @@ const visualStateStore = visualState()
 const bottomLineData = computed(
   () => tm('bottomLine') as unknown as BottomLineData
 )
+const rantIndex = ref(0)
+const selectRandomRant = () => {
+  rantIndex.value = Math.floor(
+    Math.random() * bottomLineData.value.rants.length
+  )
+}
 const isInternalHref = (href: string) =>
   href.startsWith('/') && !href.startsWith('//')
 
 const isMotionPaused = ref(false)
+const footerReady = ref(false)
 const footerExpanded = ref(false)
 const marqueeTrack = ref<HTMLElement | null>(null)
 const marqueeViewport = ref<HTMLElement | null>(null)
 const marqueeCopies = ref(2)
 const marqueeDuration = ref('24s')
 const marqueeDistance = ref('0px')
-let footerAnimationTimer: number | null = null
 let marqueeFrame: number | null = null
 let marqueeResizeObserver: ResizeObserver | null = null
 let reducedMotionQuery: MediaQueryList | null = null
@@ -56,6 +64,7 @@ let themeSwitchTimer: number | null = null
 const isDev = import.meta.env.DEV
 
 onMounted(() => {
+  selectRandomRant()
   nextTick(() => {
     scheduleMarqueeUpdate()
     if (marqueeTrack.value && 'ResizeObserver' in window) {
@@ -67,7 +76,7 @@ onMounted(() => {
     }
   })
   if (props.entryActive) {
-    nextTick(initFooterAnimation)
+    initFooterAnimation()
   }
   reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
   updateMotionState()
@@ -76,9 +85,6 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  if (footerAnimationTimer !== null) {
-    window.clearTimeout(footerAnimationTimer)
-  }
   if (marqueeFrame !== null) window.cancelAnimationFrame(marqueeFrame)
   if (themeSwitchTimer !== null) window.clearTimeout(themeSwitchTimer)
   marqueeResizeObserver?.disconnect()
@@ -119,12 +125,9 @@ const scheduleMarqueeUpdate = () => {
 const initFooterAnimation = () => {
   if (hasPlayedEntryAnimation) return
   hasPlayedEntryAnimation = true
-  footerExpanded.value = false
-
-  footerAnimationTimer = window.setTimeout(() => {
-    footerAnimationTimer = null
-    footerExpanded.value = true
-  }, 400)
+  // 同步提交渐显和展开状态，避免三维入场占用主线程时定时器漂移。
+  footerReady.value = true
+  footerExpanded.value = true
 }
 
 const changeLanguage = (lang: SiteLocale) => {
@@ -136,7 +139,7 @@ const changeTheme = async (isDark: boolean) => {
   const newTheme = isDark ? 'dark' : 'light'
   if (newTheme === 'light') await ensureLightThemeStyles()
 
-  if (route.path === '/') {
+  if (route.path === '/test2') {
     isThemeSwitching.value = true
     themeSwitchTimer = window.setTimeout(() => {
       visualStateStore.setTheme(newTheme)
@@ -157,9 +160,10 @@ watch(
   () => props.entryActive,
   (entryActive) => {
     if (entryActive) {
-      nextTick(initFooterAnimation)
+      initFooterAnimation()
     }
-  }
+  },
+  { flush: 'sync' }
 )
 
 watch(locale, () => nextTick(scheduleMarqueeUpdate))
@@ -169,7 +173,8 @@ watch(locale, () => nextTick(scheduleMarqueeUpdate))
   <div
     :class="{
       'footer-com': true,
-      'footer-ready': props.entryActive,
+      'footer-ready': footerReady,
+      'footer-above-entry-overlay': props.entryOverlayActive,
       'footer-expanded': footerExpanded,
       'motion-paused': isMotionPaused,
     }"
@@ -219,6 +224,7 @@ watch(locale, () => nextTick(scheduleMarqueeUpdate))
             '--footer-marquee-duration': marqueeDuration,
             '--footer-marquee-distance': marqueeDistance,
           }"
+          @animationiteration.self="selectRandomRant"
         >
           <div
             v-for="copy in marqueeCopies"
@@ -241,6 +247,17 @@ watch(locale, () => nextTick(scheduleMarqueeUpdate))
                 >
                 <span class="recommend-date">{{ item.date }}</span>
               </component>
+              <!-- 所有候选文案占用同一网格，保留最长宽度，随机换句时不改变循环距离。 -->
+              <span class="recommend-rant">
+                <span
+                  v-for="(rant, index) in bottomLineData.rants"
+                  :key="index"
+                  class="recommend-title"
+                  :class="{ 'rant-inactive': index !== rantIndex }"
+                  :aria-hidden="index !== rantIndex ? 'true' : undefined"
+                  >{{ rant }}</span
+                >
+              </span>
             </span>
           </div>
         </div>

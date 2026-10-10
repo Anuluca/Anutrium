@@ -35,18 +35,20 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
+import { pageThemeColors } from '@/config/pageThemes'
 import { addPageScrollListener, getPageScrollTop } from '@/utils/pageScroll'
 
 const route = useRoute()
 const props = withDefaults(
-  defineProps<{ static?: boolean; color?: string }>(),
+  defineProps<{ static?: boolean; color?: string; title?: string }>(),
   {
     static: false,
     color: '',
+    title: '',
   }
 )
 const title = computed(() =>
-  String(route.meta.titleEn || route.name || '').toUpperCase()
+  String(props.title || route.meta.titleEn || route.name || '').toUpperCase()
 )
 const titleCharacters = computed(() =>
   Array.from(title.value, (character) =>
@@ -72,7 +74,7 @@ const mobileViewportQuery = '(max-width: 768px)'
 const tabletViewportQuery =
   '(max-width: 1199px), (max-width: 1366px) and (any-pointer: coarse)'
 const themeColors: Record<string, string> = {
-  ARCHIVE: '#2f7548',
+  ARCHIVE: pageThemeColors.ARCHIVE,
   FLANERIE: '#8a2c1b',
   CRAFT: '#244392',
   ABOUT: '#e23456',

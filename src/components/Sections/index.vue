@@ -10,7 +10,7 @@
     :data-section-title="title"
   >
     <SectionNavigation
-      v-if="isClient && isNavigationHost"
+      v-if="navigation !== false && isClient && isNavigationHost"
       :active-anchor-id="activeAnchorId"
       :is-page-end="isNavigationAtPageEnd"
       :items="navigationItems"
@@ -56,15 +56,20 @@ const props = defineProps<{
   sectionNumber: string | number
   title: string
   titleEn?: string
+  navigation?: boolean
+  reveal?: boolean
 }>()
 
 const { locale } = useI18n()
 const sectionRef = ref<HTMLElement | null>(null)
-const { isReady: isScrollRevealReady } = useScrollReveal({
-  rootMargin: '0px 0px -12% 0px',
-  target: sectionRef,
-  threshold: 0.04,
-})
+const { isReady: isScrollRevealReady } =
+  props.reveal === false
+    ? { isReady: ref(false) }
+    : useScrollReveal({
+        rootMargin: '0px 0px -12% 0px',
+        target: sectionRef,
+        threshold: 0.04,
+      })
 
 const formattedSectionNumber = computed(() =>
   String(props.sectionNumber).padStart(2, '0')
@@ -90,6 +95,7 @@ const {
   navigationItems,
   scrollToSection,
 } = useSectionNavigation({
+  enabled: () => props.navigation !== false,
   eventName: 'sections-navigation:refresh',
   itemSelector: '[data-sections-nav-item="true"]',
   sectionRef,

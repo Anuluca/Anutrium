@@ -470,12 +470,15 @@
   }
 }
 
-.mobile-port--works {
+.mobile-port--creative {
   min-height: 0;
 
   .mobile-card-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     grid-template-rows: repeat(2, minmax(0, 1fr));
+    .mobile-bay-card:last-child {
+      grid-column: 1 / -1;
+    }
   }
 
   .mobile-bay-card {

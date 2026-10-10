@@ -83,13 +83,21 @@ test('journey video modal preserves and locks the page position', async ({
 test('message box preserves and locks the page position', async ({
   page,
 }, testInfo) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/archive', { waitUntil: 'domcontentloaded' })
   const trigger = page.locator('.availability-cta--resume')
   await expect(trigger).toBeAttached({ timeout: PAGE_LOAD_TIMEOUT })
   await page.waitForTimeout(850)
-  await scrollPageToRatio(page)
+  const panel = page.locator('.temple-focus-content .scroll-viewport__scroll')
+  await page.evaluate(() => document.fonts.ready)
+  await panel.evaluate((element) => {
+    element.scrollTop = 240
+  })
+  await expect
+    .poll(() => panel.evaluate((element) => element.scrollTop))
+    .toBe(240)
 
-  const initialPosition = await readPagePosition(page, '.archives-page')
+  const initialPosition = await readPagePosition(page, '.availability-panel')
   await page.evaluate(() => {
     const animationNames: string[] = []
     const recordAnimation = () => {
@@ -187,7 +195,7 @@ test('message box preserves and locks the page position', async ({
       ).textAlign,
     }
   })
-  expect(dialogStyle.accent).toBe('#5ad480')
+  expect(dialogStyle.accent).toBe('#3276fe')
   expect(dialogStyle.cornerContent).toBe('none')
   expect(dialogStyle.confirmIconContent).not.toBe('none')
   expect(dialogStyle.confirmIconWidth).toBeGreaterThan(2)
@@ -220,7 +228,7 @@ test('message box preserves and locks the page position', async ({
 
   await page.waitForTimeout(250)
   expectPagePositionToMatch(
-    await readPagePosition(page, '.archives-page'),
+    await readPagePosition(page, '.availability-panel'),
     initialPosition
   )
 
@@ -228,7 +236,7 @@ test('message box preserves and locks the page position', async ({
   await page.mouse.wheel(0, -600)
   await page.waitForTimeout(150)
   expectPagePositionToMatch(
-    await readPagePosition(page, '.archives-page'),
+    await readPagePosition(page, '.availability-panel'),
     initialPosition
   )
 
@@ -247,7 +255,7 @@ test('message box preserves and locks the page position', async ({
   await expect(messageBox).toBeHidden()
   await page.waitForTimeout(250)
   expectPagePositionToMatch(
-    await readPagePosition(page, '.archives-page'),
+    await readPagePosition(page, '.availability-panel'),
     initialPosition
   )
 })

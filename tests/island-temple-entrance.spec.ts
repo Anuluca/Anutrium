@@ -1,12 +1,8 @@
 import { expect, test } from '@playwright/test'
 
-test.beforeEach(async ({ page: _page }, testInfo) => {
-  test.skip(testInfo.project.name.includes('mobile'), '四柱场景仅用于桌面端')
-})
-
 test('entrance frames the statue before raising full-size pillars and enabling interaction', async ({
   page,
-}) => {
+}, testInfo) => {
   // 只控制渲染时间；网络加载、着色器预编译和路由定时器继续正常运行。
   await page.addInitScript(() => {
     const clock = { now: 1000 }
@@ -16,26 +12,36 @@ test('entrance frames the statue before raising full-size pillars and enabling i
       first: -1,
       completed: false,
       flashed: false,
-      removed: false,
+      startedBeforeOverlayRemoved: false,
     }
     ;(
       window as typeof window & { progressSequence: typeof progressSequence }
     ).progressSequence = progressSequence
     const observer = new MutationObserver(() => {
-      const progress = document.querySelector('.temple-preparation-progress')
+      const progress = document.querySelector(
+        '.entry-overlay-container .entry-loading-progress'
+      )
       const stage = document.querySelector<HTMLElement>('.temple-stage')
       if (progress && progressSequence.first < 0)
         progressSequence.first = Number(progress.getAttribute('aria-valuenow'))
-      if (progress && stage?.dataset.entrancePhase === 'loading-complete') {
+      if (progress && stage?.dataset.entrancePhase === 'waiting-route') {
         progressSequence.completed ||=
           progress.getAttribute('aria-valuenow') === '100' &&
           stage.style.opacity === '0'
+      }
+      if (progress && progressSequence.completed)
         progressSequence.flashed ||= progress.classList.contains('is-fading')
+      if (
+        stage?.dataset.entrancePhase === 'statue' &&
+        document.querySelector('.entry-overlay-container.is-background-exiting')
+      ) {
+        progressSequence.startedBeforeOverlayRemoved = true
       }
-      if (!progress && stage?.dataset.entrancePhase === 'statue') {
-        progressSequence.removed = true
+      if (
+        progressSequence.flashed &&
+        progressSequence.startedBeforeOverlayRemoved
+      )
         observer.disconnect()
-      }
     })
     observer.observe(document, {
       childList: true,
@@ -57,9 +63,9 @@ test('entrance frames the statue before raising full-size pillars and enabling i
       )
     }, milliseconds)
   }
-  await page.goto('/island', { waitUntil: 'domcontentloaded' })
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
   const stage = page.locator('.temple-stage')
-  const hero = stage.locator('.page-hero-title')
+  const hero = stage.locator('.temple-backdrop')
   const titleRise = () =>
     hero.locator('h1').evaluate((element) => {
       const matrix = new DOMMatrixReadOnly(getComputedStyle(element).transform)
@@ -68,6 +74,9 @@ test('entrance frames the statue before raising full-size pillars and enabling i
   await expect(stage).toHaveAttribute('data-entrance-phase', 'statue', {
     timeout: 20000,
   })
+  await expect
+    .poll(() => page.evaluate(() => (window as any).progressSequence.flashed))
+    .toBe(true)
   expect(
     await page.evaluate(
       () =>
@@ -77,12 +86,18 @@ test('entrance frames the statue before raising full-size pillars and enabling i
               first: number
               completed: boolean
               flashed: boolean
-              removed: boolean
+              startedBeforeOverlayRemoved: boolean
             }
           }
         ).progressSequence
     )
-  ).toEqual({ first: 0, completed: true, flashed: true, removed: true })
+  ).toEqual({
+    first: expect.any(Number),
+    completed: true,
+    flashed: true,
+    startedBeforeOverlayRemoved: true,
+  })
+  await expect(page.locator('.temple-preparation-progress')).toHaveCount(0)
   await expect(stage).toHaveAttribute('data-base-y', '0.000,0.000,0.000,0.000')
   expect(
     Math.abs(Number(await stage.getAttribute('data-shaft-base-gap')))
@@ -104,7 +119,7 @@ test('entrance frames the statue before raising full-size pillars and enabling i
   await expect(page.locator('.temple-obelisk:disabled')).toHaveCount(4)
   await expect(page.locator('.temple-obelisk:visible')).toHaveCount(0)
   await page
-    .locator('[data-obelisk="creative"]')
+    .locator('[data-obelisk="flanerie"]')
     .evaluate((button) => (button as HTMLButtonElement).click())
   await expect(page.locator('.temple-page')).toHaveAttribute(
     'data-selected',
@@ -137,18 +152,20 @@ test('entrance frames the statue before raising full-size pillars and enabling i
   expect(earlyTitleRise).toBeGreaterThan(0)
   expect(earlyTitleRise).toBeLessThan(1)
   await advance(250 / entranceRate)
-  await expect(stage).toHaveAttribute('data-visible-obelisks', 'creative,notes')
-  expect(
-    Number(await stage.getAttribute('data-statue-holy-light'))
-  ).toBeGreaterThan(0)
+  await expect(stage).toHaveAttribute(
+    'data-visible-obelisks',
+    'flanerie,pokeyard'
+  )
+  await expect(stage).toHaveAttribute('data-statue-holy-light', '0.000')
   expect(
     await stage.evaluate((el) => Number(getComputedStyle(el).opacity))
   ).toBeLessThan(1)
   await advance(400 / entranceRate)
   await expect(stage).toHaveAttribute(
     'data-visible-obelisks',
-    'art,creative,notes,otaku'
+    'archive,flanerie,pokeyard,island'
   )
+  await expect(stage).toHaveAttribute('data-statue-holy-light', '0.000')
   expect(await headPitch()).toBeCloseTo(initialPitch, 2)
   await advance(1700 / entranceRate)
   const middleCamera = (await stage.getAttribute('data-camera-position'))!
@@ -163,7 +180,7 @@ test('entrance frames the statue before raising full-size pillars and enabling i
   expect(middleCamera[2]).toBe(raisedCamera[2])
   await expect(stage).toHaveAttribute(
     'data-visible-obelisks',
-    'art,creative,notes,otaku'
+    'archive,flanerie,pokeyard,island'
   )
   const heights = (await stage.getAttribute('data-monument-y'))!
     .split(',')
@@ -208,7 +225,7 @@ test('entrance frames the statue before raising full-size pillars and enabling i
   expect(await titleRise()).toBeCloseTo(0, 3)
   await expect(hero.locator('h1')).toHaveCSS('opacity', '1')
   await expect(stage).toHaveAttribute('data-statue-holy-light', '1.000')
-  await expect(hero).toHaveClass(/is-static/)
+  await expect(hero).toHaveAttribute('aria-hidden', 'true')
   const geometry = await hero.evaluate((element) => {
     const stage = element.parentElement!
     const rect = element.getBoundingClientRect()
@@ -219,20 +236,28 @@ test('entrance frames the statue before raising full-size pillars and enabling i
       left: rect.left,
       width: rect.width,
       viewport: innerWidth,
+      stageHeight: bounds.height,
       color: getComputedStyle(element).color,
     }
   })
-  expect(Math.abs(geometry.bottom - geometry.horizon)).toBeLessThanOrEqual(1)
-  expect(geometry.left).toBe(0)
-  expect(geometry.width).toBe(geometry.viewport)
+  if (testInfo.project.name.includes('mobile')) {
+    expect(
+      Math.abs(geometry.bottom - (geometry.stageHeight - 64))
+    ).toBeLessThanOrEqual(1)
+    expect(geometry.left).toBe(16)
+    expect(geometry.width).toBe(geometry.viewport - 32)
+  } else {
+    expect(Math.abs(geometry.bottom - geometry.horizon)).toBeLessThanOrEqual(1)
+    expect(geometry.left).toBe(0)
+    expect(geometry.width).toBe(geometry.viewport)
+  }
   expect(geometry.color).toBe('rgb(226, 52, 86)')
   await advance(6000)
   await expect(hero.locator('.is-animating')).toHaveCount(0)
-  await expect(hero.locator('.page-hero-title__char').first()).toHaveCSS(
-    'pointer-events',
-    'none'
-  )
-  await page.locator('[data-obelisk="creative"]').click()
+  await expect(hero).toHaveCSS('pointer-events', 'none')
+  await page
+    .locator('[data-obelisk="flanerie"]')
+    .evaluate((button) => (button as HTMLButtonElement).click())
   await advance(500)
   let movingHeights = (await stage.getAttribute('data-monument-y'))!
     .split(',')
@@ -242,15 +267,18 @@ test('entrance frames the statue before raising full-size pillars and enabling i
   expect(movingHeights[1]).toBe(0)
   await expect(stage).toHaveAttribute(
     'data-visible-obelisks',
-    'art,creative,notes,otaku'
+    'archive,flanerie,pokeyard,island'
   )
   await expect(stage).toHaveAttribute('data-base-y', '0.000,0.000,0.000,0.000')
   await advance(1200)
-  await expect(stage).toHaveAttribute('data-visible-obelisks', 'creative')
+  await expect(stage).toHaveAttribute('data-visible-obelisks', 'flanerie')
   await expect(hero).toHaveCSS('opacity', '0.2')
-  await stage
-    .locator('canvas')
-    .click({ position: { x: 20, y: page.viewportSize()!.height - 100 } })
+  await page.keyboard.press('Escape')
+  // 菜单先完成 CSS 离场，再开始三维回程；这里只推进三维时钟，需先等真实离场回调。
+  await expect(page.locator('.temple-page')).toHaveAttribute(
+    'data-selected',
+    'none'
+  )
   await advance(500)
   movingHeights = (await stage.getAttribute('data-monument-y'))!
     .split(',')
@@ -266,14 +294,18 @@ test('entrance frames the statue before raising full-size pillars and enabling i
   await expect(hero).toHaveCSS('opacity', '1')
 })
 
-test('route entry completes before the scene fades in and starts its camera motion', async ({
+test('route entry completes before the simplified scene fades in on return', async ({
   page,
-}) => {
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name.includes('mobile'),
+    '手机路由几何由 island-lucario 回归覆盖'
+  )
   test.setTimeout(60000)
   // 在 GSAP 初始化前接管时钟，保证首次加载与缓存返回使用同一个时间源。
   await page.clock.install()
   await page.clock.pauseAt(await page.evaluate(() => Date.now() + 50))
-  await page.goto('/island', { waitUntil: 'domcontentloaded' })
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
   for (let attempt = 0; attempt < 100; attempt++) {
     await page.clock.runFor(50)
     const phase = await page.evaluate(
@@ -281,7 +313,7 @@ test('route entry completes before the scene fades in and starts its camera moti
         document.querySelector<HTMLElement>('.temple-stage')?.dataset
           .entrancePhase
     )
-    if (phase === 'delay') break
+    if (phase === 'statue') break
     await page.waitForTimeout(100)
   }
   await page.clock.runFor(2400)
@@ -291,17 +323,25 @@ test('route entry completes before the scene fades in and starts its camera moti
     'true',
     { timeout: 25000 }
   )
-  await page.locator('.menu-box a[href="/craft"]').click()
+  await page.evaluate(() =>
+    (
+      document.querySelector('.layout-page') as any
+    ).__vueParentComponent.proxy.$router.push('/about')
+  )
   await page.clock.runFor(1000)
-  await expect(page.locator('.craft-page')).toBeVisible()
-  await expect(page.locator('.craft-page')).not.toHaveClass(
+  await expect(page.locator('.about-page')).toBeVisible()
+  await expect(page.locator('.about-page')).not.toHaveClass(
     /route-enter-active/
   )
   // 延长真实路由过渡，确保缓存资源提前准备好，覆盖“资源先就绪”的时序。
   await page.addStyleTag({
     content: '.route-enter-active { transition-duration: 8s !important; }',
   })
-  await page.locator('.menu-box a[href="/island"]').click()
+  await page.evaluate(() =>
+    (
+      document.querySelector('.layout-page') as any
+    ).__vueParentComponent.proxy.$router.push('/')
+  )
   const root = page.locator('.temple-page')
   const stage = page.locator('.temple-stage')
   for (let attempt = 0; attempt < 100; attempt++) {
@@ -324,25 +364,29 @@ test('route entry completes before the scene fades in and starts its camera moti
   await expect(page.locator('.temple-obelisk:disabled')).toHaveCount(4)
   await page.clock.fastForward(9000)
   await expect(root).not.toHaveClass(/route-enter-active/, { timeout: 12000 })
-  await expect(stage).toHaveAttribute('data-entrance-phase', 'delay')
-  await expect(page.getByRole('progressbar')).toBeVisible()
-  for (let attempt = 0; attempt < 60; attempt++) {
-    await page.clock.runFor(50)
-    if ((await stage.getAttribute('data-entrance-phase')) === 'statue') break
-  }
-  await expect(stage).toHaveAttribute('data-entrance-phase', 'statue')
-  await expect(stage).toHaveAttribute('data-camera-position', /^0\.0000,/)
-  await page.clock.fastForward(5700)
-  await expect(stage).toHaveAttribute('data-entrance-finished', 'true', {
-    timeout: 10000,
-  })
-  await expect(stage).toHaveCSS('opacity', '1')
+  await expect(stage).toHaveAttribute('data-entrance-mode', 'simple')
+  await expect(stage).toHaveAttribute('data-entrance-phase', 'fade')
+  const camera = await stage.getAttribute('data-camera-position')
+  await page.clock.runFor(200)
+  const opacity = Number(
+    await stage.evaluate((element) => getComputedStyle(element).opacity)
+  )
+  expect(opacity).toBeGreaterThan(0)
+  expect(opacity).toBeLessThan(1)
+  await page.clock.runFor(600)
+  await expect(stage).toHaveAttribute('data-entrance-finished', 'true')
+  await expect(stage).toHaveAttribute('data-entrance-phase', 'complete')
+  await expect(stage).toHaveAttribute('data-camera-position', camera!)
 })
 
 test('resizing during the entrance settles at the resized home framing', async ({
   page,
-}) => {
-  await page.goto('/island', { waitUntil: 'domcontentloaded' })
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name.includes('mobile'),
+    '手机布局与桌面镜头构图不同'
+  )
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
   const stage = page.locator('.temple-stage')
   await expect(stage).toHaveAttribute('data-entrance-phase', 'statue', {
     timeout: 20000,
@@ -353,12 +397,12 @@ test('resizing during the entrance settles at the resized home framing', async (
   })
   const home = await stage.getAttribute('data-camera-position')
   expect(Number(home!.split(',')[2])).toBeCloseTo(31 / (1100 / 900), 3)
-  await page.locator('[data-obelisk="creative"]').click()
+  await page.locator('[data-obelisk="flanerie"]').click()
   await expect(page.locator('.temple-page')).toHaveAttribute(
     'data-settled',
     'true'
   )
-  await page.locator('[data-obelisk="creative"]').click()
+  await page.locator('[data-obelisk="flanerie"]').click()
   await expect(stage).toHaveAttribute('data-camera-position', home!, {
     timeout: 5000,
   })
@@ -366,7 +410,7 @@ test('resizing during the entrance settles at the resized home framing', async (
 
 test('reduced motion opens the final scene immediately', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto('/island', { waitUntil: 'domcontentloaded' })
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
   const stage = page.locator('.temple-stage')
   await expect(stage).toHaveAttribute('data-entrance-finished', 'true', {
     timeout: 20000,
@@ -382,5 +426,5 @@ test('reduced motion opens the final scene immediately', async ({ page }) => {
   )
   await expect(page.locator('.temple-obelisk:enabled')).toHaveCount(4)
   await expect(stage).toHaveAttribute('data-statue-holy-light', '1.000')
-  await expect(stage.locator('.page-hero-title h1')).toHaveCSS('opacity', '1')
+  await expect(stage.locator('.temple-backdrop h1')).toHaveCSS('opacity', '1')
 })

@@ -59,7 +59,7 @@
       <h4 class="vlog-title" :class="{ 'is-split': splitTitle }">
         <template v-if="splitTitle">
           <ShuffleText
-            v-if="hoverEffects"
+            v-if="hoverEffects && titleEffects"
             ref="prefixShuffleRef"
             class="vlog-title-prefix"
             :text="splitTitle.prefix"
@@ -68,7 +68,7 @@
           />
           <span v-else class="vlog-title-prefix">{{ splitTitle.prefix }}</span>
           <ShuffleText
-            v-if="hoverEffects"
+            v-if="hoverEffects && titleEffects"
             ref="restShuffleRef"
             class="vlog-title-rest"
             :text="splitTitle.rest"
@@ -78,7 +78,7 @@
           <span v-else class="vlog-title-rest">{{ splitTitle.rest }}</span>
         </template>
         <ShuffleText
-          v-else-if="hoverEffects"
+          v-else-if="hoverEffects && titleEffects"
           ref="titleShuffleRef"
           :text="vlog.title"
           :shuffle-direction="vlog.category === 'activity' ? 'right' : 'down'"
@@ -125,6 +125,7 @@ const props = withDefaults(
     interactive?: boolean
     compact?: boolean
     hoverEffects?: boolean
+    titleEffects?: boolean
     imageLoading?: 'eager' | 'lazy'
   }>(),
   {
@@ -132,6 +133,7 @@ const props = withDefaults(
     interactive: false,
     compact: false,
     hoverEffects: true,
+    titleEffects: true,
     imageLoading: 'lazy',
   }
 )
@@ -194,7 +196,7 @@ const shuffleTitle = () => {
 const handleTitleHover = () => {
   if (!props.hoverEffects) return
   if (hoverImage.value) shouldLoadHoverImage.value = true
-  shuffleTitle()
+  if (props.titleEffects) shuffleTitle()
 }
 
 watch(cardImage, () => (isBaseLoaded.value = false))

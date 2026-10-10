@@ -5,7 +5,7 @@ import { resolve } from 'node:path'
 test('personal bay blocks page scrolling and restores it after leaving', async ({
   page,
 }, testInfo) => {
-  await page.goto('/island', { waitUntil: 'domcontentloaded' })
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
   const root = page.locator('.lucario-page')
   await expect(root).toBeVisible({ timeout: 20000 })
   await expect(root).not.toHaveClass(/route-enter-active/)
@@ -43,18 +43,17 @@ test('personal bay blocks page scrolling and restores it after leaving', async (
     expect(Math.abs(after[key] - initial[key]), key).toBeLessThanOrEqual(1)
   }
 
-  if (testInfo.project.name.includes('mobile')) {
-    await page.locator('.mobile-menu-icon').click()
-    await page.locator('.mobile-menu-items a[href="/craft"]').click()
-  } else {
-    await page.locator('.menu-box a[href="/craft"]').click()
-  }
+  await page.evaluate(() =>
+    (
+      document.querySelector('.layout-page') as any
+    ).__vueParentComponent.proxy.$router.push('/about')
+  )
   await expect(root).toHaveCount(0)
-  await expect(page.locator('.craft-page')).toBeVisible()
+  await expect(page.locator('.about-page')).toBeVisible()
   // 离场及菜单关闭后，目标页应恢复正常滚动。
   await expect
     .poll(async () => {
-      await page.locator('.craft-page').evaluate(() => {
+      await page.locator('.about-page').evaluate(() => {
         document.body.scrollTop = 100
       })
       await page.waitForTimeout(100)
@@ -83,6 +82,40 @@ test('mirrored head center has continuous symmetric normals', async () => {
     if (y < metadata.headPivot[1] + 0.15) chinSamples += 1
   }
   expect(chinSamples).toBeGreaterThan(0)
+})
+
+test('baked muzzle keeps its head and nod weights across the mirror seam', async () => {
+  const [json, bytes] = await Promise.all([
+    readFile(resolve('public/models/lucario-island.json'), 'utf8'),
+    readFile(resolve('public/models/lucario-island.bin')),
+  ])
+  const metadata = JSON.parse(json)
+  const { positions, weights, nodWeights, indices } = metadata.attributes
+  const used = new Set<number>()
+  for (let offset = 0; offset < indices.count; offset += 1)
+    used.add(bytes.readUInt16LE(indices.offset + offset * 2))
+  let centerChinSamples = 0
+  for (const index of used) {
+    const x = bytes.readFloatLE(positions.offset + index * 12)
+    const y = bytes.readFloatLE(positions.offset + index * 12 + 4)
+    const z = bytes.readFloatLE(positions.offset + index * 12 + 8)
+    // 吻部完全随头部运动；中线裁切新增顶点不能退回躯干的零权重。
+    if (y <= metadata.headPivot[1] || z <= 0.25) continue
+    expect(
+      bytes.readFloatLE(weights.offset + index * 4),
+      `head ${index}`
+    ).toBeCloseTo(1, 5)
+    expect(
+      bytes.readFloatLE(nodWeights.offset + index * 4),
+      `nod ${index}`
+    ).toBeCloseTo(1, 5)
+    if (
+      Math.abs(x - metadata.center[0]) < 0.00001 &&
+      y < metadata.headPivot[1] + 0.15
+    )
+      centerChinSamples += 1
+  }
+  expect(centerChinSamples).toBeGreaterThan(0)
 })
 
 test('baked neck reduction adds no folded faces or open seams', async () => {
@@ -136,18 +169,12 @@ test('island canvas fills its stage after navigation from another page', async (
   await expect(page.locator('.footer-bottom-gradient--ready')).toBeAttached({
     timeout: 15000,
   })
-  await expect(page.locator('.craft-page')).toBeVisible()
-  if (testInfo.project.name.includes('mobile')) {
-    await page.locator('.mobile-menu-icon').click()
-    await expect(page.locator('.mobile-menu-panel')).toHaveClass(/\bactive\b/)
-  }
-  await page
-    .locator(
-      testInfo.project.name.includes('mobile')
-        ? '.mobile-menu-items a[href="/island"]'
-        : '.menu-box a[href="/island"]'
-    )
-    .click()
+  await expect(page.locator('.about-page')).toBeVisible()
+  await page.evaluate(() =>
+    (
+      document.querySelector('.layout-page') as any
+    ).__vueParentComponent.proxy.$router.push('/')
+  )
   const root = page.locator('.lucario-page')
   await expect(root).toBeVisible({ timeout: 20000 })
   // 新上下文会重新预热 GPU 程序；先等待场景就绪，再检查入场后的几何。
@@ -192,19 +219,14 @@ test('island canvas fills its stage after navigation from another page', async (
     bottom: element.querySelector('canvas')!.getBoundingClientRect().bottom,
     viewport: innerHeight,
   }))
-  if (testInfo.project.name.includes('mobile')) {
-    expect(clipping.overflow).toBe('clip')
-    expect(clipping.bottom).toBeGreaterThan(clipping.viewport)
-  } else {
-    expect(clipping.overflow).toBe('hidden')
-    expect(Math.abs(clipping.bottom - clipping.viewport)).toBeLessThanOrEqual(1)
-  }
+  expect(clipping.overflow).toBe('hidden')
+  expect(Math.abs(clipping.bottom - clipping.viewport)).toBeLessThanOrEqual(1)
 })
 
 test('removed experimental routes lead to the not-found page', async ({
   page,
 }) => {
-  for (const path of ['/test2', '/test3']) {
+  for (const path of ['/test3']) {
     await page.goto(path, { waitUntil: 'domcontentloaded' })
     await expect(page).toHaveURL(/\/404$/)
     await expect(page.locator('.not-found-page')).toBeVisible()
@@ -216,7 +238,7 @@ test('island simplifies its model and follows the pointer with its head, then le
 }, testInfo) => {
   const errors: string[] = []
   page.on('pageerror', (error) => errors.push(error.message))
-  await page.goto('/island', { waitUntil: 'domcontentloaded' })
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.footer-bottom-gradient--ready')).toBeAttached({
     timeout: 15000,
   })
@@ -312,15 +334,6 @@ test('island simplifies its model and follows the pointer with its head, then le
     path: `test-results/island-lucario-${testInfo.project.name}.png`,
   })
 
-  if (testInfo.project.name.includes('mobile')) {
-    await page.locator('.mobile-menu-icon').click()
-    await expect(page.locator('.mobile-menu-panel')).toHaveClass(/\bactive\b/)
-  }
-  const link = page.locator(
-    testInfo.project.name.includes('mobile')
-      ? '.mobile-menu-items a[href="/craft"]'
-      : '.menu-box a[href="/craft"]'
-  )
   await page.evaluate(() => {
     const state = { done: false, samples: [] as number[][] }
     ;(
@@ -340,8 +353,12 @@ test('island simplifies its model and follows the pointer with its head, then le
     }
     sample()
   })
-  await link.click()
-  await expect(page.locator('.craft-page')).toBeVisible()
+  await page.evaluate(() =>
+    (
+      document.querySelector('.layout-page') as any
+    ).__vueParentComponent.proxy.$router.push('/about')
+  )
+  await expect(page.locator('.about-page')).toBeVisible()
   await expect(root).toHaveCount(0)
   await expect
     .poll(() =>
@@ -363,236 +380,4 @@ test('island simplifies its model and follows the pointer with its head, then le
       expect(Math.abs(coordinate - samples[0][index])).toBeLessThanOrEqual(1)
     )
   expect(errors).toEqual([])
-})
-
-test('loading stays silent and the model shrinks before three quick glitch flashes', async ({
-  page,
-}, testInfo) => {
-  test.skip(
-    !testInfo.project.name.includes('mobile'),
-    '桌面改为连续三维神殿场景，原有入场动画仅保留在手机端'
-  )
-  let release!: () => void
-  const loadingGate = new Promise<void>((resolve) => {
-    release = resolve
-  })
-  await page.route('**/models/lucario-island.bin', async (route) => {
-    await loadingGate
-    await route.continue()
-  })
-  try {
-    await page.goto('/island', { waitUntil: 'domcontentloaded' })
-    await expect(page.locator('.lucario-stage')).toBeVisible()
-    await expect(page.locator('.lucario-scan-line')).toHaveCount(0)
-    await expect(page.getByText('模型加载中', { exact: true })).toHaveCount(0)
-    await expect(page.locator('.lucario-page [role="status"]')).toHaveCount(0)
-    // 记录动画对象，确保快速闪烁结束后仍可验证完整的次数和关键帧。
-    await page.evaluate(() => {
-      const entry: Animation[] = []
-      ;(window as typeof window & { lucarioEntry?: Animation[] }).lucarioEntry =
-        entry
-      const animate = Element.prototype.animate
-      Element.prototype.animate = function (keyframes, options) {
-        const animation = animate.call(this, keyframes, options)
-        if (this.matches('.lucario-stage canvas')) {
-          entry.push(animation)
-          animation.pause()
-        }
-        return animation
-      }
-    })
-    await expect(page.locator('.lucario-stage')).toHaveAttribute(
-      'aria-busy',
-      'true'
-    )
-    await page.screenshot({
-      path: `test-results/island-silent-loading-${testInfo.project.name}.png`,
-    })
-    release()
-    await expect(page.locator('.lucario-stage')).toHaveAttribute(
-      'aria-busy',
-      'false',
-      { timeout: 15000 }
-    )
-    expect(
-      await page.evaluate(
-        () =>
-          (window as typeof window & { lucarioEntry?: Animation[] })
-            .lucarioEntry!.length
-      )
-    ).toBe(2)
-    const entry = await page.evaluate(() =>
-      (
-        window as typeof window & { lucarioEntry?: Animation[] }
-      ).lucarioEntry!.map((animation) => ({
-        id: animation.id,
-        duration: animation.effect!.getTiming().duration,
-        delay: animation.effect!.getTiming().delay,
-        iterations: animation.effect!.getTiming().iterations,
-        frames: (animation.effect as KeyframeEffect)
-          .getKeyframes()
-          .map((frame) => ({
-            opacity: frame.opacity,
-            transform: frame.transform,
-            clip: frame.clipPath,
-            filter: frame.filter,
-          })),
-      }))
-    )
-    const flicker = entry!.find(
-      (animation) => animation.id === 'lucario-flicker-in'
-    )!
-    expect(flicker.duration).toBe(80)
-    expect(flicker.delay).toBe(1920)
-    expect(flicker.iterations).toBe(3)
-    expect(flicker.frames.map((frame) => Number(frame.opacity))).toEqual([
-      0.45, 1, 1, 0.85, 0.55, 1,
-    ])
-    expect(flicker.frames.every((frame) => !frame.clip)).toBe(true)
-    expect(
-      flicker.frames.every((frame) =>
-        /^translateX\([^)]+\)$/.test(String(frame.transform))
-      )
-    ).toBe(true)
-    expect(
-      flicker.frames.some((frame) =>
-        frame.transform?.includes('translateX(-10px)')
-      )
-    ).toBe(true)
-    expect(
-      flicker.frames.some((frame) => frame.filter?.includes('hue-rotate'))
-    ).toBe(true)
-    const shrink = entry!.find(
-      (animation) => animation.id === 'lucario-shrink-in'
-    )!
-    expect(shrink.duration).toBe(1920)
-    expect(shrink.delay).toBe(0)
-    expect(shrink.frames.map((frame) => Number(frame.opacity))).toEqual([0, 1])
-    expect(shrink.frames.map((frame) => frame.transform)).toEqual([
-      'scale(2)',
-      'scale(1)',
-    ])
-    expect(shrink.frames.every((frame) => !frame.clip)).toBe(true)
-    await expect(page.locator('.lucario-stage')).toHaveAttribute(
-      'data-material-phase',
-      'wireframe'
-    )
-    await expect(page.locator('.entry-overlay-container')).toHaveCount(0, {
-      timeout: 15000,
-    })
-    const canvas = page.locator('.lucario-stage canvas')
-    // 固定缩放和透明度，仅比较头部从正常角度到低头的实际渲染变化。
-    await page.addStyleTag({
-      content: '.lucario-stage { background: #050105; }',
-    })
-    await canvas.evaluate(() => {
-      const shrink = (
-        window as typeof window & { lucarioEntry?: Animation[] }
-      ).lucarioEntry!.find((animation) => animation.id === 'lucario-shrink-in')!
-      ;(shrink.effect as KeyframeEffect).setKeyframes([
-        { transform: 'scale(1)', opacity: 1 },
-        { transform: 'scale(1)', opacity: 1 },
-      ])
-      shrink.currentTime = 0
-    })
-    await page.waitForTimeout(100)
-    const uprightHead = await canvas.screenshot()
-    await canvas.evaluate(() => {
-      const shrink = (
-        window as typeof window & { lucarioEntry?: Animation[] }
-      ).lucarioEntry!.find((animation) => animation.id === 'lucario-shrink-in')!
-      shrink.currentTime = 960
-    })
-    await page.waitForTimeout(100)
-    const loweringHead = await canvas.screenshot()
-    expect(uprightHead.equals(loweringHead)).toBe(false)
-    await canvas.evaluate(async () => {
-      const shrink = (
-        window as typeof window & { lucarioEntry?: Animation[] }
-      ).lucarioEntry!.find((animation) => animation.id === 'lucario-shrink-in')!
-      shrink.currentTime = 1919
-      await new Promise<void>((resolve) =>
-        requestAnimationFrame(() => resolve())
-      )
-    })
-    await expect(page.locator('.lucario-stage')).toHaveAttribute(
-      'data-material-phase',
-      'wireframe'
-    )
-    const wireframeImage = await canvas.screenshot()
-    expect(loweringHead.equals(wireframeImage)).toBe(false)
-    await page.screenshot({
-      path: `test-results/island-wireframe-entry-${testInfo.project.name}.png`,
-    })
-    await canvas.evaluate(() => {
-      const shrink = (
-        window as typeof window & { lucarioEntry?: Animation[] }
-      ).lucarioEntry!.find((animation) => animation.id === 'lucario-shrink-in')!
-      shrink.finish()
-    })
-    await expect(page.locator('.lucario-stage')).toHaveAttribute(
-      'data-material-phase',
-      'chrome'
-    )
-    const normalImage = await canvas.screenshot()
-    expect(wireframeImage.equals(normalImage)).toBe(false)
-    // 检查实际中间帧，避免关键帧存在、却被全局缓动跳过的回归。
-    const renderedGlitch = await canvas.evaluate(async (element) => {
-      const flicker = (
-        window as typeof window & { lucarioEntry?: Animation[] }
-      ).lucarioEntry!.find(
-        (animation) => animation.id === 'lucario-flicker-in'
-      )!
-      flicker.pause()
-      flicker.currentTime = 1920 + 20
-      await new Promise<void>((resolve) =>
-        requestAnimationFrame(() => resolve())
-      )
-      const style = getComputedStyle(element)
-      return {
-        opacity: Number(style.opacity),
-        transform: style.transform,
-        filter: style.filter,
-        clip: style.clipPath,
-      }
-    })
-    expect(renderedGlitch.opacity).toBe(1)
-    expect(renderedGlitch.transform).toBe('matrix(1, 0, 0, 1, -10, 0)')
-    expect(renderedGlitch.filter).toContain('hue-rotate(75deg)')
-    expect(renderedGlitch.clip).toBe('none')
-    expect(normalImage.equals(await canvas.screenshot())).toBe(false)
-    await page.screenshot({
-      path: `test-results/island-glitch-${testInfo.project.name}.png`,
-    })
-    await canvas.evaluate(() => {
-      for (const animation of (
-        window as typeof window & { lucarioEntry?: Animation[] }
-      ).lucarioEntry!)
-        animation.finish()
-    })
-    await page.locator('.lucario-stage canvas').evaluate(async (element) => {
-      await Promise.all(
-        element.getAnimations().map((animation) => animation.finished)
-      )
-    })
-    await expect(page.locator('.lucario-stage')).toHaveAttribute(
-      'data-entrance-finished',
-      'true'
-    )
-    await expect(page.locator('.lucario-scan-line')).toHaveCount(0)
-    await expect(page.locator('.lucario-stage canvas')).toHaveCSS(
-      'filter',
-      'none'
-    )
-    await expect(page.locator('.lucario-stage canvas')).toHaveCSS(
-      'clip-path',
-      'none'
-    )
-    await expect(page.locator('.lucario-stage canvas')).toHaveCSS(
-      'transform',
-      'none'
-    )
-  } finally {
-    release()
-  }
 })

@@ -10,21 +10,8 @@ import {
 } from 'vue'
 
 import ParticlesBg from '@/components/ParticlesBg/index.vue'
+import type { ZodiacSignId } from '@/config/zodiacThemes'
 import { addPageResizeListener } from '@/utils/pageScroll'
-
-type ZodiacSignId =
-  | 'aries'
-  | 'taurus'
-  | 'gemini'
-  | 'cancer'
-  | 'leo'
-  | 'virgo'
-  | 'libra'
-  | 'scorpio'
-  | 'sagittarius'
-  | 'capricorn'
-  | 'aquarius'
-  | 'pisces'
 
 type ZodiacLayout = 'hero' | 'content' | 'red'
 
@@ -34,6 +21,7 @@ interface Props {
   deepBlack?: boolean
   activeSign?: ZodiacSignId
   layout?: ZodiacLayout
+  tinted?: boolean
   particlesVisible?: boolean
   particleFps?: number
   topInset?: number
@@ -53,6 +41,7 @@ const props = withDefaults(defineProps<Props>(), {
   deepBlack: false,
   activeSign: 'leo',
   layout: 'hero',
+  tinted: false,
   particlesVisible: true,
   particleFps: 60,
   topInset: 0,
@@ -156,8 +145,9 @@ const containerStyle = computed(() => ({
   '--background-top-inset': `${Math.max(0, props.topInset)}px`,
 }))
 const themeParticleColor = ref('#e23456')
+const chartTinted = computed(() => props.tinted || props.layout === 'red')
 const particleColor = computed(() =>
-  props.layout === 'red' ? themeParticleColor.value : '#ffffff'
+  chartTinted.value ? themeParticleColor.value : '#ffffff'
 )
 const particleQuantity = computed(() =>
   Math.round((isMobileViewport.value ? 25 : 100) * 1.3)
@@ -379,6 +369,7 @@ const containerClass = computed(() => [
     'is-deep-black': props.deepBlack,
     'is-content-layout': props.layout === 'content',
     'is-red-layout': props.layout === 'red',
+    'is-theme-tinted': chartTinted.value,
     'is-chart-transitioning': isChartTransitioning.value,
     'is-route-transitioning': isRouteTransitioning.value,
     'is-entry-ready': props.entryActive,
@@ -456,7 +447,7 @@ onUnmounted(() => {
       <div class="zodiac-gradient-layer">
         <div class="zodiac-artwork">
           <span
-            v-if="props.layout === 'red'"
+            v-if="chartTinted"
             class="zodiac-static-art zodiac-static-art--tinted"
             :style="{ '--static-chart-mask': `url('${STATIC_CHART_SRC}')` }"
           />

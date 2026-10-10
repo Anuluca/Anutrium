@@ -1,6 +1,16 @@
 const bottomLine = {
   intro: 'DRIVEN BY PASSION.',
   lastUpdate: '2026/09/30',
+  rants: [
+    {
+      zhCn: '这个时代的DJ REMIX会不会多过头了',
+      en: 'ARE THERE TOO MANY DJ REMIXES THESE DAYS?',
+    },
+    {
+      zhCn: '不要暂停我的音乐',
+      en: "DON'T PAUSE MY MUSIC",
+    },
+  ],
   recommand: [
     {
       title: {

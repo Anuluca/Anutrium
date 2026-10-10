@@ -39,7 +39,8 @@ const readHeroExitMotion = (page: Page) =>
   })
 
 const pageRoutes = [
-  { path: '/', selector: '.home-page', title: /HOME|Anutrium/ },
+  { path: '/test2', selector: '.home-page', title: /TEST2|Anutrium/ },
+  { path: '/', selector: '.temple-page', title: /HOME|Anutrium/ },
   { path: '/archive', selector: '.archives-page', title: /ARCHIVE|作品集/ },
   { path: '/flanerie', selector: '.flanerie-page', title: /FLÂNERIE|旅程/ },
   { path: '/craft', selector: '.craft-page', title: /CRAFT|工具/ },
@@ -114,7 +115,7 @@ test('page theme color follows the active route', async ({ page }) => {
     },
     {
       path: '/archive',
-      color: '#5ad480',
+      color: '#3276fe',
       backgroundDark: '',
       backgroundLight: '',
     },
@@ -522,7 +523,7 @@ test('page hero title stays fixed while switching between title pages', async ({
 test('home entry animation does not remount hydrated content', async ({
   page,
 }) => {
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
   const homePage = page.locator('.home-page')
   await expect(homePage).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
 
@@ -539,7 +540,7 @@ test('home entry animation does not remount hydrated content', async ({
 test('home keeps the marquee fixed to the viewport outside the hero', async ({
   page,
 }) => {
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.home-page')).toBeVisible({
     timeout: PAGE_LOAD_TIMEOUT,
   })
@@ -625,7 +626,7 @@ test('home keeps the marquee fixed to the viewport outside the hero', async ({
 })
 
 test('home marquee uses a real nested 3D perspective', async ({ page }) => {
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
   const marquee = page.locator('.marquee-wrapper')
   const perspectivePlane = marquee.locator('.marquee-3d-container')
   await expect(marquee).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
@@ -652,7 +653,7 @@ test('home marquee uses a real nested 3D perspective', async ({ page }) => {
 test('home keeps its geometry stable throughout route leave', async ({
   page,
 }) => {
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.layout-page')).toHaveClass(/\blayout-show\b/, {
     timeout: PAGE_LOAD_TIMEOUT,
   })
@@ -741,7 +742,7 @@ test('desktop custom cursor is ready during entry and hides outside viewport', a
 }, testInfo) => {
   test.skip(testInfo.project.name.includes('mobile'))
   await page.setViewportSize({ width: 1000, height: 700 })
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
 
   const cursor = page.locator('.cursor-position')
   await expect(cursor).toBeAttached({ timeout: PAGE_LOAD_TIMEOUT })
@@ -770,7 +771,7 @@ test('desktop header suppresses the default focus ring', async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name.includes('mobile'))
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
 
   const logoButton = page.locator('.logo-box')
   await logoButton.focus()
@@ -781,7 +782,7 @@ test('desktop navigation rolls text without moving route logos', async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name.includes('mobile'))
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
 
   const archiveMenuItem = page.locator('.desktop-menu-item.ARCHIVE')
   await expect(archiveMenuItem).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
@@ -867,7 +868,7 @@ test('desktop footer social links roll text without glow', async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name.includes('mobile'))
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
 
   const socialLink = page.locator(
     '.footer-com .text-links .social-link--twitter'
@@ -1008,62 +1009,59 @@ test('archive groups all primary works by company above miscellaneous work', asy
   expect(Math.max(...englishTitleCenterOffsets)).toBeLessThanOrEqual(1)
 })
 
-test('archive availability keeps one compact status column', async ({
+test('archive availability preserves square contribution cells without a status column', async ({
   page,
 }, testInfo) => {
   await page.goto('/archive', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.layout-page')).toHaveClass(/\blayout-show\b/, {
     timeout: PAGE_LOAD_TIMEOUT,
   })
-
-  const items = page.locator('.availability-grid .availability-item')
-  await expect(items).toHaveCount(1)
-  await expect(items.locator(':scope > span')).toHaveText(['个人状态'])
-
+  await expect(
+    page.locator('.availability-grid, .availability-item')
+  ).toHaveCount(0)
   const panel = page.locator('.availability-panel')
   await panel.evaluate((element) =>
     element.getAnimations().forEach((animation) => animation.finish())
   )
   const geometry = await panel.evaluate((panel) => {
-    const copyBounds = panel
+    const copy = panel
       .querySelector<HTMLElement>('.availability-copy')!
       .getBoundingClientRect()
-    const githubBounds = panel
+    const graph = panel
       .querySelector<HTMLElement>('.availability-github')!
       .getBoundingClientRect()
-    const statusBounds = panel
-      .querySelector<HTMLElement>('.availability-grid')!
-      .getBoundingClientRect()
-    const actionBounds = Array.from(
+    const calendar = panel.querySelector<SVGSVGElement>(
+      '.github-contribution-graph__calendar'
+    )!
+    const calendarBounds = calendar.getBoundingClientRect()
+    const cells = calendar.querySelector('rect')!.getBoundingClientRect()
+    const actions = Array.from(
       panel.querySelectorAll<HTMLElement>('.availability-cta')
-    ).map((element) => element.getBoundingClientRect())
-
+    ).map((el) => {
+      const rect = el.getBoundingClientRect()
+      return { top: rect.top, width: rect.width }
+    })
     return {
-      actionBounds: actionBounds.map(({ top, width }) => ({ top, width })),
-      githubBottomOverflow: Math.max(
-        0,
-        githubBounds.bottom - copyBounds.bottom
-      ),
-      githubTopOverflow: Math.max(0, copyBounds.top - githubBounds.top),
-      statusTop: statusBounds.top,
-      statusWidth: statusBounds.width,
+      graphHeight: graph.height,
+      copyHeight: copy.height,
+      cellRatio: cells.width / cells.height,
+      calendarRatio: calendarBounds.width / calendarBounds.height,
+      copyWidth: copy.width,
+      actions,
     }
   })
-
-  expect(geometry.githubTopOverflow).toBeLessThanOrEqual(1)
-  expect(geometry.githubBottomOverflow).toBeLessThanOrEqual(1)
-
+  expect(geometry.cellRatio).toBeCloseTo(1, 2)
+  expect(geometry.calendarRatio).toBeGreaterThan(7)
+  expect(geometry.graphHeight).toBeLessThanOrEqual(geometry.copyHeight + 1)
+  expect(geometry.actions).toHaveLength(2)
   if (testInfo.project.name.includes('mobile')) {
-    expect(geometry.actionBounds).toHaveLength(2)
-    for (const action of geometry.actionBounds) {
-      expect(Math.abs(action.top - geometry.statusTop)).toBeLessThanOrEqual(1)
-      expect(Math.abs(action.width - geometry.statusWidth)).toBeLessThanOrEqual(
-        3
-      )
-    }
-  } else {
-    expect(geometry.statusWidth).toBeGreaterThanOrEqual(120)
-    expect(geometry.statusWidth).toBeLessThanOrEqual(150)
+    expect(
+      Math.abs(geometry.actions[0].top - geometry.actions[1].top)
+    ).toBeLessThanOrEqual(1)
+    for (const action of geometry.actions)
+      expect(
+        Math.abs(action.width * 2 - geometry.copyWidth)
+      ).toBeLessThanOrEqual(3)
   }
 })
 
@@ -1488,7 +1486,7 @@ test('about content uses the full-width feathered hover field without a glass pl
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name.includes('mobile'))
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.layout-page')).toHaveClass(/\blayout-show\b/, {
     timeout: PAGE_LOAD_TIMEOUT,
   })
@@ -1591,7 +1589,7 @@ test('about content uses the full-width feathered hover field without a glass pl
 test('home titles and content move as one monotonic parallax group', async ({
   page,
 }) => {
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.layout-page')).toHaveClass(/\blayout-show\b/, {
     timeout: PAGE_LOAD_TIMEOUT,
   })
@@ -1726,7 +1724,7 @@ test('desktop first-screen wheel snap keeps both directions exact and unlocked',
 }, testInfo) => {
   test.skip(testInfo.project.name.includes('mobile'))
   test.skip(true, '旧版首屏切换测试已由 home-pagination.spec.ts 替代')
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.home-page')).toBeVisible({
     timeout: PAGE_LOAD_TIMEOUT,
   })
@@ -1866,7 +1864,7 @@ test('mobile first-screen swipe snap supports return gesture and button', async 
 }, testInfo) => {
   test.skip(!testInfo.project.name.includes('mobile'))
   test.skip(true, '旧版首屏切换测试已由 home-pagination.spec.ts 替代')
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.home-page')).toBeVisible({
     timeout: PAGE_LOAD_TIMEOUT,
   })
@@ -1946,7 +1944,7 @@ test('mobile first-screen swipe snap supports return gesture and button', async 
 test('home reveal items fade out and replay whenever they re-enter the viewport', async ({
   page,
 }) => {
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.home-page')).toBeVisible({
     timeout: PAGE_LOAD_TIMEOUT,
   })
@@ -2020,7 +2018,7 @@ test('home reveal items fade out and replay whenever they re-enter the viewport'
 test('home defers secondary journey images until interaction', async ({
   page,
 }, testInfo) => {
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
   const journeyCards = page.locator('.journey-grid .shared-vlog-card')
   const firstJourneyCard = journeyCards.first()
 
@@ -2324,7 +2322,7 @@ test('archive loads the work detail modal on demand', async ({
 test('personal bay menu entry opens the Lucario page', async ({
   page,
 }, testInfo) => {
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.home-page')).toBeVisible({
     timeout: PAGE_LOAD_TIMEOUT,
   })
@@ -2369,7 +2367,7 @@ test('404 page remains locked at the top', async ({ page }) => {
 test('hidden footer debug entry opens the personal bay test route', async ({
   page,
 }) => {
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
   const testEntry = page.getByRole('button', { name: '打开开发测试页' })
   await expect(testEntry).toBeAttached({ timeout: PAGE_LOAD_TIMEOUT })
   await testEntry.click()
@@ -2547,7 +2545,7 @@ test('mobile menu reuses the footer social link bar', async ({
 }, testInfo) => {
   test.skip(!testInfo.project.name.includes('mobile'))
 
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
   await page.locator('.mobile-menu-icon').click()
 
   const menu = page.locator('.mobile-menu-panel')
@@ -2624,7 +2622,7 @@ test('mobile home content uses tripled spacing between modules', async ({
 }, testInfo) => {
   test.skip(!testInfo.project.name.includes('mobile'))
 
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.home-page')).toBeVisible({
     timeout: PAGE_LOAD_TIMEOUT,
   })
@@ -2804,7 +2802,7 @@ test('mobile pages respect route layout gutters without clipping home overflow',
     expect(gutter.right).toBeCloseTo(gutter.left, 1)
   }
 
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
   const overflow = await page.locator('.home-page').evaluate((element) => ({
     home: getComputedStyle(element).overflowX,
     router: getComputedStyle(element.parentElement!).overflowX,
@@ -3191,7 +3189,7 @@ test('particle background remains active after route navigation', async ({
 test('particle field stays bounded and uses one Canvas 2D surface', async ({
   page,
 }, testInfo) => {
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
   const particleField = page.locator('.particles-bg')
   await expect(particleField).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
   await expect(page.locator('.layout-page')).toHaveClass(/\blayout-show\b/, {
@@ -3726,10 +3724,8 @@ test('about modules use sequenced entrance animations', async ({ page }) => {
   )
   expect(animation.passionLogoDuration).toBeGreaterThan(1.7)
   expect(animation.passionLogoKeyframeCount).toBe(2)
-  expect(animation.neighborsBlockName).toContain('neighborsBlockIn')
-  expect(animation.neighborsBlockDelay).toBeGreaterThanOrEqual(
-    animation.passionDelay + animation.passionDuration
-  )
+  expect(animation.neighborsBlockName).toBe('none')
+  expect(animation.neighborsBlockDelay).toBe(0)
   expect(
     animation.itemNames.every((name) => name.includes('changelogItemIn'))
   ).toBeTruthy()

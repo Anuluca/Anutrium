@@ -5,6 +5,7 @@
       'layout-page': true,
       'layout-show': layoutShow,
       'entry-logo-ready': headerLogoReady,
+      'temple-header-default': templeHeaderDefault,
       'no-menu': noMenuShellActive,
     }"
   >
@@ -25,137 +26,100 @@
         @click="returnHome"
       >
         <Logo id="0" class="logo" :active="false" data-entry-logo-target />
-        <span class="site-title-slot">
-          <div :class="['right', isHomeRoute ? locale : 'en']">
-            <span
-              class="site-main-title-slot"
-              :class="{
-                'site-main-title-slot--shifted':
-                  !isHomeRoute || locale !== 'zhCn',
-              }"
-            >
-              <p>
-                <span>{{ headerSiteTitle[0] }}</span>
-                <span :class="['name-center', { active: logoActive }]">{{
-                  headerSiteTitle[1]
-                }}</span>
-                <span>{{ headerSiteTitle[2] }}</span>
-              </p>
-            </span>
-            <span class="site-subtitle-slot">
-              <Transition name="site-subtitle-slide">
+        <Transition name="header-fade">
+          <span v-if="showNavigation" class="header-brand-details">
+            <span class="site-brand">Anutrium</span>
+            <Transition name="module-name" mode="out-in" :duration="560">
+              <span
+                v-if="displayedHeader.moduleName"
+                :key="displayedHeader.moduleName"
+                :class="[
+                  'current-module-name',
+                  displayedHeader.moduleTheme &&
+                    `current-module-name--${displayedHeader.moduleTheme}`,
+                ]"
+              >
                 <span
-                  v-if="isHomeRoute && locale === 'zhCn'"
-                  class="site-subtitle"
+                  v-for="(character, index) in splitModuleName(
+                    displayedHeader.moduleName
+                  )"
+                  :key="`${character}:${index}`"
+                  class="module-name-character"
+                  :style="{
+                    '--module-character-delay': `${index * 24}ms`,
+                  }"
+                  >{{ character === ' ' ? '\u00a0' : character }}</span
                 >
-                  <span class="site-subtitle-text site-subtitle-text--short">
-                    <span>A</span>
-                    <span>N</span>
-                    <span>U</span>
-                    <span>T</span>
-                    <span>R</span>
-                    <span>I</span>
-                    <span>U</span>
-                    <span>M</span>
-                  </span>
-                  <span class="site-subtitle-text site-subtitle-text--long">
-                    <span>A</span>
-                    <span>N</span>
-                    <span>U</span>
-                    <span>L</span>
-                    <span>U</span>
-                    <span>C</span>
-                    <span>A</span>
-                    <span>'</span>
-                    <span>S</span>
-                    <span class="site-subtitle-space" aria-hidden="true" />
-                    <span>A</span>
-                    <span>T</span>
-                    <span>R</span>
-                    <span>I</span>
-                    <span>U</span>
-                    <span>M</span>
-                  </span>
-                </span>
-              </Transition>
-            </span>
-          </div>
-        </span>
-        <Transition name="module-name" mode="out-in" :duration="560">
-          <span
-            v-if="headerPresentation.moduleName"
-            :key="headerPresentation.moduleName"
-            :class="[
-              'current-module-name',
-              headerPresentation.moduleTheme &&
-                `current-module-name--${headerPresentation.moduleTheme}`,
-            ]"
-          >
-            <span
-              v-for="(character, index) in splitModuleName(
-                headerPresentation.moduleName
-              )"
-              :key="`${character}:${index}`"
-              class="module-name-character"
-              :style="{
-                '--module-character-delay': `${index * 24}ms`,
-              }"
-              >{{ character === ' ' ? '\u00a0' : character }}</span
-            >
+              </span>
+            </Transition>
           </span>
         </Transition>
       </button>
 
-      <nav
-        v-if="!isMobile"
-        class="desktop-menu"
-        :aria-label="locale === 'en' ? 'Primary navigation' : '主导航'"
-      >
-        <ul class="menu-box">
-          <li
-            v-for="item in filterRoutes"
-            :key="item.path"
-            :class="[
-              'desktop-menu-item',
-              item.name,
-              {
-                'is-active': currentRouter === item.path,
-                'is-inner-active':
-                  isInnerMenuRoute && currentRouter === item.path,
-              },
-            ]"
-          >
-            <RouterLink
-              :to="item.path"
-              :aria-current="currentRouter === item.path ? 'page' : undefined"
+      <Transition name="header-fade">
+        <nav
+          v-if="!isMobile && showNavigation"
+          class="desktop-menu"
+          :aria-label="locale === 'en' ? 'Primary navigation' : '主导航'"
+        >
+          <ul class="menu-box">
+            <li
+              v-for="item in menuItems"
+              :key="item.id"
+              :class="[
+                'desktop-menu-item',
+                item.id.toUpperCase(),
+                {
+                  'is-active': activeNavigation === item.id,
+                  'is-inner-active':
+                    isInnerMenuRoute && activeNavigation === item.id,
+                },
+              ]"
             >
-              <div class="title-box">
-                <TextRoll class="main-title" :text="item.meta.titleEn" />
-                <div class="second-title">
-                  <div class="line" />
-                  <span>{{ item.meta.titleCn }}</span>
+              <button
+                type="button"
+                class="temple-nav-action"
+                :data-temple-nav="item.id"
+                :style="{
+                  '--module-theme-color':
+                    'themeColor' in item ? item.themeColor : '#e23456',
+                }"
+                :disabled="
+                  !item.enabled || (isTempleRoute && !navigation.ready)
+                "
+                :aria-pressed="activeNavigation === item.id"
+                @click="activateNavigation(item.id)"
+              >
+                <div class="title-box">
+                  <TextRoll class="main-title" :text="item.title" />
+                  <div class="second-title">
+                    <div class="line" />
+                    <span>{{ item.label }}</span>
+                  </div>
                 </div>
-              </div>
-            </RouterLink>
-          </li>
-        </ul>
-      </nav>
+              </button>
+            </li>
+          </ul>
+        </nav>
+      </Transition>
     </el-header>
 
-    <button
-      v-if="isMobile"
-      :class="{
-        'mobile-menu-icon': true,
-        scrolled: isScrolled,
-        'scroll-layout-active': isHeaderScrollLayoutActive,
-      }"
-      type="button"
-      :aria-label="locale === 'en' ? 'Toggle navigation' : '切换导航菜单'"
-      :aria-expanded="isMobileMenuOpen"
-      @click="toggleMobileMenu"
-    >
-      <MenuToggleIcon :active="isMobileMenuOpen" />
-    </button>
+    <Transition name="header-fade">
+      <button
+        v-if="isMobile && showNavigation"
+        :class="{
+          'mobile-menu-icon': true,
+          scrolled: isScrolled,
+          'scroll-layout-active': isHeaderScrollLayoutActive,
+        }"
+        type="button"
+        :aria-label="locale === 'en' ? 'Toggle navigation' : '切换导航菜单'"
+        :aria-expanded="isMobileMenuOpen"
+        @click="toggleMobileMenu"
+      >
+        <MenuToggleIcon :active="isMobileMenuOpen" />
+      </button>
+    </Transition>
 
     <div
       v-if="isMobileMenuMounted"
@@ -168,7 +132,7 @@
     />
 
     <div
-      v-if="isMobile"
+      v-if="isMobile && (showNavigation || isMobileMenuMounted)"
       :class="{
         'mobile-menu-panel': true,
         active: isMobileMenuOpen,
@@ -179,23 +143,31 @@
       <div v-if="isMobileMenuMounted" class="mobile-menu-wrapper">
         <div class="mobile-menu-content" @click.stop>
           <div class="mobile-menu-items">
-            <RouterLink
-              v-for="(item, index) in filterRoutes"
-              :key="index"
-              :to="item.path"
-              @click="closeMobileMenu"
+            <button
+              v-for="item in menuItems"
+              :key="item.id"
+              type="button"
+              class="temple-nav-action"
+              :data-temple-nav="item.id"
+              :style="{
+                '--module-theme-color':
+                  'themeColor' in item ? item.themeColor : '#e23456',
+              }"
+              :disabled="!item.enabled || (isTempleRoute && !navigation.ready)"
+              :aria-pressed="activeNavigation === item.id"
+              @click="activateNavigation(item.id)"
             >
               <div
                 class="mobile-menu-item"
                 :class="{
-                  active: currentRouter === item.path,
-                  [item.name]: true,
+                  active: activeNavigation === item.id,
+                  [item.id.toUpperCase()]: true,
                 }"
               >
-                <div class="big-title">{{ item.meta.titleEn }}</div>
-                <div class="little-title">{{ item.meta.titleCn }}</div>
+                <div class="big-title">{{ item.title }}</div>
+                <div class="little-title">{{ item.label }}</div>
               </div>
-            </RouterLink>
+            </button>
           </div>
         </div>
         <div class="mobile-footer">
@@ -306,12 +278,19 @@ import PageScrollProgress from '@/components/PageScrollProgress/index.vue'
 import TextRoll from '@/components/TextRoll/index.vue'
 import { HOME_RETURN_TO_PASSION_EVENT } from '@/config/homeNavigation'
 import {
+  templeCategoryById,
+  templeNavigation,
+  type TempleNavigationId,
+} from '@/config/templeNavigation'
+import {
   finishRouteCursorLoading,
   type PageLayout,
   routes,
+  syncPageTheme,
   syncSeoMeta,
 } from '@/router'
 import { visualState } from '@/stores'
+import { useTempleNavigation } from '@/stores/templeNavigation'
 import { persistLocale, type SiteLocale } from '@/utils/locale'
 import {
   addPageResizeListener,
@@ -328,9 +307,13 @@ const FooterSocialLinks = defineAsyncComponent(
   () => import('@/components/FooterSocialLinks/index.vue')
 )
 
-const { locale, t } = useI18n()
+const { locale } = useI18n()
 const props = defineProps({
   entryActive: {
+    type: Boolean,
+    default: false,
+  },
+  sceneEntryActive: {
     type: Boolean,
     default: false,
   },
@@ -350,26 +333,41 @@ provide(
   computed(() => props.entryActive)
 )
 provide(
+  'site-scene-entry-active',
+  computed(() => props.sceneEntryActive)
+)
+provide(
   'site-header-bottom',
   computed(() => headerBottom.value)
 )
 
-const logoActive = ref(true)
 const headerLogoReady = ref(false)
 
 const route = useRoute()
 const router = useRouter()
 const visualStateStore = visualState()
-const isHomeRoute = computed(() => route.name === 'HOME')
-const resolvePageLayout = (pageLayout: unknown): PageLayout =>
-  pageLayout === 'main' ? 'main' : 'sub'
-const englishSiteTitle = ['Anu', "luca's A", 'trium'] as const
-const headerSiteTitle = computed(() =>
-  isHomeRoute.value
-    ? [t('name[0]'), t('name[1]'), t('name[2]')]
-    : englishSiteTitle
+const isHomeRoute = computed(() => route.name === 'TEST2')
+const isTempleRoute = computed(() => route.name === 'HOME')
+const navigation = useTempleNavigation()
+const wantsNavigation = computed(
+  () => !isTempleRoute.value || !!navigation.selected || navigation.aboutOpen
+)
+const templeHeaderDefault = ref(!wantsNavigation.value)
+const navigationRevealed = ref(wantsNavigation.value)
+const showNavigation = computed(
+  () => wantsNavigation.value && navigationRevealed.value
+)
+watch(
+  [isTempleRoute, () => navigation.selected, () => navigation.aboutOpen],
+  () => {
+    if (isTempleRoute.value)
+      syncPageTheme(route, navigation.selected?.toUpperCase() || 'HOME')
+  },
+  { immediate: true }
 )
 
+const resolvePageLayout = (pageLayout: unknown): PageLayout =>
+  pageLayout === 'main' ? 'main' : 'sub'
 const normalizeMenuPath = (path: string) =>
   path === '/' ? path : path.replace(/\/+$/, '')
 
@@ -377,6 +375,8 @@ const currentRouter = computed(() => {
   const activePath =
     typeof route.meta.activeMenu === 'string'
       ? route.meta.activeMenu
+      : route.name === 'HOME'
+      ? '/'
       : route.path
 
   return normalizeMenuPath(activePath)
@@ -401,12 +401,22 @@ const moduleThemeByPath: Readonly<Record<string, ModuleHeaderTheme>> = {
 const moduleRouteByPath = new Map(
   routes.map((item) => [normalizeMenuPath(item.path), item])
 )
-const hiddenModuleTitleRoutes = new Set(['HOME', '404', 'TEST'])
+const hiddenModuleTitleRoutes = new Set(['HOME', 'TEST2', '404', 'TEST'])
 const headerPresentation = computed(() => {
   const routeName = String(route.name || '')
   const modulePath = currentRouter.value
   const moduleMeta = moduleRouteByPath.get(modulePath)?.meta || route.meta
 
+  if (isTempleRoute.value)
+    return {
+      contentAligned: false,
+      moduleName: navigation.aboutOpen
+        ? 'ABOUT'
+        : (navigation.selected &&
+            templeCategoryById.get(navigation.selected)?.title) ||
+          '',
+      moduleTheme: '',
+    }
   return {
     contentAligned: resolvePageLayout(route.meta.pageLayout) === 'sub',
     moduleName: hiddenModuleTitleRoutes.has(routeName)
@@ -414,6 +424,106 @@ const headerPresentation = computed(() => {
       : String(moduleMeta.titleEn),
     moduleTheme: moduleThemeByPath[modulePath] || '',
   }
+})
+// 退出时保留文字布局，Logo 独立移动，避免渐隐中的菜单位置跳变。
+const lastTempleHeader = ref(headerPresentation.value)
+const displayedHeader = computed(() =>
+  isTempleRoute.value ? lastTempleHeader.value : headerPresentation.value
+)
+let logoMotion: Animation | undefined
+let logoCentering = false
+let headerMotionRevision = 0
+const moveTempleLogo = async (centered: boolean) => {
+  const revision = ++headerMotionRevision
+  const logo = document.querySelector<HTMLElement>('.logo-box .logo')
+  const before = logo?.getBoundingClientRect()
+  logoMotion?.cancel()
+  logoCentering = centered
+  if (!centered) templeHeaderDefault.value = false
+  await nextTick()
+  if (!logo || !before || revision !== headerMotionRevision) return
+  const after = logo.getBoundingClientRect()
+  let targetX = after.x
+  let targetY = after.y
+  if (centered) {
+    // 同一帧内测量居中样式的最终位置，包含负边距变化，避免动画结束后跳动。
+    const shell = logo.closest('.layout-page')!
+    shell.classList.add('temple-header-default')
+    const target = logo.getBoundingClientRect()
+    targetX = (window.innerWidth - after.width) / 2
+    targetY = target.y
+    shell.classList.remove('temple-header-default')
+  }
+  const animation = logo.animate(
+    [
+      {
+        transform: `translate(${before.x - after.x}px, ${
+          before.y - after.y
+        }px)`,
+      },
+      {
+        transform: centered
+          ? `translate(${targetX - after.x}px, ${targetY - after.y}px)`
+          : 'none',
+      },
+    ],
+    {
+      duration: matchMedia('(prefers-reduced-motion: reduce)').matches
+        ? 1
+        : 2000,
+      easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+      fill: 'forwards',
+    }
+  )
+  logoMotion = animation
+  try {
+    await animation.finished
+  } catch {
+    return false
+  }
+  if (revision !== headerMotionRevision) return false
+  if (centered) {
+    templeHeaderDefault.value = true
+    await nextTick()
+    if (revision !== headerMotionRevision) return false
+    logoCentering = false
+  }
+  animation.cancel()
+  return true
+}
+const centerTempleLogo = () => {
+  if (
+    isTempleRoute.value &&
+    !wantsNavigation.value &&
+    !templeHeaderDefault.value &&
+    !logoCentering
+  )
+    moveTempleLogo(true)
+}
+watch(
+  [wantsNavigation, headerPresentation],
+  async ([visible, presentation]) => {
+    if (visible) {
+      lastTempleHeader.value = presentation
+      if (templeHeaderDefault.value || logoCentering) {
+        navigationRevealed.value = false
+        if (await moveTempleLogo(false))
+          navigationRevealed.value = wantsNavigation.value
+      } else navigationRevealed.value = true
+    }
+    if (!visible) {
+      navigationRevealed.value = false
+      centerTempleLogo()
+    }
+    if (!isTempleRoute.value) {
+      templeHeaderDefault.value = false
+      navigationRevealed.value = true
+    }
+  }
+)
+onUnmounted(() => {
+  headerMotionRevision++
+  logoMotion?.cancel()
 })
 const splitModuleName = (moduleName: string) => Array.from(moduleName)
 const isInnerMenuRoute = computed(
@@ -426,9 +536,15 @@ const routerContainer = ref<HTMLElement | null>(null)
 const isScrolled = ref(false)
 const layoutShow = ref(false)
 const theme = computed(() => visualStateStore.theme)
-const filterRoutes = routes.filter((item) => {
-  return item?.meta?.ifShow
-})
+const menuItems = templeNavigation
+const activeNavigation = computed(() =>
+  navigation.aboutOpen ? 'about' : navigation.selected
+)
+const activateNavigation = async (id: TempleNavigationId) => {
+  closeMobileMenu()
+  if (!isTempleRoute.value) await router.push('/')
+  navigation.request(id)
+}
 
 const activePageLayout = ref<PageLayout>(
   resolvePageLayout(route.meta.pageLayout)
@@ -471,8 +587,9 @@ const backToTopElement = ref<{
 } | null>(null)
 const shouldShowPageScrollProgress = computed(
   () =>
-    visualStateStore.pageScrollProgressOverride !== null ||
-    isPageScrollable.value
+    !isTempleRoute.value &&
+    (visualStateStore.pageScrollProgressOverride !== null ||
+      isPageScrollable.value)
 )
 const isHeaderScrollLayoutActive = ref(false)
 const isEntryContentRefreshing = ref(false)
@@ -536,7 +653,6 @@ const startEntryAnimation = () => {
   hasPlayedEntryAnimation = true
 
   clearEntryAnimationTimers()
-  logoActive.value = true
   headerLogoReady.value = false
   layoutShow.value = props.contentActive
 
@@ -544,7 +660,6 @@ const startEntryAnimation = () => {
     headerLogoReady.value = true
 
     logoTimer = window.setTimeout(() => {
-      logoActive.value = false
       logoTimer = null
     }, ENTRY_LOGO_REVEAL_DURATION)
   }, ENTRY_LOGO_REVEAL_DELAY)
@@ -788,6 +903,10 @@ const schedulePageMetricsRefresh = () => {
 }
 
 const returnHome = () => {
+  if (isTempleRoute.value) {
+    navigation.request(null)
+    return
+  }
   if (isHomeRoute.value) {
     window.dispatchEvent(new CustomEvent(HOME_RETURN_TO_PASSION_EVENT))
     return
@@ -920,7 +1039,7 @@ const unlockIslandRouteGeometry = () => {
     ...floraLeavingClasses
   )
 
-  if (route.name !== ISLAND_ROUTE_NAME) {
+  if (route.name !== ISLAND_ROUTE_NAME && route.name !== 'HOME') {
     document.body.classList.remove(...islandShellClasses)
   }
   if (route.name !== 'PET') {
@@ -949,6 +1068,7 @@ const completeRouteTransition = () => {
 const scheduleIslandGeometryUnlock = () => {
   if (
     route.name === ISLAND_ROUTE_NAME ||
+    route.name === 'HOME' ||
     !hasIslandShellClass() ||
     islandGeometryUnlockTimer !== null
   ) {
@@ -1060,6 +1180,13 @@ watch(pageScrollProgressElement, (component) => {
 
 watch(backToTopElement, (component) => {
   component?.setScrollState(documentScrollTop, scrollProgress)
+})
+
+watch(isMobileMenuMounted, (mounted) => {
+  if (!mounted && !wantsNavigation.value) centerTempleLogo()
+})
+watch(showNavigation, (visible) => {
+  if (!visible) closeMobileMenu()
 })
 
 watch(isHeaderScrollLayoutActive, () => {

@@ -28,6 +28,16 @@ export const readPagePosition = (
   }, anchorSelector)
 
 export const scrollPageToRatio = async (page: Page, ratio = 1) => {
+  // 首次站点入场会卸载并重新挂载页面；几何快照必须等待这段生命周期结束。
+  await expect(page.locator('.footer-bottom-gradient--ready')).toBeAttached({
+    timeout: 20000,
+  })
+  await expect(page.locator('.entry-overlay-container')).toHaveCount(0, {
+    timeout: 20000,
+  })
+  await expect(page.locator('.router-container > :first-child')).toBeVisible({
+    timeout: 20000,
+  })
   await page.evaluate((scrollRatio) => {
     const maxScrollTop = Math.max(
       0,
@@ -56,6 +66,27 @@ export const scrollPageToRatio = async (page: Page, ratio = 1) => {
       )
     )
     .toBeGreaterThan(100)
+  await page.evaluate(() => document.fonts.ready)
+  let previous = ''
+  let stableSamples = 0
+  await expect
+    .poll(
+      async () => {
+        const current = await page.evaluate(() =>
+          JSON.stringify([
+            document.body.scrollTop,
+            document.body.scrollHeight,
+            document.documentElement.scrollTop,
+            document.documentElement.scrollHeight,
+          ])
+        )
+        stableSamples = current === previous ? stableSamples + 1 : 0
+        previous = current
+        return stableSamples
+      },
+      { intervals: [100], timeout: 10000 }
+    )
+    .toBeGreaterThanOrEqual(5)
 }
 
 export const expectPagePositionToMatch = (

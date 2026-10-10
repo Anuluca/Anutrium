@@ -178,6 +178,7 @@ const refreshMapSize = () => {
 
   window.requestAnimationFrame(() => {
     mapInstance?.invalidateSize({ animate: false, pan: false })
+    tileLayer?.redraw()
   })
 }
 
@@ -387,6 +388,8 @@ watch([locale, () => props.vlogs], () => {
   void loadLeaflet().then(recreateMap)
 })
 watch(() => visualStateStore.theme, updateMapTheme)
+
+defineExpose({ refreshMapSize })
 
 onUnmounted(() => {
   isUnmounted = true

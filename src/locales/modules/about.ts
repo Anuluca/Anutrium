@@ -1,14 +1,6 @@
 import dynamic from '../dynamic/about'
 
 const about = {
-  brandColorKicker: {
-    zhCn: '品牌色彩',
-    en: 'BRAND COLOR',
-  },
-  brandColorTitleLead: {
-    zhCn: '秩序与生命力。',
-    en: 'VIVID AND DELIBERATE. ',
-  },
   brandColorName: {
     zhCn: '热情红',
     en: 'PASSION RED',

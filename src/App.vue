@@ -14,6 +14,7 @@ import { useHead } from '@vueuse/head'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { visualState } from './stores'
+import { useSiteLoading } from '@/stores/siteLoading'
 import {
   getSeoMeta,
   syncPageTheme,
@@ -49,11 +50,31 @@ let resizeRafId: number | null = null
 let pageContentRemountTimer: number | null = null
 let cancelScheduledTypekitLoad: (() => void) | null = null
 const entryAnimationReady = ref(false)
+const sceneEntryReady = ref(false)
 const entryOverlayHidden = ref(false)
+const footerTeleportReady = ref(false)
 const pageContentActive = ref(true)
-const petTeaserHiddenPaths = new Set(['/pet', '/404', '/island', '/test'])
+const isTempleRoute = computed(() => route.name === 'HOME')
+const siteLoading = useSiteLoading()
+watch(
+  isTempleRoute,
+  (home) => {
+    if (typeof window === 'undefined') return
+    if (home) siteLoading.beginTask('home-scene')
+    else siteLoading.cancelTask('home-scene')
+  },
+  { immediate: true, flush: 'sync' }
+)
+const petTeaserHiddenPaths = new Set([
+  '/',
+  '/pet',
+  '/404',
+  '/island',
+  '/home2',
+  '/test',
+])
 const shouldShowPetTeaser = computed(
-  () => !petTeaserHiddenPaths.has(route.path)
+  () => !isTempleRoute.value && !petTeaserHiddenPaths.has(route.path)
 )
 
 interface VlogSeoItem {
@@ -169,7 +190,7 @@ const startAnimationFinished = () => {
 
 const syncSmoothScrollForRoute = () => {
   if (!entryAnimationReady.value) return
-  if (route.path === '/') stopSmoothScroll()
+  if (route.path === '/test2') stopSmoothScroll()
   else startSmoothScroll()
 }
 
@@ -178,11 +199,13 @@ const startAnimationHidden = () => {
 }
 
 const unmountPageContent = () => {
-  if (route.path === '/island') return
+  if (isTempleRoute.value) return
   pageContentActive.value = false
 }
 
 onMounted(async () => {
+  // SSR 保留页脚节点，客户端挂载后再移至 body，避开移动端页面容器的层叠上下文。
+  footerTeleportReady.value = true
   setRootFontSize()
   window.addEventListener('resize', scheduleRootFontSizeUpdate, {
     passive: true,
@@ -210,7 +233,7 @@ onUnmounted(() => {
 watch(
   () => route.path,
   (path) => {
-    if (path === '/') stopSmoothScroll()
+    if (path === '/test2') stopSmoothScroll()
   }
 )
 </script>
@@ -219,14 +242,14 @@ watch(
   <CursorMove />
   <StartAnimation
     @finished="startAnimationFinished"
+    @scene-ready="sceneEntryReady = true"
     @hidden="startAnimationHidden"
     @progress-complete="unmountPageContent"
   />
   <layout
     :entry-active="entryAnimationReady"
-    :content-active="
-      pageContentActive && (entryAnimationReady || route.path !== '/island')
-    "
+    :scene-entry-active="sceneEntryReady"
+    :content-active="pageContentActive"
     @route-transition-complete="syncSmoothScrollForRoute"
   />
   <PetTeaserLink
@@ -239,7 +262,12 @@ watch(
     :class="{ 'footer-bottom-gradient--ready': entryAnimationReady }"
     aria-hidden="true"
   />
-  <FooterCom :entry-active="entryAnimationReady" />
+  <Teleport to="body" :disabled="!footerTeleportReady">
+    <FooterCom
+      :entry-active="isTempleRoute ? sceneEntryReady : entryAnimationReady"
+      :entry-overlay-active="!entryOverlayHidden"
+    />
+  </Teleport>
   <BackController :entry-active="entryAnimationReady" />
   <MobileExperienceAlert v-if="entryOverlayHidden" />
   <div class="mobile-screen-frame-bottom" aria-hidden="true" />

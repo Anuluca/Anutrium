@@ -51,7 +51,7 @@ test('mobile home paging accepts a short slow swipe', async ({
   page,
 }, testInfo) => {
   test.skip(!testInfo.project.name.includes('mobile'))
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.home-page-swiper')).toBeVisible({
     timeout: PAGE_LOAD_TIMEOUT,
   })
@@ -118,7 +118,7 @@ test('home paging pauses the bottom marquee during transitions', async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' })
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.layout-page')).toHaveClass(/\blayout-show\b/, {
     timeout: PAGE_LOAD_TIMEOUT,
   })
@@ -185,7 +185,7 @@ test('home paging pauses the bottom marquee during transitions', async ({
 
 test('home paging respects reduced motion', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.layout-page')).toHaveClass(/\blayout-show\b/, {
     timeout: PAGE_LOAD_TIMEOUT,
   })
@@ -213,7 +213,7 @@ test('home paging respects reduced motion', async ({ page }) => {
 test('home prevents native bounce from sub-threshold wheel input', async ({
   page,
 }) => {
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.home-page-swiper')).toBeVisible({
     timeout: PAGE_LOAD_TIMEOUT,
   })
@@ -257,7 +257,7 @@ test('home coordinates exits while changing between Passion and About Me', async
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' })
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.home-page')).toBeVisible({
     timeout: PAGE_LOAD_TIMEOUT,
   })
@@ -594,7 +594,7 @@ test('home unmounts each previous secondary section when the next one enters', a
   page,
 }, testInfo) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' })
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.layout-page')).toHaveClass(/\blayout-show\b/, {
     timeout: PAGE_LOAD_TIMEOUT,
   })
@@ -904,7 +904,7 @@ test('mobile home hides side indicators and lower corners at the footer', async 
 }, testInfo) => {
   test.skip(!testInfo.project.name.includes('mobile'))
 
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.layout-page')).toHaveClass(/\blayout-show\b/, {
     timeout: PAGE_LOAD_TIMEOUT,
   })
@@ -1003,7 +1003,7 @@ test('mobile Craft returns to Flanerie after the footer is closed', async ({
 }, testInfo) => {
   test.skip(!testInfo.project.name.includes('mobile'))
 
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.layout-page')).toHaveClass(/\blayout-show\b/, {
     timeout: PAGE_LOAD_TIMEOUT,
   })
@@ -1039,7 +1039,7 @@ test('mobile Craft returns to Flanerie after the footer is closed', async ({
 test('home title returns the active home module to Passion', async ({
   page,
 }) => {
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.home-page-swiper')).toBeVisible({
     timeout: PAGE_LOAD_TIMEOUT,
   })
@@ -1071,7 +1071,7 @@ test('home title returns the active home module to Passion', async ({
 test('home Flanerie spacing and Craft grid follow the responsive layout', async ({
   page,
 }, testInfo) => {
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
   const homeSwiper = page.locator('.home-page-swiper')
   await expect(homeSwiper).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
 
@@ -1172,7 +1172,7 @@ test('mobile home Craft grid remains inside the visual viewport', async ({
   page,
 }, testInfo) => {
   test.skip(!testInfo.project.name.includes('mobile'))
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
   const homeSwiper = page.locator('.home-page-swiper')
   await expect(homeSwiper).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
 
@@ -1220,7 +1220,7 @@ test('home switches five full-screen pages vertically while marquee stays fixed'
   page,
 }, testInfo) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' })
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.home-page-swiper')).toBeVisible({
     timeout: PAGE_LOAD_TIMEOUT,
   })
@@ -2337,7 +2337,7 @@ test('hero news wheel uses only the center third without hijacking page scroll',
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name.includes('mobile'))
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.layout-page')).toHaveClass(/\blayout-show\b/, {
     timeout: PAGE_LOAD_TIMEOUT,
   })

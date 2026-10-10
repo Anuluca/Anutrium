@@ -121,3 +121,59 @@ test('marquee recalculates coverage after viewport resizing', async ({
     )
     .toBe(true)
 })
+
+test('random rants appear at the end of each copy without changing cycle width and switch languages', async ({
+  page,
+}) => {
+  const track = page.locator('.footer-com .marquee-wrap')
+  const visibleRants = track.locator(
+    '.recommend-rant .recommend-title:not(.rant-inactive)'
+  )
+  const readCycleWidth = () =>
+    track
+      .locator('.marquee-content')
+      .first()
+      .evaluate((element) => element.getBoundingClientRect().width)
+  const initialWidth = await readCycleWidth()
+
+  for (const [random, text] of [
+    [0.1, '这个时代的DJ REMIX会不会多过头了'],
+    [0.9, '不要暂停我的音乐'],
+  ] as const) {
+    await track.evaluate((element, value) => {
+      const originalRandom = Math.random
+      try {
+        Math.random = () => value
+        element.dispatchEvent(new AnimationEvent('animationiteration'))
+      } finally {
+        Math.random = originalRandom
+      }
+    }, random)
+    await expect(visibleRants.first()).toHaveText(text)
+    expect(await visibleRants.allTextContents()).toEqual(
+      Array(await track.locator('.marquee-content').count()).fill(text)
+    )
+    expect(Math.abs((await readCycleWidth()) - initialWidth)).toBeLessThan(0.01)
+  }
+
+  expect(
+    await track
+      .locator('.marquee-content')
+      .first()
+      .evaluate((element) =>
+        element
+          .querySelector('.recommend')!
+          .lastElementChild!.classList.contains('recommend-rant')
+      )
+  ).toBe(true)
+
+  // 手机端语言按钮隐藏，直接触发同一个按钮处理器验证双语切换。
+  await page
+    .locator('.footer-com .language button')
+    .filter({ hasText: /^En$/ })
+    .evaluate((element) => (element as HTMLButtonElement).click())
+  await expect(visibleRants.first()).toHaveText("DON'T PAUSE MY MUSIC")
+  await expect(track.locator('.recommend-rant').first()).toContainText(
+    'ARE THERE TOO MANY DJ REMIXES THESE DAYS?'
+  )
+})

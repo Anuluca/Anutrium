@@ -358,10 +358,21 @@
 }
 
 // 星盘整体着色后沿竖直方向减弱亮度；遮罩不跟随内部星座轮盘旋转。
+.star-container.is-theme-tinted {
+  --chart-primary: color-mix(
+    in srgb,
+    var(--page-theme-color, #e23456) 76%,
+    transparent
+  );
+  --chart-strong: var(--page-theme-color, #e23456);
+  --chart-faint: color-mix(
+    in srgb,
+    var(--page-theme-color, #e23456) 24%,
+    transparent
+  );
+}
+
 .star-container.is-red-layout {
-  --chart-primary: rgba(226, 52, 86, 0.76);
-  --chart-strong: #e23456;
-  --chart-faint: rgba(226, 52, 86, 0.24);
   --stage-offset-y: -50%;
   --stage-opacity: 0.6;
 
@@ -388,9 +399,11 @@
   .zodiac-artwork {
     inset: calc(100% / 6);
   }
+}
 
+.star-container.is-theme-tinted {
   .zodiac-static-art--tinted {
-    background-color: #e23456;
+    background-color: var(--page-theme-color, #e23456);
     mask-image: var(--static-chart-mask);
     -webkit-mask-image: var(--static-chart-mask);
     mask-size: contain;
@@ -411,5 +424,19 @@
 
   .zodiac-stage {
     animation: none;
+  }
+}
+
+.star-container.is-theme-tinted.is-content-layout {
+  --stage-opacity: 0.15;
+}
+.star-container.is-theme-tinted.is-entry-ready.is-content-layout:not(
+    .is-route-transitioning
+  ) {
+  .zodiac-sign-face.is-active .zodiac-glyph {
+    color: var(--chart-strong);
+  }
+  .zodiac-sign-face.is-active {
+    opacity: 0.45;
   }
 }

@@ -17,9 +17,15 @@
   transition: left 0.5s ease, bottom 0.5s ease, width 0.5s ease,
     opacity 0.4s ease-in;
   opacity: 0;
+  pointer-events: none;
+
+  &.footer-above-entry-overlay {
+    z-index: 9001;
+  }
 
   &.footer-ready {
     opacity: 1;
+    pointer-events: auto;
   }
 
   &.footer-expanded {
@@ -120,14 +126,14 @@
     letter-spacing: 0;
     display: inline-block;
     overflow: hidden;
-    -webkit-backdrop-filter: blur(4px);
-    backdrop-filter: blur(4px);
+    // 大写 PX 避免被自动换算成 rem，使模糊半径固定为实际 10px。
+    -webkit-backdrop-filter: ~'blur(10PX)';
+    backdrop-filter: ~'blur(10PX)';
 
     .expand {
       position: relative;
-      background-color: rgb(24 24 24 / 50%);
+      background-color: transparent;
       box-sizing: border-box;
-      border-block: 1px solid rgb(217 222 220 / 10%);
       width: 0;
       height: 100%;
       background-image: radial-gradient(
@@ -164,8 +170,10 @@
           font-weight: inherit;
         }
 
-        &:hover {
-          animation-play-state: paused;
+        @media (hover: hover) and (pointer: fine) {
+          &:hover {
+            animation-play-state: paused;
+          }
         }
 
         .marquee-content {
@@ -181,11 +189,42 @@
           align-items: center;
           height: 100%;
 
-          .recommend-link {
+          .recommend-link,
+          .recommend-rant {
             height: 100%;
             padding: 0 16px;
             display: flex;
             align-items: center;
+          }
+
+          .recommend-rant {
+            display: grid;
+            align-content: center;
+
+            .recommend-title {
+              grid-area: 1 / 1;
+
+              &::before,
+              &::after {
+                content: '—';
+                color: inherit;
+              }
+
+              &::before {
+                margin-right: 0.65em;
+              }
+
+              &::after {
+                margin-left: 0.65em;
+              }
+            }
+
+            .rant-inactive {
+              visibility: hidden;
+            }
+          }
+
+          .recommend-link {
             gap: 0.65em;
             cursor: pointer;
             transition: color 0.2s;
@@ -304,11 +343,6 @@ body.light {
 
     .center {
       --ticker-text: #343e3b;
-
-      .expand {
-        background-color: rgb(235 235 235 / 50%);
-        border-color: rgb(52 62 59 / 10%);
-      }
     }
   }
 }
@@ -335,8 +369,6 @@ body.light {
     }
 
     .center {
-      backdrop-filter: blur(0);
-
       .expand {
         opacity: 1;
       }
