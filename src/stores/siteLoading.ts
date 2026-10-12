@@ -12,6 +12,7 @@ interface LoadingTask {
 export const useSiteLoading = defineStore('site-loading', () => {
   const tasks = reactive(new Map<string, LoadingTask>())
   const batch = ref(0)
+  const presentationReady = ref(true)
   let token = 0
   const pending = computed(() =>
     [...tasks.values()].some((task) => task.state === 'loading')
@@ -32,6 +33,7 @@ export const useSiteLoading = defineStore('site-loading', () => {
       if (!pending.value) {
         tasks.clear()
         batch.value++
+        presentationReady.value = false
       }
       task = { token: ++token, progress: 0, weight, state: 'loading' }
       tasks.set(key, task)
@@ -70,5 +72,13 @@ export const useSiteLoading = defineStore('site-loading', () => {
     }
   }
 
-  return { tasks, batch, pending, progress, beginTask, cancelTask }
+  return {
+    tasks,
+    batch,
+    pending,
+    progress,
+    presentationReady,
+    beginTask,
+    cancelTask,
+  }
 })

@@ -73,3 +73,21 @@
 }
 
 @ratio-threshold: 1;
+
+// 屏幕底缘的扫描线由下向上逐渐变细，供页面边框与窗口复用。
+.tapered-screen-lines(@line-color) {
+  background: linear-gradient(
+    to top,
+    @line-color 0 14px,
+    transparent 14px 15.95px,
+    @line-color 15.95px 17.95px,
+    transparent 17.95px 19.9px,
+    @line-color 19.9px 21.4px,
+    transparent 21.4px 23.35px,
+    @line-color 23.35px 24.35px,
+    transparent 24.35px 26.3px,
+    @line-color 26.3px 26.95px,
+    transparent 26.95px 28.9px,
+    @line-color 28.9px 29.25px
+  );
+}

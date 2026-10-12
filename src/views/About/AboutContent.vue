@@ -35,6 +35,7 @@ interface NeighbourItem {
 const props = withDefaults(defineProps<{ embedded?: boolean }>(), {
   embedded: false,
 })
+const emit = defineEmits<{ close: [] }>()
 const { locale, t, tm } = useI18n()
 const crewRoles = [
   'originalConcept',
@@ -64,6 +65,14 @@ const {
   finishPanelLeave,
   toggleAboutPanel,
 } = useAboutPanels()
+const handlePassionClick = (event: MouseEvent) => {
+  if ((event.target as Element).closest('.passion-content')) return
+  if (activeAboutPanel.value || visibleAboutPanel.value) {
+    activeAboutPanel.value = null
+    return
+  }
+  emit('close')
+}
 const {
   crewContentRef,
   crewEntered,
@@ -180,16 +189,17 @@ const roadmapItems = computed(() =>
       class="about-hero-shell"
       :class="{ 'is-crew-open': crewOpen }"
     >
-      <section class="about-hero-section">
+      <section class="about-hero-section" :class="{ 'no-rem': props.embedded }">
         <PageHeroTitle v-if="!props.embedded" title="ABOUT" color="#e23456" />
 
         <section
           ref="passionRef"
-          class="passion-section no-cursor"
+          class="passion-section no-cursor no-rem"
           :aria-label="t('about.brandColorName')"
           @mouseenter="showPassionCrosshair"
           @mousemove="updatePassionCrosshair"
           @mouseleave="hidePassionCrosshair"
+          @click="handlePassionClick"
         >
           <div class="passion-back" />
           <LogoRotating3D
@@ -280,7 +290,10 @@ const roadmapItems = computed(() =>
               </span>
             </header>
 
-            <div class="update-program__body">
+            <div
+              class="update-program__body"
+              :class="{ 'is-changelog': visibleAboutPanel === 'changelog' }"
+            >
               <div
                 ref="panelScrollRef"
                 class="update-program__body-content"
@@ -554,6 +567,7 @@ const roadmapItems = computed(() =>
       </div>
       <div class="asset-credits">
         <h4>{{ t('about.assetCredits.title') }}</h4>
+        <p>{{ t('about.assetCredits.aiDesignRestriction') }}</p>
         <p>
           {{ t('about.assetCredits.unbounded') }}
           <a

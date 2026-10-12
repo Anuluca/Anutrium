@@ -22,7 +22,7 @@ export async function prepareLucarioGeometry() {
     .setDecoderConfig({ type: 'wasm' })
   const gltf = await new GLTFLoader()
     .setDRACOLoader(decoder)
-    .loadAsync('/models/lucario.glb')
+    .loadAsync('/scripts/assets/lucario/lucario.glb')
   try {
     // 骨骼本地轴并非标准人体坐标，将世界空间的姿势调整转换回父骨骼空间。
     const rotateBoneInWorld = (

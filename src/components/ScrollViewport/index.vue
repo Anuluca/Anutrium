@@ -33,7 +33,7 @@ const measure = () => {
 }
 useResizeObserver([scrollRoot, content], measure)
 onMounted(() => nextTick(measure))
-defineExpose({ scrollRoot })
+defineExpose({ scrollRoot, measure })
 </script>
 
 <template>

@@ -11,6 +11,7 @@ import {
   templeParentModule,
 } from '@/config/templeNavigation'
 import { useTempleNavigation } from '@/stores/templeNavigation'
+import { preloadTempleAssets } from '@/utils/preloadTempleAssets'
 
 import i18n from '../locales'
 import { ensureRouteMessages } from '../locales/routeMessages'
@@ -136,10 +137,6 @@ const PAGE_DESCRIPTIONS: Record<string, { zhCn: string; en: string }> = {
   ISLAND: {
     zhCn: 'Anuluca 的个人内容与兴趣空间。',
     en: 'A personal space for Anuluca’s interests and collected fragments.',
-  },
-  PET: {
-    zhCn: '花花庭院：花花的沉浸式宠物角色档案。',
-    en: 'Floratrium, an immersive character profile for Huahua.',
   },
 }
 
@@ -403,19 +400,6 @@ export const routes: RouteConfig[] = [
       fullFooter: false,
       pageFooter: false,
       pageLayout: 'main',
-      ifShow: false,
-    },
-  },
-  {
-    path: '/pet',
-    name: 'PET',
-    component: () => import('@/views/Flora/index.vue'),
-    meta: {
-      titleEn: 'Floratrium',
-      titleCn: '花花庭院',
-      fullFooter: false,
-      pageFooter: false,
-      pageLayout: 'sub',
       ifShow: false,
     },
   },
@@ -739,6 +723,8 @@ export const installRouterGuards = (router: Router) => {
       navigation.returnExpanded = navigation.expanded
     }
     if (to.name === 'HOME') {
+      if (typeof window !== 'undefined')
+        void preloadTempleAssets().catch(() => undefined)
       const explicitModule =
         templeModuleAtPath(to.path) ||
         templeModuleAtPath(`/${String(to.query.module || '')}`)

@@ -1,5 +1,11 @@
 import { expect, test } from '@playwright/test'
 
+test.beforeEach(async ({ page }) => {
+  await page.routeWebSocket('ws://localhost:3000/**', (socket) =>
+    socket.close()
+  )
+})
+
 test('entry animation rotates and hands off to the SVG logo', async ({
   page,
 }, testInfo) => {
@@ -10,12 +16,8 @@ test('entry animation rotates and hands off to the SVG logo', async ({
   await expect(canvas).toBeVisible({ timeout: 15_000 })
   const loadingProgress = page.locator('.entry-loading-progress')
   await expect(loadingProgress).toBeVisible()
-  await expect(loadingProgress).toHaveCSS('color', 'rgba(0, 0, 0, 0)')
-  await expect(loadingProgress).toHaveCSS(
-    '-webkit-text-stroke-color',
-    'rgb(226, 52, 86)'
-  )
-  await expect(loadingProgress).toHaveCSS('-webkit-text-stroke-width', '1px')
+  await expect(loadingProgress).toHaveText(/\d+%/)
+  await expect(page.locator('.loading-line')).toHaveCount(0)
   const entryScene = page.locator('.entry-overlay-container .scene-container')
   await expect
     .poll(() =>
@@ -50,7 +52,7 @@ test('entry animation rotates and hands off to the SVG logo', async ({
   const svgLogo = page.locator('.logo-wrapper2')
   await expect(svgLogo).toHaveClass(/show/, { timeout: 5_000 })
   await expect(page.locator('.logo-wrapper')).toHaveClass(/is-wiping-out/)
-  await expect(loadingProgress).toHaveText('100%')
+  await expect(loadingProgress).toHaveAttribute('aria-valuenow', '100')
   const handoffAnimation = await svgLogo.evaluate((element) => {
     const style = getComputedStyle(element)
     return {
@@ -70,12 +72,12 @@ test('entry animation rotates and hands off to the SVG logo', async ({
   await expect(svgLogo).toHaveClass(/is-docking/, { timeout: 3_000 })
 })
 
-test('entry loading progress keeps its spacing on tall desktop viewports', async ({
+test('entry loading line keeps its horizon on tall desktop viewports', async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name.includes('mobile'))
   await page.setViewportSize({ width: 1600, height: 1200 })
-  await page.goto('/test2', { waitUntil: 'domcontentloaded' })
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
 
   const progress = page.locator('.entry-loading-progress')
   const canvas = page.locator('.entry-overlay-container canvas')
@@ -105,18 +107,30 @@ test('entry loading progress keeps its spacing on tall desktop viewports', async
         height: canvasBounds.height,
       },
       canvasTransform: canvasStyle.transform,
+      crystalHalfHeight: parseFloat(
+        document
+          .querySelector<HTMLElement>(
+            '.entry-overlay-container .scene-container'
+          )!
+          .style.getPropertyValue('--crystal-half-height')
+      ),
     }
   })
 
   expect(geometry.progressTop).toBeCloseTo(
-    geometry.viewport.height * 0.64 + 68,
+    // 真实初始机位的投影高度；窄长窗口的相机距离按宽高比增加。
+    676.15,
     0
   )
   expect(geometry.canvasTransform).toBe('matrix(0.5, 0, 0, 0.5, 0, 0)')
   expect(geometry.canvas.width).toBeCloseTo(geometry.viewport.width / 2, 0)
   expect(geometry.canvas.height).toBeCloseTo(geometry.viewport.height / 2, 0)
   expect(geometry.canvas.left).toBeCloseTo(geometry.viewport.width / 4, 0)
-  expect(geometry.canvas.top).toBeCloseTo(geometry.viewport.height / 4, 0)
+  expect(
+    geometry.canvas.top +
+      geometry.canvas.height / 2 +
+      geometry.crystalHalfHeight
+  ).toBeCloseTo(geometry.progressTop, 0)
 })
 
 test('entry SVG logo docks with compositor-only FLIP geometry', async ({

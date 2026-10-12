@@ -8,8 +8,9 @@
   flex-direction: column;
   position: relative;
   color: #fff;
-  transform-origin: 100% 0;
+  transform-origin: center center;
   perspective: 1200px;
+  background: rgba(5, 2, 8, 0.9);
 
   &::after {
     position: absolute;
@@ -28,7 +29,7 @@
     &::after {
       animation: anutriumCrtFlashOn 0.46s linear forwards;
     }
-    .modal-body {
+    :deep(.scroll-viewport__scroll) {
       animation: galleryVertical3dIn 0.46s cubic-bezier(0.16, 1, 0.3, 1) both;
     }
   }
@@ -39,24 +40,31 @@
     &::after {
       animation: anutriumCrtFlashOff 0.42s linear forwards;
     }
-    .modal-body {
+    :deep(.scroll-viewport__scroll) {
       animation: galleryVertical3dIn 0.42s cubic-bezier(0.7, 0, 0.84, 0) reverse
         both;
     }
   }
-  .modal-body {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    padding: 24px 0;
-    box-sizing: border-box;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scrollbar-width: thin;
-    scrollbar-color: @work-accent transparent;
-    background: rgba(5, 2, 8, 0.9);
-    transform-origin: center top;
+  :deep(.scroll-viewport__scroll) {
+    padding-right: 0;
+    transform-origin: center center;
     backface-visibility: hidden;
+  }
+  .modal-body {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: max-content;
+    grid-template-areas:
+      'company company'
+      'divider divider'
+      'overview media'
+      'details details'
+      'confidential confidential';
+    align-content: start;
+    gap: 20px;
+    padding: 18px 24px 0;
+    box-sizing: border-box;
+    overflow: visible;
   }
   // Flatten only the inline layout so shared modal content can be reordered.
   .modal-aside,
@@ -79,42 +87,51 @@
     flex: none;
   }
   .aside-company {
-    order: 0;
+    grid-area: company;
   }
   .aside-divider {
-    order: 1;
+    grid-area: divider;
+  }
+  .inline-overview,
+  .inline-media {
+    display: flex;
+    flex-direction: column;
+    align-self: start;
+    min-width: 0;
+    gap: 20px;
+  }
+  .inline-overview {
+    grid-area: overview;
+  }
+  .inline-media {
+    grid-area: media;
   }
   .gallery-carousel,
   .gallery-empty {
-    order: 2;
+    order: 0;
+    width: 100%;
+    align-self: start;
     animation: none;
   }
-  .aside-title {
-    order: 3;
-  }
   .aside-summary {
-    order: 4;
     display: grid;
-    grid-template-columns: max-content max-content minmax(0, 1fr);
+    grid-template-columns: max-content minmax(0, 1fr);
     column-gap: 32px;
     align-items: start;
     .aside-tags {
-      grid-column: 3;
+      grid-column: 1 / -1;
       min-width: 0;
     }
   }
-  .aside-desc {
-    order: 5;
-  }
   .aside-links {
-    order: 6;
+    order: 1;
   }
   .links-list {
     flex-direction: row;
     flex-wrap: wrap;
   }
   .link-item {
-    flex: 1 1 calc(25% - 6px);
+    flex: 1 1 calc(50% - 4px);
     box-sizing: border-box;
   }
   .link-item,
@@ -130,15 +147,24 @@
     object-fit: contain;
   }
   .details-section {
-    order: 7;
-    padding: 20px 0 0;
+    grid-area: details;
+    padding: 0;
+    margin-top: 0;
+    border-top: 0;
   }
   .details-list {
     overflow: visible;
   }
   .confidential-notice {
-    order: 8;
+    grid-area: confidential;
     margin-top: 0;
+
+    .confidential-lock {
+      right: 14px;
+      left: auto;
+      font-size: 2rem;
+      transform: translateY(-50%);
+    }
   }
   .modal-crystal-logo {
     position: static;
@@ -765,7 +791,7 @@
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 8px;
   overflow-y: auto;
   overscroll-behavior: contain;
 
@@ -1023,8 +1049,10 @@
   .work-detail-inline.work-detail-panel-leave-active,
   .work-detail-inline.work-detail-panel-enter-active::after,
   .work-detail-inline.work-detail-panel-leave-active::after,
-  .work-detail-inline.work-detail-panel-enter-active .modal-body,
-  .work-detail-inline.work-detail-panel-leave-active .modal-body {
+  .work-detail-inline.work-detail-panel-enter-active
+    :deep(.scroll-viewport__scroll),
+  .work-detail-inline.work-detail-panel-leave-active
+    :deep(.scroll-viewport__scroll) {
     animation: none;
   }
 

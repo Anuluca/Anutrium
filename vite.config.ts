@@ -1,4 +1,5 @@
 import vue from '@vitejs/plugin-vue'
+import { execFileSync } from 'node:child_process'
 import AutoImport from 'unplugin-auto-import/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 import Components from 'unplugin-vue-components/vite'
@@ -9,6 +10,18 @@ import imageLog from './src/locales/dynamic/island/Photography/imageLog'
 import merchPhotos from './src/locales/dynamic/island/Photography/merchPhotos'
 
 const path = require('path')
+
+// 使用提交时间而非构建时间，并固定北京时间，避免构建服务器时区影响日期。
+const lastCommitTime = execFileSync('git', ['log', '-1', '--format=%cI'], {
+  cwd: __dirname,
+  encoding: 'utf8',
+}).trim()
+const lastUpdate = new Intl.DateTimeFormat('zh-CN', {
+  timeZone: 'Asia/Shanghai',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+}).format(new Date(lastCommitTime))
 
 const merchPhotographyDetailRoutes = Object.values(merchPhotos).flatMap(
   (collections) =>
@@ -21,6 +34,9 @@ const imageLogDetailRoutes = imageLog.map(
 )
 
 export default defineConfig({
+  define: {
+    'import.meta.env.VITE_LAST_UPDATE': JSON.stringify(lastUpdate),
+  },
   plugins: [
     vue(),
     AutoImport({
@@ -62,7 +78,8 @@ export default defineConfig({
               cacheName: 'r2-fonts',
               cacheableResponse: { statuses: [0, 200] },
               expiration: {
-                maxEntries: 8,
+                // 当前 90 个 Unicode 分片，加上其他字体和发布切换余量。
+                maxEntries: 128,
                 maxAgeSeconds: 60 * 60 * 24 * 365,
                 purgeOnQuotaError: true,
               },
@@ -120,19 +137,11 @@ export default defineConfig({
 
           if (!normalizedId.includes('/node_modules/')) return undefined
 
-          if (normalizedId.includes('/three/examples/')) {
-            return 'vendor-three-addons'
-          }
+          // 扩展按实际消费者拆分，避免线框入口连带预加载材质模式的后处理。
+          if (normalizedId.includes('/three/examples/')) return undefined
           if (normalizedId.includes('/three/')) return 'vendor-three'
           if (normalizedId.includes('/swiper/')) return 'vendor-swiper'
-          if (normalizedId.includes('/@element-plus/icons-vue/')) {
-            // Icons import Element Plus internals, so splitting them creates a
-            // circular production chunk that can execute before core exports.
-            return 'vendor-element-plus'
-          }
-          if (normalizedId.includes('/element-plus/')) {
-            return 'vendor-element-plus'
-          }
+          // Element Plus 与图标跟随实际消费者，避免首屏连带下载路由级弹窗/表单。
 
           // Let Rollup keep route-only dependencies with their actual consumers.
           // A catch-all vendor chunk makes one shared framework import pull every
@@ -199,7 +208,6 @@ export default defineConfig({
       '/base64Codec',
       '/imageBase64',
       '/about',
-      '/pet',
       '/island',
       '/island/photography',
       '/island/merch-photography',

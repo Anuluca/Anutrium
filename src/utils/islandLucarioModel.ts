@@ -1,3 +1,6 @@
+import modelRevision from './lucarioModelRevision.generated.json'
+import { readCompressedModelBuffer } from './readCompressedModelBuffer'
+
 interface ModelAttribute {
   offset: number
   count: number
@@ -34,7 +37,9 @@ let cachedModel:
   | undefined
 
 const fetchAsset = async (path: string, signal: AbortSignal) => {
-  const response = await fetch(`/models/${path}`, { signal })
+  const response = await fetch(`/models/${path}?v=${modelRevision.revision}`, {
+    signal,
+  })
   if (!response.ok) throw new Error(`Lucario asset ${path}: ${response.status}`)
   return response
 }
@@ -56,17 +61,7 @@ export function loadIslandLucarioModel() {
         (response) => response.json() as Promise<IslandEnvironment>
       ),
       fetchAsset('lucario-studio.bin.gz', controller.signal).then(
-        async (response) => {
-          const compressed = await response.arrayBuffer()
-          const signature = new Uint8Array(compressed, 0, 2)
-          // 某些静态服务器自动设置 Content-Encoding，浏览器已经完成解压。
-          if (signature[0] !== 0x1f || signature[1] !== 0x8b) return compressed
-          // 静态 HDR 环境保留 HalfFloat 精度，只在首次加载时解压，不运行 PMREM 卷积。
-          const stream = new Blob([compressed])
-            .stream()
-            .pipeThrough(new DecompressionStream('gzip'))
-          return new Response(stream).arrayBuffer()
-        }
+        readCompressedModelBuffer
       ),
     ])
       .then(([metadata, buffer, environment, radiance]) => {

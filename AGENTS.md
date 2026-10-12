@@ -37,4 +37,11 @@
 - 禁止启用 Element Plus 的 `lock-scroll` / `lockScroll`，禁止通过 `body.style` 或弹窗状态类设置 `body` 的 `overflow: hidden/clip`。背景锁定统一使用 `setSmoothScrollLocked`。
 - 新增或修改弹窗时，必须运行 `yarn check:overlay-scroll` 与 `yarn test:overlay-scroll`；页面 `scrollTop`、内容锚点和 `body` 宽度偏移不得超过 `1px`。
 
+## 花花小窝参考规范
+
+- 花花小窝是首页点击新叶喵后出现的 `sprigatito` 聚焦模块，位于 `src/views/Home/TemplePage.vue`；不得另建独立宠物路由或用猫咪图片页替代该模块。
+- 修改前先阅读 `docs/references/flora/README.md`，并查看同目录中的三张布局参考图。
+- 后续实现须同时遵循用户当次意见与参考图：左侧为花花模型区，模型位置按用户意见微调；右侧承载内容模块。1/3 仅为用户目测参考，分区宽度可调整，不得为了固定比例擅自移动模型。用户当次明确要求优先于参考图。
+- 分区当前使用透明背景，边框默认隐藏；网站全局方形按钮紧贴视口左下角控制边框显示，不随路由移动。不要仅因参考图而擅自添加其文字、数据、像素风或配色。
+
 ## 待补充

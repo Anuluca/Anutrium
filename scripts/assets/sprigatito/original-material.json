@@ -1,0 +1,19 @@
+{
+  "materialType": "MeshStandardMaterial",
+  "parameters": {
+    "vertexColors": true,
+    "roughness": 0.6,
+    "metalness": 0.12,
+    "envMapIntensity": 1.1
+  },
+  "vertexColors": {
+    "source": "scripts/lib/prepareSprigatitoGeometry.ts",
+    "attribute": "colors",
+    "colorSpace": "LinearSRGBColorSpace"
+  },
+  "sourceTextures": [
+    "pm1010_00_00_body_a_alb.png",
+    "pm1010_00_00_body_b_alb.png",
+    "pm1010_00_00_eye_alb_composite.png"
+  ]
+}

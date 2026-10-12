@@ -5,12 +5,14 @@ import { useEventListener, useMediaQuery } from '@vueuse/core'
 import ScrollViewport from '@/components/ScrollViewport/index.vue'
 import { useTempleNavigation } from '@/stores/templeNavigation'
 
+import { loadAboutContent } from './aboutContentLoader'
+
 const navigation = useTempleNavigation()
 const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)')
 const dialog = ref<HTMLElement | null>(null)
 const maskReady = ref(false)
 let returnFocus: HTMLElement | null = null
-const AboutContent = defineAsyncComponent(() => import('./AboutContent.vue'))
+const AboutContent = defineAsyncComponent(loadAboutContent)
 const close = () => {
   navigation.aboutOpen = false
 }
@@ -22,6 +24,8 @@ watch(
   () => navigation.aboutOpen,
   async (open) => {
     if (open) {
+      // 下载与遮罩渐显并行，仍由 after-enter 决定实际挂载时机。
+      void loadAboutContent().catch(() => undefined)
       maskReady.value = false
       returnFocus =
         document.activeElement instanceof HTMLElement
@@ -92,7 +96,7 @@ useEventListener(
       <div class="about-overlay__content no-rem" @click="close">
         <ScrollViewport v-if="maskReady" edge-progress :progress-z-index="1200">
           <Transition name="about-content" appear>
-            <AboutContent embedded @click.stop />
+            <AboutContent embedded @click.stop @close="close" />
           </Transition>
         </ScrollViewport>
       </div>
@@ -117,10 +121,18 @@ useEventListener(
   transition: background-color 0.4s ease;
 }
 .about-overlay__content.no-rem {
+  --about-content-top: max(
+    124px,
+    calc(var(--layout-header-bottom, 0px) + 24px)
+  );
+  --about-content-bottom: calc(128px / 3);
+  --about-hero-height: calc(
+    100dvh - var(--about-content-top) - var(--about-content-bottom)
+  );
   position: absolute;
   z-index: 1;
-  inset: max(124px, calc(var(--layout-header-bottom, 0px) + 24px))
-    var(--temple-content-inset) 64px;
+  inset: var(--about-content-top) var(--temple-content-inset)
+    var(--about-content-bottom);
   :deep(.scroll-viewport__scroll) {
     padding-right: 0;
   }
@@ -153,7 +165,9 @@ useEventListener(
 }
 @media (max-width: 768px) {
   .about-overlay__content.no-rem {
-    inset: 114px 24px max(48px, env(safe-area-inset-bottom));
+    --about-content-top: 114px;
+    --about-content-bottom: max(32px, env(safe-area-inset-bottom));
+    inset: var(--about-content-top) 24px var(--about-content-bottom);
   }
 }
 @media (prefers-reduced-motion: reduce) {

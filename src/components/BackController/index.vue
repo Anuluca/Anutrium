@@ -37,7 +37,7 @@ const craftRouteNames = new Set([
 const requestedActiveSign = computed<ZodiacSignId>(() => {
   if (isTempleRoute.value) {
     return (
-      templeCategories.find((item) => item.id === navigation.selected)
+      templeCategories.find((item) => item.id === navigation.activeModule)
         ?.zodiacSign || 'pisces'
     )
   }
@@ -70,7 +70,7 @@ watch(
 )
 
 watch(
-  [() => navigation.selected, () => navigation.aboutOpen],
+  [() => navigation.activeSelection, () => navigation.aboutOpen],
   () => {
     // 模块切换直接旋转；真正的路由切换仍等待原有离场信号。
     if (isTempleRoute.value) activeSign.value = requestedActiveSign.value
@@ -87,8 +87,7 @@ watch(
 )
 
 const zodiacLayout = computed(() => {
-  if (isTempleRoute.value)
-    return navigation.selected ? 'content' : 'red'
+  if (isTempleRoute.value) return navigation.activeSelection ? 'content' : 'red'
   return currentRouter.value === '/test2'
     ? visualStateStore.zodiacLayout
     : 'content'
@@ -96,6 +95,9 @@ const zodiacLayout = computed(() => {
 const particlesVisible = computed(
   () =>
     currentRouter.value !== '/test2' || visualStateStore.homeStarfieldVisible
+)
+const motionActive = computed(
+  () => !isTempleRoute.value || (!navigation.aboutOpen && !navigation.expanded)
 )
 </script>
 
@@ -109,6 +111,7 @@ const particlesVisible = computed(
       :layout="zodiacLayout"
       :tinted="isTempleRoute"
       :particles-visible="particlesVisible"
+      :motion-active="motionActive"
       :particle-fps="isTempleRoute ? 12 : 60"
       :top-inset="visualStateStore.backgroundTopInset"
       :entry-active="props.entryActive"

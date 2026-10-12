@@ -1,11 +1,19 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import { useMediaQuery, useWindowSize } from '@vueuse/core'
 
+import LoadingLine from '@/components/LoadingLine/index.vue'
 import LoadingPercentage from '@/components/LoadingPercentage/index.vue'
 import Logo from '@/components/Logo/index.vue'
 import LogoRotating3D from '@/components/Logo_rotating3D/index.vue'
+import { getTempleEntranceHorizon } from '@/config/templeCamera'
+import { visualState } from '@/stores'
 import { useSiteLoading } from '@/stores/siteLoading'
+import { useTempleNavigation } from '@/stores/templeNavigation'
 import { loadCriticalFont } from '@/utils/fontLoader'
+import { hasJourneyReturnState } from '@/utils/journeyReturnState'
+import { templePresentations } from '@/views/Home/templePresentation'
 
 const emit = defineEmits([
   'finished',
@@ -22,10 +30,40 @@ const isLogoDocking = ref(false)
 const isBackgroundExiting = ref(false)
 const isBackgroundFading = ref(false)
 const siteLoading = useSiteLoading()
+const route = useRoute()
+// 固定首次访问的动画类型；模块入口与其详情页不能按路径前缀混用。
+const isHorizonIntro = route.name === 'HOME' || route.name === 'ABOUT'
+const navigation = useTempleNavigation()
+const visual = visualState()
+const touchDevice = useMediaQuery('(pointer: coarse)')
+const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)')
+const { width: viewportWidth, height: viewportHeight } = useWindowSize()
+const projectedLogoHeight = ref(0)
+const logoSizeStyle = computed(() =>
+  isHorizonIntro && projectedLogoHeight.value > 0
+    ? { '--entry-logo-height': `${projectedLogoHeight.value}px` }
+    : {}
+)
+const loadingLineStyle = computed(() => {
+  const presentation =
+    visual.deviceType === 'desktop' && !touchDevice.value
+      ? templePresentations.desktop
+      : templePresentations.mobile
+  return {
+    '--loading-horizon-y': `${getTempleEntranceHorizon(
+      Math.max(1, viewportWidth.value),
+      Math.max(360, viewportHeight.value),
+      presentation.scene.homeCamera,
+      reducedMotion.value ||
+        navigation.simpleEntrance ||
+        hasJourneyReturnState()
+    )}px`,
+  }
+})
 const introProgress = ref(0)
 const loadingProgress = computed(() => {
   if (!siteLoading.tasks.size) return introProgress.value
-  // 20% 为入口动画，80% 为页面真实准备阶段；百分比不是下载字节比例。
+  // 20% 为入口动画，80% 为页面真实准备阶段。
   const value = Math.floor(
     introProgress.value * 0.2 + siteLoading.progress * 0.8
   )
@@ -34,7 +72,6 @@ const loadingProgress = computed(() => {
 const isProgressFading = ref(false)
 const compactVisible = ref(false)
 const compactFading = ref(false)
-let compactRevision = 0
 let introReady = false
 let skipLogoReveal = false
 const logoRotating3DRef = ref()
@@ -83,7 +120,9 @@ const updateLoadingProgress = (timestamp: number) => {
     99,
     Math.floor((elapsed / INTRO_PROGRESS_DURATION) * 100)
   )
-  progressAnimationFrame = window.requestAnimationFrame(updateLoadingProgress)
+  // 达到等待上限后由真实任务完成信号继续推进，不为停滞的网络空转。
+  if (introProgress.value < 99)
+    progressAnimationFrame = window.requestAnimationFrame(updateLoadingProgress)
 }
 
 const completeLoadingProgress = () => {
@@ -92,10 +131,8 @@ const completeLoadingProgress = () => {
     progressAnimationFrame = null
   }
   introProgress.value = 100
-  emit('progress-complete')
-  schedule(() => {
-    isProgressFading.value = true
-  }, 140)
+  if (isHorizonIntro) isProgressFading.value = true
+  else schedule(() => (isProgressFading.value = true), 140)
 }
 
 const emitReady = () => {
@@ -120,6 +157,7 @@ const forceHideIntro = () => {
   isLogoWipingOut.value = true
   isBackgroundExiting.value = true
   isBackgroundFading.value = true
+  siteLoading.presentationReady = true
   emitReady()
   emit('scene-ready')
   hideIntro()
@@ -235,24 +273,32 @@ const startExitMotion = async () => {
   isLogoDocking.value = true
   isBackgroundExiting.value = true
   emitReady()
-  schedule(
-    () => emit('scene-ready'),
-    (EXIT_BACKGROUND_SHRINK_DURATION + EXIT_BACKGROUND_FADE_DURATION) / 2
-  )
+  if (!isHorizonIntro)
+    schedule(
+      revealScene,
+      (EXIT_BACKGROUND_SHRINK_DURATION + EXIT_BACKGROUND_FADE_DURATION) / 2
+    )
 }
 
-const finishIntro = (skipLogoReveal = false) => {
+const finishIntro = () => {
   if (hasStartedIntroExit || isUnmounted) return
 
   hasStartedIntroExit = true
   completeLoadingProgress()
+  if (!isHorizonIntro) startIntroExit()
+}
+
+const startIntroExit = () => {
+  if (isUnmounted) return
+  emit('progress-complete')
+  const exitDuration = skipLogoReveal
+    ? Math.max(
+        EXIT_BACKGROUND_SHRINK_DURATION + EXIT_BACKGROUND_FADE_DURATION,
+        isHorizonIntro ? 2440 : 0
+      )
+    : EXIT_HIDE_DELAY
   // 资源准备可能超过入口动画时长，退场兜底必须从实际完成时开始计时。
-  schedule(
-    forceHideIntro,
-    (skipLogoReveal
-      ? EXIT_BACKGROUND_SHRINK_DURATION + EXIT_BACKGROUND_FADE_DURATION
-      : EXIT_HIDE_DELAY) + 320
-  )
+  schedule(forceHideIntro, exitDuration + 320)
 
   if (skipLogoReveal) {
     isLogoWipingOut.value = true
@@ -264,7 +310,7 @@ const finishIntro = (skipLogoReveal = false) => {
 
     schedule(() => {
       hideIntro()
-    }, EXIT_BACKGROUND_SHRINK_DURATION + EXIT_BACKGROUND_FADE_DURATION)
+    }, exitDuration)
     return
   }
 
@@ -289,7 +335,12 @@ const finishIntro = (skipLogoReveal = false) => {
 }
 
 const tryFinishIntro = () => {
-  if (introReady && !siteLoading.pending) finishIntro(skipLogoReveal)
+  if (introReady && !siteLoading.pending) finishIntro()
+}
+
+const revealScene = () => {
+  siteLoading.presentationReady = true
+  emit('scene-ready')
 }
 
 const rotateFinished = () => {
@@ -299,20 +350,16 @@ const rotateFinished = () => {
 }
 
 watch(() => siteLoading.pending, tryFinishIntro)
-// 首次入口保留完整 Logo 过渡；之后的页面准备复用同一模块的简化百分比。
+// 首次入口保留完整 Logo 过渡；后续页面准备复用同一条加载线。
 watch(
   [isAnimating, () => siteLoading.pending, () => siteLoading.batch],
   ([animating, pending]) => {
-    const revision = ++compactRevision
     if (animating) return
     if (pending) {
       compactVisible.value = true
       compactFading.value = false
     } else if (compactVisible.value) {
       compactFading.value = true
-      schedule(() => {
-        if (revision === compactRevision) compactVisible.value = false
-      }, 600)
     }
   },
   { flush: 'sync' }
@@ -353,8 +400,10 @@ onUnmounted(() => {
       :class="{
         'is-background-exiting': isBackgroundExiting,
         'is-background-fading': isBackgroundFading,
+        'entry-mode--horizon': isHorizonIntro,
+        'entry-mode--centered': !isHorizonIntro,
       }"
-      :style="entryStyle"
+      :style="[loadingLineStyle, logoSizeStyle, entryStyle]"
     >
       <div class="entry-background" />
 
@@ -366,11 +415,23 @@ onUnmounted(() => {
             edge-color="#E23456"
             :edge-width="2"
             transparent
+            :bottom-anchor="isHorizonIntro"
+            @anchor-change="projectedLogoHeight = $event"
             @finished="rotateFinished"
           />
         </div>
       </div>
+      <LoadingLine
+        v-if="isHorizonIntro"
+        :progress="loadingProgress"
+        :fading="isProgressFading"
+        :style="loadingLineStyle"
+        aria-hidden="true"
+        @complete="startIntroExit"
+        @reveal="revealScene"
+      />
       <LoadingPercentage
+        v-else
         :progress="loadingProgress"
         :fading="isProgressFading"
         aria-hidden="true"
@@ -387,14 +448,16 @@ onUnmounted(() => {
         <Logo v-if="logo2DShow" ref="logoRef" class="logo" />
       </div>
     </div>
-    <LoadingPercentage
+    <LoadingLine
       v-if="!isAnimating && compactVisible"
       :key="siteLoading.batch"
       class="site-loading-progress"
       :progress="siteLoading.progress"
-      :animate="siteLoading.pending"
       :fading="compactFading"
+      :style="loadingLineStyle"
       aria-label="网站加载进度"
+      @reveal="siteLoading.presentationReady = true"
+      @faded="compactFading && (compactVisible = false)"
     />
   </Teleport>
 </template>
@@ -404,8 +467,6 @@ onUnmounted(() => {
 <style lang="less" scoped>
 .entry-loading-progress.site-loading-progress.no-rem {
   position: fixed;
-  top: 50%;
   z-index: 1001;
-  translate: -50% -50%;
 }
 </style>

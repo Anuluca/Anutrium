@@ -2,7 +2,10 @@
   <div
     ref="sceneContainer"
     class="scene-container"
-    :class="[{ 'is-transparent': transparent }, `render-mode--${renderMode}`]"
+    :class="[
+      { 'is-transparent': transparent, 'is-bottom-anchored': bottomAnchor },
+      `render-mode--${renderMode}`,
+    ]"
   >
     <div ref="container" class="canvas-container" />
   </div>
@@ -29,16 +32,12 @@ import {
   Scene,
   SpotLight,
   Vector2,
+  Vector3,
   WebGLRenderer,
 } from 'three'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
-import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
 import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js'
 import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js'
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
-import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
 
 import {
   cacheWebGLResource,
@@ -46,7 +45,7 @@ import {
   takeCachedWebGLResource,
 } from '@/utils/webglResourceCache'
 
-const emit = defineEmits(['finished'])
+const emit = defineEmits(['finished', 'anchor-change'])
 const props = defineProps({
   interactive: {
     type: Boolean,
@@ -57,6 +56,10 @@ const props = defineProps({
     default: false,
   },
   transparent: {
+    type: Boolean,
+    default: false,
+  },
+  bottomAnchor: {
     type: Boolean,
     default: false,
   },
@@ -120,6 +123,9 @@ const FRONT_ROTATION_INTERVAL = Math.PI / 2
 const START_ROTATION = FRONT_ROTATION_OFFSET + FRONT_ROTATION_INTERVAL / 2
 const MOBILE_BREAKPOINT = 768
 const RESOURCE_CACHE_TTL = 60_000
+const CRYSTAL_RADIUS = 1.5
+const CRYSTAL_CYLINDER_HEIGHT = 4
+const CRYSTAL_CONE_HEIGHT = CRYSTAL_RADIUS * 1.3
 const isEdgeRenderMode = () => props.renderMode === 'edges'
 const getRotationSpeed = () =>
   ROTATION_SPEEDS[props.rotationSpeed] ?? ROTATION_SPEEDS.fast
@@ -159,6 +165,28 @@ const getSceneSize = () => {
     width: Math.max(1, Math.round(rect?.width || window.innerWidth)),
     height: Math.max(1, Math.round(rect?.height || window.innerHeight)),
   }
+}
+
+const syncBottomAnchor = () => {
+  if (!props.bottomAnchor || !crystal || !camera || !sceneContainer.value)
+    return
+  scene.updateMatrixWorld(true)
+  camera.updateMatrixWorld()
+  // 以晶体的真实下尖端投影定位，包含模型缩放与画布的 0.5 倍 CSS 缩放。
+  const tip = new Vector3(
+    0,
+    -CRYSTAL_CYLINDER_HEIGHT / 2 - CRYSTAL_CONE_HEIGHT,
+    0
+  )
+    .applyMatrix4(crystal.matrixWorld)
+    .project(camera)
+  const halfHeight = (Math.abs(tip.y) * getSceneSize().height) / 4
+  sceneContainer.value.style.setProperty(
+    '--crystal-half-height',
+    `${halfHeight}px`
+  )
+  // 2D 接续图形复用此投影高度，避免贴底后因尺寸不同而产生中心偏移。
+  emit('anchor-change', halfHeight * 2)
 }
 
 const assignResources = (resources) => {
@@ -222,6 +250,23 @@ const initThree = async () => {
     if (cachedResources) disposeResources(cachedResources)
 
     const useEdgeRendering = isEdgeRenderMode()
+    // 入口线框不下载环境与辉光扩展；在创建资源前完成加载，离场可直接取消初始化。
+    const [environmentModule, effects, controlsModule] = await Promise.all([
+      useEdgeRendering
+        ? null
+        : import('three/examples/jsm/environments/RoomEnvironment.js'),
+      !props.lowPower && !useEdgeRendering
+        ? Promise.all([
+            import('three/examples/jsm/postprocessing/EffectComposer.js'),
+            import('three/examples/jsm/postprocessing/RenderPass.js'),
+            import('three/examples/jsm/postprocessing/UnrealBloomPass.js'),
+          ])
+        : null,
+      props.interactive
+        ? import('three/examples/jsm/controls/OrbitControls.js')
+        : null,
+    ])
+    if (isUnmounted || generation !== runtimeGeneration) return
     scene = new Scene()
     scene.background = props.transparent ? null : new Color('#050505')
     if (!props.transparent && !useEdgeRendering) {
@@ -248,7 +293,10 @@ const initThree = async () => {
 
     if (!useEdgeRendering) {
       const pmremGenerator = new PMREMGenerator(renderer)
-      environmentMap = pmremGenerator.fromScene(new RoomEnvironment(), 0.04)
+      environmentMap = pmremGenerator.fromScene(
+        new environmentModule.RoomEnvironment(),
+        0.04
+      )
       scene.environment = environmentMap.texture
       pmremGenerator.dispose()
 
@@ -265,6 +313,7 @@ const initThree = async () => {
     }
 
     if (!props.lowPower && !useEdgeRendering) {
+      const [{ EffectComposer }, { RenderPass }, { UnrealBloomPass }] = effects
       const renderScene = new RenderPass(scene, camera)
       const bloomPass = new UnrealBloomPass(
         new Vector2(width, height),
@@ -282,7 +331,7 @@ const initThree = async () => {
     }
 
     if (props.interactive) {
-      controls = new OrbitControls(camera, renderer.domElement)
+      controls = new controlsModule.OrbitControls(camera, renderer.domElement)
       controls.enableDamping = true
       controls.dampingFactor = 0.05
     }
@@ -341,9 +390,9 @@ const initThree = async () => {
 
     const createCrystal = () => {
       const crystalGroup = new Group()
-      const radius = 1.5
-      const cylinderHeight = 4
-      const coneHeight = radius * 1.3
+      const radius = CRYSTAL_RADIUS
+      const cylinderHeight = CRYSTAL_CYLINDER_HEIGHT
+      const coneHeight = CRYSTAL_CONE_HEIGHT
       const segments = 4
 
       const cylinderGeometry = prepareGeometry(
@@ -437,6 +486,7 @@ const initThree = async () => {
     group.scale.set(0.5, 0.5, 0.5)
   }
 
+  syncBottomAnchor()
   isStopping = false
   stopStartTime = null
   stopStartRotation = null
@@ -543,6 +593,7 @@ const handleResize = () => {
   renderer.setPixelRatio(getRendererPixelRatio())
   renderer.setSize(width, height)
   composer?.setSize(width, height)
+  syncBottomAnchor()
 }
 
 const scheduleResize = () => {
@@ -716,6 +767,14 @@ defineExpose({
   align-items: center;
   justify-content: center;
   background-color: #050505;
+
+  &.is-bottom-anchored {
+    transform: translateY(
+      calc(
+        var(--loading-horizon-y, 50vh) - 50vh - var(--crystal-half-height, 0px)
+      )
+    );
+  }
 
   &.is-transparent {
     background-color: transparent;

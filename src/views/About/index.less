@@ -17,6 +17,7 @@
 
 .about-hero-shell {
   --about-crew-shift: 0px;
+  --about-hero-bottom-gap: 1.6rem;
   position: relative;
 
   &.is-crew-open {
@@ -32,7 +33,7 @@
 
 .about-crew-trigger.no-rem {
   position: absolute;
-  bottom: calc(1.6rem + 14px);
+  bottom: calc(var(--about-hero-bottom-gap) + 8px);
   right: 28px;
   z-index: 12;
   padding: 0;
@@ -57,7 +58,6 @@
 
   @media (max-width: 768px) {
     right: 15px;
-    bottom: calc(1.6rem + 65px);
     font-size: 16px;
   }
 }
@@ -89,6 +89,40 @@
 
 .block {
   margin-bottom: 50px;
+}
+
+.is-embedded .about-hero-section.no-rem {
+  height: var(--about-hero-height);
+  padding-bottom: var(--about-hero-bottom-gap);
+
+  > .passion-section {
+    flex: 1 1 0;
+    aspect-ratio: auto;
+    margin: 0;
+    overflow: clip;
+  }
+}
+
+.is-embedded .about-hero-shell {
+  --about-hero-bottom-gap: 32px;
+}
+
+// 遮罩统一提供暗化，内容入场不再叠加黑色背景或闪光。
+.is-embedded .passion-back {
+  background-color: transparent;
+  opacity: 1;
+  animation: none;
+}
+
+.is-embedded .passion-section::after {
+  opacity: 0;
+  animation: none;
+}
+
+@media (min-width: 769px) {
+  .is-embedded .passion-section.no-rem .passion-content {
+    bottom: 64px;
+  }
 }
 
 .passion-section {
@@ -311,8 +345,8 @@
     clamp(660px, 60vw, 880px) - clamp(24px, 2.4vw, 34px)
   );
   --passion-logo-center-lift: 9.55vw;
-  --passion-logo-center-offset-y: 36px;
-  --passion-logo-canvas-scale: 1;
+  --passion-logo-center-offset-y: 126px;
+  --passion-logo-canvas-scale: 1.2;
   --passion-logo-rest-transform: translate(
       -50%,
       calc(
@@ -859,9 +893,11 @@
   }
 
   .passion-logo-bg {
-    --passion-logo-size: 250px;
     --passion-logo-center-lift: 0px;
-    --passion-logo-canvas-scale: 4;
+    --passion-logo-center-offset-y: 0px;
+    --passion-logo-canvas-scale: 1.2;
+    --passion-logo-size: min(150vw, 85dvh);
+    top: 38%;
 
     opacity: 0.95;
   }
@@ -890,6 +926,27 @@
       font-size: 22px;
       line-height: 1.5;
     }
+  }
+
+  .passion-section.no-rem .passion-content {
+    bottom: 80px;
+  }
+
+  .passion-section.no-rem .passion-color-code {
+    margin-left: 0;
+    font-size: clamp(48px, 16vw, 110px);
+  }
+
+  .passion-section.no-rem .passion-field-name {
+    margin-top: 0;
+    * {
+      font-size: clamp(12px, 3vw, 18px);
+    }
+  }
+
+  .passion-section.no-rem .passion-field-meta span {
+    font-size: clamp(10px, 2.7vw, 16px);
+    letter-spacing: 0.08em;
   }
 
   .neighbors-grid {
@@ -1050,7 +1107,7 @@
   --program-open-height: min(54dvh, 510px);
 
   position: absolute;
-  bottom: calc(1.6rem + 14px);
+  bottom: calc(var(--about-hero-bottom-gap) + 8px);
   left: 16px;
   z-index: 12;
   width: min(700px, calc(100% - 32px));
@@ -1243,6 +1300,33 @@
 
     &::-webkit-scrollbar {
       display: none;
+    }
+  }
+
+  .update-program__body.is-changelog {
+    &::before,
+    &::after {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 1;
+      height: 29.25px;
+      content: '';
+      pointer-events: none;
+    }
+
+    &::before {
+      background: linear-gradient(
+        to bottom,
+        transparent,
+        color-mix(in srgb, var(--program-surface) 72%, transparent) 70%,
+        var(--program-surface)
+      );
+    }
+
+    &::after {
+      .tapered-screen-lines(var(--program-surface));
     }
   }
 
@@ -1483,12 +1567,15 @@
   @media (max-width: 768px) {
     --program-open-height: 55dvh;
 
-    bottom: calc(1.6rem + 65px);
     left: 8px;
     width: calc(100% - 16px);
 
     .about-update-dock__triggers {
       gap: 7px;
+    }
+
+    .about-update-dock__panel {
+      bottom: calc(100% + 16px);
     }
 
     .about-update-trigger {
@@ -1500,9 +1587,13 @@
     }
 
     &.is-crew-panel {
-      left: auto;
+      left: 15px;
       right: 15px;
-      width: 33.333333%;
+      width: calc(100% - 30px);
+
+      .update-program__body-content {
+        padding-top: 24px;
+      }
     }
 
     .update-program__path {
@@ -1515,6 +1606,42 @@
 
     .update-program__entry h3 {
       font-size: 20px;
+    }
+
+    .staff-credits {
+      font-size: 19.2px;
+
+      .staff-credits__intro {
+        margin-bottom: 8px;
+        padding: 8px 0 12px;
+      }
+
+      h2 {
+        font-size: 20px;
+        margin-bottom: 1.5px;
+      }
+
+      h3 {
+        font-size: 19.2px;
+      }
+
+      .staff-credits__typeface,
+      .staff-credits__model-name {
+        font-size: 28.8px;
+      }
+
+      .staff-credits__model-details {
+        font-size: 14.4px;
+      }
+
+      .staff-credits__author {
+        font-size: 11.2px;
+      }
+
+      .staff-credits__audience,
+      .staff-credits__closing {
+        font-size: 38.4px;
+      }
     }
   }
 

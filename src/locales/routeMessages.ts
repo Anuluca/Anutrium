@@ -21,7 +21,8 @@ const messageLoaders: Record<MessageDomain, () => Promise<MessageModule>> = {
 
 const routeMessageDomains: Record<string, MessageDomain[]> = {
   TEST2: ['home', 'archive', 'craft', 'flanerie'],
-  HOME: ['archive', 'flanerie', 'about'],
+  // 首页场景不消费这些文案；嵌入面板在挂载前按需加载，避免阻塞首屏。
+  HOME: [],
   ARCHIVE: ['archive'],
   FLANERIE: ['flanerie'],
   FLANERIE_DETAIL: ['flanerie'],

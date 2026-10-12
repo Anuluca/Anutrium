@@ -3,10 +3,10 @@ export const pageThemeColors: Readonly<Record<string, string>> = {
   ABOUT: '#e23456',
   ARCHIVE: '#3276fe',
   CRAFT: '#244392',
-  FLANERIE: '#8a2c1b',
+  FLANERIE: '#8b5cc7',
   HOME: '#e23456',
   TEST2: '#e23456',
-  ISLAND: '#e23456',
+  ISLAND: '#ce4c87',
+  SPRIGATITO: '#8a2c1b',
   POKEYARD: '#f1c640',
-  PET: '#e23456',
 }

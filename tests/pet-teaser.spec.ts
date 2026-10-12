@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 const PAGE_LOAD_TIMEOUT = 20_000
 
-test('pet teaser plays its state sequence without opening Flora', async ({
+test('pet teaser plays its state sequence without navigating away', async ({
   page,
 }, testInfo) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' })
@@ -190,7 +190,6 @@ test('pet teaser plays its state sequence without opening Flora', async ({
   })
   await expect(teaser).toHaveAttribute('aria-disabled', 'false')
   await expect(page).toHaveURL(/\/$/)
-  await expect(page.locator('.flora-page')).toHaveCount(0)
   await expect(teaser).toBeVisible()
 })
 
@@ -219,7 +218,6 @@ test('pet teaser activation preserves the current route and scroll state', async
   await expect(teaser).toHaveAttribute('aria-disabled', 'false')
   await expect(page).toHaveURL(/\/archive$/)
   await expect(page.locator('.archives-page')).toBeVisible()
-  await expect(page.locator('.flora-page')).toHaveCount(0)
   expect(await page.evaluate(() => document.body.scrollTop)).toBeCloseTo(
     scrollTopBefore,
     0
@@ -584,5 +582,4 @@ test('pet teaser remains animation-only with reduced motion', async ({
   })
   await expect(teaser).toHaveAttribute('aria-disabled', 'false')
   await expect(page).toHaveURL(/\/$/)
-  await expect(page.locator('.flora-page')).toHaveCount(0)
 })

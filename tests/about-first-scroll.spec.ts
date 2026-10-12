@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test'
 import path from 'node:path'
 
+import { openHomeAboutOverlay } from './helpers/homeAboutOverlay'
+
 test.beforeEach(async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' })
   await page.route('https://assets.anuluca.com/fonts/unbounded/**', (route) =>
@@ -47,13 +49,7 @@ for (const embedded of [false, true]) {
       )
       const mobile = testInfo.project.name.includes('mobile')
       if (mobile) await page.locator('.mobile-menu-icon').click()
-      await page
-        .locator(
-          `${
-            mobile ? '.mobile-menu-items' : '.menu-box'
-          } [data-temple-nav="about"]`
-        )
-        .click()
+      await openHomeAboutOverlay(page)
     }
     const about = page.locator(
       embedded ? '.about-overlay .about-page' : '.about-page'

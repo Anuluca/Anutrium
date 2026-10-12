@@ -2,6 +2,7 @@
 /* eslint-disable simple-import-sort/imports */
 import layout from './layout/index.vue'
 import FooterCom from '@/components/FooterCom/index.vue'
+import LayoutBorderToggle from '@/components/LayoutBorderToggle/index.vue'
 import {
   computed,
   defineAsyncComponent,
@@ -15,6 +16,7 @@ import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { visualState } from './stores'
 import { useSiteLoading } from '@/stores/siteLoading'
+import { useTempleNavigation } from '@/stores/templeNavigation'
 import {
   getSeoMeta,
   syncPageTheme,
@@ -60,14 +62,13 @@ watch(
   isTempleRoute,
   (home) => {
     if (typeof window === 'undefined') return
-    if (home) siteLoading.beginTask('home-scene')
+    if (home && !entryAnimationReady.value) siteLoading.beginTask('home-scene')
     else siteLoading.cancelTask('home-scene')
   },
   { immediate: true, flush: 'sync' }
 )
 const petTeaserHiddenPaths = new Set([
   '/',
-  '/pet',
   '/404',
   '/island',
   '/home2',
@@ -214,7 +215,15 @@ onMounted(async () => {
   if (savedTheme === 'light') await ensureLightThemeStyles()
   visualStateStore.setTheme(savedTheme === 'light' ? 'light' : 'dark')
   syncSeoMeta(route)
-  syncPageTheme(route)
+  const navigation = useTempleNavigation()
+  syncPageTheme(
+    route,
+    isTempleRoute.value
+      ? navigation.companionFocused
+        ? 'SPRIGATITO'
+        : (navigation.activeModule || navigation.entryModule)?.toUpperCase()
+      : undefined
+  )
   removeExternalLinkTracking = installExternalLinkTracking()
   cancelScheduledTypekitLoad = scheduleTypekitLoad()
 })
@@ -267,6 +276,7 @@ watch(
       :entry-active="isTempleRoute ? sceneEntryReady : entryAnimationReady"
       :entry-overlay-active="!entryOverlayHidden"
     />
+    <LayoutBorderToggle />
   </Teleport>
   <BackController :entry-active="entryAnimationReady" />
   <MobileExperienceAlert v-if="entryOverlayHidden" />
@@ -338,20 +348,7 @@ watch(
 
     &::after {
       z-index: 1;
-      background: linear-gradient(
-        to top,
-        var(--mobile-screen-frame-color) 0 14px,
-        transparent 14px 15.95px,
-        var(--mobile-screen-frame-color) 15.95px 17.95px,
-        transparent 17.95px 19.9px,
-        var(--mobile-screen-frame-color) 19.9px 21.4px,
-        transparent 21.4px 23.35px,
-        var(--mobile-screen-frame-color) 23.35px 24.35px,
-        transparent 24.35px 26.3px,
-        var(--mobile-screen-frame-color) 26.3px 26.95px,
-        transparent 26.95px 28.9px,
-        var(--mobile-screen-frame-color) 28.9px 29.25px
-      );
+      .tapered-screen-lines(var(--mobile-screen-frame-color));
     }
   }
 }

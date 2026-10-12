@@ -1,0 +1,824 @@
+{
+  "date": "2026-10-12T14:58:57.359Z",
+  "method": {
+    "browser": "Chromium",
+    "backend": "Apple M4 Metal",
+    "desktop": [
+      1440,
+      900
+    ],
+    "mobile": "Pixel 7 emulation",
+    "fontSource": "local generated files",
+    "typekit": "blocked for isolation",
+    "contributions": "live endpoint response",
+    "production": "existing dist served by request interception"
+  },
+  "samples": [
+    {
+      "mode": "desktop",
+      "name": "archive-normal",
+      "elapsedMs": 2204.5019999932265,
+      "TaskDurationMs": 421.1879999999999,
+      "ScriptDurationMs": 9.788999999999993,
+      "LayoutDurationMs": 0,
+      "RecalcStyleDurationMs": 141.25900000000001,
+      "LayoutCount": 0,
+      "RecalcStyleCount": 353,
+      "animations": {
+        "githubContributionTwinkle-2739331c": 84,
+        "marquee": 1
+      },
+      "particles": [
+        {
+          "state": "running",
+          "count": "130",
+          "fps": "12"
+        }
+      ],
+      "graphActiveCells": 84,
+      "fontUnique": 33
+    },
+    {
+      "mode": "desktop",
+      "name": "archive-graph-paused",
+      "elapsedMs": 2208.3070000080625,
+      "TaskDurationMs": 164.76700000000034,
+      "ScriptDurationMs": 9.362999999999955,
+      "LayoutDurationMs": 0,
+      "RecalcStyleDurationMs": 29.283000000000058,
+      "LayoutCount": 0,
+      "RecalcStyleCount": 354,
+      "animations": {
+        "marquee": 1
+      },
+      "particles": [
+        {
+          "state": "running",
+          "count": "130",
+          "fps": "12"
+        }
+      ],
+      "graphActiveCells": 84,
+      "fontUnique": 33
+    },
+    {
+      "mode": "desktop",
+      "name": "archive-normal-repeat",
+      "elapsedMs": 2322.501000002376,
+      "TaskDurationMs": 430.9139999999996,
+      "ScriptDurationMs": 9.041999999999994,
+      "LayoutDurationMs": 0,
+      "RecalcStyleDurationMs": 143.076,
+      "LayoutCount": 0,
+      "RecalcStyleCount": 372,
+      "animations": {
+        "githubContributionTwinkle-2739331c": 84,
+        "marquee": 1
+      },
+      "particles": [
+        {
+          "state": "running",
+          "count": "130",
+          "fps": "12"
+        }
+      ],
+      "graphActiveCells": 84,
+      "fontUnique": 33
+    },
+    {
+      "mode": "desktop",
+      "name": "archive-expanded",
+      "elapsedMs": 2205.9319999971194,
+      "TaskDurationMs": 310.2879999999999,
+      "ScriptDurationMs": 7.373000000000019,
+      "LayoutDurationMs": 0,
+      "RecalcStyleDurationMs": 106.792,
+      "LayoutCount": 0,
+      "RecalcStyleCount": 353,
+      "animations": {
+        "spin-6e730349": 1,
+        "githubContributionTwinkle-2739331c": 84,
+        "marquee": 1
+      },
+      "particles": [
+        {
+          "state": "running",
+          "count": "130",
+          "fps": "12"
+        }
+      ],
+      "graphActiveCells": 84,
+      "fontUnique": 35
+    },
+    {
+      "mode": "desktop",
+      "name": "about-covered-archive",
+      "elapsedMs": 2202.5199999916367,
+      "TaskDurationMs": 515.2110000000007,
+      "ScriptDurationMs": 57.84800000000001,
+      "LayoutDurationMs": 0,
+      "RecalcStyleDurationMs": 153.50799999999998,
+      "LayoutCount": 0,
+      "RecalcStyleCount": 330,
+      "animations": {
+        "githubContributionTwinkle-2739331c": 84,
+        "passion-scanline-b6788281": 1,
+        "gearDiamondBlink-b6788281": 3,
+        "marquee": 1
+      },
+      "particles": [
+        {
+          "state": "running",
+          "count": "130",
+          "fps": "12"
+        }
+      ],
+      "graphActiveCells": 84,
+      "fontUnique": 35
+    },
+    {
+      "mode": "desktop",
+      "name": "about-raf-callbacks",
+      "callbacks": {
+        "(time) => {\n      const deltaTime = time - (this.time || time);\n      this.time = tim": 341,
+        "animateFrame": 341,
+        "animate": 25
+      },
+      "webgl": [
+        {
+          "class": "",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "class": "",
+          "width": 477,
+          "height": 398
+        },
+        {
+          "class": "particles-bg particle-field",
+          "width": 1440,
+          "height": 900
+        }
+      ]
+    },
+    {
+      "mode": "mobile",
+      "name": "archive-normal",
+      "elapsedMs": 2224.090999996406,
+      "TaskDurationMs": 323.96399999999994,
+      "ScriptDurationMs": 3.935999999999995,
+      "LayoutDurationMs": 0,
+      "RecalcStyleDurationMs": 113.064,
+      "LayoutCount": 0,
+      "RecalcStyleCount": 216,
+      "animations": {
+        "githubContributionTwinkle-2739331c": 84,
+        "marquee": 1
+      },
+      "particles": [
+        {
+          "state": "running",
+          "count": "33",
+          "fps": "12"
+        }
+      ],
+      "graphActiveCells": 84,
+      "fontUnique": 34
+    },
+    {
+      "mode": "mobile",
+      "name": "archive-graph-paused",
+      "elapsedMs": 2202.8920000011567,
+      "TaskDurationMs": 20.626000000000033,
+      "ScriptDurationMs": 3.3149999999999844,
+      "LayoutDurationMs": 0,
+      "RecalcStyleDurationMs": 1.906999999999992,
+      "LayoutCount": 0,
+      "RecalcStyleCount": 25,
+      "animations": {
+        "marquee": 1
+      },
+      "particles": [
+        {
+          "state": "running",
+          "count": "33",
+          "fps": "12"
+        }
+      ],
+      "graphActiveCells": 84,
+      "fontUnique": 34
+    },
+    {
+      "mode": "mobile",
+      "name": "archive-normal-repeat",
+      "elapsedMs": 2205.3739999973914,
+      "TaskDurationMs": 274.35699999999997,
+      "ScriptDurationMs": 2.5590000000000055,
+      "LayoutDurationMs": 0,
+      "RecalcStyleDurationMs": 100.431,
+      "LayoutCount": 0,
+      "RecalcStyleCount": 253,
+      "animations": {
+        "githubContributionTwinkle-2739331c": 84,
+        "marquee": 1
+      },
+      "particles": [
+        {
+          "state": "running",
+          "count": "33",
+          "fps": "12"
+        }
+      ],
+      "graphActiveCells": 84,
+      "fontUnique": 34
+    },
+    {
+      "mode": "mobile",
+      "name": "about-covered-archive",
+      "elapsedMs": 2213.0709999910323,
+      "TaskDurationMs": 569.8539999999998,
+      "ScriptDurationMs": 60.251,
+      "LayoutDurationMs": 0,
+      "RecalcStyleDurationMs": 161.83999999999997,
+      "LayoutCount": 0,
+      "RecalcStyleCount": 259,
+      "animations": {
+        "githubContributionTwinkle-2739331c": 84,
+        "passion-scanline-b6788281": 1,
+        "gearDiamondBlink-b6788281": 3,
+        "marquee": 1
+      },
+      "particles": [
+        {
+          "state": "running",
+          "count": "33",
+          "fps": "12"
+        }
+      ],
+      "graphActiveCells": 84,
+      "fontUnique": 34
+    },
+    {
+      "mode": "mobile",
+      "name": "about-raf-callbacks",
+      "callbacks": {
+        "animateFrame": 243,
+        "animate": 25
+      },
+      "webgl": [
+        {
+          "class": "",
+          "width": 618,
+          "height": 1258
+        },
+        {
+          "class": "",
+          "width": 1113,
+          "height": 927
+        },
+        {
+          "class": "particles-bg particle-field",
+          "width": 618,
+          "height": 1259
+        }
+      ]
+    }
+  ],
+  "scene": [
+    {
+      "name": "idle",
+      "objects": 140,
+      "frames": 0,
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "averages": {
+        "matrixCalls": 0,
+        "localUpdates": 0,
+        "rendererMatrixCalls": 0,
+        "rendererLocalUpdates": 0,
+        "draws": 0
+      }
+    },
+    {
+      "name": "focus",
+      "objects": 140,
+      "frames": 170,
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "averages": {
+        "matrixCalls": 27.976470588235294,
+        "localUpdates": 7.7176470588235295,
+        "rendererMatrixCalls": 141,
+        "rendererLocalUpdates": 44,
+        "draws": 49.629411764705885
+      }
+    },
+    {
+      "name": "blur",
+      "objects": 140,
+      "frames": 178,
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "averages": {
+        "matrixCalls": 29,
+        "localUpdates": 8,
+        "rendererMatrixCalls": 141,
+        "rendererLocalUpdates": 44,
+        "draws": 61.19662921348315
+      }
+    }
+  ],
+  "production": [
+    {
+      "route": "/",
+      "errors": [],
+      "jsBytes": 1143895,
+      "cssBytes": 290117,
+      "fontFiles": [
+        "unboundedsans-latin.b28252ecd183.woff2",
+        "unboundedsans-u6500.20200c39fbd9.woff2",
+        "unboundedsans-u8200.6512dc2e7078.woff2",
+        "unboundedsans-u8f00.06e1d0b2648d.woff2",
+        "unboundedsans-uf000.9209ebcc80d6.woff2",
+        "unboundedsans-u7e00.3a45c5721e14.woff2",
+        "unboundedsans-u6200.322209c8fa9f.woff2",
+        "unboundedsans-u6000.d5dd729b722b.woff2",
+        "unboundedsans-u5c00.e7451c8a5709.woff2",
+        "unboundedsans-u4e00.04077ca81bc5.woff2",
+        "unboundedsans-u7a00.2e93815c9c55.woff2",
+        "unboundedsans-u5e00.a17255aff60e.woff2",
+        "unboundedsans-u5f00.905c1b1d8092.woff2",
+        "unboundedsans-u5200.dd88083ccfe7.woff2",
+        "unboundedsans-u5d00.8eeebf294582.woff2",
+        "unboundedsans-u5100.e06c794fa2b2.woff2",
+        "unboundedsans-u7400.10b5fcda81a9.woff2",
+        "unboundedsans-u5600.e654a23d643c.woff2",
+        "unboundedsans-u5700.e7657eb1881e.woff2",
+        "unboundedsans-u7600.e87c7db8c302.woff2",
+        "unboundedsans-u5900.5edbc22e0cba.woff2",
+        "unboundedsans-u2000.d92ff74278f9.woff2",
+        "unboundedsans-u4f00.59416d47e08a.woff2",
+        "unboundedsans-u8900.8316bb5c46fb.woff2",
+        "unboundedsans-u6600.ba79fe199920.woff2",
+        "unboundedsans-u5000.3d187b7ae2bd.woff2",
+        "unboundedsans-u9700.61018addb6a6.woff2"
+      ],
+      "jsCoverage": [
+        {
+          "url": "/assets/vendor-three-8b7fe157.js",
+          "unusedBytes": 227636
+        },
+        {
+          "url": "/assets/vendor-element-plus-524f8c77.js",
+          "unusedBytes": 133281
+        },
+        {
+          "url": "/assets/app-01189fed.js",
+          "unusedBytes": 111196
+        },
+        {
+          "url": "/assets/index-348c2e2e.js",
+          "unusedBytes": 50121
+        },
+        {
+          "url": "/assets/OrbitControls-1615f998.js",
+          "unusedBytes": 13083
+        },
+        {
+          "url": "/assets/templeScene-8f67ff5e.js",
+          "unusedBytes": 11492
+        },
+        {
+          "url": "/assets/index-f48a0d26.js",
+          "unusedBytes": 9992
+        },
+        {
+          "url": "/assets/index-72826554.js",
+          "unusedBytes": 9299
+        },
+        {
+          "url": "/assets/index-a0954610.js",
+          "unusedBytes": 3408
+        },
+        {
+          "url": "/assets/index-6dee976a.js",
+          "unusedBytes": 2480
+        },
+        {
+          "url": "/assets/index-1b916221.js",
+          "unusedBytes": 1567
+        },
+        {
+          "url": "/assets/index-ba3e1d70.js",
+          "unusedBytes": 923
+        },
+        {
+          "url": "/assets/pointerSamples-3630a73f.js",
+          "unusedBytes": 672
+        },
+        {
+          "url": "/assets/templeCamera-8edd10a1.js",
+          "unusedBytes": 12
+        },
+        {
+          "url": "/assets/templePresentation-ab333c0e.js",
+          "unusedBytes": 0
+        }
+      ]
+    },
+    {
+      "route": "/archive",
+      "errors": [],
+      "jsBytes": 1221658,
+      "cssBytes": 394319,
+      "fontFiles": [
+        "unboundedsans-latin.b28252ecd183.woff2",
+        "unboundedsans-u6500.20200c39fbd9.woff2",
+        "unboundedsans-u8200.6512dc2e7078.woff2",
+        "unboundedsans-u8f00.06e1d0b2648d.woff2",
+        "unboundedsans-uf000.9209ebcc80d6.woff2",
+        "unboundedsans-u7e00.3a45c5721e14.woff2",
+        "unboundedsans-u6200.322209c8fa9f.woff2",
+        "unboundedsans-u6000.d5dd729b722b.woff2",
+        "unboundedsans-u5c00.e7451c8a5709.woff2",
+        "unboundedsans-u4e00.04077ca81bc5.woff2",
+        "unboundedsans-u7a00.2e93815c9c55.woff2",
+        "unboundedsans-u5700.e7657eb1881e.woff2",
+        "unboundedsans-u5200.dd88083ccfe7.woff2",
+        "unboundedsans-u5e00.a17255aff60e.woff2",
+        "unboundedsans-u7400.10b5fcda81a9.woff2",
+        "unboundedsans-u5100.e06c794fa2b2.woff2",
+        "unboundedsans-u5d00.8eeebf294582.woff2",
+        "unboundedsans-u5600.e654a23d643c.woff2",
+        "unboundedsans-u5900.5edbc22e0cba.woff2",
+        "unboundedsans-u7600.e87c7db8c302.woff2",
+        "unboundedsans-u5f00.905c1b1d8092.woff2",
+        "unboundedsans-u2000.d92ff74278f9.woff2",
+        "unboundedsans-u4f00.59416d47e08a.woff2",
+        "unboundedsans-u9700.61018addb6a6.woff2",
+        "unboundedsans-u8900.8316bb5c46fb.woff2",
+        "unboundedsans-u6600.ba79fe199920.woff2",
+        "unboundedsans-u5000.3d187b7ae2bd.woff2",
+        "Anton.woff2",
+        "unboundedsans-u7f00.fffb1d6cb18c.woff2",
+        "unboundedsans-u5b00.b2a99a09d32f.woff2",
+        "unboundedsans-u7500.6d3c98c1f71a.woff2",
+        "unboundedsans-u8000.d3064e387cf7.woff2",
+        "unboundedsans-u6700.fda087c37ea1.woff2"
+      ],
+      "jsCoverage": [
+        {
+          "url": "/assets/vendor-three-8b7fe157.js",
+          "unusedBytes": 224754
+        },
+        {
+          "url": "/assets/vendor-element-plus-524f8c77.js",
+          "unusedBytes": 130018
+        },
+        {
+          "url": "/assets/app-01189fed.js",
+          "unusedBytes": 99894
+        },
+        {
+          "url": "/assets/index-348c2e2e.js",
+          "unusedBytes": 46324
+        },
+        {
+          "url": "/assets/OrbitControls-1615f998.js",
+          "unusedBytes": 13055
+        },
+        {
+          "url": "/assets/index-72826554.js",
+          "unusedBytes": 8382
+        },
+        {
+          "url": "/assets/index-2e695f5b.js",
+          "unusedBytes": 8176
+        },
+        {
+          "url": "/assets/templeScene-8f67ff5e.js",
+          "unusedBytes": 7811
+        },
+        {
+          "url": "/assets/index-f48a0d26.js",
+          "unusedBytes": 7397
+        },
+        {
+          "url": "/assets/useSectionNavigation-280f90d9.js",
+          "unusedBytes": 3433
+        },
+        {
+          "url": "/assets/index-5ad490b6.js",
+          "unusedBytes": 3172
+        },
+        {
+          "url": "/assets/index-a0954610.js",
+          "unusedBytes": 3067
+        },
+        {
+          "url": "/assets/index-fb96537b.js",
+          "unusedBytes": 3006
+        },
+        {
+          "url": "/assets/index-6dee976a.js",
+          "unusedBytes": 2480
+        },
+        {
+          "url": "/assets/ArchiveContent-c42868e1.js",
+          "unusedBytes": 1986
+        },
+        {
+          "url": "/assets/index-c34b0014.js",
+          "unusedBytes": 1872
+        },
+        {
+          "url": "/assets/index-8214b7bd.js",
+          "unusedBytes": 1682
+        },
+        {
+          "url": "/assets/index-1b916221.js",
+          "unusedBytes": 1567
+        },
+        {
+          "url": "/assets/index-8ccc60dd.js",
+          "unusedBytes": 1192
+        },
+        {
+          "url": "/assets/pointerSamples-3630a73f.js",
+          "unusedBytes": 672
+        },
+        {
+          "url": "/assets/index.vue_vue_type_script_setup_true_lang-48d4be7d.js",
+          "unusedBytes": 340
+        },
+        {
+          "url": "/assets/index-699df0ca.js",
+          "unusedBytes": 221
+        },
+        {
+          "url": "/assets/index-0b8e3383.js",
+          "unusedBytes": 110
+        },
+        {
+          "url": "/assets/index-59b1e8ab.js",
+          "unusedBytes": 38
+        },
+        {
+          "url": "/assets/index-ba3e1d70.js",
+          "unusedBytes": 14
+        },
+        {
+          "url": "/assets/templeCamera-8edd10a1.js",
+          "unusedBytes": 12
+        },
+        {
+          "url": "/assets/templePresentation-ab333c0e.js",
+          "unusedBytes": 0
+        },
+        {
+          "url": "/assets/archive-cb4a1625.js",
+          "unusedBytes": 0
+        }
+      ]
+    },
+    {
+      "route": "/craft",
+      "errors": [],
+      "jsBytes": 1050814,
+      "cssBytes": 345890,
+      "fontFiles": [
+        "unboundedsans-latin.b28252ecd183.woff2",
+        "unboundedsans-u6500.20200c39fbd9.woff2",
+        "unboundedsans-u8f00.06e1d0b2648d.woff2",
+        "unboundedsans-u8200.6512dc2e7078.woff2",
+        "unboundedsans-uf000.9209ebcc80d6.woff2",
+        "unboundedsans-u6200.322209c8fa9f.woff2",
+        "unboundedsans-u7e00.3a45c5721e14.woff2",
+        "unboundedsans-u6000.d5dd729b722b.woff2",
+        "unboundedsans-u5c00.e7451c8a5709.woff2",
+        "unboundedsans-u4e00.04077ca81bc5.woff2",
+        "unboundedsans-u5700.e7657eb1881e.woff2",
+        "unboundedsans-u7a00.2e93815c9c55.woff2",
+        "unboundedsans-u5200.dd88083ccfe7.woff2",
+        "unboundedsans-u7400.10b5fcda81a9.woff2",
+        "unboundedsans-u5100.e06c794fa2b2.woff2",
+        "unboundedsans-u5f00.905c1b1d8092.woff2",
+        "unboundedsans-u5600.e654a23d643c.woff2",
+        "unboundedsans-u5d00.8eeebf294582.woff2",
+        "unboundedsans-u5e00.a17255aff60e.woff2",
+        "unboundedsans-u2000.d92ff74278f9.woff2",
+        "unboundedsans-u7600.e87c7db8c302.woff2",
+        "unboundedsans-u9700.61018addb6a6.woff2",
+        "unboundedsans-u8900.8316bb5c46fb.woff2",
+        "unboundedsans-u4f00.59416d47e08a.woff2",
+        "unboundedsans-u5900.5edbc22e0cba.woff2",
+        "unboundedsans-u5000.3d187b7ae2bd.woff2",
+        "unboundedsans-u6600.ba79fe199920.woff2",
+        "Anton.woff2",
+        "unboundedsans-u9600.abc832ee487f.woff2",
+        "unboundedsans-u5300.dd36d1b7b700.woff2",
+        "unboundedsans-u8d00.952f147e25a6.woff2"
+      ],
+      "jsCoverage": [
+        {
+          "url": "/assets/vendor-three-8b7fe157.js",
+          "unusedBytes": 267564
+        },
+        {
+          "url": "/assets/vendor-element-plus-524f8c77.js",
+          "unusedBytes": 125732
+        },
+        {
+          "url": "/assets/app-01189fed.js",
+          "unusedBytes": 103960
+        },
+        {
+          "url": "/assets/OrbitControls-1615f998.js",
+          "unusedBytes": 13083
+        },
+        {
+          "url": "/assets/index-d99df80e.js",
+          "unusedBytes": 10358
+        },
+        {
+          "url": "/assets/index-72826554.js",
+          "unusedBytes": 10301
+        },
+        {
+          "url": "/assets/index-6dee976a.js",
+          "unusedBytes": 3303
+        },
+        {
+          "url": "/assets/index-a0954610.js",
+          "unusedBytes": 3025
+        },
+        {
+          "url": "/assets/index-fb96537b.js",
+          "unusedBytes": 1941
+        },
+        {
+          "url": "/assets/index-1b916221.js",
+          "unusedBytes": 1567
+        },
+        {
+          "url": "/assets/index-eb25c203.js",
+          "unusedBytes": 998
+        },
+        {
+          "url": "/assets/index-eac09409.js",
+          "unusedBytes": 880
+        },
+        {
+          "url": "/assets/pointerSamples-3630a73f.js",
+          "unusedBytes": 672
+        },
+        {
+          "url": "/assets/index-6c40db27.js",
+          "unusedBytes": 647
+        },
+        {
+          "url": "/assets/PetTeaserLink-5111f6bf.js",
+          "unusedBytes": 616
+        },
+        {
+          "url": "/assets/index-0f83b5a1.js",
+          "unusedBytes": 396
+        },
+        {
+          "url": "/assets/index-252d4ace.js",
+          "unusedBytes": 225
+        },
+        {
+          "url": "/assets/templeCamera-8edd10a1.js",
+          "unusedBytes": 12
+        },
+        {
+          "url": "/assets/craft-15a1a512.js",
+          "unusedBytes": 0
+        },
+        {
+          "url": "/assets/templePresentation-ab333c0e.js",
+          "unusedBytes": 0
+        }
+      ]
+    }
+  ],
+  "bundle": {
+    "buildTime": "2026-10-12T10:20:26.844Z",
+    "initialJS": [
+      {
+        "p": "/assets/vendor-three-8b7fe157.js",
+        "bytes": 524352,
+        "gzip": 129345
+      },
+      {
+        "p": "/assets/vendor-element-plus-524f8c77.js",
+        "bytes": 209563,
+        "gzip": 72936
+      },
+      {
+        "p": "/assets/app-01189fed.js",
+        "bytes": 198757,
+        "gzip": 64976
+      },
+      {
+        "p": "/assets/index-72826554.js",
+        "bytes": 27194,
+        "gzip": 9044
+      },
+      {
+        "p": "/assets/index-f48a0d26.js",
+        "bytes": 16605,
+        "gzip": 6209
+      },
+      {
+        "p": "/assets/index-a0954610.js",
+        "bytes": 11581,
+        "gzip": 4817
+      },
+      {
+        "p": "/assets/index-6dee976a.js",
+        "bytes": 8736,
+        "gzip": 3553
+      },
+      {
+        "p": "/assets/index-1b916221.js",
+        "bytes": 3428,
+        "gzip": 1462
+      },
+      {
+        "p": "/assets/templePresentation-ab333c0e.js",
+        "bytes": 1477,
+        "gzip": 624
+      },
+      {
+        "p": "/assets/index-ba3e1d70.js",
+        "bytes": 1252,
+        "gzip": 724
+      },
+      {
+        "p": "/assets/pointerSamples-3630a73f.js",
+        "bytes": 945,
+        "gzip": 403
+      },
+      {
+        "p": "/assets/templeCamera-8edd10a1.js",
+        "bytes": 420,
+        "gzip": 282
+      }
+    ],
+    "total": 1004310,
+    "totalGzip": 294375,
+    "initialCSS": [
+      {
+        "p": "/assets/vendor-element-plus-9c4bd050.css",
+        "bytes": 53249,
+        "gzip": 8253
+      },
+      {
+        "p": "/assets/index-08fd14b2.css",
+        "bytes": 167968,
+        "gzip": 36024
+      },
+      {
+        "p": "/assets/index-45bac78c.css",
+        "bytes": 28498,
+        "gzip": 3864
+      },
+      {
+        "p": "/assets/index-8bb5af57.css",
+        "bytes": 4379,
+        "gzip": 1275
+      },
+      {
+        "p": "/assets/index-7ff5d9b3.css",
+        "bytes": 13529,
+        "gzip": 2351
+      },
+      {
+        "p": "/assets/index-3c01324d.css",
+        "bytes": 3045,
+        "gzip": 912
+      },
+      {
+        "p": "/assets/index-b9aaa1d4.css",
+        "bytes": 11601,
+        "gzip": 2658
+      }
+    ],
+    "fontFiles": 90
+  },
+  "liveImageExample": {
+    "path": "/Island/picWork/normal/DSC00812-01-01.jpeg",
+    "original": 266051,
+    "desktopThumbnail": 9709,
+    "mobileThumbnail": 4892
+  },
+  "liveHeaders": {
+    "javascript": {
+      "encoding": "br",
+      "cacheControl": "public,max-age=31536000,immutable"
+    },
+    "latinFont": {
+      "cacheControl": "public, max-age=31536000, immutable"
+    }
+  }
+}

@@ -39,8 +39,8 @@ export const templeCategories = [
     id: 'island',
     enabled: true,
     roman: 'IV',
-    title: 'ISLAND',
-    label: '个人海湾',
+    title: 'CREATIVE',
+    label: '创作',
     themeColor: pageThemeColors.ISLAND,
     zodiacSign: 'pisces',
     x: 6.9,
@@ -56,9 +56,23 @@ export const templeCategoryById = new Map<
 
 export const templeNavigation = [
   ...templeCategories,
+  {
+    id: 'sprigatito',
+    title: 'FLORATRIUM',
+    label: '花花小窝',
+    enabled: true,
+    themeColor: pageThemeColors.SPRIGATITO,
+  },
+  {
+    id: 'statue',
+    title: 'ISLAND',
+    label: '个人海湾',
+    enabled: true,
+    themeColor: pageThemeColors.HOME,
+  },
   { id: 'about', title: 'ABOUT', label: '关于', enabled: true },
 ] as const
-export type TempleNavigationId = TempleCategoryId | 'about'
+export type TempleNavigationId = (typeof templeNavigation)[number]['id']
 
 // 模块入口与子页面归属共用映射，直接访问和返回首页使用同一规则。
 export const templeModulePaths: Record<TempleCategoryId, string> = {

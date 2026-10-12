@@ -17,7 +17,7 @@ export function prepareLucarioEnvironment() {
       object.material.emissiveIntensity *= 0.35
   })
   const generator = new THREE.PMREMGenerator(renderer)
-  const environment = generator.fromScene(studio, 0.02, 0.1, 100, { size: 256 })
+  const environment = generator.fromScene(studio, 0.02, 0.1, 100, { size: 128 })
   const pixels = new Uint16Array(environment.width * environment.height * 4)
   renderer.readRenderTargetPixels(
     environment,

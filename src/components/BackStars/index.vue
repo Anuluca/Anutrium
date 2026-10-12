@@ -23,6 +23,7 @@ interface Props {
   layout?: ZodiacLayout
   tinted?: boolean
   particlesVisible?: boolean
+  motionActive?: boolean
   particleFps?: number
   topInset?: number
   entryActive?: boolean
@@ -43,6 +44,7 @@ const props = withDefaults(defineProps<Props>(), {
   layout: 'hero',
   tinted: false,
   particlesVisible: true,
+  motionActive: true,
   particleFps: 60,
   topInset: 0,
   entryActive: true,
@@ -428,7 +430,9 @@ onUnmounted(() => {
     >
       <ParticlesBg
         class="particle-field"
-        :active="props.entryActive && isParticleFieldVisible"
+        :active="
+          props.entryActive && isParticleFieldVisible && props.motionActive
+        "
         :quantity="particleQuantity"
         :max-fps="props.particleFps"
         :color="particleColor"

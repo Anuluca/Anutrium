@@ -6,12 +6,15 @@ import {
   onBeforeUnmount,
   onMounted,
   onUnmounted,
+  provide,
   type Ref,
   ref,
   watch,
 } from 'vue'
 import { useRoute } from 'vue-router'
 
+import { decorationActivityKey } from '@/composables/useDecorationActivity'
+import { pageThemeColors } from '@/config/pageThemes'
 import { templeExperience } from '@/config/templeExperience'
 import {
   templeCategories,
@@ -24,25 +27,82 @@ import { hasJourneyReturnState } from '@/utils/journeyReturnState'
 import { setSmoothScrollLocked } from '@/utils/smoothScroll'
 import AboutOverlay from '@/views/About/AboutOverlay.vue'
 
+import FloraFocusLayout from './components/FloraFocusLayout.vue'
 import FocusContent from './components/FocusContent.vue'
 import TempleBackdrop from './components/TempleBackdrop.vue'
+import TempleClock from './components/TempleClock.vue'
+import { loadTempleFocusContent } from './focusContentLoader'
 import type { TemplePresentation } from './templePresentation'
 import type { createHomeTemple, TempleSelection } from './templeScene'
 
 const props = defineProps<{ presentation: TemplePresentation }>()
 const route = useRoute()
 const navigation = useTempleNavigation()
+provide(
+  decorationActivityKey,
+  computed(() => !navigation.aboutOpen)
+)
 const siteLoading = useSiteLoading()
 let loadingTask: ReturnType<typeof siteLoading.beginTask> | undefined
 const config = props.presentation
 const shell = config.routeShell
 const stage = ref<HTMLElement | null>(null)
 const status = ref<'loading' | 'ready' | 'error'>('loading')
+const entranceFinished = ref(false)
 const selected = ref<TempleSelection | null>(null)
+const clockVisible = computed(
+  () =>
+    entranceFinished.value &&
+    (!selected.value || selected.value === 'statue') &&
+    !navigation.aboutOpen
+)
 const menuCategory = ref<TempleCategoryId | null>(null)
 const settled = ref(false)
+const menuContentReady = ref(false)
+const menuRevealed = ref(false)
+let menuRevealFrame: number | undefined
+const cancelMenuReveal = () => {
+  if (menuRevealFrame !== undefined) cancelAnimationFrame(menuRevealFrame)
+  menuRevealFrame = undefined
+  menuRevealed.value = false
+}
+watch(
+  menuCategory,
+  () => {
+    cancelMenuReveal()
+    menuContentReady.value = false
+  },
+  { flush: 'sync' }
+)
+watch(
+  [settled, menuContentReady],
+  ([stable, ready]) => {
+    cancelMenuReveal()
+    if (!stable || !ready) return
+    // 内容先以透明起始态完成一帧绘制，下一帧再切换，缓存命中时也能完整过渡。
+    menuRevealFrame = requestAnimationFrame(() => {
+      menuRevealFrame = requestAnimationFrame(() => {
+        menuRevealFrame = undefined
+        menuRevealed.value = true
+      })
+    })
+  },
+  { flush: 'post' }
+)
+const onMenuContentLoading = (id: TempleCategoryId) => {
+  if (menuCategory.value === id) menuContentReady.value = false
+}
+const onMenuContentReady = (id: TempleCategoryId) => {
+  if (menuCategory.value === id) menuContentReady.value = true
+}
 const menu = ref<HTMLElement | null>(null)
 const workDetailTarget = ref<HTMLElement | null>(null)
+const focusContent = ref<InstanceType<typeof FocusContent> | null>(null)
+const finishMenuReveal = (event: TransitionEvent) => {
+  // transform 不触发 ResizeObserver；入场结束后只测量一次，修正固定滚动进度条的位置。
+  if (event.propertyName === 'transform' && menuRevealed.value)
+    focusContent.value?.refreshGeometry()
+}
 let resolveMenuExit: (() => void) | undefined
 let menuExitElement: HTMLElement | undefined
 const finishMenuExit = (element?: Element) => {
@@ -91,18 +151,37 @@ const toggleExpanded = async () => {
     await nextTick()
     if (revision !== resizeRevision) return
     const after = pane.getBoundingClientRect()
-    await animateResize(
-      pane,
-      [
-        { left: `${before.x}px`, right: 'auto', width: `${before.width}px` },
-        { left: `${after.x}px`, right: 'auto', width: `${after.width}px` },
-      ],
-      reduced ? 1 : 1200
-    )
+    scroll.scrollTop = scrollTop
+    const scale = before.width / after.width
+    const offset = before.x - after.x
+    const body = pane.querySelector<HTMLElement>('.temple-menu__body')!
+    // FLIP：只在切换时重排一次。外层变换边界，内层反向缩放保持文字比例。
+    await Promise.all([
+      animateResize(
+        pane,
+        [
+          { transform: `translateX(${offset}px) scaleX(${scale})` },
+          { transform: 'none' },
+        ],
+        reduced ? 1 : 1200
+      ),
+      animateResize(
+        body,
+        Array.from({ length: 33 }, (_, index) => {
+          const offset = index / 32
+          return {
+            offset,
+            transform: `scaleX(${1 / (scale + (1 - scale) * offset)})`,
+          }
+        }),
+        reduced ? 1 : 1200
+      ),
+    ])
     if (revision !== resizeRevision) return
     resizeAnimations.forEach((animation) => animation.cancel())
     resizeAnimations.clear()
     scroll.scrollTop = scrollTop
+    focusContent.value?.refreshGeometry()
   } catch (error) {
     if (!(error instanceof DOMException && error.name === 'AbortError'))
       throw error
@@ -145,7 +224,7 @@ const waitForRouteEnter = async () => {
   if (disposed) return
   if (!siteEntryActive.value) {
     await new Promise<void>((resolve) => {
-      // 全站加载模块在遮罩退场进行一半时开放模型入场。
+      // 加载线开始渐隐时开放模型入场，让初始地平线接续加载线。
       const stop = watch(siteEntryActive, (active) => {
         if (active) cancelEntryWait?.()
       })
@@ -156,9 +235,47 @@ const waitForRouteEnter = async () => {
       }
     })
   }
+  if (!disposed && !siteLoading.presentationReady) {
+    await new Promise<void>((resolve) => {
+      const stop = watch(
+        () => siteLoading.presentationReady,
+        (ready) => {
+          if (ready) cancelEntryWait?.()
+        }
+      )
+      cancelEntryWait = () => {
+        stop()
+        cancelEntryWait = undefined
+        resolve()
+      }
+    })
+  }
 }
 
-const dismissMenuBackground = () => scene?.select(null)
+// 空白点击优先收起侧栏详情，第二次点击才退出作品集聚焦。
+const closeInlineDetail = () =>
+  config.id === 'desktop' &&
+  navigation.selected === 'archive' &&
+  !navigation.expanded &&
+  !navigation.aboutOpen &&
+  (focusContent.value?.closeInlineDetail() ?? false)
+
+const dismissMenuBackground = (event: MouseEvent) => {
+  if (!settled.value || resizing.value || navigation.aboutOpen) return
+  const target = event.target
+  // 只响应布局容器本身的空白，避免卡片、文字和按钮点击触发返回。
+  if (
+    target instanceof HTMLElement &&
+    target.matches(
+      '.temple-menu, .temple-menu__body, .temple-focus-content, ' +
+        '.scroll-viewport__scroll, .scroll-viewport__scroll > div, ' +
+        '.archive-content, .journey-content, .works-section, .misc-section, ' +
+        '.vlog-section, .works-grid, .misc-grid, .vlog-grid, .vlog-groups, .vlog-group'
+    )
+  ) {
+    if (!closeInlineDetail()) scene?.select(null)
+  }
+}
 
 const setButton = (id: string, element: unknown) => {
   if (element instanceof HTMLElement) buttons.set(id, element)
@@ -171,22 +288,23 @@ watch(
     if (navigation.ready) scene?.select(navigation.requested)
   }
 )
-watch(
-  () => navigation.selected,
-  () => {
-    scene?.setThemeColor(
-      (navigation.selected &&
-        templeCategoryById.get(navigation.selected)?.themeColor) ||
-        templeExperience.themeColor
-    )
-  }
-)
+watch(selected, () => {
+  const themeCategory = navigation.selected
+  scene?.setThemeColor(
+    selected.value === 'sprigatito'
+      ? pageThemeColors.SPRIGATITO
+      : (themeCategory && templeCategoryById.get(themeCategory)?.themeColor) ||
+          templeExperience.themeColor
+  )
+})
 
 onMounted(async () => {
+  navigation.setInlineDetailCloser(closeInlineDetail)
   document.body.classList.remove(`${shell}-shell-leaving`)
   document.body.classList.add(`${shell}-shell`)
   setSmoothScrollLocked('island-temple', true)
-  loadingTask = siteLoading.beginTask('home-scene')
+  // 全局地平线加载仅属于首次入场；站内返回沿用路由过渡。
+  if (!siteEntryActive.value) loadingTask = siteLoading.beginTask('home-scene')
   try {
     const { createHomeTemple } = await import('./templeScene')
     if (disposed || !stage.value) return
@@ -195,6 +313,7 @@ onMounted(async () => {
       buttons,
       {
         waitForRouteEnter,
+        dismissBackground: closeInlineDetail,
         prepared: () => loadingTask?.finish(),
         progress: (value) => loadingTask?.update(value),
         ready: () => {
@@ -206,16 +325,21 @@ onMounted(async () => {
               : navigation.entryModule || route.query.module) ??
             (hasJourneyReturnState() ? 'flanerie' : undefined)
           if (
+            initialModule === 'statue' ||
+            initialModule === 'sprigatito' ||
             templeCategories.some(
               (item) => item.id === initialModule && item.enabled
             )
           )
             scene?.select(
-              initialModule as TempleCategoryId,
+              initialModule as TempleSelection,
               navigation.simpleEntrance
             )
           if (initialModule === navigation.returnModule)
             navigation.expanded = navigation.returnExpanded
+        },
+        entranceComplete: () => {
+          entranceFinished.value = true
         },
         beforeReturn: () => {
           if (!menuCategory.value || !menu.value) return
@@ -234,15 +358,22 @@ onMounted(async () => {
           finishMenuExit()
           cancelResize()
           selected.value = id
-          navigation.selected = id === 'statue' ? null : id
+          navigation.selected =
+            id === 'statue' || id === 'sprigatito' ? null : id
+          navigation.companionFocused = id === 'sprigatito'
+          navigation.statueFocused = id === 'statue'
           navigation.expanded = false
           settled.value = false
-          if (id === 'statue') menuCategory.value = null
+          if (id && id !== 'statue' && id !== 'sprigatito')
+            void loadTempleFocusContent(id).catch(() => {})
+          if (id === 'statue' || id === 'sprigatito') menuCategory.value = null
         },
         settled: () => {
           if (resolveMenuExit) return
           menuCategory.value =
-            selected.value === 'statue' ? null : selected.value
+            selected.value === 'statue' || selected.value === 'sprigatito'
+              ? null
+              : selected.value
           settled.value = true
         },
         error: (error) => {
@@ -267,6 +398,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   disposed = true
+  cancelMenuReveal()
   cancelResize()
   navigation.reset()
   cancelRouteWait?.()
@@ -303,7 +435,9 @@ onUnmounted(() => {
       class="lucario-stage temple-stage"
       :aria-busy="status === 'loading'"
     >
+      <FloraFocusLayout v-if="selected === 'sprigatito' && settled" />
       <TempleBackdrop />
+      <TempleClock v-if="clockVisible" />
     </div>
     <div class="temple-obelisks">
       <button
@@ -339,10 +473,15 @@ onUnmounted(() => {
         v-if="category"
         ref="menu"
         class="temple-menu"
-        :class="{ 'temple-menu--left': category.x > 0, 'is-visible': settled }"
+        :class="{
+          'temple-menu--left': category.x > 0,
+          'is-visible': settled && menuRevealed,
+        }"
         :aria-label="category.label"
-        :inert="!settled || navigation.aboutOpen || undefined"
-        :aria-busy="resizing"
+        :inert="!settled || !menuRevealed || navigation.aboutOpen || undefined"
+        :aria-busy="resizing || !menuContentReady"
+        :data-content-ready="menuContentReady"
+        @transitionend.self="finishMenuReveal"
         @click="dismissMenuBackground"
       >
         <button
@@ -358,12 +497,14 @@ onUnmounted(() => {
         </button>
         <div class="temple-menu__body" :inert="resizing || undefined">
           <FocusContent
+            ref="focusContent"
             :key="category.id"
             :category="category.id"
             :expanded="navigation.expanded"
             :resizing="resizing"
             :detail-target="workDetailTarget"
-            @click.stop
+            @loading="onMenuContentLoading"
+            @ready="onMenuContentReady"
           />
         </div>
       </section>

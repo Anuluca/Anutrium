@@ -70,15 +70,6 @@
     }
   }
 
-  &[data-statue-focused='true'] :deep(.temple-backdrop) {
-    animation: temple-glitch-out 550ms steps(1, end) forwards;
-    pointer-events: none;
-  }
-
-  &[data-statue-transition='exit'] :deep(.temple-backdrop) {
-    animation: temple-glitch-in 550ms 400ms steps(1, end) both;
-  }
-
   .temple-stage,
   .temple-obelisks {
     position: absolute;
@@ -130,8 +121,13 @@
     opacity: 0;
     transform: var(--temple-menu-enter-offset);
     pointer-events: none;
-    transition: opacity 350ms ease,
-      transform 550ms cubic-bezier(0.16, 1, 0.3, 1);
+    transform-origin: left center;
+    transition: opacity 560ms cubic-bezier(0.4, 0, 0.2, 1),
+      transform 640ms cubic-bezier(0.16, 1, 0.3, 1);
+    // 回程保持原退场节奏，入场延长透明度过渡让内容出现过程可见。
+    &.temple-menu-reveal-leave-active {
+      transition-duration: 350ms, 550ms;
+    }
 
     &--left {
       right: auto;
@@ -141,11 +137,7 @@
       opacity: 1;
       transform: var(--temple-menu-visible-offset);
       pointer-events: auto;
-      @media (prefers-reduced-motion: no-preference) {
-        animation: temple-menu-flicker 350ms steps(1, end);
-      }
     }
-
   }
 
   .temple-menu__body {
@@ -155,6 +147,7 @@
     min-height: 0;
     box-sizing: border-box;
     overflow-anchor: none;
+    transform-origin: left center;
   }
   .temple-work-detail {
     position: absolute;
@@ -164,8 +157,8 @@
         var(--temple-menu-header-gap)
     );
     bottom: 64px;
-    left: var(--temple-content-inset);
-    width: calc(50vw - var(--temple-content-inset) - 64px);
+    left: var(--header-inline-padding);
+    width: calc(50vw - var(--header-inline-padding) - 64px);
     box-sizing: border-box;
     pointer-events: none;
     > * {
@@ -179,8 +172,8 @@
     pointer-events: none;
     background: repeating-linear-gradient(
       to bottom,
-      #000 0 4px,
-      #121212 4px 6px
+      rgba(0, 0, 0, 0.9) 0 4px,
+      rgba(18, 18, 18, 0.9) 4px 6px
     );
     opacity: 0;
     transition: opacity 1200ms cubic-bezier(0.16, 1, 0.3, 1);
@@ -214,104 +207,30 @@
       .temple-menu {
         padding-top: var(--temple-menu-compact-padding-top);
         padding-bottom: var(--temple-menu-compact-padding-bottom);
-
       }
     }
   }
 }
 
-@keyframes temple-menu-flicker {
-  0% {
-    opacity: 0;
-  }
-  12%,
-  32%,
-  54%,
-  78%,
-  100% {
-    opacity: 1;
-  }
-  22%,
-  42% {
-    opacity: 0.2;
-  }
-  66% {
-    opacity: 0.55;
-  }
-}
-
-@keyframes temple-glitch-out {
-  0% {
-    opacity: 1;
-    clip-path: inset(0);
-  }
-  18% {
-    opacity: 0.65;
-    clip-path: inset(12% 0 30%);
-    translate: 6px 0;
-  }
-  30% {
-    opacity: 0.9;
-    clip-path: inset(0);
-    translate: -4px 0;
-  }
-  45% {
-    opacity: 0.45;
-    clip-path: inset(40% 0 5%);
-    translate: 8px 0;
-  }
-  62% {
-    opacity: 0.7;
-    clip-path: inset(5% 0 45%);
-    translate: -3px 0;
-  }
-  80% {
-    opacity: 0.2;
-    clip-path: inset(55% 0 25%);
-  }
-  100% {
-    opacity: 0;
-    visibility: hidden;
-    translate: 0;
-  }
-}
-
-@keyframes temple-glitch-in {
-  0% {
-    opacity: 0;
-    clip-path: inset(55% 0 25%);
-  }
-  20% {
-    opacity: 0.25;
-    clip-path: inset(40% 0 5%);
-    translate: -6px 0;
-  }
-  38% {
-    opacity: 0.7;
-    clip-path: inset(5% 0 45%);
-    translate: 4px 0;
-  }
-  55% {
-    opacity: 0.4;
-    clip-path: inset(12% 0 30%);
-    translate: -8px 0;
-  }
-  70% {
-    opacity: 0.9;
-    clip-path: inset(0);
-    translate: 3px 0;
-  }
-  85% {
-    opacity: 0.65;
-  }
-  100% {
-    opacity: 1;
-    clip-path: inset(0);
-    translate: 0;
-  }
-}
-
 .temple-page.no-rem {
+  &.temple-page--resizing {
+    .temple-menu,
+    .temple-menu__body {
+      will-change: transform;
+    }
+  }
+  &.temple-page--resizing,
+  &[data-settled='false'] {
+    // 转场期间暂停 SVG 格子滤镜，避免内容装饰与运镜争用主线程。
+    :deep(.github-contribution-graph__day),
+    :deep(.github-contribution-graph__placeholder) {
+      animation-play-state: paused;
+    }
+  }
+  .temple-menu-reveal-enter-active,
+  .temple-menu-reveal-leave-active {
+    will-change: transform, opacity;
+  }
   .temple-expand {
     position: absolute;
     z-index: 1;
@@ -388,6 +307,11 @@
     }
   }
   &.temple-page--mobile {
+    :deep(.temple-focus-content .is-embedded .works-grid),
+    :deep(.temple-focus-content .is-embedded .misc-grid),
+    :deep(.temple-focus-content .is-embedded .vlog-grid) {
+      grid-template-columns: minmax(0, 1fr);
+    }
     :deep(.temple-backdrop) {
       z-index: 2;
       bottom: max(64px, calc(env(safe-area-inset-bottom) + 24px));

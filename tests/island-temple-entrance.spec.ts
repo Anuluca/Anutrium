@@ -1,11 +1,19 @@
 import { expect, test } from '@playwright/test'
 
+test.beforeEach(async ({ page }) => {
+  await page.routeWebSocket('ws://localhost:3000/**', (socket) =>
+    socket.close()
+  )
+})
+
 test('entrance frames the statue before raising full-size pillars and enabling interaction', async ({
   page,
 }, testInfo) => {
   // 只控制渲染时间；网络加载、着色器预编译和路由定时器继续正常运行。
   await page.addInitScript(() => {
-    const clock = { now: 1000 }
+    const clock = { now: 1000, running: true }
+    const nativeNow = performance.now.bind(performance)
+    let lastFrame = nativeNow()
     ;(window as typeof window & { entranceClock: typeof clock }).entranceClock =
       clock
     const progressSequence = {
@@ -35,6 +43,7 @@ test('entrance frames the statue before raising full-size pillars and enabling i
         stage?.dataset.entrancePhase === 'statue' &&
         document.querySelector('.entry-overlay-container.is-background-exiting')
       ) {
+        clock.running = false
         progressSequence.startedBeforeOverlayRemoved = true
       }
       if (
@@ -51,7 +60,12 @@ test('entrance frames the statue before raising full-size pillars and enabling i
     const requestFrame = window.requestAnimationFrame.bind(window)
     performance.now = () => clock.now
     window.requestAnimationFrame = (callback) =>
-      requestFrame(() => callback(clock.now))
+      requestFrame(() => {
+        const now = nativeNow()
+        if (clock.running) clock.now += now - lastFrame
+        lastFrame = now
+        callback(clock.now)
+      })
   })
   const advance = async (milliseconds: number) => {
     await page.evaluate(async (ms) => {
@@ -316,7 +330,8 @@ test('route entry completes before the simplified scene fades in on return', asy
     if (phase === 'statue') break
     await page.waitForTimeout(100)
   }
-  await page.clock.runFor(2400)
+  // 本测试只检查路由/入场顺序，首段无需逐帧绘制所有中间姿态。
+  await page.clock.fastForward(2400)
   await page.clock.fastForward(5700)
   await expect(page.locator('.temple-stage')).toHaveAttribute(
     'data-entrance-finished',
@@ -363,6 +378,7 @@ test('route entry completes before the simplified scene fades in on return', asy
   await expect(stage).toHaveAttribute('data-entrance-finished', 'false')
   await expect(page.locator('.temple-obelisk:disabled')).toHaveCount(4)
   await page.clock.fastForward(9000)
+  // 站内返回没有全局加载线；路由完成后直接开始场景渐显。
   await expect(root).not.toHaveClass(/route-enter-active/, { timeout: 12000 })
   await expect(stage).toHaveAttribute('data-entrance-mode', 'simple')
   await expect(stage).toHaveAttribute('data-entrance-phase', 'fade')

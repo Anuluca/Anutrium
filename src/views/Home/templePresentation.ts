@@ -27,7 +27,7 @@ const desktopMenuStyles = {
     'calc(var(--header-inline-padding) + var(--header-menu-item-padding))',
   '--temple-menu-width': 'calc(50vw - var(--temple-content-inset))',
   '--temple-menu-shade':
-    'linear-gradient(var(--temple-menu-shade-direction), rgba(0,0,0,0.94) 0%, rgba(0,0,0,0.82) 28%, rgba(0,0,0,0.38) 45%, transparent 62%)',
+    'linear-gradient(var(--temple-menu-shade-direction), rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.82) 28%, rgba(0,0,0,0.38) 45%, transparent 62%)',
   '--temple-menu-enter-offset': 'translateY(16px)',
   '--temple-menu-visible-offset': 'translateY(0)',
   '--temple-menu-header-gap': '40px',
@@ -70,12 +70,14 @@ export const templePresentations: Record<
       styles: {
         ...desktopMenuStyles,
         '--temple-menu-width': '100%',
-        '--temple-menu-shade': '#000',
+        '--temple-menu-shade':
+          'repeating-linear-gradient(to bottom, rgba(0,0,0,0.9) 0 4px, rgba(18,18,18,0.9) 4px 6px)',
         '--temple-menu-padding':
-          'max(90px, env(safe-area-inset-top)) 24px max(90px, env(safe-area-inset-bottom))',
-        '--temple-menu-header-gap': '48px',
-        '--temple-menu-compact-padding-top': '80px',
-        '--temple-menu-compact-padding-bottom': '64px',
+          'max(23px, env(safe-area-inset-top)) 24px max(30px, env(safe-area-inset-bottom))',
+        '--temple-menu-header-gap': '32px',
+        '--temple-menu-compact-padding-top':
+          'max(23px, env(safe-area-inset-top))',
+        '--temple-menu-compact-padding-bottom': 'calc(64px / 3)',
       },
     },
   },

@@ -82,6 +82,10 @@ const about = {
   },
   assetCredits: {
     title: { zhCn: '开源素材使用声明', en: '' },
+    aiDesignRestriction: {
+      zhCn: '禁止将本站原创设计（包括页面截图、布局与视觉元素）输入人工智能（AI）工具，用于生成网站或平面设计。',
+      en: 'Do not input this site’s original design, including page screenshots, layouts, or visual elements, into AI tools to generate websites or graphic designs.',
+    },
     unbounded: {
       zhCn: 'UnboundedSans（标小智无界黑）：本站标题使用的字体，基于 Dela Gothic One 衍生并补充简体中文字符，由无界黑项目作者与贡献者维护，标小智支持该项目。字体采用 SIL 开源字体许可证（SIL Open Font License，OFL）1.1 发布，允许按许可使用、嵌入、修改与再分发，包括商业用途；字体本身不得单独出售，再分发须保留版权与许可信息。相关权利归原作者及权利人所有。',
       en: '',

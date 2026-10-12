@@ -177,3 +177,135 @@ test('random rants appear at the end of each copy without changing cycle width a
     'ARE THERE TOO MANY DJ REMIXES THESE DAYS?'
   )
 })
+
+test('desktop thumbnail sits above its link and uses CRT power and flip animations', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, 'Desktop hover preview')
+  await page.route('**/*image=card-mobile*', (route) =>
+    route.fulfill({
+      contentType: 'image/svg+xml',
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="260" height="180"><rect width="260" height="180" fill="#e23456"/></svg>',
+    })
+  )
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await page.locator('.marquee-wrap').evaluate((element) => {
+    element.getAnimations().forEach((animation) => animation.pause())
+  })
+  const link = page.locator('.footer-com .recommend-link').first()
+  const footerBefore = await page.locator('.footer-com').boundingBox()
+  await link.hover()
+  const preview = page.locator('.footer-thumbnail')
+  await expect(preview).toHaveCount(1)
+  await expect(preview.locator('img')).toHaveAttribute(
+    'src',
+    /27b03fd3.*\?image=card-mobile$/
+  )
+  const enter = await preview.evaluate((element) => {
+    const style = getComputedStyle(element)
+    const animation = element.getAnimations()[0]
+    animation.pause()
+    const screen = element.querySelector('.footer-thumbnail-screen')!
+    const screenAnimation = screen.getAnimations()[0]
+    screenAnimation.pause()
+    return {
+      name: style.animationName,
+      duration: style.animationDuration,
+      opacity: style.opacity,
+      flip: (animation.effect as KeyframeEffect).getKeyframes()[0].transform,
+      crtName: getComputedStyle(screen).animationName,
+      crtDuration: getComputedStyle(screen).animationDuration,
+    }
+  })
+  expect(enter).toMatchObject({
+    name: 'footer-thumbnail-flip-in',
+    duration: '0.46s',
+    opacity: '0.4',
+    crtName: 'anutriumCrtOn',
+    crtDuration: '0.46s',
+  })
+  expect(enter.flip).toContain('rotateY(-78deg)')
+  await preview.evaluate(async (element) => {
+    for (const animation of element.getAnimations({ subtree: true })) {
+      animation.pause()
+      animation.currentTime = Number(animation.effect!.getTiming().duration)
+    }
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+  })
+  const imageBounds = (await preview.boundingBox())!
+  const linkBounds = (await link.boundingBox())!
+  expect(imageBounds.width).toBeCloseTo(180, 0)
+  expect(imageBounds.height).toBeCloseTo(125, 0)
+  expect(imageBounds.y + imageBounds.height).toBeLessThan(linkBounds.y)
+  expect(imageBounds.x).toBeGreaterThanOrEqual(0)
+  expect(imageBounds.x + imageBounds.width).toBeLessThanOrEqual(
+    page.viewportSize()!.width
+  )
+  expect(await page.locator('.footer-com').boundingBox()).toEqual(footerBefore)
+  await page.mouse.move(0, 0)
+  await expect(preview).toHaveClass(/footer-thumbnail-leave-active/)
+  const leave = await preview.evaluate((element) => {
+    const style = getComputedStyle(element)
+    return {
+      name: style.animationName,
+      duration: style.animationDuration,
+      crtName: getComputedStyle(
+        element.querySelector('.footer-thumbnail-screen')!
+      ).animationName,
+    }
+  })
+  expect(leave).toEqual({
+    name: 'footer-thumbnail-flip-out',
+    duration: '0.42s',
+    crtName: 'anutriumCrtOff',
+  })
+  await expect(preview).toHaveCount(0)
+})
+
+test('leaving before an image loads cannot revive a stale thumbnail', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, 'Desktop hover preview')
+  let releaseImage!: () => void
+  const heldImage = new Promise<void>((resolve) => {
+    releaseImage = resolve
+  })
+  let imageRequested!: () => void
+  const requestStarted = new Promise<void>((resolve) => {
+    imageRequested = resolve
+  })
+  await page.route('**/*image=card-mobile*', async (route) => {
+    imageRequested()
+    await heldImage
+    await route.fulfill({
+      contentType: 'image/svg+xml',
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="260" height="180"/>',
+    })
+  })
+  await page.locator('.footer-com .recommend-link').first().hover()
+  await requestStarted
+  await page.mouse.move(0, 0)
+  releaseImage()
+  await page.waitForLoadState('networkidle')
+  await expect(page.locator('.footer-thumbnail')).toHaveCount(0)
+})
+
+test('mobile does not render or request hover thumbnails', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(!isMobile, 'Mobile thumbnail suppression')
+  const requests: string[] = []
+  page.on('request', (request) => {
+    if (request.url().includes('image=card-mobile'))
+      requests.push(request.url())
+  })
+  const link = page.locator('.footer-com .recommend-link').first()
+  await link.dispatchEvent('mouseenter')
+  await link.focus()
+  await page.waitForTimeout(400)
+  await expect(page.locator('.footer-thumbnail')).toHaveCount(0)
+  expect(requests).toEqual([])
+})

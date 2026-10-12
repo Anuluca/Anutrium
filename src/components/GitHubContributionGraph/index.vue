@@ -1,11 +1,13 @@
 <template>
   <component
     :is="decorative ? 'div' : 'a'"
+    ref="graphElement"
     class="github-contribution-graph"
     :class="{
       'is-decorative': decorative,
       'is-loading': isLoading,
       'has-error': hasError,
+      'is-motion-paused': !animationActive,
     }"
     :href="decorative ? undefined : profileUrl"
     :target="decorative ? undefined : '_blank'"
@@ -61,6 +63,11 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+
+import { useDecorationActivity } from '@/composables/useDecorationActivity'
+
+const graphElement = ref<HTMLElement | null>(null)
+const animationActive = useDecorationActivity(graphElement)
 
 type ContributionLevel =
   | 'NONE'
@@ -291,6 +298,13 @@ onBeforeUnmount(() => {
 
 .github-contribution-graph.has-error .github-contribution-graph__placeholder {
   opacity: 0.24;
+}
+
+.github-contribution-graph.is-motion-paused {
+  .github-contribution-graph__day,
+  .github-contribution-graph__placeholder {
+    animation-play-state: paused;
+  }
 }
 
 @keyframes githubContributionLoading {

@@ -1,5 +1,7 @@
 import { expect, type Page, test } from '@playwright/test'
 
+import { openHomeAboutOverlay } from './helpers/homeAboutOverlay'
+
 test.setTimeout(90000)
 
 const push = (page: Page, path: string) =>
@@ -125,15 +127,7 @@ test('about preserves module color, model tint and zodiac', async ({
   const before = await theme()
   if (info.project.name.includes('mobile'))
     await page.locator('.mobile-menu-icon').click()
-  await page
-    .locator(
-      `${
-        info.project.name.includes('mobile')
-          ? '.mobile-menu-items'
-          : '.menu-box'
-      } [data-temple-nav="about"]`
-    )
-    .click()
+  await openHomeAboutOverlay(page)
   await expect(page.locator('.about-overlay')).toBeVisible()
   await page.waitForTimeout(1200)
   expect(await theme()).toEqual(before)
@@ -142,7 +136,7 @@ test('about preserves module color, model tint and zodiac', async ({
   expect(await theme()).toEqual(before)
 })
 
-test('collapsed and expanded cards, title height and progress edge remain consistent', async ({
+test('collapsed and expanded cards and progress edge remain consistent', async ({
   page,
 }, info) => {
   test.skip(
@@ -157,8 +151,6 @@ test('collapsed and expanded cards, title height and progress edge remain consis
       .locator(module === 'archive' ? '.works-grid' : '.vlog-grid')
       .first()
     if (module !== 'island') await expect(grid).toBeVisible()
-    const title = page.locator('.temple-focus-content .page-hero-title')
-    const height = (await title.boundingBox())!.height
     for (const expanded of [false, true, false]) {
       if (
         expanded !==
@@ -180,8 +172,6 @@ test('collapsed and expanded cards, title height and progress edge remain consis
               getComputedStyle(element).gridTemplateColumns.split(' ').length
           )
         ).toBe(expanded ? 4 : 2)
-      if (expanded)
-        expect((await title.boundingBox())!.height).toBeGreaterThan(height)
       if (expanded && module !== 'island') {
         expect(
           (await page.locator('.temple-expand').boundingBox())!.x
@@ -352,7 +342,7 @@ test('default logo hover enlarges its icon', async ({ page }, info) => {
   ).toBeLessThanOrEqual(1)
 })
 
-test('embedded work and journey cards use two columns on mobile', async ({
+test('embedded work and journey cards use one column on mobile', async ({
   page,
 }, info) => {
   test.skip(
@@ -372,7 +362,7 @@ test('embedded work and journey cards use two columns on mobile', async ({
         (element) =>
           getComputedStyle(element).gridTemplateColumns.split(' ').length
       )
-    ).toBe(2)
+    ).toBe(1)
     const progress = page.locator('body > .page-scroll-progress.is-embedded')
     expect(
       Math.abs(

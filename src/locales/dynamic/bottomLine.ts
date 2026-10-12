@@ -1,6 +1,6 @@
 const bottomLine = {
   intro: 'DRIVEN BY PASSION.',
-  lastUpdate: '2026/09/30',
+  lastUpdate: import.meta.env.VITE_LAST_UPDATE,
   rants: [
     {
       zhCn: '这个时代的DJ REMIX会不会多过头了',
@@ -21,6 +21,7 @@ const bottomLine = {
       color: '#F2F347',
       date: '2026/09/16',
       href: 'https://drrr.anuluca.com',
+      img: 'https://assets.anuluca.com/other/27b03fd3-077d-44ae-8965-f0fd0317621e.jpg',
     },
     {
       title: { zhCn: '新加坡', en: 'SINGAPORE' },
@@ -28,6 +29,7 @@ const bottomLine = {
       color: '#D04B33',
       date: '2026/06/25',
       href: '/flanerie/singapore',
+      img: 'https://assets.anuluca.com/Flanerie/cities/singapore/f1ae5f2f-5d6d-422e-b4ef-475a20c31484 (1).png',
     },
     {
       title: { zhCn: '庐山', en: 'LUSHAN' },
@@ -35,6 +37,7 @@ const bottomLine = {
       color: '#D04B33',
       date: '2026/06/25',
       href: '/flanerie/lushan',
+      img: 'https://assets.anuluca.com/Flanerie/cities/lushan/DSC07767.jpg',
     },
     {
       title: { zhCn: '弹力球', en: 'BOUNCING BALL' },

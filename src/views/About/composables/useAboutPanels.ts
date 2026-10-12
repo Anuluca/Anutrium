@@ -28,9 +28,13 @@ export function useAboutPanels() {
           )
     if (!shell || !trigger) return
     const rect = trigger.getBoundingClientRect()
+    const mobile = window.matchMedia('(max-width: 768px)').matches
+    const crewInset = shell.right - rect.right
     const width =
       panelLayout.value === 'crew'
-        ? shell.width / 3
+        ? mobile
+          ? Math.max(0, shell.width - crewInset * 2)
+          : shell.width / 3
         : Math.min(700, shell.right - rect.left - 8)
     panelLayoutWidth.value = width
     if (panelLayout.value === 'crew' && passionRef.value) {
@@ -91,7 +95,8 @@ export function useAboutPanels() {
     () => {
       activeAboutPanel.value = null
     },
-    { ignore: [aboutTriggersRef, crewTriggerRef] }
+    // Passion 点击单独处理，避免外部点击先清空状态后误关闭整个 About。
+    { ignore: [aboutTriggersRef, crewTriggerRef, passionRef] }
   )
 
   const toggleAboutPanel = (panel: AboutPanel) => {

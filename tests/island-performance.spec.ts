@@ -79,7 +79,7 @@ test('island stops idle GPU work, uses static buffers and reuses downloaded asse
   const packedEnvironment = await readFile(
     resolve('public/models/lucario-studio.bin.gz')
   )
-  await page.route('**/models/lucario-studio.bin.gz', (route) =>
+  await page.route('**/models/lucario-studio.bin.gz?*', (route) =>
     route.fulfill({
       body: packedEnvironment,
       contentType: 'application/octet-stream',
@@ -193,7 +193,7 @@ test('sampled pointer preserves the final position and cancels pending work', as
   page,
 }) => {
   await page.goto('/craft', { waitUntil: 'domcontentloaded' })
-  await expect(page.locator('.about-page')).toBeVisible()
+  await expect(page.locator('.craft-page')).toBeVisible()
   const result = await page.evaluate(async () => {
     const moduleURL = '/src/utils/pointerSamples.ts'
     const { subscribePointerSamples } = await import(

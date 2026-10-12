@@ -1,4 +1,3 @@
-@primary-orange: #e7492d;
 @primary-blue: #3276fe;
 @primary-pink: #e23456;
 
@@ -48,6 +47,8 @@
   }
 
   .el-menu-layout-all {
+    box-sizing: border-box;
+    flex-shrink: 0;
     height: 3.33333rem;
     padding: var(--header-inline-padding);
     padding-top: 2.33333rem;
@@ -186,8 +187,15 @@
       }
 
       .header-brand-details {
+        position: relative;
+        top: calc(-0.16667rem + 1px + 1px);
         display: inline-flex;
         align-items: center;
+        transition: opacity 0.8s ease;
+        &--hidden {
+          opacity: 0;
+          pointer-events: none;
+        }
       }
 
       .site-brand {
@@ -222,7 +230,6 @@
           display: inline-block;
           backface-visibility: hidden;
           transform-origin: center;
-          will-change: opacity, transform;
         }
 
         &--zh {
@@ -231,23 +238,25 @@
 
         .define-module-theme(@name, @color) {
           &--@{name} {
-            border-left-color: fade(@color, 28%);
+            border-left-color: color-mix(in srgb, @color 28%, transparent);
             color: @color;
           }
         }
 
         .define-module-theme(archive, @primary-blue);
-        .define-module-theme(flanerie, @primary-orange);
-        .define-module-theme(island, @primary-pink);
+        .define-module-theme(flanerie, var(--page-theme-color));
+        .define-module-theme(island, var(--page-theme-color));
         .define-module-theme(craft, @primary-blue);
         .define-module-theme(about, @primary-pink);
-        .define-module-theme(flora, @primary-pink);
       }
     }
 
     .module-name-enter-active,
     .module-name-leave-active {
       pointer-events: none;
+      .module-name-character {
+        will-change: opacity, transform;
+      }
     }
 
     .module-name-enter-active {
@@ -308,8 +317,8 @@
           }
 
           &:not(.is-active):hover {
-            .line {
-              width: 100% !important;
+            .title-box .second-title .line {
+              transform: scaleX(1);
             }
 
             :deep(.text-roll__char--current) {
@@ -363,12 +372,17 @@
               font-weight: 900;
 
               .line {
-                width: 0px;
+                flex: 1;
+                min-width: 0;
                 height: 56%;
-
+                transform: scaleX(0);
+                transform-origin: right center;
                 background-color: var(--text-color);
-                transition: width 0.5s;
+                transition: transform 0.5s;
                 box-sizing: border-box;
+                &:last-child {
+                  transform-origin: left center;
+                }
               }
 
               span {
@@ -384,6 +398,18 @@
           }
         }
 
+        &:not(.menu-box--right) .desktop-menu-item .title-box .second-title {
+          flex-direction: row-reverse;
+
+          .line {
+            transform-origin: left center;
+          }
+
+          span {
+            margin-left: 0;
+          }
+        }
+
         .desktop-menu-item.is-active {
           cursor: default;
 
@@ -394,7 +420,7 @@
 
             .second-title {
               .line {
-                width: 100%;
+                transform: scaleX(1);
                 background-color: transparent;
               }
             }
@@ -435,7 +461,7 @@
               }
 
               .line {
-                width: 0;
+                transform: scaleX(0);
                 border-top: 0;
               }
             }
@@ -444,20 +470,38 @@
 
         .define-menu-style(HOME, @primary-color, #eb6978c3);
         .define-menu-style(ARCHIVE, @primary-blue, #6596f9da);
-        .define-menu-style(FLANERIE, @primary-orange, #e7492dda);
+        .define-menu-style(
+          FLANERIE,
+          var(--module-theme-color),
+          color-mix(in srgb, var(--module-theme-color) 85%, transparent)
+        );
         .define-menu-style(
           POKEYARD,
           var(--module-theme-color),
           color-mix(in srgb, var(--module-theme-color) 77%, transparent)
         );
-        .define-menu-style(ISLAND, @primary-pink, #E23456c5);
+        .define-menu-style(
+          ISLAND,
+          var(--module-theme-color),
+          color-mix(in srgb, var(--module-theme-color) 77%, transparent)
+        );
         .define-menu-style(CRAFT, @primary-blue, #6596f9da);
+        .define-menu-style(
+          SPRIGATITO,
+          var(--module-theme-color),
+          color-mix(in srgb, var(--module-theme-color) 77%, transparent)
+        );
+        .define-menu-style(
+          STATUE,
+          var(--module-theme-color),
+          color-mix(in srgb, var(--module-theme-color) 77%, transparent)
+        );
         .define-menu-style(ABOUT, @primary-pink, #e23456c5);
 
         .HOME.is-active {
           .title-box {
             .line {
-              width: 0 !important;
+              transform: scaleX(0) !important;
             }
 
             opacity: 0;
@@ -562,22 +606,20 @@
       .mobile-menu-wrapper {
         opacity: 1;
         zoom: 1;
-        filter: blur(0);
+        transform: translateY(0);
       }
 
       .mobile-menu-wrapper .mobile-footer {
         opacity: 1;
         transform: translateY(0);
-        filter: blur(0);
         transition: opacity 0.24s ease-out,
-          transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), filter 0.24s ease-out;
+          transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
         transition-delay: 0.12s;
       }
     }
 
     &.closing .mobile-menu-wrapper .mobile-footer {
       opacity: 0;
-      filter: blur(0);
       transform: translateY(0);
       transition: opacity 0.2s ease-out;
     }
@@ -585,8 +627,8 @@
     .mobile-menu-wrapper {
       opacity: 0;
       font-size: 1.33333rem;
-      filter: blur(0.33333rem);
-      transition: opacity 0.6s ease, filter 0.4s;
+      transform: translateY(8px);
+      transition: opacity 0.6s ease, transform 0.4s ease;
       width: 100vw;
       height: calc(100% + 0.66667rem);
       overflow: hidden;
@@ -655,7 +697,7 @@
             }
 
             &.FLANERIE.active {
-              color: @primary-orange;
+              color: var(--module-theme-color);
             }
 
             &.POKEYARD.active {
@@ -663,7 +705,7 @@
             }
 
             &.ISLAND.active {
-              color: @primary-pink;
+              color: var(--module-theme-color);
             }
 
             &.CRAFT.active {
@@ -683,7 +725,6 @@
         left: 0;
         right: 0;
         opacity: 0;
-        filter: blur(0.2rem);
         transform: translateY(2rem);
         transition: none;
 
@@ -1039,6 +1080,20 @@
 }
 
 .temple-nav-action {
+  .about-info-icon {
+    display: block;
+    width: 1rem;
+    height: 1rem;
+    margin-inline: auto;
+    color: #fff;
+    font-weight: 400;
+    transition: color 0.2s ease;
+  }
+
+  &:hover .about-info-icon {
+    color: var(--page-theme-color, @primary-color);
+  }
+
   padding: 0;
   border: 0;
   background: transparent;
@@ -1064,6 +1119,77 @@
     .logo {
       margin-right: 0;
     }
+    .header-brand-details {
+      display: none;
+    }
+  }
+}
+
+// 两侧等宽区域保证标题严格居中；两组入口共用 gap，离场期间保留原布局。
+.layout-page.temple-header-balanced .el-menu-layout-all {
+  --temple-route-gap: clamp(27px, 4.5vw, 72px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content minmax(0, 1fr);
+  grid-template-rows: 0;
+  align-content: center;
+  column-gap: 0;
+  justify-content: normal;
+
+  .logo-box {
+    grid-area: 1 / 2;
+    justify-self: center;
+    width: max-content;
+    padding-inline: clamp(20px, 2vw, 40px);
+    transform: none;
+
+    .current-module-name {
+      position: relative;
+      top: 0.1rem;
+      left: auto;
+      transform: none;
+    }
+  }
+
+  .desktop-menu {
+    grid-area: 1 / 1 / 2 / -1;
+    display: grid;
+    grid-template-columns: subgrid;
+    min-width: 0;
+    transform: none;
+    pointer-events: none;
+
+    .menu-box {
+      grid-column: 1;
+      justify-self: start;
+      display: flex;
+      justify-content: flex-start;
+      gap: var(--temple-route-gap);
+      padding-left: calc(
+        var(--header-logo-inline-padding) +
+          var(--header-logo-visual-inline-inset)
+      );
+      margin-top: -0.4rem;
+
+      &--right {
+        grid-column: 3;
+        justify-self: end;
+        padding-left: 0;
+        padding-right: var(--header-menu-item-padding);
+      }
+
+      .desktop-menu-item {
+        min-width: 0;
+        padding: 0;
+        pointer-events: auto;
+
+        > .temple-nav-action {
+          display: flex;
+          justify-content: center;
+          width: auto;
+          box-sizing: border-box;
+        }
+      }
+    }
   }
 }
 
@@ -1078,6 +1204,7 @@
 .layout-page .el-menu-layout-all .desktop-menu.header-fade-enter-active,
 .layout-page .el-menu-layout-all .desktop-menu.header-fade-leave-active {
   transition: opacity 0.8s ease;
+  will-change: opacity;
 }
 .header-fade-enter-from,
 .header-fade-leave-to {
@@ -1104,6 +1231,9 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  .layout-page .el-menu-layout-all .logo-box .header-brand-details {
+    transition-duration: 0.01s;
+  }
   .layout-page .header-fade-enter-active,
   .layout-page .header-fade-leave-active,
   .layout-page .mobile-menu-icon.header-fade-enter-active,
@@ -1121,6 +1251,27 @@
   &[aria-pressed='true'] .big-title,
   .mobile-menu-item.active {
     color: var(--module-theme-color) !important;
+  }
+}
+
+.layout-page .temple-nav-action.is-wireframe-preview {
+  --module-theme-color: #888 !important;
+
+  .title-box,
+  .main-title,
+  .second-title,
+  .mobile-menu-item,
+  .big-title,
+  .little-title {
+    color: #888 !important;
+  }
+
+  .second-title .line {
+    background-color: #888 !important;
+  }
+
+  .main-title::after {
+    text-shadow: none !important;
   }
 }
 

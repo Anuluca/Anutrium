@@ -23,6 +23,7 @@ test('clicking the statue smoothly reveals its full wireframe and restores the t
   const canvas = stage.locator('canvas')
   const home = await stage.getAttribute('data-camera-position')
   const halfY = await stage.getAttribute('data-statue-y')
+  const clipHeight = Number(await stage.getAttribute('data-statue-clip-height'))
   await page.evaluate(() => {
     const clock = { now: performance.now() }
     ;(window as typeof window & { statueClock: typeof clock }).statueClock =
@@ -59,10 +60,13 @@ test('clicking the statue smoothly reveals its full wireframe and restores the t
   })
   await expect(root).toHaveAttribute('data-selected', 'statue')
   await advance(200)
-  expect(
-    Number(await stage.getAttribute('data-statue-clip-height'))
-  ).toBeLessThan(
-    Number(halfY) - Number(await stage.getAttribute('data-statue-full-y'))
+  const emergingClip = Number(
+    await stage.getAttribute('data-statue-clip-height')
+  )
+  expect(emergingClip).toBeGreaterThan(0)
+  expect(emergingClip).toBeLessThan(clipHeight)
+  expect(Number(await stage.getAttribute('data-statue-y'))).toBeGreaterThan(
+    Number(halfY)
   )
   const reveal = Number(await stage.getAttribute('data-temple-reveal'))
   expect(reveal).toBeGreaterThan(0)
@@ -84,7 +88,7 @@ test('clicking the statue smoothly reveals its full wireframe and restores the t
     await stage.getAttribute('data-statue-full-y')
   )
   await expect(page.locator('.temple-obelisk:visible')).toHaveCount(0)
-  await expect(stage.locator('.temple-backdrop')).toBeHidden()
+  await expect(stage.locator('.temple-backdrop')).toHaveCSS('opacity', '0')
   await expect(page.locator('.el-menu-layout-all')).toBeVisible()
   await expect(page.locator('.logo-box')).toBeVisible()
   await expect(page.locator('.footer-com')).toBeVisible()

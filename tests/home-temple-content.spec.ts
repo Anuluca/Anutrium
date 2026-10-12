@@ -1,6 +1,11 @@
 import { expect, test } from '@playwright/test'
 
+import { openHomeAboutOverlay } from './helpers/homeAboutOverlay'
+
 test.beforeEach(async ({ page }, testInfo) => {
+  await page.routeWebSocket('ws://localhost:3000/**', (socket) =>
+    socket.close()
+  )
   await page.emulateMedia({
     reducedMotion:
       testInfo.title.includes('fades') || testInfo.title.includes('focus aims')
@@ -38,6 +43,17 @@ test('home centers its icon, then exposes scene shortcuts and enables all pillar
       'data-settled',
       'true'
     )
+    if (id === 'island') {
+      await expect(page.locator('.current-module-name')).toHaveText('CREATIVE')
+      await expect(page.locator('[data-obelisk="island"]')).toHaveAttribute(
+        'aria-label',
+        'IV / 创作'
+      )
+      await expect(page.locator('.temple-stage')).toHaveAttribute(
+        'data-theme-color',
+        '#ce4c87'
+      )
+    }
     await page.keyboard.press('Escape')
     await expect(page.locator('.temple-page')).toHaveAttribute(
       'data-settled',
@@ -59,12 +75,25 @@ test('home centers its icon, then exposes scene shortcuts and enables all pillar
       ? '.mobile-menu-items .temple-nav-action'
       : '.menu-box .temple-nav-action'
   )
-  await expect(actions).toHaveCount(5)
+  await expect(actions).toHaveCount(mobile ? 7 : 6)
   expect(
     await actions.evaluateAll((items) =>
       items.map((item) => item.getAttribute('data-temple-nav'))
     )
-  ).toEqual(['archive', 'flanerie', 'pokeyard', 'island', 'about'])
+  ).toEqual(
+    mobile
+      ? [
+          'home',
+          'archive',
+          'flanerie',
+          'pokeyard',
+          'island',
+          'sprigatito',
+          'statue',
+        ]
+      : ['archive', 'flanerie', 'statue', 'sprigatito', 'pokeyard', 'island']
+  )
+  await expect(page.locator('[data-temple-nav="about"]')).toHaveCount(0)
   await expect(actions.filter({ hasText: 'POKÉYARD' })).toBeEnabled()
   await page
     .locator(
@@ -78,6 +107,92 @@ test('home centers its icon, then exposes scene shortcuts and enables all pillar
     'data-selected',
     'flanerie'
   )
+})
+
+test('mobile HOME clears focus and overrides module restoration when returning from a child page', async ({
+  page,
+}, testInfo) => {
+  test.skip(!testInfo.project.name.includes('mobile'), '手机菜单专用入口')
+  test.setTimeout(90000)
+  const root = page.locator('.temple-page')
+  await page
+    .locator('[data-obelisk="flanerie"]')
+    .evaluate((el: HTMLButtonElement) => el.click())
+  await expect(root).toHaveAttribute('data-settled', 'true')
+  const clickHome = async () => {
+    await page.locator('.mobile-menu-icon').click()
+    await page.locator('.mobile-menu-items [data-temple-nav="home"]').click()
+    await expect(page).toHaveURL(/\/$/)
+    await expect(root).toHaveAttribute('data-selected', 'none')
+    await expect(page.locator('.layout-page')).toHaveClass(
+      /temple-header-default/
+    )
+    await expect(page.locator('.mobile-menu-panel.active')).toHaveCount(0)
+  }
+  await clickHome()
+  await expect(root).toHaveAttribute('data-settled', 'true')
+  await page
+    .locator('[data-obelisk="island"]')
+    .evaluate((el: HTMLButtonElement) => el.click())
+  await expect(root).toHaveAttribute('data-settled', 'true')
+  await page.evaluate(() =>
+    (
+      document.querySelector('.layout-page') as any
+    ).__vueParentComponent.proxy.$router.push('/craft')
+  )
+  await expect(root).toHaveCount(0, { timeout: 15000 })
+  // 模拟旅程详情保留的恢复标记，HOME 应同时覆盖这类自动聚焦。
+  await page.evaluate(() => {
+    sessionStorage.setItem('anutrium:flanerie:returning-from-detail', 'true')
+    sessionStorage.setItem('anutrium:flanerie:selected-vlog', 'test-home')
+  })
+  await clickHome()
+  await expect(page.locator('.temple-stage')).toHaveAttribute(
+    'data-entrance-finished',
+    'true',
+    { timeout: 25000 }
+  )
+  await expect(root).toHaveAttribute('data-selected', 'none')
+  await expect(page.locator('.temple-focus-content')).toHaveCount(0)
+})
+
+test('header blank space exits pillar focus while navigation buttons keep switching modules', async ({
+  page,
+}, testInfo) => {
+  test.setTimeout(90000)
+  const root = page.locator('.temple-page')
+  await page
+    .locator('[data-obelisk="flanerie"]')
+    .evaluate((el: HTMLButtonElement) => el.click())
+  await expect(root).toHaveAttribute('data-settled', 'true')
+  const mobile = testInfo.project.name.includes('mobile')
+  if (mobile) await page.locator('.mobile-menu-icon').click()
+  await page
+    .locator(
+      `${
+        mobile ? '.mobile-menu-items' : '.menu-box'
+      } [data-temple-nav="archive"]`
+    )
+    .locator(mobile ? '.big-title' : '.main-title')
+    .click()
+  await expect(root).toHaveAttribute('data-selected', 'archive')
+  await expect(root).toHaveAttribute('data-settled', 'true')
+  const header = page.locator('.el-menu-layout-all')
+  const bounds = (await header.boundingBox())!
+  const blank = { x: bounds.width / 2, y: 2 }
+  expect(
+    await page.evaluate(
+      ({ x, y }) => !!document.elementFromPoint(x, y)?.closest('button, a'),
+      { x: bounds.x + blank.x, y: bounds.y + blank.y }
+    )
+  ).toBe(false)
+  await header.click({ position: blank })
+  await expect(root).toHaveAttribute('data-selected', 'none')
+  await expect(root).toHaveAttribute('data-settled', 'true')
+  await expect(page.locator('.layout-page')).toHaveClass(
+    /temple-header-default/
+  )
+  await expect(page).toHaveURL(/\/$/)
 })
 
 test('embedded portfolio uses a desktop side detail and keeps mobile and expanded dialogs', async ({
@@ -129,9 +244,8 @@ test('embedded portfolio uses a desktop side detail and keeps mobile and expande
         fields.map((field) => field.getBoundingClientRect().top)
       )
     expect(summaryTops).toHaveLength(3)
-    expect(
-      Math.max(...summaryTops) - Math.min(...summaryTops)
-    ).toBeLessThanOrEqual(1)
+    expect(Math.abs(summaryTops[0] - summaryTops[1])).toBeLessThanOrEqual(1)
+    expect(summaryTops[2]).toBeGreaterThan(Math.max(...summaryTops.slice(0, 2)))
     const layout = await detail.evaluate((el) => {
       const rect = (selector: string) =>
         el.querySelector(selector)!.getBoundingClientRect()
@@ -140,20 +254,53 @@ test('embedded portfolio uses a desktop side detail and keeps mobile and expande
         link.getBoundingClientRect()
       )
       return {
+        galleryTop: gallery.top,
         galleryBottom: gallery.bottom,
+        galleryLeft: gallery.left,
         galleryRatio: gallery.width / gallery.height,
+        galleryWidth: gallery.width,
+        contentWidth: rect('.aside-company').width,
+        columnGap: getComputedStyle(el.querySelector('.modal-body')!).columnGap,
         titleTop: rect('.aside-title').top,
+        titleRight: rect('.aside-title').right,
+        titleBottom: rect('.aside-title').bottom,
+        summaryTop: rect('.aside-summary').top,
+        summaryBottom: rect('.aside-summary').bottom,
+        aboutTop: rect('.aside-desc').top,
+        linksLeft: rect('.aside-links').left,
+        linksTop: rect('.aside-links').top,
         confidentialTop: rect('.confidential-notice').top,
         detailsBottom: rect('.details-section').bottom,
+        lastDetailBottom: rect('.detail-item:last-child').bottom,
         summaryGap: getComputedStyle(el.querySelector('.aside-summary')!)
           .columnGap,
         rootFontSize: getComputedStyle(document.documentElement).fontSize,
         links: links.map(({ top, width }) => ({ top, width })),
       }
     })
-    expect(layout.galleryBottom).toBeLessThan(layout.titleTop)
+    expect(Math.abs(layout.galleryTop - layout.titleTop)).toBeLessThanOrEqual(1)
+    expect(layout.galleryLeft).toBeGreaterThan(layout.titleRight)
+    expect(Math.abs(layout.linksLeft - layout.galleryLeft)).toBeLessThanOrEqual(
+      1
+    )
+    expect(layout.linksTop).toBeGreaterThan(layout.galleryBottom)
+    expect(layout.summaryTop).toBeGreaterThan(layout.titleBottom)
+    expect(layout.aboutTop).toBeGreaterThan(layout.summaryBottom)
+    expect(layout.summaryTop - layout.titleBottom).toBeCloseTo(
+      parseFloat(layout.columnGap),
+      1
+    )
+    expect(layout.aboutTop - layout.summaryBottom).toBeCloseTo(
+      parseFloat(layout.columnGap),
+      1
+    )
     expect(layout.galleryRatio).toBeCloseTo(16 / 9, 2)
+    expect(layout.galleryWidth).toBeCloseTo(
+      (layout.contentWidth - parseFloat(layout.columnGap)) / 2,
+      1
+    )
     expect(layout.confidentialTop).toBeGreaterThan(layout.detailsBottom)
+    expect(layout.confidentialTop).toBeGreaterThan(layout.lastDetailBottom)
     expect(parseFloat(layout.summaryGap)).toBeCloseTo(
       parseFloat(layout.rootFontSize) * (32 / 30),
       1
@@ -166,16 +313,51 @@ test('embedded portfolio uses a desktop side detail and keeps mobile and expande
       'contain'
     )
     const detailBox = (await detail.boundingBox())!
+    const origin = await detail.evaluate((el) =>
+      getComputedStyle(el).transformOrigin.split(' ').map(parseFloat)
+    )
+    expect(origin[0]).toBeCloseTo(detailBox.width / 2, 1)
+    expect(origin[1]).toBeCloseTo(detailBox.height / 2, 1)
     expect(Math.abs(detailBox.y - panelBox.y)).toBeLessThanOrEqual(1)
     expect(
       Math.abs(detailBox.y + detailBox.height - (panelBox.y + panelBox.height))
     ).toBeLessThanOrEqual(1)
     const companyBox = (await detail.locator('.aside-company').boundingBox())!
-    expect(Math.abs(companyBox.x - detailBox.x)).toBeLessThanOrEqual(1)
+    expect(companyBox.x - detailBox.x).toBeCloseTo(
+      parseFloat(layout.rootFontSize) * (24 / 30),
+      1
+    )
+    expect(companyBox.y - detailBox.y).toBeCloseTo(
+      parseFloat(layout.rootFontSize) * (18 / 30),
+      1
+    )
+    const headerTitleBox = (await page.locator('.logo-box').boundingBox())!
+    expect(Math.abs(detailBox.x - headerTitleBox.x)).toBeLessThanOrEqual(1)
     expect(detailBox.x).toBeGreaterThanOrEqual(0)
     expect(detailBox.x + detailBox.width).toBeLessThanOrEqual(
       viewport.width / 2
     )
+    const detailScroll = detail.locator('.scroll-viewport__scroll')
+    const detailProgress = detail.locator('.page-scroll-progress')
+    await expect(detailScroll).toHaveCSS('scrollbar-width', 'none')
+    await expect(detailProgress).toBeVisible()
+    await detailScroll.evaluate((el) => {
+      el.scrollTop = el.scrollHeight
+    })
+    await expect
+      .poll(() =>
+        detailProgress.evaluate((el) =>
+          parseFloat(
+            (el as HTMLElement).style.getPropertyValue(
+              '--page-scroll-progress-scale'
+            )
+          )
+        )
+      )
+      .toBeCloseTo(1, 2)
+    await detailScroll.evaluate((el) => {
+      el.scrollTop = 0
+    })
     const secondCard = panel.locator('.shared-work-card').nth(1)
     const secondTitle = (await secondCard.locator('strong').textContent())!
     await secondCard.click()
@@ -295,6 +477,138 @@ test('embedded content fades with the panel before it is unmounted', async ({
   await expect(page.locator('.temple-menu')).toHaveCount(0)
 })
 
+test('creative and pokeyard reuse embedded 404 content without locking the page', async ({
+  page,
+}, testInfo) => {
+  test.setTimeout(60000)
+  const root = page.locator('.temple-page')
+  for (const category of ['island', 'pokeyard']) {
+    await page
+      .locator(`[data-obelisk="${category}"]`)
+      .evaluate((el: HTMLButtonElement) => el.click())
+    await expect(root).toHaveAttribute('data-selected', category)
+    await expect(root).toHaveAttribute('data-settled', 'true')
+    const content = page.locator(
+      '.temple-focus-content .not-found-page.is-embedded'
+    )
+    await expect(content).toBeVisible({ timeout: 15000 })
+    await expect(content).toContainText('404 NOT FOUND')
+    await expect(content.locator('.porygon__draw-mask > *')).toHaveCount(11)
+    const geometry = await content.evaluate((el) => {
+      const viewport = el
+        .closest('.scroll-viewport__scroll')!
+        .getBoundingClientRect()
+      const group = el.querySelector('.inner')!.getBoundingClientRect()
+      const text = el.querySelector('.show-text')!.getBoundingClientRect()
+      const image = el.querySelector('.porygon')!.getBoundingClientRect()
+      return {
+        centerOffset: Math.abs(
+          group.top + group.height / 2 - viewport.top - viewport.height / 2
+        ),
+        imageLeft: image.left,
+        textLeft: text.left,
+        textRight: text.right,
+      }
+    })
+    expect(geometry.centerOffset).toBeLessThanOrEqual(1)
+    expect(geometry.imageLeft).toBeGreaterThan(geometry.textLeft)
+    if (!testInfo.project.name.includes('mobile'))
+      expect(geometry.imageLeft).toBeLessThan(geometry.textRight)
+    await expect(content.locator('.porygon')).toHaveCSS('position', 'absolute')
+    await expect(content.locator('.show-text')).toHaveCSS(
+      'position',
+      'absolute'
+    )
+    await expect(page.locator('html')).not.toHaveClass(/not-found-no-scroll/)
+    await expect(page.locator('body')).not.toHaveClass(/not-found-no-scroll/)
+    const bounds = await content.evaluate((el) => {
+      const root = el.getBoundingClientRect()
+      const group = el.querySelector('.inner')!.getBoundingClientRect()
+      return { left: group.left - root.left, right: group.right - root.right }
+    })
+    expect(bounds.left).toBeGreaterThanOrEqual(-1)
+    expect(bounds.right).toBeLessThanOrEqual(1)
+    if (!testInfo.project.name.includes('mobile')) {
+      await page.locator('.temple-expand').click()
+      await expect(root).not.toHaveClass(/temple-page--resizing/)
+      await expect(content).toBeVisible()
+    }
+    await content.getByRole('button', { name: '-> RETURN TO HOME' }).click()
+    await expect(root).toHaveAttribute('data-selected', 'none')
+    await expect(page.locator('.temple-menu')).toHaveCount(0)
+  }
+})
+
+test('portfolio blank clicks close inline detail before returning home', async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name.includes('mobile'),
+    'Inline details are desktop only'
+  )
+  const root = page.locator('.temple-page')
+  await page
+    .locator('[data-obelisk="archive"]')
+    .evaluate((el: HTMLButtonElement) => el.click())
+  await expect(root).toHaveAttribute('data-settled', 'true')
+  const card = page.locator('.temple-focus-content .shared-work-card').first()
+  await expect(card).toBeVisible({ timeout: 20000 })
+  const detail = page.locator('.work-detail-inline')
+  const content = page.locator('.temple-focus-content')
+  const menuBox = (await content.boundingBox())!
+  const scrollBox = (await content
+    .locator('.scroll-viewport__scroll')
+    .boundingBox())!
+  const canvasBox = (await page.locator('.temple-stage canvas').boundingBox())!
+  for (const point of [
+    { x: menuBox.x + menuBox.width / 2, y: menuBox.y + 2 },
+    { x: scrollBox.x + scrollBox.width / 2, y: scrollBox.y + 2 },
+    { x: canvasBox.x + 2, y: canvasBox.y + canvasBox.height / 2 },
+  ]) {
+    await card.click()
+    await expect(detail).toBeVisible()
+    await page.mouse.click(point.x, point.y)
+    await expect(detail).toHaveCount(0)
+    await expect(root).toHaveAttribute('data-selected', 'archive')
+    await expect(root).toHaveAttribute('data-settled', 'true')
+    await expect(content).toBeVisible()
+    await expect(root).not.toHaveClass(/temple-page--expanded/)
+  }
+  await page.mouse.click(menuBox.x + menuBox.width / 2, menuBox.y + 2)
+  await expect(root).toHaveAttribute('data-selected', 'none')
+  await expect(page.locator('.temple-menu')).toHaveCount(0)
+})
+
+test('secondary menu blank space returns home in sidebar and fullscreen layouts', async ({
+  page,
+}, testInfo) => {
+  const root = page.locator('.temple-page')
+  const mobile = testInfo.project.name.includes('mobile')
+  for (const expanded of mobile ? [false] : [false, true]) {
+    await page
+      .locator('[data-obelisk="archive"]')
+      .evaluate((el: HTMLButtonElement) => el.click())
+    await expect(root).toHaveAttribute('data-settled', 'true')
+    await expect(page.locator('.shared-work-card').first()).toBeVisible({
+      timeout: 20000,
+    })
+    if (expanded) {
+      await page.locator('.temple-expand').click()
+      await expect(root).not.toHaveClass(/temple-page--resizing/)
+    }
+    const content = page.locator('.temple-focus-content')
+    const box = (await content.boundingBox())!
+    // 内容上方的实际留白应可返回，覆盖两端和桌面展开状态。
+    await page.mouse.click(box.x + box.width / 2, box.y + 2)
+    await expect(root).toHaveAttribute('data-selected', 'none')
+    await expect(root).toHaveAttribute('data-settled', 'true', {
+      timeout: 10000,
+    })
+    await expect(page.locator('.temple-menu')).toHaveCount(0)
+    await expect(root).not.toHaveClass(/temple-page--expanded/)
+  }
+})
+
 test('focus expansion preserves scroll state and uses a progress bar without scroll masks', async ({
   page,
 }, testInfo) => {
@@ -314,7 +628,7 @@ test('focus expansion preserves scroll state and uses a progress bar without scr
   await expect(viewport).not.toHaveClass(/has-fixed-header/)
   await expect(viewport).toHaveCSS(
     'padding-top',
-    testInfo.project.name.includes('mobile') ? '48px' : '40px'
+    testInfo.project.name.includes('mobile') ? '32px' : '40px'
   )
   await expect(scroll).toHaveCSS('mask-image', 'none')
   const viewportShift = await scroll.evaluate((el) => {
@@ -335,6 +649,14 @@ test('focus expansion preserves scroll state and uses a progress bar without scr
         .locator('.temple-page')
         .evaluate((el) => getComputedStyle(el, '::after').maskImage)
     ).toBe('none')
+    const shade = await page.locator('.temple-page').evaluate((el) => {
+      const css = getComputedStyle(el, '::after')
+      return { image: css.backgroundImage, pointerEvents: css.pointerEvents }
+    })
+    expect(shade.image).toContain('repeating-linear-gradient')
+    expect(shade.image).toContain('rgba(0, 0, 0, 0.9)')
+    expect(shade.image).toContain('rgba(18, 18, 18, 0.9)')
+    expect(shade.pointerEvents).toBe('none')
     return
   }
   const initialWidth = (await viewport.boundingBox())!.width
@@ -370,13 +692,7 @@ test('about opens over the scene without navigation, preserves focus, and closes
   const mobile = testInfo.project.name.includes('mobile')
   const open = async () => {
     if (mobile) await page.locator('.mobile-menu-icon').click()
-    await page
-      .locator(
-        `${
-          mobile ? '.mobile-menu-items' : '.menu-box'
-        } [data-temple-nav="about"]`
-      )
-      .click()
+    await openHomeAboutOverlay(page)
     await expect(page.locator('.about-overlay .about-page')).toBeVisible({
       timeout: 15000,
     })
@@ -466,10 +782,7 @@ test('about mask fades immediately before content loads, aligns with the menu, a
   )
   if (testInfo.project.name.includes('mobile'))
     await page.locator('.mobile-menu-icon').click()
-  const parent = testInfo.project.name.includes('mobile')
-    ? '.mobile-menu-items'
-    : '.menu-box'
-  await page.locator(`${parent} [data-temple-nav="about"]`).evaluate((el) => {
+  await page.evaluate(() => {
     const samples: {
       backdrop: string
       alpha: number
@@ -495,8 +808,8 @@ test('about mask fades immediately before content loads, aligns with the menu, a
       requestAnimationFrame(sample)
     }
     requestAnimationFrame(sample)
-    ;(el as HTMLButtonElement).click()
   })
+  await openHomeAboutOverlay(page)
   await expect(page.locator('.about-overlay')).toBeVisible()
   await expect(page.locator('.about-overlay__content')).toBeAttached()
   await expect(page.locator('.about-overlay__mask')).toHaveCSS(
@@ -566,6 +879,282 @@ test('about mask fades immediately before content loads, aligns with the menu, a
   )
 })
 
+test('statue inscription appears on desktop hover and stays visible on mobile', async ({
+  page,
+}, testInfo) => {
+  const stage = page.locator('.temple-stage')
+  const mobile = testInfo.project.name.includes('mobile')
+  expect(
+    Number(await stage.getAttribute('data-statue-label-depth'))
+  ).toBeCloseTo(0.568, 3)
+  await expect(stage).toHaveAttribute('data-statue-label-color', '#e23456')
+  await expect(stage).toHaveAttribute(
+    'data-statue-label-reveal',
+    mobile ? '1.000' : '0.000'
+  )
+  const viewport = page.viewportSize()!
+  await page.mouse.move(viewport.width / 2, viewport.height / 2)
+  await expect(stage).toHaveAttribute('data-statue-label-reveal', '1.000')
+  await page.mouse.move(20, 150)
+  await expect(stage).toHaveAttribute(
+    'data-statue-label-reveal',
+    mobile ? '1.000' : '0.000'
+  )
+  if (mobile) {
+    for (const id of ['archive', 'flanerie', 'pokeyard', 'island']) {
+      await page
+        .locator(`[data-obelisk="${id}"]`)
+        .evaluate((el: HTMLButtonElement) => el.click())
+      await expect(page.locator('.temple-page')).toHaveAttribute(
+        'data-selected',
+        id
+      )
+      await expect(page.locator('.temple-page')).toHaveAttribute(
+        'data-settled',
+        'true'
+      )
+      const themeColor = await stage.getAttribute('data-theme-color')
+      await expect(stage).toHaveAttribute(
+        'data-statue-label-color',
+        themeColor!
+      )
+      await expect(stage).toHaveAttribute('data-statue-label-reveal', '1.000')
+      await page.keyboard.press('Escape')
+      await expect(page.locator('.temple-page')).toHaveAttribute(
+        'data-selected',
+        'none'
+      )
+      await expect(page.locator('.temple-page')).toHaveAttribute(
+        'data-settled',
+        'true'
+      )
+      await expect(stage).toHaveAttribute('data-statue-label-color', '#e23456')
+    }
+    return
+  }
+  await stage.locator('canvas').click({
+    position: { x: viewport.width / 2, y: viewport.height / 2 },
+  })
+  await expect(page.locator('.temple-page')).toHaveAttribute(
+    'data-selected',
+    'statue'
+  )
+  await expect(page.locator('.temple-page')).toHaveAttribute(
+    'data-settled',
+    'true'
+  )
+  await expect(stage).toHaveAttribute('data-temple-reveal', '0.000')
+  await expect(stage).toHaveAttribute('data-statue-label-visible', 'true')
+  await expect(stage).toHaveAttribute('data-statue-label-reveal', '1.000')
+  await expect(stage).toHaveAttribute('data-statue-label-scale', '1.500')
+  await expect(stage).toHaveAttribute('data-statue-label-color', '#e23456')
+  await expect(stage).toHaveAttribute('data-statue-label-scanlines', '1.000')
+  const footerHeight = await page
+    .locator('.footer-com')
+    .evaluate((el) => parseFloat(getComputedStyle(el).height))
+  expect(
+    Math.abs(
+      viewport.height -
+        Number(await stage.getAttribute('data-statue-label-bottom')) -
+        (footerHeight * 3 + 24)
+    )
+  ).toBeLessThanOrEqual(1)
+  await page.mouse.move(20, 150)
+  await expect(stage).toHaveAttribute('data-statue-label-visible', 'true')
+  await page.keyboard.press('Escape')
+  await expect(page.locator('.temple-page')).toHaveAttribute(
+    'data-settled',
+    'true'
+  )
+  await expect(stage).toHaveAttribute('data-statue-label-scale', '1.000')
+  await expect(stage).toHaveAttribute('data-statue-label-color', '#e23456')
+  await expect(stage).toHaveAttribute('data-statue-label-scanlines', '0.000')
+})
+
+test('statue inscription overlaps letter reveals linearly and fades only after returning', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name.includes('mobile'), '手机端字样默认展示')
+  const stage = page.locator('.temple-stage')
+  const shaderErrors: string[] = []
+  page.on('console', (message) => {
+    if (message.type() === 'error' && /shader|WebGL/i.test(message.text()))
+      shaderErrors.push(message.text())
+  })
+  const readEnvironment = async () =>
+    stage.evaluate((element) => ({
+      reveal: Number(element.dataset.templeReveal),
+      scale: Number(element.dataset.templeScale),
+      pillars: element.dataset.monumentY!.split(',').map(Number),
+      holyScale: Number(element.dataset.statueHolyScale),
+      holyLight: Number(element.dataset.statueHolyLight),
+      clipHeight: Number(element.dataset.statueClipHeight),
+      statueY: Number(element.dataset.statueY),
+    }))
+  const closingStates: Awaited<ReturnType<typeof readEnvironment>>[] = []
+  const openingStates: typeof closingStates = []
+  await page.evaluate(() => {
+    const clock = { now: performance.now() }
+    ;(window as any).labelFadeClock = clock
+    const nativeFrame = requestAnimationFrame.bind(window)
+    performance.now = () => clock.now
+    window.requestAnimationFrame = (callback) =>
+      nativeFrame(() => callback(clock.now))
+  })
+  const advance = async (milliseconds: number) => {
+    await page.evaluate(async (ms) => {
+      ;(window as any).labelFadeClock.now += ms
+      await new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+      )
+    }, milliseconds)
+  }
+  const viewport = page.viewportSize()!
+  await page.mouse.move(viewport.width / 2, viewport.height / 2)
+  const readLetters = async () =>
+    (await stage.getAttribute('data-statue-label-letters'))!
+      .split(',')
+      .map(Number)
+  await advance(100)
+  const firstLetters = await readLetters()
+  expect(firstLetters[0]).toBeCloseTo(100 / 180, 2)
+  expect(firstLetters[1]).toBeCloseTo(10 / 180, 2)
+  expect(firstLetters[0] - firstLetters[1]).toBeCloseTo(0.5, 2)
+  expect(firstLetters.slice(2)).toEqual([0, 0, 0, 0])
+  await advance(100)
+  const secondLetters = await readLetters()
+  expect(secondLetters[0]).toBe(1)
+  expect(secondLetters[1]).toBeCloseTo(110 / 180, 2)
+  expect(secondLetters[2]).toBeCloseTo(20 / 180, 2)
+  expect(secondLetters[1] - secondLetters[2]).toBeCloseTo(0.5, 2)
+  expect(secondLetters[3]).toBe(0)
+  await advance(100)
+  const thirdLetters = await readLetters()
+  expect(thirdLetters[2]).toBeCloseTo(120 / 180, 2)
+  expect(thirdLetters[3]).toBeCloseTo(30 / 180, 2)
+  expect(thirdLetters[4]).toBe(0)
+  for (let i = 0; i < 4; i++) await advance(100)
+  await expect(stage).toHaveAttribute('data-statue-label-reveal', '1.000')
+  await expect(stage).toHaveAttribute('data-statue-label-color', '#e23456')
+  const footerHeight = await page
+    .locator('.footer-com')
+    .evaluate((el) => parseFloat(getComputedStyle(el).height))
+  const targetBottom = viewport.height - (footerHeight * 3 + 24)
+  const homeBottom = Number(
+    await stage.getAttribute('data-statue-label-bottom')
+  )
+  let previousBottom = homeBottom
+  const direction = Math.sign(targetBottom - previousBottom)
+  const initialModel = await readEnvironment()
+  await stage.locator('canvas').click({
+    position: { x: viewport.width / 2, y: viewport.height / 2 },
+  })
+  for (let i = 0; i < 18; i++) {
+    await advance(100)
+    closingStates.push(await readEnvironment())
+    const bottom = Number(await stage.getAttribute('data-statue-label-bottom'))
+    expect((bottom - previousBottom) * direction).toBeGreaterThanOrEqual(-1)
+    expect((bottom - targetBottom) * direction).toBeLessThanOrEqual(1)
+    previousBottom = bottom
+    await expect(stage).toHaveAttribute('data-statue-label-reveal', '1.000')
+  }
+  // 点击后首帧应仍保持半身裁切；随后裁切面与模型上升连续推进。
+  expect(closingStates[0].clipHeight).toBeCloseTo(initialModel.clipHeight, 2)
+  expect(closingStates[0].statueY).toBeCloseTo(initialModel.statueY, 2)
+  expect(closingStates.at(-1)!.clipHeight).toBeCloseTo(-0.1, 3)
+  expect(closingStates.at(-1)!.statueY).toBeGreaterThan(initialModel.statueY)
+  expect(
+    closingStates.some(
+      ({ reveal, scale, pillars, holyScale, holyLight }) =>
+        reveal > 0 &&
+        reveal < 1 &&
+        scale > 1 &&
+        pillars.every((y) => y < 0 && y > -7.5) &&
+        holyScale < 1 &&
+        holyLight > 0 &&
+        holyLight < 1
+    )
+  ).toBe(true)
+  for (let i = 1; i < closingStates.length; i++) {
+    expect(closingStates[i].clipHeight).toBeLessThanOrEqual(
+      closingStates[i - 1].clipHeight
+    )
+    expect(closingStates[i].statueY).toBeGreaterThanOrEqual(
+      closingStates[i - 1].statueY
+    )
+    expect(closingStates[i].reveal).toBeLessThanOrEqual(
+      closingStates[i - 1].reveal
+    )
+    expect(closingStates[i].scale).toBeGreaterThanOrEqual(
+      closingStates[i - 1].scale
+    )
+    closingStates[i].pillars.forEach((y, index) =>
+      expect(y).toBeLessThanOrEqual(closingStates[i - 1].pillars[index])
+    )
+  }
+  expect(closingStates[7].reveal).toBeGreaterThan(0)
+  expect(closingStates[14].reveal).toBeGreaterThan(0)
+  await expect(stage).toHaveAttribute('data-temple-reveal', '0.000')
+  await expect(stage).toHaveAttribute(
+    'data-monument-y',
+    '-7.500,-7.500,-7.500,-7.500'
+  )
+  await expect(stage).toHaveAttribute('data-visible-obelisks', '')
+  await expect(stage).toHaveAttribute('data-statue-holy-light', '0.000')
+  expect(Math.abs(previousBottom - targetBottom)).toBeLessThanOrEqual(1)
+  await page.mouse.move(20, 150)
+  await page.keyboard.press('Escape')
+  await advance(100)
+  await expect(stage).toHaveAttribute('data-statue-label-reveal', '1.000')
+  for (let i = 0; i < 20; i++) {
+    await advance(100)
+    openingStates.push(await readEnvironment())
+    const bottom = Number(await stage.getAttribute('data-statue-label-bottom'))
+    expect((bottom - previousBottom) * -direction).toBeGreaterThanOrEqual(-1)
+    expect((bottom - homeBottom) * -direction).toBeLessThanOrEqual(1)
+    previousBottom = bottom
+    await expect(stage).toHaveAttribute('data-statue-label-reveal', '1.000')
+    await expect(stage).toHaveAttribute('data-statue-label-visible', 'true')
+  }
+  expect(Math.abs(previousBottom - homeBottom)).toBeLessThanOrEqual(1)
+  expect(
+    openingStates.some(
+      ({ reveal, scale, pillars, holyScale, holyLight }) =>
+        reveal > 0 &&
+        reveal < 1 &&
+        scale > 1 &&
+        pillars.every((y) => y < 0 && y > -7.5) &&
+        holyScale > 0 &&
+        holyScale < 1 &&
+        holyLight > 0 &&
+        holyLight < 1
+    )
+  ).toBe(true)
+  expect(openingStates.at(-1)!.clipHeight).toBeCloseTo(
+    initialModel.clipHeight,
+    3
+  )
+  expect(openingStates.at(-1)!.statueY).toBeCloseTo(initialModel.statueY, 3)
+  await expect(stage).toHaveAttribute('data-temple-scale', '1.000')
+  await expect(stage).toHaveAttribute('data-temple-reveal', '1.000')
+  await expect(stage).toHaveAttribute(
+    'data-monument-y',
+    '0.000,0.000,0.000,0.000'
+  )
+  await expect(stage).toHaveAttribute('data-statue-holy-scale', '1.000')
+  await expect(stage).toHaveAttribute('data-statue-holy-light', '1.000')
+  await advance(100)
+  const disappearing = Number(
+    await stage.getAttribute('data-statue-label-reveal')
+  )
+  expect(disappearing).toBeGreaterThan(0)
+  expect(disappearing).toBeLessThan(1)
+  await advance(2000)
+  expect(shaderErrors).toEqual([])
+  await expect(stage).toHaveAttribute('data-statue-label-reveal', '0.000')
+  await expect(stage).toHaveAttribute('data-statue-label-visible', 'false')
+})
+
 test('module colors synchronize the page and model and all crystals remain hoverable', async ({
   page,
 }, testInfo) => {
@@ -576,9 +1165,9 @@ test('module colors synchronize the page and model and all crystals remain hover
   if (!testInfo.project.name.includes('mobile')) {
     for (const [id, color, index] of [
       ['archive', '#3276fe', 0],
-      ['flanerie', '#8a2c1b', 1],
-      ['island', '#e23456', 2],
-      ['pokeyard', '#f1c640', 3],
+      ['flanerie', '#8b5cc7', 1],
+      ['island', '#ce4c87', 3],
+      ['pokeyard', '#f1c640', 2],
     ] as const) {
       const box = (await page.locator(`[data-obelisk="${id}"]`).boundingBox())!
       await page.mouse.move(box.x + box.width / 2, box.y + box.height * 0.25)
@@ -593,7 +1182,8 @@ test('module colors synchronize the page and model and all crystals remain hover
   }
   for (const [id, color] of [
     ['archive', '#3276fe'],
-    ['flanerie', '#8a2c1b'],
+    ['flanerie', '#8b5cc7'],
+    ['island', '#ce4c87'],
   ] as const) {
     await page
       .locator(`[data-obelisk="${id}"]`)
@@ -710,6 +1300,7 @@ test('header fades in and out and its brand never stretches', async ({
         logoDuration: number
         fadeDuration: string
         navOpacity: number | null
+        titleOpacity: number | null
       }[] = []
       document
         .querySelector<HTMLButtonElement>('[data-obelisk="archive"]')!
@@ -719,6 +1310,7 @@ test('header fades in and out and its brand never stretches', async ({
           const logo = document.querySelector('.logo-box .logo')!
           const nav = document.querySelector(selector)
           const navOpacity = nav ? Number(getComputedStyle(nav).opacity) : null
+          const title = document.querySelector('.header-brand-details')
           frames.push({
             logoMoving: logo.getAnimations().length > 0,
             logoDuration: Number(
@@ -726,6 +1318,9 @@ test('header fades in and out and its brand never stretches', async ({
             ),
             fadeDuration: nav ? getComputedStyle(nav).transitionDuration : '',
             navOpacity,
+            titleOpacity: title
+              ? Number(getComputedStyle(title).opacity)
+              : null,
           })
           if (navOpacity === 1) resolve()
           else requestAnimationFrame(sample)
@@ -743,6 +1338,15 @@ test('header fades in and out and its brand never stretches', async ({
   expect(
     samples.some(
       (frame) =>
+        frame.logoMoving &&
+        frame.titleOpacity !== null &&
+        frame.titleOpacity > 0 &&
+        frame.titleOpacity < 1
+    )
+  ).toBe(true)
+  expect(
+    samples.some(
+      (frame) =>
         frame.navOpacity !== null &&
         frame.navOpacity > 0 &&
         frame.navOpacity < 1
@@ -757,6 +1361,12 @@ test('header fades in and out and its brand never stretches', async ({
   expect(samples.some((frame) => frame.fadeDuration === '0.8s')).toBe(true)
   const brand = page.locator('.site-brand')
   const focusedLogo = (await page.locator('.logo-box .logo').boundingBox())!
+  if (mobile) {
+    expect(focusedLogo.x).toBeLessThan(page.viewportSize()!.width * 0.2)
+    await expect(page.locator('.layout-page')).not.toHaveClass(
+      /temple-header-balanced/
+    )
+  }
   const brandBox = (await brand.boundingBox())!
   const rootFont = await page.evaluate(() =>
     parseFloat(getComputedStyle(document.documentElement).fontSize)
@@ -834,6 +1444,12 @@ test('header fades in and out and its brand never stretches', async ({
   expect(
     exitFrames.some((frame) => frame.opacity > 0 && frame.logoMoving)
   ).toBe(true)
+  expect(
+    exitFrames.some(
+      (frame) =>
+        frame.brandOpacity > 0 && frame.brandOpacity < 1 && frame.logoMoving
+    )
+  ).toBe(true)
   await expect(nav).toHaveCount(0)
   await expect(brand).toHaveCount(0)
   await expect
@@ -893,8 +1509,8 @@ test('focused modules tint the half-screen zodiac and rotate to their configured
   await expect(chart).toHaveClass(/is-red-layout/)
   for (const [id, glyph, color] of [
     ['archive', '♒︎', '#3276fe'],
-    ['flanerie', '♐︎', '#8a2c1b'],
-    ['island', '♓︎', '#e23456'],
+    ['flanerie', '♐︎', '#8b5cc7'],
+    ['island', '♓︎', '#ce4c87'],
     ['pokeyard', '♌︎', '#f1c640'],
   ]) {
     await page
@@ -1213,7 +1829,7 @@ test('switching focus during submenu exit cancels the pending return', async ({
   )
   await expect(page.locator('.temple-stage')).toHaveAttribute(
     'data-theme-color',
-    '#8a2c1b'
+    '#8b5cc7'
   )
 })
 

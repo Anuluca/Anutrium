@@ -260,7 +260,7 @@ test('model loading is silent and does not expose interactive controls before it
   const gate = new Promise<void>((resolve) => {
     release = resolve
   })
-  await page.route('**/models/lucario-island.bin', async (route) => {
+  await page.route('**/models/lucario-island.bin?*', async (route) => {
     await gate
     await route.continue()
   })

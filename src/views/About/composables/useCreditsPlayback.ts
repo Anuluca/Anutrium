@@ -68,7 +68,7 @@ export function useCreditsPlayback(
       // Respect manual scrolling in both directions while retaining subpixels.
       if (Math.abs(actualPosition - crewScrollPosition) > 1)
         crewScrollPosition = actualPosition
-      crewScrollPosition += elapsed * 0.022
+      crewScrollPosition += elapsed * 0.033
       const nextPosition = Math.min(end, Math.round(crewScrollPosition))
       if (nextPosition !== actualPosition) scroller.scrollTop = nextPosition
       if (crewScrollPosition >= end) {

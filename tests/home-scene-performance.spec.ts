@@ -1,4 +1,25 @@
 import { expect, test } from '@playwright/test'
+import path from 'node:path'
+
+import { openHomeAboutOverlay } from './helpers/homeAboutOverlay'
+
+test.beforeEach(async ({ page }) => {
+  // 几何采样不能被其他开发窗口的 HMR 重挂载打断；字体也固定为同一份本地资源。
+  await page.routeWebSocket('ws://localhost:3000/**', (socket) =>
+    socket.close()
+  )
+  await page.route('https://use.typekit.net/**', (route) => route.abort())
+  await page.route('https://assets.anuluca.com/fonts/unbounded/**', (route) =>
+    route.fulfill({
+      path: path.resolve(
+        'scripts/fonts/generated',
+        path.basename(new URL(route.request().url()).pathname)
+      ),
+      contentType: 'font/woff2',
+      headers: { 'access-control-allow-origin': '*' },
+    })
+  )
+})
 
 test('focus and blur preserve full resolution and page geometry throughout motion', async ({
   page,
@@ -21,7 +42,7 @@ test('focus and blur preserve full resolution and page geometry throughout motio
     })
   const initial = await read()
   for (const focused of [true, false]) {
-    if (focused) await page.locator('[data-obelisk="pokeyard"]').click()
+    if (focused) await page.locator('[data-obelisk="flanerie"]').click()
     else await page.keyboard.press('Escape')
     const changes = await canvas.evaluate(async (element) => {
       const canvas = element as HTMLCanvasElement
@@ -132,11 +153,7 @@ test('about overlay pauses the covered home scene and resumes after closing', as
   })
   const mobile = testInfo.project.name.includes('mobile')
   if (mobile) await page.locator('.mobile-menu-icon').click()
-  await page
-    .locator(
-      `${mobile ? '.mobile-menu-items' : '.menu-box'} [data-temple-nav="about"]`
-    )
-    .click()
+  await openHomeAboutOverlay(page)
   await expect(page.locator('.about-overlay .about-page')).toBeVisible()
   const before = await readDraws()
   expect(before).toBeGreaterThan(0)

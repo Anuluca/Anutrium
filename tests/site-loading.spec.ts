@@ -1,25 +1,37 @@
 import { expect, type Page, test } from '@playwright/test'
 
 test.setTimeout(90000)
+test.beforeEach(async ({ page }) => {
+  await page.routeWebSocket('ws://localhost:3000/**', (socket) =>
+    socket.close()
+  )
+})
 const push = (page: Page, path: string) =>
   page.evaluate(async (target) => {
     const app = document.querySelector('#app') as any
     await app.__vue_app__.config.globalProperties.$router.push(target)
   }, path)
 
-test('home enters midway through overlay exit and the footer follows above the overlay', async ({
+test('home enters when the loading line fades and the footer follows above the overlay', async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' })
-  await page.clock.install()
-  await page.clock.pauseAt(await page.evaluate(() => Date.now() + 50))
   await page.addInitScript(() => {
     const probe = {
       shrinkStarted: 0,
+      fadeStarted: 0,
       modelStarted: 0,
       modelEnteredDuringShrink: false,
       footerAboveOverlay: false,
     }
+    document.addEventListener('animationstart', (event) => {
+      const animation = event as AnimationEvent
+      if (
+        (animation.target as Element).matches('.loading-line') &&
+        animation.animationName.includes('loading-line-lifecycle')
+      )
+        probe.fadeStarted = performance.now()
+    })
     const observer = new MutationObserver(() => {
       const stage = document.querySelector<HTMLElement>('.temple-stage')
       const overlay = document.querySelector('.entry-overlay-container')
@@ -53,25 +65,25 @@ test('home enters midway through overlay exit and the footer follows above the o
     ;(window as any).homeEntryProbe = probe
   })
   await page.goto('/', { waitUntil: 'domcontentloaded' })
-  for (let attempt = 0; attempt < 140; attempt++) {
-    await page.clock.runFor(50)
-    if (await page.evaluate(() => (window as any).homeEntryProbe.modelStarted))
-      break
-    await page.waitForTimeout(100)
-  }
+  await expect
+    .poll(
+      () => page.evaluate(() => (window as any).homeEntryProbe.modelStarted),
+      { timeout: 30000 }
+    )
+    .toBeGreaterThan(0)
   const footer = page.locator('.footer-com')
   await expect(footer).toHaveClass(/footer-ready/, { timeout: 30000 })
   const probe = await page.evaluate(() => (window as any).homeEntryProbe)
   expect(probe.modelEnteredDuringShrink).toBe(true)
   expect(probe.footerAboveOverlay).toBe(true)
-  expect(probe.modelStarted - probe.shrinkStarted).toBeGreaterThanOrEqual(1000)
-  expect(probe.modelStarted - probe.shrinkStarted).toBeLessThan(1100)
+  expect(probe.fadeStarted).toBeGreaterThan(0)
+  expect(Math.abs(probe.modelStarted - probe.fadeStarted)).toBeLessThan(100)
   await expect(footer).toHaveCSS('transition-delay', '0s, 0s, 0s, 0s')
   await expect(footer.locator('.expand')).toHaveCSS('transition-delay', '0s')
   await expect(footer).toHaveClass(/footer-expanded/)
-  await expect(page.locator('.entry-overlay-container')).toHaveCount(1)
-  await page.clock.runFor(1200)
-  await expect(page.locator('.entry-overlay-container')).toHaveCount(0)
+  await expect(page.locator('.entry-overlay-container')).toHaveCount(0, {
+    timeout: 10000,
+  })
   await expect(footer).toHaveCSS('z-index', '100')
   await expect(footer).not.toHaveClass(/footer-above-entry-overlay/)
 })
@@ -83,7 +95,7 @@ test('site loader waits for home assets without displaying a second page loader'
   const assetGate = new Promise<void>((resolve) => {
     release = resolve
   })
-  await page.route('**/models/lucario-island.bin', async (route) => {
+  await page.route('**/models/lucario-island.bin*', async (route) => {
     await assetGate
     await route.continue()
   })
@@ -121,7 +133,7 @@ test('site loader waits for home assets without displaying a second page loader'
   }
 })
 
-test('returning to home uses the global compact loader and reuses model downloads', async ({
+test('returning to home skips the global loader and reuses model downloads', async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
@@ -141,16 +153,16 @@ test('returning to home uses the global compact loader and reuses model download
   await page.evaluate(() => {
     const probe = {
       seen: false,
-      centered: false,
+      aligned: false,
       observer: new MutationObserver(() => {
         const element = document.querySelector('.site-loading-progress')
         if (element) {
           probe.seen = true
           const bounds = element.getBoundingClientRect()
-          probe.centered ||=
+          probe.aligned ||=
             getComputedStyle(element).position === 'fixed' &&
             Math.abs(bounds.x + bounds.width / 2 - innerWidth / 2) <= 1 &&
-            Math.abs(bounds.y + bounds.height / 2 - innerHeight / 2) <= 1
+            Math.abs(bounds.height - 1) <= 0.01
         }
       }),
     }
@@ -168,9 +180,9 @@ test('returning to home uses the global compact loader and reuses model download
     await page.evaluate(() => {
       const probe = (window as any).siteLoadingProbe
       probe.observer.disconnect()
-      return { seen: probe.seen, centered: probe.centered }
+      return { seen: probe.seen, aligned: probe.aligned }
     })
-  ).toEqual({ seen: true, centered: true })
+  ).toEqual({ seen: false, aligned: false })
   await expect(page.locator('.entry-overlay-container')).toHaveCount(0)
   await expect(
     page.locator('.temple-page .entry-loading-progress')
@@ -188,7 +200,7 @@ test('failed home preparation releases the site loader and can be retried on ret
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.route('**/models/lucario-island.bin', (route) =>
+  await page.route('**/models/lucario-island.bin*', (route) =>
     route.fulfill({ status: 503, body: '' })
   )
   await page.goto('/', { waitUntil: 'domcontentloaded' })
@@ -197,7 +209,7 @@ test('failed home preparation releases the site loader and can be retried on ret
     timeout: 15000,
   })
   await expect(page.locator('.entry-loading-progress')).toHaveCount(0)
-  await page.unroute('**/models/lucario-island.bin')
+  await page.unroute('**/models/lucario-island.bin*')
   await push(page, '/craft')
   await expect(page.locator('.craft-page')).toBeVisible()
   await push(page, '/')
@@ -215,11 +227,16 @@ test('stalled model requests time out and release the global loading overlay', a
 }) => {
   await page.clock.install()
   let requested = false
-  await page.route('**/models/lucario-island.bin', () => {
+  await page.route('**/models/lucario-island.bin*', () => {
     requested = true
   })
   await page.goto('/', { waitUntil: 'domcontentloaded' })
   await expect.poll(() => requested).toBe(true)
+  // 路由预取比场景挂载更早；先确认场景已订阅同一加载任务，再推进超时时钟。
+  await expect(page.locator('.temple-stage')).toHaveAttribute(
+    'data-model',
+    'lucario'
+  )
   await page.clock.fastForward(31000)
   await expect(page.locator('.lucario-status')).toBeAttached()
   await page.clock.runFor(3500)

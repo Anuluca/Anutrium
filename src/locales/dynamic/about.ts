@@ -11,8 +11,8 @@ const aboutDynamic = {
       en: '__"POKEYARD"__ page',
     },
     {
-      zhCn: '__「花花小窝」__大模块',
-      en: '__"Flora\'s Place"__ page',
+      zhCn: '__「创作」__大模块',
+      en: '__"CREATIVE"__ page',
     },
   ],
   neighbours: [

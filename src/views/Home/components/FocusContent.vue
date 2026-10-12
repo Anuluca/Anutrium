@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import {
-  defineAsyncComponent,
+  type Component,
   nextTick,
   onBeforeUnmount,
   ref,
+  shallowRef,
   watch,
 } from 'vue'
 import { useResizeObserver } from '@vueuse/core'
@@ -12,6 +13,8 @@ import ScrollViewport from '@/components/ScrollViewport/index.vue'
 import type { TempleCategoryId } from '@/config/templeNavigation'
 import { useTempleNavigation } from '@/stores/templeNavigation'
 
+import { loadTempleFocusContent } from '../focusContentLoader'
+
 const props = defineProps<{
   category: TempleCategoryId
   expanded: boolean
@@ -19,7 +22,19 @@ const props = defineProps<{
   detailTarget?: HTMLElement | null
 }>()
 const navigation = useTempleNavigation()
+const emit = defineEmits<{
+  (event: 'loading', category: TempleCategoryId): void
+  (event: 'ready', category: TempleCategoryId): void
+}>()
+const component = shallowRef<Component>()
+const failed = ref(false)
+let loadRevision = 0
 const viewport = ref<InstanceType<typeof ScrollViewport> | null>(null)
+const archive = ref<{ closeInlineDetail: () => boolean } | null>(null)
+defineExpose({
+  closeInlineDetail: () => archive.value?.closeInlineDetail() ?? false,
+  refreshGeometry: () => viewport.value?.measure(),
+})
 let scrollRestored = false
 const restoreScroll = async () => {
   const root = viewport.value?.scrollRoot
@@ -38,40 +53,73 @@ useResizeObserver(
   restoreScroll
 )
 onBeforeUnmount(() => {
+  loadRevision++
   if (viewport.value?.scrollRoot)
     navigation.scrollPositions[props.category] =
       viewport.value.scrollRoot.scrollTop
 })
-// 聚焦结束后才挂载内容，避免默认场景承担列表与地图的渲染开销。
-const ArchiveContent = defineAsyncComponent(
-  () => import('@/views/Archive/ArchiveContent.vue')
-)
-const JourneyContent = defineAsyncComponent(
-  () => import('@/views/Flânerie/JourneyContent.vue')
-)
+const loadContent = async () => {
+  const revision = ++loadRevision
+  const category = props.category
+  emit('loading', category)
+  component.value = undefined
+  failed.value = false
+  try {
+    const loaded = await loadTempleFocusContent(category)
+    if (revision !== loadRevision) return
+    component.value = loaded
+    // 通知父层前完成真实内容挂载和滚动恢复，避免只对空壳播放入场动画。
+    await nextTick()
+    await restoreScroll()
+    if (revision === loadRevision) emit('ready', category)
+  } catch (error) {
+    if (revision !== loadRevision) return
+    console.error('二级菜单内容加载失败', error)
+    failed.value = true
+    await nextTick()
+    if (revision === loadRevision) emit('ready', category)
+  }
+}
+watch(() => props.category, loadContent, { immediate: true })
 </script>
 
 <template>
   <ScrollViewport
     ref="viewport"
     class="temple-focus-content"
-    :class="{ 'is-expanded': props.expanded }"
+    :class="{
+      'is-expanded': props.expanded,
+      'is-placeholder':
+        props.category === 'island' || props.category === 'pokeyard',
+    }"
     :data-content="props.category"
     edge-progress
   >
     <template #default="{ scrollRoot }">
-      <ArchiveContent
-        v-if="props.category === 'archive'"
+      <component
+        :is="component"
+        v-if="component && props.category === 'archive'"
+        ref="archive"
         embedded
         :detail-target="props.detailTarget"
         :inline-details="!props.expanded && navigation.selected === 'archive'"
       />
-      <JourneyContent
-        v-else-if="props.category === 'flanerie'"
+      <component
+        :is="component"
+        v-else-if="component && props.category === 'flanerie'"
         embedded
         :scroll-root="scrollRoot"
         :resizing="props.resizing"
       />
+      <component
+        :is="component"
+        v-else-if="component"
+        embedded
+        @return-home="navigation.request(null)"
+      />
+      <p v-else-if="failed" role="alert">
+        内容加载失败，<button type="button" @click="loadContent">重试</button>
+      </p>
     </template>
   </ScrollViewport>
 </template>
@@ -84,6 +132,9 @@ const JourneyContent = defineAsyncComponent(
   padding-top: var(--temple-menu-header-gap);
   :deep(.scroll-viewport__scroll) {
     padding-right: 0;
+  }
+  &.is-placeholder :deep(.scroll-viewport__scroll > div) {
+    height: 100%;
   }
   :deep(.is-embedded .works-grid),
   :deep(.is-embedded .misc-grid),

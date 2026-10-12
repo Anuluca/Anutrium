@@ -6,10 +6,12 @@
       'layout-show': layoutShow,
       'entry-logo-ready': headerLogoReady,
       'temple-header-default': templeHeaderDefault,
+      'temple-header-balanced':
+        isTempleRoute && !isMobile && !templeHeaderDefault,
       'no-menu': noMenuShellActive,
     }"
   >
-    <el-header
+    <header
       ref="headerElement"
       class="el-menu-layout-all"
       :class="{
@@ -17,6 +19,7 @@
         'scroll-layout-active': isHeaderScrollLayoutActive,
         'content-aligned': headerPresentation.contentAligned,
       }"
+      @click="dismissTempleFocusFromHeader"
     >
       <span class="header-hover-overlay" aria-hidden="true" />
       <button
@@ -27,7 +30,17 @@
       >
         <Logo id="0" class="logo" :active="false" data-entry-logo-target />
         <Transition name="header-fade">
-          <span v-if="showNavigation" class="header-brand-details">
+          <span
+            v-if="
+              showHeaderTitle ||
+              (isTempleRoute && !isMobile && !templeHeaderDefault)
+            "
+            class="header-brand-details"
+            :class="{
+              'header-brand-details--hidden':
+                isTempleRoute && !isMobile && !showHeaderTitle,
+            }"
+          >
             <span class="site-brand">Anutrium</span>
             <Transition name="module-name" mode="out-in" :duration="560">
               <span
@@ -62,9 +75,14 @@
           class="desktop-menu"
           :aria-label="locale === 'en' ? 'Primary navigation' : '主导航'"
         >
-          <ul class="menu-box">
+          <ul
+            v-for="(items, groupIndex) in desktopMenuGroups"
+            :key="groupIndex"
+            class="menu-box"
+            :class="{ 'menu-box--right': groupIndex === 1 }"
+          >
             <li
-              v-for="item in menuItems"
+              v-for="item in items"
               :key="item.id"
               :class="[
                 'desktop-menu-item',
@@ -79,7 +97,11 @@
               <button
                 type="button"
                 class="temple-nav-action"
+                :class="{
+                  'is-wireframe-preview': isTempleMutedMenuItem(item.id),
+                }"
                 :data-temple-nav="item.id"
+                :aria-label="item.id === 'about' ? 'ABOUT / 关于' : undefined"
                 :style="{
                   '--module-theme-color':
                     'themeColor' in item ? item.themeColor : '#e23456',
@@ -90,7 +112,12 @@
                 :aria-pressed="activeNavigation === item.id"
                 @click="activateNavigation(item.id)"
               >
-                <div class="title-box">
+                <InfoFilled
+                  v-if="item.id === 'about'"
+                  class="about-info-icon"
+                  aria-hidden="true"
+                />
+                <div v-else class="title-box">
                   <TextRoll class="main-title" :text="item.title" />
                   <div class="second-title">
                     <div class="line" />
@@ -102,7 +129,7 @@
           </ul>
         </nav>
       </Transition>
-    </el-header>
+    </header>
 
     <Transition name="header-fade">
       <button
@@ -144,11 +171,39 @@
         <div class="mobile-menu-content" @click.stop>
           <div class="mobile-menu-items">
             <button
+              type="button"
+              class="temple-nav-action"
+              data-temple-nav="home"
+              :aria-pressed="
+                isTempleRoute &&
+                !navigation.activeSelection &&
+                !navigation.aboutOpen
+              "
+              @click="returnToInitialHome"
+            >
+              <div
+                class="mobile-menu-item HOME"
+                :class="{
+                  active:
+                    isTempleRoute &&
+                    !navigation.activeSelection &&
+                    !navigation.aboutOpen,
+                }"
+              >
+                <div class="big-title">HOME</div>
+                <div class="little-title">首页</div>
+              </div>
+            </button>
+            <button
               v-for="item in menuItems"
               :key="item.id"
               type="button"
               class="temple-nav-action"
+              :class="{
+                'is-wireframe-preview': isTempleMutedMenuItem(item.id),
+              }"
               :data-temple-nav="item.id"
+              :aria-label="item.id === 'about' ? 'ABOUT / 关于' : undefined"
               :style="{
                 '--module-theme-color':
                   'themeColor' in item ? item.themeColor : '#e23456',
@@ -164,8 +219,15 @@
                   [item.id.toUpperCase()]: true,
                 }"
               >
-                <div class="big-title">{{ item.title }}</div>
-                <div class="little-title">{{ item.label }}</div>
+                <InfoFilled
+                  v-if="item.id === 'about'"
+                  class="about-info-icon"
+                  aria-hidden="true"
+                />
+                <template v-else>
+                  <div class="big-title">{{ item.title }}</div>
+                  <div class="little-title">{{ item.label }}</div>
+                </template>
               </div>
             </button>
           </div>
@@ -194,16 +256,16 @@
               @click="toggleTheme"
             >
               <span v-if="theme === 'light'" class="first sun">
-                <el-icon><Sunny /></el-icon>
+                <HeaderThemeIcon kind="sun" />
               </span>
               <span v-if="theme === 'light'" class="second">
-                <el-icon><Moon /></el-icon>
+                <HeaderThemeIcon kind="moon" />
               </span>
               <span v-if="theme === 'dark'" class="first">
-                <el-icon><Moon /></el-icon>
+                <HeaderThemeIcon kind="moon" />
               </span>
               <span v-if="theme === 'dark'" class="second">
-                <el-icon><Sunny /></el-icon>
+                <HeaderThemeIcon kind="sun" />
               </span>
             </button>
           </div>
@@ -269,16 +331,17 @@ import {
 } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
-import { Moon, Sunny } from '@element-plus/icons-vue'
+import { InfoFilled } from '@element-plus/icons-vue'
 
 import BackToTop from '@/components/BackToTop/index.vue'
+import HeaderThemeIcon from '@/components/HeaderThemeIcon.vue'
 import Logo from '@/components/Logo/index.vue'
 import MenuToggleIcon from '@/components/MenuToggleIcon/index.vue'
 import PageScrollProgress from '@/components/PageScrollProgress/index.vue'
 import TextRoll from '@/components/TextRoll/index.vue'
 import { HOME_RETURN_TO_PASSION_EVENT } from '@/config/homeNavigation'
+import { isTempleMutedMenuItem } from '@/config/templeModelDisplay'
 import {
-  templeCategoryById,
   templeNavigation,
   type TempleNavigationId,
 } from '@/config/templeNavigation'
@@ -291,6 +354,7 @@ import {
 } from '@/router'
 import { visualState } from '@/stores'
 import { useTempleNavigation } from '@/stores/templeNavigation'
+import { consumeJourneyReturnState } from '@/utils/journeyReturnState'
 import { persistLocale, type SiteLocale } from '@/utils/locale'
 import {
   addPageResizeListener,
@@ -342,6 +406,7 @@ provide(
 )
 
 const headerLogoReady = ref(false)
+const navigationEntryReady = ref(false)
 
 const route = useRoute()
 const router = useRouter()
@@ -349,19 +414,55 @@ const visualStateStore = visualState()
 const isHomeRoute = computed(() => route.name === 'TEST2')
 const isTempleRoute = computed(() => route.name === 'HOME')
 const navigation = useTempleNavigation()
+const dismissTempleFocusFromHeader = (event: MouseEvent) => {
+  if (
+    !isTempleRoute.value ||
+    !navigation.activeSelection ||
+    navigation.aboutOpen
+  )
+    return
+  if (
+    event.target instanceof Element &&
+    event.target.closest(
+      'a, button, input, select, textarea, [role="button"], [contenteditable="true"]'
+    )
+  )
+    return
+  if (!navigation.closeInlineDetail()) navigation.request(null)
+}
 const wantsNavigation = computed(
-  () => !isTempleRoute.value || !!navigation.selected || navigation.aboutOpen
+  () =>
+    !isTempleRoute.value || !!navigation.activeSelection || navigation.aboutOpen
 )
 const templeHeaderDefault = ref(!wantsNavigation.value)
 const navigationRevealed = ref(wantsNavigation.value)
 const showNavigation = computed(
-  () => wantsNavigation.value && navigationRevealed.value
+  () =>
+    wantsNavigation.value &&
+    navigationRevealed.value &&
+    navigationEntryReady.value
+)
+// 标题随聚焦立即淡入，路由入口继续等待 Logo 移动完成。
+const showHeaderTitle = computed(() =>
+  isTempleRoute.value
+    ? wantsNavigation.value && navigationEntryReady.value
+    : showNavigation.value
 )
 watch(
-  [isTempleRoute, () => navigation.selected, () => navigation.aboutOpen],
+  [
+    isTempleRoute,
+    () => navigation.activeModule,
+    () => navigation.aboutOpen,
+    () => navigation.companionFocused,
+  ],
   () => {
     if (isTempleRoute.value)
-      syncPageTheme(route, navigation.selected?.toUpperCase() || 'HOME')
+      syncPageTheme(
+        route,
+        navigation.companionFocused
+          ? 'SPRIGATITO'
+          : navigation.activeModule?.toUpperCase() || 'HOME'
+      )
   },
   { immediate: true }
 )
@@ -382,13 +483,7 @@ const currentRouter = computed(() => {
   return normalizeMenuPath(activePath)
 })
 
-type ModuleHeaderTheme =
-  | 'about'
-  | 'archive'
-  | 'craft'
-  | 'flanerie'
-  | 'flora'
-  | 'island'
+type ModuleHeaderTheme = 'about' | 'archive' | 'craft' | 'flanerie' | 'island'
 
 const moduleThemeByPath: Readonly<Record<string, ModuleHeaderTheme>> = {
   '/archive': 'archive',
@@ -396,7 +491,6 @@ const moduleThemeByPath: Readonly<Record<string, ModuleHeaderTheme>> = {
   '/island': 'island',
   '/craft': 'craft',
   '/about': 'about',
-  '/pet': 'flora',
 }
 const moduleRouteByPath = new Map(
   routes.map((item) => [normalizeMenuPath(item.path), item])
@@ -412,9 +506,9 @@ const headerPresentation = computed(() => {
       contentAligned: false,
       moduleName: navigation.aboutOpen
         ? 'ABOUT'
-        : (navigation.selected &&
-            templeCategoryById.get(navigation.selected)?.title) ||
-          '',
+        : templeNavigation.find(
+            (item) => item.id === navigation.activeSelection
+          )?.title || '',
       moduleTheme: '',
     }
   return {
@@ -446,13 +540,12 @@ const moveTempleLogo = async (centered: boolean) => {
   let targetX = after.x
   let targetY = after.y
   if (centered) {
-    // 同一帧内测量居中样式的最终位置，包含负边距变化，避免动画结束后跳动。
-    const shell = logo.closest('.layout-page')!
-    shell.classList.add('temple-header-default')
-    const target = logo.getBoundingClientRect()
+    // 回正布局清除负上边距；直接补偿居中对齐偏移，避免临时 display:none 中断标题渐隐。
+    const marginTop = parseFloat(
+      getComputedStyle(logo.parentElement!).marginTop
+    )
     targetX = (window.innerWidth - after.width) / 2
-    targetY = target.y
-    shell.classList.remove('temple-header-default')
+    targetY = after.y - marginTop / 2
   }
   const animation = logo.animate(
     [
@@ -537,13 +630,40 @@ const isScrolled = ref(false)
 const layoutShow = ref(false)
 const theme = computed(() => visualStateStore.theme)
 const menuItems = templeNavigation
+const menuItemById = new Map(menuItems.map((item) => [item.id, item]))
+const balancedMenuItems = (
+  [
+    'archive',
+    'flanerie',
+    'statue',
+    'about',
+    'sprigatito',
+    'pokeyard',
+    'island',
+  ] as const
+).map((id) => menuItemById.get(id)!)
+const desktopMenuGroups = computed(() =>
+  isTempleRoute.value
+    ? [balancedMenuItems.slice(0, 4), balancedMenuItems.slice(4)]
+    : [menuItems]
+)
 const activeNavigation = computed(() =>
-  navigation.aboutOpen ? 'about' : navigation.selected
+  navigation.aboutOpen ? 'about' : navigation.activeSelection
 )
 const activateNavigation = async (id: TempleNavigationId) => {
   closeMobileMenu()
   if (!isTempleRoute.value) await router.push('/')
   navigation.request(id)
+}
+const returnToInitialHome = async () => {
+  closeMobileMenu()
+  // HOME 是显式复位；在路由切换前提交请求，避免子页返回逻辑自动恢复模块聚焦。
+  consumeJourneyReturnState()
+  navigation.returnModule = null
+  navigation.returnExpanded = false
+  navigation.request(null)
+  await router.push('/')
+  navigation.entryModule = null
 }
 
 const activePageLayout = ref<PageLayout>(
@@ -594,6 +714,7 @@ const shouldShowPageScrollProgress = computed(
 const isHeaderScrollLayoutActive = ref(false)
 const isEntryContentRefreshing = ref(false)
 let logoTimer: number | null = null
+let navigationEntryTimer: number | null = null
 let islandGeometryUnlockTimer: number | null = null
 let removeRouteGeometryGuard: (() => void) | null = null
 let lockedIslandRouteGeometry: {
@@ -616,7 +737,8 @@ let lockedRouterContainerGeometry: {
 let hasPlayedEntryAnimation = false
 const ISLAND_ROUTE_NAME = 'TEST'
 const ISLAND_GEOMETRY_UNLOCK_DELAY = 260
-const ENTRY_LOGO_REVEAL_DELAY = 600
+const ENTRY_LOGO_REVEAL_DELAY = 900
+const ENTRY_NAVIGATION_REVEAL_DELAY = 300
 const ENTRY_LOGO_REVEAL_DURATION = 300
 const HEADER_SCROLL_DISTANCE = 100
 const HEADER_SCROLL_PROGRESS_EPSILON = 0.001
@@ -627,21 +749,20 @@ const islandLeavingClasses = [
   'island-pc-shell-leaving',
   'island-mobile-shell-leaving',
 ] as const
-const floraShellClasses = ['flora-shell'] as const
-const floraLeavingClasses = ['flora-shell-leaving'] as const
 const routeShellClasses = [
   ...islandShellClasses,
   ...islandLeavingClasses,
-  ...floraShellClasses,
-  ...floraLeavingClasses,
 ] as const
 const islandLeavingClassByRouteShell = {
   'island-pc': 'island-pc-shell-leaving',
   'island-mobile': 'island-mobile-shell-leaving',
-  flora: 'flora-shell-leaving',
 } as const
 
 const clearEntryAnimationTimers = () => {
+  if (navigationEntryTimer !== null) {
+    window.clearTimeout(navigationEntryTimer)
+    navigationEntryTimer = null
+  }
   if (logoTimer !== null) {
     window.clearTimeout(logoTimer)
     logoTimer = null
@@ -1034,16 +1155,10 @@ const unlockIslandRouteGeometry = () => {
   restoreIslandRouteGeometry()
   activePageLayout.value = pendingPageLayout
   noMenuShellActive.value = pendingNoMenuShell
-  document.body.classList.remove(
-    ...islandLeavingClasses,
-    ...floraLeavingClasses
-  )
+  document.body.classList.remove(...islandLeavingClasses)
 
   if (route.name !== ISLAND_ROUTE_NAME && route.name !== 'HOME') {
     document.body.classList.remove(...islandShellClasses)
-  }
-  if (route.name !== 'PET') {
-    document.body.classList.remove(...floraShellClasses)
   }
 
   void nextTick(schedulePageMetricsRefresh)
@@ -1075,9 +1190,25 @@ const scheduleIslandGeometryUnlock = () => {
     return
   }
 
+  const leavingElement = lockedIslandRouteGeometry?.element
+  let fallbackDelay = ISLAND_GEOMETRY_UNLOCK_DELAY
+  if (leavingElement) {
+    const style = getComputedStyle(leavingElement)
+    const milliseconds = (value: string) =>
+      parseFloat(value) * (value.trim().endsWith('ms') ? 1 : 1000)
+    const delays = style.transitionDelay.split(',').map(milliseconds)
+    const durations = style.transitionDuration.split(',').map(milliseconds)
+    // 超时兜底须晚于真实 CSS 离场；固定 260ms 会在慢过渡中提前恢复盒模型。
+    fallbackDelay = Math.max(
+      fallbackDelay,
+      ...durations.map(
+        (duration, index) => duration + delays[index % delays.length] + 100
+      )
+    )
+  }
   islandGeometryUnlockTimer = window.setTimeout(
     unlockIslandRouteGeometry,
-    ISLAND_GEOMETRY_UNLOCK_DELAY
+    fallbackDelay
   )
 }
 
@@ -1109,12 +1240,7 @@ onMounted(() => {
 onUnmounted(() => {
   clearIslandGeometryUnlockTimer()
   restoreIslandRouteGeometry()
-  document.body.classList.remove(
-    ...islandShellClasses,
-    ...islandLeavingClasses,
-    ...floraShellClasses,
-    ...floraLeavingClasses
-  )
+  document.body.classList.remove(...islandShellClasses, ...islandLeavingClasses)
   unlockMobilePageScroll()
   clearMobileMenuTimers()
   clearBackgroundTopInsetTimer()
@@ -1157,6 +1283,16 @@ watch(
   },
   { flush: 'sync' }
 )
+
+watch(layoutShow, (visible) => {
+  if (!visible || navigationEntryReady.value || navigationEntryTimer !== null)
+    return
+  // 从布局实际显示时开始延迟，避免被页面内容的重挂载等待抵消。
+  navigationEntryTimer = window.setTimeout(() => {
+    navigationEntryTimer = null
+    navigationEntryReady.value = true
+  }, ENTRY_NAVIGATION_REVEAL_DELAY)
+})
 
 watch(
   [

@@ -41,12 +41,20 @@ test('crew panel preserves page position, fits its container and restores the br
   const container = (await page.locator('.passion-section').boundingBox())!
   const triggerBounds = (await trigger.boundingBox())!
   const bounds = (await panel.boundingBox())!
-  expect(Math.abs(bounds.width - container.width / 3)).toBeLessThanOrEqual(1)
+  const mobile = page.viewportSize()!.width <= 768
+  const inset =
+    container.x + container.width - triggerBounds.x - triggerBounds.width
+  expect(
+    Math.abs(
+      bounds.width -
+        (mobile ? container.width - inset * 2 : container.width / 3)
+    )
+  ).toBeLessThanOrEqual(1)
   expect(
     Math.abs(bounds.height - (triggerBounds.y - container.y + 56) * 0.9)
   ).toBeLessThanOrEqual(1)
   expect(
-    Math.abs(bounds.y + bounds.height - triggerBounds.y)
+    Math.abs(bounds.y + bounds.height - (triggerBounds.y - (mobile ? 16 : 0)))
   ).toBeLessThanOrEqual(1)
   expect(
     Math.abs(bounds.x + bounds.width - triggerBounds.x - triggerBounds.width)

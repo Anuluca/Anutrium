@@ -161,6 +161,12 @@ const openDetail = (work: ArchiveWork) => {
 const closeDetail = () => {
   selectedWork.value = null
 }
+const closeInlineDetail = () => {
+  if (!inlineDetail.value || !selectedWork.value) return false
+  closeDetail()
+  return true
+}
+defineExpose({ closeInlineDetail })
 // 展开/收起只切换展示方式，不把当前侧栏详情自动转换成弹窗。
 watch(inlineDetail, closeDetail)
 </script>

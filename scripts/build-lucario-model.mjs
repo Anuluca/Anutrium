@@ -3,6 +3,9 @@ import { chromium } from '@playwright/test'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { gzipSync } from 'node:zlib'
 
+import { bakeTempleLabelAsset } from './lib/bakeTempleLabelAsset.mjs'
+import { updateTempleAssetRevision } from './lib/updateTempleAssetRevision.mjs'
+
 const baseURL = process.env.LUCARIO_BUILD_URL || 'http://localhost:3000'
 const browser = await chromium.launch({ headless: true })
 try {
@@ -64,6 +67,8 @@ try {
     JSON.stringify({ width: environment.width, height: environment.height })
   )
   console.log(`Environment baked: ${environmentData.byteLength} bytes`)
+  await bakeTempleLabelAsset()
+  await updateTempleAssetRevision()
   console.log(
     `Lucario baked: ${offset} bytes, ${model.stats.simplifiedFaces} triangles`
   )
