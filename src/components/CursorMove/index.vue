@@ -9,7 +9,7 @@
     }"
   >
     <div class="cursor-scale" :class="{ 'is-clicked': isClicked }">
-      <div ref="cursorMotionElement" class="cursor-motion">
+      <div class="cursor-motion">
         <div
           class="cursor-shape"
           :class="{
@@ -17,7 +17,11 @@
               isHovering ||
               (!shouldHideCursor && cursorStateStore.isInteractive),
           }"
-        />
+        >
+          <svg class="cursor-body" viewBox="-24 -24 48 48" aria-hidden="true">
+            <circle cx="0" cy="0" r="12" />
+          </svg>
+        </div>
       </div>
     </div>
   </div>
@@ -44,13 +48,8 @@ const INTERACTIVE_CURSOR_SELECTOR =
 const FINE_POINTER_MEDIA = '(hover: hover) and (pointer: fine)'
 
 const cursorElement = ref(null)
-const cursorMotionElement = ref(null)
 const mouse = { x: 0, y: 0 }
 const follower = { x: 0, y: 0 }
-const deformation = { xx: 0, xy: 0, yy: 0 }
-const maxStretch = 0.5
-const fullStretchSpeed = 1.2 // px/ms，避免形变幅度受刷新率影响。
-const deformationTimeConstant = 45
 
 const isHovering = ref(false)
 const isClicked = ref(false)
@@ -78,9 +77,6 @@ const shouldTrackCursor = computed(() => {
   return props.enabled && hasFinePointer.value
 })
 const isLoading = computed(() => cursorStateStore.isLoading)
-const canDeformCursor = computed(
-  () => !isLoading.value && !isHovering.value && !cursorStateStore.isInteractive
-)
 
 const shouldAnimateCursor = computed(
   () => shouldTrackCursor.value && isPageVisible.value
@@ -162,36 +158,6 @@ const syncCursorPosition = () => {
   cursorElement.value.style.transform = `translate3d(${follower.x}px, ${follower.y}px, 0)`
 }
 
-const resetDeformation = () => {
-  deformation.xx = deformation.xy = deformation.yy = 0
-  if (cursorMotionElement.value)
-    cursorMotionElement.value.style.transform = 'none'
-}
-
-const updateDeformation = (moveX, moveY, elapsed) => {
-  if (!canDeformCursor.value) {
-    resetDeformation()
-    return
-  }
-
-  const distance = Math.hypot(moveX, moveY)
-  const stretch =
-    maxStretch * Math.min(distance / Math.max(elapsed, 1) / fullStretchSpeed, 1)
-  const x = distance > 0 ? moveX / distance : 0
-  const y = distance > 0 ? moveY / distance : 0
-  const ease = 1 - Math.exp(-elapsed / deformationTimeConstant)
-
-  // 用对称矩阵沿速度方向拉伸、垂直方向轻微压缩，避免转向时角度跨越造成旋转跳变。
-  deformation.xx += (stretch * (x * x - 0.5 * y * y) - deformation.xx) * ease
-  deformation.yy += (stretch * (y * y - 0.5 * x * x) - deformation.yy) * ease
-  deformation.xy += (stretch * 1.5 * x * y - deformation.xy) * ease
-  if (cursorMotionElement.value) {
-    cursorMotionElement.value.style.transform = `matrix(${
-      1 + deformation.xx
-    }, ${deformation.xy}, ${deformation.xy}, ${1 + deformation.yy}, 0, 0)`
-  }
-}
-
 const startRender = () => {
   if (!shouldAnimateCursor.value || animationFrameId !== null) return
   lastFrameTime = performance.now()
@@ -200,7 +166,6 @@ const startRender = () => {
 
 const stopRender = () => {
   lastFrameTime = null
-  resetDeformation()
   if (animationFrameId === null) return
   cancelAnimationFrame(animationFrameId)
   animationFrameId = null
@@ -240,22 +205,12 @@ const render = (timestamp) => {
   const moveY = dy * ease
   follower.x += moveX
   follower.y += moveY
-  updateDeformation(moveX, moveY, elapsed)
   syncCursorPosition()
 
-  if (
-    Math.abs(dx) < settleThreshold &&
-    Math.abs(dy) < settleThreshold &&
-    Math.max(
-      Math.abs(deformation.xx),
-      Math.abs(deformation.xy),
-      Math.abs(deformation.yy)
-    ) < 0.001
-  ) {
+  if (Math.abs(dx) < settleThreshold && Math.abs(dy) < settleThreshold) {
     follower.x = mouse.x
     follower.y = mouse.y
     syncCursorPosition()
-    resetDeformation()
     lastFrameTime = null
     return
   }
@@ -354,8 +309,6 @@ watch(shouldTrackCursor, () => {
 
 watch(isCustomCursorReady, syncNativeCursor, { flush: 'sync' })
 
-watch(canDeformCursor, resetDeformation, { flush: 'sync' })
-
 watch(shouldAnimateCursor, (canAnimate) => {
   if (canAnimate) startRender()
   else stopRender()
@@ -399,7 +352,6 @@ watch(shouldAnimateCursor, (canAnimate) => {
   pointer-events: none;
   z-index: 20000;
 
-  mix-blend-mode: difference;
   transition: opacity 0.2s ease;
   will-change: transform;
 
@@ -409,6 +361,7 @@ watch(shouldAnimateCursor, (canAnimate) => {
 }
 
 .cursor-scale {
+  position: relative;
   // 按裁剪后的轮廓发光，避免箭头和三角形的光晕被 clip-path 截断。
   filter: drop-shadow(
     0 0 10px
@@ -429,11 +382,12 @@ watch(shouldAnimateCursor, (canAnimate) => {
 }
 
 .cursor-shape {
+  position: relative;
   width: @follower-size;
   height: @follower-size;
   margin-top: -(@follower-size / 2);
   margin-left: -(@follower-size / 2);
-  background-color: var(--page-theme-color, #e23456);
+  background-color: transparent;
   border-radius: 50%;
   clip-path: none;
 
@@ -445,11 +399,27 @@ watch(shouldAnimateCursor, (canAnimate) => {
     margin-top: -(@triangle-size / 2);
     margin-left: -(@triangle-size / 2);
     border-radius: 0;
+    background-color: var(--page-theme-color, #e23456);
+
+    .cursor-body {
+      opacity: 0;
+    }
 
     clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
 
     animation: spin 2s linear infinite;
   }
+}
+
+.cursor-body {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  overflow: visible;
+  fill: var(--page-theme-color, #e23456);
+  transition: opacity 0.2s ease;
 }
 
 .cursor-position.is-loading {
@@ -466,6 +436,12 @@ watch(shouldAnimateCursor, (canAnimate) => {
     margin-left: -(@follower-size / 2);
     border-radius: 50%;
     clip-path: none;
+    background-color: transparent;
+
+    .cursor-body {
+      opacity: 1;
+    }
+
     opacity: 0.5;
     transition: none;
     animation: cursor-loading-opacity 1.2s ease-in-out infinite;
