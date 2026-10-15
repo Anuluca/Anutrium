@@ -66,6 +66,14 @@
   }
 }
 
+.entry-mode--horizon .logo-wrapper {
+  // 与加载线共用定位父级和地平线坐标，不依赖 vh 与可视高度相等。
+  position: absolute;
+  top: var(--loading-horizon-y, 50%);
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
 .logo-wrapper2 {
   position: absolute;
   z-index: 3;

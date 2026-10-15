@@ -769,11 +769,8 @@ defineExpose({
   background-color: #050505;
 
   &.is-bottom-anchored {
-    transform: translateY(
-      calc(
-        var(--loading-horizon-y, 50vh) - 50vh - var(--crystal-half-height, 0px)
-      )
-    );
+    // 父级中心已锚在线上，只需扣除晶体投影的半高，让下尖端落在线上。
+    transform: translateY(calc(0px - var(--crystal-half-height, 0px)));
   }
 
   &.is-transparent {
