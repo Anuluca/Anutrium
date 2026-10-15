@@ -79,7 +79,6 @@ const {
   allItems,
   loading,
   error,
-  nextCursor,
   pageCursors,
   pageIndex,
   totalPages,
@@ -108,14 +107,12 @@ const resetScroll = async () => {
   viewport.value?.scrollTo({ top: 0 })
 }
 const changePage = async (direction: -1 | 1) => {
-  await loadAdjacentPage(direction)
-  await resetScroll()
+  if (await loadAdjacentPage(direction)) await resetScroll()
 }
 const goToPage = async (target: number, event?: MouseEvent) => {
   if (event?.currentTarget instanceof HTMLButtonElement)
     flashActionButton(event.currentTarget)
-  await loadPage(target)
-  await resetScroll()
+  if (await loadPage(target)) await resetScroll()
 }
 let clickFlash: Animation | undefined
 const toggle = (event: MouseEvent) => {
@@ -182,10 +179,7 @@ onBeforeUnmount(() => {
         {{ t('error') }}
         <button type="button" @click="refresh()">{{ t('retry') }}</button>
       </p>
-      <p
-        v-else-if="!items.length"
-        class="flora-album-gallery__notice"
-      >
+      <p v-else-if="!items.length" class="flora-album-gallery__notice">
         {{ t('empty') }}
       </p>
       <MediaGallery
@@ -236,10 +230,7 @@ onBeforeUnmount(() => {
       <span>{{ expanded ? 'COLLAPSE' : 'EXPAND' }}</span>
     </button>
     <footer v-if="expanded" class="flora-album-gallery__footer">
-      <nav
-        class="flora-album-gallery__pagination"
-        aria-label="相册分页"
-      >
+      <nav class="flora-album-gallery__pagination" aria-label="相册分页">
         <button
           type="button"
           :aria-label="t('previous')"
@@ -267,7 +258,7 @@ onBeforeUnmount(() => {
         <button
           type="button"
           :aria-label="t('next')"
-          :disabled="!pageCursors[pageIndex + 1] && (!nextCursor || loading)"
+          :disabled="!pageCursors[pageIndex + 1]"
           @click="changePage(1)"
         >
           <span class="flora-album-gallery__page-arrow" aria-hidden="true" />

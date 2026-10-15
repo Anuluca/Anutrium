@@ -10,6 +10,7 @@ export interface FloraMediaPage {
   totalPages?: number
 }
 export const FLORA_MEDIA_PAGE_SIZE = 28
+export const FLORA_MEDIA_INDEX_TTL_MS = 15000
 export const FLORA_ASSET_ORIGIN = 'https://assets.anuluca.com'
 export const getFloraMediaType = (key: string): FloraMedia['type'] | null => {
   if (
@@ -28,6 +29,23 @@ export const getFloraMediaType = (key: string): FloraMedia['type'] | null => {
 }
 export const getFloraAssetUrl = (key: string) =>
   `${FLORA_ASSET_ORIGIN}/${key.split('/').map(encodeURIComponent).join('/')}`
+
+// keys 由数据源统一过滤并倒序；这里只构建当前页的 URL，不为整个相册分配媒体对象。
+export const createFloraMediaPage = (
+  keys: readonly string[],
+  offset: number
+): FloraMediaPage => ({
+  items: keys.slice(offset, offset + FLORA_MEDIA_PAGE_SIZE).map((key) => ({
+    key,
+    url: getFloraAssetUrl(key),
+    type: getFloraMediaType(key)!,
+  })),
+  nextCursor:
+    offset + FLORA_MEDIA_PAGE_SIZE < keys.length
+      ? String(offset + FLORA_MEDIA_PAGE_SIZE)
+      : null,
+  totalPages: Math.max(1, Math.ceil(keys.length / FLORA_MEDIA_PAGE_SIZE)),
+})
 
 // 文件名中的 YYYYMMDD 是拍摄日期；不使用上传时间，也不让无效日期自动进位。
 export const getFloraCaptureDate = (source: string): string | null => {

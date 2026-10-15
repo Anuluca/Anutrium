@@ -6,7 +6,7 @@ Steam Web API 与 GitHub GraphQL API 的代理层。网站前端只访问 Worker
 
 - `GET /profile`：Steam 资料。
 - `GET /github/contributions`：GitHub 用户近一年的贡献日历，默认缓存 6 小时。
-- `GET /floratrium/media?pet=flora|hei&cursor=...`：只读 R2 相册列表，固定每页最多 28 个图片/视频，不缓存。目录限定为 `Floratrium/flora/` 与 `Floratrium/hei/`；按文件名全局倒序后分页；后续页使用响应的 `nextCursor`，`totalPages` 为总页数。
+- `GET /floratrium/media?pet=flora|hei&cursor=...`：只读 R2 相册列表，固定每页最多 28 个图片/视频，HTTP 响应不缓存。目录限定为 `Floratrium/flora/` 与 `Floratrium/hei/`；利用 R2 键名顺序倒序分页，同一实例按桶及宠物缓存已完成的键名索引 15 秒，翻页复用索引，不缓存跨请求 I/O。后续页使用响应的 `nextCursor`，`totalPages` 为总页数；新增文件最多在索引过期后下次刷新时出现。
 
 ## 首次部署
 

@@ -70,6 +70,7 @@ try {
     '--cache-control',
     'public, max-age=3600',
   ])
+  run(['scripts/check-fonts-remote.mjs'])
 } finally {
   rmSync(temporary, { recursive: true, force: true })
 }

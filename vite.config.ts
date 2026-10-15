@@ -6,7 +6,7 @@ import Components from 'unplugin-vue-components/vite'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
-import { floratriumDevPlugin } from './scripts/lib/floratriumDevPlugin.mjs'
+import { floratriumDevPlugin } from './scripts/lib/floratriumDevPlugin'
 import imageLog from './src/locales/dynamic/island/Photography/imageLog'
 import merchPhotos from './src/locales/dynamic/island/Photography/merchPhotos'
 

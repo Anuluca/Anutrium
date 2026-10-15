@@ -134,10 +134,26 @@ const entranceStarted = ref(!props.staggeredEntrance)
 let isGalleryVisible = false
 
 const isVideoUrl = (url: string) => VIDEO_FILE_PATTERN.test(url)
+const mediaIndex = computed(() => {
+  const urls = new Set<string>()
+  const images: string[] = []
+  const thumbnails = new Map<string, { desktop: string; mobile: string }>()
+  for (const media of props.items) {
+    urls.add(media.url)
+    if (isVideoUrl(media.url)) continue
+    images.push(media.url)
+    thumbnails.set(media.url, {
+      desktop: getCardThumbnailUrl(media.url),
+      mobile: getCardMobileThumbnailUrl(media.url),
+    })
+  }
+  return { urls, images, thumbnails }
+})
+// 加载状态与宽高比会多次触发渲染，缩略图 URL 只在媒体列表变化时解析。
 const getMediaThumbnailUrl = (media: GalleryMedia) =>
-  getCardThumbnailUrl(media.url)
+  mediaIndex.value.thumbnails.get(media.url)?.desktop
 const getMediaMobileThumbnailUrl = (media: GalleryMedia) =>
-  getCardMobileThumbnailUrl(media.url)
+  mediaIndex.value.thumbnails.get(media.url)?.mobile
 const getLabel = (media: GalleryMedia) => props.getMediaLabel(media)
 const shouldShowMediaInfo = (media: GalleryMedia) => props.showMediaInfo(media)
 const getVideoElements = () =>
@@ -153,17 +169,15 @@ const getEntranceStyle = (index: number) =>
         )}ms`,
       }
     : undefined
-const imageUrls = computed(() =>
-  props.items
-    .filter((media) => !isVideoUrl(media.url))
-    .map((media) => media.url)
-)
+const imageUrls = computed(() => mediaIndex.value.images)
+const currentMediaUrls = computed(() => mediaIndex.value.urls)
 
 const markMediaLoaded = (url: string) => {
-  if (props.items.some((media) => media.url === url)) loadedMediaUrls.add(url)
+  if (currentMediaUrls.value.has(url)) loadedMediaUrls.add(url)
 }
 
 const markImageDecoded = async (event: Event, url: string) => {
+  if (!currentMediaUrls.value.has(url)) return
   const image = event.currentTarget as HTMLImageElement
   if (image.naturalHeight)
     mediaAspectRatios.set(url, image.naturalWidth / image.naturalHeight)
@@ -177,6 +191,7 @@ const markImageDecoded = async (event: Event, url: string) => {
   markMediaLoaded(url)
 }
 const markVideoLoaded = (event: Event, url: string) => {
+  if (!currentMediaUrls.value.has(url)) return
   const video = event.currentTarget as HTMLVideoElement
   if (video.videoHeight)
     mediaAspectRatios.set(url, video.videoWidth / video.videoHeight)
@@ -298,9 +313,9 @@ const { refresh: observeVisibleVideos } = useIntersectionActivation(
 
 watch(
   () => props.items,
-  async (items) => {
+  async () => {
     showViewer.value = false
-    const currentUrls = new Set(items.map((media) => media.url))
+    const currentUrls = currentMediaUrls.value
     // 列表切换会复用同 URL 的图片节点，不能清空其状态并等待不会重发的 load 事件。
     for (const url of loadedMediaUrls)
       if (!currentUrls.has(url)) loadedMediaUrls.delete(url)

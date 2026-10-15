@@ -1,4 +1,4 @@
-import { onScopeDispose, ref, type Ref, shallowRef, watch } from 'vue'
+import { onScopeDispose, type Ref, ref, shallowRef, watch } from 'vue'
 import { useDocumentVisibility, useIntervalFn } from '@vueuse/core'
 
 import { petAlbums } from '@/locales/dynamic/petAlbums'
@@ -42,7 +42,9 @@ const fetchPage = async (
         typeof item.url !== 'string' ||
         (item.type !== 'image' && item.type !== 'video')
     ) ||
-    !(page.nextCursor === null || typeof page.nextCursor === 'string')
+    !(page.nextCursor === null || typeof page.nextCursor === 'string') ||
+    (page.totalPages !== undefined &&
+      (!Number.isSafeInteger(page.totalPages) || page.totalPages < 1))
   )
     throw new Error('Invalid album response')
   return page
@@ -53,7 +55,9 @@ const sameItems = (previous: FloraMedia[], next: FloraMedia[]) =>
   previous.every((item, index) => {
     const other = next[index]
     return (
-      item.key === other.key && item.url === other.url && item.type === other.type
+      item.key === other.key &&
+      item.url === other.url &&
+      item.type === other.type
     )
   })
 
@@ -65,7 +69,6 @@ export const useFloraAlbum = (
   const loading = ref(false)
   const error = ref(false)
   const allItems = shallowRef<FloraMedia[]>([])
-  const nextCursor = ref<string | null>(null)
   const pageCursors = ref([''])
   const pageIndex = ref(0)
   const totalPages = ref<number | null>(null)
@@ -84,7 +87,6 @@ export const useFloraAlbum = (
     pageCursors.value = ['']
     pageIndex.value = 0
     totalPages.value = null
-    nextCursor.value = null
     error.value = false
   }
   const refresh = async (quiet = false) => {
@@ -105,26 +107,29 @@ export const useFloraAlbum = (
       if (requestRevision !== revision) return
       // 保留未变化的数组引用，避免重建预览、重启视频及重新绑定观察器。
       if (!sameItems(allItems.value, page.items)) allItems.value = page.items
-      nextCursor.value = page.nextCursor
       if (
         Number.isSafeInteger(page.totalPages) &&
         page.totalPages! > 0 &&
         page.totalPages !== totalPages.value
       ) {
         totalPages.value = page.totalPages!
-        pageCursors.value = Array.from({ length: page.totalPages! }, (_, index) =>
-          index === 0 ? '' : String(index * FLORA_MEDIA_PAGE_SIZE)
+        pageCursors.value = Array.from(
+          { length: page.totalPages! },
+          (_, index) =>
+            index === 0 ? '' : String(index * FLORA_MEDIA_PAGE_SIZE)
         )
       }
       // 旧接口未提供总页数时只发现下一页，不再为页码预扫描全部相册。
       if (page.totalPages === undefined) {
         totalPages.value = null
-        pageCursors.value = pageCursors.value.slice(0, pageIndex.value + 1)
-        if (page.nextCursor && !pageCursors.value.includes(page.nextCursor))
-          pageCursors.value.push(page.nextCursor)
+        if (pageCursors.value[pageIndex.value + 1] !== page.nextCursor) {
+          pageCursors.value = pageCursors.value.slice(0, pageIndex.value + 1)
+          if (page.nextCursor && !pageCursors.value.includes(page.nextCursor))
+            pageCursors.value.push(page.nextCursor)
+        }
       }
       error.value = false
-    } catch (cause) {
+    } catch {
       if (requestRevision === revision && !requestController.signal.aborted)
         error.value = true
     } finally {
@@ -141,13 +146,14 @@ export const useFloraAlbum = (
       target > pageCursors.value.length ||
       target === pageIndex.value + 1
     )
-      return
+      return false
     stopRequest()
     beforePageChange()
     pageIndex.value = target - 1
     allItems.value = []
     error.value = false
     await refresh()
+    return true
   }
   const changePage = (direction: -1 | 1) =>
     goToPage(pageIndex.value + direction + 1)
@@ -181,7 +187,6 @@ export const useFloraAlbum = (
     pageCursors,
     pageIndex,
     totalPages,
-    nextCursor,
     refresh,
     goToPage,
     changePage,

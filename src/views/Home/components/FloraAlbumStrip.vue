@@ -7,7 +7,6 @@ import type { FloraMedia } from '@/utils/floratriumMedia'
 import { getCardThumbnailUrl } from '@/utils/imageVariant'
 
 const props = defineProps<{ items: FloraMedia[]; title: string }>()
-const root = ref<HTMLElement | null>(null)
 const viewport = ref<HTMLElement | null>(null)
 const firstGroup = ref<HTMLElement | null>(null)
 const groupWidth = ref(0)
@@ -15,16 +14,22 @@ const copies = ref(2)
 const readyUrls = ref(new Set<string>())
 const imageRatios = ref(new Map<string, number>())
 const imageHeight = ref(0)
-const layoutReady = ref(false)
 const viewerIndex = ref<number | null>(null)
 const visibility = useDocumentVisibility()
 const urls = computed(() => props.items.map((item) => item.url))
+const currentUrls = computed(() => new Set(urls.value))
+const photos = computed(() =>
+  props.items.map((item) => ({
+    ...item,
+    thumbnail: getCardThumbnailUrl(item.url),
+  }))
+)
 const running = computed(
   () =>
     visibility.value === 'visible' &&
-    layoutReady.value &&
+    groupWidth.value > 0 &&
     viewerIndex.value === null &&
-    props.items.every((item) => readyUrls.value.has(item.url))
+    readyUrls.value.size === currentUrls.value.size
 )
 const setGroup = (element: unknown, copy: number) => {
   if (copy === 0)
@@ -40,37 +45,42 @@ const measureGroups = () => {
     Math.ceil((viewport.value?.clientWidth || 0) / width) + 1
   )
 }
-useResizeObserver([viewport, firstGroup], async () => {
-  imageHeight.value = viewport.value?.clientHeight || 0
+let measurementQueued = false
+const scheduleMeasurement = async () => {
+  if (measurementQueued) return
+  measurementQueued = true
   await nextTick()
+  measurementQueued = false
   measureGroups()
+}
+useResizeObserver([viewport, firstGroup], () => {
+  imageHeight.value = viewport.value?.clientHeight || 0
+  void scheduleMeasurement()
 })
 watch(
   () => props.items,
   () => {
     readyUrls.value = new Set()
     imageRatios.value = new Map()
-    layoutReady.value = false
     viewerIndex.value = null
   }
 )
-const markReady = async (url: string, event: Event) => {
+const markReady = (url: string, event: Event) => {
+  if (!currentUrls.value.has(url)) return
   const image = event.target as HTMLImageElement
+  const ratio = image.naturalHeight
+    ? image.naturalWidth / image.naturalHeight
+    : imageRatios.value.get(url) || 1
+  if (readyUrls.value.has(url) && imageRatios.value.get(url) === ratio) return
   // 各轮复用同一宽高比，避免尚未加载的副本缩窄后露出大块空白。
-  imageRatios.value.set(
-    url,
-    image.naturalHeight ? image.naturalWidth / image.naturalHeight : 1
-  )
+  imageRatios.value.set(url, ratio)
   readyUrls.value.add(url)
-  await nextTick()
-  measureGroups()
-  layoutReady.value = props.items.every((item) => readyUrls.value.has(item.url))
+  void scheduleMeasurement()
 }
 </script>
 
 <template>
   <div
-    ref="root"
     class="flora-album-strip no-rem"
     :class="{ 'is-running': running }"
     :style="{
@@ -88,7 +98,7 @@ const markReady = async (url: string, event: Event) => {
           :aria-hidden="copy > 1 ? true : undefined"
         >
           <button
-            v-for="(item, index) in items"
+            v-for="(item, index) in photos"
             :key="item.url"
             class="flora-album-strip__photo"
             type="button"
@@ -100,7 +110,7 @@ const markReady = async (url: string, event: Event) => {
             @click="viewerIndex = index"
           >
             <img
-              :src="getCardThumbnailUrl(item.url)"
+              :src="item.thumbnail"
               :alt="title"
               decoding="async"
               @load="markReady(item.url, $event)"

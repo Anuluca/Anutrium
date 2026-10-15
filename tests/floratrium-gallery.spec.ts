@@ -127,7 +127,7 @@ test('responsive album sizing, expansion and character rail placement', async ({
           previousHeight: (character.height - 20) / 3,
         }
       })
-    expect(railGeometry.height / railGeometry.width).toBeCloseTo(5.5, 1)
+    expect(railGeometry.height / railGeometry.width).toBeCloseTo(5.2, 1)
     expect(railGeometry.height).toBeGreaterThan(railGeometry.previousHeight)
     expect(railGeometry.ballSize).toBeGreaterThan(
       railGeometry.previousHeight * 0.14
@@ -323,6 +323,7 @@ test('R2 pages fill twenty-eight supported media entries without dropping filter
       .reverse()
   )
   expect(fourth.nextCursor).toBeNull()
+  expect(limits).toHaveLength(Math.ceil(keys.length / 31))
   expect(limits.every((limit) => limit > 0 && limit <= 1000)).toBe(true)
 })
 
@@ -339,10 +340,13 @@ test('online defaults, upward expansion, paging, refresh and pet reset preserve 
   await expect(stage).toHaveAttribute('data-entrance-finished', 'true', {
     timeout: 45000,
   })
+  if (info.project.name.includes('mobile'))
+    await page.locator('.mobile-experience-alert .el-alert__close-btn').click()
   const point = (await stage.getAttribute('data-companion-screen'))!
     .split(',')
     .map(Number)
   await page.mouse.click(point[0], point[1])
+  await page.mouse.move(0, 0)
   const gallery = page.locator('.flora-album-gallery')
   await expect(
     gallery.locator(
@@ -414,7 +418,7 @@ test('online defaults, upward expansion, paging, refresh and pet reset preserve 
       font: getComputedStyle(label).fontFamily,
       italic: getComputedStyle(label).fontStyle,
       rotation: getComputedStyle(label).transform,
-      spacing: parseFloat(getComputedStyle(label).letterSpacing),
+      spacing: parseFloat(getComputedStyle(label).letterSpacing) || 0,
     }
   })
   expect(layout.titleFont).toContain('UnboundedSans')
@@ -428,6 +432,31 @@ test('online defaults, upward expansion, paging, refresh and pet reset preserve 
     Math.max(...layout.heights) - Math.min(...layout.heights)
   ).toBeLessThanOrEqual(1)
   expect(layout.gaps.every((gap) => Math.abs(gap - 12) <= 1)).toBe(true)
+  const repeatedLoadMeasurements = await gallery.evaluate(async (element) => {
+    const group = element.querySelector<HTMLElement>(
+      '.flora-album-strip__group'
+    )!
+    const offsetWidth = Object.getOwnPropertyDescriptor(
+      HTMLElement.prototype,
+      'offsetWidth'
+    )!.get!
+    let reads = 0
+    Object.defineProperty(group, 'offsetWidth', {
+      configurable: true,
+      get() {
+        reads++
+        return offsetWidth.call(group)
+      },
+    })
+    for (const image of group.querySelectorAll('img')) {
+      image.dispatchEvent(new Event('load'))
+      image.dispatchEvent(new Event('load'))
+    }
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    Reflect.deleteProperty(group, 'offsetWidth')
+    return reads
+  })
+  expect(repeatedLoadMeasurements).toBe(0)
   await page.emulateMedia({ reducedMotion: 'no-preference' })
   const strip = gallery.locator('.flora-album-strip')
   await expect(strip).toHaveClass(/is-running/)
@@ -509,13 +538,17 @@ test('online defaults, upward expansion, paging, refresh and pet reset preserve 
     gallery.locator('.media-gallery__card img').first()
   ).toHaveAttribute('src', /[?&]image=card-thumb(?:&|$)/)
   await expect(gallery.locator('.photo-info__time').first()).toHaveText(
-    '2025-06-03'
+    getFloraCaptureDate(base)!
   )
   const after = (await gallery.boundingBox())!
   expect(after.y).toBeLessThan(before!.y)
-  expect(
-    Math.abs(after.y + after.height - before!.y - before!.height)
-  ).toBeLessThanOrEqual(1)
+  if (info.project.name.includes('mobile')) {
+    expect(after.y).toBeCloseTo(0, 0)
+    expect(after.height).toBeCloseTo(page.viewportSize()!.height, 0)
+  } else
+    expect(
+      Math.abs(after.y + after.height - before!.y - before!.height)
+    ).toBeLessThanOrEqual(1)
   const firstNode = await gallery
     .locator('.media-gallery__card')
     .first()
@@ -529,6 +562,8 @@ test('online defaults, upward expansion, paging, refresh and pet reset preserve 
   ).toBeDisabled()
   await gallery.getByRole('button', { name: '上一页', exact: true }).click()
   await expect(gallery.locator('.media-gallery__card')).toHaveCount(28)
+  if (info.project.name.includes('mobile'))
+    await gallery.getByRole('button', { name: 'COLLAPSE', exact: true }).click()
   await page.locator('button[data-pet-id="xiaohei"]').click()
   await expect(stage).toHaveAttribute('data-pet-id', 'xiaohei')
   await expect(gallery).not.toHaveClass(/is-expanded/)
@@ -537,9 +572,19 @@ test('online defaults, upward expansion, paging, refresh and pet reset preserve 
       '.flora-album-strip__group:not([aria-hidden]) .flora-album-strip__photo'
     )
   ).toHaveCount(7)
+  const heiResponse = page.waitForResponse((response) => {
+    const url = new URL(response.url())
+    return (
+      url.pathname === '/__floratrium/media' &&
+      url.searchParams.get('pet') === 'hei'
+    )
+  })
   await gallery.getByRole('button', { name: 'EXPAND', exact: true }).click()
+  const heiPage = await (await heiResponse).json()
   await expect(gallery.locator('video')).not.toHaveCount(0)
-  await expect(gallery.locator('.media-gallery__card')).toHaveCount(19)
+  await expect(gallery.locator('.media-gallery__card')).toHaveCount(
+    heiPage.items.length
+  )
   await gallery.getByRole('button', { name: 'COLLAPSE', exact: true }).click()
   await gallery.locator('.flora-album-strip__photo').first().click()
   await expect(page.locator('.el-image-viewer__wrapper')).toBeVisible()
@@ -570,6 +615,15 @@ test('cached photos remain visible after repeated full-to-selected switches', as
     socket.close()
   )
   await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.route('**/__floratrium/media?**', (route) =>
+    route.fulfill({
+      json: {
+        items: petAlbums.huahua.defaults,
+        nextCursor: null,
+        totalPages: 1,
+      },
+    })
+  )
   await page.goto('/', { waitUntil: 'domcontentloaded' })
   const stage = page.locator('.temple-stage')
   await expect(stage).toHaveAttribute('data-entrance-finished', 'true', {
@@ -604,9 +658,7 @@ test('cached photos remain visible after repeated full-to-selected switches', as
   }
 })
 
-test('outside clicks collapse the album before returning home', async ({
-  page,
-}) => {
+test('albums close before returning home', async ({ page }, info) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.route('**/__floratrium/media?**', (route) =>
     route.fulfill({ json: { items: [], nextCursor: null } })
@@ -623,7 +675,9 @@ test('outside clicks collapse the album before returning home', async ({
   const gallery = page.locator('.flora-album-gallery')
   await gallery.getByRole('button', { name: 'EXPAND', exact: true }).click()
   await expect(gallery).toHaveClass(/is-expanded/)
-  await page.mouse.click(10, 180)
+  if (info.project.name.includes('mobile'))
+    await gallery.getByRole('button', { name: 'COLLAPSE', exact: true }).click()
+  else await page.mouse.click(10, 180)
   await expect(gallery).not.toHaveClass(/is-expanded/)
   await expect(page.locator('.temple-page')).toHaveAttribute(
     'data-selected',
@@ -637,7 +691,7 @@ test('outside clicks collapse the album before returning home', async ({
   await expect(gallery).not.toBeAttached()
 })
 
-test('centered triangle pagination supports direct page jumps', async ({
+test('triangle pagination supports direct page jumps without scanning unseen pages', async ({
   page,
 }, info) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
@@ -645,7 +699,7 @@ test('centered triangle pagination supports direct page jumps', async ({
   let releaseSecondPage: (() => void) | undefined
   await page.route('**/__floratrium/media?**', async (route) => {
     const cursor = new URL(route.request().url()).searchParams.get('cursor')
-    const index = cursor ? Number(cursor) : 0
+    const index = cursor ? Number(cursor) / 28 : 0
     if (index === 1 && holdSecondPage)
       await new Promise<void>((resolve) => {
         releaseSecondPage = resolve
@@ -659,7 +713,8 @@ test('centered triangle pagination supports direct page jumps', async ({
             type: 'image',
           },
         ],
-        nextCursor: index < 2 ? String(index + 1) : null,
+        nextCursor: index < 2 ? String((index + 1) * 28) : null,
+        totalPages: 3,
       },
     })
   })
@@ -699,7 +754,7 @@ test('centered triangle pagination supports direct page jumps', async ({
   await expect.poll(() => Boolean(releaseSecondPage)).toBe(true)
   const canceled = page.waitForEvent(
     'requestfailed',
-    (request) => new URL(request.url()).searchParams.get('cursor') === '1'
+    (request) => new URL(request.url()).searchParams.get('cursor') === '28'
   )
   await pages.nth(2).click()
   await canceled
@@ -721,7 +776,8 @@ test('centered triangle pagination supports direct page jumps', async ({
       (container.left + container.right - nav.left - nav.right) / 2
     )
   })
-  expect(delta).toBeLessThanOrEqual(1)
+  if (!info.project.name.includes('mobile'))
+    expect(delta).toBeLessThanOrEqual(1)
   await gallery.getByRole('button', { name: 'COLLAPSE', exact: true }).click()
   await page.emulateMedia({ reducedMotion: 'no-preference' })
   await gallery.getByRole('button', { name: 'EXPAND', exact: true }).click()

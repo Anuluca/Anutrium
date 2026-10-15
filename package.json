@@ -18,6 +18,7 @@
     "optimize:model-assets": "node scripts/optimize-model-assets.mjs",
     "build:fonts": "python3 scripts/build-unbounded-fonts.py",
     "check:fonts": "node scripts/check-unbounded-fonts.mjs",
+    "check:fonts:remote": "node scripts/check-fonts-remote.mjs",
     "upload:fonts": "node scripts/upload-unbounded-fonts.mjs",
     "build:map-data": "node scripts/build-travel-boundaries.mjs",
     "check:overlay-scroll": "node scripts/check-overlay-scroll-lock.mjs",

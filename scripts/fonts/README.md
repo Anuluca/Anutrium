@@ -24,6 +24,8 @@ yarn upload:fonts anutrium
 ```
 
 重新生成后，先上传 WOFF2 和 OFL.txt 到 R2，再部署网站。
+上传结束会自动通过公开域名检查全部分片的 HTTP 状态、CORS 许可和 SHA-256。
+可单独执行 `yarn check:fonts:remote` 检查生产资源；本地完整性检查无法发现线上文件缺失。
 上传复用 `worker/` 中已安装的 Wrangler 及本机 Cloudflare 登录；当前桶为
 `anutrium`，其自定义域名为 `assets.anuluca.com`。仅新增有哈希的字体文件，
 不删除旧分包，以便旧版本网页仍能加载。
