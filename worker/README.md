@@ -4,6 +4,8 @@ Steam Web API 与 GitHub GraphQL API 的代理层。网站前端只访问 Worker
 
 ## 接口
 
+相册前端默认通过 Netlify 的 `/api/floratrium/media` 同源代理访问自定义域名；不依赖浏览器直连 `workers.dev`。Git 推送只触发站点构建，修改 Worker 后仍须在 `worker` 目录运行 `yarn deploy`，并核验接口返回每页最多 28 项及 `totalPages`，避免前后端分页协议不一致。
+
 - `GET /profile`：Steam 资料。
 - `GET /github/contributions`：GitHub 用户近一年的贡献日历，默认缓存 6 小时。
 - `GET /floratrium/media?pet=flora|hei&cursor=...`：只读 R2 相册列表，固定每页最多 28 个图片/视频，HTTP 响应不缓存。目录限定为 `Floratrium/flora/` 与 `Floratrium/hei/`；利用 R2 键名顺序倒序分页，同一实例按桶及宠物缓存已完成的键名索引 15 秒，翻页复用索引，不缓存跨请求 I/O。后续页使用响应的 `nextCursor`，`totalPages` 为总页数；新增文件最多在索引过期后下次刷新时出现。

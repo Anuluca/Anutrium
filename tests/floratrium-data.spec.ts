@@ -327,3 +327,70 @@ test('gallery state updates reuse parsed thumbnail URLs', async ({ page }) => {
   expect(result.unchanged).toBe(true)
   expect(result.source).toContain('image=card-thumb')
 })
+
+test('album request timeout ends loading and a retry can recover', async ({
+  page,
+}) => {
+  await page.route('http://localhost:3000/', (route) =>
+    route.fulfill({ contentType: 'text/html', body: '<html></html>' })
+  )
+  await page.goto('/')
+  const result = await page.evaluate(async () => {
+    const { effectScope, ref, nextTick } = await import(
+      '/node_modules/.vite/deps/vue.js'
+    )
+    const { useFloraAlbum } = await import(
+      '/src/views/Home/composables/useFloraAlbum.ts'
+    )
+    const nativeTimer = window.setTimeout
+    window.setTimeout = (handler, timeout, ...args) =>
+      nativeTimer(handler, timeout === 15000 ? 10 : timeout, ...args)
+    const scope = effectScope()
+    try {
+      window.fetch = (_url, options) =>
+        new Promise((_resolve, reject) => {
+          options!.signal!.addEventListener(
+            'abort',
+            () => reject(new DOMException('Timeout', 'AbortError')),
+            { once: true }
+          )
+        })
+      const expanded = ref(false)
+      const album = scope.run(() =>
+        useFloraAlbum(
+          () => 'huahua',
+          expanded,
+          () => {}
+        )
+      )!
+      expanded.value = true
+      await nextTick()
+      await new Promise((resolve) => nativeTimer(resolve, 50))
+      const timedOut = album.error.value && !album.loading.value
+      window.fetch = async () =>
+        new Response(
+          JSON.stringify({
+            items: [
+              {
+                key: 'recovered',
+                url: 'https://assets.anuluca.com/recovered.webp',
+                type: 'image',
+              },
+            ],
+            nextCursor: null,
+            totalPages: 1,
+          })
+        )
+      await album.refresh()
+      return {
+        timedOut,
+        recovered:
+          !album.error.value && album.allItems.value[0]?.key === 'recovered',
+      }
+    } finally {
+      scope.stop()
+      window.setTimeout = nativeTimer
+    }
+  })
+  expect(result).toEqual({ timedOut: true, recovered: true })
+})

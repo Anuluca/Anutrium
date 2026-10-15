@@ -6,6 +6,12 @@
   NODE_VERSION = "24.12.0"
 
 [[redirects]]
+  from = "/api/floratrium/media"
+  to = "https://steam-api.anuluca.com/floratrium/media"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200

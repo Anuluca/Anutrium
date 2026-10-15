@@ -13,11 +13,13 @@ const origin = import.meta.env.DEV
   : (
       import.meta.env.VITE_PROFILE_WORKER_URL ||
       import.meta.env.VITE_STEAM_WORKER_URL ||
-      'https://anutrium-steam-api.tilucario.workers.dev'
+      ''
     ).replace(/\/$/, '')
 const pathname = import.meta.env.DEV
   ? '/__floratrium/media'
-  : '/floratrium/media'
+  : origin
+  ? '/floratrium/media'
+  : '/api/floratrium/media'
 
 const fetchPage = async (
   petId: string,
@@ -97,6 +99,12 @@ export const useFloraAlbum = (
     const requestController = new AbortController()
     controller = requestController
     const requestRevision = revision
+    let timedOut = false
+    // 区分网络超时与切页主动取消：超时显示重试，主动取消不污染新页状态。
+    const timeout = setTimeout(() => {
+      timedOut = true
+      requestController.abort()
+    }, 15000)
     if (!quiet) loading.value = true
     try {
       const page = await fetchPage(
@@ -130,9 +138,13 @@ export const useFloraAlbum = (
       }
       error.value = false
     } catch {
-      if (requestRevision === revision && !requestController.signal.aborted)
+      if (
+        requestRevision === revision &&
+        (timedOut || !requestController.signal.aborted)
+      )
         error.value = true
     } finally {
+      clearTimeout(timeout)
       if (requestRevision === revision) {
         loading.value = false
         controller = undefined
