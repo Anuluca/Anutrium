@@ -2,6 +2,12 @@ import { expect, test } from '@playwright/test'
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
+test.beforeEach(async ({ page }) => {
+  await page.routeWebSocket('ws://localhost:3000/**', (socket) =>
+    socket.close()
+  )
+})
+
 test('personal bay blocks page scrolling and restores it after leaving', async ({
   page,
 }, testInfo) => {
@@ -158,18 +164,19 @@ test('baked neck reduction adds no folded faces or open seams', async () => {
   ).toBeLessThanOrEqual(4)
   expect(
     [...edges.values()].filter((count) => count === 1).length
-  ).toBeLessThanOrEqual(289)
+    // 原网格两处重合面去重后，真实薄壳边界基准为 293；面块化不得再增加。
+  ).toBeLessThanOrEqual(293)
   expect(metadata.stats.neckFacesAfter).toBe(70)
 })
 
 test('island canvas fills its stage after navigation from another page', async ({
   page,
-}, testInfo) => {
+}) => {
   await page.goto('/craft', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.footer-bottom-gradient--ready')).toBeAttached({
     timeout: 15000,
   })
-  await expect(page.locator('.about-page')).toBeVisible()
+  await expect(page.locator('.craft-page')).toBeVisible()
   await page.evaluate(() =>
     (
       document.querySelector('.layout-page') as any
@@ -307,7 +314,7 @@ test('island simplifies its model and follows the pointer with its head, then le
   expect(head.error).toBeLessThanOrEqual(0.008)
   expect(head.preserved).toBe('true')
   const canvas = root.getByRole('img', {
-    name: '头部跟随指针的路卡利欧三维模型',
+    name: '路卡利欧三维模型',
   })
   await expect(canvas).toBeVisible()
   await expect(root.locator('.lucario-stage')).toHaveAttribute(

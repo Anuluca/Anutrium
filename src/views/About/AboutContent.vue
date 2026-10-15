@@ -76,6 +76,7 @@ const handlePassionClick = (event: MouseEvent) => {
 const {
   crewContentRef,
   crewEntered,
+  crewLoopPhase,
   crewFocused,
   updateCrewHover,
   clearCrewHover,
@@ -364,7 +365,10 @@ const roadmapItems = computed(() =>
                   id="about-crew-content"
                   ref="crewContentRef"
                   class="staff-credits"
-                  :class="{ 'is-entered': crewEntered }"
+                  :class="{
+                    'is-entered': crewEntered,
+                    'is-loop-fading-out': crewLoopPhase === 'fading-out',
+                  }"
                   @animationend="finishCrewEntrance"
                   @pointermove="updateCrewHover"
                   @pointerleave="clearCrewHover"
@@ -447,6 +451,31 @@ const roadmapItems = computed(() =>
                       >
                     </p>
                     <p class="staff-credits__model-details">
+                      <strong class="staff-credits__model-name">{{
+                        t('about.staff.sprigatito')
+                      }}</strong
+                      ><br />{{ t('about.staff.modelSource') }}:
+                      <a
+                        href="https://archive.vg-resource.com/post-677666.html"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        >The VG Resource · Pokémon Model Ripping Project</a
+                      >
+                    </p>
+                    <p class="staff-credits__model-details">
+                      <strong class="staff-credits__model-name">{{
+                        t('about.staff.mightyena')
+                      }}</strong
+                      ><br />{{ t('about.staff.modelSource') }}:
+                      <a
+                        href="https://archive.vg-resource.com/thread-25872.html"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        >The VG Resource · Pokémon Model Ripping Project ·
+                        RTB</a
+                      >
+                    </p>
+                    <p class="staff-credits__model-details staff-credits__ip">
                       {{ t('about.staff.originalIP') }}:<br />Nintendo ·
                       Creatures Inc. · GAME FREAK inc.
                     </p>
@@ -467,7 +496,11 @@ const roadmapItems = computed(() =>
                   <p class="staff-credits__closing">DRIVEN BY PASSION.</p>
                 </div>
               </div>
-              <PageScrollProgress embedded :scroll-target="panelScrollRef" />
+              <PageScrollProgress
+                embedded
+                color="#E23456"
+                :scroll-target="panelScrollRef"
+              />
             </div>
           </section>
         </Transition>
@@ -566,8 +599,12 @@ const roadmapItems = computed(() =>
         </div>
       </div>
       <div class="asset-credits">
+        <h4>{{ t('about.originalDesign.title') }}</h4>
+        <p>{{ t('about.originalDesign.restriction') }}</p>
+      </div>
+      <div class="asset-credits">
         <h4>{{ t('about.assetCredits.title') }}</h4>
-        <p>{{ t('about.assetCredits.aiDesignRestriction') }}</p>
+        <p>{{ t('about.assetCredits.intro') }}</p>
         <p>
           {{ t('about.assetCredits.unbounded') }}
           <a
@@ -613,6 +650,24 @@ const roadmapItems = computed(() =>
           {{ t('about.assetCredits.lucario') }}
           <a
             href="https://github.com/Pokemon-3D-api/assets#%EF%B8%8F-license--credits"
+            target="_blank"
+            rel="noopener noreferrer"
+            >{{ t('about.assetCredits.modelSource') }}</a
+          >
+        </p>
+        <p>
+          {{ t('about.assetCredits.sprigatito') }}
+          <a
+            href="https://archive.vg-resource.com/post-677666.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            >{{ t('about.assetCredits.modelSource') }}</a
+          >
+        </p>
+        <p>
+          {{ t('about.assetCredits.mightyena') }}
+          <a
+            href="https://archive.vg-resource.com/thread-25872.html"
             target="_blank"
             rel="noopener noreferrer"
             >{{ t('about.assetCredits.modelSource') }}</a

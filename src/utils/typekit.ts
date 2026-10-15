@@ -8,13 +8,15 @@ type TypekitWindow = Window & {
       async: boolean
       kitId: string
       scriptTimeout: number
+      active: () => void
+      inactive: () => void
     }) => void
   }
 }
 
 let typekitLoadPromise: Promise<boolean> | null = null
 
-const loadTypekit = () => {
+export const loadTypekitFonts = () => {
   if (typekitLoadPromise) return typekitLoadPromise
 
   typekitLoadPromise = new Promise<boolean>((resolve) => {
@@ -23,13 +25,22 @@ const loadTypekit = () => {
       TYPEKIT_SCRIPT_ID
     ) as HTMLScriptElement | null
 
+    const activateFonts = () => {
+      try {
+        browserWindow.Typekit?.load({
+          async: true,
+          kitId: TYPEKIT_ID,
+          scriptTimeout: 3000,
+          active: () => resolve(true),
+          inactive: () => resolve(false),
+        })
+      } catch {
+        resolve(false)
+      }
+    }
+
     if (browserWindow.Typekit) {
-      browserWindow.Typekit.load({
-        async: true,
-        kitId: TYPEKIT_ID,
-        scriptTimeout: 3000,
-      })
-      resolve(true)
+      activateFonts()
       return
     }
 
@@ -40,16 +51,7 @@ const loadTypekit = () => {
     script.addEventListener(
       'load',
       () => {
-        try {
-          browserWindow.Typekit?.load({
-            async: true,
-            kitId: TYPEKIT_ID,
-            scriptTimeout: 3000,
-          })
-          resolve(true)
-        } catch {
-          resolve(false)
-        }
+        activateFonts()
       },
       { once: true }
     )
@@ -76,7 +78,7 @@ export const scheduleTypekitLoad = () => {
       idleHandle = browserWindow.requestIdleCallback(
         () => {
           idleHandle = null
-          if (!cancelled) void loadTypekit()
+          if (!cancelled) void loadTypekitFonts()
         },
         { timeout: TYPEKIT_IDLE_TIMEOUT }
       )
@@ -85,7 +87,7 @@ export const scheduleTypekitLoad = () => {
 
     fallbackTimer = window.setTimeout(() => {
       fallbackTimer = null
-      if (!cancelled) void loadTypekit()
+      if (!cancelled) void loadTypekitFonts()
     }, 0)
   }
 

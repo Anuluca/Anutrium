@@ -12,6 +12,12 @@ import {
 } from '@/config/templeNavigation'
 import { useTempleNavigation } from '@/stores/templeNavigation'
 import { preloadTempleAssets } from '@/utils/preloadTempleAssets'
+import { consumeJourneyReturnState } from '@/utils/journeyReturnState'
+import {
+  cancelRouteCurtain,
+  coverRouteCurtain,
+  revealRouteCurtain,
+} from '@/utils/routeCurtain'
 
 import i18n from '../locales'
 import { ensureRouteMessages } from '../locales/routeMessages'
@@ -673,7 +679,8 @@ const getPageThemeGroup = (route: RouteLocationNormalizedLoaded) => {
 
 export const syncPageTheme = (
   route: RouteLocationNormalizedLoaded,
-  moduleGroup?: string
+  moduleGroup?: string,
+  colorOverride?: string
 ) => {
   if (typeof document === 'undefined') return
   const rootStyle = document.documentElement.style
@@ -686,7 +693,7 @@ export const syncPageTheme = (
 
   rootStyle.setProperty(
     '--page-theme-color',
-    pageThemeColors[pageGroup] || '#e23456'
+    colorOverride || pageThemeColors[pageGroup] || '#e23456'
   )
 
   if (LEGACY_RED_BACKGROUND_GROUPS.has(pageGroup)) {
@@ -699,7 +706,9 @@ export const syncPageTheme = (
 }
 
 export const installRouterGuards = (router: Router) => {
-  if (typeof document !== 'undefined') installRouteIntentPreload(router)
+  if (typeof document !== 'undefined') {
+    installRouteIntentPreload(router)
+  }
 
   router.beforeEach(async (to, from) => {
     if (!router.hasRoute(to.name)) {
@@ -723,6 +732,8 @@ export const installRouterGuards = (router: Router) => {
       navigation.returnExpanded = navigation.expanded
     }
     if (to.name === 'HOME') {
+      // 重新加载不属于站内返回，旧会话标记不能恢复聚焦或简易入场。
+      if (from.matched.length === 0) consumeJourneyReturnState()
       if (typeof window !== 'undefined')
         void preloadTempleAssets().catch(() => undefined)
       const explicitModule =
@@ -746,11 +757,23 @@ export const installRouterGuards = (router: Router) => {
     return true
   })
 
+  router.beforeResolve(async (to, from) => {
+    if (
+      typeof window === 'undefined' ||
+      !from.matched.length ||
+      to.path === from.path ||
+      (to.name === 'HOME' && from.name === 'HOME')
+    )
+      return
+    await coverRouteCurtain(to.fullPath)
+  })
+
   router.afterEach((to, _from, failure) => {
     if (typeof window === 'undefined') return
 
     NProgress.done()
     if (failure) {
+      cancelRouteCurtain(to.fullPath)
       finishRouteCursorLoading()
       return
     }
@@ -765,12 +788,14 @@ export const installRouterGuards = (router: Router) => {
         ? (navigation.selected || navigation.entryModule)?.toUpperCase()
         : undefined
     )
+    void revealRouteCurtain(to.fullPath)
   })
 
   router.onError(() => {
     if (typeof window === 'undefined') return
 
     NProgress.done()
+    cancelRouteCurtain()
     finishRouteCursorLoading()
   })
 }

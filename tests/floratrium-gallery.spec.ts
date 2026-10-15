@@ -1,0 +1,841 @@
+import { expect, test } from '@playwright/test'
+
+import { petAlbums } from '../src/locales/dynamic/petAlbums'
+import { getFloraCaptureDate } from '../src/utils/floratriumMedia'
+import { loadFloraMediaPage } from '../worker/src/floratrium'
+
+test('responsive album sizing, expansion and character rail placement', async ({
+  page,
+}, info) => {
+  test.setTimeout(60000)
+  const mobile = info.project.name.includes('mobile')
+  await page.routeWebSocket('ws://localhost:3000/**', (socket) =>
+    socket.close()
+  )
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.route('**/__floratrium/media?**', (route) =>
+    route.fulfill({
+      json: {
+        items: petAlbums.huahua.defaults.map((item, index) => ({
+          ...item,
+          key: `fixture-${index}`,
+        })),
+        nextCursor: null,
+      },
+    })
+  )
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  const stage = page.locator('.temple-stage')
+  await expect(stage).toHaveAttribute('data-entrance-finished', 'true', {
+    timeout: 30000,
+  })
+  const point = (await stage.getAttribute('data-companion-screen'))!
+    .split(',')
+    .map(Number)
+  await page.mouse.click(point[0], point[1])
+  const gallery = page.locator('.flora-album-gallery')
+  const toggleWithMotion = () =>
+    page.evaluate(async () => {
+      const album = document.querySelector('.flora-album-gallery')!
+      const button = album.querySelector<HTMLButtonElement>(
+        '.flora-album-gallery__expand'
+      )!
+      const character = document.querySelector(
+        '.flora-focus-layout__character'
+      )!
+      const initial = button.getBoundingClientRect().toJSON()
+      const initialLeft = album.getBoundingClientRect().left
+      const frames: Array<{
+        x: number
+        y: number
+        width: number
+        height: number
+        left: number
+        opacity: number
+      }> = []
+      button.click()
+      const deadline = performance.now() + 1000
+      await new Promise<void>((resolve) => {
+        const sample = () => {
+          const rect = button.getBoundingClientRect()
+          frames.push({
+            x: rect.x,
+            y: rect.y,
+            width: rect.width,
+            height: rect.height,
+            left: album.getBoundingClientRect().left,
+            opacity: Number(getComputedStyle(character).opacity),
+          })
+          if (performance.now() < deadline) requestAnimationFrame(sample)
+          else resolve()
+        }
+        requestAnimationFrame(sample)
+      })
+      return { initial, initialLeft, frames }
+    })
+  const checkMotion = (
+    result: Awaited<ReturnType<typeof toggleWithMotion>>
+  ) => {
+    for (const key of ['x', 'width', 'height'] as const)
+      expect(
+        Math.max(
+          ...result.frames.map((frame) =>
+            Math.abs(frame[key] - result.initial[key])
+          )
+        )
+      ).toBeLessThanOrEqual(1)
+    expect(
+      result.frames.some((frame) => frame.opacity > 0 && frame.opacity < 1)
+    ).toBe(true)
+    expect(
+      Math.max(
+        ...result.frames.map((frame) =>
+          Math.abs(frame.left - result.initialLeft)
+        )
+      )
+    ).toBeLessThanOrEqual(1)
+  }
+  await expect(gallery).toBeVisible()
+  const collapsedAlbumBounds = (await gallery.boundingBox())!
+  await expect(page.locator('.flora-identity-bar__gender')).toHaveCSS(
+    'opacity',
+    '0.6'
+  )
+  await expect(gallery.locator('.flora-album-gallery__title')).toHaveCSS(
+    'font-size',
+    mobile ? '36px' : '60px'
+  )
+  await expect(gallery.locator('.flora-album-gallery__expand')).toHaveCSS(
+    'font-size',
+    mobile ? '18px' : '36px'
+  )
+  if (mobile) {
+    const railGeometry = await page
+      .locator('.flora-character-rail')
+      .evaluate((element) => {
+        const bounds = element.getBoundingClientRect()
+        const slots = element.querySelectorAll('.flora-character-rail__slot')
+        const first = slots[0].getBoundingClientRect()
+        const last = slots[slots.length - 1].getBoundingClientRect()
+        const character = element.parentElement!.getBoundingClientRect()
+        return {
+          width: bounds.width,
+          height: bounds.height,
+          topPadding: first.top - bounds.top,
+          bottomPadding: bounds.bottom - last.bottom,
+          ballSize: first.width,
+          previousHeight: (character.height - 20) / 3,
+        }
+      })
+    expect(railGeometry.height / railGeometry.width).toBeCloseTo(5.5, 1)
+    expect(railGeometry.height).toBeGreaterThan(railGeometry.previousHeight)
+    expect(railGeometry.ballSize).toBeGreaterThan(
+      railGeometry.previousHeight * 0.14
+    )
+    expect(railGeometry.topPadding).toBeGreaterThanOrEqual(8)
+    expect(railGeometry.bottomPadding).toBeGreaterThanOrEqual(8)
+    expect((await gallery.boundingBox())!.height).toBeCloseTo(
+      Math.min(120, Math.max(85, page.viewportSize()!.height * 0.125)),
+      0
+    )
+    await expect
+      .poll(() =>
+        page.locator('.flora-character-rail').evaluate((rail) => {
+          const symbols = document
+            .querySelector('.flora-number-bar__symbols')!
+            .getBoundingClientRect()
+          const bounds = rail.getBoundingClientRect()
+          return (
+            Math.abs(bounds.right - symbols.right) <= 1 &&
+            bounds.top >= symbols.bottom + 7
+          )
+        })
+      )
+      .toBe(true)
+    await page.screenshot({
+      path: `.tmp/flora-responsive-collapsed-${info.project.name}.png`,
+    })
+  }
+  if (mobile) {
+    await page.emulateMedia({ reducedMotion: 'no-preference' })
+    checkMotion(await toggleWithMotion())
+  } else
+    await gallery.getByRole('button', { name: 'EXPAND', exact: true }).click()
+  await expect(gallery.locator('.media-gallery__card')).toHaveCount(10)
+  if (mobile) {
+    const layout = await gallery.evaluate((element) => {
+      const root = document
+        .querySelector('.flora-focus-layout')!
+        .getBoundingClientRect()
+      const bounds = element.getBoundingClientRect()
+      const viewport = element.querySelector('.flora-album-gallery__viewport')!
+      const footer = element.querySelector('.flora-album-gallery__footer')!
+      const footerStyle = getComputedStyle(footer)
+      const pager = footer.querySelector('nav')!.getBoundingClientRect()
+      const control = element
+        .querySelector('.flora-album-gallery__expand')!
+        .getBoundingClientRect()
+      return {
+        height: bounds.height,
+        available: root.height,
+        left: bounds.left,
+        right: innerWidth - bounds.right,
+        inset: getComputedStyle(viewport).paddingLeft,
+        viewportTopGap: viewport.getBoundingClientRect().top - bounds.top,
+        listTopGap:
+          element.querySelector('.media-gallery')!.getBoundingClientRect().top -
+          viewport.getBoundingClientRect().top,
+        footerTop: footerStyle.paddingTop,
+        pagerLeftGap: pager.left - footer.getBoundingClientRect().left,
+        footerBottom: footerStyle.paddingBottom,
+        controlsOverlap:
+          pager.right > control.left && pager.bottom > control.top,
+      }
+    })
+    expect(layout.height).toBeGreaterThan(layout.available * 0.8)
+    expect(layout.left).toBeCloseTo(collapsedAlbumBounds.x, 0)
+    expect(layout.right).toBeCloseTo(
+      page.viewportSize()!.width -
+        collapsedAlbumBounds.x -
+        collapsedAlbumBounds.width,
+      0
+    )
+    expect(layout.inset).toBe('8px')
+    expect(layout.viewportTopGap).toBeCloseTo(20, 0)
+    expect(layout.listTopGap).toBeCloseTo(8, 0)
+    expect(layout.footerTop).toBe('8px')
+    expect(layout.pagerLeftGap).toBeCloseTo(8, 0)
+    expect(layout.footerBottom).toBe('8px')
+    expect(layout.controlsOverlap).toBe(false)
+    await expect(page.locator('.flora-focus-layout__character')).toHaveCSS(
+      'opacity',
+      '0'
+    )
+    await expect(page.locator('.flora-pet-level')).toHaveCSS('opacity', '0')
+    await expect(stage.locator('canvas')).toHaveCSS('visibility', 'hidden')
+    await page.screenshot({
+      path: `.tmp/flora-responsive-expanded-${info.project.name}.png`,
+    })
+  }
+  if (mobile) checkMotion(await toggleWithMotion())
+  else
+    await gallery.getByRole('button', { name: 'COLLAPSE', exact: true }).click()
+  await expect(page.locator('.flora-character-rail')).toBeVisible()
+  await expect(stage.locator('canvas')).toHaveCSS('visibility', 'visible')
+  if (mobile) {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await gallery.getByRole('button', { name: 'EXPAND', exact: true }).click()
+    for (const element of [
+      gallery,
+      page.locator('.flora-focus-layout__character'),
+    ])
+      expect(
+        await element.evaluate((node) =>
+          getComputedStyle(node)
+            .transitionDuration.split(',')
+            .every((duration) => parseFloat(duration) <= 0.001)
+        )
+      ).toBe(true)
+    await gallery.getByRole('button', { name: 'COLLAPSE', exact: true }).click()
+    await page.getByRole('button', { name: '切换导航菜单' }).click()
+    await expect(
+      page.locator('.mobile-menu-items .little-title').first()
+    ).toHaveText('首页')
+    await expect(
+      page.locator('.mobile-menu-items .little-title').nth(1)
+    ).toHaveText('个人海湾')
+  }
+})
+
+test('capture dates come from filenames and reject invalid calendar dates', ({
+  browserName,
+}) => {
+  expect(browserName).toBe('chromium')
+  expect(
+    getFloraCaptureDate('Floratrium/flora/20250603_180916_compressed.webp')
+  ).toBe('2025-06-03')
+  expect(
+    getFloraCaptureDate(
+      'https://assets.anuluca.com/Floratrium/hei/20240229_100000.mp4?image=card-thumb'
+    )
+  ).toBe('2024-02-29')
+  expect(getFloraCaptureDate('20250229_100000.webp')).toBeNull()
+  expect(getFloraCaptureDate('20251301_100000.webp')).toBeNull()
+  expect(getFloraCaptureDate('photo.webp')).toBeNull()
+})
+
+test('R2 pages fill twenty-eight supported media entries without dropping filtered objects', async ({
+  browserName,
+}, info) => {
+  test.skip(
+    info.project.name.includes('mobile'),
+    `${browserName} 服务端分页逻辑共用`
+  )
+  const keys = [
+    ...Array.from({ length: 13 }, (_, i) => `Floratrium/flora/.hidden-${i}`),
+    ...Array.from(
+      { length: 103 },
+      (_, i) => `Floratrium/flora/${String(i).padStart(3, '0')}.webp`
+    ),
+    'Floratrium/flora/end.mp4',
+  ]
+  const limits: number[] = []
+  const bucket = {
+    list: async (options: { cursor?: string; limit: number }) => {
+      limits.push(options.limit)
+      const start = Number(options.cursor || 0)
+      const end = Math.min(keys.length, start + Math.min(options.limit, 31))
+      return {
+        objects: keys.slice(start, end).map((key) => ({ key })),
+        truncated: end < keys.length,
+        cursor: String(end),
+        delimitedPrefixes: [],
+      }
+    },
+  } as Parameters<typeof loadFloraMediaPage>[0]
+  const first = await loadFloraMediaPage(bucket, 'flora')
+  const second = await loadFloraMediaPage(bucket, 'flora', first.nextCursor!)
+  const third = await loadFloraMediaPage(bucket, 'flora', second.nextCursor!)
+  const fourth = await loadFloraMediaPage(bucket, 'flora', third.nextCursor!)
+  expect([
+    first.items.length,
+    second.items.length,
+    third.items.length,
+    fourth.items.length,
+  ]).toEqual([28, 28, 28, 20])
+  expect(
+    new Set(
+      [...first.items, ...second.items, ...third.items, ...fourth.items].map(
+        (item) => item.key
+      )
+    ).size
+  ).toBe(104)
+  expect(first.items[0].type).toBe('video')
+  expect(first.totalPages).toBe(4)
+  expect(
+    [...first.items, ...second.items, ...third.items, ...fourth.items].map(
+      (item) => item.key
+    )
+  ).toEqual(
+    keys
+      .filter((key) => !key.includes('/.hidden-'))
+      .sort()
+      .reverse()
+  )
+  expect(fourth.nextCursor).toBeNull()
+  expect(limits.every((limit) => limit > 0 && limit <= 1000)).toBe(true)
+})
+
+test('online defaults, upward expansion, paging, refresh and pet reset preserve the page', async ({
+  page,
+}, info) => {
+  test.setTimeout(90000)
+  await page.routeWebSocket('ws://localhost:3000/**', (socket) =>
+    socket.close()
+  )
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  const stage = page.locator('.temple-stage')
+  await expect(stage).toHaveAttribute('data-entrance-finished', 'true', {
+    timeout: 45000,
+  })
+  const point = (await stage.getAttribute('data-companion-screen'))!
+    .split(',')
+    .map(Number)
+  await page.mouse.click(point[0], point[1])
+  const gallery = page.locator('.flora-album-gallery')
+  await expect(
+    gallery.locator(
+      '.flora-album-strip__group:not([aria-hidden]) .flora-album-strip__photo'
+    )
+  ).toHaveCount(10)
+  await expect(gallery.locator('img').first()).toHaveAttribute(
+    'src',
+    /^https:\/\/assets\.anuluca\.com\/Floratrium\/.+\?image=card-thumb$/
+  )
+  await expect
+    .poll(() =>
+      gallery
+        .locator('img')
+        .first()
+        .evaluate((image) => (image as HTMLImageElement).naturalWidth)
+    )
+    .toBeGreaterThan(0)
+  await expect
+    .poll(
+      () =>
+        gallery
+          .locator('.flora-album-strip__group:not([aria-hidden]) img')
+          .evaluateAll((images) =>
+            images.every(
+              (image) =>
+                (image as HTMLImageElement).complete &&
+                (image as HTMLImageElement).naturalWidth > 0
+            )
+          ),
+      { timeout: 20000 }
+    )
+    .toBe(true)
+  await expect(gallery.locator('.media-gallery__info')).toHaveCount(0)
+  const layout = await gallery.evaluate((element) => {
+    const title = element.querySelector<HTMLElement>(
+      '.flora-album-gallery__title'
+    )!
+    const images = Array.from(
+      element.querySelectorAll<HTMLImageElement>(
+        '.flora-album-strip__group:not([aria-hidden]) img'
+      )
+    )
+    const rects = images.map((image) => image.getBoundingClientRect())
+    const button = element.querySelector<HTMLElement>(
+      '.flora-album-gallery__expand'
+    )!
+    const label = button.querySelector('span')!
+    return {
+      titleFont: getComputedStyle(title).fontFamily,
+      titleWeight: getComputedStyle(title).fontWeight,
+      titleSize: getComputedStyle(title).fontSize,
+      titleBottom: title.getBoundingClientRect().bottom,
+      titleTop: title.getBoundingClientRect().top,
+      overflowBottom: element.getBoundingClientRect().top,
+      overflowTop: element.getBoundingClientRect().top - 32,
+      heights: rects.map((rect) => rect.height),
+      gaps: rects.slice(1).map((rect, index) => rect.left - rects[index].right),
+      buttonLeft: button.getBoundingClientRect().left,
+      buttonRight: button.getBoundingClientRect().right,
+      viewportLeft: element
+        .querySelector('.flora-album-strip__viewport')!
+        .getBoundingClientRect().left,
+      viewportRight: element
+        .querySelector('.flora-album-strip__viewport')!
+        .getBoundingClientRect().right,
+      stripLeft: element.getBoundingClientRect().left,
+      stripRight: element.getBoundingClientRect().right,
+      font: getComputedStyle(label).fontFamily,
+      italic: getComputedStyle(label).fontStyle,
+      rotation: getComputedStyle(label).transform,
+      spacing: parseFloat(getComputedStyle(label).letterSpacing),
+    }
+  })
+  expect(layout.titleFont).toContain('UnboundedSans')
+  expect(layout.titleWeight).toBe('400')
+  expect(layout.titleSize).toBe(
+    info.project.name.includes('mobile') ? '36px' : '60px'
+  )
+  expect(layout.titleTop).toBeLessThan(layout.overflowBottom)
+  expect(layout.titleBottom).toBeGreaterThan(layout.overflowTop)
+  expect(
+    Math.max(...layout.heights) - Math.min(...layout.heights)
+  ).toBeLessThanOrEqual(1)
+  expect(layout.gaps.every((gap) => Math.abs(gap - 12) <= 1)).toBe(true)
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  const strip = gallery.locator('.flora-album-strip')
+  await expect(strip).toHaveClass(/is-running/)
+  const loop = await strip.evaluate((element) => {
+    const track = element.querySelector<HTMLElement>(
+      '.flora-album-strip__track'
+    )!
+    const animation = track.getAnimations()[0]
+    animation.pause()
+    animation.currentTime =
+      Number(animation.effect!.getTiming().duration) * 0.99
+    const viewport = element.querySelector('.flora-album-strip__viewport')!
+    const groups = Array.from(
+      element.querySelectorAll('.flora-album-strip__group')
+    ).map((group) => group.getBoundingClientRect())
+    animation.play()
+    return {
+      widths: groups.map((group) => group.width),
+      right: groups.at(-1)!.right,
+      viewportRight: viewport.getBoundingClientRect().right,
+    }
+  })
+  expect(
+    Math.max(...loop.widths) - Math.min(...loop.widths)
+  ).toBeLessThanOrEqual(1)
+  expect(loop.right).toBeGreaterThanOrEqual(loop.viewportRight)
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  expect(layout.buttonRight).toBeLessThan(layout.stripRight)
+  expect(layout.viewportLeft - layout.stripLeft).toBeGreaterThanOrEqual(
+    info.project.name.includes('mobile') ? 7 : 19
+  )
+  expect(layout.font).toContain('Anton')
+  expect(layout.italic).toBe('normal')
+  expect(layout.rotation).toBe('none')
+  expect(layout.spacing).toBe(0)
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await page.mouse.move(10, 10)
+  const track = gallery.locator('.flora-album-strip__track')
+  await expect
+    .poll(() =>
+      track.evaluate((element) => getComputedStyle(element).animationPlayState)
+    )
+    .toBe('running')
+  const initialTransform = await track.evaluate(
+    (element) => getComputedStyle(element).transform
+  )
+  await expect
+    .poll(() =>
+      track.evaluate((element) => getComputedStyle(element).transform)
+    )
+    .not.toBe(initialTransform)
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  const before = await gallery.boundingBox()
+  const bodyWidth = await page.evaluate(
+    () => document.body.getBoundingClientRect().width
+  )
+  const base = petAlbums.huahua.defaults[0].url
+  const fixtures = Array.from({ length: 50 }, (_, i) => ({
+    key: `fixture-${i}`,
+    url: `${base}?fixture=${i}`,
+    type: 'image',
+  }))
+  let requests = 0
+  await page.route('**/__floratrium/media?**', (route) => {
+    const url = new URL(route.request().url())
+    if (url.searchParams.get('pet') === 'hei') return route.continue()
+    requests++
+    const second = !!url.searchParams.get('cursor')
+    return route.fulfill({
+      json: {
+        items: second ? fixtures.slice(28) : fixtures.slice(0, 28),
+        nextCursor: second ? null : 'page-two',
+      },
+    })
+  })
+  await gallery.getByRole('button', { name: 'EXPAND', exact: true }).click()
+  await expect(gallery.locator('.media-gallery__card')).toHaveCount(28)
+  await expect(
+    gallery.locator('.media-gallery__card img').first()
+  ).toHaveAttribute('src', /[?&]image=card-thumb(?:&|$)/)
+  await expect(gallery.locator('.photo-info__time').first()).toHaveText(
+    '2025-06-03'
+  )
+  const after = (await gallery.boundingBox())!
+  expect(after.y).toBeLessThan(before!.y)
+  expect(
+    Math.abs(after.y + after.height - before!.y - before!.height)
+  ).toBeLessThanOrEqual(1)
+  const firstNode = await gallery
+    .locator('.media-gallery__card')
+    .first()
+    .elementHandle()
+  await expect.poll(() => requests, { timeout: 20000 }).toBeGreaterThan(1)
+  expect(await firstNode!.evaluate((node) => node.isConnected)).toBe(true)
+  await gallery.getByRole('button', { name: '下一页', exact: true }).click()
+  await expect(gallery.locator('.media-gallery__card')).toHaveCount(22)
+  await expect(
+    gallery.getByRole('button', { name: '下一页', exact: true })
+  ).toBeDisabled()
+  await gallery.getByRole('button', { name: '上一页', exact: true }).click()
+  await expect(gallery.locator('.media-gallery__card')).toHaveCount(28)
+  await page.locator('button[data-pet-id="xiaohei"]').click()
+  await expect(stage).toHaveAttribute('data-pet-id', 'xiaohei')
+  await expect(gallery).not.toHaveClass(/is-expanded/)
+  await expect(
+    gallery.locator(
+      '.flora-album-strip__group:not([aria-hidden]) .flora-album-strip__photo'
+    )
+  ).toHaveCount(7)
+  await gallery.getByRole('button', { name: 'EXPAND', exact: true }).click()
+  await expect(gallery.locator('video')).not.toHaveCount(0)
+  await expect(gallery.locator('.media-gallery__card')).toHaveCount(19)
+  await gallery.getByRole('button', { name: 'COLLAPSE', exact: true }).click()
+  await gallery.locator('.flora-album-strip__photo').first().click()
+  await expect(page.locator('.el-image-viewer__wrapper')).toBeVisible()
+  expect(
+    Math.abs(
+      (await page.evaluate(() => document.body.getBoundingClientRect().width)) -
+        bodyWidth
+    )
+  ).toBeLessThanOrEqual(1)
+  await page.locator('.el-image-viewer__close').click()
+  await expect(page.locator('.el-image-viewer__wrapper')).toHaveCount(0)
+  expect(
+    Math.abs(
+      (await page.evaluate(() => document.body.getBoundingClientRect().width)) -
+        bodyWidth
+    )
+  ).toBeLessThanOrEqual(1)
+  await page.screenshot({
+    path: `.tmp/floratrium-gallery-${info.project.name}.png`,
+  })
+})
+
+test('cached photos remain visible after repeated full-to-selected switches', async ({
+  page,
+}) => {
+  test.setTimeout(60000)
+  await page.routeWebSocket('ws://localhost:3000/**', (socket) =>
+    socket.close()
+  )
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  const stage = page.locator('.temple-stage')
+  await expect(stage).toHaveAttribute('data-entrance-finished', 'true', {
+    timeout: 45000,
+  })
+  const point = (await stage.getAttribute('data-companion-screen'))!
+    .split(',')
+    .map(Number)
+  await page.mouse.click(point[0], point[1])
+  const gallery = page.locator('.flora-album-gallery')
+  const firstFilename = petAlbums.huahua.defaults[0].key.split('/').pop()!
+  const firstImage = gallery.locator(`img[src*="${firstFilename}"]`).first()
+  await expect(firstImage).toBeVisible()
+  await expect
+    .poll(() =>
+      firstImage.evaluate((img) => (img as HTMLImageElement).naturalWidth)
+    )
+    .toBeGreaterThan(0)
+  for (let round = 0; round < 2; round++) {
+    await gallery.getByRole('button', { name: 'EXPAND', exact: true }).click()
+    await expect(gallery).toHaveClass(/is-expanded/)
+    await firstImage.scrollIntoViewIfNeeded()
+    await expect(firstImage).toHaveCSS('opacity', '1')
+    await gallery.getByRole('button', { name: 'COLLAPSE', exact: true }).click()
+    await expect(gallery).not.toHaveClass(/is-expanded/)
+    await expect(firstImage).toHaveCSS('opacity', '1')
+    await expect
+      .poll(() =>
+        firstImage.evaluate((img) => (img as HTMLImageElement).naturalWidth)
+      )
+      .toBeGreaterThan(0)
+  }
+})
+
+test('outside clicks collapse the album before returning home', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.route('**/__floratrium/media?**', (route) =>
+    route.fulfill({ json: { items: [], nextCursor: null } })
+  )
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  const stage = page.locator('.temple-stage')
+  await expect(stage).toHaveAttribute('data-entrance-finished', 'true', {
+    timeout: 45000,
+  })
+  const point = (await stage.getAttribute('data-companion-screen'))!
+    .split(',')
+    .map(Number)
+  await page.mouse.click(point[0], point[1])
+  const gallery = page.locator('.flora-album-gallery')
+  await gallery.getByRole('button', { name: 'EXPAND', exact: true }).click()
+  await expect(gallery).toHaveClass(/is-expanded/)
+  await page.mouse.click(10, 180)
+  await expect(gallery).not.toHaveClass(/is-expanded/)
+  await expect(page.locator('.temple-page')).toHaveAttribute(
+    'data-selected',
+    'sprigatito'
+  )
+  await page.mouse.click(10, 180)
+  await expect(page.locator('.temple-page')).toHaveAttribute(
+    'data-selected',
+    'none'
+  )
+  await expect(gallery).not.toBeAttached()
+})
+
+test('centered triangle pagination supports direct page jumps', async ({
+  page,
+}, info) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  let holdSecondPage = false
+  let releaseSecondPage: (() => void) | undefined
+  await page.route('**/__floratrium/media?**', async (route) => {
+    const cursor = new URL(route.request().url()).searchParams.get('cursor')
+    const index = cursor ? Number(cursor) : 0
+    if (index === 1 && holdSecondPage)
+      await new Promise<void>((resolve) => {
+        releaseSecondPage = resolve
+      })
+    return route.fulfill({
+      json: {
+        items: [
+          {
+            key: `page-${index}`,
+            url: `${petAlbums.huahua.defaults[0].url}?page=${index}`,
+            type: 'image',
+          },
+        ],
+        nextCursor: index < 2 ? String(index + 1) : null,
+      },
+    })
+  })
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  const stage = page.locator('.temple-stage')
+  await expect(stage).toHaveAttribute('data-entrance-finished', 'true', {
+    timeout: 45000,
+  })
+  const point = (await stage.getAttribute('data-companion-screen'))!
+    .split(',')
+    .map(Number)
+  await page.mouse.click(point[0], point[1])
+  const gallery = page.locator('.flora-album-gallery')
+  await gallery.getByRole('button', { name: 'EXPAND', exact: true }).click()
+  const pages = gallery.locator('.flora-album-gallery__page-numbers button')
+  await expect(pages).toHaveText(['1', '2', '3'])
+  await expect(gallery.getByRole('spinbutton')).toHaveCount(0)
+  await expect(pages.nth(0)).toHaveAttribute('aria-current', 'page')
+  await expect(
+    gallery.getByRole('button', { name: '上一页', exact: true })
+  ).toBeDisabled()
+  await pages.nth(2).click()
+  await expect(pages.nth(2)).toHaveAttribute('aria-current', 'page')
+  await expect(
+    gallery.locator('.media-gallery__card img').first()
+  ).toHaveAttribute('src', /page=2/)
+  await expect(
+    gallery.getByRole('button', { name: '下一页', exact: true })
+  ).toBeDisabled()
+  await pages.nth(0).click()
+  await expect(
+    gallery.locator('.media-gallery__card img').first()
+  ).toHaveAttribute('src', /page=0/)
+  holdSecondPage = true
+  await pages.nth(1).click()
+  await expect(pages.nth(1)).toHaveAttribute('aria-current', 'page')
+  await expect.poll(() => Boolean(releaseSecondPage)).toBe(true)
+  const canceled = page.waitForEvent(
+    'requestfailed',
+    (request) => new URL(request.url()).searchParams.get('cursor') === '1'
+  )
+  await pages.nth(2).click()
+  await canceled
+  await expect(
+    gallery.locator('.media-gallery__card img').first()
+  ).toHaveAttribute('src', /page=2/)
+  releaseSecondPage?.()
+  holdSecondPage = false
+  await pages.nth(0).click()
+  await expect(
+    gallery.locator('.media-gallery__card img').first()
+  ).toHaveAttribute('src', /page=0/)
+  const delta = await gallery.evaluate((element) => {
+    const container = element.getBoundingClientRect()
+    const nav = element
+      .querySelector('.flora-album-gallery__pagination')!
+      .getBoundingClientRect()
+    return Math.abs(
+      (container.left + container.right - nav.left - nav.right) / 2
+    )
+  })
+  expect(delta).toBeLessThanOrEqual(1)
+  await gallery.getByRole('button', { name: 'COLLAPSE', exact: true }).click()
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await gallery.getByRole('button', { name: 'EXPAND', exact: true }).click()
+  await expect(gallery).toHaveCSS(
+    'transition-duration',
+    /^0\.85s(?:, 0\.85s)*$/
+  )
+  const blades = gallery.locator('.flora-album-gallery__background span')
+  await expect(blades).toHaveCount(12)
+  await expect(blades.first()).toHaveCSS('animation-delay', '0s')
+  await expect(blades.last()).toHaveCSS('animation-delay', '0.264s')
+  await gallery.screenshot({
+    path: `.tmp/flora-pagination-${info.project.name}.png`,
+  })
+})
+
+test('mobile album keeps its horizontal bounds while expanding and collapsing', async ({
+  page,
+}, info) => {
+  test.skip(!info.project.name.includes('mobile'), '手机端横向边界回归')
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.route('**/__floratrium/media?**', (route) =>
+    route.fulfill({
+      json: { items: petAlbums.huahua.defaults, nextCursor: null },
+    })
+  )
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  const stage = page.locator('.temple-stage')
+  await expect(stage).toHaveAttribute('data-entrance-finished', 'true', {
+    timeout: 45000,
+  })
+  const point = (await stage.getAttribute('data-companion-screen'))!
+    .split(',')
+    .map(Number)
+  await page.mouse.click(point[0], point[1])
+  const gallery = page.locator('.flora-album-gallery')
+  await expect(gallery).toBeVisible()
+  const initialLayer = await page
+    .locator('.layout-page')
+    .evaluate((element) => getComputedStyle(element).zIndex)
+  const frameLayer = await page
+    .locator('.mobile-screen-frame-bottom')
+    .evaluate((element) => Number(getComputedStyle(element).zIndex))
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  for (const opening of [true, false]) {
+    const result = await gallery.evaluate(async (element) => {
+      const initial = element.getBoundingClientRect()
+      element
+        .querySelector<HTMLButtonElement>('.flora-album-gallery__expand')!
+        .click()
+      let maxShift = 0
+      const until = performance.now() + 1000
+      await new Promise<void>((resolve) => {
+        const sample = () => {
+          const current = element.getBoundingClientRect()
+          maxShift = Math.max(
+            maxShift,
+            Math.abs(current.left - initial.left),
+            Math.abs(current.right - initial.right)
+          )
+          if (performance.now() < until) requestAnimationFrame(sample)
+          else resolve()
+        }
+        requestAnimationFrame(sample)
+      })
+      return {
+        maxShift,
+        heightChange: element.getBoundingClientRect().height - initial.height,
+      }
+    })
+    expect(result.maxShift).toBeLessThanOrEqual(1)
+    if (opening) {
+      expect(
+        await page
+          .locator('.layout-page')
+          .evaluate((element) => Number(getComputedStyle(element).zIndex))
+      ).toBeGreaterThan(frameLayer)
+      await expect(gallery).toHaveClass(/is-expanded/)
+      const bounds = (await gallery.boundingBox())!
+      expect(Math.abs(bounds.y)).toBeLessThanOrEqual(1)
+      expect(
+        Math.abs(bounds.y + bounds.height - page.viewportSize()!.height)
+      ).toBeLessThanOrEqual(1)
+      await expect(page.locator('.footer-com')).toHaveCSS('opacity', '0')
+      await expect(page.locator('.el-menu-layout-all')).toHaveCSS(
+        'opacity',
+        '0'
+      )
+      await expect(page.locator('.mobile-menu-icon')).toHaveCSS('opacity', '0')
+      await expect(
+        gallery.locator('.flora-album-gallery__decoration')
+      ).toHaveCSS('opacity', '0')
+      const control = (await gallery
+        .locator('.flora-album-gallery__expand')
+        .boundingBox())!
+      expect(control.y + control.height).toBeCloseTo(
+        page.viewportSize()!.height - 8,
+        0
+      )
+    } else {
+      await expect(page.locator('.layout-page')).toHaveCSS(
+        'z-index',
+        initialLayer
+      )
+      await expect(gallery).not.toHaveClass(/is-expanded/)
+      await expect(page.locator('.footer-com')).toHaveCSS('opacity', '1')
+      await expect(page.locator('.el-menu-layout-all')).toHaveCSS(
+        'opacity',
+        '1'
+      )
+      await expect(page.locator('.mobile-menu-icon')).toHaveCSS('opacity', '1')
+      await expect(
+        gallery.locator('.flora-album-gallery__decoration')
+      ).toHaveCSS('opacity', '1')
+    }
+  }
+})

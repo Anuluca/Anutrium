@@ -131,7 +131,7 @@
 ### 原理与可能收益
 
 - 移动不属于首屏的组件样式到对应路由，可减少首屏 CSS 下载、解析和样式规则处理。
-- 本次首屏 UI 分包已经会改变 CSS 依赖图，必须针对新构建重新统计，不能沿用旧的首页约 290KB CSS 数据。
+- 本次首屏 UI 分包已改变 CSS 依赖图；新构建首页实际请求 CSS 为 241,999 B，详见 [实施结果](./selected-optimization-results.md)，不能沿用旧的约 290KB 基线。
 - 动画方案应通过实际布局/绘制分析判断；长期增加 will-change 不是通用解决方法。[Chrome 动画指南](https://web.dev/articles/animations-guide)
 
 ### 为什么未执行样式不能直接删除

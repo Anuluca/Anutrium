@@ -70,10 +70,11 @@ export const templePresentations: Record<
       styles: {
         ...desktopMenuStyles,
         '--temple-menu-width': '100%',
+        '--temple-mobile-content-inset': '24px',
         '--temple-menu-shade':
           'repeating-linear-gradient(to bottom, rgba(0,0,0,0.9) 0 4px, rgba(18,18,18,0.9) 4px 6px)',
         '--temple-menu-padding':
-          'max(23px, env(safe-area-inset-top)) 24px max(30px, env(safe-area-inset-bottom))',
+          'max(23px, env(safe-area-inset-top)) var(--temple-mobile-content-inset) max(30px, env(safe-area-inset-bottom))',
         '--temple-menu-header-gap': '32px',
         '--temple-menu-compact-padding-top':
           'max(23px, env(safe-area-inset-top))',

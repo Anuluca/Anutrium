@@ -10,16 +10,16 @@ test.beforeEach(async ({ page }) => {
 })
 
 test('baked render assets contain only referenced vertices and valid morph topology', async () => {
-  const files = (await readdir(resolve('public/models')))
-    .filter((name) => name.startsWith('sprigatito-'))
-    .sort()
-  expect(files).toEqual(['sprigatito-sleep.bin.gz', 'sprigatito-sleep.json'])
-  {
+  for (const model of ['sprigatito', 'mightyena']) {
+    const files = (await readdir(resolve('public/models')))
+      .filter((name) => name.startsWith(`${model}-`))
+      .sort()
+    expect(files).toEqual([`${model}-sleep.bin.gz`, `${model}-sleep.json`])
     const metadata = JSON.parse(
-      await readFile(resolve(`public/models/sprigatito-sleep.json`), 'utf8')
+      await readFile(resolve(`public/models/${model}-sleep.json`), 'utf8')
     )
     const bytes = gunzipSync(
-      await readFile(resolve(`public/models/sprigatito-sleep.bin.gz`))
+      await readFile(resolve(`public/models/${model}-sleep.bin.gz`))
     )
     const buffer = bytes.buffer.slice(
       bytes.byteOffset,
@@ -28,7 +28,10 @@ test('baked render assets contain only referenced vertices and valid morph topol
     const count = metadata.attributes.positions.count / 3
     const attribute = metadata.attributes.indices
     const indices = new Uint16Array(buffer, attribute.offset, attribute.count)
-    expect(indices.length / 3).toBe(2066)
+    expect(indices.length / 3).toBe(metadata.stats.faces)
+    expect(indices.length).toBeGreaterThan(0)
+    expect(metadata.textures).toBeUndefined()
+    expect(metadata.attributes.uvs).toBeUndefined()
     expect(new Set(indices).size).toBe(count)
     expect(Math.max(...indices)).toBeLessThan(count)
     for (const name of [
@@ -36,6 +39,10 @@ test('baked render assets contain only referenced vertices and valid morph topol
       'normals',
       'raisedPositions',
       'raisedNormals',
+      'yawPositions',
+      'yawNormals',
+      'pitchPositions',
+      'pitchNormals',
     ]) {
       const attribute = metadata.attributes[name]
       expect(attribute.offset % 4).toBe(0)

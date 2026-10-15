@@ -2,7 +2,7 @@ import * as THREE from 'three'
 
 // 读取朱紫 FlatBuffers 骨骼动画的首帧。仅供离线烘焙，不进入首页运行时。
 // 格式与四种轨道类型参考 ChicoEevee/Pokemon-Switch-Model-Importer-Blender 的 GFLib/Anim。
-function flatBufferReader(buffer: ArrayBuffer) {
+export function flatBufferReader(buffer: ArrayBuffer) {
   const view = new DataView(buffer)
   const u32 = (offset: number) => view.getUint32(offset, true)
   const indirect = (offset: number) => offset + u32(offset)
@@ -75,7 +75,7 @@ export function readTranmPose(buffer: ArrayBuffer) {
   const root = u32(0)
   const info = indirect(field(root, 0))
   if (!field(info, 0) || !u32(field(info, 0))) {
-    throw new Error('Expected looping sleep animation')
+    throw new Error('Expected looping base animation')
   }
   const skeleton = indirect(field(root, 1))
   const tracks = indirect(field(skeleton, 0))

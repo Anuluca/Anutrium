@@ -6,6 +6,7 @@ import Components from 'unplugin-vue-components/vite'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
+import { floratriumDevPlugin } from './scripts/lib/floratriumDevPlugin.mjs'
 import imageLog from './src/locales/dynamic/island/Photography/imageLog'
 import merchPhotos from './src/locales/dynamic/island/Photography/merchPhotos'
 
@@ -39,6 +40,7 @@ export default defineConfig({
   },
   plugins: [
     vue(),
+    floratriumDevPlugin(),
     AutoImport({
       resolvers: [ElementPlusResolver()],
     }),
@@ -140,8 +142,8 @@ export default defineConfig({
           // 扩展按实际消费者拆分，避免线框入口连带预加载材质模式的后处理。
           if (normalizedId.includes('/three/examples/')) return undefined
           if (normalizedId.includes('/three/')) return 'vendor-three'
-          if (normalizedId.includes('/swiper/')) return 'vendor-swiper'
-          // Element Plus 与图标跟随实际消费者，避免首屏连带下载路由级弹窗/表单。
+          // UI 库跟随实际消费者。强制分包会把其 Vue 共享依赖一起移入 vendor，
+          // 从而让首屏为共享运行时下载仅旧页面使用的 Swiper 或路由级弹窗/表单。
 
           // Let Rollup keep route-only dependencies with their actual consumers.
           // A catch-all vendor chunk makes one shared framework import pull every

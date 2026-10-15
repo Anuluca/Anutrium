@@ -23,7 +23,8 @@
     "check:overlay-scroll": "node scripts/check-overlay-scroll-lock.mjs",
     "test:overlay-scroll": "playwright test tests/modal-scroll-lock.spec.ts tests/page-footer.spec.ts --grep preserves",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore && node scripts/check-overlay-scroll-lock.mjs",
-    "format": "prettier --write src/"
+    "format": "prettier --write src/",
+    "build:flora-pets": "node scripts/build-flora-pets.mjs"
   },
   "engines": {
     "node": "24.12.0",

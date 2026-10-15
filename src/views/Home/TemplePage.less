@@ -76,12 +76,25 @@
     inset: 0;
   }
 
+  .temple-stage {
+    // 场景脚本尚未加载时也隐藏背景字样；模型、背景统一由入场时间轴渐显。
+    opacity: 0;
+
+    &[data-entrance-mode='simple']:not([data-entrance-finished='true']) {
+      :deep(.temple-backdrop) {
+        transition: none;
+      }
+    }
+  }
+
   :deep(canvas) {
     position: relative;
     z-index: 1;
     display: block;
     width: 100%;
     height: 100%;
+    // 保留画布键盘交互，避免窗口恢复焦点时显示满屏默认轮廓。
+    outline: none;
   }
 
   .temple-obelisks {
@@ -307,6 +320,30 @@
     }
   }
   &.temple-page--mobile {
+    .temple-stage::after {
+      content: '';
+      position: absolute;
+      inset: 0 0 auto;
+      height: 28svh;
+      z-index: 2;
+      background: linear-gradient(to bottom, #000, transparent);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 350ms ease;
+    }
+
+    &:not([data-selected='none']) .temple-stage::after {
+      opacity: 1;
+    }
+
+    &:has(.flora-focus-layout.is-album-expanded) {
+      :deep(canvas),
+      :deep(.temple-backdrop),
+      :deep(.temple-clock) {
+        visibility: hidden !important;
+      }
+    }
+
     :deep(.temple-focus-content .is-embedded .works-grid),
     :deep(.temple-focus-content .is-embedded .misc-grid),
     :deep(.temple-focus-content .is-embedded .vlog-grid) {

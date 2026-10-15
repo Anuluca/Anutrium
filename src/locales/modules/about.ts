@@ -74,17 +74,26 @@ const about = {
       en: '3D MODEL CREDITS',
     },
     lucario: { zhCn: '路卡利欧', en: 'Lucario' },
+    sprigatito: { zhCn: '新叶喵', en: 'Sprigatito' },
+    mightyena: { zhCn: '大狼犬', en: 'Mightyena' },
     modelSource: { zhCn: '三维模型来源', en: '3D Model Source' },
     repository: { zhCn: '资源仓库', en: 'Repository' },
     originalIP: { zhCn: '宝可梦原始知识产权', en: 'Original Pokémon IP' },
     thanks: { zhCn: '特别鸣谢', en: 'SPECIAL THANKS' },
-    huahua: { zhCn: '花花', en: 'Huahua' },
+    huahua: { zhCn: '花花', en: 'Flora' },
+  },
+  originalDesign: {
+    title: { zhCn: '原创设计使用声明', en: 'Original Design Usage Notice' },
+    restriction: {
+      zhCn: '本站由 Anuluca 独立设计与开发，原创内容包括页面布局、视觉元素、交互编排、动态效果及原创文案。欢迎通过链接分享本站；如需在介绍、评论或设计研究中引用页面截图，请注明作者 Anuluca 与本站来源，并保留完整署名，不得将引用内容冒充为自己的作品。未经授权，请勿复制、改编或再分发本站原创设计，将其用于网站模板、商业项目、产品包装或其他设计作品。禁止将本站原创设计（包括页面截图、布局与视觉元素）输入人工智能（AI）工具，用于生成网站或平面设计。其他使用需求请先联系作者，说明用途与使用范围。本站使用的第三方字体、模型及其他素材，其权利归各自权利人所有，具体使用条件以对应授权与许可为准。',
+      en: 'This site is independently designed and developed by Anuluca. Original work includes page layouts, visual elements, interaction sequences, motion effects, and original copy. You are welcome to share links to this site. When quoting screenshots in introductions, commentary, or design research, credit Anuluca and this site, retain the attribution, and do not present the quoted work as your own. Without permission, do not copy, adapt, or redistribute this site’s original design for website templates, commercial projects, product packaging, or other design work. Do not input this site’s original design, including page screenshots, layouts, or visual elements, into artificial intelligence (AI) tools to generate websites or graphic designs. For other uses, contact the author first and specify the intended purpose and scope. Third-party fonts, models, and other assets remain the property of their respective rights holders and are subject to their applicable permissions and licenses.',
+    },
   },
   assetCredits: {
     title: { zhCn: '开源素材使用声明', en: '' },
-    aiDesignRestriction: {
-      zhCn: '禁止将本站原创设计（包括页面截图、布局与视觉元素）输入人工智能（AI）工具，用于生成网站或平面设计。',
-      en: 'Do not input this site’s original design, including page screenshots, layouts, or visual elements, into AI tools to generate websites or graphic designs.',
+    intro: {
+      zhCn: '以下列出本站使用的开源字体与三维模型素材，并说明其来源、许可及相关权利归属。',
+      en: 'The following lists the open-source fonts and 3D model assets used on this site, together with their sources, licenses, and relevant rights information.',
     },
     unbounded: {
       zhCn: 'UnboundedSans（标小智无界黑）：本站标题使用的字体，基于 Dela Gothic One 衍生并补充简体中文字符，由无界黑项目作者与贡献者维护，标小智支持该项目。字体采用 SIL 开源字体许可证（SIL Open Font License，OFL）1.1 发布，允许按许可使用、嵌入、修改与再分发，包括商业用途；字体本身不得单独出售，再分发须保留版权与许可信息。相关权利归原作者及权利人所有。',
@@ -101,6 +110,14 @@ const about = {
     lucario: {
       zhCn: '路卡利欧（Lucario）模型：个人海湾页面的模型取自 Pokémon 3D API 的公开资源仓库（编号 448），本站对模型进行了姿势、网格与材质展示处理，上游仓库提供 MIT 许可。宝可梦模型的权利归属于 Nintendo、Creatures Inc. 与 GAME FREAK inc.。本站为个人创作展示，与上述权利方不存在官方合作、赞助或背书关系。',
       en: '',
+    },
+    sprigatito: {
+      zhCn: '新叶喵（Sprigatito）素材：本站首页及花花小窝使用的模型、贴图与睡眠／战斗待机动画素材下载自 The VG Resource 的 Pokémon Model Ripping Project 帖子，模型文件署名 Centrixe；本站进行了姿势采样、网格优化与渲染适配。下载来源未提供明确的开源许可，公开下载不代表素材采用开源授权；宝可梦相关权利归 Nintendo、Creatures Inc. 与 GAME FREAK inc. 所有。本站为个人创作展示，与上述权利方不存在官方合作、赞助或背书关系。',
+      en: 'Sprigatito assets: the model, textures, and sleep / battle idle animations used on the home page and in Flora’s space were downloaded from The VG Resource’s Pokémon Model Ripping Project thread. The model file credits Centrixe; pose sampling, mesh optimization, and rendering adaptation were completed by this site. The download source provides no explicit open-source license; public availability does not imply open-source licensing. Pokémon rights belong to Nintendo, Creatures Inc., and GAME FREAK inc. This is a personal creative showcase with no official affiliation, sponsorship, or endorsement from those rights holders.',
+    },
+    mightyena: {
+      zhCn: '大狼犬（Mightyena）素材：本站首页及宠物模块使用的模型、贴图与坐姿动画素材来自 The VG Resource 的 Pokémon Model Ripping Project 中 RTB 发布的《宝可梦 朱／紫》DLC1 资源；本站进行了姿势采样、面部与尖爪简化、网格优化及渲染适配。下载来源未提供明确的开源许可，公开下载不代表素材采用开源授权；宝可梦相关权利归 Nintendo、Creatures Inc. 与 GAME FREAK inc. 所有。本站为个人创作展示，与上述权利方不存在官方合作、赞助或背书关系。',
+      en: 'Mightyena assets: the model, textures, and sitting animation used on the home page and in the pet module come from the Pokémon Scarlet / Violet DLC1 resources shared by RTB in The VG Resource’s Pokémon Model Ripping Project. This site sampled poses, simplified facial features and claws, optimized the mesh, and adapted rendering. The download source provides no explicit open-source license; public availability does not imply open-source licensing. Pokémon rights belong to Nintendo, Creatures Inc., and GAME FREAK inc. This is a personal creative showcase with no official affiliation, sponsorship, or endorsement from those rights holders.',
     },
     source: { zhCn: '项目来源', en: 'Project source' },
     license: { zhCn: '许可文本', en: 'License text' },

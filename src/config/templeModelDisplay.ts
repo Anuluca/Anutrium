@@ -2,7 +2,6 @@
 export const templeWireframeModels: ReadonlySet<string> = new Set()
 
 export const templeMutedMenuItems: ReadonlySet<string> = new Set([
-  'sprigatito',
   'pokeyard',
   'island',
 ])

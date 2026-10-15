@@ -26,6 +26,7 @@ declare module '@vue/runtime-core' {
     DiamondCloseBtn: typeof import('./src/components/DiamondCloseBtn/index.vue')['default']
     DomeGallery: typeof import('./src/components/DomeGallery/index.vue')['default']
     ElIcon: typeof import('element-plus/es')['ElIcon']
+    ElPopover: typeof import('element-plus/es')['ElPopover']
     FilterRail: typeof import('./src/components/FilterRail/index.vue')['default']
     FooterCom: typeof import('./src/components/FooterCom/index.vue')['default']
     FooterSocialLinkBar: typeof import('./src/components/FooterSocialLinkBar/index.vue')['default']

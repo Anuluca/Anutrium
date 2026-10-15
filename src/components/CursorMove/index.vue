@@ -37,7 +37,7 @@ const cursorStateStore = cursorState()
 const HIDDEN_CURSOR_SELECTOR =
   '.no-cursor, .hide-cursor, .cursor-none, .native-cursor'
 const INTERACTIVE_CURSOR_SELECTOR =
-  'a, button, [role="button"], [data-magnetic], .is-clickable'
+  'a, button, [role="button"], [data-magnetic], .is-clickable, .el-image-viewer__close, .el-image-viewer__prev, .el-image-viewer__next'
 const FINE_POINTER_MEDIA = '(hover: hover) and (pointer: fine)'
 
 const cursorElement = ref(null)
@@ -332,7 +332,7 @@ watch(shouldAnimateCursor, (canAnimate) => {
   top: 0;
   left: 0;
   pointer-events: none;
-  z-index: 9999;
+  z-index: 20000;
 
   mix-blend-mode: difference;
   transition: opacity 0.2s ease;

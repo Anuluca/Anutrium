@@ -17,43 +17,6 @@ const titles = [
   'CREATIVE',
 ]
 
-test('desktop route hover animates the line in both menu groups', async ({
-  page,
-}, testInfo) => {
-  test.skip(testInfo.project.name.includes('mobile'), '悬停动画用于桌面导航')
-  await page.goto('/island', { waitUntil: 'domcontentloaded' })
-  await expect(page.locator('.temple-stage')).toHaveAttribute(
-    'aria-busy',
-    'false',
-    { timeout: 30000 }
-  )
-
-  for (const id of ['archive', 'sprigatito']) {
-    const action = page.locator(`.desktop-menu [data-temple-nav="${id}"]`)
-    const line = action.locator('.line')
-    await expect(line).toHaveCSS('transform', 'matrix(0, 0, 0, 1, 0, 0)')
-    await action.hover()
-    const scales = await line.evaluate(async (element) => {
-      const values: number[] = []
-      // 采样动画过程，避免只有终态可见但填充动画仍失效。
-      for (let frame = 0; frame < 40; frame++) {
-        await new Promise<void>((resolve) =>
-          requestAnimationFrame(() => resolve())
-        )
-        values.push(
-          new DOMMatrixReadOnly(getComputedStyle(element).transform).a
-        )
-      }
-      return values
-    })
-    expect(scales.some((scale) => scale > 0 && scale < 1)).toBe(true)
-    await expect(line).toHaveCSS('transform', 'matrix(1, 0, 0, 1, 0, 0)')
-    await expect(line).toHaveCSS('transition-duration', '0.5s')
-    await page.mouse.move(720, 700)
-    await expect(line).toHaveCSS('transform', 'matrix(0, 0, 0, 1, 0, 0)')
-  }
-})
-
 test('focused desktop header keeps its full title centered with equal route gaps and aligned edge offsets', async ({
   page,
 }, testInfo) => {

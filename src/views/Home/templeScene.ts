@@ -2,8 +2,13 @@ import { gsap } from 'gsap'
 import * as THREE from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 
-import { FLORA_MODEL_CENTER_X } from '@/config/floraLayout'
-import { pageThemeColors } from '@/config/pageThemes'
+import {
+  FLORA_LAYOUT_BOTTOM_GAP,
+  FLORA_LAYOUT_GAP,
+  FLORA_MOBILE_CHARACTER_HEIGHT_RATIO,
+  FLORA_MOBILE_MODEL_HEIGHT_RATIO,
+  FLORA_MODEL_CENTER_X,
+} from '@/config/floraLayout'
 import { templeCamera } from '@/config/templeCamera'
 import {
   type TempleExperience,
@@ -14,15 +19,28 @@ import {
   templeCategories,
   type TempleCategoryId,
 } from '@/config/templeNavigation'
+import type { TemplePresentation } from '@/config/templePresentation'
+import { type PetProfile, pets } from '@/locales/dynamic/pets'
 import { cursorState } from '@/stores'
 import { cacheMorphRaycastVertices } from '@/utils/cacheMorphRaycastVertices'
-import { loadIslandSprigatitoModel } from '@/utils/islandSprigatitoModel'
+import {
+  type FloraPetModelAsset,
+  loadFloraPetModel,
+} from '@/utils/floraPetModel'
 import { subscribePointerSamples } from '@/utils/pointerSamples'
+import { preloadTempleAssets } from '@/utils/preloadTempleAssets'
 import { createSceneMatrixUpdater } from '@/utils/sceneMatrixUpdater'
-import { loadTempleLabelModel } from '@/utils/templeLabelModel'
 import { getTempleLabelCanvas } from '@/utils/templeLabelTextures'
 
-import type { TemplePresentation } from './templePresentation'
+import {
+  createObeliskBaseGeometry,
+  createObeliskBodyGeometry,
+} from './scene/geometry'
+import { installEnvironmentFade, installHeadRig } from './scene/materials'
+import {
+  createPetFocusCamera,
+  createPetScreenBounds,
+} from './scene/petFocusCamera'
 
 export type TempleSelection = TempleCategoryId | 'statue' | 'sprigatito'
 
@@ -69,6 +87,8 @@ const STATUE_LABEL_HOVER_DURATION =
 const STATUE_LABEL_DOCK_OFFSET = 24
 const STATUE_PREVIEW_SCALE = 1.5
 const STATUE_PREVIEW_VERTICAL_OFFSET = 0.12
+// 保留缩头前的宽度基准，避免头部变小后自动放大整个模型。
+const SPRIGATITO_REFERENCE_WIDTH = 0.2963257431983948
 
 export function createHomeTemple(
   stage: HTMLElement,
@@ -76,8 +96,13 @@ export function createHomeTemple(
   callbacks: TempleCallbacks,
   config: TemplePresentation,
   experience: TempleExperience = templeExperience,
-  simpleEntrance = false
+  simpleEntrance = false,
+  initialPet: PetProfile = pets[0]
 ) {
+  let currentPet = initialPet
+  let petChangeRevision = 0
+  let petFadingOut = false
+  let petEntrance: gsap.core.Timeline | undefined
   const { model } = experience
   const rig = model.rig
   const headNodDegrees = rig.enabled ? rig.entranceNod : 0
@@ -218,6 +243,37 @@ export function createHomeTemple(
   let viewWidth = 0
   let viewHeight = 0
   const focusFraming = { x: 0, y: 0 }
+  const floraFraming = () => {
+    const offsetX = currentPet.focusOffsetX ?? 0
+    if (config.id !== 'mobile')
+      return {
+        x: FLORA_MODEL_CENTER_X - 0.5 + offsetX,
+        y: -SCENE_VERTICAL_OFFSET + 0.05,
+      }
+    // 以导航和页脚之间的实际可用高度构图；模型中心下移少许，为上方编号留空间。
+    const stageTop = stage.getBoundingClientRect().top
+    const headerBottom =
+      document.querySelector('.el-menu-layout-all')?.getBoundingClientRect()
+        .bottom ?? stageTop
+    const footer = document.querySelector('.footer-com')
+    const footerTop =
+      footer && getComputedStyle(footer).display !== 'none'
+        ? footer.getBoundingClientRect().top
+        : stageTop + viewHeight
+    const top = headerBottom - stageTop + FLORA_LAYOUT_GAP
+    const characterHeight =
+      Math.max(
+        0,
+        footerTop - stageTop - top - FLORA_LAYOUT_BOTTOM_GAP - FLORA_LAYOUT_GAP
+      ) * FLORA_MOBILE_CHARACTER_HEIGHT_RATIO
+    return {
+      x: offsetX,
+      y:
+        (top + characterHeight * FLORA_MOBILE_MODEL_HEIGHT_RATIO) / viewHeight -
+        0.5 -
+        SCENE_VERTICAL_OFFSET,
+    }
+  }
   const applyViewOffset = () => {
     if (!viewWidth || !viewHeight) return
     // 调整相机投影，让雕像、碑身、圣光和倒影整体让出菜单空间；点击投影使用同一相机。
@@ -281,77 +337,10 @@ export function createHomeTemple(
   rim.position.set(6, 6, -9)
   scene.add(rim)
 
-  // 所有方尖碑共用几何体；顶部独立使用完整的四面锥体。
-  // 每面一组菱形切面，中心微凹、边界保持原轮廓；独立三角面法线产生真实的切割反光。
-  const facetPositions: number[] = []
-  const facetColors: number[] = []
-  const addFacet = (
-    a: THREE.Vector3,
-    b: THREE.Vector3,
-    c: THREE.Vector3,
-    shade = 1
-  ) => {
-    for (const point of [a, b, c]) {
-      facetPositions.push(point.x, point.y, point.z)
-      facetColors.push(shade, shade, shade)
-    }
-  }
-  const halfWidth = (y: number) => 0.65 * (1 - ((y + 2.275) / 4.55) * 0.28)
-  for (let side = 0; side < 4; side++) {
-    const angle = (side * Math.PI) / 2
-    const point = (x: number, y: number, inset = 0) =>
-      new THREE.Vector3(x, y, halfWidth(y) - inset).applyAxisAngle(
-        new THREE.Vector3(0, 1, 0),
-        angle
-      )
-    const bottom = -2.275
-    const top = 2.275
-    const middle = (bottom + top) / 2
-    const bottomLeft = point(-halfWidth(bottom), bottom)
-    const bottomRight = point(halfWidth(bottom), bottom)
-    const topLeft = point(-halfWidth(top), top)
-    const topRight = point(halfWidth(top), top)
-    const lower = point(0, bottom)
-    const upper = point(0, top)
-    const left = point(-halfWidth(middle), middle)
-    const right = point(halfWidth(middle), middle)
-    const center = point(0, middle, 0.1)
-    addFacet(lower, right, center, 0.35)
-    addFacet(right, upper, center, 1.35)
-    addFacet(upper, left, center, 0.65)
-    addFacet(left, lower, center, 1.08)
-    addFacet(bottomLeft, lower, left, 0.96)
-    addFacet(lower, bottomRight, right, 0.96)
-    addFacet(left, upper, topLeft, 0.96)
-    addFacet(right, topRight, upper, 0.96)
-    for (const y of [-2.275, 2.275]) {
-      const center = new THREE.Vector3(0, y, 0)
-      const left = point(-halfWidth(y), y)
-      const right = point(halfWidth(y), y)
-      if (y > 0) addFacet(center, left, right)
-      else addFacet(center, right, left)
-    }
-  }
-  const bodyGeometry = geometry(new THREE.BufferGeometry())
-  bodyGeometry.setAttribute(
-    'position',
-    new THREE.Float32BufferAttribute(facetPositions, 3)
-  )
-  bodyGeometry.setAttribute(
-    'color',
-    new THREE.Float32BufferAttribute(facetColors, 3)
-  )
-  bodyGeometry.computeVertexNormals()
+  const bodyGeometry = geometry(createObeliskBodyGeometry())
   const capGeometry = geometry(new THREE.ConeGeometry(0.663, 1.05, 4))
   capGeometry.rotateY(Math.PI / 4)
-  const footGeometry = geometry(new THREE.BoxGeometry(1.8, 0.21, 1.8))
-  const stepGeometry = geometry(new THREE.BoxGeometry(2.35, 0.13, 2.35))
-  // 同材质的两级台阶烘焙进一个共享几何体，实体、网格及倒影均减少绘制调用。
-  const baseParts = [stepGeometry.clone(), footGeometry.clone()]
-  baseParts[0].translate(0, 0.065, 0)
-  baseParts[1].translate(0, 0.235, 0)
-  const baseGeometry = geometry(mergeGeometries(baseParts)!)
-  baseParts.forEach((value) => value.dispose())
+  const baseGeometry = geometry(createObeliskBaseGeometry())
   const capEdges = geometry(new THREE.EdgesGeometry(capGeometry, 25))
   const labelGeometry = geometry(new THREE.PlaneGeometry(0.82, 4.22))
   const plinthMaterial = material(
@@ -379,8 +368,7 @@ export function createHomeTemple(
   const glowGeometry = geometry(new THREE.PlaneGeometry(5, 5))
 
   const labelSubscriptions: (() => void)[] = []
-  const labelTexture = (roman: string, title: string) => {
-    const label = getTempleLabelCanvas(roman, title)
+  const labelTexture = (label: ReturnType<typeof getTempleLabelCanvas>) => {
     const map = texture(new THREE.CanvasTexture(label.canvas))
     map.colorSpace = THREE.SRGBColorSpace
     map.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy())
@@ -506,7 +494,7 @@ export function createHomeTemple(
     const labelAccent = { value: new THREE.Color('#f52e5b') }
     const labelMaterial = material(
       new THREE.MeshBasicMaterial({
-        map: labelTexture(category.roman, category.title),
+        map: labelTexture(getTempleLabelCanvas(category.roman, category.title)),
         transparent: true,
         depthWrite: false,
         toneMapped: false,
@@ -735,7 +723,9 @@ export function createHomeTemple(
     0.035,
     statueZ + sprigatitoForwardOffset
   )
-  sleepingSprigatito.rotation.y = THREE.MathUtils.degToRad(-35)
+  sleepingSprigatito.rotation.y = THREE.MathUtils.degToRad(
+    currentPet.rotationY.home
+  )
   scene.add(sleepingSprigatito)
   let sprigatitoMesh:
     | THREE.Mesh<
@@ -753,16 +743,28 @@ export function createHomeTemple(
   const sprigatitoHover = { value: 0 }
   const sprigatitoFocus = { value: 0 }
   const sprigatitoPose = { value: 0 }
+  const petVisibility = { value: 1 }
+  let petMeshes: THREE.Mesh[] = []
+  const petHead = new THREE.Vector2()
+  const petHeadTarget = new THREE.Vector2()
   const reflectedSprigatitoMeshes: THREE.Mesh[] = []
-  const sprigatitoTheme = new THREE.Color(pageThemeColors.SPRIGATITO)
+  const sprigatitoTheme = new THREE.Color(currentPet.themeColor)
   const sprigatitoHoverColor = new THREE.Color()
   const sprigatitoBeamMaterial = material(obelisks[0].beamMaterial.clone())
   sprigatitoBeamMaterial.depthTest = false
-  const sprigatitoBeam = new THREE.Mesh(beamGeometry, sprigatitoBeamMaterial)
-  sprigatitoBeam.scale.set(0.55, 0.5, 0.55)
+  // 独立延长宠物光束，避免首页取景露出光束上端；底端仍贴近地面。
+  const petBeamGeometry = geometry(
+    new THREE.CylinderGeometry(0.18, 1.7, 64, 32, 1, true)
+  )
+  const sprigatitoBeam = new THREE.Mesh(petBeamGeometry, sprigatitoBeamMaterial)
+  sprigatitoBeam.scale.set(
+    0.55 * currentPet.topLight.widthScale,
+    0.5,
+    0.55 * currentPet.topLight.widthScale
+  )
   sprigatitoBeam.position.set(
     sleepingSprigatito.position.x,
-    4.05,
+    16.05,
     sleepingSprigatito.position.z
   )
   // 路卡先绘制，顶光不被其深度遮挡，花花最后绘制在光束前方。
@@ -1102,7 +1104,11 @@ export function createHomeTemple(
         )
     }
     stage.dataset.themeColor = color
-    if (!animate || reducedMotion) {
+    if (
+      !animate ||
+      reducedMotion ||
+      (simpleEntrance && stage.dataset.entranceFinished !== 'true')
+    ) {
       themeBlend.value = 1
       applyThemeTint()
     } else
@@ -1172,6 +1178,7 @@ export function createHomeTemple(
       side: THREE.DoubleSide,
       metalness: 1,
       roughness: 0.09,
+      flatShading: true,
       clearcoat: 0.45,
       clearcoatRoughness: 0.08,
       envMapIntensity: 1.8,
@@ -1179,37 +1186,12 @@ export function createHomeTemple(
       clippingPlanes: [statueClipPlane],
     })
   )
-  chromeMaterial.onBeforeCompile = (shader) => {
-    shader.uniforms.headRotation = headRotation
-    shader.uniforms.headPivot = headPivot
-    shader.uniforms.headNodPivot = headNodPivot
-    shader.uniforms.headNodAngle = headNodAngle
-    shader.vertexShader = shader.vertexShader
-      .replace(
-        '#include <common>',
-        `#include <common>
-      attribute float headInfluence; attribute float headNodInfluence;
-      uniform vec4 headRotation; uniform vec3 headPivot;
-      uniform vec3 headNodPivot; uniform float headNodAngle;
-      vec3 rotateHead(vec3 v,vec4 q){return v+2.*cross(q.xyz,cross(q.xyz,v)+q.w*v);}
-      vec4 getNodRotation(){float a=headNodAngle*headNodInfluence*0.5;return vec4(sin(a),0.,0.,cos(a));}
-      vec4 getHeadRotation(){
-        if(headInfluence>=0.999)return headRotation;
-        if(headInfluence<=0.)return vec4(0.,0.,0.,1.);
-        float angle=acos(clamp(headRotation.w,-1.,1.));
-        return vec4(headRotation.xyz*sin(angle*headInfluence)/max(sin(angle),0.00001),cos(angle*headInfluence));
-      }`
-      )
-      .replace(
-        '#include <beginnormal_vertex>',
-        '#include <beginnormal_vertex>\nobjectNormal=rotateHead(rotateHead(objectNormal,getNodRotation()),getHeadRotation());'
-      )
-      .replace(
-        '#include <begin_vertex>',
-        // 额外低头只用 Head 子树权重、围绕头颈关节旋转；Neck 根部不参与此动作。
-        '#include <begin_vertex>\ntransformed=rotateHead(transformed-headNodPivot,getNodRotation())+headNodPivot;\ntransformed=rotateHead(transformed-headPivot,getHeadRotation())+headPivot;'
-      )
-  }
+  installHeadRig(chromeMaterial, {
+    headRotation,
+    headPivot,
+    headNodPivot,
+    headNodAngle,
+  })
   const wireMaterial = material(
     new THREE.MeshBasicMaterial({
       color: HOLY_LIGHT_COLOR,
@@ -1312,48 +1294,13 @@ export function createHomeTemple(
           for (const value of values) unexpanded.add(value)
         }
       })
-    const expandScreen = (source: string) =>
-      'uniform float templeExpansion;\n' +
-      source.replace(/}\s*$/, 'gl_Position.xy *= templeExpansion;\n}')
-    for (const value of materials) {
-      if (excluded.has(value)) continue
-      const expands = !unexpanded.has(value)
-      // 在加载阶段预编译透明材质；切换时仅更新 uniform，避免重新编译着色器。
-      if (!value.transparent) value.forceSinglePass = true
-      value.transparent = true
-      if (value instanceof THREE.ShaderMaterial) {
-        value.uniforms.templeReveal = templeReveal
-        if (expands) {
-          value.uniforms.templeExpansion = templeExpansion
-          value.vertexShader = expandScreen(value.vertexShader)
-        }
-        value.fragmentShader =
-          'uniform float templeReveal;\n' +
-          value.fragmentShader.replace(
-            /#include <(?:tonemapping|colorspace)_fragment>/,
-            'gl_FragColor.a *= templeReveal;\n$&'
-          )
-      } else {
-        const originalCompile = value.onBeforeCompile
-        const originalKey = value.customProgramCacheKey()
-        value.onBeforeCompile = (shader, renderer) => {
-          originalCompile.call(value, shader, renderer)
-          shader.uniforms.templeReveal = templeReveal
-          if (expands) {
-            shader.uniforms.templeExpansion = templeExpansion
-            shader.vertexShader = expandScreen(shader.vertexShader)
-          }
-          shader.fragmentShader =
-            'uniform float templeReveal;\n' +
-            shader.fragmentShader.replace(
-              '#include <opaque_fragment>',
-              'diffuseColor.a *= templeReveal;\n#include <opaque_fragment>'
-            )
-        }
-        value.customProgramCacheKey = () =>
-          originalKey + (expands ? ':temple-expand-fade' : ':temple-fade')
-      }
-    }
+    installEnvironmentFade(
+      materials,
+      excluded,
+      unexpanded,
+      templeReveal,
+      templeExpansion
+    )
   }
 
   const screenPoint = new THREE.Vector3()
@@ -1499,36 +1446,50 @@ export function createHomeTemple(
     }
     // 角度动画仍需绘制，但仅构图变化才更新投影、倒影位置和命中区域。
     const sceneChanged = projectionDirty
-    if (sprigatitoMesh?.morphTargetInfluences)
-      sprigatitoMesh.morphTargetInfluences[0] = sprigatitoPose.value
-    for (const mesh of [sprigatitoWire, sprigatitoWireDepth])
-      if (mesh?.morphTargetInfluences)
-        mesh.morphTargetInfluences[0] = sprigatitoPose.value
-    for (const mesh of reflectedSprigatitoMeshes)
-      if (mesh.morphTargetInfluences)
-        mesh.morphTargetInfluences[0] = sprigatitoPose.value
+    const canFollowPet =
+      selected === 'sprigatito' &&
+      !transitionActive &&
+      !cameraMoving &&
+      !petEntrance?.isActive() &&
+      sprigatitoPose.value === 1
+    if (!canFollowPet) petHeadTarget.set(0, 0)
+    const headBlend = reducedMotion ? 1 : 1 - Math.exp(-elapsed * 8)
+    petHead.lerp(petHeadTarget, headBlend)
+    const petHeadMoving = petHead.distanceToSquared(petHeadTarget) > 0.000001
+    if (!petHeadMoving) petHead.copy(petHeadTarget)
+    for (const mesh of petMeshes) {
+      if (!mesh?.morphTargetInfluences) continue
+      mesh.morphTargetInfluences[0] = sprigatitoPose.value
+      mesh.morphTargetInfluences[1] = petHead.x
+      mesh.morphTargetInfluences[2] = petHead.y
+    }
     // 聚焦与返回共用同一个进度；实体、简化网格及倒影同步切换，手势继续使用原姿态。
     const sprigatitoWireMix = isTempleWireframeModel('sprigatito')
       ? 1
       : sprigatitoFocus.value
-    if (sprigatitoSurface) sprigatitoSurface.opacity = 1 - sprigatitoWireMix
+    if (sprigatitoSurface)
+      sprigatitoSurface.opacity = (1 - sprigatitoWireMix) * petVisibility.value
     if (sprigatitoMesh) sprigatitoMesh.visible = sprigatitoWireMix < 1
     if (sprigatitoWire) {
       sprigatitoWire.visible = sprigatitoWireMix > 0
-      sprigatitoWire.material.opacity = sprigatitoWireMix
+      sprigatitoWire.material.opacity = sprigatitoWireMix * petVisibility.value
     }
-    if (sprigatitoWireDepth) sprigatitoWireDepth.visible = sprigatitoWireMix > 0
+    if (sprigatitoWireDepth)
+      sprigatitoWireDepth.visible =
+        sprigatitoWireMix > 0 && petVisibility.value > 0
     if (reflectedSprigatitoSurface) {
       reflectedSprigatitoSurface.visible = sprigatitoWireMix < 1
       reflectedSprigatitoSurface.material.opacity =
-        0.25 * (1 - sprigatitoWireMix)
+        0.25 * (1 - sprigatitoWireMix) * petVisibility.value
     }
     if (reflectedSprigatitoWire) {
       reflectedSprigatitoWire.visible = sprigatitoWireMix > 0
-      reflectedSprigatitoWire.material.opacity = 0.25 * sprigatitoWireMix
+      reflectedSprigatitoWire.material.opacity =
+        0.25 * sprigatitoWireMix * petVisibility.value
     }
     if (reflectedSprigatitoWireDepth)
-      reflectedSprigatitoWireDepth.visible = sprigatitoWireMix > 0
+      reflectedSprigatitoWireDepth.visible =
+        sprigatitoWireMix > 0 && petVisibility.value > 0
     const statueOnly = selected === 'statue'
     const environmentVisible = templeReveal.value > 0
     templeExpansion.value =
@@ -1588,7 +1549,8 @@ export function createHomeTemple(
         )
     }
     let moving =
-      followHead && headCurrent.distanceToSquared(headTarget) > 0.000001
+      petHeadMoving ||
+      (followHead && headCurrent.distanceToSquared(headTarget) > 0.000001)
     if (!moving && followHead) headCurrent.copy(headTarget)
     if (statueOnly) {
       const yaw = THREE.MathUtils.degToRad(pointerTarget.x * rig.bodyYaw)
@@ -1629,11 +1591,20 @@ export function createHomeTemple(
       pedestal.position.z = statue.position.z
       reflectedSprigatito?.position.copy(sleepingSprigatito.position)
       reflectedSprigatito?.rotation.copy(sleepingSprigatito.rotation)
-      sprigatitoBeam.position.x = sleepingSprigatito.position.x
-      sprigatitoBeam.position.z = sleepingSprigatito.position.z
+      // 沿镜头右方向偏移，仅在聚焦结束时达到宠物配置的完整偏移量。
+      const lightOffset =
+        currentPet.topLight.focusRightOffset * sprigatitoFocus.value
+      const lightYaw = ground.rotation.y
+      sprigatitoBeam.scale.x = sprigatitoBeam.scale.z =
+        0.55 * currentPet.topLight.widthScale
+      sprigatitoBeam.position.x =
+        sleepingSprigatito.position.x + Math.cos(lightYaw) * lightOffset
+      sprigatitoBeam.position.z =
+        sleepingSprigatito.position.z - Math.sin(lightYaw) * lightOffset
       sprigatitoPool.position.x = sleepingSprigatito.position.x
       sprigatitoPool.position.z = sleepingSprigatito.position.z
-      sprigatitoSpot.position.z = sleepingSprigatito.position.z + 0.5
+      sprigatitoSpot.position.x = sprigatitoBeam.position.x
+      sprigatitoSpot.position.z = sprigatitoBeam.position.z + 0.5
       sprigatitoSpot.target.position.copy(sleepingSprigatito.position)
       reflectedPedestal.position.copy(pedestal.position)
       statueGlow.position.z = statue.position.z + 1
@@ -1990,6 +1961,17 @@ export function createHomeTemple(
       )
       setStageData('companionWireOpacity', sprigatitoWireMix.toFixed(3))
       setStageData('companionHeadPose', sprigatitoPose.value.toFixed(3))
+      setStageData(
+        'companionHeadFollow',
+        `${petHead.x.toFixed(3)},${petHead.y.toFixed(3)}`
+      )
+      setStageData('companionVisibility', petVisibility.value.toFixed(3))
+      setStageData(
+        'companionPose',
+        currentPet.model === 'sprigatito' && sprigatitoPose.value === 0
+          ? 'sleep'
+          : currentPet.pose
+      )
       setStageData('backgroundBaseReveal', backgroundBaseReveal.toFixed(3))
       setStageData(
         'backgroundBaseDepthWrite',
@@ -2010,13 +1992,56 @@ export function createHomeTemple(
         screenPoint
           .copy(sleepingSprigatito.position)
           .add(new THREE.Vector3(0, sprigatitoSize.y / 2, 0))
-          .project(camera)
+        if (selected === 'sprigatito' && !transitionActive && !cameraMoving)
+          screenPoint.copy(lookAt)
+        screenPoint.project(camera)
         setStageData(
           'companionScreen',
           `${(((screenPoint.x + 1) * viewWidth) / 2).toFixed(2)},${(
             ((1 - screenPoint.y) * viewHeight) /
             2
           ).toFixed(2)}`
+        )
+      }
+      if (
+        sprigatitoMesh &&
+        selected === 'sprigatito' &&
+        !transitionActive &&
+        !cameraMoving &&
+        sprigatitoPose.value === 1 &&
+        !petEntrance?.isActive()
+      ) {
+        // 仅在静止末帧发布真实投影尺寸，验证镜头适配；不产生常驻渲染或逐帧骨骼计算。
+        const { minX, maxX, minY, maxY } = petScreenBounds(
+          sprigatitoMesh,
+          camera
+        )
+        const facing =
+          floraReferenceModel && currentPet.model !== 'sprigatito'
+            ? currentPetAssetFacing
+            : undefined
+        if (facing) {
+          const direction = new THREE.Vector3()
+            .fromArray(facing)
+            .applyQuaternion(sleepingSprigatito.quaternion)
+          direction.y = 0
+          const towardCamera = camera.position.clone().sub(lookAt)
+          towardCamera.y = 0
+          setStageData(
+            'companionFacingDot',
+            direction.normalize().dot(towardCamera.normalize()).toFixed(4)
+          )
+        }
+        setStageData(
+          'companionScreenBounds',
+          [
+            ((minX + 1) * viewWidth) / 2,
+            ((1 - maxY) * viewHeight) / 2,
+            ((maxX - minX) * viewWidth) / 2,
+            ((maxY - minY) * viewHeight) / 2,
+          ]
+            .map((value) => value.toFixed(2))
+            .join(',')
         )
       }
       setStageData('environmentBrightness', environmentBrightness.toFixed(3))
@@ -2057,6 +2082,10 @@ export function createHomeTemple(
       )
     }
     drawScene()
+    if (publishDiagnostics) {
+      setStageData('renderFrames', String(renderer.info.render.frame))
+      setStageData('gpuGeometries', String(renderer.info.memory.geometries))
+    }
     // 头部跟随和晶体悬停不会改变柱子轮廓，只有镜头、建筑移动或窗口缩放时更新点击区域。
     if (sceneChanged) {
       projectButtons()
@@ -2191,28 +2220,24 @@ export function createHomeTemple(
       target,
     }
   }
+  const petFocusCamera = createPetFocusCamera()
+  const petScreenBounds = createPetScreenBounds()
+  let floraReferenceModel: FloraPetModelAsset | undefined
+  let currentPetAssetFacing: number[] | undefined
   const selectedPose = () => {
     if (selected === 'statue') return fullStatuePose()
     if (selected === 'sprigatito') {
-      const target = sleepingSprigatito.position
-        .clone()
-        .add(new THREE.Vector3(0, sprigatitoSize.y / 2, 0))
-      const distance =
-        Math.max(sprigatitoSize.y, sprigatitoSize.x / camera.aspect) /
-          (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * 0.45) +
-        sprigatitoSize.z / 2
-      const pitch = THREE.MathUtils.degToRad(8)
-      // 默认朝向为 -35°；镜头转到 -70°，使相对视角变成对应的 +35° 斜侧面。
-      const azimuth = sleepingSprigatito.rotation.y * 2
-      const radius = distance * Math.cos(pitch)
-      return {
-        position: new THREE.Vector3(
-          target.x + Math.sin(azimuth) * radius,
-          Math.max(0.12, target.y - distance * Math.sin(pitch)),
-          target.z + Math.cos(azimuth) * radius
-        ),
-        target,
-      }
+      return petFocusCamera({
+        geometry: sprigatitoMesh!.geometry,
+        reference: floraReferenceModel,
+        camera,
+        pet: currentPet,
+        position: sleepingSprigatito.position,
+        scale: sleepingSprigatito.scale,
+        size: sprigatitoSize,
+        mobile: config.id === 'mobile',
+        referenceWidth: SPRIGATITO_REFERENCE_WIDTH,
+      })
     }
     return focusedObelisk
       ? focusPose(focusedObelisk.category)
@@ -2368,6 +2393,8 @@ export function createHomeTemple(
       : 0
     updateDrawingBuffer()
     camera.aspect = viewWidth / viewHeight
+    if (selected === 'sprigatito' && !transitionActive)
+      Object.assign(focusFraming, floraFraming())
     // 偏移投影而非页面容器，场景、倒影和投影点击区域一起下移，导航及离场几何保持原位。
     applyViewOffset()
     homePosition.z = Math.max(
@@ -2433,7 +2460,14 @@ export function createHomeTemple(
       }
     }
     menuExitPending = false
+    petChangeRevision++
+    petFadingOut = false
+    petEntrance?.kill()
+    petVisibility.value = 1
+    petHead.set(0, 0)
+    petHeadTarget.set(0, 0)
     selected = next
+    syncActivity()
     focusedObelisk =
       next && next !== 'statue' && next !== 'sprigatito'
         ? obeliskById.get(next)
@@ -2498,6 +2532,18 @@ export function createHomeTemple(
       )
         transition!.to(target, vars, position)
     }
+    tweenIfChanged(
+      sleepingSprigatito.rotation,
+      {
+        y: THREE.MathUtils.degToRad(
+          currentPet.rotationY[selected === 'sprigatito' ? 'focus' : 'home']
+        ),
+        duration,
+        ease: 'power2.inOut',
+        onUpdate: markProjectionDirty,
+      },
+      0
+    )
     tweenIfChanged(
       sprigatitoFocus,
       {
@@ -2630,13 +2676,13 @@ export function createHomeTemple(
         x: item
           ? Math.sign(item.category.x) * config.scene.focus.screenOffset
           : selected === 'sprigatito'
-          ? FLORA_MODEL_CENTER_X - 0.5
+          ? floraFraming().x
           : 0,
         y:
           selected === 'statue'
             ? STATUE_PREVIEW_VERTICAL_OFFSET
             : selected === 'sprigatito'
-            ? -SCENE_VERTICAL_OFFSET + 0.05
+            ? floraFraming().y
             : 0,
         duration,
         ease: 'power3.inOut',
@@ -2827,6 +2873,7 @@ export function createHomeTemple(
       : (hit.object.userData.category as TempleCategoryId)
   }
   const click = (event: MouseEvent) => {
+    if (selected === 'sprigatito' && callbacks.dismissBackground?.()) return
     if (selected === 'statue') return select(null)
     const id = raycast(event, true)
     if (id === 'statue') select(selected ? null : 'statue')
@@ -2869,6 +2916,43 @@ export function createHomeTemple(
           (event.clientY / innerHeight - 0.5) * 2
         )
         .clampScalar(-1, 1)
+    if (selected === 'sprigatito') {
+      if (event.pointerType === 'touch') return
+      if (
+        !transitionActive &&
+        !cameraMoving &&
+        !petEntrance?.isActive() &&
+        sprigatitoPose.value === 1
+      ) {
+        // 朝向包含原始网格方向；小黑原生朝 -X，不能按花花的 +Z 推断转头正负。
+        const modelHeading = currentPetAssetFacing
+          ? Math.atan2(currentPetAssetFacing[0], currentPetAssetFacing[2])
+          : 0
+        const azimuth =
+          Math.atan2(
+            camera.position.x - lookAt.x,
+            camera.position.z - lookAt.z
+          ) -
+          sleepingSprigatito.rotation.y -
+          modelHeading
+        const horizontal = THREE.MathUtils.clamp(
+          (event.clientX / viewWidth - 0.5) * 2,
+          -1,
+          1
+        )
+        const vertical = THREE.MathUtils.clamp(
+          (event.clientY / viewHeight - 0.5) * 2,
+          -1,
+          1
+        )
+        petHeadTarget
+          .set(horizontal * Math.cos(azimuth), vertical)
+          .multiplyScalar(2)
+        diagnosticsDirty = true
+        invalidate()
+      }
+      return
+    }
     const hit =
       !cameraMoving && isSceneTarget(event.target)
         ? raycast(event, true, true)
@@ -2893,6 +2977,7 @@ export function createHomeTemple(
       motionIdle = true
       cursorStateStore.setInteractive(statueCursorSource, false)
       themeTransition?.pause()
+      petEntrance?.pause()
       unsubscribe?.()
       unsubscribe = undefined
       if (frame !== undefined) cancelAnimationFrame(frame)
@@ -2900,6 +2985,7 @@ export function createHomeTemple(
       if (!pausedAt) pausedAt = performance.now()
     } else {
       themeTransition?.resume()
+      petEntrance?.resume()
       if (ready && !unsubscribe)
         unsubscribe = subscribePointerSamples(follow, 1000 / 30)
       if (pausedAt && transitionActive)
@@ -2911,6 +2997,8 @@ export function createHomeTemple(
   document.addEventListener('visibilitychange', syncActivity)
   const resetPointer = () => {
     hasPointer = false
+    petHeadTarget.set(0, 0)
+    diagnosticsDirty = true
     pointerTarget.set(0, 0)
     if (
       (!selected || selected === 'statue') &&
@@ -2972,6 +3060,270 @@ export function createHomeTemple(
     renderer.render(scene, camera)
     setStageData('shaderWarmup', 'complete')
   }
+  const createPetGeometry = (sleepingModel: FloraPetModelAsset) => {
+    const sleepingSurface = geometry(new THREE.BufferGeometry())
+    for (const [target, source] of [
+      ['position', 'positions'],
+      ['normal', 'normals'],
+    ] as const) {
+      const attribute = sleepingModel.metadata.attributes[source]
+      sleepingSurface.setAttribute(
+        target,
+        new THREE.BufferAttribute(
+          new Float32Array(
+            sleepingModel.buffer,
+            attribute.offset,
+            attribute.count
+          ),
+          3
+        )
+      )
+    }
+    const sleepingIndices = sleepingModel.metadata.attributes.indices
+    for (const [target, sources] of [
+      ['position', ['raisedPositions', 'yawPositions', 'pitchPositions']],
+      ['normal', ['raisedNormals', 'yawNormals', 'pitchNormals']],
+    ] as const) {
+      sleepingSurface.morphAttributes[target] = sources.map((source) => {
+        const attribute = sleepingModel.metadata.attributes[source]
+        return new THREE.BufferAttribute(
+          new Float32Array(
+            sleepingModel.buffer,
+            attribute.offset,
+            attribute.count
+          ),
+          3
+        )
+      })
+    }
+    sleepingSurface.setIndex(
+      new THREE.BufferAttribute(
+        new Uint16Array(
+          sleepingModel.buffer,
+          sleepingIndices.offset,
+          sleepingIndices.count
+        ),
+        1
+      )
+    )
+    sleepingSurface.computeBoundingBox()
+    sleepingSurface.computeBoundingSphere()
+    sleepingSurface.userData.sleepMinY =
+      new THREE.Box3().setFromBufferAttribute(
+        sleepingSurface.getAttribute('position')
+      ).min.y
+    return sleepingSurface
+  }
+  const updatePetSize = (sleepingModel: FloraPetModelAsset) => {
+    const width =
+      currentPet.model === 'sprigatito'
+        ? SPRIGATITO_REFERENCE_WIDTH
+        : sleepingModel.metadata.size[0]
+    sleepingSprigatito.scale.setScalar(
+      ((config.id === 'mobile' ? 0.7 : 1.1) * currentPet.displayScale) / width
+    )
+    // 以睡姿实际最低点落地，而非动画骨骼原点；不同物种不会悬空或被地面吞没。
+    sleepingSprigatito.position.y =
+      0.035 -
+      sprigatitoMesh!.geometry.userData.sleepMinY * sleepingSprigatito.scale.x
+    sleepingSprigatito.rotation.y = THREE.MathUtils.degToRad(
+      currentPet.rotationY[selected === 'sprigatito' ? 'focus' : 'home']
+    )
+    sprigatitoSize
+      .fromArray(sleepingModel.metadata.size)
+      .multiplyScalar(sleepingSprigatito.scale.x)
+    if (reflectedSprigatito)
+      reflectedSprigatito.scale.copy(sleepingSprigatito.scale)
+  }
+  const publishPet = (asset: FloraPetModelAsset) => {
+    currentPetAssetFacing = asset.metadata.facingDirection
+    setStageData('companionVisibility', petVisibility.value.toFixed(3))
+    stage.dataset.companion = currentPet.model
+    stage.dataset.petId = currentPet.id
+    stage.dataset.companionPose =
+      currentPet.model === 'sprigatito' && sprigatitoPose.value === 0
+        ? 'sleep'
+        : currentPet.pose
+    stage.dataset.companionMaterial = 'chrome-wireframe'
+    stage.dataset.companionWidth = String(sprigatitoSize.x)
+    stage.dataset.companionReflectionScaleY = String(
+      reflectedSprigatito!.scale.y / sleepingSprigatito.scale.y
+    )
+    stage.dataset.companionEntrance = currentPet.entrance
+    stage.dataset.companionRevision = asset.revision
+    stage.dataset.companionFaces = String(
+      asset.metadata.attributes.indices.count / 3
+    )
+    stage.dataset.companionGroundY = String(
+      sleepingSprigatito.position.y +
+        sprigatitoMesh!.geometry.userData.sleepMinY * sleepingSprigatito.scale.x
+    )
+  }
+  const animatePetEntrance = (pet: PetProfile) => {
+    petEntrance = gsap.timeline({
+      onUpdate: invalidate,
+      onComplete: () => {
+        cameraMoving = false
+        projectionDirty = true
+        diagnosticsDirty = true
+        invalidate()
+      },
+    })
+    petEntrance.to(
+      petVisibility,
+      { value: 1, duration: reducedMotion ? 0.01 : 0.42, ease: 'power2.out' },
+      0
+    )
+    if (selected === 'sprigatito') {
+      const pose = selectedPose()
+      const startPosition = camera.position.clone()
+      const startTarget = lookAt.clone()
+      const startOffset = startPosition.clone().sub(startTarget)
+      const endOffset = pose.position.clone().sub(pose.target)
+      const startAngle = Math.atan2(startOffset.x, startOffset.z)
+      const endAngle = Math.atan2(endOffset.x, endOffset.z)
+      const delta = Math.atan2(
+        Math.sin(endAngle - startAngle),
+        Math.cos(endAngle - startAngle)
+      )
+      const orbit = { value: 0 }
+      cameraMoving = true
+      petEntrance.to(
+        orbit,
+        {
+          value: 1,
+          duration: reducedMotion ? 0.01 : 1.05,
+          ease: 'power3.inOut',
+          onUpdate: () => {
+            lookAt.lerpVectors(startTarget, pose.target, orbit.value)
+            // 中段轻微拉远，给两只宠物的尺寸变化留出空间，然后平滑收回。
+            const radius =
+              THREE.MathUtils.lerp(
+                Math.hypot(startOffset.x, startOffset.z),
+                Math.hypot(endOffset.x, endOffset.z),
+                orbit.value
+              ) *
+              (1 + Math.sin(Math.PI * orbit.value) * 0.07)
+            const angle = startAngle + delta * orbit.value
+            camera.position.set(
+              lookAt.x + Math.sin(angle) * radius,
+              THREE.MathUtils.lerp(
+                startPosition.y,
+                pose.position.y,
+                orbit.value
+              ),
+              lookAt.z + Math.cos(angle) * radius
+            )
+            markProjectionDirty()
+          },
+        },
+        0
+      )
+      petEntrance.to(
+        sleepingSprigatito.rotation,
+        {
+          y: THREE.MathUtils.degToRad(pet.rotationY.focus),
+          duration: reducedMotion ? 0.01 : 1.05,
+          ease: 'power2.inOut',
+          onUpdate: markProjectionDirty,
+        },
+        0
+      )
+      petEntrance.to(
+        sprigatitoPose,
+        {
+          value: 1,
+          duration: reducedMotion ? 0.01 : 1.1,
+          ease: 'power2.inOut',
+          onUpdate: markProjectionDirty,
+        },
+        reducedMotion ? 0 : 0.25
+      )
+      const framing = floraFraming()
+      petEntrance.to(
+        focusFraming,
+        {
+          ...framing,
+          duration: reducedMotion ? 0.01 : 1.05,
+          ease: 'power3.inOut',
+          onUpdate: applyViewOffset,
+        },
+        0
+      )
+    }
+  }
+  const setPet = async (pet: PetProfile) => {
+    const revision = ++petChangeRevision
+    const asset = await loadFloraPetModel(pet.model)
+    if (disposed || revision !== petChangeRevision || !sprigatitoMesh)
+      return false
+    if (currentPet.id === pet.id) {
+      // 再次选中当前宠物仅取消尚未提交的切换，不能把它的入场动作停在半途。
+      if (petFadingOut) {
+        petEntrance?.kill()
+        petFadingOut = false
+        transition?.kill()
+        transitionActive = false
+        animatePetEntrance(pet)
+      }
+      return true
+    }
+    petEntrance?.kill()
+    petHead.set(0, 0)
+    petHeadTarget.set(0, 0)
+    petFadingOut = true
+    // 资源就绪后再淡出；中途切换通过版本号和 onInterrupt 解开等待。
+    await new Promise<void>((resolve) => {
+      petEntrance = gsap
+        .timeline({ onComplete: resolve, onInterrupt: resolve })
+        .to(petVisibility, {
+          value: 0,
+          duration: reducedMotion ? 0.01 : 0.22,
+          ease: 'power2.in',
+          onUpdate: invalidate,
+        })
+    })
+    if (disposed || revision !== petChangeRevision) return false
+    petFadingOut = false
+    delete stage.dataset.companionScreenBounds
+    const nextGeometry = createPetGeometry(asset)
+    const previous = sprigatitoMesh.geometry
+    petEntrance?.kill()
+    transition?.kill()
+    transitionActive = false
+    cameraMoving = false
+    currentPet = pet
+    sprigatitoPose.value = 0
+    for (const mesh of petMeshes) {
+      if (!mesh) continue
+      mesh.geometry = nextGeometry
+      mesh.updateMorphTargets()
+    }
+    geometries.delete(previous)
+    previous.dispose()
+    updatePetSize(asset)
+    if (selected === 'sprigatito')
+      sleepingSprigatito.rotation.y = THREE.MathUtils.degToRad(
+        pet.rotationY.home
+      )
+    sprigatitoTheme.set(pet.themeColor)
+    sprigatitoLightColorsReady = false
+    appearance.sprigatitoHover = NaN
+    const tint = tintByColor.get(sprigatitoSurface!.color)!
+    const accent = sprigatitoTheme.getHSL({ h: 0, s: 0, l: 0 })
+    sprigatitoHoverColor.setHSL(
+      tint.h + accent.h - themeOrigin.h,
+      Math.min(1, (tint.s * accent.s) / themeOrigin.s),
+      tint.l
+    )
+    animatePetEntrance(pet)
+    publishPet(asset)
+    projectionDirty = true
+    diagnosticsDirty = true
+    invalidate()
+    return true
+  }
+
   const releaseResources = () => {
     labelSubscriptions.forEach((unsubscribe) => unsubscribe())
     geometries.forEach((value) => value.dispose())
@@ -2981,17 +3333,17 @@ export function createHomeTemple(
     renderer.forceContextLoss()
   }
 
-  Promise.all([
-    model.load(),
-    loadIslandSprigatitoModel(),
-    loadTempleLabelModel(),
-  ])
+  preloadTempleAssets(model.load, () => loadFloraPetModel(currentPet.model))
     .then(
       async ([
         { metadata, buffer, environment, radiance },
         sleepingModel,
         labelModel,
       ]) => {
+        floraReferenceModel =
+          currentPet.model === 'sprigatito'
+            ? sleepingModel
+            : await loadFloraPetModel('sprigatito')
         if (disposed) return
         callbacks.progress(60)
         for (const name of [
@@ -3026,51 +3378,7 @@ export function createHomeTemple(
         statueLabelHalfHeight = labelModel.metadata.halfHeight
         statueLabelDepth = labelModel.metadata.depth
         statueLabel.position.y = 0.52 + statueLabelHalfHeight
-        const sleepingSurface = geometry(new THREE.BufferGeometry())
-        for (const [target, source] of [
-          ['position', 'positions'],
-          ['normal', 'normals'],
-        ] as const) {
-          const attribute = sleepingModel.metadata.attributes[source]
-          sleepingSurface.setAttribute(
-            target,
-            new THREE.BufferAttribute(
-              new Float32Array(
-                sleepingModel.buffer,
-                attribute.offset,
-                attribute.count
-              ),
-              3
-            )
-          )
-        }
-        const sleepingIndices = sleepingModel.metadata.attributes.indices
-        for (const [target, source] of [
-          ['position', 'raisedPositions'],
-          ['normal', 'raisedNormals'],
-        ] as const) {
-          const attribute = sleepingModel.metadata.attributes[source]
-          sleepingSurface.morphAttributes[target] = [
-            new THREE.BufferAttribute(
-              new Float32Array(
-                sleepingModel.buffer,
-                attribute.offset,
-                attribute.count
-              ),
-              3
-            ),
-          ]
-        }
-        sleepingSurface.setIndex(
-          new THREE.BufferAttribute(
-            new Uint16Array(
-              sleepingModel.buffer,
-              sleepingIndices.offset,
-              sleepingIndices.count
-            ),
-            1
-          )
-        )
+        const sleepingSurface = createPetGeometry(sleepingModel)
         // 复用雕像的金属材质参数，不沿用雕像专属的裁切平面与头部变形。
         const sleepingMaterial = material(chromeMaterial.clone())
         sleepingMaterial.clippingPlanes = null
@@ -3096,12 +3404,7 @@ export function createHomeTemple(
           sleepingMaterial
         )
         sprigatitoWire.name = 'sprigatito-wire'
-        sleepingSprigatito.scale.setScalar(
-          (config.id === 'mobile' ? 0.7 : 1.1) / sleepingModel.metadata.size[0]
-        )
-        sprigatitoSize
-          .fromArray(sleepingModel.metadata.size)
-          .multiplyScalar(sleepingSprigatito.scale.x)
+        updatePetSize(sleepingModel)
         reflectedSprigatito = mirror(sleepingSprigatito, 0.25)
         reflectedSprigatitoSurface = reflectedSprigatito.getObjectByName(
           'sprigatito-surface'
@@ -3119,10 +3422,13 @@ export function createHomeTemple(
               trackTint((object.material as THREE.MeshBasicMaterial).color)
           }
         })
-        stage.dataset.companion = 'sprigatito'
-        stage.dataset.companionPose = 'sleep'
-        stage.dataset.companionRevision = sleepingModel.revision
-        stage.dataset.companionFaces = String(sleepingSurface.index!.count / 3)
+        petMeshes = [
+          sprigatitoMesh!,
+          sprigatitoWire!,
+          sprigatitoWireDepth!,
+          ...reflectedSprigatitoMeshes,
+        ]
+        publishPet(sleepingModel)
         stage.dataset.wireframeObelisks = obelisks
           .filter((item) => isTempleWireframeModel(item.category.id))
           .map((item) => item.category.id)
@@ -3141,6 +3447,7 @@ export function createHomeTemple(
         environmentTexture.magFilter = THREE.LinearFilter
         environmentTexture.needsUpdate = true
         scene.environment = environmentTexture
+        scene.environmentRotation.y = THREE.MathUtils.degToRad(-100)
         const surface = geometry(new THREE.BufferGeometry())
         for (const [name, source, itemSize] of [
           ['position', 'positions', 3],
@@ -3232,15 +3539,11 @@ export function createHomeTemple(
         setStageData('entrancePhase', 'waiting-route')
         await callbacks.waitForRouteEnter()
         if (disposed) return
-        const reveal = () => {
-          if (disposed) return
-          ready = true
-          startEntrance()
-          render(performance.now())
-          renderer.domElement.style.visibility = 'visible'
-          syncActivity()
-        }
-        reveal()
+        ready = true
+        startEntrance()
+        render(performance.now())
+        renderer.domElement.style.visibility = 'visible'
+        syncActivity()
       }
     )
     .catch((error) => {
@@ -3251,6 +3554,7 @@ export function createHomeTemple(
     select,
     pick: click,
     setThemeColor,
+    setPet,
     // 页面决定场景是否可见，场景统一管理动画时钟、指针订阅和绘制的暂停/恢复。
     setActive: (active: boolean) => {
       if (sceneActive === active) return
@@ -3259,6 +3563,8 @@ export function createHomeTemple(
     },
     dispose: () => {
       disposed = true
+      petChangeRevision++
+      petEntrance?.kill()
       cursorStateStore.setInteractive(statueCursorSource, false)
       transition?.kill()
       themeTransition?.kill()

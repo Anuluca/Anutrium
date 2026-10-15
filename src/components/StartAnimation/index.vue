@@ -7,13 +7,12 @@ import LoadingLine from '@/components/LoadingLine/index.vue'
 import LoadingPercentage from '@/components/LoadingPercentage/index.vue'
 import Logo from '@/components/Logo/index.vue'
 import LogoRotating3D from '@/components/Logo_rotating3D/index.vue'
+import { useTemplePresentation } from '@/composables/useTemplePresentation'
 import { getTempleEntranceHorizon } from '@/config/templeCamera'
-import { visualState } from '@/stores'
 import { useSiteLoading } from '@/stores/siteLoading'
 import { useTempleNavigation } from '@/stores/templeNavigation'
 import { loadCriticalFont } from '@/utils/fontLoader'
 import { hasJourneyReturnState } from '@/utils/journeyReturnState'
-import { templePresentations } from '@/views/Home/templePresentation'
 
 const emit = defineEmits([
   'finished',
@@ -34,8 +33,7 @@ const route = useRoute()
 // 固定首次访问的动画类型；模块入口与其详情页不能按路径前缀混用。
 const isHorizonIntro = route.name === 'HOME' || route.name === 'ABOUT'
 const navigation = useTempleNavigation()
-const visual = visualState()
-const touchDevice = useMediaQuery('(pointer: coarse)')
+const presentation = useTemplePresentation()
 const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)')
 const { width: viewportWidth, height: viewportHeight } = useWindowSize()
 const projectedLogoHeight = ref(0)
@@ -45,15 +43,11 @@ const logoSizeStyle = computed(() =>
     : {}
 )
 const loadingLineStyle = computed(() => {
-  const presentation =
-    visual.deviceType === 'desktop' && !touchDevice.value
-      ? templePresentations.desktop
-      : templePresentations.mobile
   return {
     '--loading-horizon-y': `${getTempleEntranceHorizon(
       Math.max(1, viewportWidth.value),
       Math.max(360, viewportHeight.value),
-      presentation.scene.homeCamera,
+      presentation.value.scene.homeCamera,
       reducedMotion.value ||
         navigation.simpleEntrance ||
         hasJourneyReturnState()

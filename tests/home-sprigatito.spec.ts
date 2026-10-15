@@ -1,7 +1,13 @@
 import { expect, test } from '@playwright/test'
 
-import { FLORA_MODEL_CENTER_X } from '../src/config/floraLayout'
+import {
+  FLORA_LAYOUT_BOTTOM_GAP,
+  FLORA_MOBILE_CHARACTER_HEIGHT_RATIO,
+  FLORA_MOBILE_MODEL_HEIGHT_RATIO,
+  FLORA_MODEL_CENTER_X,
+} from '../src/config/floraLayout'
 import { pageThemeColors } from '../src/config/pageThemes'
+import { pets } from '../src/locales/dynamic/pets'
 import modelRevision from '../src/utils/sprigatitoModelRevision.generated.json'
 
 test.beforeEach(async ({ page }) => {
@@ -81,6 +87,7 @@ test('Sprigatito dims the scene on hover and focuses without a secondary menu', 
   await expect(stage).toHaveAttribute('data-companion-holy-light', '0.500')
   await expect(page.locator('.temple-menu')).toHaveCount(0)
   await expect(page.locator('.current-module-name')).toHaveText('FLORATRIUM')
+  const mobile = testInfo.project.name.includes('mobile')
   const viewport = page.viewportSize()!
   const focused = (await stage.getAttribute('data-companion-screen'))!
     .split(',')
@@ -130,21 +137,49 @@ test('Sprigatito dims the scene on hover and focuses without a secondary menu', 
     Math.abs(bounds.left - (viewport.width - bounds.right))
   ).toBeLessThanOrEqual(1)
   expect(Math.abs(bounds.top - bounds.headerBottom - 16)).toBeLessThanOrEqual(1)
-  expect(Math.abs(bounds.footerTop - bounds.bottom - 16)).toBeLessThanOrEqual(1)
+  expect(
+    Math.abs(bounds.footerTop - bounds.bottom - FLORA_LAYOUT_BOTTOM_GAP)
+  ).toBeLessThanOrEqual(1)
   expect(Math.abs(regions[0].left - bounds.left)).toBeLessThanOrEqual(1)
-  expect(Math.abs(regions[1].left - regions[0].right - 16)).toBeLessThanOrEqual(
-    1
-  )
-  expect(Math.abs(regions[1].right - bounds.right)).toBeLessThanOrEqual(1)
+  if (mobile) {
+    expect(
+      Math.abs(regions[1].top - regions[0].top - regions[0].height - 16)
+    ).toBeLessThanOrEqual(1)
+    expect(
+      Math.abs(
+        regions[0].height / (bounds.height - 16) -
+          FLORA_MOBILE_CHARACTER_HEIGHT_RATIO
+      )
+    ).toBeLessThan(0.002)
+    expect(regions[1].height).toBeGreaterThan(regions[0].height)
+    expect(
+      Math.abs(regions[1].top + regions[1].height - bounds.bottom)
+    ).toBeLessThanOrEqual(1)
+    for (const region of regions) {
+      expect(Math.abs(region.left - bounds.left)).toBeLessThanOrEqual(1)
+      expect(Math.abs(region.right - bounds.right)).toBeLessThanOrEqual(1)
+    }
+  } else {
+    expect(
+      Math.abs(regions[1].left - regions[0].right - 16)
+    ).toBeLessThanOrEqual(1)
+    expect(Math.abs(regions[1].right - bounds.right)).toBeLessThanOrEqual(1)
+    for (const region of regions) {
+      expect(Math.abs(region.top - bounds.top)).toBeLessThanOrEqual(1)
+      expect(Math.abs(region.height - bounds.height)).toBeLessThanOrEqual(1)
+    }
+  }
   for (const region of regions) {
-    expect(Math.abs(region.top - bounds.top)).toBeLessThanOrEqual(1)
-    expect(Math.abs(region.height - bounds.height)).toBeLessThanOrEqual(1)
     expect(region.color).toBe('rgba(0, 0, 0, 0)')
     expect(region.borderWidth).toBe('1px')
     expect(region.borderStyle).toBe('solid')
   }
   expect(
-    Math.abs(focused[0] - viewport.width * FLORA_MODEL_CENTER_X)
+    Math.abs(
+      focused[0] -
+        viewport.width *
+          ((mobile ? 0.5 : FLORA_MODEL_CENTER_X) + (pets[0].focusOffsetX ?? 0))
+    )
   ).toBeLessThanOrEqual(1)
   expect(
     await layout.evaluate((element) => getComputedStyle(element).pointerEvents)
@@ -207,21 +242,23 @@ test('Sprigatito dims the scene on hover and focuses without a secondary menu', 
     .split(',')
     .map(Number)
   expect(cameraPosition[1]).toBeLessThan(cameraTarget[1])
-  expect(Math.abs(focused[1] - viewport.height * 0.55)).toBeLessThan(2)
+  const expectedModelY = mobile
+    ? regions[0].top + regions[0].height * FLORA_MOBILE_MODEL_HEIGHT_RATIO
+    : viewport.height * 0.55
+  expect(Math.abs(focused[1] - expectedModelY)).toBeLessThan(2)
   await page.screenshot({
     path: `.tmp/sprigatito-focus-${testInfo.project.name}.png`,
   })
-  const mobile = testInfo.project.name.includes('mobile')
   const openNavigation = async () => {
     if (mobile) await page.locator('.mobile-menu-icon').click()
     return page.locator(mobile ? '.mobile-menu-items' : '.menu-box')
   }
   let menu = await openNavigation()
-  await expect(menu.locator('[data-temple-nav="sprigatito"]')).toContainText(
-    '花花小窝'
-  )
-  await expect(menu.locator('[data-temple-nav="statue"]')).toContainText(
-    '个人海湾'
+  await expect(
+    menu.locator('[data-temple-nav="sprigatito"]')
+  ).toHaveAccessibleName(mobile ? /花花小窝/ : 'FLORATRIUM')
+  await expect(menu.locator('[data-temple-nav="statue"]')).toHaveAccessibleName(
+    mobile ? /个人海湾/ : 'ISLAND'
   )
   if (!mobile) {
     await expect

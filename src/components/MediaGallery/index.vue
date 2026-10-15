@@ -3,6 +3,7 @@
     ref="galleryRef"
     class="media-gallery"
     :class="{
+      'media-gallery--four-columns': columns === 4,
       'media-gallery--staggered': staggeredEntrance,
       'media-gallery--preserve-image-colors': preserveImageColors,
       'is-entered': entranceStarted,
@@ -14,7 +15,12 @@
       class="media-gallery__card"
       :style="getEntranceStyle(index)"
     >
-      <div class="media-gallery__shell">
+      <div
+        class="media-gallery__shell"
+        :style="{
+          '--media-aspect-ratio': mediaAspectRatios.get(media.url) || 1,
+        }"
+      >
         <div
           class="media-gallery__frame"
           :class="{ 'is-loading': !loadedMediaUrls.has(media.url) }"
@@ -30,7 +36,7 @@
               muted
               playsinline
               preload="none"
-              @loadedmetadata="markMediaLoaded(media.url)"
+              @loadedmetadata="markVideoLoaded($event, media.url)"
             />
             <button
               v-else
@@ -47,6 +53,7 @@
                 <img
                   :src="getMediaThumbnailUrl(media)"
                   :alt="getLabel(media)"
+                  :data-media-url="media.url"
                   loading="lazy"
                   decoding="async"
                   width="768"
@@ -103,6 +110,7 @@ const props = withDefaults(
     entranceReady?: boolean
     entranceStepMs?: number
     preserveImageColors?: boolean
+    columns?: 3 | 4
   }>(),
   {
     getMediaLabel: (media: GalleryMedia) => media.title || 'Photo',
@@ -111,12 +119,14 @@ const props = withDefaults(
     entranceReady: true,
     entranceStepMs: 70,
     preserveImageColors: false,
+    columns: 3,
   }
 )
 
 const VIDEO_FILE_PATTERN = /\.(?:mov|mp4|webm|m4v|ogv)(?:[?#].*)?$/i
 const galleryRef = ref<HTMLElement | null>(null)
 const loadedMediaUrls = reactive(new Set<string>())
+const mediaAspectRatios = reactive(new Map<string, number>())
 const nearbyVideoUrls = reactive(new Set<string>())
 const showViewer = ref(false)
 const currentImageIndex = ref(0)
@@ -150,11 +160,13 @@ const imageUrls = computed(() =>
 )
 
 const markMediaLoaded = (url: string) => {
-  loadedMediaUrls.add(url)
+  if (props.items.some((media) => media.url === url)) loadedMediaUrls.add(url)
 }
 
 const markImageDecoded = async (event: Event, url: string) => {
   const image = event.currentTarget as HTMLImageElement
+  if (image.naturalHeight)
+    mediaAspectRatios.set(url, image.naturalWidth / image.naturalHeight)
 
   try {
     await image.decode()
@@ -162,6 +174,12 @@ const markImageDecoded = async (event: Event, url: string) => {
     // 部分浏览器在图片已完成解码时会拒绝重复 decode，仍可安全显示。
   }
 
+  markMediaLoaded(url)
+}
+const markVideoLoaded = (event: Event, url: string) => {
+  const video = event.currentTarget as HTMLVideoElement
+  if (video.videoHeight)
+    mediaAspectRatios.set(url, video.videoWidth / video.videoHeight)
   markMediaLoaded(url)
 }
 
@@ -280,12 +298,33 @@ const { refresh: observeVisibleVideos } = useIntersectionActivation(
 
 watch(
   () => props.items,
-  async () => {
+  async (items) => {
     showViewer.value = false
-    loadedMediaUrls.clear()
+    const currentUrls = new Set(items.map((media) => media.url))
+    // 列表切换会复用同 URL 的图片节点，不能清空其状态并等待不会重发的 load 事件。
+    for (const url of loadedMediaUrls)
+      if (!currentUrls.has(url)) loadedMediaUrls.delete(url)
+    for (const url of mediaAspectRatios.keys())
+      if (!currentUrls.has(url)) mediaAspectRatios.delete(url)
     nearbyVideoUrls.clear()
     void replayEntrance()
     await nextTick()
+    // 缓存图片可能在 DOM 更新前已完成加载；仅将真正加载成功的图片解除占位状态。
+    galleryRef.value
+      ?.querySelectorAll<HTMLImageElement>('img[data-media-url]')
+      .forEach((image) => {
+        if (
+          image.complete &&
+          image.naturalWidth > 0 &&
+          image.dataset.mediaUrl
+        ) {
+          mediaAspectRatios.set(
+            image.dataset.mediaUrl,
+            image.naturalWidth / image.naturalHeight
+          )
+          markMediaLoaded(image.dataset.mediaUrl)
+        }
+      })
     observeGalleryEntrance()
     observeNearbyVideos()
     observeVisibleVideos()
@@ -317,7 +356,7 @@ onBeforeUnmount(() => {
   box-sizing: border-box;
   --media-gallery-max-height: clamp(220px, 25vw, 360px);
 
-  &:not(:nth-child(3n))::after {
+  &::after {
     position: absolute;
     top: 0;
     right: 0;
@@ -326,6 +365,9 @@ onBeforeUnmount(() => {
     content: '';
     background: rgba(255, 255, 255, 0.05);
     pointer-events: none;
+  }
+  &:nth-child(3n)::after {
+    display: none;
   }
 }
 
@@ -360,7 +402,7 @@ onBeforeUnmount(() => {
     linear-gradient(currentColor 0 0) bottom left / 1px 22px no-repeat,
     linear-gradient(currentColor 0 0) bottom right / 22px 1px no-repeat,
     linear-gradient(currentColor 0 0) bottom right / 1px 22px no-repeat;
-  color: rgba(255, 255, 255, 0.78);
+  color: color-mix(in srgb, var(--page-theme-color, #e23456) 78%, transparent);
   opacity: 0;
   pointer-events: none;
   animation: media-gallery-corners-expand 0.9s cubic-bezier(0.22, 1, 0.36, 1)
@@ -376,11 +418,16 @@ onBeforeUnmount(() => {
 .media-gallery__shell,
 .media-gallery__frame,
 .media-gallery__stage {
-  width: fit-content;
+  width: 100%;
   max-width: 100%;
 }
 
 .media-gallery__shell {
+  // 以实际媒体比例计算宽度；固定图片区高度仍用于对齐信息栏。
+  width: min(
+    100%,
+    calc(var(--media-gallery-max-height) * var(--media-aspect-ratio))
+  );
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -391,6 +438,8 @@ onBeforeUnmount(() => {
 .media-gallery__frame {
   position: relative;
   z-index: 1;
+  height: var(--media-gallery-max-height);
+  flex: none;
   max-height: var(--media-gallery-max-height);
 
   &::before {
@@ -398,23 +447,27 @@ onBeforeUnmount(() => {
     inset: 0;
     z-index: 2;
     content: '';
-    background: rgba(226, 52, 86, 0.04);
+    background: color-mix(
+      in srgb,
+      var(--page-theme-color, #e23456) 4%,
+      transparent
+    );
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.24s ease;
   }
 
   &.is-loading {
-    width: 12rem;
     height: var(--media-gallery-max-height);
     overflow: hidden;
 
     &::before {
       background: linear-gradient(
         105deg,
-        rgba(226, 52, 86, 0.04) 30%,
-        rgba(226, 52, 86, 0.12) 50%,
-        rgba(226, 52, 86, 0.04) 70%
+        color-mix(in srgb, var(--page-theme-color, #e23456) 4%, transparent) 30%,
+        color-mix(in srgb, var(--page-theme-color, #e23456) 12%, transparent)
+          50%,
+        color-mix(in srgb, var(--page-theme-color, #e23456) 4%, transparent) 70%
       );
       opacity: 1;
       transform: translateX(-100%);
@@ -439,15 +492,16 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+  height: 100%;
   max-height: var(--media-gallery-max-height);
   overflow: hidden;
 
   img,
   video {
     display: block;
-    width: auto;
+    width: 100%;
     max-width: 100%;
-    height: auto;
+    height: 100%;
     max-height: var(--media-gallery-max-height);
     object-fit: contain;
     opacity: 1;
@@ -471,7 +525,8 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: fit-content;
+  width: 100%;
+  height: 100%;
   max-width: 100%;
   max-height: var(--media-gallery-max-height);
   padding: 0;
@@ -501,7 +556,7 @@ onBeforeUnmount(() => {
 .media-gallery__info {
   position: relative;
   width: 100%;
-  min-width: 12rem;
+  min-width: 0;
   min-height: 28px;
   margin-top: 14px;
   background: rgb(35 35 35 / 40%);
@@ -581,6 +636,36 @@ onBeforeUnmount(() => {
   }
 }
 
+@media (min-width: 901px) {
+  .media-gallery__card:nth-child(3n + 1) {
+    padding-left: 0;
+  }
+  .media-gallery__card:nth-child(3n) {
+    padding-right: 0;
+  }
+  .media-gallery--four-columns {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+
+    .media-gallery__card {
+      padding-right: 10px;
+      padding-left: 10px;
+
+      &::after {
+        display: block;
+      }
+      &:nth-child(4n + 1) {
+        padding-left: 0;
+      }
+      &:nth-child(4n) {
+        padding-right: 0;
+        &::after {
+          display: none;
+        }
+      }
+    }
+  }
+}
+
 @media (max-width: 900px) {
   .media-gallery {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -590,6 +675,13 @@ onBeforeUnmount(() => {
     padding: 10px 5px;
     border-bottom-color: rgba(255, 255, 255, 0.04);
     --media-gallery-max-height: clamp(150px, 42vw, 220px);
+
+    &:nth-child(odd) {
+      padding-left: 0;
+    }
+    &:nth-child(even) {
+      padding-right: 0;
+    }
 
     &::after,
     &:not(:nth-child(3n))::after {

@@ -19,6 +19,9 @@ export function useCreditsPlayback(
   const crewPlaybackReady = ref(false)
   const crewHovered = ref(false)
   const crewFocused = ref(false)
+  const crewLoopPhase = ref<'scrolling' | 'fading-out' | 'fading-in'>(
+    'scrolling'
+  )
   const reducedMotion = usePreferredReducedMotion()
   const documentVisibility = useDocumentVisibility()
   const contentVisible = useElementVisibility(crewContentRef)
@@ -55,12 +58,20 @@ export function useCreditsPlayback(
         return
       }
       if (crewAtEnd) {
+        if (crewLoopPhase.value === 'scrolling') {
+          crewLoopPhase.value = 'fading-out'
+          crewLoopWait = 500
+          return
+        }
+        // 淡出完成后才回到顶部，避免观众看到滚动位置跳变。
         scroller.scrollTop = 0
         crewScrollPosition = 0
+        crewLoopPhase.value = 'fading-in'
         crewLoopWait = 800
         crewAtEnd = false
         return
       }
+      crewLoopPhase.value = 'scrolling'
       const end = scrollEnd.value
       if (end <= 0) return
       // 保留小数位置，让低速滚动在不同刷新率下保持一致。
@@ -188,6 +199,7 @@ export function useCreditsPlayback(
     crewScrollPosition = 0
     crewLoopWait = 0
     crewAtEnd = false
+    crewLoopPhase.value = 'scrolling'
   }
 
   const finishPanelEnter = () => {
@@ -215,6 +227,7 @@ export function useCreditsPlayback(
   return {
     crewContentRef,
     crewEntered,
+    crewLoopPhase,
     crewFocused,
     updateCrewHover,
     clearCrewHover,

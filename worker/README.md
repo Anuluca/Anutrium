@@ -6,6 +6,7 @@ Steam Web API 与 GitHub GraphQL API 的代理层。网站前端只访问 Worker
 
 - `GET /profile`：Steam 资料。
 - `GET /github/contributions`：GitHub 用户近一年的贡献日历，默认缓存 6 小时。
+- `GET /floratrium/media?pet=flora|hei&cursor=...`：只读 R2 相册列表，固定每页最多 28 个图片/视频，不缓存。目录限定为 `Floratrium/flora/` 与 `Floratrium/hei/`；按文件名全局倒序后分页；后续页使用响应的 `nextCursor`，`totalPages` 为总页数。
 
 ## 首次部署
 
@@ -50,3 +51,10 @@ yarn dev
 ```
 
 `.dev.vars` 已被根目录 `.gitignore` 的 `*.local` 规则之外单独忽略。
+
+## 宠物相册
+
+- R2 绑定为 `FLORATRIUM_BUCKET`，使用既有 `anutrium` 存储桶；接口只调用 `list()`。
+- 默认照片维护在 `src/locales/dynamic/petAlbums.ts`，不由在线刷新覆盖。
+- 展开全量相册后，每 15 秒刷新当前页；页面隐藏或相册收起时停止刷新。
+- 本地开发通过现有 Vite 服务的 `/__floratrium/media` 读取 `/Users/anuluca/Work/Space_Coding/R2/Floratrium/`，本地仅用于枚举清单，返回的媒体链接统一指向线上 `https://assets.anuluca.com`；页面缩略图复用旅程详情页的 R2 压缩参数。

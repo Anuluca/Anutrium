@@ -11,7 +11,10 @@ import { readTranmPose, readTrsklScaleCompensation } from './readTranmPose'
 // 构建时采样官方睡眠动画与贴图；首页使用静态烘焙结果，不运行骨骼动画或贴图解码。
 export async function prepareSprigatitoGeometry({
   headTilt = 15,
-  headLift = 14,
+  headLift = 0,
+  battle = false,
+  followYaw = 0,
+  followPitch = 0,
 } = {}) {
   const path = '/scripts/assets/sprigatito/'
   const manager = new THREE.LoadingManager()
@@ -34,9 +37,13 @@ export async function prepareSprigatitoGeometry({
   })
   model.updateMatrixWorld(true)
   const [animation, skeleton] = await Promise.all(
-    ['pm1010_00_00_00281_sleep01_loop.tranm', 'pm1010_00_00.trskl'].map(
-      (file) =>
-        fetch(`${path}${file}`).then((response) => response.arrayBuffer())
+    [
+      battle
+        ? 'pm1010_00_00_00001_battlewait01_loop.tranm'
+        : 'pm1010_00_00_00281_sleep01_loop.tranm',
+      'pm1010_00_00.trskl',
+    ].map((file) =>
+      fetch(`${path}${file}`).then((response) => response.arrayBuffer())
     )
   )
   const poses = readTranmPose(animation)
@@ -51,11 +58,28 @@ export async function prepareSprigatitoGeometry({
     if (pose.scale) bone.scale.copy(pose.scale)
     bone.updateMatrix()
   }
-  // 在官方睡姿上微调：头绕自身纵轴轻歪，尾巴分段向身体方向弯曲。
+  // 在官方睡姿上保留轻歪头入场动作，尾巴恢复原来的向身体弯曲。
   const head = model.getObjectByName('head')!
+  // 等比缩小整个头部，子骨骼上的耳朵与侧须同步调整，两种姿态保持一致。
+  head.scale.multiplyScalar(0.9)
   head.rotateZ(THREE.MathUtils.degToRad(headTilt))
   head.rotateY(THREE.MathUtils.degToRad(headLift))
   model.updateMatrixWorld(true)
+  // 跟随姿态离线采样；运行时使用变形目标，不加载完整骨架。
+  for (const [axis, angle] of [
+    [new THREE.Vector3(0, 1, 0), followYaw],
+    [new THREE.Vector3(1, 0, 0), followPitch],
+  ] as const) {
+    head.rotateOnAxis(
+      axis
+        .clone()
+        .applyQuaternion(
+          head.getWorldQuaternion(new THREE.Quaternion()).invert()
+        ),
+      THREE.MathUtils.degToRad(angle)
+    )
+    model.updateMatrixWorld(true)
+  }
   const tailRoot = model.getObjectByName('tail_a_01')!
   const tailNext = model.getObjectByName('tail_a_02')!
   const tailOrigin = tailRoot.getWorldPosition(new THREE.Vector3())
@@ -79,7 +103,8 @@ export async function prepareSprigatitoGeometry({
     const localUp = new THREE.Vector3(0, 1, 0).applyQuaternion(
       bone.getWorldQuaternion(new THREE.Quaternion()).invert()
     )
-    bone.rotateOnAxis(localUp, THREE.MathUtils.degToRad(degrees * bendSign))
+    if (!battle)
+      bone.rotateOnAxis(localUp, THREE.MathUtils.degToRad(degrees * bendSign))
     model.updateMatrixWorld(true)
   }
   const compensated = readTrsklScaleCompensation(skeleton)
@@ -113,7 +138,7 @@ export async function prepareSprigatitoGeometry({
     .getWorldScale(new THREE.Vector3())
     .toArray()
   if (Math.max(...headScale) - Math.min(...headScale) > 1e-6) {
-    throw new Error('Sleep pose must preserve the original head proportions')
+    throw new Error('Base pose must preserve the original head proportions')
   }
 
   const parts: THREE.BufferGeometry[] = []

@@ -21,37 +21,42 @@ onBeforeUnmount(() => window.clearTimeout(timer))
 </script>
 
 <template>
-  <time
-    class="temple-clock no-rem"
-    :datetime="currentTime"
-    :aria-label="currentTime"
-  >
-    <span
-      v-for="(character, index) in currentTime"
-      :key="index"
-      class="temple-clock__character"
-      :style="{ '--character-index': index }"
-      aria-hidden="true"
+  <div class="temple-clock-group no-rem">
+    <p class="temple-clock__tagline">DRIVEN BY PASSION.</p>
+    <time
+      class="temple-clock no-rem"
+      :datetime="currentTime"
+      :aria-label="currentTime"
     >
-      <span :class="{ 'temple-clock__colon': character === ':' }">{{
-        character
-      }}</span>
-    </span>
-  </time>
+      <span
+        v-for="(character, index) in currentTime"
+        :key="index"
+        class="temple-clock__character"
+        :style="{ '--character-index': index }"
+        aria-hidden="true"
+      >
+        <span :class="{ 'temple-clock__colon': character === ':' }">{{
+          character
+        }}</span>
+      </span>
+    </time>
+  </div>
 </template>
 
 <style lang="less" scoped>
-.temple-clock.no-rem {
+.temple-clock-group.no-rem {
   position: absolute;
   z-index: 3;
   top: calc(var(--temple-clock-y) + 30px);
   left: calc(var(--temple-clock-x) + 4px);
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
   color: var(--page-theme-color);
-  opacity: 0.5;
   font-family: 'Anton', sans-serif;
   font-size: clamp(14px, 1.35vw, 22px);
-  font-weight: 700;
+  font-weight: 400;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.16em;
   line-height: 1;
@@ -59,6 +64,73 @@ onBeforeUnmount(() => window.clearTimeout(timer))
   transform: translateX(-50%) scaleY(1.3);
   transform-origin: center top;
   pointer-events: none;
+}
+
+.temple-clock__tagline {
+  margin: 0;
+  font-size: 1.2em;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  transform: perspective(180px) rotateX(60deg);
+  transform-origin: center top;
+}
+
+.temple-clock-reveal-enter-active {
+  animation: temple-clock-reveal-in 960ms ease both;
+
+  .temple-clock__tagline {
+    animation: temple-tagline-in 960ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+.temple-clock-reveal-leave-active {
+  animation: temple-clock-reveal-out 480ms ease both;
+
+  .temple-clock__tagline {
+    animation: temple-tagline-out 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+@keyframes temple-clock-reveal-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes temple-clock-reveal-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes temple-tagline-in {
+  from {
+    transform: perspective(180px) rotateX(60deg) translateY(-18px);
+  }
+  to {
+    transform: perspective(180px) rotateX(60deg);
+  }
+}
+
+@keyframes temple-tagline-out {
+  from {
+    transform: perspective(180px) rotateX(60deg);
+  }
+  to {
+    transform: perspective(180px) rotateX(60deg) translateY(-18px);
+  }
+}
+
+.temple-clock.no-rem {
+  display: flex;
+  opacity: 0.5;
+  font-weight: 700;
 }
 
 .temple-clock__character {
@@ -101,6 +173,15 @@ onBeforeUnmount(() => window.clearTimeout(timer))
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .temple-clock-reveal-enter-active,
+  .temple-clock-reveal-leave-active {
+    animation-duration: 1ms;
+
+    .temple-clock__tagline {
+      animation-duration: 1ms;
+    }
+  }
+
   .temple-clock__character,
   .temple-clock__character::after {
     animation: none;

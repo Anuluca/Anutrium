@@ -39,9 +39,9 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: var(--page-theme-color, #e23456);
+  color: @red;
   font-family: 'UnboundedSans', sans-serif;
-  font-size: 18px;
+  font-size: 24px;
   font-weight: 400;
   line-height: 1.5;
   cursor: pointer;
@@ -1101,7 +1101,7 @@
 }
 
 .about-update-dock.no-rem {
-  --program-accent: var(--page-theme-color, #e23456);
+  --program-accent: @red;
   --program-surface: #000;
   --program-ink: #fffff4;
   --program-open-height: min(54dvh, 510px);
@@ -1118,7 +1118,7 @@
   font-weight: 600;
 
   &.about-panel-dock {
-    height: 27px;
+    height: 36px;
   }
 
   &.is-crew-panel {
@@ -1157,7 +1157,7 @@
   .about-update-dock__triggers {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 24px;
     margin-left: 12px;
     width: fit-content;
     max-width: calc(100% - 12px);
@@ -1174,7 +1174,7 @@
     background: transparent;
     color: var(--program-accent);
     font-family: 'UnboundedSans', sans-serif;
-    font-size: 18px;
+    font-size: 24px;
     font-weight: 400;
     line-height: 1.5;
     letter-spacing: 0;
@@ -1339,10 +1339,15 @@
     line-height: 1.35;
     overflow-wrap: anywhere;
     text-align: center;
+    transition: opacity 0.5s ease;
 
     &.is-entered {
       opacity: 1;
       animation: staff-credits-entrance 0.45s linear;
+    }
+
+    &.is-loop-fading-out {
+      opacity: 0;
     }
 
     h2,
@@ -1405,6 +1410,10 @@
 
     .staff-credits__model-details {
       font-size: 18px;
+    }
+
+    .staff-credits__ip {
+      margin-top: 32px;
     }
 
     .staff-credits__font-entry + .staff-credits__font-entry {

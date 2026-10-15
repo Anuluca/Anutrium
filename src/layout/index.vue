@@ -101,7 +101,13 @@
                   'is-wireframe-preview': isTempleMutedMenuItem(item.id),
                 }"
                 :data-temple-nav="item.id"
-                :aria-label="item.id === 'about' ? 'ABOUT / 关于' : undefined"
+                :aria-label="
+                  item.id === 'about'
+                    ? locale === 'en'
+                      ? 'About'
+                      : '关于'
+                    : item.title
+                "
                 :style="{
                   '--module-theme-color':
                     'themeColor' in item ? item.themeColor : '#e23456',
@@ -119,10 +125,6 @@
                 />
                 <div v-else class="title-box">
                   <TextRoll class="main-title" :text="item.title" />
-                  <div class="second-title">
-                    <div class="line" />
-                    <span>{{ item.label }}</span>
-                  </div>
                 </div>
               </button>
             </li>
@@ -195,7 +197,7 @@
               </div>
             </button>
             <button
-              v-for="item in menuItems"
+              v-for="item in mobileMenuItems"
               :key="item.id"
               type="button"
               class="temple-nav-action"
@@ -287,9 +289,11 @@
         <transition
           name="route"
           mode="out-in"
-          :css="!isEntryContentRefreshing"
+          :css="false"
           @before-enter="beginRouteEnter"
           @before-leave="lockIslandRouteGeometry"
+          @leave="finishCoveredRoute"
+          @enter="finishCoveredRoute"
           @after-leave="completeRouteLeave"
           @after-enter="completeRouteTransition"
           @enter-cancelled="completeRouteTransition"
@@ -308,6 +312,9 @@
       v-if="shouldShowPageScrollProgress"
       ref="pageScrollProgressElement"
       :top="headerBottom"
+      :color="
+        route.path === '/about' || navigation.aboutOpen ? '#E23456' : undefined
+      "
     />
     <button
       class="fullscreen"
@@ -353,6 +360,7 @@ import {
   syncSeoMeta,
 } from '@/router'
 import { visualState } from '@/stores'
+import { useFloraPets } from '@/stores/floraPets'
 import { useTempleNavigation } from '@/stores/templeNavigation'
 import { consumeJourneyReturnState } from '@/utils/journeyReturnState'
 import { persistLocale, type SiteLocale } from '@/utils/locale'
@@ -414,6 +422,7 @@ const visualStateStore = visualState()
 const isHomeRoute = computed(() => route.name === 'TEST2')
 const isTempleRoute = computed(() => route.name === 'HOME')
 const navigation = useTempleNavigation()
+const floraPets = useFloraPets()
 const dismissTempleFocusFromHeader = (event: MouseEvent) => {
   if (
     !isTempleRoute.value ||
@@ -454,6 +463,7 @@ watch(
     () => navigation.activeModule,
     () => navigation.aboutOpen,
     () => navigation.companionFocused,
+    () => floraPets.activePet.themeColor,
   ],
   () => {
     if (isTempleRoute.value)
@@ -461,7 +471,8 @@ watch(
         route,
         navigation.companionFocused
           ? 'SPRIGATITO'
-          : navigation.activeModule?.toUpperCase() || 'HOME'
+          : navigation.activeModule?.toUpperCase() || 'HOME',
+        navigation.companionFocused ? floraPets.activePet.themeColor : undefined
       )
   },
   { immediate: true }
@@ -631,6 +642,11 @@ const layoutShow = ref(false)
 const theme = computed(() => visualStateStore.theme)
 const menuItems = templeNavigation
 const menuItemById = new Map(menuItems.map((item) => [item.id, item]))
+const mobileMenuItems = [
+  menuItemById.get('statue')!,
+  menuItemById.get('sprigatito')!,
+  ...menuItems.filter((item) => !['statue', 'sprigatito'].includes(item.id)),
+]
 const balancedMenuItems = (
   [
     'archive',
@@ -652,7 +668,11 @@ const activeNavigation = computed(() =>
 )
 const activateNavigation = async (id: TempleNavigationId) => {
   closeMobileMenu()
-  if (!isTempleRoute.value) await router.push('/')
+  if (!isTempleRoute.value) {
+    await router.push('/')
+    // 详情离场会写入旅程返回标记；菜单已指定目标，不再恢复旅程位置。
+    consumeJourneyReturnState()
+  }
   navigation.request(id)
 }
 const returnToInitialHome = async () => {
@@ -1173,6 +1193,12 @@ const beginRouteEnter = () => {
   routeEntryActive.value = true
 }
 
+const finishCoveredRoute = (_element: Element, done: () => void) => {
+  // 路由遮罩已完全覆盖；保留一帧离场几何后换页，首次加载的内容重挂载直接完成。
+  if (isEntryContentRefreshing.value) done()
+  else window.requestAnimationFrame(() => done())
+}
+
 const completeRouteTransition = () => {
   routeEntryActive.value = false
   unlockIslandRouteGeometry()
@@ -1229,7 +1255,8 @@ onMounted(() => {
     syncHeaderBottom()
   }
   removeRouteGeometryGuard = router.beforeEach((to, from) => {
-    if (to.fullPath === from.fullPath) return true
+    // 同一路由组件只更新模块、参数或查询，不离场，也不能留下固定定位锁。
+    if (to.fullPath === from.fullPath || to.name === from.name) return true
 
     const leavingElement = routerContainer.value?.firstElementChild
     if (leavingElement) lockIslandRouteGeometry(leavingElement)
@@ -1358,25 +1385,4 @@ watch(
 
 <style lang="less" scoped>
 @import './index.less';
-
-.route-enter-active {
-  transform-origin: top center;
-  transition: opacity 0.12s ease, transform 0.6s ease;
-  transition-delay: 0.12s;
-  will-change: opacity, transform;
-}
-
-.route-leave-active {
-  transition: opacity 0.12s ease-in;
-  pointer-events: none;
-}
-
-.route-enter-from {
-  opacity: 0;
-  transform: scale(0.86);
-}
-
-.route-leave-to {
-  opacity: 0;
-}
 </style>

@@ -492,7 +492,7 @@ test('creative and pokeyard reuse embedded 404 content without locking the page'
       '.temple-focus-content .not-found-page.is-embedded'
     )
     await expect(content).toBeVisible({ timeout: 15000 })
-    await expect(content).toContainText('404 NOT FOUND')
+    await expect(content).toContainText('404 SIGNAL LOST')
     await expect(content.locator('.porygon__draw-mask > *')).toHaveCount(11)
     const geometry = await content.evaluate((el) => {
       const viewport = el

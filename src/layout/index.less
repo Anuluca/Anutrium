@@ -215,7 +215,7 @@
         align-items: center;
         margin-left: 0.66667rem;
         padding-left: 0.56667rem;
-        border-left: 1px solid fade(@primary-pink, 28%);
+        border-left: 1px solid fade(@primary-pink, 70%);
         color: @primary-pink;
         font-family: 'alibaba-puhuiti', sans-serif;
         font-size: 1rem;
@@ -238,7 +238,7 @@
 
         .define-module-theme(@name, @color) {
           &--@{name} {
-            border-left-color: color-mix(in srgb, @color 28%, transparent);
+            border-left-color: color-mix(in srgb, @color 70%, transparent);
             color: @color;
           }
         }
@@ -366,6 +366,7 @@
               width: 100%;
               height: 0.66667rem;
               display: flex;
+              gap: 4px;
               align-items: center;
               justify-content: space-between;
               font-family: 'alibaba-puhuiti';
@@ -376,37 +377,25 @@
                 min-width: 0;
                 height: 56%;
                 transform: scaleX(0);
-                transform-origin: right center;
+                transform-origin: left center;
                 background-color: var(--text-color);
                 transition: transform 0.5s;
                 box-sizing: border-box;
                 &:last-child {
-                  transform-origin: left center;
+                  transform-origin: right center;
                 }
               }
 
               span {
-                flex: 0 0 1;
+                flex: 0 0 auto;
                 line-height: 0.66667rem;
                 font-size: 0.6rem;
                 letter-spacing: -0.1px;
                 font-weight: bold;
-                margin: 0 2px;
+                margin: 0;
                 transition: color 0.4s ease;
               }
             }
-          }
-        }
-
-        &:not(.menu-box--right) .desktop-menu-item .title-box .second-title {
-          flex-direction: row-reverse;
-
-          .line {
-            transform-origin: left center;
-          }
-
-          span {
-            margin-left: 0;
           }
         }
 
@@ -1000,7 +989,7 @@
             0rem - var(--page-inline-gutter) - var(--desktop-shell-inline-inset) +
               var(--header-inline-padding) + var(--header-menu-item-padding)
           ),
-          0,
+          -0.2rem,
           0
         );
       }
@@ -1082,8 +1071,8 @@
 .temple-nav-action {
   .about-info-icon {
     display: block;
-    width: 1rem;
-    height: 1rem;
+    width: 0.85rem;
+    height: 0.85rem;
     margin-inline: auto;
     color: #fff;
     font-weight: 400;
@@ -1216,11 +1205,7 @@
   .logo-box
   .current-module-name {
   color: var(--page-theme-color);
-  border-left-color: color-mix(
-    in srgb,
-    var(--page-theme-color) 28%,
-    transparent
-  );
+  border-left-color: color-mix(in srgb, var(--page-theme-color) 70%, transparent);
 }
 @media screen and (max-aspect-ratio: @ratio-threshold) {
   .layout-page:has(.temple-page):not(.temple-header-default)

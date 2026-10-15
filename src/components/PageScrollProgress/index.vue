@@ -3,7 +3,10 @@
     ref="progressElement"
     class="page-scroll-progress no-rem"
     :class="{ 'is-embedded': props.embedded }"
-    :style="{ '--page-scroll-progress-top': `${props.top}px` }"
+    :style="{
+      '--page-scroll-progress-top': `${props.top}px`,
+      '--page-scroll-progress-color': props.color,
+    }"
     aria-hidden="true"
   />
 </template>
@@ -15,11 +18,13 @@ import { useEventListener, useResizeObserver } from '@vueuse/core'
 const props = withDefaults(
   defineProps<{
     top?: number
+    color?: string
     embedded?: boolean
     scrollTarget?: HTMLElement | null
   }>(),
   {
     top: 0,
+    color: undefined,
     embedded: false,
     scrollTarget: null,
   }
@@ -110,7 +115,10 @@ defineExpose({ setProgress })
     right: 0;
     width: 100%;
     height: 100%;
-    background: var(--page-theme-color, #e23456);
+    background: var(
+      --page-scroll-progress-color,
+      var(--page-theme-color, #e23456)
+    );
     transform: scaleY(var(--page-scroll-progress-scale, 0));
     transform-origin: top;
     transition: transform var(--page-scroll-progress-transition-duration, 0ms)

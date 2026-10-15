@@ -10,6 +10,7 @@
       "custom_domain": true
     }
   ],
+  "r2_buckets": [{ "binding": "FLORATRIUM_BUCKET", "bucket_name": "anutrium" }],
   "vars": {
     "STEAM_ID": "76561198287023366",
     "STEAM_VANITY": "anuluca",

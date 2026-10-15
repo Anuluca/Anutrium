@@ -4,6 +4,7 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { gzipSync } from 'node:zlib'
 
 import { bakeTempleLabelAsset } from './lib/bakeTempleLabelAsset.mjs'
+import { facetModelGeometry } from './lib/facetModelGeometry.mjs'
 import { updateTempleAssetRevision } from './lib/updateTempleAssetRevision.mjs'
 
 const baseURL = process.env.LUCARIO_BUILD_URL || 'http://localhost:3000'
@@ -17,12 +18,20 @@ try {
     )
     return prepareLucarioGeometry()
   })
+  const faceted = await facetModelGeometry(
+    {
+      positions: new Float32Array(model.positions),
+      normals: new Float32Array(model.normals),
+      weights: new Float32Array(model.weights),
+      nodWeights: new Float32Array(model.nodWeights),
+    },
+    Uint32Array.from(model.indices),
+    // 路卡已有较强减面，薄壳更多；保守处理以保留原开放边与头颈拓扑。
+    { symmetryPlaneX: model.center[0], targetRatio: 0.9 }
+  )
   const arrays = {
-    positions: new Float32Array(model.positions),
-    normals: new Float32Array(model.normals),
-    weights: new Float32Array(model.weights),
-    nodWeights: new Float32Array(model.nodWeights),
-    indices: new Uint16Array(model.indices),
+    ...faceted.attributes,
+    indices: Uint16Array.from(faceted.indices),
   }
   const metadata = {
     version: 1,
@@ -30,7 +39,8 @@ try {
     headPivot: model.headPivot,
     headNodPivot: model.headNodPivot,
     size: model.size,
-    stats: model.stats,
+    stats: { ...model.stats, simplifiedFaces: faceted.indices.length / 3 },
+    faceting: faceted.stats,
     attributes: {},
   }
   let offset = 0
@@ -70,7 +80,7 @@ try {
   await bakeTempleLabelAsset()
   await updateTempleAssetRevision()
   console.log(
-    `Lucario baked: ${offset} bytes, ${model.stats.simplifiedFaces} triangles`
+    `Lucario baked: ${offset} bytes, ${faceted.indices.length / 3} triangles`
   )
 } finally {
   await browser.close()

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { getCurrentInstance, onMounted, onUnmounted, ref } from 'vue'
-import { useResizeObserver } from '@vueuse/core'
+import { useMediaQuery, useResizeObserver } from '@vueuse/core'
 
 const props = withDefaults(defineProps<{ embedded?: boolean }>(), {
   embedded: false,
@@ -11,17 +11,24 @@ const isEntered = ref(false)
 const contentRoot = ref<HTMLElement | null>(null)
 const composition = ref<HTMLElement | null>(null)
 const compositionScale = ref(1)
+const isCompact = useMediaQuery('(max-width: 768px)')
 // 只缩放完整构图，文字、插画的尺寸与重叠关系仍由原 404 样式决定。
 useResizeObserver([contentRoot, composition], () => {
-  if (!props.embedded || !contentRoot.value || !composition.value) return
+  if (
+    (!props.embedded && !isCompact.value) ||
+    !contentRoot.value ||
+    !composition.value
+  )
+    return
   const root = contentRoot.value
   const inner = composition.value
   const image = inner.querySelector<HTMLElement>('.porygon')
   compositionScale.value =
-    0.8 *
+    (isCompact.value ? 1 : 0.8) *
     Math.min(
       1,
-      root.clientWidth / Math.max(inner.offsetWidth, 1),
+      (root.clientWidth - (isCompact.value ? 24 : 0)) /
+        Math.max(inner.offsetWidth, 1),
       root.clientHeight /
         Math.max(inner.offsetHeight, image?.offsetHeight ?? 0, 1)
     )
@@ -60,12 +67,14 @@ onUnmounted(() => {
     ref="contentRoot"
     class="not-found-page main-container"
     :style="
-      props.embedded ? { '--not-found-scale': compositionScale } : undefined
+      props.embedded || isCompact
+        ? { '--not-found-scale': compositionScale }
+        : undefined
     "
     :class="{
       'is-entered': isEntered,
       'is-embedded': props.embedded,
-      'no-rem': props.embedded,
+      'no-rem': props.embedded || isCompact,
     }"
   >
     <div ref="composition" class="inner">
@@ -74,8 +83,23 @@ onUnmounted(() => {
           viewBox="0 0 394 369"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
+          :style="{ '--porygon-glow': `url(#${maskId}-glow)` }"
         >
           <defs>
+            <filter
+              :id="`${maskId}-glow`"
+              x="-30%"
+              y="-30%"
+              width="160%"
+              height="160%"
+              color-interpolation-filters="sRGB"
+            >
+              <feGaussianBlur in="SourceGraphic" stdDeviation="4" />
+              <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
             <mask
               :id="maskId"
               maskUnits="userSpaceOnUse"
@@ -168,7 +192,12 @@ onUnmounted(() => {
         </svg>
       </div>
       <div class="show-text">
-        <p><span>404</span> NOT FOUND</p>
+        <div class="signal-interference" aria-hidden="true" />
+        <p>
+          <span class="signal-title">
+            <span class="signal-code">404</span> SIGNAL LOST
+          </span>
+        </p>
         <p
           class="last-show-text"
           role="button"

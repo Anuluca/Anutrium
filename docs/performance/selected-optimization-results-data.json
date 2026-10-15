@@ -1,0 +1,464 @@
+{
+  "date": "2026-10-13",
+  "implemented": [
+    3,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "constrainedItem1": "Only pause invisible / covered decoration; retain visible twinkle keyframes and filter.",
+  "method": {
+    "scene": "Desktop Chromium, Apple M4 Metal; same viewport, local fonts, blocked Typekit and HMR; instrument served responses only.",
+    "production": "Latest SSG dist mapped to existing localhost:3000 requests; fresh contexts, service worker blocked; local fonts and blocked Typekit. Raw bytes and per-file gzip estimates are not live network Brotli sizes.",
+    "caveat": "Shared workspace includes concurrent feature edits, so route resource totals are not an isolated A/B of only these patches. Matrix method is identical; call counts are not CPU utilization or multiplication counts."
+  },
+  "matrices": [
+    {
+      "state": "idle",
+      "objects": 140,
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "before": {
+        "frames": 0,
+        "matrixCalls": 0,
+        "localUpdates": 0,
+        "rendererMatrixCalls": 0,
+        "rendererLocalUpdates": 0,
+        "draws": 0
+      },
+      "after": {
+        "frames": 0,
+        "matrixCalls": 0,
+        "localUpdates": 0,
+        "rendererMatrixCalls": 0,
+        "rendererLocalUpdates": 0,
+        "draws": 0
+      }
+    },
+    {
+      "state": "focus",
+      "objects": 140,
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "before": {
+        "frames": 170,
+        "matrixCalls": 27.976470588235294,
+        "localUpdates": 7.7176470588235295,
+        "rendererMatrixCalls": 141,
+        "rendererLocalUpdates": 44,
+        "draws": 49.629411764705885
+      },
+      "after": {
+        "frames": 177,
+        "matrixCalls": 72.47457627118644,
+        "localUpdates": 5.440677966101695,
+        "rendererMatrixCalls": 0,
+        "rendererLocalUpdates": 0,
+        "draws": 50.152542372881356
+      }
+    },
+    {
+      "state": "blur",
+      "objects": 140,
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "before": {
+        "frames": 178,
+        "matrixCalls": 29,
+        "localUpdates": 8,
+        "rendererMatrixCalls": 141,
+        "rendererLocalUpdates": 44,
+        "draws": 61.19662921348315
+      },
+      "after": {
+        "frames": 178,
+        "matrixCalls": 73.64606741573034,
+        "localUpdates": 5.477528089887641,
+        "rendererMatrixCalls": 0,
+        "rendererLocalUpdates": 0,
+        "draws": 61.42696629213483
+      }
+    }
+  ],
+  "pages": [
+    {
+      "route": "/",
+      "errors": [],
+      "jsBytes": 1052019,
+      "jsGzipEstimateBytes": 313605,
+      "cssBytes": 241999,
+      "previousJsBytes": 1143895,
+      "previousCssBytes": 290117,
+      "fontUrls": 28,
+      "jsAssets": [
+        "/assets/index-a876a6e8.js",
+        "/assets/app-80cd65cb.js",
+        "/assets/index-9535ffeb.js",
+        "/assets/index-aa5ce65e.js",
+        "/assets/index-d712ee27.js",
+        "/assets/index-c2059b99.js",
+        "/assets/useIntersectionActivation-6ff7a698.js",
+        "/assets/index-bc59e227.js",
+        "/assets/templePresentation-ab333c0e.js",
+        "/assets/pointerSamples-3630a73f.js",
+        "/assets/templeCamera-8edd10a1.js",
+        "/assets/vendor-three-8b7fe157.js",
+        "/assets/templeScene-80d2c011.js",
+        "/assets/index-348c2e2e.js",
+        "/assets/OrbitControls-1615f998.js",
+        "/assets/index-3cd00572.js"
+      ],
+      "staticGraph": {
+        "route": "/",
+        "files": [
+          {
+            "url": "/assets/app-80cd65cb.js",
+            "bytes": 311814,
+            "gzipBytes": 105458,
+            "elementMarkers": []
+          },
+          {
+            "url": "/assets/index-a876a6e8.js",
+            "bytes": 19119,
+            "gzipBytes": 7200,
+            "elementMarkers": []
+          },
+          {
+            "url": "/assets/useIntersectionActivation-6ff7a698.js",
+            "bytes": 647,
+            "gzipBytes": 415,
+            "elementMarkers": []
+          },
+          {
+            "url": "/assets/index-bc59e227.js",
+            "bytes": 1211,
+            "gzipBytes": 694,
+            "elementMarkers": []
+          },
+          {
+            "url": "/assets/templePresentation-ab333c0e.js",
+            "bytes": 1477,
+            "gzipBytes": 624,
+            "elementMarkers": []
+          },
+          {
+            "url": "/assets/index-9535ffeb.js",
+            "bytes": 3382,
+            "gzipBytes": 1435,
+            "elementMarkers": []
+          },
+          {
+            "url": "/assets/pointerSamples-3630a73f.js",
+            "bytes": 945,
+            "gzipBytes": 403,
+            "elementMarkers": []
+          },
+          {
+            "url": "/assets/index-aa5ce65e.js",
+            "bytes": 8694,
+            "gzipBytes": 3548,
+            "elementMarkers": []
+          },
+          {
+            "url": "/assets/index-c2059b99.js",
+            "bytes": 27152,
+            "gzipBytes": 9017,
+            "elementMarkers": []
+          },
+          {
+            "url": "/assets/vendor-three-8b7fe157.js",
+            "bytes": 524352,
+            "gzipBytes": 129345,
+            "elementMarkers": []
+          },
+          {
+            "url": "/assets/templeCamera-8edd10a1.js",
+            "bytes": 420,
+            "gzipBytes": 282,
+            "elementMarkers": []
+          },
+          {
+            "url": "/assets/index-d712ee27.js",
+            "bytes": 11673,
+            "gzipBytes": 4827,
+            "elementMarkers": []
+          }
+        ],
+        "bytes": 910886,
+        "gzipBytes": 263248
+      }
+    },
+    {
+      "route": "/archive",
+      "errors": [],
+      "jsBytes": 1220633,
+      "jsGzipEstimateBytes": 378391,
+      "cssBytes": 395312,
+      "previousJsBytes": 1221658,
+      "previousCssBytes": 394319,
+      "fontUrls": 33,
+      "jsAssets": [
+        "/assets/app-80cd65cb.js",
+        "/assets/index-9535ffeb.js",
+        "/assets/index-a876a6e8.js",
+        "/assets/index-aa5ce65e.js",
+        "/assets/index-d712ee27.js",
+        "/assets/index-c2059b99.js",
+        "/assets/index-bc59e227.js",
+        "/assets/useIntersectionActivation-6ff7a698.js",
+        "/assets/templePresentation-ab333c0e.js",
+        "/assets/pointerSamples-3630a73f.js",
+        "/assets/vendor-three-8b7fe157.js",
+        "/assets/templeCamera-8edd10a1.js",
+        "/assets/templeScene-80d2c011.js",
+        "/assets/index-348c2e2e.js",
+        "/assets/OrbitControls-1615f998.js",
+        "/assets/index-09e2590c.js",
+        "/assets/ArchiveContent-5aafaeec.js",
+        "/assets/base-08275c68.js",
+        "/assets/index-11332f2e.js",
+        "/assets/index-6cdaa1d2.js",
+        "/assets/index-5515b8f2.js",
+        "/assets/useSectionNavigation-c8cb9abc.js",
+        "/assets/index-102e5a8c.js",
+        "/assets/index-ce977e97.js",
+        "/assets/index.vue_vue_type_script_setup_true_lang-b179564f.js",
+        "/assets/index-f822b180.js",
+        "/assets/index-269a6b74.js",
+        "/assets/archive-cb4a1625.js",
+        "/assets/index-3cd00572.js"
+      ],
+      "staticGraph": {
+        "route": "/archive",
+        "files": [
+          {
+            "url": "/assets/app-80cd65cb.js",
+            "bytes": 311814,
+            "gzipBytes": 105458,
+            "elementMarkers": []
+          },
+          {
+            "url": "/assets/index-a876a6e8.js",
+            "bytes": 19119,
+            "gzipBytes": 7200,
+            "elementMarkers": []
+          },
+          {
+            "url": "/assets/useIntersectionActivation-6ff7a698.js",
+            "bytes": 647,
+            "gzipBytes": 415,
+            "elementMarkers": []
+          },
+          {
+            "url": "/assets/index-bc59e227.js",
+            "bytes": 1211,
+            "gzipBytes": 694,
+            "elementMarkers": []
+          },
+          {
+            "url": "/assets/templePresentation-ab333c0e.js",
+            "bytes": 1477,
+            "gzipBytes": 624,
+            "elementMarkers": []
+          },
+          {
+            "url": "/assets/index-9535ffeb.js",
+            "bytes": 3382,
+            "gzipBytes": 1435,
+            "elementMarkers": []
+          },
+          {
+            "url": "/assets/pointerSamples-3630a73f.js",
+            "bytes": 945,
+            "gzipBytes": 403,
+            "elementMarkers": []
+          },
+          {
+            "url": "/assets/index-aa5ce65e.js",
+            "bytes": 8694,
+            "gzipBytes": 3548,
+            "elementMarkers": []
+          },
+          {
+            "url": "/assets/index-c2059b99.js",
+            "bytes": 27152,
+            "gzipBytes": 9017,
+            "elementMarkers": []
+          },
+          {
+            "url": "/assets/vendor-three-8b7fe157.js",
+            "bytes": 524352,
+            "gzipBytes": 129345,
+            "elementMarkers": []
+          },
+          {
+            "url": "/assets/templeCamera-8edd10a1.js",
+            "bytes": 420,
+            "gzipBytes": 282,
+            "elementMarkers": []
+          },
+          {
+            "url": "/assets/index-d712ee27.js",
+            "bytes": 11673,
+            "gzipBytes": 4827,
+            "elementMarkers": []
+          }
+        ],
+        "bytes": 910886,
+        "gzipBytes": 263248
+      }
+    },
+    {
+      "route": "/craft",
+      "errors": [],
+      "jsBytes": 995639,
+      "jsGzipEstimateBytes": 294691,
+      "cssBytes": 316439,
+      "previousJsBytes": 1050814,
+      "previousCssBytes": 345890,
+      "fontUrls": 31,
+      "jsAssets": [
+        "/assets/app-80cd65cb.js",
+        "/assets/index-ed2b550e.js",
+        "/assets/index-0b1b3992.js",
+        "/assets/index-3812253c.js",
+        "/assets/index-429ebbcf.js",
+        "/assets/index-352353ea.js",
+        "/assets/index-9535ffeb.js",
+        "/assets/index-aa5ce65e.js",
+        "/assets/index-c2059b99.js",
+        "/assets/PetTeaserLink-84d2e191.js",
+        "/assets/index-d712ee27.js",
+        "/assets/index-a8e4f3c3.js",
+        "/assets/base-08275c68.js",
+        "/assets/index-11332f2e.js",
+        "/assets/craft-15a1a512.js",
+        "/assets/pointerSamples-3630a73f.js",
+        "/assets/vendor-three-8b7fe157.js",
+        "/assets/templeCamera-8edd10a1.js",
+        "/assets/templePresentation-ab333c0e.js",
+        "/assets/OrbitControls-1615f998.js"
+      ],
+      "staticGraph": {
+        "route": "/craft",
+        "files": [
+          {
+            "url": "/assets/app-80cd65cb.js",
+            "bytes": 311814,
+            "gzipBytes": 105458,
+            "elementMarkers": []
+          },
+          {
+            "url": "/assets/index-ed2b550e.js",
+            "bytes": 3012,
+            "gzipBytes": 1476,
+            "elementMarkers": []
+          },
+          {
+            "url": "/assets/index-429ebbcf.js",
+            "bytes": 2531,
+            "gzipBytes": 1082,
+            "elementMarkers": []
+          },
+          {
+            "url": "/assets/index-352353ea.js",
+            "bytes": 5384,
+            "gzipBytes": 2418,
+            "elementMarkers": []
+          },
+          {
+            "url": "/assets/index-a8e4f3c3.js",
+            "bytes": 25979,
+            "gzipBytes": 10063,
+            "elementMarkers": []
+          },
+          {
+            "url": "/assets/base-08275c68.js",
+            "bytes": 3303,
+            "gzipBytes": 1701,
+            "elementMarkers": [
+              "ElIcon"
+            ]
+          },
+          {
+            "url": "/assets/index-11332f2e.js",
+            "bytes": 35074,
+            "gzipBytes": 13165,
+            "elementMarkers": [
+              "ElDialog"
+            ]
+          },
+          {
+            "url": "/assets/index-0b1b3992.js",
+            "bytes": 3760,
+            "gzipBytes": 1773,
+            "elementMarkers": []
+          },
+          {
+            "url": "/assets/index-3812253c.js",
+            "bytes": 2080,
+            "gzipBytes": 932,
+            "elementMarkers": []
+          },
+          {
+            "url": "/assets/index-9535ffeb.js",
+            "bytes": 3382,
+            "gzipBytes": 1435,
+            "elementMarkers": []
+          },
+          {
+            "url": "/assets/pointerSamples-3630a73f.js",
+            "bytes": 945,
+            "gzipBytes": 403,
+            "elementMarkers": []
+          },
+          {
+            "url": "/assets/index-aa5ce65e.js",
+            "bytes": 8694,
+            "gzipBytes": 3548,
+            "elementMarkers": []
+          },
+          {
+            "url": "/assets/index-c2059b99.js",
+            "bytes": 27152,
+            "gzipBytes": 9017,
+            "elementMarkers": []
+          },
+          {
+            "url": "/assets/vendor-three-8b7fe157.js",
+            "bytes": 524352,
+            "gzipBytes": 129345,
+            "elementMarkers": []
+          },
+          {
+            "url": "/assets/templeCamera-8edd10a1.js",
+            "bytes": 420,
+            "gzipBytes": 282,
+            "elementMarkers": []
+          },
+          {
+            "url": "/assets/templePresentation-ab333c0e.js",
+            "bytes": 1477,
+            "gzipBytes": 624,
+            "elementMarkers": []
+          },
+          {
+            "url": "/assets/PetTeaserLink-84d2e191.js",
+            "bytes": 3118,
+            "gzipBytes": 1510,
+            "elementMarkers": []
+          },
+          {
+            "url": "/assets/index-d712ee27.js",
+            "bytes": 11673,
+            "gzipBytes": 4827,
+            "elementMarkers": []
+          }
+        ],
+        "bytes": 974150,
+        "gzipBytes": 289059
+      }
+    }
+  ]
+}

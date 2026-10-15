@@ -63,7 +63,7 @@ const goBack = () => {
     margin: 0;
     padding: 0;
     border: 0;
-    color: #3276fe;
+    color: var(--page-theme-color, #e23456);
     background: transparent;
     font-family: 'UnboundedSans', 'Courier New', monospace;
     font-size: 17px;
@@ -79,11 +79,11 @@ const goBack = () => {
     }
 
     &:hover {
-      color: #e8284a;
+      color: var(--page-theme-color, #e23456);
       transform: translateX(-4px) scaleX(0.9);
 
       &::before {
-        color: #e8284a;
+        color: var(--page-theme-color, #e23456);
         content: '<< ';
       }
     }
@@ -100,20 +100,25 @@ const goBack = () => {
 
   h1 {
     margin: 0;
-    color: #e23456;
+    color: var(--page-theme-color, #e23456);
     font-family: 'alibaba-puhuiti', sans-serif;
     font-size: clamp(1.1rem, 2.6vw, 2.3rem);
     font-weight: 900;
     letter-spacing: -0.02em;
     line-height: 1.05;
     overflow-wrap: anywhere;
-    text-shadow: 0 0 18px rgba(226, 52, 86, 0.2);
+    text-shadow: 0 0 18px
+      color-mix(in srgb, var(--page-theme-color, #e23456) 20%, transparent);
     transition: text-shadow 0.25s ease;
   }
 
   &__subtitle {
     margin: 0;
-    color: rgba(226, 52, 86, 0.58);
+    color: color-mix(
+      in srgb,
+      var(--page-theme-color, #e23456) 58%,
+      transparent
+    );
     font-family: 'alibaba-puhuiti', sans-serif;
     font-size: clamp(0.7rem, 1.15vw, 1rem);
     font-weight: 700;
@@ -122,8 +127,10 @@ const goBack = () => {
   }
 
   &:hover h1 {
-    text-shadow: 0 0 24px rgba(226, 52, 86, 0.43),
-      0 0 60px rgba(226, 52, 86, 0.36);
+    text-shadow: 0 0 24px
+        color-mix(in srgb, var(--page-theme-color, #e23456) 43%, transparent),
+      0 0 60px
+        color-mix(in srgb, var(--page-theme-color, #e23456) 36%, transparent);
   }
 }
 

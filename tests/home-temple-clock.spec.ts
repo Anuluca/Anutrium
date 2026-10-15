@@ -78,8 +78,21 @@ test('statue clock types after model entrance, ticks without retyping, and reset
     'data-settled',
     'true'
   )
+  await page.evaluate(() => {
+    const observer = new MutationObserver(() => {
+      if (!document.querySelector('.temple-clock')) return
+      ;(window as any).clockReturnSettled = document
+        .querySelector('.temple-page')
+        ?.getAttribute('data-settled')
+      observer.disconnect()
+    })
+    observer.observe(document, { childList: true, subtree: true })
+  })
   await page.keyboard.press('Escape')
   await expect(clock).toBeVisible()
+  expect(await page.evaluate(() => (window as any).clockReturnSettled)).toBe(
+    'true'
+  )
   await expect.poll(visibleCharacters).toBe(8)
   await expect(page.locator('.temple-page')).toHaveAttribute(
     'data-settled',

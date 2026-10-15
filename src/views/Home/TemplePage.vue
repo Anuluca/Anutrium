@@ -1,28 +1,29 @@
 <script setup lang="ts">
 import {
   computed,
-  inject,
   nextTick,
   onBeforeUnmount,
   onMounted,
   onUnmounted,
   provide,
-  type Ref,
   ref,
   watch,
 } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { decorationActivityKey } from '@/composables/useDecorationActivity'
-import { pageThemeColors } from '@/config/pageThemes'
 import { templeExperience } from '@/config/templeExperience'
 import {
   templeCategories,
   templeCategoryById,
   type TempleCategoryId,
 } from '@/config/templeNavigation'
+import type { TemplePresentation } from '@/config/templePresentation'
+import { pets } from '@/locales/dynamic/pets'
+import { useFloraPets } from '@/stores/floraPets'
 import { useSiteLoading } from '@/stores/siteLoading'
 import { useTempleNavigation } from '@/stores/templeNavigation'
+import { flashActionButton } from '@/utils/flashActionButton'
 import { hasJourneyReturnState } from '@/utils/journeyReturnState'
 import { setSmoothScrollLocked } from '@/utils/smoothScroll'
 import AboutOverlay from '@/views/About/AboutOverlay.vue'
@@ -31,13 +32,15 @@ import FloraFocusLayout from './components/FloraFocusLayout.vue'
 import FocusContent from './components/FocusContent.vue'
 import TempleBackdrop from './components/TempleBackdrop.vue'
 import TempleClock from './components/TempleClock.vue'
+import TempleModuleCaption from './components/TempleModuleCaption.vue'
+import { useTempleEntry } from './composables/useTempleEntry'
 import { loadTempleFocusContent } from './focusContentLoader'
-import type { TemplePresentation } from './templePresentation'
 import type { createHomeTemple, TempleSelection } from './templeScene'
 
 const props = defineProps<{ presentation: TemplePresentation }>()
 const route = useRoute()
 const navigation = useTempleNavigation()
+const floraPets = useFloraPets()
 provide(
   decorationActivityKey,
   computed(() => !navigation.aboutOpen)
@@ -50,9 +53,11 @@ const stage = ref<HTMLElement | null>(null)
 const status = ref<'loading' | 'ready' | 'error'>('loading')
 const entranceFinished = ref(false)
 const selected = ref<TempleSelection | null>(null)
+const clockAwaitingSettle = ref(false)
 const clockVisible = computed(
   () =>
     entranceFinished.value &&
+    !clockAwaitingSettle.value &&
     (!selected.value || selected.value === 'statue') &&
     !navigation.aboutOpen
 )
@@ -98,6 +103,7 @@ const onMenuContentReady = (id: TempleCategoryId) => {
 const menu = ref<HTMLElement | null>(null)
 const workDetailTarget = ref<HTMLElement | null>(null)
 const focusContent = ref<InstanceType<typeof FocusContent> | null>(null)
+const floraFocusLayout = ref<InstanceType<typeof FloraFocusLayout> | null>(null)
 const finishMenuReveal = (event: TransitionEvent) => {
   // transform 不触发 ResizeObserver；入场结束后只测量一次，修正固定滚动进度条的位置。
   if (event.propertyName === 'transform' && menuRevealed.value)
@@ -135,9 +141,11 @@ const animateResize = async (
   await animation.finished
   return animation
 }
-const toggleExpanded = async () => {
+let expandClickFlash: Animation | undefined
+const toggleExpanded = async (event: MouseEvent) => {
   if (config.menu.layout === 'fullscreen' || resizing.value || !menu.value)
     return
+  expandClickFlash = flashActionButton(event.currentTarget as HTMLButtonElement)
   const revision = ++resizeRevision
   resizing.value = true
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -199,66 +207,17 @@ const sceneActive = computed(
 )
 watch(sceneActive, (active) => scene?.setActive(active), { flush: 'post' })
 let disposed = false
-const routeEntryActive = inject<Ref<boolean>>('route-entry-active', ref(false))
-const siteEntryActive = inject<Ref<boolean>>(
-  'site-scene-entry-active',
-  ref(true)
-)
-let cancelRouteWait: (() => void) | undefined
-let cancelEntryWait: (() => void) | undefined
-const waitForRouteTransition = () =>
-  new Promise<void>((resolve) => {
-    if (!routeEntryActive.value) return resolve()
-    // 使用路由 after-enter 信号，避免依赖固定延迟或与页面缩放过渡重叠。
-    const stop = watch(routeEntryActive, (active) => {
-      if (!active) cancelRouteWait?.()
-    })
-    cancelRouteWait = () => {
-      stop()
-      cancelRouteWait = undefined
-      resolve()
-    }
-  })
-const waitForRouteEnter = async () => {
-  await waitForRouteTransition()
-  if (disposed) return
-  if (!siteEntryActive.value) {
-    await new Promise<void>((resolve) => {
-      // 加载线开始渐隐时开放模型入场，让初始地平线接续加载线。
-      const stop = watch(siteEntryActive, (active) => {
-        if (active) cancelEntryWait?.()
-      })
-      cancelEntryWait = () => {
-        stop()
-        cancelEntryWait = undefined
-        resolve()
-      }
-    })
-  }
-  if (!disposed && !siteLoading.presentationReady) {
-    await new Promise<void>((resolve) => {
-      const stop = watch(
-        () => siteLoading.presentationReady,
-        (ready) => {
-          if (ready) cancelEntryWait?.()
-        }
-      )
-      cancelEntryWait = () => {
-        stop()
-        cancelEntryWait = undefined
-        resolve()
-      }
-    })
-  }
-}
+const { siteEntryActive, waitForRouteEnter } = useTempleEntry()
 
 // 空白点击优先收起侧栏详情，第二次点击才退出作品集聚焦。
 const closeInlineDetail = () =>
-  config.id === 'desktop' &&
-  navigation.selected === 'archive' &&
-  !navigation.expanded &&
-  !navigation.aboutOpen &&
-  (focusContent.value?.closeInlineDetail() ?? false)
+  (selected.value === 'sprigatito' &&
+    (floraFocusLayout.value?.closeExpandedAlbum() ?? false)) ||
+  (config.id === 'desktop' &&
+    navigation.selected === 'archive' &&
+    !navigation.expanded &&
+    !navigation.aboutOpen &&
+    (focusContent.value?.closeInlineDetail() ?? false))
 
 const dismissMenuBackground = (event: MouseEvent) => {
   if (!settled.value || resizing.value || navigation.aboutOpen) return
@@ -288,15 +247,53 @@ watch(
     if (navigation.ready) scene?.select(navigation.requested)
   }
 )
-watch(selected, () => {
-  const themeCategory = navigation.selected
-  scene?.setThemeColor(
-    selected.value === 'sprigatito'
-      ? pageThemeColors.SPRIGATITO
-      : (themeCategory && templeCategoryById.get(themeCategory)?.themeColor) ||
-          templeExperience.themeColor
+watch(
+  [selected, () => floraPets.activePet.themeColor],
+  () => {
+    const themeCategory =
+      selected.value === 'statue' || selected.value === 'sprigatito'
+        ? null
+        : selected.value
+    scene?.setThemeColor(
+      selected.value === 'sprigatito'
+        ? floraPets.activePet.themeColor
+        : (themeCategory &&
+            templeCategoryById.get(themeCategory)?.themeColor) ||
+            templeExperience.themeColor
+    )
+  },
+  // 首帧绘制前完成主题初始化；不能等待默认 watcher 队列再由红色补间。
+  { flush: 'sync' }
+)
+
+let petSelectionRevision = 0
+const selectPet = async (id: string) => {
+  const pet = pets.find((item) => item.id === id)
+  if (
+    !pet ||
+    !scene ||
+    (pet.id === floraPets.activePetId && !floraPets.loadingPetId)
   )
-})
+    return
+  const revision = ++petSelectionRevision
+  floraPets.loadingPetId = pet.id
+  floraPets.error = ''
+  try {
+    if (
+      (await scene.setPet(pet)) &&
+      !disposed &&
+      revision === petSelectionRevision
+    )
+      floraPets.activePetId = pet.id
+  } catch (error) {
+    if (!disposed && revision === petSelectionRevision) {
+      floraPets.error = '宠物模型加载失败，请重试'
+      console.error('Pet model load failed', error)
+    }
+  } finally {
+    if (revision === petSelectionRevision) floraPets.loadingPetId = null
+  }
+}
 
 onMounted(async () => {
   navigation.setInlineDetailCloser(closeInlineDetail)
@@ -355,6 +352,7 @@ onMounted(async () => {
           })
         },
         select: (id) => {
+          clockAwaitingSettle.value = true
           finishMenuExit()
           cancelResize()
           selected.value = id
@@ -375,6 +373,7 @@ onMounted(async () => {
               ? null
               : selected.value
           settled.value = true
+          clockAwaitingSettle.value = false
         },
         error: (error) => {
           loadingTask?.finish('error')
@@ -384,7 +383,8 @@ onMounted(async () => {
       },
       config,
       templeExperience,
-      navigation.simpleEntrance || hasJourneyReturnState()
+      navigation.simpleEntrance || hasJourneyReturnState(),
+      floraPets.activePet
     )
     scene.setActive(sceneActive.value)
   } catch (error) {
@@ -397,12 +397,13 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
+  expandClickFlash?.cancel()
   disposed = true
+  petSelectionRevision++
+  floraPets.loadingPetId = null
   cancelMenuReveal()
   cancelResize()
   navigation.reset()
-  cancelRouteWait?.()
-  cancelEntryWait?.()
   loadingTask?.finish('cancelled')
   scene?.dispose()
   finishMenuExit()
@@ -435,9 +436,16 @@ onUnmounted(() => {
       class="lucario-stage temple-stage"
       :aria-busy="status === 'loading'"
     >
-      <FloraFocusLayout v-if="selected === 'sprigatito' && settled" />
+      <FloraFocusLayout
+        v-if="selected === 'sprigatito' && settled"
+        ref="floraFocusLayout"
+        :mobile="config.id === 'mobile'"
+        @select-pet="selectPet"
+      />
       <TempleBackdrop />
-      <TempleClock v-if="clockVisible" />
+      <Transition name="temple-clock-reveal" appear>
+        <TempleClock v-if="clockVisible" />
+      </Transition>
     </div>
     <div class="temple-obelisks">
       <button
@@ -508,6 +516,21 @@ onUnmounted(() => {
           />
         </div>
       </section>
+    </Transition>
+    <Transition name="temple-caption" appear>
+      <TempleModuleCaption
+        v-if="
+          category &&
+          config.menu.layout === 'sidebar' &&
+          settled &&
+          menuRevealed &&
+          !navigation.expanded &&
+          !resizing &&
+          !navigation.aboutOpen
+        "
+        :key="category.id"
+        :category="category.id"
+      />
     </Transition>
     <AboutOverlay />
     <p v-if="status === 'error'" class="lucario-status" role="alert">

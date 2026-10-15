@@ -1,3 +1,4 @@
+import { createCachedModelLoader } from './cachedModelLoader'
 import modelRevision from './lucarioModelRevision.generated.json'
 import { readCompressedModelBuffer } from './readCompressedModelBuffer'
 
@@ -27,56 +28,26 @@ export interface IslandModelAsset {
   environment: IslandEnvironment
   radiance: ArrayBuffer
 }
-let cachedModel:
-  | Promise<{
-      metadata: IslandModelMetadata
-      buffer: ArrayBuffer
-      environment: IslandEnvironment
-      radiance: ArrayBuffer
-    }>
-  | undefined
-
-const fetchAsset = async (path: string, signal: AbortSignal) => {
-  const response = await fetch(`/models/${path}?v=${modelRevision.revision}`, {
-    signal,
-  })
-  if (!response.ok) throw new Error(`Lucario asset ${path}: ${response.status}`)
-  return response
-}
-
 // 同一会话只下载一次；每次进入页面创建独立 GPU 资源，离场后可以安全释放。
-export function loadIslandLucarioModel() {
-  if (!cachedModel) {
-    const controller = new AbortController()
-    // 同时约束响应头和响应体读取；失败后清空缓存，返回首页时可以重试。
-    const timeout = setTimeout(() => controller.abort(), 30000)
-    cachedModel = Promise.all([
-      fetchAsset('lucario-island.json', controller.signal).then(
+export const loadIslandLucarioModel = createCachedModelLoader<IslandModelAsset>(
+  modelRevision.revision,
+  'Lucario asset',
+  async (fetchAsset) => {
+    const [metadata, buffer, environment, radiance] = await Promise.all([
+      fetchAsset('lucario-island.json').then(
         (response) => response.json() as Promise<IslandModelMetadata>
       ),
-      fetchAsset('lucario-island.bin', controller.signal).then((response) =>
+      fetchAsset('lucario-island.bin').then((response) =>
         response.arrayBuffer()
       ),
-      fetchAsset('lucario-studio.json', controller.signal).then(
+      fetchAsset('lucario-studio.json').then(
         (response) => response.json() as Promise<IslandEnvironment>
       ),
-      fetchAsset('lucario-studio.bin.gz', controller.signal).then(
-        readCompressedModelBuffer
-      ),
+      fetchAsset('lucario-studio.bin.gz').then(readCompressedModelBuffer),
     ])
-      .then(([metadata, buffer, environment, radiance]) => {
-        if (metadata.version !== 1)
-          throw new Error('Unsupported Lucario geometry')
-        if (radiance.byteLength !== environment.width * environment.height * 8)
-          throw new Error('Invalid Lucario environment')
-        return { metadata, buffer, environment, radiance }
-      })
-      .catch((error) => {
-        controller.abort()
-        cachedModel = undefined
-        throw error
-      })
-      .finally(() => clearTimeout(timeout))
+    if (metadata.version !== 1) throw new Error('Unsupported Lucario geometry')
+    if (radiance.byteLength !== environment.width * environment.height * 8)
+      throw new Error('Invalid Lucario environment')
+    return { metadata, buffer, environment, radiance }
   }
-  return cachedModel
-}
+)

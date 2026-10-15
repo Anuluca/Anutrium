@@ -12,7 +12,7 @@
     >
       {{ item.time || '' }}
     </span>
-    <span class="photo-info__location">
+    <span v-if="item.location" class="photo-info__location">
       <Location
         v-if="item.location"
         class="photo-info__location-icon"
@@ -44,7 +44,6 @@ withDefaults(
 </script>
 
 <style lang="less" scoped>
-@red: #e23456;
 @mono: 'UnboundedSans', 'Courier New', monospace;
 @cjk: 'alibaba-puhuiti', sans-serif;
 
@@ -74,25 +73,30 @@ withDefaults(
   }
 
   &__device {
-    color: @red;
+    color: var(--page-theme-color, #e23456);
     font-family: @mono;
     font-weight: 800;
     text-align: left;
   }
 
   &__time {
-    padding-right: var(--photo-info-time-padding) !important;
+    font-family: @cjk;
+    font-weight: 900;
+    padding-right: 0 !important;
 
     &--divided {
+      padding-right: var(--photo-info-time-padding) !important;
       background: linear-gradient(
-          rgba(117, 18, 38, 0.9),
-          rgba(117, 18, 38, 0.9)
+          color-mix(in srgb, var(--page-theme-color, #e23456) 52%, transparent),
+          color-mix(in srgb, var(--page-theme-color, #e23456) 52%, transparent)
         )
         right center / 8px 1px no-repeat;
     }
   }
 
   &__location {
+    font-family: @cjk;
+    font-weight: 900;
     display: inline-flex;
     align-items: center;
     justify-content: flex-end;
@@ -111,7 +115,7 @@ withDefaults(
     flex: 0 0 auto;
     width: 14px;
     height: 14px;
-    color: @red;
+    color: var(--page-theme-color, #e23456);
   }
 }
 

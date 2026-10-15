@@ -1,4 +1,4 @@
-import { expect, type Page, test } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 
 const PAGE_LOAD_TIMEOUT = 20_000
 const MAX_GEOMETRY_DELTA = 1
@@ -19,17 +19,6 @@ type VueAppElement = HTMLElement & {
       }
     }
   }
-}
-
-const navigateWithRouter = async (page: Page, path: string) => {
-  await page.evaluate(async (targetPath) => {
-    const app = document.querySelector<VueAppElement>('#app')
-    await app?.__vue_app__?.config.globalProperties.$router.push(targetPath)
-  }, path)
-
-  await expect
-    .poll(() => new URL(page.url()).pathname, { timeout: PAGE_LOAD_TIMEOUT })
-    .toBe(path)
 }
 
 test('every route explicitly configures a page layout', async ({ page }) => {
@@ -291,15 +280,15 @@ test('home visual backgrounds span the viewport', async ({ page }) => {
 
 for (const transition of [
   {
-    from: '/archive',
-    to: '/flanerie',
-    selector: '.archives-page',
-    layoutClass: 'page-layout--sub',
+    from: '/flanerie',
+    to: '/flanerie/changsha?from=home',
+    selector: '.temple-page',
+    layoutClass: 'page-layout--main',
   },
   {
-    from: '/flanerie',
+    from: '/flanerie/changsha',
     to: '/archive',
-    selector: '.flanerie-page',
+    selector: '.flr-page',
     layoutClass: 'page-layout--sub',
   },
 ]) {
@@ -310,15 +299,23 @@ for (const transition of [
     await expect(page.locator(transition.selector)).toBeVisible({
       timeout: PAGE_LOAD_TIMEOUT,
     })
+    await expect(page.locator('.entry-overlay-container')).toHaveCount(0, {
+      timeout: PAGE_LOAD_TIMEOUT,
+    })
 
     const samples = await page.evaluate(
       async ({ layoutClass, selector, targetPath }) => {
         const leavingPage = document.querySelector<HTMLElement>(selector)!
         const initial = leavingPage.getBoundingClientRect()
+        const initialContainer = document
+          .querySelector('.router-container')!
+          .getBoundingClientRect()
         const geometrySamples: Array<{
           left: number
           top: number
           layoutRetained: boolean
+          containerLeft: number
+          containerTop: number
         }> = []
         const app = document.querySelector<VueAppElement>('#app')
 
@@ -332,9 +329,14 @@ for (const transition of [
               return
             }
             const bounds = currentPage.getBoundingClientRect()
+            const containerBounds = document
+              .querySelector('.router-container')!
+              .getBoundingClientRect()
             geometrySamples.push({
               left: bounds.left - initial.left,
               top: bounds.top - initial.top,
+              containerLeft: containerBounds.left - initialContainer.left,
+              containerTop: containerBounds.top - initialContainer.top,
               layoutRetained: document
                 .querySelector('.router-container')!
                 .classList.contains(layoutClass),
@@ -353,11 +355,19 @@ for (const transition of [
       }
     )
 
-    await navigateWithRouter(page, transition.to)
+    await expect(page.locator('.route-curtain')).toHaveCount(0, {
+      timeout: PAGE_LOAD_TIMEOUT,
+    })
     expect(samples.length).toBeGreaterThan(0)
     expect(samples.every((sample) => sample.layoutRetained)).toBe(true)
     expect(
       Math.max(...samples.map((sample) => Math.abs(sample.left)))
+    ).toBeLessThanOrEqual(MAX_GEOMETRY_DELTA)
+    expect(
+      Math.max(...samples.map((sample) => Math.abs(sample.containerLeft)))
+    ).toBeLessThanOrEqual(MAX_GEOMETRY_DELTA)
+    expect(
+      Math.max(...samples.map((sample) => Math.abs(sample.containerTop)))
     ).toBeLessThanOrEqual(MAX_GEOMETRY_DELTA)
     expect(
       Math.max(...samples.map((sample) => Math.abs(sample.top)))

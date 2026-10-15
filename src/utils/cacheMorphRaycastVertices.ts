@@ -4,13 +4,23 @@ import type { Mesh } from 'three'
 export function cacheMorphRaycastVertices(mesh: Mesh) {
   // 包围盒包含两个姿态；射线先排除球体包围范围内、实际模型范围外的空白区域。
   if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox()
-  const count = mesh.geometry.getAttribute('position').count
-  const positions = new Float64Array(count * 3)
-  const valid = new Uint8Array(count)
+  let cachedGeometry = mesh.geometry
+  let positions = new Float64Array(
+    cachedGeometry.getAttribute('position').count * 3
+  )
+  let valid = new Uint8Array(positions.length / 3)
   let influences: number[] = []
   const raycast = mesh.raycast
   const getVertexPosition = mesh.getVertexPosition
   mesh.raycast = function (raycaster, intersections) {
+    // 切换宠物时重置缓存，防止沿用另一种拓扑的顶点或包围盒。
+    if (cachedGeometry !== this.geometry) {
+      cachedGeometry = this.geometry
+      positions = new Float64Array(
+        cachedGeometry.getAttribute('position').count * 3
+      )
+      valid = new Uint8Array(positions.length / 3)
+    }
     const current = this.morphTargetInfluences || []
     if (
       current.length !== influences.length ||

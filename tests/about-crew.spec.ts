@@ -64,6 +64,14 @@ test('crew panel preserves page position, fits its container and restores the br
     'STAFF & CREDITS'
   )
   await expect(panel.locator('.staff-credits__role')).toHaveCount(8)
+  await expect(panel.locator('.staff-credits__model-name')).toHaveText([
+    '路卡利欧',
+    '新叶喵',
+    '大狼犬',
+  ])
+  await expect(page.locator('.about-page')).toContainText(
+    '大狼犬（Mightyena）素材'
+  )
   expect((await brand.boundingBox())!.x).toBeLessThan(brandBefore.x - 10)
   expect((await crystal.boundingBox())!.x).toBeLessThan(crystalBefore.x - 10)
   expectPagePositionToMatch(
@@ -474,11 +482,26 @@ test('credits enter after window expansion, autoplay and pause over text', async
   await scroller.evaluate(
     (element) => (element.scrollTop = element.scrollHeight)
   )
+  const credits = page.locator('#about-crew-content')
+  await expect(credits).toHaveClass(/is-loop-fading-out/, { timeout: 4000 })
+  await expect
+    .poll(
+      () =>
+        credits.evaluate((element) =>
+          Number(getComputedStyle(element).opacity)
+        ),
+      {
+        intervals: [30],
+      }
+    )
+    .toBeLessThan(0.05)
   await expect
     .poll(() => scroller.evaluate((element) => element.scrollTop), {
       timeout: 4000,
     })
     .toBeLessThan(5)
+  await expect(credits).not.toHaveClass(/is-loop-fading-out/)
+  await expect(credits).toHaveCSS('opacity', '1')
   await page.locator('.is-crew-panel .update-program__collapse').click()
   await expect(page.locator('#about-crew-content')).toHaveCount(0)
   await trigger.click()
@@ -509,6 +532,14 @@ test('passion windows reuse the page progress bar and hide native scrollbars', a
     const scroller = panel.locator('.update-program__body-content')
     const progress = panel.locator('.page-scroll-progress.is-embedded')
     await expect(progress).toHaveCount(1)
+    await progress.evaluate((element) => {
+      element.style.setProperty('--page-theme-color', '#00ff00')
+    })
+    expect(
+      await progress.evaluate(
+        (element) => getComputedStyle(element, '::after').backgroundColor
+      )
+    ).toBe('rgb(226, 52, 86)')
     expect(
       await scroller.evaluate(
         (element) => getComputedStyle(element).scrollbarWidth
