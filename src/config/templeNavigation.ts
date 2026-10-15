@@ -75,16 +75,23 @@ export const templeNavigation = [
 export type TempleNavigationId = (typeof templeNavigation)[number]['id']
 
 // 模块入口与子页面归属共用映射，直接访问和返回首页使用同一规则。
+// 内部 island 标识属于 CREATIVE；公开 /island 入口对应中央 ISLAND 模型。
 export const templeModulePaths: Record<TempleCategoryId, string> = {
   archive: '/archive',
   flanerie: '/flanerie',
-  island: '/island',
+  island: '/creative',
   pokeyard: '/pokeyard',
 }
-const moduleByPath = new Map(
-  templeCategories.map((item) => [templeModulePaths[item.id], item.id])
-)
-export const templeModuleAtPath = (path: string): TempleCategoryId | null =>
+export type TempleEntryId = Exclude<TempleNavigationId, 'about'>
+const moduleByPath = new Map<string, TempleEntryId>([
+  ...templeCategories.map((item): [string, TempleEntryId] => [
+    templeModulePaths[item.id],
+    item.id,
+  ]),
+  ['/island', 'statue'],
+  ['/floratrium', 'sprigatito'],
+])
+export const templeModuleAtPath = (path: string): TempleEntryId | null =>
   moduleByPath.get(path.replace(/\/+$/, '')) ?? null
 
 export const templeParentModule = (path: string): TempleCategoryId | null => {

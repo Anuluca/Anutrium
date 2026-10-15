@@ -211,6 +211,8 @@ export default defineConfig({
       '/imageBase64',
       '/about',
       '/island',
+      '/floratrium',
+      '/creative',
       '/island/photography',
       '/island/merch-photography',
       ...merchPhotographyDetailRoutes,

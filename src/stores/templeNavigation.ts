@@ -4,6 +4,7 @@ import { defineStore } from 'pinia'
 import {
   templeCategoryById,
   type TempleCategoryId,
+  type TempleEntryId,
   type TempleNavigationId,
 } from '@/config/templeNavigation'
 
@@ -22,21 +23,20 @@ export const useTempleNavigation = defineStore('temple-navigation', () => {
   }
   const closeInlineDetail = () => inlineDetailCloser?.() ?? false
 
-  const entryModule = ref<TempleCategoryId | null>(null)
+  const entryModule = ref<TempleEntryId | null>(null)
   // 返回时场景尚未就绪，先用路由已解析的模块保持页头和星盘布局。
-  const activeModule = computed(
-    () =>
-      selected.value ||
-      (!ready.value
-        ? revision.value
-          ? requested.value === 'statue' || requested.value === 'sprigatito'
-            ? null
-            : requested.value
-          : entryModule.value
-        : null)
-  )
+  const activeModule = computed(() => {
+    if (selected.value) return selected.value
+    if (ready.value) return null
+    const pending = revision.value ? requested.value : entryModule.value
+    return pending === 'statue' || pending === 'sprigatito' ? null : pending
+  })
   const activeSelection = computed(() =>
-    companionFocused.value
+    !ready.value &&
+    !revision.value &&
+    (entryModule.value === 'statue' || entryModule.value === 'sprigatito')
+      ? entryModule.value
+      : companionFocused.value
       ? 'sprigatito'
       : statueFocused.value
       ? 'statue'

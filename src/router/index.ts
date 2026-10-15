@@ -225,7 +225,7 @@ export const routes: RouteConfig[] = [
   },
 
   {
-    path: '/:module(archive|flanerie|island|pokeyard)?',
+    path: '/:module(archive|flanerie|island|pokeyard|creative|floratrium)?',
     alias: ['/home2'],
     name: 'HOME',
     component: () => import('@/views/Home/index.vue'),
