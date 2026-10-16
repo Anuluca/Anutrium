@@ -19,6 +19,11 @@ const cancelPendingSamples = () => {
 const dispatch = (event: PointerEvent) => {
   const now = performance.now()
   for (const subscriber of subscribers) {
+    // 不限频的指针订阅直接分发，避免每个高频事件反复写入待发状态。
+    if (subscriber.interval <= 0) {
+      subscriber.callback(event)
+      continue
+    }
     subscriber.pending = event
     if (now - subscriber.last >= subscriber.interval) {
       if (subscriber.timer !== undefined) clearTimeout(subscriber.timer)
@@ -39,6 +44,10 @@ const dispatch = (event: PointerEvent) => {
   }
 }
 
+const handleVisibilityChange = () => {
+  if (document.hidden) cancelPendingSamples()
+}
+
 export function subscribePointerSamples(
   callback: (event: PointerEvent) => void,
   interval = 0
@@ -47,6 +56,7 @@ export function subscribePointerSamples(
   if (!subscribers.size) {
     window.addEventListener('pointermove', dispatch, { passive: true })
     window.addEventListener('blur', cancelPendingSamples)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
     document.documentElement.addEventListener(
       'pointerleave',
       cancelPendingSamples
@@ -55,11 +65,13 @@ export function subscribePointerSamples(
   subscribers.add(subscriber)
   return () => {
     if (subscriber.timer !== undefined) clearTimeout(subscriber.timer)
+    subscriber.timer = undefined
     subscriber.pending = undefined
     subscribers.delete(subscriber)
     if (!subscribers.size) {
       window.removeEventListener('pointermove', dispatch)
       window.removeEventListener('blur', cancelPendingSamples)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
       document.documentElement.removeEventListener(
         'pointerleave',
         cancelPendingSamples

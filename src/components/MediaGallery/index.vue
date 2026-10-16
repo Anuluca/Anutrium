@@ -26,24 +26,33 @@
           :class="{ 'is-loading': !loadedMediaUrls.has(media.url) }"
         >
           <div class="media-gallery__stage">
-            <video
-              v-if="isVideoUrl(media.url)"
-              :src="nearbyVideoUrls.has(media.url) ? media.url : undefined"
-              :data-video-src="media.url"
-              :aria-label="getLabel(media)"
-              controls
-              loop
-              muted
-              playsinline
-              preload="none"
-              @loadedmetadata="markVideoLoaded($event, media.url)"
-            />
             <button
-              v-else
+              v-if="isVideoUrl(media.url)"
               class="media-gallery__open"
               type="button"
               :aria-label="getLabel(media)"
               @click="openViewer(media.url)"
+            >
+              <video
+                :src="nearbyVideoUrls.has(media.url) ? media.url : undefined"
+                :data-video-src="media.url"
+                :aria-label="getLabel(media)"
+                loop
+                muted
+                playsinline
+                preload="none"
+                @loadedmetadata="markVideoLoaded($event, media.url)"
+              />
+            </button>
+            <button
+              v-else
+              class="media-gallery__open media-gallery__open--image"
+              type="button"
+              :aria-label="getLabel(media)"
+              @click="openViewer(media.url)"
+              @pointerenter="startCincoHover"
+              @pointerleave="leaveCincoHover"
+              @pointercancel="stopCincoHover"
             >
               <picture>
                 <source
@@ -76,7 +85,7 @@
 
     <SafeImageViewer
       v-if="showViewer"
-      :url-list="imageUrls"
+      :url-list="previewUrls"
       :initial-index="currentImageIndex"
       @close="showViewer = false"
     />
@@ -87,6 +96,7 @@
 import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue'
 
 import SafeImageViewer from '@/components/SafeImageViewer/index.vue'
+import { useImageCincoHover } from '@/composables/useImageCincoHover'
 import { useIntersectionActivation } from '@/composables/useIntersectionActivation'
 import {
   getCardMobileThumbnailUrl,
@@ -125,6 +135,11 @@ const props = withDefaults(
 
 const VIDEO_FILE_PATTERN = /\.(?:mov|mp4|webm|m4v|ogv)(?:[?#].*)?$/i
 const galleryRef = ref<HTMLElement | null>(null)
+const {
+  start: startCincoHover,
+  leave: leaveCincoHover,
+  stop: stopCincoHover,
+} = useImageCincoHover()
 const loadedMediaUrls = reactive(new Set<string>())
 const mediaAspectRatios = reactive(new Map<string, number>())
 const nearbyVideoUrls = reactive(new Set<string>())
@@ -136,18 +151,16 @@ let isGalleryVisible = false
 const isVideoUrl = (url: string) => VIDEO_FILE_PATTERN.test(url)
 const mediaIndex = computed(() => {
   const urls = new Set<string>()
-  const images: string[] = []
   const thumbnails = new Map<string, { desktop: string; mobile: string }>()
   for (const media of props.items) {
     urls.add(media.url)
     if (isVideoUrl(media.url)) continue
-    images.push(media.url)
     thumbnails.set(media.url, {
       desktop: getCardThumbnailUrl(media.url),
       mobile: getCardMobileThumbnailUrl(media.url),
     })
   }
-  return { urls, images, thumbnails }
+  return { urls, thumbnails }
 })
 // 加载状态与宽高比会多次触发渲染，缩略图 URL 只在媒体列表变化时解析。
 const getMediaThumbnailUrl = (media: GalleryMedia) =>
@@ -169,7 +182,7 @@ const getEntranceStyle = (index: number) =>
         )}ms`,
       }
     : undefined
-const imageUrls = computed(() => mediaIndex.value.images)
+const previewUrls = computed(() => props.items.map((media) => media.url))
 const currentMediaUrls = computed(() => mediaIndex.value.urls)
 
 const markMediaLoaded = (url: string) => {
@@ -199,7 +212,7 @@ const markVideoLoaded = (event: Event, url: string) => {
 }
 
 const openViewer = (url: string) => {
-  const imageIndex = imageUrls.value.indexOf(url)
+  const imageIndex = previewUrls.value.indexOf(url)
   if (imageIndex < 0) return
   currentImageIndex.value = imageIndex
   showViewer.value = true
@@ -259,7 +272,12 @@ const playVisibleVideo = async (video: HTMLVideoElement) => {
 
   nearbyVideoUrls.add(source)
   await nextTick()
-  if (!visibleVideoElements.has(video) || !video.isConnected) return
+  if (
+    showViewer.value ||
+    !visibleVideoElements.has(video) ||
+    !video.isConnected
+  )
+    return
   await video.play().catch(() => undefined)
 }
 
@@ -314,6 +332,7 @@ const { refresh: observeVisibleVideos } = useIntersectionActivation(
 watch(
   () => props.items,
   async () => {
+    stopCincoHover()
     showViewer.value = false
     const currentUrls = currentMediaUrls.value
     // 列表切换会复用同 URL 的图片节点，不能清空其状态并等待不会重发的 load 事件。
@@ -345,6 +364,14 @@ watch(
     observeVisibleVideos()
   }
 )
+
+watch(showViewer, (open) => {
+  if (open) stopCincoHover()
+  getVideoElements()?.forEach((video) => {
+    if (open) video.pause()
+    else if (visibleVideoElements.has(video)) void playVisibleVideo(video)
+  })
+})
 
 onBeforeUnmount(() => {
   getVideoElements()?.forEach((video) => video.pause())
@@ -477,16 +504,17 @@ onBeforeUnmount(() => {
     overflow: hidden;
 
     &::before {
+      // 参照 Motion Skeleton Shimmer：固定占位区域，仅横向移动明暗渐变。
       background: linear-gradient(
-        105deg,
-        color-mix(in srgb, var(--page-theme-color, #e23456) 4%, transparent) 30%,
-        color-mix(in srgb, var(--page-theme-color, #e23456) 12%, transparent)
-          50%,
-        color-mix(in srgb, var(--page-theme-color, #e23456) 4%, transparent) 70%
+        90deg,
+        rgb(255 255 255 / 6%) 25%,
+        rgb(255 255 255 / 12%) 50%,
+        rgb(255 255 255 / 6%) 75%
       );
+      background-size: 200% 100%;
+      background-position: -200% 0;
       opacity: 1;
-      transform: translateX(-100%);
-      animation: media-placeholder-shimmer 1.6s ease-in-out infinite;
+      animation: media-placeholder-shimmer 1.5s ease-in-out infinite;
     }
 
     .media-gallery__stage {
@@ -525,8 +553,6 @@ onBeforeUnmount(() => {
 
   img {
     object-position: center;
-    filter: saturate(0.88) contrast(1.06) brightness(0.82);
-    transition: opacity 0.28s ease, filter 0.28s ease, transform 0.28s ease;
   }
 
   video {
@@ -537,6 +563,7 @@ onBeforeUnmount(() => {
 }
 
 .media-gallery__open {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -553,18 +580,22 @@ onBeforeUnmount(() => {
     display: contents;
   }
 
-  &:hover img,
-  &:focus-visible img {
-    filter: saturate(1.12) contrast(1.1) brightness(0.94);
-    transform: scale(1.015);
+  :deep(.media-gallery__cinco-surface) {
+    position: absolute;
+    z-index: 1;
+    display: grid;
+    overflow: hidden;
+    pointer-events: none;
   }
-}
 
-.media-gallery--preserve-image-colors {
-  .media-gallery__stage img,
-  .media-gallery__open:hover img,
-  .media-gallery__open:focus-visible img {
-    filter: none;
+  :deep(.media-gallery__cinco-layer) {
+    position: relative;
+    grid-area: 1 / 1 / -1 / -1;
+    width: 100%;
+    height: 100%;
+    background-position: 50% 50%;
+    background-repeat: no-repeat;
+    background-size: cover;
   }
 }
 
@@ -579,8 +610,12 @@ onBeforeUnmount(() => {
 }
 
 @keyframes media-placeholder-shimmer {
+  from {
+    background-position: -200% 0;
+  }
+
   to {
-    transform: translateX(100%);
+    background-position: 200% 0;
   }
 }
 
@@ -722,6 +757,11 @@ onBeforeUnmount(() => {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .media-gallery__frame.is-loading::before {
+    animation: none;
+    background-position: 50% 0;
+  }
+
   .media-gallery--staggered:not(.is-entered) .media-gallery__frame,
   .media-gallery--staggered:not(.is-entered) .media-gallery__info {
     opacity: 1;

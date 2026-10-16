@@ -1771,7 +1771,10 @@ export function createHomeTemple(
         .multiplyScalar(
           1 - (environmentHover.value - sprigatitoHover.value) * 0.58
         )
-      surface.envMapIntensity = 1.8 + sprigatitoHover.value * 0.8
+      surface.envMapIntensity = 2.5 + sprigatitoHover.value * 0.8
+      // 给宠物暗面补足基础亮度，颜色跟随主题和悬停状态，避免纯金属背光时近乎全黑。
+      surface.emissive.copy(surface.color)
+      surface.emissiveIntensity = 0.08
       surface.clearcoat = 0.45 + sprigatitoHover.value * 0.25
       reflectionAppearanceChanged = true
     }

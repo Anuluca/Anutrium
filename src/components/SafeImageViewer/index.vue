@@ -1,6 +1,6 @@
 <template>
   <ElImageViewer
-    :url-list="urlList"
+    :url-list="viewerUrls"
     :initial-index="initialIndex"
     :z-index="zIndex"
     :hide-on-click-modal="hideOnClickModal"
@@ -8,10 +8,32 @@
     @close="handleClose"
     @switch="handleSwitch"
   >
+    <div
+      v-if="isImageLoading && !activeVideo"
+      ref="loadingPlaceholder"
+      class="safe-image-viewer__placeholder"
+      role="status"
+      aria-busy="true"
+      :aria-label="locale === 'en' ? 'Loading image' : '图片加载中'"
+    />
+    <div v-if="activeVideo" class="safe-image-viewer__video-stage">
+      <video
+        :key="activeVideo"
+        ref="videoPlayer"
+        :src="activeVideo"
+        :aria-label="locale === 'en' ? 'Video preview' : '视频预览'"
+        controls
+        autoplay
+        muted
+        playsinline
+        preload="metadata"
+        @keydown="handleVideoKeydown"
+      />
+    </div>
     <div ref="corners" class="safe-image-viewer__corners" aria-hidden="true" />
     <template #toolbar="{ actions, reset }">
       <button
-        v-for="tool in tools"
+        v-for="tool in activeVideo ? [] : tools"
         :key="tool.action"
         type="button"
         class="safe-image-viewer__tool"
@@ -77,8 +99,9 @@ const emit = defineEmits<{
   close: []
 }>()
 const { locale } = useI18n()
+const ACTION_FLASH_DURATION = 180
 const onToolClick = (event: MouseEvent, action: () => void) => {
-  flashActionButton(event.currentTarget as HTMLElement, 180)
+  flashActionButton(event.currentTarget as HTMLElement, ACTION_FLASH_DURATION)
   action()
 }
 const corners = ref<HTMLElement | null>(null)
@@ -90,11 +113,56 @@ let mutationObserver: MutationObserver | undefined
 let resizeObserver: ResizeObserver | undefined
 let navigationObserver: ResizeObserver | undefined
 let unbindTouch: (() => void) | undefined
-let activeIndex = props.initialIndex
+const activeIndex = ref(props.initialIndex)
+const videoPlayer = ref<HTMLVideoElement | null>(null)
+const isImageLoading = ref(true)
+const loadingPlaceholder = ref<HTMLElement | null>(null)
+const isVideoUrl = (url: string) =>
+  /\.(?:mov|mp4|webm|m4v|ogv)(?:[?#].*)?$/i.test(url)
+const activeVideo = computed(() => {
+  const url = props.urlList[activeIndex.value]
+  return url && isVideoUrl(url) ? url : null
+})
+// 图片组件继续负责导航；视频使用独立播放器，避免把视频 URL 当作图片请求。
+const videoPlaceholder =
+  'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="1" height="1"/%3E'
+const viewerUrls = computed(() =>
+  props.urlList.map((url) => (isVideoUrl(url) ? videoPlaceholder : url))
+)
+const handleVideoKeydown = (event: KeyboardEvent) => {
+  if (event.key !== 'Escape') event.stopPropagation()
+}
 let requestedDirection = 0
 let switchVersion = 0
 let outgoingImage: HTMLImageElement | null = null
 const switchAnimations = new Set<Animation>()
+const navigationFlashes = new Map<HTMLElement, Animation>()
+const flashNavigation = (nav: HTMLElement) => {
+  if (nav.classList.contains('is-disabled')) return
+  const fill = nav.querySelector<HTMLElement>('.safe-image-viewer__nav-fill')
+  if (!fill) return
+  navigationFlashes.get(fill)?.cancel()
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+  const background = getComputedStyle(fill).backgroundImage
+  // 只闪烁带扫描线和文字镂空的填充层，保留按钮原有轮廓。
+  const animation = fill.animate(
+    [
+      { background: '#1dcba9', offset: 0 },
+      { background, offset: 0.25 },
+      { background: '#1dcba9', offset: 0.5 },
+      { background, offset: 0.75 },
+      { background, offset: 1 },
+    ].map((frame) => ({ ...frame, easing: 'steps(1, end)' })),
+    { duration: ACTION_FLASH_DURATION }
+  )
+  navigationFlashes.set(fill, animation)
+  const clear = () => {
+    if (navigationFlashes.get(fill) === animation)
+      navigationFlashes.delete(fill)
+  }
+  animation.onfinish = clear
+  animation.oncancel = clear
+}
 const clearSwitchAnimations = () => {
   for (const animation of switchAnimations) animation.cancel()
   switchAnimations.clear()
@@ -106,8 +174,15 @@ const recordSwitchDirection = (event: Event) => {
     if (event.key === 'ArrowLeft') requestedDirection = -1
     if (event.key === 'ArrowRight') requestedDirection = 1
   } else if (event.target instanceof Element) {
-    if (event.target.closest('.el-image-viewer__prev')) requestedDirection = -1
-    if (event.target.closest('.el-image-viewer__next')) requestedDirection = 1
+    const nav = event.target.closest<HTMLElement>(
+      '.el-image-viewer__prev, .el-image-viewer__next'
+    )
+    if (nav) {
+      requestedDirection = nav.classList.contains('el-image-viewer__prev')
+        ? -1
+        : 1
+      flashNavigation(nav)
+    }
   }
 }
 const handleSwitch = async (index: number) => {
@@ -116,10 +191,17 @@ const handleSwitch = async (index: number) => {
   const version = ++switchVersion
   const direction =
     requestedDirection ||
-    (index === (activeIndex + 1) % props.urlList.length ? 1 : -1)
+    (index === (activeIndex.value + 1) % props.urlList.length ? 1 : -1)
   requestedDirection = 0
-  activeIndex = index
+  videoPlayer.value?.pause()
+  activeIndex.value = index
+  isImageLoading.value = !activeVideo.value
+  void nextTick(syncCorners)
   clearSwitchAnimations()
+  if (activeVideo.value) {
+    syncCorners()
+    return
+  }
   if (!wrapper || window.matchMedia('(prefers-reduced-motion: reduce)').matches)
     return
   const oldImage = wrapper.querySelector<HTMLImageElement>(
@@ -148,11 +230,6 @@ const handleSwitch = async (index: number) => {
     '.el-image-viewer__img'
   )
   if (!incoming) return
-  try {
-    await incoming.decode()
-  } catch {
-    /* 图片加载失败时保留组件原有错误展示。 */
-  }
   if (
     version !== switchVersion ||
     !wrapper?.isConnected ||
@@ -160,9 +237,11 @@ const handleSwitch = async (index: number) => {
   )
     return
   syncCorners()
+  const target = isImageLoading.value ? loadingPlaceholder.value : incoming
+  if (!target) return
   const vertical = window.matchMedia('(max-width: 768px)').matches
   const distance =
-    Math.min(vertical ? incoming.offsetHeight : incoming.offsetWidth, 160) *
+    Math.min(vertical ? target.offsetHeight : target.offsetWidth, 160) *
     direction
   const offset = (value: number) => (vertical ? `0 ${value}px` : `${value}px 0`)
   // 使用独立 translate 动画，避免覆盖缩放、旋转、拖动使用的 transform。
@@ -186,12 +265,13 @@ const handleSwitch = async (index: number) => {
       { translate: '0 0', opacity: 1 },
       { translate: offset(-distance), opacity: 0 },
     ]).then(() => previous.remove())
-  if (corners.value)
+  if (!isImageLoading.value && corners.value)
     void animate(corners.value, [
       { translate: offset(distance), opacity: 0 },
       { translate: '0 0', opacity: 1 },
     ])
-  void animate(incoming, [
+  // 加载时先让占位层入场，图片加载完成后直接显示。
+  void animate(target, [
     { translate: offset(distance), opacity: 0 },
     { translate: '0 0', opacity: 1 },
   ])
@@ -253,6 +333,7 @@ const syncNavigationCutouts = () => {
 let closeTimer: ReturnType<typeof setTimeout> | undefined
 const handleClose = () => {
   if (closeTimer !== undefined) return
+  videoPlayer.value?.pause()
   ++switchVersion
   clearSwitchAnimations()
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -264,6 +345,13 @@ const handleClose = () => {
   closeTimer = setTimeout(() => emit('close'), 450)
 }
 const markNavigationHovered = (event: PointerEvent) => {
+  if (
+    event.pointerType === 'touch' ||
+    !window.matchMedia(
+      '(min-width: 769px) and (hover: hover) and (pointer: fine)'
+    ).matches
+  )
+    return
   if (!(event.target instanceof Element)) return
   const nav = event.target.closest(
     '.el-image-viewer__prev, .el-image-viewer__next'
@@ -272,12 +360,7 @@ const markNavigationHovered = (event: PointerEvent) => {
   nav.classList.add('has-hovered')
   if (event.relatedTarget instanceof Node && nav.contains(event.relatedTarget))
     return
-  if (
-    window.matchMedia(
-      '(min-width: 769px) and (hover: hover) and (pointer: fine)'
-    ).matches
-  )
-    wrapper?.classList.add('is-hover-dimmed')
+  wrapper?.classList.add('is-hover-dimmed')
 }
 const clearNavigationHover = (event: PointerEvent) => {
   if (!(event.target instanceof Element)) return
@@ -291,8 +374,15 @@ const clearNavigationHover = (event: PointerEvent) => {
     wrapper?.classList.remove('is-hover-dimmed')
 }
 const syncCorners = () => {
+  if (activeVideo.value) {
+    isImageLoading.value = false
+    if (corners.value) corners.value.style.display = 'none'
+    return
+  }
   const current =
     wrapper?.querySelector<HTMLImageElement>('.el-image-viewer__img') ?? null
+  // complete 在加载成功和失败时都会变为 true，错误状态交还原有预览组件。
+  isImageLoading.value = !current || !current.complete
   if (current !== image) {
     resizeObserver?.disconnect()
     image = current
@@ -425,6 +515,7 @@ onMounted(async () => {
     attributeFilter: ['style', 'src'],
   })
   wrapper.addEventListener('load', syncCorners, true)
+  wrapper.addEventListener('error', syncCorners, true)
   wrapper.addEventListener('pointerover', markNavigationHovered)
   wrapper.addEventListener('pointerout', clearNavigationHover)
   wrapper.addEventListener('click', recordSwitchDirection, true)
@@ -433,6 +524,9 @@ onMounted(async () => {
   syncCorners()
 })
 onBeforeUnmount(() => {
+  videoPlayer.value?.pause()
+  for (const animation of navigationFlashes.values()) animation.cancel()
+  navigationFlashes.clear()
   unbindTouch?.()
   ++switchVersion
   clearSwitchAnimations()
@@ -441,6 +535,7 @@ onBeforeUnmount(() => {
   resizeObserver?.disconnect()
   navigationObserver?.disconnect()
   wrapper?.removeEventListener('load', syncCorners, true)
+  wrapper?.removeEventListener('error', syncCorners, true)
   wrapper?.removeEventListener('pointerover', markNavigationHovered)
   wrapper?.removeEventListener('pointerout', clearNavigationHover)
   wrapper?.removeEventListener('click', recordSwitchDirection, true)
@@ -480,3 +575,90 @@ const tools = computed(
 
 useOverlayScrollLock('safe-image-viewer', () => true)
 </script>
+
+<style lang="less">
+.safe-image-viewer__placeholder {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(72vw, 960px);
+  height: min(66vh, 640px);
+  transform: translate(-50%, -50%);
+  background: linear-gradient(
+    90deg,
+    rgb(255 255 255 / 6%) 25%,
+    rgb(255 255 255 / 12%) 50%,
+    rgb(255 255 255 / 6%) 75%
+  );
+  background-size: 200% 100%;
+  animation: viewer-placeholder-shimmer 1.5s ease-in-out infinite;
+  pointer-events: none;
+}
+.el-image-viewer__wrapper:has(.safe-image-viewer__placeholder) {
+  .el-image-viewer__img,
+  .safe-image-viewer__corners {
+    visibility: hidden;
+  }
+}
+@keyframes viewer-placeholder-shimmer {
+  from {
+    background-position: -200% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .safe-image-viewer__placeholder {
+    animation: none;
+  }
+}
+@media (max-width: 768px) {
+  .safe-image-viewer__placeholder {
+    width: calc(100% - 64px);
+    height: min(60vh, 440px);
+  }
+}
+
+.el-image-viewer__wrapper:has(.safe-image-viewer__video-stage) {
+  .el-image-viewer__canvas,
+  .el-image-viewer__actions {
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+.safe-image-viewer__video-stage {
+  position: absolute;
+  inset: clamp(48px, 8vh, 88px) clamp(48px, 10vw, 160px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  video {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+    background: #000;
+    pointer-events: auto;
+  }
+}
+.el-image-viewer__wrapper.is-crt-closing .safe-image-viewer__video-stage {
+  pointer-events: none;
+  video {
+    pointer-events: none;
+    animation: anutriumCrtOff 420ms cubic-bezier(0.2, 1, 0.22, 1) both;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .el-image-viewer__wrapper.is-crt-closing
+    .safe-image-viewer__video-stage
+    video {
+    animation: none;
+  }
+}
+@media (max-width: 768px) {
+  .safe-image-viewer__video-stage {
+    inset: 80px 16px;
+  }
+}
+</style>

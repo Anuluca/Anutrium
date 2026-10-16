@@ -12,6 +12,8 @@
   ],
   "r2_buckets": [{ "binding": "FLORATRIUM_BUCKET", "bucket_name": "anutrium" }],
   "vars": {
+    "GA4_PROPERTY_ID": "353411419",
+    "GA4_STREAM_ID": "4620543849",
     "STEAM_ID": "76561198287023366",
     "STEAM_VANITY": "anuluca",
     "GITHUB_USERNAME": "Anuluca",
@@ -20,7 +22,7 @@
     "GITHUB_CACHE_TTL_SECONDS": "21600"
   },
   "secrets": {
-    "required": ["STEAM_API_KEY", "GITHUB_TOKEN"]
+    "required": ["STEAM_API_KEY", "GITHUB_TOKEN", "GA4_SERVICE_ACCOUNT_JSON"]
   },
   "observability": {
     "enabled": true,

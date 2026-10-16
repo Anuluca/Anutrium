@@ -718,6 +718,12 @@ export const installRouterGuards = (router: Router) => {
     }
 
     if (typeof document !== 'undefined') {
+      if (
+        from.matched.length > 0 &&
+        to.path !== from.path &&
+        !(to.name === 'HOME' && from.name === 'HOME')
+      )
+        void coverRouteCurtain(to.fullPath)
       if (from.matched.length > 0 && to.fullPath !== from.fullPath) {
         finishRouteCursorLoading()
         cursorState().startLoading(ROUTE_CURSOR_LOADING_SOURCE)

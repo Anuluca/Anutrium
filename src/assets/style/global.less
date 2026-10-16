@@ -218,16 +218,19 @@ body:has(.flora-focus-layout--mobile.is-album-expanded) {
       pointer-events: none;
       content: '';
     }
-    &.has-hovered::before,
-    &.has-hovered::after {
-      animation: viewer-corner-out 160ms step-end both;
-    }
-    &:hover {
-      opacity: 1;
-      &::before,
-      &::after {
+    @media (min-width: 769px) and (hover: hover) and (pointer: fine) {
+      &.has-hovered::before,
+      &.has-hovered::after {
+        animation: viewer-corner-out 160ms step-end both;
+      }
+      &:hover {
+        --viewer-accent: #e23456;
         opacity: 1;
-        animation: viewer-corner-in 160ms step-end both;
+        &::before,
+        &::after {
+          opacity: 1;
+          animation: viewer-corner-in 160ms step-end both;
+        }
       }
     }
   }
@@ -293,11 +296,13 @@ body:has(.flora-focus-layout--mobile.is-album-expanded) {
       transform: rotate(-45deg) scale(2);
       transition: transform 300ms ease;
     }
-    &:hover {
-      background: var(--viewer-accent);
-      color: #000;
-      .el-icon {
-        transform: rotate(45deg);
+    @media (min-width: 769px) and (hover: hover) and (pointer: fine) {
+      &:hover {
+        background: var(--viewer-accent);
+        color: #000;
+        .el-icon {
+          transform: rotate(45deg);
+        }
       }
     }
   }
@@ -361,7 +366,7 @@ body:has(.flora-focus-layout--mobile.is-album-expanded) {
     color: var(--viewer-accent);
     font-size: 22px;
     cursor: pointer;
-    @media (hover: hover) and (pointer: fine) {
+    @media (min-width: 769px) and (hover: hover) and (pointer: fine) {
       &:hover {
         background: #e23456;
         color: #000;
@@ -377,17 +382,39 @@ body:has(.flora-focus-layout--mobile.is-album-expanded) {
   }
 }
 @media (min-width: 769px) and (hover: hover) and (pointer: fine) {
+  .el-image-viewer__wrapper {
+    .el-image-viewer__prev,
+    .el-image-viewer__next {
+      transition: opacity 200ms ease, background-color 200ms ease,
+        scale 280ms cubic-bezier(0.22, 1, 0.36, 1);
+
+      &:hover {
+        scale: 1.08 1;
+      }
+    }
+
+    .el-image-viewer__prev {
+      transform-origin: left center;
+    }
+
+    .el-image-viewer__next {
+      transform-origin: right center;
+    }
+  }
+
   .el-image-viewer__wrapper.is-hover-dimmed .el-image-viewer__img {
     filter: brightness(0.5);
   }
 }
-.el-image-viewer__wrapper:has(
-    .el-image-viewer__prev:hover,
-    .el-image-viewer__next:hover
-  )
-  .safe-image-viewer__corners {
-  opacity: 0;
-  animation: viewer-corner-out 160ms step-end both;
+@media (min-width: 769px) and (hover: hover) and (pointer: fine) {
+  .el-image-viewer__wrapper:has(
+      .el-image-viewer__prev:hover,
+      .el-image-viewer__next:hover
+    )
+    .safe-image-viewer__corners {
+    opacity: 0;
+    animation: viewer-corner-out 160ms step-end both;
+  }
 }
 @keyframes viewer-corner-in {
   0%,
@@ -631,6 +658,7 @@ body:has(.flora-focus-layout--mobile.is-album-expanded) {
   .el-image-viewer__wrapper .el-image-viewer__prev,
   .el-image-viewer__wrapper .el-image-viewer__next {
     animation: none;
+    transition-duration: 0s;
     &.has-hovered::before,
     &.has-hovered::after,
     &:hover::before,

@@ -13,7 +13,7 @@ import {
 } from 'vue'
 import { useHead } from '@vueuse/head'
 import { useI18n } from 'vue-i18n'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { visualState } from './stores'
 import { useSiteLoading } from '@/stores/siteLoading'
 import { useTempleNavigation } from '@/stores/templeNavigation'
@@ -23,7 +23,10 @@ import {
   syncSeoMeta,
   type SeoLocale,
 } from '@/router'
-import { installExternalLinkTracking } from '@/utils/analytics'
+import {
+  installExternalLinkTracking,
+  installGoogleAnalytics,
+} from '@/utils/analytics'
 import { startSmoothScroll, stopSmoothScroll } from '@/utils/smoothScroll'
 import { ensureLightThemeStyles } from '@/utils/themeStyles'
 import { scheduleTypekitLoad } from '@/utils/typekit'
@@ -46,8 +49,10 @@ const MobileExperienceAlert = defineAsyncComponent(
 
 const visualStateStore = visualState()
 const route = useRoute()
+const router = useRouter()
 const { locale, tm } = useI18n()
 let removeExternalLinkTracking: (() => void) | null = null
+let removeGoogleAnalytics: (() => void) | null = null
 let resizeRafId: number | null = null
 let pageContentRemountTimer: number | null = null
 let cancelScheduledTypekitLoad: (() => void) | null = null
@@ -205,6 +210,7 @@ const unmountPageContent = () => {
 }
 
 onMounted(async () => {
+  removeGoogleAnalytics = installGoogleAnalytics(router)
   // SSR 保留页脚节点，客户端挂载后再移至 body，避开移动端页面容器的层叠上下文。
   footerTeleportReady.value = true
   setRootFontSize()
@@ -236,6 +242,7 @@ onUnmounted(() => {
   }
   cancelScheduledTypekitLoad?.()
   removeExternalLinkTracking?.()
+  removeGoogleAnalytics?.()
   stopSmoothScroll()
 })
 

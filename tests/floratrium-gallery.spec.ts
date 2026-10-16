@@ -895,3 +895,39 @@ test('mobile album keeps its horizontal bounds while expanding and collapsing', 
     }
   }
 })
+
+test('album blank space and title toggle expansion while photo clicks keep preview behavior', async ({
+  page,
+}) => {
+  test.setTimeout(60000)
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.routeWebSocket('ws://localhost:3000/**', (socket) =>
+    socket.close()
+  )
+  await page.route('**/__floratrium/media?**', (route) =>
+    route.fulfill({
+      json: {
+        items: petAlbums.huahua.defaults,
+        nextCursor: null,
+        totalPages: 1,
+      },
+    })
+  )
+  await page.goto('/floratrium', { waitUntil: 'domcontentloaded' })
+  const gallery = page.locator('.flora-album-gallery')
+  await expect(gallery).toBeVisible({ timeout: 30000 })
+  await gallery.click({ position: { x: 4, y: 4 } })
+  await expect(gallery).toHaveClass(/is-expanded/)
+  await gallery.click({ position: { x: 4, y: 4 } })
+  await expect(gallery).not.toHaveClass(/is-expanded/)
+  await gallery.locator('.flora-album-gallery__title button').click()
+  await expect(gallery).toHaveClass(/is-expanded/)
+  // 手机展开后标题随边框移出视口，直接触发按钮验证同一收起逻辑。
+  await gallery
+    .locator('.flora-album-gallery__title button')
+    .evaluate((button: HTMLButtonElement) => button.click())
+  await expect(gallery).not.toHaveClass(/is-expanded/)
+  await gallery.locator('.flora-album-strip__photo').first().click()
+  await expect(page.locator('.el-image-viewer__wrapper')).toBeVisible()
+  await expect(gallery).not.toHaveClass(/is-expanded/)
+})

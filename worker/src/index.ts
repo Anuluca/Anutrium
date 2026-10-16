@@ -1,3 +1,4 @@
+import { handleAnalytics } from './analytics'
 import { handleFloraMedia } from './floratrium'
 import { fetchGitHubContributions } from './github'
 import {
@@ -79,6 +80,16 @@ const worker: ExportedHandler<Env> = {
     if (url.pathname === '/health') {
       return withCors(jsonResponse({ ok: true }), origin, allowedOrigins)
     }
+
+    if (
+      url.pathname === '/analytics/summary' ||
+      url.pathname === '/analytics/realtime'
+    )
+      return withCors(
+        await handleAnalytics(request, env, ctx),
+        origin,
+        allowedOrigins
+      )
 
     if (url.pathname === '/floratrium/media')
       return withCors(await handleFloraMedia(url, env), origin, allowedOrigins)

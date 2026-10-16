@@ -119,6 +119,12 @@ const toggle = (event: MouseEvent) => {
   clickFlash = flashActionButton(event.currentTarget as HTMLButtonElement)
   expanded.value = !expanded.value
 }
+const toggleFromSurface = (event: MouseEvent) => {
+  if (!(event.target instanceof Element)) return
+  // 照片和现有按钮继续执行各自操作；非交互空白区域切换相册展开状态。
+  if (event.target.closest('button, a, input, video, [role="button"]')) return
+  expanded.value = !expanded.value
+}
 const closeExpanded = () => {
   if (!expanded.value) return false
   expanded.value = false
@@ -135,6 +141,7 @@ onBeforeUnmount(() => {
     class="flora-album-gallery no-rem"
     :class="{
       'is-expanded': expanded,
+      'is-clickable': true,
       'has-toggled': hasToggled,
       'flora-album-gallery--mobile': mobile,
     }"
@@ -143,7 +150,7 @@ onBeforeUnmount(() => {
       '--album-title-space': `${titleSpace}px`,
     }"
     :aria-label="title"
-    @click.stop
+    @click.stop="toggleFromSurface"
   >
     <div
       :key="String(expanded)"
@@ -156,7 +163,15 @@ onBeforeUnmount(() => {
         :style="{ '--blade-index': blade - 1 }"
       />
     </div>
-    <h2 ref="titleElement" class="flora-album-gallery__title">{{ title }}</h2>
+    <h2 ref="titleElement" class="flora-album-gallery__title">
+      <button
+        type="button"
+        :aria-expanded="expanded"
+        @click.stop="expanded = !expanded"
+      >
+        {{ title }}
+      </button>
+    </h2>
     <FloraAlbumStrip v-if="!expanded" :items="items" :title="title" />
     <div
       v-else
@@ -308,7 +323,7 @@ onBeforeUnmount(() => {
     right: 0;
     left: 0;
     height: 32px;
-    transition: background-color 850ms ease;
+    transition: background-color 850ms ease, opacity 200ms ease;
     background: color-mix(in srgb, var(--flora-theme-color) 60%, transparent);
     -webkit-mask-image: var(--album-overflow-mask);
     mask-image: var(--album-overflow-mask);
@@ -346,14 +361,25 @@ onBeforeUnmount(() => {
     padding: 12px;
   }
   .flora-album-gallery__title {
+    -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
     position: absolute;
     bottom: calc(100% - 4px);
     left: 0;
     max-width: 100%;
     margin: 0;
     z-index: 2;
-    pointer-events: none;
+    pointer-events: auto;
+    transition: opacity 200ms ease;
     font: 400 60px / 1.2 'UnboundedSans', sans-serif;
+    button {
+      padding: 0;
+      font: inherit;
+      text-align: left;
+      &:disabled {
+        opacity: 1;
+      }
+    }
   }
   .flora-album-gallery__decoration {
     position: absolute;
@@ -376,6 +402,7 @@ onBeforeUnmount(() => {
     display: grid;
     grid-template-rows: repeat(12, minmax(0, 1fr));
     opacity: 0.6;
+    transition: opacity 200ms ease;
     -webkit-mask-image: repeating-linear-gradient(
       to bottom,
       transparent 0 1px,
@@ -391,6 +418,30 @@ onBeforeUnmount(() => {
       margin-bottom: -1px;
       background: var(--album-background);
       transform-origin: center bottom;
+    }
+  }
+  @media (hover: hover) and (pointer: fine) {
+    &:hover:not(
+        :has(
+            button:hover,
+            a:hover,
+            input:hover,
+            video:hover,
+            [role='button']:hover
+          )
+      ) {
+      &::before {
+        opacity: 0.8;
+      }
+      .flora-album-gallery__background {
+        opacity: 0.48;
+      }
+      &.is-expanded .flora-album-gallery__background {
+        opacity: 0.32;
+      }
+    }
+    .flora-album-gallery__title:hover {
+      opacity: 0.8;
     }
   }
   &.has-toggled .flora-album-gallery__background span {
@@ -416,6 +467,10 @@ onBeforeUnmount(() => {
     display: flex;
     align-items: center;
     gap: 8px;
+    button:hover {
+      background: #e23456;
+      color: #000;
+    }
   }
   .flora-album-gallery__page-arrow {
     display: inline-block;
@@ -461,7 +516,7 @@ onBeforeUnmount(() => {
     align-items: center;
     justify-content: center;
     padding: 10px 14px;
-    overflow: hidden;
+    overflow: visible;
     background: #000;
     color: #fff;
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
@@ -469,6 +524,18 @@ onBeforeUnmount(() => {
     backdrop-filter: blur(10px);
     font: 400 36px / 1 'Anton', sans-serif;
     letter-spacing: 0;
+    &::before {
+      position: absolute;
+      top: 0;
+      right: 100%;
+      bottom: 0;
+      width: 24px;
+      background: inherit;
+      -webkit-mask-image: linear-gradient(to right, transparent, #000);
+      mask-image: linear-gradient(to right, transparent, #000);
+      pointer-events: none;
+      content: '';
+    }
     &:hover,
     &:focus-visible {
       background: #e23456;

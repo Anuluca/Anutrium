@@ -4,24 +4,23 @@
     ref="cursorElement"
     class="cursor-position"
     :class="{
-      'is-hidden': shouldHideCursor || !hasPointerPosition || !isPointerInside,
+      'is-hidden':
+        shouldHideCursor ||
+        !hasPointerPosition ||
+        !isPointerInside ||
+        !isPageVisible,
       'is-loading': isLoading,
     }"
   >
     <div class="cursor-scale" :class="{ 'is-clicked': isClicked }">
-      <div class="cursor-motion">
-        <div
-          class="cursor-shape"
-          :class="{
-            'is-active':
-              isHovering ||
-              (!shouldHideCursor && cursorStateStore.isInteractive),
-          }"
-        >
-          <svg class="cursor-body" viewBox="-24 -24 48 48" aria-hidden="true">
-            <circle cx="0" cy="0" r="12" />
-          </svg>
-        </div>
+      <div
+        class="cursor-shape"
+        :class="{
+          'is-active': isInteractiveCursor,
+          'is-moving': isMoving && !isLoading && !isInteractiveCursor,
+        }"
+      >
+        <div class="cursor-body" />
       </div>
     </div>
   </div>
@@ -48,11 +47,12 @@ const INTERACTIVE_CURSOR_SELECTOR =
 const FINE_POINTER_MEDIA = '(hover: hover) and (pointer: fine)'
 
 const cursorElement = ref(null)
-const mouse = { x: 0, y: 0 }
+const targetPosition = { x: 0, y: 0 }
 const follower = { x: 0, y: 0 }
 
 const isHovering = ref(false)
 const isClicked = ref(false)
+const isMoving = ref(false)
 const shouldHideCursor = ref(false)
 const isPageVisible = ref(true)
 const hasPointerPosition = ref(false)
@@ -60,16 +60,13 @@ const hasFinePointer = ref(false)
 const isPointerInside = ref(false)
 
 // 以 60Hz 下每帧追赶 30% 为基准，按时间衰减统一不同刷新率的惯性感受。
-const referenceFrameDuration = 1000 / 60
 const referenceEase = 0.3
+const followDecay = -Math.log1p(-referenceEase) / (1000 / 60)
 const settleThreshold = 0.35
 let animationFrameId = null
 let lastFrameTime = null
-let hasPointerListeners = false
 let unsubscribePointerSamples = null
 let finePointerQuery = null
-let latestPointerX = 0
-let latestPointerY = 0
 let hasPendingPointerMove = false
 let shouldSnapToPointer = true
 
@@ -77,13 +74,20 @@ const shouldTrackCursor = computed(() => {
   return props.enabled && hasFinePointer.value
 })
 const isLoading = computed(() => cursorStateStore.isLoading)
+const isInteractiveCursor = computed(
+  () =>
+    isHovering.value ||
+    (!shouldHideCursor.value && cursorStateStore.isInteractive)
+)
 
 const shouldAnimateCursor = computed(
   () => shouldTrackCursor.value && isPageVisible.value
 )
 const isCustomCursorReady = computed(
   () =>
-    shouldTrackCursor.value && hasPointerPosition.value && isPointerInside.value
+    shouldAnimateCursor.value &&
+    hasPointerPosition.value &&
+    isPointerInside.value
 )
 
 const syncNativeCursor = () => {
@@ -93,30 +97,30 @@ const syncNativeCursor = () => {
   )
 }
 
-const checkShouldHideCursor = (target) => {
-  return target instanceof Element && !!target.closest(HIDDEN_CURSOR_SELECTOR)
-}
-
 const syncCursorTarget = (target) => {
-  const nextShouldHideCursor = checkShouldHideCursor(target)
-  if (shouldHideCursor.value !== nextShouldHideCursor) {
-    shouldHideCursor.value = nextShouldHideCursor
-  }
-
-  const nextIsHovering =
-    !nextShouldHideCursor &&
-    target instanceof Element &&
-    !!target.closest(INTERACTIVE_CURSOR_SELECTOR)
-  if (isHovering.value !== nextIsHovering) {
-    isHovering.value = nextIsHovering
+  const element = target instanceof Element ? target : null
+  shouldHideCursor.value = !!element?.closest(HIDDEN_CURSOR_SELECTOR)
+  isHovering.value =
+    !shouldHideCursor.value && !!element?.closest(INTERACTIVE_CURSOR_SELECTOR)
+  if (shouldHideCursor.value) {
+    shouldSnapToPointer = true
+    stopRender()
   }
 }
 
 const onPointerMove = (event) => {
-  if (!shouldAnimateCursor.value) return
+  if (!shouldAnimateCursor.value || shouldHideCursor.value) return
+  if (
+    hasPointerPosition.value &&
+    !shouldSnapToPointer &&
+    event.clientX === targetPosition.x &&
+    event.clientY === targetPosition.y
+  )
+    return
 
-  latestPointerX = event.clientX
-  latestPointerY = event.clientY
+  // 高频输入只更新最新目标；移动状态和 DOM 写入统一在下一帧处理。
+  targetPosition.x = event.clientX
+  targetPosition.y = event.clientY
   hasPendingPointerMove = true
   startRender()
 }
@@ -124,15 +128,14 @@ const onPointerMove = (event) => {
 const onPointerOver = (event) => {
   if (!shouldAnimateCursor.value) return
   if (!isPointerInside.value) isPointerInside.value = true
+  const wasHidden = shouldHideCursor.value
   syncCursorTarget(event.target)
+  if (wasHidden || shouldSnapToPointer) onPointerMove(event)
 }
 
 const onPointerOut = (event) => {
-  if (!event.relatedTarget) {
-    onPointerLeaveViewport()
-    return
-  }
-  syncCursorTarget(event.relatedTarget)
+  // 元素间的切换由下一次 pointerover 统一识别，避免重复 closest 查询。
+  if (!event.relatedTarget) onPointerLeaveViewport()
 }
 
 const onPointerLeaveViewport = () => {
@@ -140,13 +143,6 @@ const onPointerLeaveViewport = () => {
   shouldSnapToPointer = true
   isPointerInside.value = false
   isClicked.value = false
-  stopRender()
-}
-
-const onWindowBlur = () => {
-  isPointerInside.value = false
-  hasPendingPointerMove = false
-  shouldSnapToPointer = true
   stopRender()
 }
 
@@ -166,6 +162,7 @@ const startRender = () => {
 
 const stopRender = () => {
   lastFrameTime = null
+  isMoving.value = false
   if (animationFrameId === null) return
   cancelAnimationFrame(animationFrameId)
   animationFrameId = null
@@ -183,54 +180,46 @@ const render = (timestamp) => {
 
   if (hasPendingPointerMove) {
     const shouldSnap = shouldSnapToPointer || !hasPointerPosition.value
-    mouse.x = latestPointerX
-    mouse.y = latestPointerY
     hasPendingPointerMove = false
     isPointerInside.value = true
 
     if (shouldSnap) {
-      follower.x = mouse.x
-      follower.y = mouse.y
+      follower.x = targetPosition.x
+      follower.y = targetPosition.y
       hasPointerPosition.value = true
       shouldSnapToPointer = false
-      syncCursorPosition()
+    } else {
+      isMoving.value = true
     }
   }
 
-  const dx = mouse.x - follower.x
-  const dy = mouse.y - follower.y
+  const dx = targetPosition.x - follower.x
+  const dy = targetPosition.y - follower.y
+  const isSettled =
+    Math.abs(dx) < settleThreshold && Math.abs(dy) < settleThreshold
 
-  const ease = 1 - Math.pow(1 - referenceEase, elapsed / referenceFrameDuration)
-  const moveX = dx * ease
-  const moveY = dy * ease
-  follower.x += moveX
-  follower.y += moveY
-  syncCursorPosition()
-
-  if (Math.abs(dx) < settleThreshold && Math.abs(dy) < settleThreshold) {
-    follower.x = mouse.x
-    follower.y = mouse.y
-    syncCursorPosition()
+  if (isSettled) {
+    isMoving.value = false
+    follower.x = targetPosition.x
+    follower.y = targetPosition.y
     lastFrameTime = null
-    return
+  } else {
+    const ease = -Math.expm1(-followDecay * elapsed)
+    follower.x += dx * ease
+    follower.y += dy * ease
   }
 
-  animationFrameId = requestAnimationFrame(render)
+  // 初次定位、追赶和收敛共用一次写入，每帧最多修改一次位置样式。
+  syncCursorPosition()
+  if (!isSettled) animationFrameId = requestAnimationFrame(render)
 }
 
 const handleVisibilityChange = () => {
   isPageVisible.value = document.visibilityState !== 'hidden'
-  if (!isPageVisible.value) {
-    onPointerLeaveViewport()
-    stopRender()
-    return
-  }
-
-  startRender()
 }
 
 const addPointerListeners = () => {
-  if (hasPointerListeners) return
+  if (unsubscribePointerSamples) return
 
   unsubscribePointerSamples = subscribePointerSamples(onPointerMove)
   window.addEventListener('pointerover', onPointerOver, { passive: true })
@@ -238,47 +227,36 @@ const addPointerListeners = () => {
   window.addEventListener('pointerdown', onPointerDown, true)
   window.addEventListener('pointerup', onPointerUp, true)
   window.addEventListener('pointercancel', onPointerUp, true)
-  document.documentElement.addEventListener(
-    'mouseleave',
-    onPointerLeaveViewport
-  )
-  window.addEventListener('blur', onWindowBlur)
-  hasPointerListeners = true
+  window.addEventListener('blur', onPointerLeaveViewport)
 }
 
 const removePointerListeners = () => {
-  if (!hasPointerListeners) return
+  if (!unsubscribePointerSamples) {
+    stopRender()
+    return
+  }
 
-  unsubscribePointerSamples?.()
+  unsubscribePointerSamples()
   unsubscribePointerSamples = null
   window.removeEventListener('pointerover', onPointerOver)
   window.removeEventListener('pointerout', onPointerOut)
   window.removeEventListener('pointerdown', onPointerDown, true)
   window.removeEventListener('pointerup', onPointerUp, true)
   window.removeEventListener('pointercancel', onPointerUp, true)
-  document.documentElement.removeEventListener(
-    'mouseleave',
-    onPointerLeaveViewport
-  )
-  window.removeEventListener('blur', onWindowBlur)
-  hasPointerListeners = false
+  window.removeEventListener('blur', onPointerLeaveViewport)
   isHovering.value = false
-  isClicked.value = false
   shouldHideCursor.value = false
   hasPointerPosition.value = false
-  isPointerInside.value = false
-  hasPendingPointerMove = false
-  shouldSnapToPointer = true
+  onPointerLeaveViewport()
 }
 
 const syncPointerListeners = () => {
-  if (shouldTrackCursor.value) {
+  if (shouldAnimateCursor.value) {
     addPointerListeners()
     return
   }
 
   removePointerListeners()
-  stopRender()
 }
 
 const syncFinePointer = () => {
@@ -299,20 +277,12 @@ onUnmounted(() => {
   finePointerQuery?.removeEventListener('change', syncFinePointer)
   document.removeEventListener('visibilitychange', handleVisibilityChange)
   removePointerListeners()
-  stopRender()
   document.documentElement.classList.remove('custom-cursor-enabled')
-})
-
-watch(shouldTrackCursor, () => {
-  syncPointerListeners()
 })
 
 watch(isCustomCursorReady, syncNativeCursor, { flush: 'sync' })
 
-watch(shouldAnimateCursor, (canAnimate) => {
-  if (canAnimate) startRender()
-  else stopRender()
-})
+watch(shouldAnimateCursor, syncPointerListeners)
 </script>
 
 <style>
@@ -352,6 +322,7 @@ watch(shouldAnimateCursor, (canAnimate) => {
   pointer-events: none;
   z-index: 20000;
 
+  mix-blend-mode: difference;
   transition: opacity 0.2s ease;
   will-change: transform;
 
@@ -362,6 +333,9 @@ watch(shouldAnimateCursor, (canAnimate) => {
 
 .cursor-scale {
   position: relative;
+  display: flow-root;
+  width: 0;
+  height: 0;
   // 按裁剪后的轮廓发光，避免箭头和三角形的光晕被 clip-path 截断。
   filter: drop-shadow(
     0 0 10px
@@ -374,13 +348,6 @@ watch(shouldAnimateCursor, (canAnimate) => {
   }
 }
 
-.cursor-motion {
-  display: flow-root;
-  width: 0;
-  height: 0;
-  transform-origin: 0 0;
-}
-
 .cursor-shape {
   position: relative;
   width: @follower-size;
@@ -391,7 +358,11 @@ watch(shouldAnimateCursor, (canAnimate) => {
   border-radius: 50%;
   clip-path: none;
 
-  transition: all 1s cubic-bezier(0.25, 1, 0.5, 1);
+  transition: width 1s cubic-bezier(0.25, 1, 0.5, 1),
+    height 1s cubic-bezier(0.25, 1, 0.5, 1),
+    margin 1s cubic-bezier(0.25, 1, 0.5, 1),
+    background-color 1s cubic-bezier(0.25, 1, 0.5, 1),
+    border-radius 1s cubic-bezier(0.25, 1, 0.5, 1);
 
   &.is-active {
     width: @triangle-size;
@@ -413,13 +384,16 @@ watch(shouldAnimateCursor, (canAnimate) => {
 
 .cursor-body {
   position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  overflow: visible;
-  fill: var(--page-theme-color, #e23456);
-  transition: opacity 0.2s ease;
+  inset: 0;
+  border-radius: 50%;
+  background-color: var(--page-theme-color, #e23456);
+  transform-origin: center;
+  transition: opacity 0.2s ease, transform 0.18s ease;
+}
+
+// 圆形缩放与三角形旋转分层，避免两种 transform 相互覆盖。
+.cursor-shape.is-moving .cursor-body {
+  transform: scale(1.2);
 }
 
 .cursor-position.is-loading {
@@ -445,6 +419,13 @@ watch(shouldAnimateCursor, (canAnimate) => {
     opacity: 0.5;
     transition: none;
     animation: cursor-loading-opacity 1.2s ease-in-out infinite;
+  }
+}
+
+.cursor-position.is-hidden {
+  .cursor-shape,
+  .cursor-scale {
+    animation-play-state: paused;
   }
 }
 

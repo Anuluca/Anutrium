@@ -11,6 +11,7 @@ import { useFrameTask } from '@/composables/useFrameTask'
 
 import { useAboutPanels } from './composables/useAboutPanels'
 import { useCreditsPlayback } from './composables/useCreditsPlayback'
+import SiteAnalytics from './SiteAnalytics.vue'
 
 interface ChangelogItem {
   version: string
@@ -676,6 +677,7 @@ const roadmapItems = computed(() =>
       </div>
     </section>
 
+    <SiteAnalytics />
     <PageFooter v-if="!props.embedded" />
   </div>
 </template>

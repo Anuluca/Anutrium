@@ -1,3 +1,7 @@
+import { trackGoogleEvent } from './ga4'
+
+export { installGoogleAnalytics } from './ga4'
+
 type AnalyticsEventName =
   | 'external_link_click'
   | 'project_click'
@@ -11,61 +15,28 @@ interface AnalyticsPayload {
   [key: string]: AnalyticsValue
 }
 
-const ANALYTICS_ENDPOINT = import.meta.env.VITE_ANALYTICS_ENDPOINT as
-  | string
-  | undefined
-
-const trimValue = (value: AnalyticsValue) => {
-  if (typeof value !== 'string') return value
-  return value.replace(/\s+/g, ' ').trim().slice(0, 240)
-}
-
-const getViewport = () => {
-  if (typeof window === 'undefined') return 'server'
-  if (window.innerWidth < 768) return 'mobile'
-  if (window.innerWidth < 1200) return 'tablet'
-  return 'desktop'
-}
-
 export const trackEvent = (
   event: AnalyticsEventName,
   payload: AnalyticsPayload = {}
 ) => {
   if (typeof window === 'undefined') return
-
-  const eventPayload = {
-    event,
+  const parameters: Record<string, string | number> = {
     path: window.location.pathname,
-    viewport: getViewport(),
-    language: navigator.language,
-    ts: new Date().toISOString(),
-    ...Object.fromEntries(
-      Object.entries(payload).map(([key, value]) => [key, trimValue(value)])
-    ),
+    viewport:
+      window.innerWidth < 768
+        ? 'mobile'
+        : window.innerWidth < 1200
+        ? 'tablet'
+        : 'desktop',
   }
-
-  window.dispatchEvent(
-    new CustomEvent('anutrium:analytics', { detail: eventPayload })
-  )
-
-  if (!ANALYTICS_ENDPOINT) return
-
-  const body = JSON.stringify(eventPayload)
-
-  if (navigator.sendBeacon) {
-    const queued = navigator.sendBeacon(
-      ANALYTICS_ENDPOINT,
-      new Blob([body], { type: 'application/json' })
-    )
-    if (queued) return
+  for (const [key, value] of Object.entries(payload)) {
+    if (typeof value === 'string')
+      parameters[key] = value.replace(/\s+/g, ' ').trim().slice(0, 100)
+    else if (typeof value === 'boolean') parameters[key] = Number(value)
+    else if (typeof value === 'number' && Number.isFinite(value))
+      parameters[key] = value
   }
-
-  fetch(ANALYTICS_ENDPOINT, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body,
-    keepalive: true,
-  }).catch(() => undefined)
+  trackGoogleEvent(event, parameters)
 }
 
 export const trackProjectClick = (project: {
@@ -123,7 +94,12 @@ export const installExternalLinkTracking = () => {
     const href = anchor.getAttribute('href')
     if (!href) return
 
-    const url = new URL(href, window.location.href)
+    let url: URL
+    try {
+      url = new URL(href, window.location.href)
+    } catch {
+      return
+    }
     const isMailOrTel = ['mailto:', 'tel:'].includes(url.protocol)
     const isExternalHttp =
       ['http:', 'https:'].includes(url.protocol) &&
