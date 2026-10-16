@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, type Page, test } from '@playwright/test'
 
 const report = (
   id: string,
@@ -56,7 +56,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/')
 })
 
-async function mount(page: import('@playwright/test').Page) {
+async function mount(page: Page) {
   await page.evaluate(async () => {
     const { createApp } = await import('/node_modules/.vite/deps/vue.js')
     const { createI18n } = await import('/node_modules/.vite/deps/vue-i18n.js')

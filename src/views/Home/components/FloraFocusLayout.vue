@@ -59,7 +59,7 @@ const { t, locale } = useI18n({
       ball: '精灵球',
       loadError: '模型加载失败，请重新点击精灵球重试。',
       levelRule: '等级 = 当前年月 − 出生年月（月数）',
-      album: '{name}的相册',
+      album: '相册',
     },
     en: {
       female: 'Female',
@@ -67,7 +67,7 @@ const { t, locale } = useI18n({
       ball: 'Poké Ball',
       loadError: 'Model could not load. Select the Poké Ball again to retry.',
       levelRule: 'Level = months since birth',
-      album: "{name}'s Album",
+      album: 'Album',
     },
   },
 })
@@ -89,9 +89,7 @@ const petLevel = computed(() => {
 })
 const activeBallIndex = computed(() => pets.indexOf(activePet.value) + 1)
 const petLocale = computed(() => (locale.value === 'en' ? 'en' : 'zhCn'))
-const albumTitle = computed(() =>
-  t('album', { name: activePet.value.name[petLocale.value] })
-)
+const albumTitle = computed(() => t('album'))
 const petNumber = computed(() =>
   String(activePet.value.number).padStart(3, '0')
 )

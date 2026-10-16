@@ -1,5 +1,7 @@
 import * as THREE from 'three'
 
+import { LUCARIO_HEADACHE_RED } from './lucarioHeadache'
+
 interface HeadRigUniforms {
   headRotation: { value: THREE.Vector4 }
   headPivot: { value: THREE.Vector3 }
@@ -34,13 +36,60 @@ export function installHeadRig(
       }`
       )
       .replace(
-        '#include <beginnormal_vertex>',
-        '#include <beginnormal_vertex>\nobjectNormal=rotateHead(rotateHead(objectNormal,getNodRotation()),getHeadRotation());'
+        '#include <morphnormal_vertex>',
+        '#include <morphnormal_vertex>\nobjectNormal=rotateHead(rotateHead(objectNormal,getNodRotation()),getHeadRotation());'
+      )
+      .replace(
+        '#include <morphtarget_vertex>',
+        // 额外低头只用 Head 子树权重、围绕头颈关节旋转；Neck 根部不参与此动作。
+        '#include <morphtarget_vertex>\ntransformed=rotateHead(transformed-headNodPivot,getNodRotation())+headNodPivot;\ntransformed=rotateHead(transformed-headPivot,getHeadRotation())+headPivot;'
+      )
+  }
+}
+
+/** 按模型原始高度染红，避免歪头或倒影翻转改变渐变方向。 */
+export function installHeadacheTint(
+  surface: THREE.MeshPhysicalMaterial,
+  strength: { value: number },
+  heightRange: { value: THREE.Vector2 }
+) {
+  const originalCompile = surface.onBeforeCompile
+  surface.onBeforeCompile = (shader, renderer) => {
+    originalCompile.call(surface, shader, renderer)
+    shader.uniforms.headacheRedness = strength
+    shader.uniforms.headacheHeightRange = heightRange
+    shader.uniforms.headacheRed = {
+      value: new THREE.Color(LUCARIO_HEADACHE_RED),
+    }
+    shader.vertexShader = shader.vertexShader
+      .replace(
+        '#include <common>',
+        '#include <common>\nvarying float headacheHeight;'
       )
       .replace(
         '#include <begin_vertex>',
-        // 额外低头只用 Head 子树权重、围绕头颈关节旋转；Neck 根部不参与此动作。
-        '#include <begin_vertex>\ntransformed=rotateHead(transformed-headNodPivot,getNodRotation())+headNodPivot;\ntransformed=rotateHead(transformed-headPivot,getHeadRotation())+headPivot;'
+        '#include <begin_vertex>\nheadacheHeight = position.y;'
+      )
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        '#include <common>',
+        `#include <common>
+        varying float headacheHeight;
+        uniform float headacheRedness;
+        uniform vec2 headacheHeightRange;
+        uniform vec3 headacheRed;`
+      )
+      .replace(
+        '#include <opaque_fragment>',
+        // 光照计算后去色，使主题灯光和环境反射也不会把底部重新染色。
+        `
+        float redness = smoothstep(headacheHeightRange.x, headacheHeightRange.y, headacheHeight);
+        vec3 luminanceWeights = vec3(0.2126, 0.7152, 0.0722);
+        float brightness = dot(outgoingLight, luminanceWeights);
+        vec3 redTint = headacheRed / max(dot(headacheRed, luminanceWeights), 0.001);
+        vec3 headacheBody = brightness * mix(vec3(1.0), redTint, redness * 0.9);
+        outgoingLight = mix(outgoingLight, headacheBody, headacheRedness);
+        #include <opaque_fragment>`
       )
   }
 }

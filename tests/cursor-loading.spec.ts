@@ -29,23 +29,20 @@ test('desktop cursor grows slightly while the pointer is pressed', async ({
   await expect(cursorScale).toHaveCSS('transform', 'none')
 })
 
-test('desktop cursor follows the active main route theme color', async ({
+test('desktop cursor keeps a white inversion base across route themes', async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name.includes('mobile'))
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
-
-  const cursorShape = page.locator('.cursor-position .cursor-shape')
-  const archiveMenuItem = page.locator('.desktop-menu-item.ARCHIVE')
-  await expect(cursorShape).toBeAttached({ timeout: PAGE_LOAD_TIMEOUT })
-  await expect(cursorShape).toHaveCSS('background-color', 'rgb(226, 52, 86)')
-
-  await expect(archiveMenuItem).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
-  await archiveMenuItem.click()
-  await expect(page.locator('.archives-page')).toBeVisible({
-    timeout: PAGE_LOAD_TIMEOUT,
-  })
-  await expect(cursorShape).toHaveCSS('background-color', 'rgb(90, 212, 128)')
+  for (const path of ['/', '/archive']) {
+    await page.goto(path, { waitUntil: 'domcontentloaded' })
+    const cursor = page.locator('.cursor-position')
+    await expect(cursor).toBeAttached({ timeout: PAGE_LOAD_TIMEOUT })
+    await expect(cursor).toHaveCSS('mix-blend-mode', 'difference')
+    await expect(cursor.locator('.cursor-body')).toHaveCSS(
+      'background-color',
+      'rgb(255, 255, 255)'
+    )
+  }
 })
 
 test('desktop cursor uses the loading state for the full route transition', async ({

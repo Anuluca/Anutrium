@@ -66,9 +66,6 @@ useResizeObserver(titleElement, () => {
   )
 })
 const album = computed(() => petAlbums[props.petId])
-const items = computed(() =>
-  expanded.value ? allItems.value : album.value.defaults
-)
 const overflowMask = createScanlineMask({
   seed: 'flora-album-overflow',
   lines: 8,
@@ -172,46 +169,56 @@ onBeforeUnmount(() => {
         {{ title }}
       </button>
     </h2>
-    <FloraAlbumStrip v-if="!expanded" :items="items" :title="title" />
-    <div
-      v-else
-      ref="viewport"
-      class="flora-album-gallery__viewport"
-      data-lenis-nested-scroll
-    >
-      <p
-        v-if="loading && !items.length"
-        class="flora-album-gallery__notice"
-        role="status"
-      >
-        {{ t('loading') }}
-      </p>
-      <p
-        v-else-if="error && !items.length"
-        class="flora-album-gallery__notice"
-        role="alert"
-      >
-        {{ t('error') }}
-        <button type="button" @click="refresh()">{{ t('retry') }}</button>
-      </p>
-      <p v-else-if="!items.length" class="flora-album-gallery__notice">
-        {{ t('empty') }}
-      </p>
-      <MediaGallery
+    <Transition name="album-mode" mode="out-in">
+      <FloraAlbumStrip
+        v-if="!expanded"
+        key="selected"
+        :items="album.defaults"
+        :title="title"
+      />
+      <div
         v-else
-        :columns="4"
-        :items="items"
-        :get-media-label="() => title"
-        preserve-image-colors
+        key="all"
+        ref="viewport"
+        class="flora-album-gallery__viewport"
+        data-lenis-nested-scroll
       >
-        <template #info="{ item }">
-          <MediaPhotoInfo
-            :item="{ time: getFloraCaptureDate(item.url) || t('unknownDate') }"
-            :time-divider-padding="0"
-          />
-        </template>
-      </MediaGallery>
-    </div>
+        <p
+          v-if="loading && !allItems.length"
+          class="flora-album-gallery__notice"
+          role="status"
+        >
+          {{ t('loading') }}
+        </p>
+        <p
+          v-else-if="error && !allItems.length"
+          class="flora-album-gallery__notice"
+          role="alert"
+        >
+          {{ t('error') }}
+          <button type="button" @click="refresh()">{{ t('retry') }}</button>
+        </p>
+        <p v-else-if="!allItems.length" class="flora-album-gallery__notice">
+          {{ t('empty') }}
+        </p>
+        <MediaGallery
+          v-else
+          :columns="4"
+          :items="allItems"
+          :get-media-label="() => title"
+          preserve-image-colors
+        >
+          <template #info="{ item }">
+            <MediaPhotoInfo
+              :item="{
+                time: getFloraCaptureDate(item.url) || t('unknownDate'),
+              }"
+              :time-divider-padding="0"
+            />
+          </template>
+        </MediaGallery>
+      </div>
+    </Transition>
     <svg width="0" height="0" aria-hidden="true" style="position: absolute">
       <defs>
         <filter :id="decorationFilterId" color-interpolation-filters="sRGB">
@@ -289,7 +296,7 @@ onBeforeUnmount(() => {
   right: var(--flora-content-inset);
   bottom: var(--flora-content-inset);
   left: var(--flora-content-inset);
-  height: clamp(170px, 25vh, 240px);
+  height: clamp(240px, 34vh, 320px);
   display: flex;
   flex-direction: column;
   --album-background: var(--flora-theme-color);
@@ -329,6 +336,42 @@ onBeforeUnmount(() => {
     mask-image: var(--album-overflow-mask);
     content: '';
     pointer-events: none;
+  }
+  .album-mode-enter-active {
+    transition: opacity 420ms ease,
+      transform 550ms cubic-bezier(0.22, 1, 0.36, 1), clip-path 550ms ease;
+  }
+  .album-mode-leave-active {
+    pointer-events: none;
+    transition: opacity 350ms 150ms ease, transform 500ms ease,
+      clip-path 500ms ease;
+    :deep(.flora-album-strip__photo) {
+      transition: transform 500ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+  }
+  .album-mode-leave-to :deep(.flora-album-strip__photo) {
+    transform: translate(-50%, -50%) perspective(1400px) rotateY(0deg)
+      scale(1.08);
+  }
+  .album-mode-enter-from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.94);
+    clip-path: inset(15% 0 0 0);
+  }
+  .album-mode-leave-to {
+    opacity: 0;
+    transform: translateY(-24px) scale(1.1);
+    clip-path: inset(0 0 15% 0);
+  }
+  &:not(.is-expanded) {
+    .album-mode-enter-from {
+      transform: translateY(-16px) scale(1.04);
+      clip-path: inset(0 0 15% 0);
+    }
+    .album-mode-leave-to {
+      transform: translateY(16px) scale(0.94);
+      clip-path: inset(15% 0 0 0);
+    }
   }
   .flora-album-gallery__viewport {
     position: relative;
@@ -371,7 +414,7 @@ onBeforeUnmount(() => {
     z-index: 2;
     pointer-events: auto;
     transition: opacity 200ms ease;
-    font: 400 60px / 1.2 'UnboundedSans', sans-serif;
+    font: 400 72px / 1.2 'UnboundedSans', sans-serif;
     button {
       padding: 0;
       font: inherit;
@@ -564,17 +607,17 @@ onBeforeUnmount(() => {
     left: var(--album-inline-inset);
     right: var(--album-inline-inset);
     bottom: calc(var(--flora-content-inset) + 1px);
-    height: clamp(85px, 12.5vh, 120px);
+    height: clamp(120px, 17vh, 160px);
     transition: height 850ms cubic-bezier(0.22, 1, 0.36, 1),
       bottom 850ms cubic-bezier(0.22, 1, 0.36, 1);
 
     .flora-album-gallery__title {
-      font-size: 36px;
+      font-size: 44px;
       bottom: 100%;
     }
 
     :deep(.flora-album-strip.no-rem) {
-      width: calc(100% - 34px);
+      width: 100%;
       padding: 6px 8px;
     }
 
@@ -628,6 +671,14 @@ onBeforeUnmount(() => {
     }
   }
   @media (prefers-reduced-motion: reduce) {
+    .album-mode-enter-active,
+    .album-mode-leave-active {
+      transition: none;
+      :deep(.flora-album-strip__photo) {
+        transition: none;
+      }
+    }
+
     &.flora-album-gallery--mobile {
       transition: none;
 

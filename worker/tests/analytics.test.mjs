@@ -1,10 +1,10 @@
-import { test } from 'node:test'
+import { build } from 'esbuild'
 import assert from 'node:assert/strict'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { test } from 'node:test'
 import { pathToFileURL } from 'node:url'
-import { build } from 'esbuild'
 
 const dir = await mkdtemp(join(tmpdir(), 'anutrium-analytics-'))
 await build({

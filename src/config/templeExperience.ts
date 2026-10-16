@@ -28,11 +28,28 @@ export interface TempleModelDefinition {
 export interface TempleExperience {
   themeColor: string
   model: TempleModelDefinition
+  headache?: {
+    mode: 'normal' | 'headache'
+    bodyTwist: number
+    upperArmTwist: number
+    forearmTwist: number
+    headLeanBack: number
+    headTilt: number
+  }
 }
 
 // 彩蛋入口可传入其他配置；模型选择与页面构图、主题颜色保持独立。
 export const templeExperience: TempleExperience = {
   themeColor: pageThemeColors.HOME,
+  // 日常切换只改 mode，重新部署即可；各部位角度单位为度。
+  headache: {
+    mode: 'headache',
+    bodyTwist: 0,
+    upperArmTwist: 12,
+    forearmTwist: -22,
+    headLeanBack: 29,
+    headTilt: 7,
+  },
   model: {
     id: 'lucario',
     label: '路卡利欧',

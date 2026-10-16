@@ -12,6 +12,17 @@ test.beforeEach(async ({ page }, testInfo) => {
         ? 'no-preference'
         : 'reduce',
   })
+  if (testInfo.title.includes('focus aims')) {
+    await page.route('**/src/config/templeExperience.ts*', async (route) => {
+      const response = await route.fetch()
+      await route.fulfill({
+        response,
+        body: (
+          await response.text()
+        ).replace(/mode: ["']headache["']/, 'mode: "normal"'),
+      })
+    })
+  }
   await page.goto('/', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.temple-stage')).toHaveAttribute(
     'aria-busy',
@@ -735,6 +746,7 @@ test('fullscreen home leaves without changing its page or router geometry', asyn
   await expect(page.locator('.entry-overlay-container')).toHaveCount(0, {
     timeout: 20000,
   })
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
   await page.evaluate(() => {
     const root = document.querySelector('.temple-page')!
     const container = document.querySelector('.router-container')!
@@ -744,17 +756,12 @@ test('fullscreen home leaves without changing its page or router geometry', asyn
         return [r.top, r.left]
       })
     ;(window as any).leaveGeometry = { before: sample(), frames: [] }
-    const observer = new MutationObserver(() => {
-      if (!root.classList.contains('route-leave-active')) return
-      observer.disconnect()
-      const tick = () => {
-        if (!root.isConnected) return
-        ;(window as any).leaveGeometry.frames.push(sample())
-        requestAnimationFrame(tick)
-      }
-      tick()
-    })
-    observer.observe(root, { attributes: true, attributeFilter: ['class'] })
+    const tick = () => {
+      if (!root.isConnected) return
+      ;(window as any).leaveGeometry.frames.push(sample())
+      requestAnimationFrame(tick)
+    }
+    requestAnimationFrame(tick)
     ;(
       document.querySelector('.layout-page') as any
     ).__vueParentComponent.proxy.$router.push('/craft')
@@ -1823,10 +1830,6 @@ test('switching focus during submenu exit cancels the pending return', async ({
   await expect(page.locator('.temple-menu-reveal-leave-active')).toHaveCount(0)
   await expect(root).toHaveAttribute('data-selected', 'flanerie')
   await expect(page.locator('.journey-content')).toBeVisible()
-  await expect(page.locator('.temple-stage')).toHaveAttribute(
-    'data-head-aim',
-    'flanerie'
-  )
   await expect(page.locator('.temple-stage')).toHaveAttribute(
     'data-theme-color',
     '#8b5cc7'

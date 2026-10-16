@@ -36,7 +36,17 @@ import {
   createObeliskBaseGeometry,
   createObeliskBodyGeometry,
 } from './scene/geometry'
-import { installEnvironmentFade, installHeadRig } from './scene/materials'
+import {
+  createDizzySticker,
+  DIZZY_STICKER_FRAME_MS,
+  LUCARIO_HEADACHE_STICKER_RED,
+  prepareHeadachePose,
+} from './scene/lucarioHeadache'
+import {
+  installEnvironmentFade,
+  installHeadacheTint,
+  installHeadRig,
+} from './scene/materials'
 import {
   createPetFocusCamera,
   createPetScreenBounds,
@@ -105,6 +115,10 @@ export function createHomeTemple(
   let petEntrance: gsap.core.Timeline | undefined
   const { model } = experience
   const rig = model.rig
+  const headache = experience.headache
+  const headacheEnabled =
+    model.id === 'lucario' && headache?.mode === 'headache'
+  let headacheMix = headacheEnabled ? 1 : 0
   const headNodDegrees = rig.enabled ? rig.entranceNod : 0
   const neckExtension = rig.enabled ? rig.neckExtension : 0
   const categories = templeCategories.map((item) => ({
@@ -218,6 +232,7 @@ export function createHomeTemple(
   let ready = false
   let sceneActive = true
   let frame: number | undefined
+  let dizzyFrameTimer: ReturnType<typeof setTimeout> | undefined
   let lastDraw = 0
   let motionIdle = true
   let selected: TempleSelection | null = null
@@ -1094,7 +1109,7 @@ export function createHomeTemple(
     themeTransition?.kill()
     for (const item of tintTargets) {
       item.start.copy(item.current)
-      // 字样使用当前主题的完整色值，模型与环境保留各自的明暗层次。
+      // 字样使用完整主题色，其余对象保留各自的明暗层次。
       if (item.color === statueLabelMaterial.color) item.target.copy(themeColor)
       else
         item.target.setHSL(
@@ -1150,6 +1165,8 @@ export function createHomeTemple(
   const headPivot = { value: new THREE.Vector3() }
   const headNodPivot = { value: new THREE.Vector3() }
   const headNodAngle = { value: 0 }
+  const headacheRedness = { value: headacheMix }
+  const headacheHeightRange = { value: new THREE.Vector2(model.cropY, 3.3) }
   const headCurrent = new THREE.Vector2()
   const headTarget = new THREE.Vector2()
   const headFocusStart = new THREE.Vector2()
@@ -1161,6 +1178,28 @@ export function createHomeTemple(
   const statue = new THREE.Group()
   statue.position.set(0, 3.87, statueZ)
   scene.add(statue)
+  const dizzyEffect = headacheEnabled
+    ? createDizzySticker(invalidate)
+    : undefined
+  const dizzySticker = new THREE.Sprite(
+    material(
+      new THREE.SpriteMaterial({
+        map: dizzyEffect ? texture(dizzyEffect.texture) : null,
+        color: LUCARIO_HEADACHE_STICKER_RED,
+        opacity: 0,
+        transparent: true,
+        depthTest: false,
+        depthWrite: false,
+        toneMapped: false,
+      })
+    )
+  )
+  dizzySticker.scale.set(1.12, 0.56, 1)
+  dizzySticker.renderOrder = 10
+  dizzySticker.visible = false
+  statue.add(dizzySticker)
+  const stickerAnchor = new THREE.Vector3()
+  let stickerReveal = 0
   const statueClipPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.52)
   const statueView = { mix: 0 }
   const statueSize = new THREE.Vector3()
@@ -1219,8 +1258,11 @@ export function createHomeTemple(
     })
   )
   wireDepthMaterial.onBeforeCompile = chromeMaterial.onBeforeCompile
+  // 只给实体及其镜像增加染色，线框和深度通道保持原有用途。
+  installHeadacheTint(chromeMaterial, headacheRedness, headacheHeightRange)
   for (const value of materials) {
-    if ('color' in value) trackTint((value as THREE.MeshBasicMaterial).color)
+    if ('color' in value && value !== dizzySticker.material)
+      trackTint((value as THREE.MeshBasicMaterial).color)
     if ('emissive' in value)
       trackTint((value as THREE.MeshStandardMaterial).emissive)
     if (value instanceof THREE.ShaderMaterial)
@@ -1272,6 +1314,7 @@ export function createHomeTemple(
       wireMaterial,
       wireDepthMaterial,
       statueLabelMaterial,
+      dizzySticker.material,
     ])
     // 碑身及其倒影只向下收起；圣光单独缩小，其余环境在屏幕中心放大。
     const unexpanded = new Set<THREE.Material>([
@@ -1426,6 +1469,10 @@ export function createHomeTemple(
   const render = (now: number) => {
     frame = undefined
     if (!canRender()) return
+    if (dizzyFrameTimer !== undefined) {
+      clearTimeout(dizzyFrameTimer)
+      dizzyFrameTimer = undefined
+    }
     if (now - lastDraw < 1000 / 60 - 0.1) {
       invalidate()
       return
@@ -1517,7 +1564,12 @@ export function createHomeTemple(
     if (statueWire) statueWire.visible = statueView.mix > 0
     if (statueWireDepth) statueWireDepth.visible = statueView.mix > 0
     const followHead = !entranceActive && !returningStatue
-    if (focusedObelisk && rig.enabled) {
+    const headacheActive =
+      headacheEnabled && selected !== 'statue' && selected !== 'island'
+    const aimAtObelisk = !!focusedObelisk && !headacheActive
+    if (headacheActive && focusedObelisk && !returningPillar)
+      headTarget.copy(pointerTarget)
+    if (focusedObelisk && aimAtObelisk && rig.enabled) {
       // 从当前世界坐标计算朝向，运镜和柱子推进时连续追踪；限制转角保护颈部形变。
       const yaw = THREE.MathUtils.clamp(
         Math.atan2(
@@ -1532,11 +1584,11 @@ export function createHomeTemple(
         -rig.restPitch / Math.max(rig.pointerPitch, 0.001)
       )
     }
-    if (simpleEntrance && entranceActive && focusedObelisk)
+    if (simpleEntrance && entranceActive && aimAtObelisk)
       headCurrent.copy(headTarget)
     if (followHead) {
       if (reducedMotion) headCurrent.copy(headTarget)
-      else if (headFocusMotion.progress < 1)
+      else if (!headacheActive && headFocusMotion.progress < 1)
         headCurrent.lerpVectors(
           headFocusStart,
           headTarget,
@@ -1545,7 +1597,7 @@ export function createHomeTemple(
       else
         headCurrent.lerp(
           headTarget,
-          1 - Math.exp(-elapsed * (focusedObelisk ? 4 : rig.pointerDamping))
+          1 - Math.exp(-elapsed * (aimAtObelisk ? 4 : rig.pointerDamping))
         )
     }
     let moving =
@@ -1563,14 +1615,58 @@ export function createHomeTemple(
       statue.rotation.z = 0
       moving ||= Math.abs(statue.rotation.y - yaw) > 0.00001
     }
+    // 全身 ISLAND 预览及创作模块恢复正常，返回默认首页时平滑恢复头疼姿态。
+    const headacheTarget = headacheActive ? 1 : 0
+    headacheMix = reducedMotion
+      ? headacheTarget
+      : THREE.MathUtils.damp(headacheMix, headacheTarget, 8, elapsed)
+    if (Math.abs(headacheMix - headacheTarget) < 0.001)
+      headacheMix = headacheTarget
+    moving ||= headacheMix !== headacheTarget
+    headacheRedness.value = headacheMix
+    setStageData('headacheRedness', headacheRedness.value.toFixed(3))
+    if (statueMesh?.morphTargetInfluences)
+      statueMesh.morphTargetInfluences[0] = headacheMix
+    const stickerTarget =
+      headacheEnabled && !selected && !entranceActive ? 1 : 0
+    stickerReveal = reducedMotion
+      ? stickerTarget
+      : THREE.MathUtils.damp(stickerReveal, stickerTarget, 10, elapsed)
+    if (Math.abs(stickerReveal - stickerTarget) < 0.001)
+      stickerReveal = stickerTarget
+    moving ||= stickerReveal !== stickerTarget
+    // 保留绘制到淡出结束，避免切换模块时先 hidden 导致退场动画消失。
+    dizzySticker.visible = stickerReveal > 0
+    dizzySticker.material.opacity = stickerReveal
+    setStageData('headacheStickerOpacity', stickerReveal.toFixed(3))
+    setStageData(
+      'headacheStickerColor',
+      `#${dizzySticker.material.color.getHexString()}`
+    )
+    if (dizzySticker.visible && dizzySticker.material.map) {
+      const stickerFrame = reducedMotion
+        ? 0
+        : Math.floor(now / DIZZY_STICKER_FRAME_MS)
+      dizzyEffect?.update(stickerFrame)
+      setStageData('headacheStickerFrame', String(stickerFrame))
+    }
+    setStageData('headacheMode', headacheMix === 0 ? 'normal' : 'headache')
+    setStageData('headacheMix', headacheMix.toFixed(3))
+    setStageData('headacheSticker', String(dizzySticker.visible))
+    // 头疼姿态聚焦时仍反向跟随鼠标；正常姿态保留方尖碑注视。
+    const pointerDirection = aimAtObelisk ? 1 : 1 - 2 * headacheMix
     headAngles.set(
       THREE.MathUtils.degToRad(
-        rig.enabled ? rig.restPitch + headCurrent.y * rig.pointerPitch : 0
+        rig.enabled
+          ? rig.restPitch -
+              (headache?.headLeanBack ?? 0) * headacheMix +
+              headCurrent.y * rig.pointerPitch * pointerDirection
+          : 0
       ),
       THREE.MathUtils.degToRad(
-        rig.enabled ? headCurrent.x * rig.pointerYaw : 0
+        rig.enabled ? headCurrent.x * rig.pointerYaw * pointerDirection : 0
       ),
-      0
+      THREE.MathUtils.degToRad((headache?.headTilt ?? 0) * headacheMix)
     )
     headQuaternion.setFromEuler(headAngles)
     headNodAngle.value = THREE.MathUtils.degToRad(entranceHeadDip.value)
@@ -1580,6 +1676,16 @@ export function createHomeTemple(
       headQuaternion.z,
       headQuaternion.w
     )
+    if (statueMesh) {
+      stickerAnchor.copy(headNodPivot.value)
+      stickerAnchor.y += 0.73
+      stickerAnchor.z += 0.12
+      stickerAnchor
+        .sub(headPivot.value)
+        .applyQuaternion(headQuaternion)
+        .add(headPivot.value)
+      dizzySticker.position.copy(stickerAnchor).add(statueMesh.position)
+    }
     if (sceneChanged) {
       camera.lookAt(lookAt)
       camera.updateMatrixWorld()
@@ -2050,7 +2156,8 @@ export function createHomeTemple(
       setStageData('environmentBrightness', environmentBrightness.toFixed(3))
       setStageData(
         'headAim',
-        focusedObelisk?.category.id || (returningPillar ? 'center' : 'pointer')
+        (aimAtObelisk ? focusedObelisk?.category.id : undefined) ||
+          (returningPillar ? 'center' : 'pointer')
       )
       setStageData('headTurnProgress', headFocusMotion.progress.toFixed(3))
       setStageData(
@@ -2169,7 +2276,15 @@ export function createHomeTemple(
       invalidate()
     }
     if (moving || transitionActive || hoverMoving) invalidate()
-    else motionIdle = true
+    else {
+      motionIdle = true
+      // 静止时仅在下次随机布局到点时唤醒，避免持续绘制 60fps。
+      if (dizzySticker.visible && !reducedMotion)
+        dizzyFrameTimer = setTimeout(() => {
+          dizzyFrameTimer = undefined
+          invalidate()
+        }, DIZZY_STICKER_FRAME_MS - (now % DIZZY_STICKER_FRAME_MS))
+    }
   }
   function invalidate() {
     if (frame === undefined && canRender())
@@ -2592,7 +2707,10 @@ export function createHomeTemple(
     tweenIfChanged(
       entranceHeadDip,
       {
-        value: item ? 0 : headNodDegrees,
+        value:
+          item && !(headacheEnabled && selected !== 'island')
+            ? 0
+            : headNodDegrees,
         duration: item || wasPillar ? duration * 2 : duration,
         ease: 'power2.inOut',
       },
@@ -2965,13 +3083,21 @@ export function createHomeTemple(
     const hoverChanged = hovered !== nextHover
     hovered = nextHover
     if (
-      (!selected || selected === 'statue') &&
+      (!selected ||
+        selected === 'statue' ||
+        (headacheEnabled && selected !== 'island')) &&
       !entranceActive &&
       !returningStatue &&
       !returningPillar
     )
       headTarget.copy(pointerTarget)
-    if (!selected || selected === 'statue' || hoverChanged) invalidate()
+    if (
+      !selected ||
+      selected === 'statue' ||
+      (headacheEnabled && selected !== 'island') ||
+      hoverChanged
+    )
+      invalidate()
   }
   let unsubscribe: (() => void) | undefined
   const syncActivity = () => {
@@ -2984,6 +3110,7 @@ export function createHomeTemple(
       unsubscribe?.()
       unsubscribe = undefined
       if (frame !== undefined) cancelAnimationFrame(frame)
+      if (dizzyFrameTimer !== undefined) clearTimeout(dizzyFrameTimer)
       frame = undefined
       if (!pausedAt) pausedAt = performance.now()
     } else {
@@ -3004,7 +3131,9 @@ export function createHomeTemple(
     diagnosticsDirty = true
     pointerTarget.set(0, 0)
     if (
-      (!selected || selected === 'statue') &&
+      (!selected ||
+        selected === 'statue' ||
+        (headacheEnabled && selected !== 'island')) &&
       !returningStatue &&
       !returningPillar
     )
@@ -3025,6 +3154,7 @@ export function createHomeTemple(
       pedestal,
       reflectedPedestal,
       statue,
+      dizzySticker,
       reflectedStatue!,
       sleepingSprigatito,
       reflectedSprigatito!,
@@ -3484,6 +3614,10 @@ export function createHomeTemple(
             1
           )
         )
+        headacheHeightRange.value.set(
+          model.cropY,
+          metadata.center[1] + metadata.size[1] / 2
+        )
         headPivot.value.fromArray(metadata.headPivot)
         headNodPivot.value.fromArray(metadata.headNodPivot)
         // 按 Head 权重上移：头部整体平移、颈部平滑延长，Neck 根部与躯干保持原位。
@@ -3496,7 +3630,10 @@ export function createHomeTemple(
             positions.getY(index) + neckExtension * headWeights.getX(index)
           )
         headNodPivot.value.y += neckExtension
+        if (headacheEnabled && headache) prepareHeadachePose(surface, headache)
         const mesh = new THREE.Mesh(surface, chromeMaterial)
+        if (mesh.morphTargetInfluences)
+          mesh.morphTargetInfluences[0] = headacheMix
         cacheMorphRaycastVertices(mesh)
         mesh.position.fromArray(metadata.center).multiplyScalar(-1)
         // 半身模型在当前尺寸上放大 10%，裁切面仍与底座台面齐平。
@@ -3505,24 +3642,28 @@ export function createHomeTemple(
         statue.scale.setScalar(modelScale)
         statue.position.y = 0.52 - (cropY - metadata.center[1]) * modelScale
         statue.add(mesh)
+        statueMesh = mesh
         reflectedStatue = mirror(statue, 0.42)
         // 模型倒影在异步加载后创建，同样加入主题更新，保持镜像色一致。
         reflectedStatue.traverse((object) => {
-          if (object instanceof THREE.Mesh)
+          if (object instanceof THREE.Mesh) {
+            object.morphTargetInfluences = mesh.morphTargetInfluences
             trackTint((object.material as THREE.MeshPhysicalMaterial).color)
+          }
         })
         setThemeColor(experience.themeColor, false)
-        statueMesh = mesh
         surface.computeBoundingBox()
         const bounds = surface.boundingBox!
         bounds.getSize(statueSize).multiplyScalar(modelScale)
         statueHalfY = statue.position.y
         statueFullY = (metadata.center[1] - bounds.min.y) * modelScale
         statueWire = new THREE.Mesh(surface, wireMaterial)
+        statueWire.morphTargetInfluences = mesh.morphTargetInfluences
         statueWire.position.copy(mesh.position)
         statueWire.renderOrder = 6
         statue.add(statueWire)
         statueWireDepth = new THREE.Mesh(surface, wireDepthMaterial)
+        statueWireDepth.morphTargetInfluences = mesh.morphTargetInfluences
         statueWireDepth.position.copy(mesh.position)
         statueWireDepth.renderOrder = 5
         // 全身预览清空环境深度；回程保留底座深度，让网格与实体一起被底座自然遮挡。
@@ -3579,6 +3720,7 @@ export function createHomeTemple(
       window.removeEventListener('blur', resetPointer)
       renderer.domElement.removeEventListener('click', click)
       if (frame !== undefined) cancelAnimationFrame(frame)
+      if (dizzyFrameTimer !== undefined) clearTimeout(dizzyFrameTimer)
       renderer.domElement.remove()
       // Three 的并行编译轮询仍需读取 program；结束后再释放，避免快速离场时访问已销毁资源。
       if (preparation)

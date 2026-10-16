@@ -322,6 +322,8 @@ watch(shouldAnimateCursor, syncPointerListeners)
   pointer-events: none;
   z-index: 20000;
 
+  // 白色差值混合按背景反相，避免主题色与同色背景相减后接近黑色。
+  --cursor-inversion-color: #fff;
   mix-blend-mode: difference;
   transition: opacity 0.2s ease;
   will-change: transform;
@@ -370,7 +372,7 @@ watch(shouldAnimateCursor, syncPointerListeners)
     margin-top: -(@triangle-size / 2);
     margin-left: -(@triangle-size / 2);
     border-radius: 0;
-    background-color: var(--page-theme-color, #e23456);
+    background-color: var(--cursor-inversion-color);
 
     .cursor-body {
       opacity: 0;
@@ -386,7 +388,7 @@ watch(shouldAnimateCursor, syncPointerListeners)
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background-color: var(--page-theme-color, #e23456);
+  background-color: var(--cursor-inversion-color);
   transform-origin: center;
   transition: opacity 0.2s ease, transform 0.18s ease;
 }

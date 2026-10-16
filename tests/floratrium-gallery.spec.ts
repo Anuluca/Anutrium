@@ -135,7 +135,7 @@ test('responsive album sizing, expansion and character rail placement', async ({
     expect(railGeometry.topPadding).toBeGreaterThanOrEqual(8)
     expect(railGeometry.bottomPadding).toBeGreaterThanOrEqual(8)
     expect((await gallery.boundingBox())!.height).toBeCloseTo(
-      Math.min(120, Math.max(85, page.viewportSize()!.height * 0.125)),
+      Math.min(160, Math.max(120, page.viewportSize()!.height * 0.17)),
       0
     )
     await expect
@@ -461,28 +461,30 @@ test('online defaults, upward expansion, paging, refresh and pet reset preserve 
   const strip = gallery.locator('.flora-album-strip')
   await expect(strip).toHaveClass(/is-running/)
   const loop = await strip.evaluate((element) => {
-    const track = element.querySelector<HTMLElement>(
-      '.flora-album-strip__track'
-    )!
-    const animation = track.getAnimations()[0]
-    animation.pause()
-    animation.currentTime =
-      Number(animation.effect!.getTiming().duration) * 0.99
-    const viewport = element.querySelector('.flora-album-strip__viewport')!
-    const groups = Array.from(
-      element.querySelectorAll('.flora-album-strip__group')
-    ).map((group) => group.getBoundingClientRect())
-    animation.play()
-    return {
-      widths: groups.map((group) => group.width),
-      right: groups.at(-1)!.right,
-      viewportRight: viewport.getBoundingClientRect().right,
-    }
+    const positions = [
+      ...element.querySelectorAll<HTMLElement>('.flora-album-strip__position'),
+    ]
+    return positions.map((card) => {
+      const animation = card.getAnimations()[0]
+      const frames = (animation.effect as KeyframeEffect).getKeyframes()
+      return {
+        iterations: animation.effect!.getTiming().iterations,
+        first: Number(frames[0].opacity),
+        last: Number(frames.at(-1)!.opacity),
+        transform: frames[0].transform,
+      }
+    })
   })
+  expect(loop).toHaveLength(10)
   expect(
-    Math.max(...loop.widths) - Math.min(...loop.widths)
-  ).toBeLessThanOrEqual(1)
-  expect(loop.right).toBeGreaterThanOrEqual(loop.viewportRight)
+    loop.every(
+      (card) =>
+        card.iterations === Infinity &&
+        card.first === 0 &&
+        card.last === 0 &&
+        String(card.transform).includes('translate3d')
+    )
+  ).toBe(true)
   await page.emulateMedia({ reducedMotion: 'reduce' })
   expect(layout.buttonRight).toBeLessThan(layout.stripRight)
   expect(layout.viewportLeft - layout.stripLeft).toBeGreaterThanOrEqual(
@@ -494,10 +496,10 @@ test('online defaults, upward expansion, paging, refresh and pet reset preserve 
   expect(layout.spacing).toBe(0)
   await page.emulateMedia({ reducedMotion: 'no-preference' })
   await page.mouse.move(10, 10)
-  const track = gallery.locator('.flora-album-strip__track')
+  const track = gallery.locator('.flora-album-strip__position').first()
   await expect
     .poll(() =>
-      track.evaluate((element) => getComputedStyle(element).animationPlayState)
+      track.evaluate((element) => element.getAnimations()[0]?.playState)
     )
     .toBe('running')
   const initialTransform = await track.evaluate(
@@ -896,7 +898,7 @@ test('mobile album keeps its horizontal bounds while expanding and collapsing', 
   }
 })
 
-test('album blank space and title toggle expansion while photo clicks keep preview behavior', async ({
+test('album surfaces toggle expansion while selected and full photos preview', async ({
   page,
 }) => {
   test.setTimeout(60000)
@@ -927,7 +929,52 @@ test('album blank space and title toggle expansion while photo clicks keep previ
     .locator('.flora-album-gallery__title button')
     .evaluate((button: HTMLButtonElement) => button.click())
   await expect(gallery).not.toHaveClass(/is-expanded/)
-  await gallery.locator('.flora-album-strip__photo').first().click()
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await expect
+    .poll(() =>
+      gallery
+        .locator('.flora-album-strip__position')
+        .first()
+        .evaluate((element) => element.getAnimations().length)
+    )
+    .toBe(1)
+  await gallery
+    .locator('.flora-album-strip__photo')
+    .first()
+    .evaluate((button: HTMLButtonElement) => button.click())
   await expect(page.locator('.el-image-viewer__wrapper')).toBeVisible()
+  await expect(gallery).not.toHaveClass(/is-expanded/)
+  await expect(page.locator('.el-image-viewer__img')).toHaveAttribute(
+    'src',
+    petAlbums.huahua.defaults[0].url
+  )
+  await page.locator('.el-image-viewer__close').click()
+  await gallery
+    .getByRole('button', { name: 'EXPAND', exact: true })
+    .evaluate((button: HTMLButtonElement) => button.click())
+  await expect(gallery.locator('.flora-album-strip')).toHaveClass(
+    /album-mode-leave-active/
+  )
+
+  const leavingPhoto = gallery.locator('.flora-album-strip__position').first()
+  const frozen = await leavingPhoto.evaluate((element: HTMLElement) => ({
+    transform: element.style.transform,
+    opacity: Number(element.style.opacity),
+  }))
+  expect(frozen.transform).toMatch(/^matrix/)
+  expect(frozen.opacity).toBeGreaterThan(0.3)
+  await page.screenshot({
+    path: `.tmp/album-unfold-${test.info().project.name}.png`,
+  })
+  await expect(gallery).toHaveClass(/is-expanded/)
+  await gallery.locator('.media-gallery__open').first().click()
+  await expect(page.locator('.el-image-viewer__wrapper')).toBeVisible()
+  await expect(gallery).toHaveClass(/is-expanded/)
+  await page.locator('.el-image-viewer__close').click()
+  await gallery.getByRole('button', { name: 'COLLAPSE', exact: true }).click()
+  await expect(gallery.locator('.flora-album-gallery__viewport')).toHaveClass(
+    /album-mode-leave-active/
+  )
+  await expect(gallery.locator('.flora-album-strip')).toBeVisible()
   await expect(gallery).not.toHaveClass(/is-expanded/)
 })
