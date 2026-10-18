@@ -53,6 +53,7 @@ declare module '@vue/runtime-core' {
     MenuToggleIcon: typeof import('./src/components/MenuToggleIcon/index.vue')['default']
     MerchCollectionCard: typeof import('./src/components/MerchCollectionCard/index.vue')['default']
     MobileExperienceAlert: typeof import('./src/components/MobileExperienceAlert/index.vue')['default']
+    MobileScreenFrame: typeof import('./src/components/MobileScreenFrame/index.vue')['default']
     ModalWrapper: typeof import('./src/components/ModalWrapper/index.vue')['default']
     NotFoundContent: typeof import('./src/components/NotFoundContent/index.vue')['default']
     PageFooter: typeof import('./src/components/PageFooter/index.vue')['default']

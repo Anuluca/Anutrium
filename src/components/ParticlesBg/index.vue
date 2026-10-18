@@ -59,6 +59,7 @@ let resizeObserver: ResizeObserver | null = null
 let intersectionObserver: IntersectionObserver | null = null
 let reducedMotionQuery: MediaQueryList | null = null
 let lastFrameTime = 0
+let lastBudgetTime = 0
 let particleTextures: ParticleTexture[] = []
 let particleTexturePixelRatio = 0
 const PARTICLE_RADII = [0.65, 1, 1.45, 2.1] as const
@@ -186,8 +187,18 @@ const animate = (frameTime: number) => {
   animationFrameId = null
   if (motionState.value !== 'running') return
 
+  // 高刷新率屏幕也遵守 maxFps，避免标称 60 帧实际每秒重绘 120/165 次全屏画布。
+  const interval = 1000 / Math.max(1, props.maxFps)
+  const elapsed = frameTime - lastBudgetTime
+  if (props.maxFps >= 60 && elapsed < interval) {
+    animationFrameId = window.requestAnimationFrame(animate)
+    return
+  }
+
   drawParticles(frameTime, true)
   lastFrameTime = frameTime
+  lastBudgetTime =
+    props.maxFps >= 60 ? frameTime - (elapsed % interval) : frameTime
   if (props.maxFps < 60) {
     frameTimer = setTimeout(() => {
       frameTimer = null
@@ -201,6 +212,7 @@ const animate = (frameTime: number) => {
 const syncAnimation = () => {
   stopAnimation()
   lastFrameTime = performance.now()
+  lastBudgetTime = lastFrameTime
 
   if (motionState.value === 'running') {
     animationFrameId = window.requestAnimationFrame(animate)

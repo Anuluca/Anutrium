@@ -1,0 +1,124 @@
+// 面板只负责自身盒模型，排列、可用高度和展开边界由 FloraMediaLayout 统一提供。
+.flora-media-panel() {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  box-sizing: border-box;
+  isolation: isolate;
+  color: #fffff4;
+  pointer-events: auto;
+}
+
+.flora-media-title() {
+  position: absolute;
+  bottom: calc(100% - var(--flora-media-title-overlap, 4px));
+  left: var(--media-title-offset, 12px);
+  margin: 0;
+  font: 400 var(--flora-media-title-size, 72px) /
+      var(--flora-media-title-line-height, 1.2) 'UnboundedSans',
+    sans-serif;
+  -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
+}
+
+.flora-media-title-content() {
+  display: flex;
+  align-items: center;
+  gap: 0.04em;
+  white-space: nowrap;
+
+  svg {
+    flex: none;
+    width: 0.85em;
+    height: 0.85em;
+    stroke: currentColor;
+    stroke-width: 24;
+    stroke-linejoin: round;
+    transform: translateY(0.06em);
+    -webkit-mask-image: linear-gradient(to right, #000, transparent);
+    mask-image: linear-gradient(to right, #000, transparent);
+  }
+}
+
+.flora-media-expand-control() {
+  position: absolute;
+  bottom: 12px;
+  right: 42px;
+  z-index: 3;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 14px;
+  border: 0;
+  cursor: pointer;
+  overflow: visible;
+  background: #000;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  font: 400 36px / 1 'Anton', sans-serif;
+  letter-spacing: 0;
+  .flora-media-expand-icon {
+    position: absolute;
+    top: 50%;
+    left: -0.8em;
+    z-index: 1;
+    width: 0.9em;
+    height: 0.9em;
+    opacity: 0.5;
+    transform: translateY(-50%);
+    stroke: currentColor;
+    stroke-width: 20;
+    pointer-events: none;
+    -webkit-mask-image: linear-gradient(to right, #000, transparent);
+    mask-image: linear-gradient(to right, #000, transparent);
+  }
+  &::before {
+    position: absolute;
+    top: 0;
+    right: 100%;
+    bottom: 0;
+    width: 54px;
+    background: inherit;
+    -webkit-mask-image: linear-gradient(to right, transparent, #000);
+    mask-image: linear-gradient(to right, transparent, #000);
+    pointer-events: none;
+    content: '';
+  }
+  &:hover,
+  &:focus-visible {
+    background: #e23456;
+    color: #000;
+    box-shadow: 0 4px 14px rgba(226, 52, 86, 0.5);
+  }
+
+  span {
+    flex-shrink: 0;
+    font-family: inherit;
+    font-weight: inherit;
+    font-style: inherit;
+    white-space: nowrap;
+  }
+}
+
+.flora-media-expand-control-mobile() {
+  right: var(--album-toggle-right, 8px);
+  bottom: 8px;
+  width: var(--album-toggle-width, 80px);
+  height: 30px;
+  box-sizing: border-box;
+  padding: 6px 8px;
+  font-size: 18px;
+
+  &:hover,
+  &:focus-visible {
+    background: #000;
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+    animation: none;
+  }
+}

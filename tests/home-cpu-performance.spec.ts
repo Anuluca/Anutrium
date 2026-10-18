@@ -131,9 +131,6 @@ test('home keeps route-leave geometry within one pixel', async ({ page }) => {
   )
   await page.evaluate(() => document.fonts.ready)
   await page.emulateMedia({ reducedMotion: 'no-preference' })
-  await page.addStyleTag({
-    content: '.route-leave-active { transition-duration: 600ms !important; }',
-  })
   // 切换 reduced-motion 会恢复尚未结束的入场 transform，几何基线必须在入场完成后采集。
   await page.locator('.temple-page').evaluate(async (element) => {
     await new Promise<void>((resolve) =>
@@ -153,23 +150,33 @@ test('home keeps route-leave geometry within one pixel', async ({ page }) => {
       container.getBoundingClientRect(),
     ]
     const probe = { maxShift: 0, leaving: 0 }
-    const sample = () => {
-      if (!root.isConnected) return
-      if (root.classList.contains('route-leave-active')) {
-        probe.leaving++
-        for (const [index, rect] of [
-          root.getBoundingClientRect(),
-          container.getBoundingClientRect(),
-        ].entries()) {
-          probe.maxShift = Math.max(
-            probe.maxShift,
-            Math.abs(rect.top - before[index].top),
-            Math.abs(rect.left - before[index].left)
-          )
-        }
+    // 路由已改用 JS 过渡，不再产生 route-leave-active；锁定几何期间直接采样。
+    const observer = new MutationObserver(() => {
+      sampleGeometry()
+      if (!root.isConnected) observer.disconnect()
+    })
+    const sampleGeometry = () => {
+      if (!root.isConnected || (root as HTMLElement).style.position !== 'fixed')
+        return
+      probe.leaving++
+      for (const [index, node] of [root, container].entries()) {
+        const bounds = node.getBoundingClientRect()
+        probe.maxShift = Math.max(
+          probe.maxShift,
+          Math.abs(bounds.top - before[index].top),
+          Math.abs(bounds.left - before[index].left)
+        )
       }
+    }
+    const sample = () => {
+      if (!root.isConnected) {
+        observer.disconnect()
+        return
+      }
+      sampleGeometry()
       requestAnimationFrame(sample)
     }
+    observer.observe(root, { attributes: true, attributeFilter: ['style'] })
     requestAnimationFrame(sample)
     ;(window as any).homeLeaveProbe = probe
     void (
@@ -178,6 +185,6 @@ test('home keeps route-leave geometry within one pixel', async ({ page }) => {
   })
   await expect(page.locator('.craft-page')).toBeVisible()
   const probe = await page.evaluate(() => (window as any).homeLeaveProbe)
-  expect(probe.leaving).toBeGreaterThan(1)
+  expect(probe.leaving).toBeGreaterThan(0)
   expect(probe.maxShift).toBeLessThanOrEqual(1)
 })

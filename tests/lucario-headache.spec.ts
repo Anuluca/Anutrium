@@ -16,15 +16,11 @@ for (const reducedMotion of ['reduce', 'no-preference'] as const) {
     await page.routeWebSocket('ws://localhost:3000/**', (socket) =>
       socket.close()
     )
-    await page.route('**/src/config/templeExperience.ts*', async (route) => {
-      const response = await route.fetch()
-      await route.fulfill({
-        response,
-        body: (
-          await response.text()
-        ).replace(/mode: ["'](?:normal|headache)["']/, 'mode: "headache"'),
+    await page.route('**/site/home-features', (route) =>
+      route.fulfill({
+        json: { lucarioHeadache: true, updatedAt: null },
       })
-    })
+    )
     await page.emulateMedia({ reducedMotion })
     await page.goto('/', { waitUntil: 'domcontentloaded' })
     const stage = page.locator('.temple-stage')
@@ -93,15 +89,11 @@ for (const mode of ['headache', 'normal'] as const) {
     await page.routeWebSocket('ws://localhost:3000/**', (socket) =>
       socket.close()
     )
-    await page.route('**/src/config/templeExperience.ts*', async (route) => {
-      const response = await route.fetch()
-      await route.fulfill({
-        response,
-        body: (
-          await response.text()
-        ).replace(/mode: ["'](?:normal|headache)["']/, `mode: "${mode}"`),
+    await page.route('**/site/home-features', (route) =>
+      route.fulfill({
+        json: { lucarioHeadache: mode === 'headache', updatedAt: null },
       })
-    })
+    )
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.goto('/', { waitUntil: 'domcontentloaded' })
     const stage = page.locator('.temple-stage')

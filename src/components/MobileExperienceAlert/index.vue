@@ -10,6 +10,7 @@
         v-if="visible"
         class="mobile-experience-alert no-rem"
         :class="{ 'is-en': locale === 'en' }"
+        @click="closable && close()"
       >
         <div class="el-alert el-alert--error" role="alert">
           <div class="el-alert__message">
@@ -29,7 +30,7 @@
             v-if="closable"
             class="el-alert__close-btn is-customed"
             type="button"
-            @click="close"
+            @click.stop="close"
           >
             <slot name="action">{{ displayCloseText }}</slot>
           </button>

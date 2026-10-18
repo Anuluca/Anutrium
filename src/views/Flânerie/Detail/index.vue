@@ -88,6 +88,7 @@ import MediaGallery, {
 } from '@/components/MediaGallery/index.vue'
 import MediaPhotoInfo from '@/components/MediaPhotoInfo/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
+import { getBilibiliEmbedUrl } from '@/utils/bilibiliVideo'
 import { markJourneyReturn } from '@/utils/journeyReturnState'
 
 import type { JourneyItem, JourneyPhoto, JourneyVideo } from '@/types/flanerie'
@@ -121,15 +122,7 @@ const vlog = computed<JourneyItem | undefined>(() => {
 const videos = computed<VideoItem[]>(() => {
   return (vlog.value?.videos || []).map((v) => ({
     ...v,
-    embedUrl: v.bvid
-      ? `https://player.bilibili.com/player.html?${new URLSearchParams({
-          bvid: v.bvid,
-          page: '1',
-          high_quality: '1',
-          danmaku: '0',
-          autoplay: '1',
-        })}`
-      : '',
+    embedUrl: v.bvid ? getBilibiliEmbedUrl(v.bvid) : '',
   }))
 })
 

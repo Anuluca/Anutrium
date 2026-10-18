@@ -664,7 +664,9 @@ const desktopMenuGroups = computed(() =>
     : [menuItems]
 )
 const activeNavigation = computed(() =>
-  navigation.aboutOpen ? 'about' : navigation.activeSelection
+  route.path === '/about' || navigation.aboutOpen
+    ? 'about'
+    : navigation.activeSelection
 )
 const activateNavigation = async (id: TempleNavigationId) => {
   closeMobileMenu()

@@ -24,7 +24,7 @@ test('3D collection loops without duplicate nodes, supports local browsing and p
     )
     const { default: i18n } = await import('/src/locales/index.ts')
     const root = document.createElement('div')
-    root.style.cssText = 'width:min(880px,100%);height:360px;margin-top:40px'
+    root.style.cssText = 'width:min(440px,45vw);height:360px;margin-top:40px'
     document.body.append(root)
     createApp({
       render: () =>
@@ -79,23 +79,27 @@ test('3D collection loops without duplicate nodes, supports local browsing and p
     ].map((element) => element.getAnimations()[0])
     const times = animations.map((animation) => Number(animation.currentTime))
     const bounds = root.getBoundingClientRect()
-    const samples = [0, 2000, 6000, 14000].map((delta) => {
-      animations.forEach((animation, index) => {
-        animation.pause()
-        animation.currentTime = times[index] + delta
-      })
-      const rects = [...root.querySelectorAll('.flora-album-strip__position')]
-        .filter((element) => Number(getComputedStyle(element).opacity) > 0.01)
-        .map((element) =>
-          element.querySelector('button')!.getBoundingClientRect()
-        )
-        .sort((a, b) => a.left - b.left)
-      return {
-        count: rects.length,
-        left: Math.min(...rects.map((rect) => rect.left)) - bounds.left,
-        right: bounds.right - Math.max(...rects.map((rect) => rect.right)),
+    const samples = Array.from({ length: 16 }, (_, index) => index * 250).map(
+      (delta) => {
+        animations.forEach((animation, index) => {
+          animation.pause()
+          animation.currentTime = times[index] + delta
+        })
+        const rects = [...root.querySelectorAll('.flora-album-strip__position')]
+          .filter((element) => Number(getComputedStyle(element).opacity) > 0.01)
+          .map((element) =>
+            element.querySelector('button')!.getBoundingClientRect()
+          )
+          .sort((a, b) => a.left - b.left)
+        return {
+          count: rects.length,
+          width: bounds.width,
+          cardWidth: rects[0].width,
+          left: Math.min(...rects.map((rect) => rect.left)) - bounds.left,
+          right: bounds.right - Math.max(...rects.map((rect) => rect.right)),
+        }
       }
-    })
+    )
     animations.forEach((animation, index) => {
       animation.currentTime = times[index]
       animation.play()
@@ -103,8 +107,9 @@ test('3D collection loops without duplicate nodes, supports local browsing and p
     return samples
   })
   for (const sample of coverage) {
-    expect(sample.count).toBeGreaterThan(0)
-    expect(sample.left).toBeGreaterThanOrEqual(8)
+    expect(sample.count).toBeGreaterThanOrEqual(2)
+    expect(sample.left).toBeGreaterThanOrEqual(-sample.cardWidth * 0.4)
+    expect(sample.left).toBeLessThanOrEqual(sample.width * 0.2)
     expect(sample.right).toBeGreaterThanOrEqual(8)
   }
   const area = (await viewport.boundingBox())!

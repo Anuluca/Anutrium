@@ -26,8 +26,15 @@ test('crew panel preserves page position, fits its container and restores the br
   await page.goto('/about', { waitUntil: 'domcontentloaded' })
   const trigger = page.locator('[aria-controls="about-crew-content"]')
   await expect(trigger).toBeVisible({ timeout: 20_000 })
-  await page.waitForTimeout(2500)
-  await trigger.scrollIntoViewIfNeeded()
+  await expect(page.locator('.footer-bottom-gradient--ready')).toBeAttached({
+    timeout: 25000,
+  })
+  await expect(page.locator('.entry-overlay-container')).toHaveCount(0, {
+    timeout: 25000,
+  })
+  await page.evaluate(() => document.fonts.ready)
+  // 先完成点击可见性检查，避免把浏览器避让移动端页脚的自动滚动算作面板位移。
+  await trigger.click({ trial: true })
   const initial = await readPagePosition(page, '.about-page')
   const brand = page.locator('.passion-color-field')
   const crystal = page.locator('.passion-logo-bg')
@@ -79,7 +86,10 @@ test('crew panel preserves page position, fits its container and restores the br
     initial
   )
 
-  await panel.locator('.update-program__collapse').click()
+  const collapse = panel.locator('.update-program__collapse')
+  await collapse.click({ trial: true })
+  const beforeClose = await readPagePosition(page, '.about-page')
+  await collapse.click()
   await expect(panel).toBeHidden()
   await page.waitForTimeout(500)
   expect(
@@ -90,7 +100,7 @@ test('crew panel preserves page position, fits its container and restores the br
   ).toBeLessThanOrEqual(1)
   expectPagePositionToMatch(
     await readPagePosition(page, '.about-page'),
-    initial
+    beforeClose
   )
 })
 
@@ -319,7 +329,7 @@ test('staff credits localize labels and remain centered and scrollable', async (
     ).toBe('center')
     expect(
       await credits.evaluate((element) => getComputedStyle(element).fontSize)
-    ).toBe('24px')
+    ).toBe(page.viewportSize()!.width <= 768 ? '19.2px' : '24px')
     const scroller = page.locator(
       '.is-crew-panel .update-program__body-content'
     )

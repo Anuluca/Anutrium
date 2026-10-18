@@ -2,6 +2,7 @@
 /* eslint-disable simple-import-sort/imports */
 import layout from './layout/index.vue'
 import FooterCom from '@/components/FooterCom/index.vue'
+import MobileScreenFrame from '@/components/MobileScreenFrame/index.vue'
 import LayoutBorderToggle from '@/components/LayoutBorderToggle/index.vue'
 import {
   computed,
@@ -287,14 +288,10 @@ watch(
   </Teleport>
   <BackController :entry-active="entryAnimationReady" />
   <MobileExperienceAlert v-if="entryOverlayHidden" />
-  <div class="mobile-screen-frame-bottom" aria-hidden="true" />
+  <MobileScreenFrame v-if="!isTempleRoute" />
 </template>
 
 <style scoped lang="less">
-.mobile-screen-frame-bottom {
-  display: none;
-}
-
 .footer-bottom-gradient {
   position: fixed;
   right: 0;
@@ -319,44 +316,6 @@ watch(
 @media screen and (max-aspect-ratio: @ratio-threshold) {
   .footer-bottom-gradient {
     display: none;
-  }
-}
-
-@media screen and (max-aspect-ratio: @ratio-threshold),
-  screen and (max-width: 1024px) and (hover: none) and (pointer: coarse) {
-  .mobile-screen-frame-bottom {
-    position: fixed;
-    right: 0;
-    bottom: -1px;
-    left: 0;
-    z-index: 10;
-    display: block;
-    height: 29px;
-    zoom: 3.5;
-    pointer-events: none;
-
-    &::before,
-    &::after {
-      position: absolute;
-      inset: 0;
-      content: '';
-    }
-
-    &::before {
-      z-index: 0;
-      background: linear-gradient(
-        to bottom,
-        transparent 0%,
-        color-mix(in srgb, var(--bg-color) 25%, transparent) 35%,
-        color-mix(in srgb, var(--bg-color) 72%, transparent) 70%,
-        var(--bg-color) 100%
-      );
-    }
-
-    &::after {
-      z-index: 1;
-      .tapered-screen-lines(var(--mobile-screen-frame-color));
-    }
   }
 }
 </style>

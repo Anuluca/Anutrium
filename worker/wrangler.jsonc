@@ -22,7 +22,7 @@
     "GITHUB_CACHE_TTL_SECONDS": "21600"
   },
   "secrets": {
-    "required": ["STEAM_API_KEY", "GITHUB_TOKEN", "GA4_SERVICE_ACCOUNT_JSON"]
+    "required": ["STEAM_API_KEY", "GITHUB_TOKEN", "GA4_SERVICE_ACCOUNT_JSON", "HOME_FEATURES_TOKEN"]
   },
   "observability": {
     "enabled": true,

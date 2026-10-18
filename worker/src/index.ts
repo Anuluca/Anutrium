@@ -1,6 +1,7 @@
 import { handleAnalytics } from './analytics'
 import { handleFloraMedia } from './floratrium'
 import { fetchGitHubContributions } from './github'
+import { handleHomeFeatures } from './homeFeatures'
 import {
   getAllowedOrigins,
   getCorsHeaders,
@@ -67,6 +68,17 @@ const worker: ExportedHandler<Env> = {
       })
     }
 
+    // 管理写入只在这个独立端点开放，其余既有接口继续只读。
+    if (
+      url.pathname === '/admin/home-features' ||
+      url.pathname === '/site/home-features'
+    )
+      return withCors(
+        await handleHomeFeatures(request, env),
+        origin,
+        allowedOrigins
+      )
+
     if (request.method !== 'GET') {
       return withCors(
         jsonResponse({ error: 'Method not allowed' }, 405, {
@@ -83,7 +95,9 @@ const worker: ExportedHandler<Env> = {
 
     if (
       url.pathname === '/analytics/summary' ||
-      url.pathname === '/analytics/realtime'
+      url.pathname === '/analytics/realtime' ||
+      url.pathname === '/analytics/views' ||
+      url.pathname === '/analytics/online'
     )
       return withCors(
         await handleAnalytics(request, env, ctx),

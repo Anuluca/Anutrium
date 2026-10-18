@@ -1,6 +1,11 @@
 <script lang="ts" setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import {
+  useDocumentVisibility,
+  useEventListener,
+  useResizeObserver,
+} from '@vueuse/core'
 
 import LinkFlowMark from '@/components/LinkFlowMark/index.vue'
 import LogoRotating3D from '@/components/Logo_rotating3D/index.vue'
@@ -8,10 +13,11 @@ import PageFooter from '@/components/PageFooter/index.vue'
 import PageHeroTitle from '@/components/PageHeroTitle/index.vue'
 import PageScrollProgress from '@/components/PageScrollProgress/index.vue'
 import { useFrameTask } from '@/composables/useFrameTask'
+import { useIntersectionActivation } from '@/composables/useIntersectionActivation'
 
 import { useAboutPanels } from './composables/useAboutPanels'
 import { useCreditsPlayback } from './composables/useCreditsPlayback'
-import SiteAnalytics from './SiteAnalytics.vue'
+import SiteVisitors from './SiteVisitors.vue'
 
 interface ChangelogItem {
   version: string
@@ -66,6 +72,36 @@ const {
   finishPanelLeave,
   toggleAboutPanel,
 } = useAboutPanels()
+const passionVisible = ref(false)
+const neighborsRef = ref<HTMLElement | null>(null)
+const neighborsVisible = ref(false)
+const documentVisibility = useDocumentVisibility()
+const passionMotionPaused = computed(
+  () => !passionVisible.value || documentVisibility.value === 'hidden'
+)
+const neighborsMotionPaused = computed(
+  () => !neighborsVisible.value || documentVisibility.value === 'hidden'
+)
+useIntersectionActivation(
+  () =>
+    [passionRef.value, neighborsRef.value].filter(
+      (element): element is HTMLElement => !!element
+    ),
+  (entries) => {
+    for (const entry of entries) {
+      if (entry.target === passionRef.value)
+        passionVisible.value = entry.isIntersecting
+      if (entry.target === neighborsRef.value)
+        neighborsVisible.value = entry.isIntersecting
+    }
+  },
+  {
+    onUnsupported: () => {
+      passionVisible.value = true
+      neighborsVisible.value = true
+    },
+  }
+)
 const handlePassionClick = (event: MouseEvent) => {
   if ((event.target as Element).closest('.passion-content')) return
   if (activeAboutPanel.value || visibleAboutPanel.value) {
@@ -127,13 +163,32 @@ const parseMarkedText = (value: string): MarkedTextSegment[] => {
 }
 
 let crosshairPoint: { section: HTMLElement; x: number; y: number } | null = null
+let crosshairBounds: DOMRect | null = null
+const crosshairX = ref<HTMLElement | null>(null)
+const crosshairY = ref<HTMLElement | null>(null)
+const invalidateCrosshairBounds = () => {
+  crosshairBounds = null
+}
+useResizeObserver(passionRef, invalidateCrosshairBounds)
+useEventListener('scroll', invalidateCrosshairBounds, {
+  capture: true,
+  passive: true,
+})
 const { cancel: cancelCrosshairUpdate, schedule: scheduleCrosshairUpdate } =
   useFrameTask(() => {
     if (!crosshairPoint) return
     const { section, x, y } = crosshairPoint
-    const rect = section.getBoundingClientRect()
-    section.style.setProperty('--passion-cross-x', `${x - rect.left}px`)
-    section.style.setProperty('--passion-cross-y', `${y - rect.top}px`)
+    const rect =
+      crosshairBounds ?? (crosshairBounds = section.getBoundingClientRect())
+    // 只移动两条独立合成线，避免继承变量使整个 Passion 子树重算样式和布局。
+    if (crosshairX.value)
+      crosshairX.value.style.transform = `translate3d(${
+        x - rect.left - 0.5
+      }px, 0, 0)`
+    if (crosshairY.value)
+      crosshairY.value.style.transform = `translate3d(0, ${
+        y - rect.top - 0.5
+      }px, 0)`
   })
 const updatePassionCrosshair = (event: MouseEvent) => {
   crosshairPoint = {
@@ -146,6 +201,7 @@ const updatePassionCrosshair = (event: MouseEvent) => {
 
 const showPassionCrosshair = (event: MouseEvent) => {
   const section = event.currentTarget as HTMLElement
+  crosshairBounds = section.getBoundingClientRect()
   section.classList.add('is-crosshair-active')
   updatePassionCrosshair(event)
 }
@@ -154,6 +210,7 @@ const hidePassionCrosshair = (event: MouseEvent) => {
   const section = event.currentTarget as HTMLElement
   cancelCrosshairUpdate()
   crosshairPoint = null
+  crosshairBounds = null
   section.classList.remove('is-crosshair-active')
 }
 
@@ -197,6 +254,7 @@ const roadmapItems = computed(() =>
         <section
           ref="passionRef"
           class="passion-section no-cursor no-rem"
+          :class="{ 'is-motion-paused': passionMotionPaused }"
           :aria-label="t('about.brandColorName')"
           @mouseenter="showPassionCrosshair"
           @mousemove="updatePassionCrosshair"
@@ -204,6 +262,7 @@ const roadmapItems = computed(() =>
           @click="handlePassionClick"
         >
           <div class="passion-back" />
+          <SiteVisitors />
           <LogoRotating3D
             class="passion-logo-bg"
             low-power
@@ -233,7 +292,10 @@ const roadmapItems = computed(() =>
               </div>
             </div>
           </div>
-          <div class="passion-crosshair" aria-hidden="true" />
+          <div class="passion-crosshair" aria-hidden="true">
+            <span ref="crosshairX" class="passion-crosshair__vertical" />
+            <span ref="crosshairY" class="passion-crosshair__horizontal" />
+          </div>
         </section>
       </section>
 
@@ -543,7 +605,12 @@ const roadmapItems = computed(() =>
       </button>
     </div>
 
-    <section id="about-neighbors" class="block neighbors-block">
+    <section
+      id="about-neighbors"
+      ref="neighborsRef"
+      class="block neighbors-block"
+      :class="{ 'is-motion-paused': neighborsMotionPaused }"
+    >
       <div class="section-header">
         <h3 class="section-title">
           <span class="c-gear" aria-hidden="true">
@@ -677,7 +744,6 @@ const roadmapItems = computed(() =>
       </div>
     </section>
 
-    <SiteAnalytics />
     <PageFooter v-if="!props.embedded" />
   </div>
 </template>

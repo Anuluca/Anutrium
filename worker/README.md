@@ -12,9 +12,18 @@ Steam Web API 与 GitHub GraphQL API 的代理层。网站前端只访问 Worker
 
 ## 访客统计
 
-- `GET /analytics/summary?days=7|30|90`：公开 GA4 汇总报表。
+- `GET /analytics/summary?days=1|7|30|90`：公开 GA4 汇总报表；`1` 表示 GA4 属性时区的今天。
 - `GET /analytics/realtime`：数据流实时汇总。
 - 配置、缓存、权限和验证流程统一见 [GA4 接入文档](../docs/ga4-setup.md)。
+
+## 首页功能开关
+
+- `GET /site/home-features`：公开读取 `{ lucarioHeadache, updatedAt }`；未保存配置时返回普通模式，存储异常时返回 503。
+- `GET /admin/home-features`、`PUT /admin/home-features`：必须携带 `Authorization: Bearer <HOME_FEATURES_TOKEN>`。PUT 仅接受一个布尔字段 `lucarioHeadache`，禁止其他字段，实际请求体最多 1024 字节。
+- 配置通过既有 `FLORATRIUM_BUCKET` 读写 `config/home-features.json`，所有配置响应不缓存，不调用 GA4、Steam 或 GitHub 接口。
+- 在 Worker Secret 和 AnuConsole 服务端环境中配置相同的 `HOME_FEATURES_TOKEN`（安全随机生成，至少 32 字符），禁止添加 `VITE_` / `NEXT_PUBLIC_` 前缀。仅 AnuConsole 服务端持有管理密钥。
+- 线上设置 Worker Secret：在 `worker` 目录运行 `npx wrangler secret put HOME_FEATURES_TOKEN`，通过交互输入密钥。此命令会发布新版本；本地 `.dev.vars` 不会自动上传。上线顺序为配置密钥、部署 Worker、部署网站和 AnuConsole。
+- 回归：`node --test tests/homeFeatures.test.mjs` 在本地 Miniflare 的隔离 R2 中测试，不读写线上配置；现有 Miniflare 仅支持到 `2026-08-08`，测试使用该日期，生产配置仍保持 `2026-08-10`。
 
 ## 首次部署
 

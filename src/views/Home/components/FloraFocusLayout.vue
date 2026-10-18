@@ -1,12 +1,5 @@
 <script setup lang="ts">
-import {
-  computed,
-  type ComputedRef,
-  inject,
-  onBeforeUnmount,
-  ref,
-  watch,
-} from 'vue'
+import { computed, type ComputedRef, inject, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useNow, useResizeObserver } from '@vueuse/core'
 
@@ -26,25 +19,13 @@ import {
 } from '@/utils/scanlineMask'
 
 import { useFooterViewportOffset } from '../composables/useFooterViewportOffset'
-import FloraAlbumGallery from './FloraAlbumGallery.vue'
+import FloraMediaLayout from './FloraMediaLayout.vue'
+import FloraMovesPanel from './FloraMovesPanel.vue'
 
-const albumGallery = ref<InstanceType<typeof FloraAlbumGallery> | null>(null)
+const mediaLayout = ref<InstanceType<typeof FloraMediaLayout> | null>(null)
 const albumExpanded = ref(false)
-const albumLayerActive = ref(false)
-let albumLayerTimer: ReturnType<typeof setTimeout> | undefined
-watch(albumExpanded, (expanded) => {
-  clearTimeout(albumLayerTimer)
-  if (expanded) albumLayerActive.value = true
-  else if (window.matchMedia('(prefers-reduced-motion: reduce)').matches)
-    albumLayerActive.value = false
-  else
-    albumLayerTimer = setTimeout(() => {
-      albumLayerActive.value = false
-    }, 850)
-})
-onBeforeUnmount(() => clearTimeout(albumLayerTimer))
 defineExpose({
-  closeExpandedAlbum: () => albumGallery.value?.closeExpanded() ?? false,
+  closeExpandedAlbum: () => mediaLayout.value?.closeExpanded() ?? false,
 })
 
 defineProps<{ mobile: boolean }>()
@@ -60,6 +41,7 @@ const { t, locale } = useI18n({
       loadError: '模型加载失败，请重新点击精灵球重试。',
       levelRule: '等级 = 当前年月 − 出生年月（月数）',
       album: '相册',
+      video: '视频',
     },
     en: {
       female: 'Female',
@@ -68,6 +50,7 @@ const { t, locale } = useI18n({
       loadError: 'Model could not load. Select the Poké Ball again to retry.',
       levelRule: 'Level = months since birth',
       album: 'Album',
+      video: 'Videos',
     },
   },
 })
@@ -140,7 +123,6 @@ const layoutBorders = useLayoutBorders()
       'is-border-hidden': !layoutBorders.visible,
       'flora-focus-layout--mobile': mobile,
       'is-album-expanded': albumExpanded,
-      'is-album-layer-active': albumLayerActive,
     }"
     :style="{
       '--flora-theme-color': activePet.themeColor,
@@ -180,7 +162,7 @@ const layoutBorders = useLayoutBorders()
       >
         <component
           :is="index <= pets.length ? 'button' : 'span'"
-          v-for="index in 6"
+          v-for="index in mobile ? 3 : 6"
           :key="index"
           class="flora-character-rail__slot"
           :class="{ 'is-clickable': index <= pets.length }"
@@ -195,9 +177,11 @@ const layoutBorders = useLayoutBorders()
           "
           :aria-hidden="index > pets.length ? true : undefined"
           :style="{
-            top: `calc(${
-              ((index - 0.5) / 6) * 100
-            }% + var(--rail-slot-inset) * ${1 - (index - 0.5) / 3})`,
+            top: mobile
+              ? `${22 + (index - 1) * 42}px`
+              : `calc(${
+                  ((index - 0.5) / 6) * 100
+                }% + var(--rail-slot-inset) * ${1 - (index - 0.5) / 3})`,
           }"
           :data-pet-id="pets[index - 1]?.id"
           @click.stop="selectPet(index)"
@@ -359,45 +343,61 @@ const layoutBorders = useLayoutBorders()
       </div>
     </section>
     <section class="flora-focus-layout__content" aria-label="宠物内容模块区">
-      <ElPopover
-        :key="activePet.id"
-        placement="right"
-        trigger="hover"
-        :width="320"
-        :show-after="0"
-        :hide-after="100"
-        :show-arrow="false"
-      >
-        {{ t('levelRule') }}
-        <template #reference>
-          <button
-            :key="`${activePet.id}:${petLevel}`"
-            type="button"
-            class="flora-pet-level"
-            :aria-label="`Lv. ${petLevel}`"
-            @click.stop
-          >
-            <span aria-hidden="true">Lv.&nbsp;</span>
-            <span
-              v-for="(digit, index) in petLevel"
-              :key="index"
-              class="flora-number-bar__character-slot is-typing-digit"
-              :style="{ '--flora-type-delay': `${240 + index * 320}ms` }"
-              aria-hidden="true"
-              ><span class="flora-number-bar__character">{{
-                digit
-              }}</span></span
-            >
-          </button>
-        </template>
-      </ElPopover>
-      <FloraAlbumGallery
-        ref="albumGallery"
+      <FloraMediaLayout
+        ref="mediaLayout"
         :pet-id="activePet.id"
-        :title="albumTitle"
         :mobile="mobile"
+        :album-title="albumTitle"
+        :video-title="t('video')"
         @expanded-change="albumExpanded = $event"
-      />
+      >
+        <template #profile="{ mediaActive }">
+          <div class="flora-pet-profile">
+            <ElPopover
+              :key="activePet.id"
+              placement="right"
+              trigger="hover"
+              :width="320"
+              :show-after="0"
+              :hide-after="100"
+              :show-arrow="false"
+            >
+              {{ t('levelRule') }}
+              <template #reference>
+                <button
+                  :key="`${activePet.id}:${petLevel}`"
+                  type="button"
+                  class="flora-pet-level"
+                  :aria-label="`Lv. ${petLevel}`"
+                  @click.stop
+                >
+                  <span aria-hidden="true">Lv.&nbsp;</span>
+                  <span
+                    v-for="(digit, index) in petLevel"
+                    :key="index"
+                    class="flora-number-bar__character-slot is-typing-digit"
+                    :style="{ '--flora-type-delay': `${240 + index * 320}ms` }"
+                    aria-hidden="true"
+                    ><span class="flora-number-bar__character">{{
+                      digit
+                    }}</span></span
+                  >
+                </button>
+              </template>
+            </ElPopover>
+            <div
+              class="flora-pet-profile__moves"
+              :class="{ 'is-hidden': mediaActive }"
+            >
+              <FloraMovesPanel
+                :key="activePet.id"
+                :pet-id="activePet.id"
+                :mobile="mobile"
+              />
+            </div>
+          </div>
+        </template>
+      </FloraMediaLayout>
       <p v-if="floraPets.error" class="flora-pet-error" role="alert">
         {{ t('loadError') }}
       </p>
@@ -438,14 +438,38 @@ const layoutBorders = useLayoutBorders()
 
   .flora-focus-layout__content {
     --flora-content-inset: 24px;
+    --flora-pet-level-size: clamp(36px, 8cqw, 88px);
 
     position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    min-height: 0;
     container-type: inline-size;
     padding: var(--flora-content-inset);
   }
 
+  .flora-pet-profile {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    min-width: 0;
+  }
+
+  .flora-pet-profile__moves {
+    flex: none;
+    width: 100%;
+    margin-top: auto;
+    &.is-hidden {
+      visibility: hidden;
+      pointer-events: none;
+    }
+  }
+
   .flora-pet-level {
     display: inline-flex;
+    flex: none;
+    align-self: flex-start;
     align-items: flex-start;
     padding: 0;
     border: 0;
@@ -455,7 +479,7 @@ const layoutBorders = useLayoutBorders()
     cursor: help;
     color: var(--flora-theme-color);
     font-family: 'UnboundedSans', sans-serif;
-    font-size: clamp(36px, 8cqw, 88px);
+    font-size: var(--flora-pet-level-size);
     font-weight: 400;
     line-height: 1;
     animation: flora-number-enter 600ms ease-out both;
@@ -750,30 +774,35 @@ const layoutBorders = useLayoutBorders()
     .flora-focus-layout__content {
       --flora-content-inset: 0px;
       padding: 0;
-      // 收起与展开共用定位边界，宽高过渡期间不切换包含块。
-      position: static;
       container-type: normal;
+    }
+
+    .flora-pet-profile {
+      flex: none;
+      gap: 32px;
     }
 
     .flora-character-rail {
       --rail-slot-inset: 8px;
-      --rail-footer-height: 43.75cqw;
-      --rail-hole-radius: min(12px, calc((400cqw - 16px) / 14));
+      --rail-footer-height: 14px;
+      --rail-hole-radius: 16px;
+      --rail-mask: radial-gradient(
+        circle at 22px 106px,
+        transparent 16px,
+        #000 16.5px
+      );
 
       top: calc(var(--flora-symbols-bottom) + 8px);
       right: 0;
       left: auto;
-      width: auto;
-      height: calc(
-        clamp(96px, calc(100% - var(--flora-symbols-bottom) - 76px), 144px) *
-          1.3
-      );
-      aspect-ratio: 1 / 5.2;
+      width: 44px;
+      height: 128px;
     }
 
     .flora-character-rail__slot {
-      width: min(24px, calc((400cqw - 16px) / 7));
-      height: min(24px, calc((400cqw - 16px) / 7));
+      left: 22px;
+      width: 32px;
+      height: 32px;
     }
 
     .flora-focus-layout__character,

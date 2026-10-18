@@ -7,6 +7,12 @@
   VITE_GA4_MEASUREMENT_ID = "G-FEZS2B4N4L"
 
 [[redirects]]
+  from = "/api/site/home-features"
+  to = "https://steam-api.anuluca.com/site/home-features"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/api/analytics/*"
   to = "https://steam-api.anuluca.com/analytics/:splat"
   status = 200

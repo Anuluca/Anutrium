@@ -208,7 +208,9 @@ export async function loadAnalyticsReports(
 ): Promise<SiteAnalytics> {
   const reports: AnalyticsReport[] = []
   let timeZone = ''
-  const dateRanges = [{ startDate: `${days - 1}daysAgo`, endDate: 'today' }]
+  const dateRanges = [
+    { startDate: days === 1 ? 'today' : `${days - 1}daysAgo`, endDate: 'today' },
+  ]
   for (let offset = 0; offset < queries.length; offset += 5) {
     const group = queries.slice(offset, offset + 5)
     const requests = group.map(({ request }) => ({ ...request, dateRanges }))

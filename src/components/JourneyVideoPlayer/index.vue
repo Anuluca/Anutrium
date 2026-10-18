@@ -3,7 +3,11 @@
     ref="videoListRef"
     class="video-list"
     :class="{ 'is-entered': entranceStarted }"
-    :style="{ '--video-columns': Math.min(videos.length, 3) }"
+    :style="{
+      '--video-columns': Math.min(videos.length, 3),
+      '--video-align':
+        align === 'left' ? 'start' : align === 'right' ? 'end' : 'center',
+    }"
   >
     <button
       v-for="(video, index) in videos"
@@ -28,6 +32,7 @@
       </div>
       <strong class="video-title">{{ video.title }}</strong>
     </button>
+    <slot name="after-videos" />
   </div>
 
   <Teleport to="body">
@@ -105,9 +110,13 @@ interface VideoItem {
   embedUrl?: string
 }
 
-const props = defineProps<{
-  videos: VideoItem[]
-}>()
+const props = withDefaults(
+  defineProps<{
+    videos: VideoItem[]
+    align?: 'left' | 'center' | 'right'
+  }>(),
+  { align: 'center' }
+)
 const emit = defineEmits<{
   (event: 'entranceHandoff'): void
 }>()
@@ -212,7 +221,7 @@ onBeforeUnmount(() => {
 .video-list {
   display: grid;
   grid-template-columns: repeat(var(--video-columns), minmax(0, 300px));
-  justify-content: center;
+  justify-content: var(--video-align, center);
   gap: 50px;
 }
 

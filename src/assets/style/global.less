@@ -119,11 +119,7 @@ body:has(.pet-teaser) .back-to-top-button.no-rem {
   position: relative;
 }
 
-// 预览传送到 body 后直接继承当前页面主题色。
-// 底部线条遮罩位于根层级 10；提升整个祖先层叠上下文，收起动画结束后恢复。
-.layout-page:has(.flora-focus-layout--mobile.is-album-layer-active) {
-  z-index: 11;
-}
+// 图片预览传送到 body 后直接继承当前页面主题色。
 body:has(.flora-focus-layout--mobile) {
   .footer-com,
   .el-menu-layout-all,

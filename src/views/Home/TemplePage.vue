@@ -11,6 +11,7 @@ import {
 } from 'vue'
 import { useRoute } from 'vue-router'
 
+import MobileScreenFrame from '@/components/MobileScreenFrame/index.vue'
 import { decorationActivityKey } from '@/composables/useDecorationActivity'
 import { templeExperience } from '@/config/templeExperience'
 import {
@@ -24,6 +25,7 @@ import { useFloraPets } from '@/stores/floraPets'
 import { useSiteLoading } from '@/stores/siteLoading'
 import { useTempleNavigation } from '@/stores/templeNavigation'
 import { flashActionButton } from '@/utils/flashActionButton'
+import { readLucarioHeadache } from '@/utils/homeFeatures'
 import { hasJourneyReturnState } from '@/utils/journeyReturnState'
 import { setSmoothScrollLocked } from '@/utils/smoothScroll'
 import AboutOverlay from '@/views/About/AboutOverlay.vue'
@@ -41,9 +43,21 @@ const props = defineProps<{ presentation: TemplePresentation }>()
 const route = useRoute()
 const navigation = useTempleNavigation()
 const floraPets = useFloraPets()
+// 关闭期间继续保持背景休眠，待 About 离场结束后再恢复。
+const aboutBackgroundHidden = ref(navigation.aboutOpen)
+const restoreAboutBackground = () => {
+  if (!navigation.aboutOpen) aboutBackgroundHidden.value = false
+}
+watch(
+  () => navigation.aboutOpen,
+  (open) => {
+    if (open) aboutBackgroundHidden.value = true
+  },
+  { flush: 'sync' }
+)
 provide(
   decorationActivityKey,
-  computed(() => !navigation.aboutOpen)
+  computed(() => !aboutBackgroundHidden.value)
 )
 const siteLoading = useSiteLoading()
 let loadingTask: ReturnType<typeof siteLoading.beginTask> | undefined
@@ -203,9 +217,12 @@ const category = computed(() =>
 const buttons = new Map<string, HTMLElement>()
 let scene: ReturnType<typeof createHomeTemple> | undefined
 const sceneActive = computed(
-  () => !navigation.aboutOpen && (!navigation.expanded || resizing.value)
+  () => !aboutBackgroundHidden.value && (!navigation.expanded || resizing.value)
 )
 watch(sceneActive, (active) => scene?.setActive(active), { flush: 'post' })
+watch(aboutBackgroundHidden, (hidden) => scene?.setOccluded(hidden), {
+  flush: 'sync',
+})
 let disposed = false
 const { siteEntryActive, waitForRouteEnter } = useTempleEntry()
 
@@ -295,6 +312,7 @@ const selectPet = async (id: string) => {
   }
 }
 
+const featureRequest = new AbortController()
 onMounted(async () => {
   navigation.setInlineDetailCloser(closeInlineDetail)
   document.body.classList.remove(`${shell}-shell-leaving`)
@@ -303,7 +321,10 @@ onMounted(async () => {
   // 全局地平线加载仅属于首次入场；站内返回沿用路由过渡。
   if (!siteEntryActive.value) loadingTask = siteLoading.beginTask('home-scene')
   try {
-    const { createHomeTemple } = await import('./templeScene')
+    const [{ createHomeTemple }, headacheEnabled] = await Promise.all([
+      import('./templeScene'),
+      readLucarioHeadache(featureRequest.signal),
+    ])
     if (disposed || !stage.value) return
     scene = createHomeTemple(
       stage.value,
@@ -382,10 +403,17 @@ onMounted(async () => {
         },
       },
       config,
-      templeExperience,
+      {
+        ...templeExperience,
+        headache: templeExperience.headache && {
+          ...templeExperience.headache,
+          mode: headacheEnabled ? 'headache' : 'normal',
+        },
+      },
       navigation.simpleEntrance || hasJourneyReturnState(),
       floraPets.activePet
     )
+    scene.setOccluded(aboutBackgroundHidden.value)
     scene.setActive(sceneActive.value)
   } catch (error) {
     if (!disposed) {
@@ -397,6 +425,7 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
+  featureRequest.abort()
   expandClickFlash?.cancel()
   disposed = true
   petSelectionRevision++
@@ -431,111 +460,126 @@ onUnmounted(() => {
     :data-statue-focused="selected === 'statue'"
     :data-settled="settled"
   >
-    <div
-      ref="stage"
-      class="lucario-stage temple-stage"
-      :aria-busy="status === 'loading'"
-    >
-      <FloraFocusLayout
-        v-if="selected === 'sprigatito' && settled"
-        ref="floraFocusLayout"
-        :mobile="config.id === 'mobile'"
-        @select-pet="selectPet"
-      />
-      <TempleBackdrop />
-      <Transition name="temple-clock-reveal" appear>
-        <TempleClock v-if="clockVisible" />
-      </Transition>
-    </div>
-    <div class="temple-obelisks">
-      <button
-        v-for="item in templeCategories"
-        :key="item.id"
-        :ref="(element) => setButton(item.id, element)"
-        type="button"
-        class="temple-obelisk"
-        :data-obelisk="item.id"
-        :aria-label="`${item.roman} / ${item.label}`"
-        :aria-pressed="selected === item.id"
-        :disabled="status !== 'ready' || !item.enabled"
-        @click="
-          config.raycastObelisks && $event.detail > 0
-            ? scene?.pick($event)
-            : scene?.select(item.id)
-        "
-      />
-    </div>
-    <div class="temple-fullscreen-shade" aria-hidden="true" />
-    <div
-      v-if="config.id === 'desktop'"
-      ref="workDetailTarget"
-      class="temple-work-detail"
-      :inert="!settled || resizing || navigation.aboutOpen || undefined"
-    />
-    <Transition
-      name="temple-menu-reveal"
-      @after-leave="finishMenuExit"
-      @leave-cancelled="finishMenuExit"
-    >
-      <section
-        v-if="category"
-        ref="menu"
-        class="temple-menu"
-        :class="{
-          'temple-menu--left': category.x > 0,
-          'is-visible': settled && menuRevealed,
-        }"
-        :aria-label="category.label"
-        :inert="!settled || !menuRevealed || navigation.aboutOpen || undefined"
-        :aria-busy="resizing || !menuContentReady"
-        :data-content-ready="menuContentReady"
-        @transitionend.self="finishMenuReveal"
-        @click="dismissMenuBackground"
+    <Transition name="temple-about-background">
+      <div
+        v-show="!aboutBackgroundHidden"
+        class="temple-underlay"
+        :inert="aboutBackgroundHidden || undefined"
+        :aria-hidden="aboutBackgroundHidden"
       >
-        <button
-          v-if="config.menu.layout !== 'fullscreen'"
-          class="temple-expand"
-          type="button"
-          :aria-label="navigation.expanded ? '恢复半屏内容' : '展开全屏内容'"
-          :aria-expanded="navigation.expanded"
-          :disabled="resizing"
-          @click.stop="toggleExpanded"
+        <div
+          ref="stage"
+          class="lucario-stage temple-stage"
+          :aria-busy="status === 'loading'"
         >
-          <span />
-        </button>
-        <div class="temple-menu__body" :inert="resizing || undefined">
-          <FocusContent
-            ref="focusContent"
-            :key="category.id"
-            :category="category.id"
-            :expanded="navigation.expanded"
-            :resizing="resizing"
-            :detail-target="workDetailTarget"
-            @loading="onMenuContentLoading"
-            @ready="onMenuContentReady"
+          <FloraFocusLayout
+            v-if="selected === 'sprigatito' && settled"
+            ref="floraFocusLayout"
+            :mobile="config.id === 'mobile'"
+            @select-pet="selectPet"
+          />
+          <MobileScreenFrame v-if="config.id === 'mobile'" />
+          <TempleBackdrop />
+          <Transition name="temple-clock-reveal" appear>
+            <TempleClock v-if="clockVisible" />
+          </Transition>
+        </div>
+        <div class="temple-obelisks">
+          <button
+            v-for="item in templeCategories"
+            :key="item.id"
+            :ref="(element) => setButton(item.id, element)"
+            type="button"
+            class="temple-obelisk"
+            :data-obelisk="item.id"
+            :aria-label="`${item.roman} / ${item.label}`"
+            :aria-pressed="selected === item.id"
+            :disabled="status !== 'ready' || !item.enabled"
+            @click="
+              config.raycastObelisks && $event.detail > 0
+                ? scene?.pick($event)
+                : scene?.select(item.id)
+            "
           />
         </div>
-      </section>
+        <div class="temple-fullscreen-shade" aria-hidden="true" />
+        <div
+          v-if="config.id === 'desktop'"
+          ref="workDetailTarget"
+          class="temple-work-detail"
+          :inert="!settled || resizing || navigation.aboutOpen || undefined"
+        />
+        <Transition
+          name="temple-menu-reveal"
+          @after-leave="finishMenuExit"
+          @leave-cancelled="finishMenuExit"
+        >
+          <section
+            v-if="category"
+            ref="menu"
+            class="temple-menu"
+            :class="{
+              'temple-menu--left': category.x > 0,
+              'is-visible': settled && menuRevealed,
+            }"
+            :aria-label="category.label"
+            :inert="
+              !settled || !menuRevealed || navigation.aboutOpen || undefined
+            "
+            :aria-busy="resizing || !menuContentReady"
+            :data-content-ready="menuContentReady"
+            @transitionend.self="finishMenuReveal"
+            @click="dismissMenuBackground"
+          >
+            <button
+              v-if="config.menu.layout !== 'fullscreen'"
+              class="temple-expand"
+              type="button"
+              :aria-label="
+                navigation.expanded ? '恢复半屏内容' : '展开全屏内容'
+              "
+              :aria-expanded="navigation.expanded"
+              :disabled="resizing"
+              @click.stop="toggleExpanded"
+            >
+              <span />
+            </button>
+            <div class="temple-menu__body" :inert="resizing || undefined">
+              <FocusContent
+                ref="focusContent"
+                :key="category.id"
+                :category="category.id"
+                :expanded="navigation.expanded"
+                :resizing="resizing"
+                :detail-target="workDetailTarget"
+                @loading="onMenuContentLoading"
+                @ready="onMenuContentReady"
+              />
+            </div>
+          </section>
+        </Transition>
+        <Transition name="temple-caption" appear>
+          <TempleModuleCaption
+            v-if="
+              category &&
+              config.menu.layout === 'sidebar' &&
+              settled &&
+              menuRevealed &&
+              !navigation.expanded &&
+              !resizing &&
+              !navigation.aboutOpen
+            "
+            :key="category.id"
+            :category="category.id"
+          />
+        </Transition>
+
+        <p v-if="status === 'error'" class="lucario-status" role="alert">
+          模型加载失败，请刷新页面重试
+        </p>
+      </div>
     </Transition>
-    <Transition name="temple-caption" appear>
-      <TempleModuleCaption
-        v-if="
-          category &&
-          config.menu.layout === 'sidebar' &&
-          settled &&
-          menuRevealed &&
-          !navigation.expanded &&
-          !resizing &&
-          !navigation.aboutOpen
-        "
-        :key="category.id"
-        :category="category.id"
-      />
-    </Transition>
-    <AboutOverlay />
-    <p v-if="status === 'error'" class="lucario-status" role="alert">
-      模型加载失败，请刷新页面重试
-    </p>
+    <AboutOverlay @closed="restoreAboutBackground" />
   </main>
 </template>
 

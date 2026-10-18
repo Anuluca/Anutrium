@@ -151,6 +151,7 @@ const getResourceCacheKey = () => {
     props.transparent ? 'transparent' : 'opaque',
     props.mobileHighResolution ? 'mobile-hires' : 'default-resolution',
     props.renderMode,
+    ...(isEdgeRenderMode() ? ['batched-v1'] : []),
     ...(isEdgeRenderMode() ? [props.edgeColor.toLowerCase()] : []),
     ...(isEdgeRenderMode() ? [`${props.edgeWidth}px`] : []),
   ].join(':')
@@ -480,6 +481,31 @@ const initThree = async () => {
 
     crystal = createCrystal()
     cage = createNCage()
+    if (useEdgeRendering) {
+      // 两个旋转组各合为一次绘制；保留所有原始线段、材质和相对变换。
+      for (const target of [crystal, cage]) {
+        const positions = []
+        const geometries = new Set()
+        const point = new Vector3()
+        for (const part of target.children) {
+          part.updateMatrix()
+          geometries.add(part.geometry)
+          const { instanceStart, instanceEnd } = part.geometry.attributes
+          for (let index = 0; index < instanceStart.count; index++) {
+            for (const attribute of [instanceStart, instanceEnd]) {
+              point
+                .fromBufferAttribute(attribute, index)
+                .applyMatrix4(part.matrix)
+              positions.push(point.x, point.y, point.z)
+            }
+          }
+        }
+        target.clear()
+        const geometry = new LineSegmentsGeometry().setPositions(positions)
+        target.add(new LineSegments2(geometry, edgeMaterial))
+        geometries.forEach((geometry) => geometry.dispose())
+      }
+    }
     group.add(crystal, cage)
     crystal.rotation.y = START_ROTATION
     cage.rotation.y = -(START_ROTATION - FRONT_ROTATION_OFFSET)

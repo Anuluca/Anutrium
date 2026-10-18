@@ -231,6 +231,7 @@ export function createHomeTemple(
   let disposed = false
   let ready = false
   let sceneActive = true
+  let sceneOccluded = false
   let frame: number | undefined
   let dizzyFrameTimer: ReturnType<typeof setTimeout> | undefined
   let lastDraw = 0
@@ -1463,7 +1464,7 @@ export function createHomeTemple(
 
   // 返回展开模块时仍须完成入场及 ready 信号，随后才暂停隐藏的场景。
   const isSceneActive = () =>
-    (sceneActive || entranceActive) && !document.hidden
+    !sceneOccluded && (sceneActive || entranceActive) && !document.hidden
   const canRender = () =>
     ready && isSceneActive() && !disposed && stage.isConnected
   const render = (now: number) => {
@@ -1627,8 +1628,7 @@ export function createHomeTemple(
     setStageData('headacheRedness', headacheRedness.value.toFixed(3))
     if (statueMesh?.morphTargetInfluences)
       statueMesh.morphTargetInfluences[0] = headacheMix
-    const stickerTarget =
-      headacheEnabled && !selected && !entranceActive ? 1 : 0
+    const stickerTarget = headacheEnabled && !selected ? 1 : 0
     stickerReveal = reducedMotion
       ? stickerTarget
       : THREE.MathUtils.damp(stickerReveal, stickerTarget, 10, elapsed)
@@ -1678,7 +1678,7 @@ export function createHomeTemple(
     )
     if (statueMesh) {
       stickerAnchor.copy(headNodPivot.value)
-      stickerAnchor.y += 0.73
+      stickerAnchor.y += 0.5
       stickerAnchor.z += 0.12
       stickerAnchor
         .sub(headPivot.value)
@@ -3011,7 +3011,7 @@ export function createHomeTemple(
     if (
       Array.from(
         document.querySelectorAll<HTMLElement>(
-          '.el-dialog, .el-message-box, .el-image-viewer__wrapper'
+          '.el-dialog, .el-message-box, .el-image-viewer__wrapper, .video-modal'
         )
       ).some((element) => element.getClientRects().length > 0)
     )
@@ -3703,6 +3703,12 @@ export function createHomeTemple(
     setActive: (active: boolean) => {
       if (sceneActive === active) return
       sceneActive = active
+      syncActivity()
+    },
+    // 遮挡暂停优先于入场动画，避免 About 打开时入场逻辑继续占用 GPU。
+    setOccluded: (occluded: boolean) => {
+      if (sceneOccluded === occluded) return
+      sceneOccluded = occluded
       syncActivity()
     },
     dispose: () => {

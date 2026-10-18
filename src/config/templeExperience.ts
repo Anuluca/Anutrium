@@ -41,9 +41,9 @@ export interface TempleExperience {
 // 彩蛋入口可传入其他配置；模型选择与页面构图、主题颜色保持独立。
 export const templeExperience: TempleExperience = {
   themeColor: pageThemeColors.HOME,
-  // 日常切换只改 mode，重新部署即可；各部位角度单位为度。
+  // 首页从运行时配置读取模式；未读取到配置时使用普通模式。角度单位为度。
   headache: {
-    mode: 'headache',
+    mode: 'normal',
     bodyTwist: 0,
     upperArmTwist: 12,
     forearmTwist: -22,

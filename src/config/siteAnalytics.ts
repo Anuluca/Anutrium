@@ -1,7 +1,7 @@
 import type { AnalyticsReport } from '../types/siteAnalytics'
 
 /** 采集、报表和界面共用的固定范围，避免依赖展示字段的插入顺序。 */
-export const ANALYTICS_RANGES = [7, 30, 90] as const
+export const ANALYTICS_RANGES = [1, 7, 30, 90] as const
 export const SUMMARY_METRICS = {
   overview: [
     'activeUsers',

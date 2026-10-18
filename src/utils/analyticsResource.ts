@@ -1,8 +1,12 @@
 import { ANALYTICS_RANGES } from '@/config/siteAnalytics'
 
-import type { RealtimeAnalytics, SiteAnalytics } from '@/types/siteAnalytics'
+import type {
+  RealtimeAnalytics,
+  SiteAnalytics,
+  VisitorCount,
+} from '@/types/siteAnalytics'
 
-type Payload = SiteAnalytics | RealtimeAnalytics
+type Payload = SiteAnalytics | RealtimeAnalytics | VisitorCount
 interface Pending {
   controller: AbortController
   promise: Promise<Payload>
@@ -20,7 +24,7 @@ const base = (
     ? 'https://steam-api.anuluca.com/analytics'
     : '/api/analytics')
 ).replace(/\/$/, '')
-// 固定三个历史范围和一个实时资源；缓存上限为四项，不随路由重挂载丢失。
+// 仅缓存固定统计路径，不随路由重挂载丢失。
 const resources = new Map<string, Resource>()
 const aborted = () =>
   new DOMException('Analytics request cancelled', 'AbortError')
@@ -66,6 +70,7 @@ function request<T extends Payload>(
             current.value = payload
             const lifetime =
               payload.activeUsers === null ||
+              payload.count === null ||
               payload.reports.some(
                 (report: { status: string }) => report.status !== 'ready'
               )
@@ -133,3 +138,8 @@ export function readAnalyticsSummary(
 }
 export const readAnalyticsRealtime = (signal: AbortSignal, force = false) =>
   request<RealtimeAnalytics>('/realtime', signal, force, 30000)
+
+export const readVisitorViews = (signal: AbortSignal) =>
+  request<VisitorCount>('/views', signal, false, 600000)
+export const readVisitorOnline = (signal: AbortSignal) =>
+  request<VisitorCount>('/online', signal, false, 30000)

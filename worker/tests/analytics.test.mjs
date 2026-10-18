@@ -58,8 +58,10 @@ globalThis.caches = {
 }
 const originalFetch = globalThis.fetch
 const calls = []
+const batchQueries = []
 let failureStatus = 0
 let invalidCustom = false
+let emptyCounter = false
 const isCustom = (query) =>
   query.dimensions?.some(({ name }) => name.startsWith('customEvent:'))
 globalThis.fetch = async (url, init) => {
@@ -88,6 +90,18 @@ globalThis.fetch = async (url, init) => {
     )
   const body = JSON.parse(init.body)
   const realtime = String(url).endsWith(':runRealtimeReport')
+  if (body.minuteRanges)
+    assert.deepEqual(body.minuteRanges, [
+      { startMinutesAgo: 4, endMinutesAgo: 0 },
+    ])
+  if (body.dateRanges?.[0].startDate === '2015-08-14') {
+    const hosts = body.dimensionFilter.filter.inListFilter.values
+    assert.ok(hosts.includes('www.anuluca.icu'))
+    assert.ok(hosts.includes('anuluca.com'))
+    assert.ok(hosts.includes('anulucas-blog.pages.dev'))
+    assert.equal(hosts.includes('localhost'), false)
+  }
+  if (emptyCounter) return Response.json({ rows: [] })
   const report = (query) => {
     if (!realtime) assert.equal(query.dateRanges[0].endDate, 'today')
     assert.ok(
@@ -117,6 +131,7 @@ globalThis.fetch = async (url, init) => {
     assert.ok(body.requests.length <= 5)
     if (invalidCustom && body.requests.some(isCustom))
       return Response.json({}, { status: 400 })
+    batchQueries.push(...body.requests)
     return Response.json({ reports: body.requests.map(report) })
   }
   if (invalidCustom && isCustom(body)) return Response.json({}, { status: 400 })
@@ -163,6 +178,18 @@ try {
       200
     )
     assert.equal(calls.length, count)
+  })
+  await test('today requests the property-local current date for every report', async () => {
+    const start = batchQueries.length
+    const response = await handleAnalytics(summaryRequest(1), env, ctx)
+    assert.equal(response.status, 200)
+    const data = await response.json()
+    assert.equal(data.days, 1)
+    assert.equal(data.reports.length, 23)
+    const queries = batchQueries.slice(start)
+    assert.equal(queries.length, 23)
+    for (const query of queries)
+      assert.deepEqual(query.dateRanges, [{ startDate: 'today', endDate: 'today' }])
   })
   await test('invalid ranges and missing credentials never call upstream', async () => {
     const count = calls.length
@@ -278,6 +305,49 @@ try {
       200
     )
     assert.equal(oauthCalls(), count + 1)
+  })
+  await test('visitor counters use independent caches, all-time host allowlist and five-minute users', async () => {
+    memory.clear()
+    for (const [kind, ttl] of [
+      ['views', 600],
+      ['online', 60],
+    ]) {
+      const request = new Request(`https://worker.invalid/analytics/${kind}`)
+      const response = await handleAnalytics(request, env, ctx)
+      assert.equal(response.status, 200)
+      assert.equal((await response.json()).count, 12)
+      assert.ok(
+        response.headers.get('Cache-Control').endsWith(`s-maxage=${ttl}`)
+      )
+      await Promise.all(pending)
+      const count = calls.length
+      await handleAnalytics(request, env, ctx)
+      assert.equal(calls.length, count)
+    }
+  })
+  await test('empty historical rows remain unknown while empty realtime is zero', async () => {
+    memory.clear()
+    emptyCounter = true
+    try {
+      const views = await handleAnalytics(
+        new Request('https://worker.invalid/analytics/views'),
+        env,
+        ctx
+      )
+      assert.equal((await views.json()).count, null)
+      assert.equal(
+        views.headers.get('Cache-Control'),
+        'public, max-age=15, s-maxage=30'
+      )
+      const online = await handleAnalytics(
+        new Request('https://worker.invalid/analytics/online'),
+        env,
+        ctx
+      )
+      assert.equal((await online.json()).count, 0)
+    } finally {
+      emptyCounter = false
+    }
   })
 } finally {
   globalThis.fetch = originalFetch

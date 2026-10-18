@@ -7,6 +7,7 @@ import { useTempleNavigation } from '@/stores/templeNavigation'
 
 import { loadAboutContent } from './aboutContentLoader'
 
+const emit = defineEmits<{ (event: 'closed'): void }>()
 const navigation = useTempleNavigation()
 const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)')
 const dialog = ref<HTMLElement | null>(null)
@@ -19,6 +20,14 @@ const close = () => {
 // 遮罩完成渐显后才挂载异步内容，避免内容早于遮罩出现。
 const finishMaskEnter = () => {
   if (navigation.aboutOpen) maskReady.value = true
+}
+const finishMaskLeave = () => {
+  if (navigation.aboutOpen) return
+  maskReady.value = false
+  emit('closed')
+  void nextTick(() => {
+    if (!navigation.aboutOpen) returnFocus?.focus({ preventScroll: true })
+  })
 }
 watch(
   () => navigation.aboutOpen,
@@ -33,7 +42,7 @@ watch(
           : null
       await nextTick()
       dialog.value?.focus({ preventScroll: true })
-    } else returnFocus?.focus({ preventScroll: true })
+    }
   },
   { immediate: true }
 )
@@ -79,7 +88,7 @@ useEventListener(
     appear
     :duration="reducedMotion ? 10 : 400"
     @after-enter="finishMaskEnter"
-    @after-leave="maskReady = false"
+    @after-leave="finishMaskLeave"
   >
     <section
       v-if="navigation.aboutOpen"

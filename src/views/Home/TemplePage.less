@@ -28,7 +28,7 @@
   color: #faf4f5;
   --temple-menu-shade-direction: to left;
 
-  &::after {
+  .temple-underlay::after {
     content: '';
     position: absolute;
     inset: 0;
@@ -53,7 +53,8 @@
       .temple-menu.is-visible:not(.temple-menu-reveal-enter-from):not(
           .temple-menu-reveal-leave-to
         )
-    )::after {
+    )
+    .temple-underlay::after {
     opacity: 1;
   }
 
@@ -95,6 +96,10 @@
     height: 100%;
     // 保留画布键盘交互，避免窗口恢复焦点时显示满屏默认轮廓。
     outline: none;
+  }
+
+  &.temple-page--mobile :deep(canvas) {
+    z-index: 0;
   }
 
   .temple-obelisks {
@@ -315,11 +320,17 @@
       visibility: hidden !important;
       pointer-events: none;
     }
-    &::after {
+    .temple-underlay::after {
       opacity: 0 !important;
     }
   }
   &.temple-page--mobile {
+    :deep(.temple-clock-group.no-rem) {
+      top: calc(var(--temple-clock-y) + 18px);
+    }
+    :deep(.temple-clock.no-rem) {
+      margin-top: -6px;
+    }
     .temple-stage::after {
       content: '';
       position: absolute;
@@ -355,7 +366,7 @@
       width: calc(100% - 32px);
       left: 16px;
     }
-    &::after {
+    .temple-underlay::after {
       -webkit-mask-image: none;
       mask-image: none;
     }
@@ -366,5 +377,26 @@
       inset: 0;
       width: 100%;
     }
+  }
+}
+
+.temple-underlay {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.temple-about-background-enter-active,
+.temple-about-background-leave-active {
+  transition: opacity 400ms ease;
+  pointer-events: none;
+}
+.temple-about-background-enter-from,
+.temple-about-background-leave-to {
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .temple-about-background-enter-active,
+  .temple-about-background-leave-active {
+    transition-duration: 10ms;
   }
 }

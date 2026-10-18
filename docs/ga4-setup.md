@@ -26,23 +26,18 @@
 
 采集 ID 不能用于读取报表。读取需要 GA4 数字资源 ID、启用 Google Analytics Data API 的 Google Cloud 项目及有该资源查看权限的服务账号。服务账号私钥仅保存到 Worker Secret，不得放入前端 `VITE_` 变量或提交 Git。
 
-当前已实现 About 公开汇总面板及固定范围的读取接口与缓存。报表数据有处理延迟；实时报告与常规报告分开查询。
+About 不再展示完整 GA4 报表，仅在 Passion 容器左上角显示两个计数。采集仍使用 GA4，不移除路由浏览与业务事件上报。
 
-官方参考：
+## Passion 访问计数
 
-- https://developers.google.com/analytics/devguides/collection/ga4/views
-- https://developers.google.com/analytics/devguides/reporting/data/v1/quickstart
-
-## About 公开统计区
-
-- 位置：`AboutContent.vue` 的最后一个内容区、`PageFooter` 前；独立 About 页面和首页 About 聚焦层共用。
-- 衡量 ID：`G-FEZS2B4N4L`，已在 `netlify.toml` 的构建环境中配置。
-- 资源 ID：`353411419`；数据流 ID：`4620543849`。现有数据流名称为旧站 `Anuluca.icu`，采集可复用同一 ID。
-- 常规报表仅查询主机名 `anuluca.com` 和 `www.anuluca.com`，不混入旧域名数据；实时 API 不支持主机名维度，使用该数据流 ID 过滤，可能包含同一数据流中其他域名的实时访问。
-- 时间范围：近 7 / 30 / 90 天，包含今日；按 GA4 资源时区计算。更新时间显示北京时间。
-- 展示 14 项汇总指标、每日趋势、页面及入口、渠道及来源、推广、国家/地区/城市、设备/浏览器/系统/语言/屏幕、事件、时段及星期分布、自定义作品/工具/分享维度，以及实时用户、国家和事件。分类排名最多 20 项，时段完整展示 24 小时，超出时显示 TOP 与总行数。
-- 自定义维度未注册、权限失败、无数据分别处理；未配置读取凭证时不使用演示数据填充线上面板。
-- 每个报表保留隐私阈值、抽样及高基数汇总提示。没有交易或关键事件数据时，相应报表可能为空；此界面不等于复制 GA4 后台全部报告或逐用户访问轨迹。
+- 组件：`src/views/About/SiteVisitors.vue`；独立 About 和首页 About 聚焦层共用。
+- 当前在线：`/analytics/online`，使用数据流 `4620543849` 近 5 分钟（0–4 分钟）的去重活跃用户估算，非精确在线连接数；提示文本注明口径。实时 API 无主机名维度，可能包含同一数据流的其他站点访问。
+- 总浏览量：`/analytics/views`，查询资源 `353411419` 能读取的全部历史 `screenPageViews`，按 `worker/src/analyticsCounters.ts` 的新旧站域名白名单合并；包含 `.icu`、`.cn` 及已识别的旧部署地址，排除 localhost、127.0.0.1 和其他预览域名。不叠加固定历史偏移，避免重复累计。
+- 2026-10-18 核验：新站 `.com` 688 次，旧站域名 306 次，合计 994 次。仅代表核验时 GA4 已处理的数据；未采集或其他资源中的旧数据不在此数内。
+- 失败或无已处理浏览记录显示 `—`；明确返回的零值显示 `0`。两个计数独立请求，单项失败不影响另一项。
+- 可见时每分钟读取；离开视口、切换后台或卸载即停止轮询并取消订阅。总浏览量应用缓存 10 分钟，在线应用缓存 30 秒；路由重挂载复用缓存。
+- 常规报表通常延迟 2–6 小时，完整处理可能需要 24–48 小时。
+- 既有 `/analytics/summary` 与 `/analytics/realtime` 端点暂保留兼容旧前端；新组件不会请求这些完整报表。
 
 ### 服务端权限
 
@@ -51,7 +46,7 @@
 3. 在 GA4 的**媒体资源**访问权限管理中，将服务账号邮箱添加为“查看者”；不需要账号级管理权限。
 4. 在服务账号的“密钥 → 添加密钥 → 创建新密钥”选择 JSON，将文件保存在仓库外。CSV 报表导出不是认证密钥。
 5. 通过受保护的文件标准输入，把 JSON 完整内容设置为既有 `anutrium-steam-api` Worker 的 Secret `GA4_SERVICE_ACCOUNT_JSON`。不要把私钥写进前端、配置文件或终端命令参数。
-6. 部署 Worker；仅推送前端不会更新 Worker。确认 `/analytics/summary?days=30` 和 `/analytics/realtime` 返回真实报表后，再验证 About 面板。
+6. 部署 Worker；仅推送前端不会更新 Worker。确认 `/analytics/views` 和 `/analytics/online` 返回真实计数后，再验证 Passion 组件。
 
 接口只接受固定范围，不接受客户端传入任意 Google API 请求、资源 ID 或维度。常规报表边缘缓存 600 秒，浏览器 HTTP 缓存 300 秒；实时边缘缓存 60 秒，浏览器 HTTP 缓存 30 秒。部分失败降为边缘 30 秒、浏览器 15 秒缓存；权限、限流及服务端错误立即停止后续批次。各报表失败不会伪造零值，全部失败返回 502，缺少配置返回 503。
 
@@ -67,23 +62,3 @@ yarn tsc --noEmit
 node --test tests/analytics.test.mjs
 yarn wrangler deploy --dry-run
 ```
-
-## 本次联调记录
-
-- 已将服务账号 JSON 设置为既有 Worker 的 `GA4_SERVICE_ACCOUNT_JSON` Secret；私钥未进入仓库。
-- 已部署读取接口并验证 7 / 30 / 90 天的 23 份报表全部可读，实时接口返回成功。
-- 已关闭数据流的“根据浏览器历史记录事件判断的页面更改”，由网站代码统一上报路由浏览。
-- 已注册事件范围自定义维度：`project_title`（作品名称）、`tool_title`（工具名称）、`method`（分享方式）。新维度处理需要时间，不回补未采集的历史事件。
-- 当前域名没有对应历史访问数据；旧 `.icu` 记录不计入此公开面板。
-- Netlify 前端需要通过项目正常发布流程部署，构建时读取已配置的衡量 ID。
-
-## 性能与结构
-
-- `src/config/siteAnalytics.ts`：共用时间范围与汇总指标分组；展示顺序不再决定服务端查询字段。
-- `src/utils/analyticsResource.ts`：最多四个资源缓存，普通汇总按生成时间保留至 10 分钟，实时 30 秒；同一请求的订阅者共享下载，最后一个订阅者取消才中止 fetch。
-- `useSiteAnalytics`：复用 `useIntersectionActivation` 与文档可见性工具；离开视口或切到后台即暂停轮询，恢复时读取缓存或刷新。报表用 `shallowRef` 保存；切换范围时保留原结果并标明当前范围。
-- 展示层按报表 ID 建立 Map，表头预先计算；数字格式化器按语言仅创建两份。
-- `worker/src/analytics.ts`：HTTP 校验、缓存与公共错误响应。
-- `worker/src/analyticsReports.ts`：固定查询和结果映射。23 份常规报表正常使用五次 batch 请求；仅自定义维度无效时拆分对应批次。实时国家报表同时请求 `TOTAL`，结合事件报表仅需两次请求；活跃用户总数不按国家相加。
-- `worker/src/googleAnalyticsClient.ts`：JWT 签名与 API 通信。已完成的密钥导入和访问令牌按凭证缓存，令牌过期前 60 秒刷新，凭证改变或令牌返回 401 时失效；不跨请求共享未完成的 Worker I/O。
-- 单次读取共享 30 秒时间预算，超时覆盖响应正文。边缘缓存未提供跨实例的全局请求合并，不宣称能消除所有并发冷请求。

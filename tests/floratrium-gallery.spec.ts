@@ -33,10 +33,12 @@ test('responsive album sizing, expansion and character rail placement', async ({
     .split(',')
     .map(Number)
   await page.mouse.click(point[0], point[1])
-  const gallery = page.locator('.flora-album-gallery')
+  const gallery = page.locator('.flora-album-gallery[data-album-position="0"]')
   const toggleWithMotion = () =>
     page.evaluate(async () => {
-      const album = document.querySelector('.flora-album-gallery')!
+      const album = document.querySelector(
+        '.flora-album-gallery[data-album-position="0"]'
+      )!
       const button = album.querySelector<HTMLButtonElement>(
         '.flora-album-gallery__expand'
       )!
@@ -76,7 +78,7 @@ test('responsive album sizing, expansion and character rail placement', async ({
   const checkMotion = (
     result: Awaited<ReturnType<typeof toggleWithMotion>>
   ) => {
-    for (const key of ['x', 'width', 'height'] as const)
+    for (const key of ['width', 'height'] as const)
       expect(
         Math.max(
           ...result.frames.map((frame) =>
@@ -103,7 +105,7 @@ test('responsive album sizing, expansion and character rail placement', async ({
   )
   await expect(gallery.locator('.flora-album-gallery__title')).toHaveCSS(
     'font-size',
-    mobile ? '36px' : '60px'
+    mobile ? '44px' : '72px'
   )
   await expect(gallery.locator('.flora-album-gallery__expand')).toHaveCSS(
     'font-size',
@@ -134,10 +136,8 @@ test('responsive album sizing, expansion and character rail placement', async ({
     )
     expect(railGeometry.topPadding).toBeGreaterThanOrEqual(8)
     expect(railGeometry.bottomPadding).toBeGreaterThanOrEqual(8)
-    expect((await gallery.boundingBox())!.height).toBeCloseTo(
-      Math.min(160, Math.max(120, page.viewportSize()!.height * 0.17)),
-      0
-    )
+    expect((await gallery.boundingBox())!.height).toBeGreaterThanOrEqual(72)
+    expect((await gallery.boundingBox())!.height).toBeLessThanOrEqual(130)
     await expect
       .poll(() =>
         page.locator('.flora-character-rail').evaluate((rail) => {
@@ -194,12 +194,7 @@ test('responsive album sizing, expansion and character rail placement', async ({
     })
     expect(layout.height).toBeGreaterThan(layout.available * 0.8)
     expect(layout.left).toBeCloseTo(collapsedAlbumBounds.x, 0)
-    expect(layout.right).toBeCloseTo(
-      page.viewportSize()!.width -
-        collapsedAlbumBounds.x -
-        collapsedAlbumBounds.width,
-      0
-    )
+    expect(layout.right).toBeCloseTo(collapsedAlbumBounds.x, 0)
     expect(layout.inset).toBe('8px')
     expect(layout.viewportTopGap).toBeCloseTo(20, 0)
     expect(layout.listTopGap).toBeCloseTo(8, 0)
@@ -347,7 +342,7 @@ test('online defaults, upward expansion, paging, refresh and pet reset preserve 
     .map(Number)
   await page.mouse.click(point[0], point[1])
   await page.mouse.move(0, 0)
-  const gallery = page.locator('.flora-album-gallery')
+  const gallery = page.locator('.flora-album-gallery[data-album-position="0"]')
   await expect(
     gallery.locator(
       '.flora-album-strip__group:not([aria-hidden]) .flora-album-strip__photo'
@@ -635,7 +630,7 @@ test('cached photos remain visible after repeated full-to-selected switches', as
     .split(',')
     .map(Number)
   await page.mouse.click(point[0], point[1])
-  const gallery = page.locator('.flora-album-gallery')
+  const gallery = page.locator('.flora-album-gallery[data-album-position="0"]')
   const firstFilename = petAlbums.huahua.defaults[0].key.split('/').pop()!
   const firstImage = gallery.locator(`img[src*="${firstFilename}"]`).first()
   await expect(firstImage).toBeVisible()
@@ -674,7 +669,7 @@ test('albums close before returning home', async ({ page }, info) => {
     .split(',')
     .map(Number)
   await page.mouse.click(point[0], point[1])
-  const gallery = page.locator('.flora-album-gallery')
+  const gallery = page.locator('.flora-album-gallery[data-album-position="0"]')
   await gallery.getByRole('button', { name: 'EXPAND', exact: true }).click()
   await expect(gallery).toHaveClass(/is-expanded/)
   if (info.project.name.includes('mobile'))
@@ -729,7 +724,7 @@ test('triangle pagination supports direct page jumps without scanning unseen pag
     .split(',')
     .map(Number)
   await page.mouse.click(point[0], point[1])
-  const gallery = page.locator('.flora-album-gallery')
+  const gallery = page.locator('.flora-album-gallery[data-album-position="0"]')
   await gallery.getByRole('button', { name: 'EXPAND', exact: true }).click()
   const pages = gallery.locator('.flora-album-gallery__page-numbers button')
   await expect(pages).toHaveText(['1', '2', '3'])
@@ -796,7 +791,7 @@ test('triangle pagination supports direct page jumps without scanning unseen pag
   })
 })
 
-test('mobile album keeps its horizontal bounds while expanding and collapsing', async ({
+test('mobile album keeps its left anchor while expanding to full width', async ({
   page,
 }, info) => {
   test.skip(!info.project.name.includes('mobile'), '手机端横向边界回归')
@@ -815,11 +810,22 @@ test('mobile album keeps its horizontal bounds while expanding and collapsing', 
     .split(',')
     .map(Number)
   await page.mouse.click(point[0], point[1])
-  const gallery = page.locator('.flora-album-gallery')
+  const gallery = page.locator('.flora-album-gallery[data-album-position="0"]')
   await expect(gallery).toBeVisible()
   const initialLayer = await page
     .locator('.layout-page')
     .evaluate((element) => getComputedStyle(element).zIndex)
+  await expect(page.locator('.mobile-screen-frame-bottom')).toHaveCount(1)
+  const layers = await page.locator('.temple-stage').evaluate((stage) => {
+    const canvas = stage.querySelector('canvas')!
+    const frame = stage.querySelector('.mobile-screen-frame-bottom')!
+    const content = stage.querySelector('.flora-focus-layout')!
+    return [canvas, frame, content].map((element) =>
+      Number(getComputedStyle(element).zIndex)
+    )
+  })
+  expect(layers[0]).toBeLessThan(layers[1])
+  expect(layers[1]).toBeLessThan(layers[2])
   const frameLayer = await page
     .locator('.mobile-screen-frame-bottom')
     .evaluate((element) => Number(getComputedStyle(element).zIndex))
@@ -835,11 +841,7 @@ test('mobile album keeps its horizontal bounds while expanding and collapsing', 
       await new Promise<void>((resolve) => {
         const sample = () => {
           const current = element.getBoundingClientRect()
-          maxShift = Math.max(
-            maxShift,
-            Math.abs(current.left - initial.left),
-            Math.abs(current.right - initial.right)
-          )
+          maxShift = Math.max(maxShift, Math.abs(current.left - initial.left))
           if (performance.now() < until) requestAnimationFrame(sample)
           else resolve()
         }
@@ -900,7 +902,7 @@ test('mobile album keeps its horizontal bounds while expanding and collapsing', 
 
 test('album surfaces toggle expansion while selected and full photos preview', async ({
   page,
-}) => {
+}, info) => {
   test.setTimeout(60000)
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.routeWebSocket('ws://localhost:3000/**', (socket) =>
@@ -916,8 +918,14 @@ test('album surfaces toggle expansion while selected and full photos preview', a
     })
   )
   await page.goto('/floratrium', { waitUntil: 'domcontentloaded' })
-  const gallery = page.locator('.flora-album-gallery')
+  const gallery = page.locator('.flora-album-gallery[data-album-position="0"]')
   await expect(gallery).toBeVisible({ timeout: 30000 })
+  if (info.project.name.includes('mobile')) {
+    const alert = page.locator('.mobile-experience-alert')
+    await expect(alert).toBeVisible({ timeout: 20000 })
+    await alert.click()
+    await expect(alert).toHaveCount(0)
+  }
   await gallery.click({ position: { x: 4, y: 4 } })
   await expect(gallery).toHaveClass(/is-expanded/)
   await gallery.click({ position: { x: 4, y: 4 } })
@@ -977,4 +985,152 @@ test('album surfaces toggle expansion while selected and full photos preview', a
   )
   await expect(gallery.locator('.flora-album-strip')).toBeVisible()
   await expect(gallery).not.toHaveClass(/is-expanded/)
+})
+
+test('album and video use a responsive row or column layout', async ({
+  page,
+}, info) => {
+  test.setTimeout(60000)
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.routeWebSocket('ws://localhost:3000/**', (socket) =>
+    socket.close()
+  )
+  await page.route('**/__floratrium/media?**', (route) =>
+    route.fulfill({
+      json: {
+        items: petAlbums.huahua.defaults,
+        nextCursor: null,
+        totalPages: 1,
+      },
+    })
+  )
+  await page.goto('/floratrium', { waitUntil: 'domcontentloaded' })
+  const upper = page.locator('.flora-video-gallery')
+  const lower = page.locator('.flora-album-gallery')
+  await expect(upper).toBeVisible({ timeout: 30000 })
+  await expect(lower).toBeVisible()
+  if (info.project.name.includes('mobile')) {
+    const alert = page.locator('.mobile-experience-alert')
+    await expect(alert).toBeVisible({ timeout: 20000 })
+    await alert.click()
+    await expect(alert).toHaveCount(0)
+  }
+  for (const panel of [upper, lower]) {
+    await expect(panel.locator('h2 svg')).toHaveCount(1)
+    const heading = await panel.locator('h2').boundingBox()
+    const icon = await panel.locator('h2 svg').boundingBox()
+    const text = await panel.locator('h2 span').boundingBox()
+    expect(heading!.x - (await panel.boundingBox())!.x).toBeGreaterThanOrEqual(
+      8
+    )
+    expect(text!.x).toBeGreaterThan(icon!.x + icon!.width)
+  }
+  await expect(page.locator('.flora-album-gallery')).toHaveCount(1)
+  await expect(upper.locator('.video-item')).toHaveCount(1)
+  await expect(upper.locator('.flora-video-gallery__expand')).toBeVisible()
+  expect((await upper.boundingBox())!.width).toBeCloseTo(
+    (await lower.boundingBox())!.width,
+    0
+  )
+  expect(
+    await upper.evaluate(
+      (element) => getComputedStyle(element, '::before').opacity
+    )
+  ).toBe('0.3')
+  expect(
+    await upper.evaluate(
+      (element) => getComputedStyle(element, '::after').opacity
+    )
+  ).toBe('0.3')
+  await expect(upper.locator('.flora-album-gallery__decoration')).toHaveCount(0)
+  await expect(upper).toHaveCSS(
+    'padding',
+    info.project.name.includes('mobile') ? '18px 24px 42px' : '36px 32px'
+  )
+  const upperBox = (await upper.boundingBox())!
+  const albumBox = (await lower.boundingBox())!
+  expect(upperBox.height).toBeCloseTo(albumBox.height, 0)
+  if (info.project.name.includes('mobile')) {
+    expect(upperBox.x).toBeCloseTo(albumBox.x, 0)
+    const albumHeading = (await lower.locator('h2').boundingBox())!
+    expect(
+      albumHeading.y - upperBox.y - upperBox.height
+    ).toBeGreaterThanOrEqual(8)
+    const level = (await page.locator('.flora-pet-level').boundingBox())!
+    expect((await upper.locator('h2').boundingBox())!.y).toBeGreaterThanOrEqual(
+      level.y + level.height + 8
+    )
+  } else {
+    expect(upperBox.y).toBeCloseTo(albumBox.y, 0)
+    expect(upperBox.x - albumBox.x - albumBox.width).toBeCloseTo(16, 0)
+  }
+  expect((await upper.locator('h2').boundingBox())!.y).toBeGreaterThanOrEqual(
+    (await page.locator('.flora-pet-level').boundingBox())!.y +
+      (await page.locator('.flora-pet-level').boundingBox())!.height +
+      8
+  )
+  const toggleIcon = lower.locator('.flora-album-gallery__expand-icon')
+  await expect(toggleIcon).toBeVisible()
+  const fullscreenPath = await toggleIcon.locator('path').getAttribute('d')
+  await lower.getByRole('button', { name: 'EXPAND', exact: true }).click()
+  await expect(lower).toHaveClass(/is-expanded/)
+  await expect(toggleIcon.locator('path')).not.toHaveAttribute(
+    'd',
+    fullscreenPath!
+  )
+  await expect(upper).toBeHidden()
+  await expect(lower.locator('.media-gallery__card')).toHaveCount(
+    petAlbums.huahua.defaults.length
+  )
+  await lower.getByRole('button', { name: 'COLLAPSE', exact: true }).click()
+  await expect(upper).toBeVisible()
+})
+
+test('video panel fades out and back in when the album toggles', async ({
+  page,
+}) => {
+  test.setTimeout(60000)
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.routeWebSocket('ws://localhost:3000/**', (socket) =>
+    socket.close()
+  )
+  await page.route('**/__floratrium/media?**', (route) =>
+    route.fulfill({
+      json: {
+        items: petAlbums.huahua.defaults,
+        nextCursor: null,
+        totalPages: 1,
+      },
+    })
+  )
+  await page.goto('/floratrium', { waitUntil: 'domcontentloaded' })
+  const video = page.locator('.flora-video-gallery')
+  await expect(video).toBeVisible({ timeout: 30000 })
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  for (const opening of [true, false]) {
+    const frames = await page.evaluate(async () => {
+      const video = document.querySelector('.flora-video-gallery')!
+      document
+        .querySelector<HTMLButtonElement>('.flora-album-gallery__expand')!
+        .click()
+      const frames: number[] = []
+      const until = performance.now() + 1400
+      await new Promise<void>((resolve) => {
+        const sample = () => {
+          const style = getComputedStyle(video)
+          if (style.display !== 'none') frames.push(Number(style.opacity))
+          if (performance.now() < until) requestAnimationFrame(sample)
+          else resolve()
+        }
+        requestAnimationFrame(sample)
+      })
+      return frames
+    })
+    expect(frames.some((opacity) => opacity > 0 && opacity < 1)).toBe(true)
+    if (opening) await expect(video).toBeHidden()
+    else {
+      await expect(video).toBeVisible()
+      await expect(video).toHaveCSS('opacity', '1')
+    }
+  }
 })

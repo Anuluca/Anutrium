@@ -139,15 +139,16 @@ const rebuild = () => {
   const width = viewport.value.clientWidth
   const height = viewport.value.clientHeight
   const cardHeight = Math.min(height * 0.92, 320, width * 0.86)
-  const cardWidth = cardHeight * 0.75
+  const cardWidth = Math.min(cardHeight * 0.75, width * 0.46)
   const x = width * 0.36
-  // 在整张照片（含悬停放大）仍位于视口内时完成渐隐，避免边缘出现被裁切的窄条。
-  const edgeInset = cardWidth * 0.62 + Math.min(24, Math.max(8, width * 0.03))
+  // 预留左右边距，窄视窗也保留至少两个照片位；悬停放大仍可溢出容器。
+  const edgeInset = cardWidth * 0.46 + Math.min(24, Math.max(8, width * 0.03))
   const stepX = Math.min(
     cardWidth * 0.68,
-    Math.max(1, (width - 2 * edgeInset) * 0.8)
+    Math.max(1, (width - 2 * edgeInset) / 2.2)
   )
-  const leftSlot = (edgeInset - x) / stepX
+  // 左侧延后 0.4 个照片位退场，让下一张先接上；已允许溢出，不在容器内部提前消失。
+  const leftSlot = (edgeInset - x) / stepX - 0.4
   const rightSlot = (width - edgeInset - x) / stepX
   geometry = {
     height,
@@ -168,12 +169,13 @@ const rebuild = () => {
     const upper = maxSlot()
     const lower = geometry.lower
     const fade = Math.min(0.55, (rightSlot - leftSlot) / 3)
+    const exitFade = Math.min(0.4, fade)
     const samples = [
       ...new Set([
         upper,
         rightSlot,
         rightSlot - fade,
-        leftSlot + fade,
+        leftSlot + exitFade,
         leftSlot,
         lower,
       ]),
@@ -188,7 +190,11 @@ const rebuild = () => {
       transform: `translate3d(${relative * geometry.stepX}px, 0px, 0px)`,
       opacity: Math.max(
         0,
-        Math.min(1, (rightSlot - relative) / fade, (relative - leftSlot) / fade)
+        Math.min(
+          1,
+          (rightSlot - relative) / fade,
+          (relative - leftSlot) / exitFade
+        )
       ),
     }))
     const animation = element.animate(keyframes, {
@@ -381,6 +387,8 @@ onBeforeUnmount(() => {
 
 <style scoped lang="less">
 .flora-album-strip.no-rem {
+  position: relative;
+  z-index: 0;
   height: 100%;
   width: 100%;
   box-sizing: border-box;

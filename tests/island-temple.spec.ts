@@ -11,15 +11,11 @@ test.beforeEach(async ({ page }, testInfo) => {
     '桌面神殿，手机保留原有模型页'
   )
   if (testInfo.title.includes('focus aims')) {
-    await page.route('**/src/config/templeExperience.ts*', async (route) => {
-      const response = await route.fetch()
-      await route.fulfill({
-        response,
-        body: (
-          await response.text()
-        ).replace(/mode: ["'](?:normal|headache)["']/, 'mode: "normal"'),
+    await page.route('**/site/home-features', (route) =>
+      route.fulfill({
+        json: { lucarioHeadache: false, updatedAt: null },
       })
-    })
+    )
   }
   await page.goto('/', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.temple-stage')).toHaveAttribute(

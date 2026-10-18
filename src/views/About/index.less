@@ -126,14 +126,6 @@
 }
 
 .passion-section {
-  --passion-fade-mask: linear-gradient(
-    to bottom,
-    transparent 0%,
-    rgba(0, 0, 0, 0.28) 50%,
-    #000 70%,
-    #000 100%
-  );
-
   position: relative;
   min-height: 0;
   isolation: isolate;
@@ -154,10 +146,7 @@
       transparent 1px,
       transparent 5px
     );
-    mix-blend-mode: screen;
     opacity: 0.42;
-    -webkit-mask-image: var(--passion-fade-mask);
-    mask-image: var(--passion-fade-mask);
   }
 
   &::after {
@@ -172,7 +161,6 @@
       transparent 53%
     );
     opacity: 0;
-    mix-blend-mode: screen;
     pointer-events: none;
     animation: passionCrtFlash 0.58s linear 0.44s both;
   }
@@ -211,8 +199,8 @@
 
   100% {
     opacity: 1;
-    clip-path: inset(0);
-    filter: brightness(1) contrast(1);
+    clip-path: none;
+    filter: none;
   }
 }
 
@@ -241,30 +229,25 @@
   z-index: 5;
   pointer-events: none;
   opacity: 0;
-  -webkit-mask-image: var(--passion-fade-mask);
-  mask-image: var(--passion-fade-mask);
+  contain: layout paint style;
 
-  &::before,
-  &::after {
+  > span {
     position: absolute;
-    content: '';
     background: @red;
   }
 
-  &::before {
+  .passion-crosshair__vertical {
     top: 0;
     bottom: 0;
-    left: var(--passion-cross-x);
+    left: 0;
     width: 1px;
-    transform: translateX(-0.5px);
   }
 
-  &::after {
-    top: var(--passion-cross-y);
+  .passion-crosshair__horizontal {
+    top: 0;
     left: 0;
     right: 0;
     height: 1px;
-    transform: translateY(-0.5px);
   }
 }
 
@@ -300,8 +283,6 @@
   background-color: rgba(0, 0, 0, 0.6);
   filter: saturate(0) sepia(1) saturate(3.2) hue-rotate(310deg) brightness(0.95)
     contrast(1.02);
-  -webkit-mask-image: var(--passion-fade-mask);
-  mask-image: var(--passion-fade-mask);
 
   &::before {
     position: absolute;
@@ -339,6 +320,9 @@
   to {
     transform: translateY(100%);
   }
+}
+.passion-section.is-motion-paused .passion-back::after {
+  animation-play-state: paused;
 }
 .passion-logo-bg {
   --passion-logo-size: calc(
@@ -637,6 +621,10 @@
     box-shadow: 0 0 8px rgba(217, 26, 142, 0.8);
     animation: none;
   }
+}
+
+.neighbors-block.is-motion-paused .gear-diamonds i {
+  animation-play-state: paused;
 }
 
 .gear-letters {

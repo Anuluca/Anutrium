@@ -1,4 +1,5 @@
 import { ANALYTICS_RANGES } from '../../src/config/siteAnalytics'
+import { loadVisitorCount } from './analyticsCounters'
 import { loadAnalyticsReports, loadRealtimeAnalytics } from './analyticsReports'
 import {
   AnalyticsApiError,
@@ -13,15 +14,25 @@ export async function handleAnalytics(
 ): Promise<Response> {
   const url = new URL(request.url)
   const realtime = url.pathname.endsWith('/realtime')
+  const counter = url.pathname.endsWith('/online')
+    ? 'online'
+    : url.pathname.endsWith('/views')
+    ? 'views'
+    : null
+  const live = realtime || counter === 'online'
   const days = Number(url.searchParams.get('days') || 30)
-  if (!realtime && !(ANALYTICS_RANGES as readonly number[]).includes(days))
+  if (
+    !realtime &&
+    !counter &&
+    !(ANALYTICS_RANGES as readonly number[]).includes(days)
+  )
     return jsonResponse({ error: 'invalid_range' }, 400, {
       'Cache-Control': 'no-store',
     })
   if (
     !/^\d+$/.test(env.GA4_PROPERTY_ID || '') ||
     !env.GA4_SERVICE_ACCOUNT_JSON ||
-    (realtime && !/^\d+$/.test(env.GA4_STREAM_ID || ''))
+    (live && !/^\d+$/.test(env.GA4_STREAM_ID || ''))
   )
     return jsonResponse({ error: 'analytics_not_configured' }, 503, {
       'Cache-Control': 'no-store',
@@ -29,7 +40,7 @@ export async function handleAnalytics(
   const key = new Request(
     new URL(
       `/__analytics/v4/${env.GA4_PROPERTY_ID}/${env.GA4_STREAM_ID}/${
-        realtime ? 'realtime' : days
+        counter ? `counter-v1-${counter}` : realtime ? 'realtime' : days
       }`,
       url.origin
     )
@@ -38,15 +49,18 @@ export async function handleAnalytics(
   if (cached) return cached
   try {
     const google = await createGoogleAnalyticsClient(env)
-    const data = realtime
+    const data = counter
+      ? await loadVisitorCount(google, counter, env.GA4_STREAM_ID)
+      : realtime
       ? await loadRealtimeAnalytics(google, env.GA4_STREAM_ID)
       : await loadAnalyticsReports(google, days)
     // 上游部分失败时短缓存，避免把瞬时失败保留十分钟。
     const partial =
       ('activeUsers' in data && data.activeUsers === null) ||
+      ('count' in data && data.count === null) ||
       data.reports.some((report) => report.status === 'unavailable')
-    const browserTtl = partial ? 15 : realtime ? 30 : 300
-    const edgeTtl = partial ? 30 : realtime ? 60 : 600
+    const browserTtl = partial ? 15 : live ? 30 : 300
+    const edgeTtl = partial ? 30 : live ? 60 : 600
     const response = jsonResponse(data, 200, {
       'Cache-Control': `public, max-age=${browserTtl}, s-maxage=${edgeTtl}`,
     })

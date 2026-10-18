@@ -1,14 +1,7 @@
 <script setup lang="ts">
-import {
-  computed,
-  getCurrentInstance,
-  nextTick,
-  onBeforeUnmount,
-  ref,
-  watch,
-} from 'vue'
+import { computed, getCurrentInstance, nextTick, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useResizeObserver } from '@vueuse/core'
+import { Picture } from '@element-plus/icons-vue'
 
 import MediaGallery from '@/components/MediaGallery/index.vue'
 import MediaPhotoInfo from '@/components/MediaPhotoInfo/index.vue'
@@ -19,6 +12,7 @@ import { createScanlineMask } from '@/utils/scanlineMask'
 
 import { useFloraAlbum } from '../composables/useFloraAlbum'
 import FloraAlbumStrip from './FloraAlbumStrip.vue'
+import FloraExpandButton from './FloraExpandButton.vue'
 
 const props = defineProps<{ petId: string; title: string; mobile?: boolean }>()
 const decorationFilterId = `flora-decoration-tint-${getCurrentInstance()?.uid}`
@@ -57,14 +51,6 @@ watch(expanded, () => {
   emit('expanded-change', expanded.value)
 })
 const viewport = ref<HTMLElement | null>(null)
-const titleElement = ref<HTMLElement | null>(null)
-const titleSpace = ref(76)
-useResizeObserver(titleElement, () => {
-  titleSpace.value = Math.max(
-    props.mobile ? 40 : 76,
-    (titleElement.value?.offsetHeight || 0) + (props.mobile ? 12 : 20)
-  )
-})
 const album = computed(() => petAlbums[props.petId])
 const overflowMask = createScanlineMask({
   seed: 'flora-album-overflow',
@@ -111,9 +97,7 @@ const goToPage = async (target: number, event?: MouseEvent) => {
     flashActionButton(event.currentTarget)
   if (await loadPage(target)) await resetScroll()
 }
-let clickFlash: Animation | undefined
-const toggle = (event: MouseEvent) => {
-  clickFlash = flashActionButton(event.currentTarget as HTMLButtonElement)
+const toggle = () => {
   expanded.value = !expanded.value
 }
 const toggleFromSurface = (event: MouseEvent) => {
@@ -128,14 +112,11 @@ const closeExpanded = () => {
   return true
 }
 defineExpose({ closeExpanded })
-onBeforeUnmount(() => {
-  clickFlash?.cancel()
-})
 </script>
 
 <template>
   <section
-    class="flora-album-gallery no-rem"
+    class="flora-album-gallery flora-media-panel no-rem"
     :class="{
       'is-expanded': expanded,
       'is-clickable': true,
@@ -144,7 +125,6 @@ onBeforeUnmount(() => {
     }"
     :style="{
       '--album-overflow-mask': overflowMask,
-      '--album-title-space': `${titleSpace}px`,
     }"
     :aria-label="title"
     @click.stop="toggleFromSurface"
@@ -160,13 +140,14 @@ onBeforeUnmount(() => {
         :style="{ '--blade-index': blade - 1 }"
       />
     </div>
-    <h2 ref="titleElement" class="flora-album-gallery__title">
+    <h2 class="flora-album-gallery__title">
       <button
         type="button"
         :aria-expanded="expanded"
         @click.stop="expanded = !expanded"
       >
-        {{ title }}
+        <Picture aria-hidden="true" focusable="false" />
+        <span>{{ title }}</span>
       </button>
     </h2>
     <Transition name="album-mode" mode="out-in">
@@ -243,14 +224,13 @@ onBeforeUnmount(() => {
       decoding="async"
       draggable="false"
     />
-    <button
+    <FloraExpandButton
       class="flora-album-gallery__expand"
-      type="button"
-      :aria-expanded="expanded"
+      icon-class="flora-album-gallery__expand-icon"
+      :expanded="expanded"
+      :mobile="mobile"
       @click="toggle"
-    >
-      <span>{{ expanded ? 'COLLAPSE' : 'EXPAND' }}</span>
-    </button>
+    />
     <footer v-if="expanded" class="flora-album-gallery__footer">
       <nav class="flora-album-gallery__pagination" aria-label="相册分页">
         <button
@@ -291,20 +271,13 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped lang="less">
+@import '../styles/floraMedia.less';
 .flora-album-gallery.no-rem {
-  position: absolute;
-  right: var(--flora-content-inset);
-  bottom: var(--flora-content-inset);
-  left: var(--flora-content-inset);
-  height: clamp(240px, 34vh, 320px);
+  .flora-media-panel();
   display: flex;
   flex-direction: column;
   --album-background: var(--flora-theme-color);
-  isolation: isolate;
-  color: #fffff4;
-  pointer-events: auto;
-  transition: height 850ms cubic-bezier(0.22, 1, 0.36, 1);
-  animation: album-fade-in 450ms ease both;
+  animation: album-fade-in 450ms ease;
 
   &.is-expanded {
     .flora-album-gallery__background {
@@ -313,13 +286,6 @@ onBeforeUnmount(() => {
     &::before {
       background: color-mix(in srgb, var(--flora-theme-color) 40%, transparent);
     }
-    right: var(--flora-content-inset);
-    left: var(--flora-content-inset);
-    height: calc(
-      100% - 2 * var(--flora-content-inset) - clamp(36px, 8cqw, 88px) -
-        var(--album-title-space)
-    );
-
     .flora-album-gallery__title {
       max-width: 100%;
     }
@@ -404,18 +370,13 @@ onBeforeUnmount(() => {
     padding: 12px;
   }
   .flora-album-gallery__title {
-    -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
-    mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
-    position: absolute;
-    bottom: calc(100% - 4px);
-    left: 0;
+    .flora-media-title();
     max-width: 100%;
-    margin: 0;
     z-index: 2;
     pointer-events: auto;
     transition: opacity 200ms ease;
-    font: 400 72px / 1.2 'UnboundedSans', sans-serif;
     button {
+      .flora-media-title-content();
       padding: 0;
       font: inherit;
       text-align: left;
@@ -460,6 +421,7 @@ onBeforeUnmount(() => {
     span {
       margin-bottom: -1px;
       background: var(--album-background);
+      transition: background-color 850ms ease;
       transform-origin: center bottom;
     }
   }
@@ -533,7 +495,7 @@ onBeforeUnmount(() => {
       font-size: 18px;
     }
   }
-  button {
+  button:where(:not(.flora-expand-button)) {
     padding: 4px 6px;
     border: 0;
     background: transparent;
@@ -549,72 +511,14 @@ onBeforeUnmount(() => {
       outline-offset: 2px;
     }
   }
-  button.flora-album-gallery__expand {
-    position: absolute;
-    bottom: 12px;
-    right: 42px;
-    z-index: 3;
-    isolation: isolate;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 10px 14px;
-    overflow: visible;
-    background: #000;
-    color: #fff;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
-    font: 400 36px / 1 'Anton', sans-serif;
-    letter-spacing: 0;
-    &::before {
-      position: absolute;
-      top: 0;
-      right: 100%;
-      bottom: 0;
-      width: 24px;
-      background: inherit;
-      -webkit-mask-image: linear-gradient(to right, transparent, #000);
-      mask-image: linear-gradient(to right, transparent, #000);
-      pointer-events: none;
-      content: '';
-    }
-    &:hover,
-    &:focus-visible {
-      background: #e23456;
-      color: #000;
-      box-shadow: 0 4px 14px rgba(226, 52, 86, 0.5);
-    }
-
-    span {
-      flex-shrink: 0;
-      font-family: inherit;
-      font-weight: inherit;
-      font-style: inherit;
-      white-space: nowrap;
-    }
-  }
   .flora-album-gallery__notice {
     padding: 16px;
     margin: 0;
     font-size: 14px;
   }
   &.flora-album-gallery--mobile {
-    --album-inline-inset: calc(var(--flora-content-inset) + 1px);
     --album-toggle-width: 80px;
     --album-toggle-right: 8px;
-
-    left: var(--album-inline-inset);
-    right: var(--album-inline-inset);
-    bottom: calc(var(--flora-content-inset) + 1px);
-    height: clamp(120px, 17vh, 160px);
-    transition: height 850ms cubic-bezier(0.22, 1, 0.36, 1),
-      bottom 850ms cubic-bezier(0.22, 1, 0.36, 1);
-
-    .flora-album-gallery__title {
-      font-size: 44px;
-      bottom: 100%;
-    }
 
     :deep(.flora-album-strip.no-rem) {
       width: 100%;
@@ -625,33 +529,12 @@ onBeforeUnmount(() => {
       --media-gallery-max-height: clamp(180px, 52vw, 270px);
     }
 
-    button.flora-album-gallery__expand {
-      right: var(--album-toggle-right);
-      bottom: 8px;
-      width: var(--album-toggle-width);
-      height: 30px;
-      box-sizing: border-box;
-      padding: 6px 8px;
-      font-size: 18px;
-
-      &:hover,
-      &:focus-visible {
-        background: #000;
-        color: #fff;
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
-        animation: none;
-      }
-    }
-
     &.is-expanded {
-      z-index: 5;
       .flora-album-gallery__decoration {
         opacity: 0;
         visibility: hidden;
         transition: opacity 300ms ease, visibility 0s 300ms;
       }
-      bottom: calc(0px - var(--flora-footer-offset) - var(--flora-bottom-gap));
-      height: 100dvh;
 
       .flora-album-gallery__viewport {
         margin-top: 20px;
@@ -695,6 +578,7 @@ onBeforeUnmount(() => {
     animation: none;
     .flora-album-gallery__background span {
       animation: none;
+      transition: none;
     }
     &::before {
       transition: none;

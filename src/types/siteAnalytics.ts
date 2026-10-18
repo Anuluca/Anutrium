@@ -26,3 +26,9 @@ export interface RealtimeAnalytics {
   activeUsers: number | null
   reports: AnalyticsReport[]
 }
+
+export interface VisitorCount {
+  generatedAt: string
+  count: number | null
+  reports: AnalyticsReport[]
+}
