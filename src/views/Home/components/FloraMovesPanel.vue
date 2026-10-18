@@ -92,9 +92,9 @@ watch(
   }
 }
 .flora-moves.no-rem {
-  --flora-move-scale: 1.5;
+  --flora-move-scale: var(--flora-profile-move-scale, 1.5);
   --flora-scanline-gap: calc(1px / var(--flora-move-scale));
-  --flora-scanline-period: calc(4px / var(--flora-move-scale));
+  --flora-scanline-period: calc(3px / var(--flora-move-scale));
   position: relative;
   display: flow-root;
   opacity: 0.4;
@@ -106,7 +106,8 @@ watch(
     --flora-toggle-color: #000;
     --flora-toggle-background: repeating-linear-gradient(
       to bottom,
-      transparent 0 var(--flora-scanline-gap),
+      color-mix(in srgb, var(--flora-toggle-color) 45%, transparent) 0
+        var(--flora-scanline-gap),
       var(--flora-toggle-color) var(--flora-scanline-gap)
         var(--flora-scanline-period)
     );
@@ -125,12 +126,12 @@ watch(
     :deep(span) {
       -webkit-mask-image: repeating-linear-gradient(
         to bottom,
-        transparent 0 var(--flora-scanline-gap),
+        rgb(0 0 0 / 45%) 0 var(--flora-scanline-gap),
         #000 var(--flora-scanline-gap) var(--flora-scanline-period)
       );
       mask-image: repeating-linear-gradient(
         to bottom,
-        transparent 0 var(--flora-scanline-gap),
+        rgb(0 0 0 / 45%) 0 var(--flora-scanline-gap),
         #000 var(--flora-scanline-gap) var(--flora-scanline-period)
       );
       -webkit-text-fill-color: transparent;

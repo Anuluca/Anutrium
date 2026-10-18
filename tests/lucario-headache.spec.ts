@@ -18,7 +18,7 @@ for (const reducedMotion of ['reduce', 'no-preference'] as const) {
     )
     await page.route('**/site/home-features', (route) =>
       route.fulfill({
-        json: { lucarioHeadache: true, updatedAt: null },
+        json: { lucarioHeadache: true, headacheCount: 10, updatedAt: null },
       })
     )
     await page.emulateMedia({ reducedMotion })
@@ -31,6 +31,10 @@ for (const reducedMotion of ['reduce', 'no-preference'] as const) {
     await expect(stage).toHaveAttribute('data-entrance-finished', 'true', {
       timeout: 20000,
     })
+    await expect(stage).toHaveAttribute(
+      'data-headache-caption',
+      '这是路卡的第10次头疼发作...'
+    )
     await expect(stage).toHaveAttribute('data-headache-mix', '1.000')
     await expect(stage).toHaveAttribute('data-headache-redness', '1.000')
     await expect(stage).toHaveAttribute('data-headache-sticker', 'true')
@@ -91,7 +95,11 @@ for (const mode of ['headache', 'normal'] as const) {
     )
     await page.route('**/site/home-features', (route) =>
       route.fulfill({
-        json: { lucarioHeadache: mode === 'headache', updatedAt: null },
+        json: {
+          lucarioHeadache: mode === 'headache',
+          headacheCount: 10,
+          updatedAt: null,
+        },
       })
     )
     await page.emulateMedia({ reducedMotion: 'reduce' })

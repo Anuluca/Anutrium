@@ -21,6 +21,7 @@ import {
 import { useFooterViewportOffset } from '../composables/useFooterViewportOffset'
 import FloraMediaLayout from './FloraMediaLayout.vue'
 import FloraMovesPanel from './FloraMovesPanel.vue'
+import FloraStatsChart from './FloraStatsChart.vue'
 
 const mediaLayout = ref<InstanceType<typeof FloraMediaLayout> | null>(null)
 const albumExpanded = ref(false)
@@ -352,49 +353,59 @@ const layoutBorders = useLayoutBorders()
         @expanded-change="albumExpanded = $event"
       >
         <template #profile="{ mediaActive }">
-          <div class="flora-pet-profile">
-            <ElPopover
-              :key="activePet.id"
-              placement="right"
-              trigger="hover"
-              :width="320"
-              :show-after="0"
-              :hide-after="100"
-              :show-arrow="false"
-            >
-              {{ t('levelRule') }}
-              <template #reference>
-                <button
-                  :key="`${activePet.id}:${petLevel}`"
-                  type="button"
-                  class="flora-pet-level"
-                  :aria-label="`Lv. ${petLevel}`"
-                  @click.stop
-                >
-                  <span aria-hidden="true">Lv.&nbsp;</span>
-                  <span
-                    v-for="(digit, index) in petLevel"
-                    :key="index"
-                    class="flora-number-bar__character-slot is-typing-digit"
-                    :style="{ '--flora-type-delay': `${240 + index * 320}ms` }"
-                    aria-hidden="true"
-                    ><span class="flora-number-bar__character">{{
-                      digit
-                    }}</span></span
-                  >
-                </button>
-              </template>
-            </ElPopover>
-            <div
-              class="flora-pet-profile__moves"
-              :class="{ 'is-hidden': mediaActive }"
-            >
-              <FloraMovesPanel
+          <div class="flora-pet-overview">
+            <div class="flora-pet-profile">
+              <ElPopover
                 :key="activePet.id"
-                :pet-id="activePet.id"
-                :mobile="mobile"
-              />
+                placement="right"
+                trigger="hover"
+                :width="320"
+                :show-after="0"
+                :hide-after="100"
+                :show-arrow="false"
+              >
+                {{ t('levelRule') }}
+                <template #reference>
+                  <button
+                    :key="`${activePet.id}:${petLevel}`"
+                    type="button"
+                    class="flora-pet-level"
+                    :aria-label="`Lv. ${petLevel}`"
+                    @click.stop
+                  >
+                    <span aria-hidden="true">Lv.&nbsp;</span>
+                    <span
+                      v-for="(digit, index) in petLevel"
+                      :key="index"
+                      class="flora-number-bar__character-slot is-typing-digit"
+                      :style="{
+                        '--flora-type-delay': `${240 + index * 320}ms`,
+                      }"
+                      aria-hidden="true"
+                      ><span class="flora-number-bar__character">{{
+                        digit
+                      }}</span></span
+                    >
+                  </button>
+                </template>
+              </ElPopover>
+              <div
+                class="flora-pet-profile__moves"
+                :class="{ 'is-hidden': mediaActive }"
+              >
+                <FloraMovesPanel
+                  :key="activePet.id"
+                  :pet-id="activePet.id"
+                  :mobile="mobile"
+                />
+              </div>
             </div>
+            <FloraStatsChart
+              class="flora-pet-stats"
+              :class="{ 'is-hidden': mediaActive }"
+              :stats="activePet.stats"
+              :name="activePet.name[petLocale]"
+            />
           </div>
         </template>
       </FloraMediaLayout>
@@ -449,6 +460,24 @@ const layoutBorders = useLayoutBorders()
     padding: var(--flora-content-inset);
   }
 
+  .flora-pet-overview {
+    --flora-profile-move-scale: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    gap: 0;
+    min-width: 0;
+  }
+
+  .flora-pet-stats {
+    align-self: end;
+    justify-self: center;
+    margin: 0;
+    &.is-hidden {
+      visibility: hidden;
+      pointer-events: none;
+    }
+  }
+
   .flora-pet-profile {
     display: flex;
     flex-direction: column;
@@ -460,6 +489,7 @@ const layoutBorders = useLayoutBorders()
     flex: none;
     width: 100%;
     margin-top: auto;
+    translate: 0 -24px;
     &.is-hidden {
       visibility: hidden;
       pointer-events: none;
@@ -775,6 +805,17 @@ const layoutBorders = useLayoutBorders()
       --flora-content-inset: 0px;
       padding: 0;
       container-type: normal;
+    }
+
+    .flora-pet-overview {
+      --flora-profile-move-scale: 1.5;
+      flex: none;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0;
+    }
+
+    .flora-pet-stats {
+      max-width: 300px;
     }
 
     .flora-pet-profile {

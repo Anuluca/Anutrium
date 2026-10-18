@@ -70,13 +70,13 @@ test('pet move cards show types and PP with forgotten moves in a scroll-safe mod
       })
     )
     .toBeGreaterThanOrEqual(8)
-  const mediaHeading = await page
-    .locator('.flora-video-gallery h2')
-    .boundingBox()
+  const mediaBounds = (await page
+    .locator('.flora-video-gallery')
+    .boundingBox())!
   const movesBounds = (await panel.boundingBox())!
   expect(
-    mediaHeading!.y - movesBounds.y - movesBounds.height
-  ).toBeGreaterThanOrEqual(8)
+    mediaBounds.y - movesBounds.y - movesBounds.height
+  ).toBeGreaterThanOrEqual(0)
   await page.mouse.move(0, 0)
   for (const selector of [name, type, pp]) {
     const text = current.first().locator(selector)

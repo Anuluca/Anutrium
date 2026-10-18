@@ -45,13 +45,13 @@ const type = computed(() => moveTypes[props.move.type])
   .flora-move-card__pp {
     -webkit-mask-image: repeating-linear-gradient(
       to bottom,
-      transparent 0 var(--flora-scanline-gap, 1px),
-      #000 var(--flora-scanline-gap, 1px) var(--flora-scanline-period, 4px)
+      rgb(0 0 0 / 45%) 0 var(--flora-scanline-gap, 1px),
+      #000 var(--flora-scanline-gap, 1px) var(--flora-scanline-period, 3px)
     );
     mask-image: repeating-linear-gradient(
       to bottom,
-      transparent 0 var(--flora-scanline-gap, 1px),
-      #000 var(--flora-scanline-gap, 1px) var(--flora-scanline-period, 4px)
+      rgb(0 0 0 / 45%) 0 var(--flora-scanline-gap, 1px),
+      #000 var(--flora-scanline-gap, 1px) var(--flora-scanline-period, 3px)
     );
   }
   .flora-move-card__type,
@@ -68,14 +68,14 @@ const type = computed(() => moveTypes[props.move.type])
     -webkit-mask-image: linear-gradient(to right, transparent, #000 45%),
       repeating-linear-gradient(
         to bottom,
-        transparent 0 var(--flora-scanline-gap, 1px),
-        #000 var(--flora-scanline-gap, 1px) var(--flora-scanline-period, 4px)
+        rgb(0 0 0 / 45%) 0 var(--flora-scanline-gap, 1px),
+        #000 var(--flora-scanline-gap, 1px) var(--flora-scanline-period, 3px)
       );
     mask-image: linear-gradient(to right, transparent, #000 45%),
       repeating-linear-gradient(
         to bottom,
-        transparent 0 var(--flora-scanline-gap, 1px),
-        #000 var(--flora-scanline-gap, 1px) var(--flora-scanline-period, 4px)
+        rgb(0 0 0 / 45%) 0 var(--flora-scanline-gap, 1px),
+        #000 var(--flora-scanline-gap, 1px) var(--flora-scanline-period, 3px)
       );
     -webkit-mask-composite: source-in;
     mask-composite: intersect;

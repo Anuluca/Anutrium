@@ -63,14 +63,25 @@
 - 数值为第九世代基础 PP，不表示实际剩余次数、不包含提升道具加成；睡觉为 5 PP，轮唱为 15 PP。
 - 核对资料：[Pokémon Database 招式表](https://pokemondb.net/move/all)、[睡觉的世代变化](https://pokemondb.net/move/rest)、[官方《朱／紫》攻略本介绍](https://over-lap.co.jp/book/sv/)。官方公开介绍未提供完整招式 PP 表，完整数值通过前两项非官方资料核对，不能标注为官方 API 数据。
 - 属性色使用 Bulbapedia 当前颜色模板：[一般 #9FA19F](https://bulbapedia.bulbagarden.net/wiki/Template:Normal_color)、[恶 #624D4E](https://bulbapedia.bulbagarden.net/wiki/Template:Dark_color)、[超能力 #EF4179](https://bulbapedia.bulbagarden.net/wiki/Template:Psychic_color)、[妖精 #EF70EF](https://bulbapedia.bulbagarden.net/wiki/Template:Fairy_color)、[虫 #91A119](https://bulbapedia.bulbagarden.net/wiki/Template:Bug_color)。
-- 招式栏位于相册／视频上方，与等级栏左侧对齐并占满可用宽度；在基础尺寸上整体放大 1.5 倍，总透明度 0.4。基础卡片高度桌面 48px、手机 44px，左侧直角、列表无左右内边距；基础行距桌面 24px、手机 20px。招式名、属性、PP、FORGOTTEN 默认描边，悬停时恢复实心。扫描线补偿缩放后的间距，实际周期保持 4px；FORGOTTEN 的左侧背景渐隐不受文字遮罩裁切。
+- 招式栏位于相册／视频上方，与等级栏左侧对齐并占满资料列的可用宽度；桌面端与战力图并列时使用基础尺寸，手机端整体放大 1.5 倍，总透明度 0.4。基础卡片高度桌面 48px、手机 44px，左侧直角、列表无左右内边距；基础行距桌面 24px、手机 20px。招式名、属性、PP、FORGOTTEN 默认描边，悬停时恢复实心。扫描线补偿缩放后的间距，实际周期保持 4px；FORGOTTEN 的左侧背景渐隐不受文字遮罩裁切。
 
 ## 内容区结构与布局
 
-- `FloraFocusLayout.vue` 管理模型分区、身份与资料内容；等级栏和招式同属 `flora-pet-profile`，招式包装层为 `flora-pet-profile__moves`，通过 `profile` 插槽传入 `FloraMediaLayout.vue`。媒体组件只负责资料整体与相册／视频的空间分配、滚动、显示顺序和展开状态，不再直接导入招式组件。
+- `FloraFocusLayout.vue` 管理模型分区、身份与资料内容；等级栏和招式同属 `flora-pet-profile`，招式包装层为 `flora-pet-profile__moves`；资料与战力图组成 `flora-pet-overview`，通过 `profile` 插槽传入 `FloraMediaLayout.vue`。媒体组件只负责资料整体与相册／视频的空间分配、滚动、显示顺序和展开状态，不再直接导入招式组件。
 - 相册／视频的排列、尺寸和展开边界仅由 `FloraMediaLayout` 定义，子组件负责内容。桌面端使用两列等宽网格，左侧相册、右侧视频、列间距 16px；手机端顺序为招式、视频、相册，模板顺序随断点保持一致。
 - 所有屏幕共用正常文档流，媒体区按剩余空间分配高度；桌面端媒体主体最小 180px，最大 `clamp(280px, 38vh, 380px)`，手机端主体固定 170px。空间不足时内容区独立纵向滚动，不再按屏幕高度切换定位方案。标题留白由共用字号、行高和标题间距计算，不使用固定的合计高度补偿。
 - 展开与收起共用 850ms 边界动画，按实际位置和尺寸插值，不缩放控制按钮；减少动态效果时立即切换。收起动画结束后再恢复另一媒体和招式显示，保持原有滚动位置；手机端展开覆盖视口并保持相同左右边界。
+
+## 六维战力图
+
+- `FloraStatsChart.vue` 使用原生 SVG 六边形和六条径向轴，沿用宠物主题色；数值维护在 `src/locales/dynamic/pets.ts` 的 `stats` 中，统一上限 `PET_STAT_MAX = 150`，按 `数值 / 150` 计算距中心的比例。这些是用户指定的展示数值，不随等级换算。
+- 参考图的顺时针顺序为 HP、Atk、Def、Spe、SpD、SpA，HP 位于顶部。每轴以 Anton 字体显示英文缩写和对应数值，字号均为 28px，数字基线位于指标名下方 20px，形成轻微重叠；指标名、内部多边形填充与边框直接使用宠物主题色，数字使用白色，不混色或额外降低填充透明度。图表提供包含全部数值的无障碍描述。
+- 桌面端位于资料区右侧，资料与图表按 2:1 分列、间距为 0，图表无上下外边距并底部对齐；为适应左侧资料的新宽度，桌面招式采用基础尺寸，手机保留原 1.5 倍尺寸并将图表放在资料下方。展开媒体时隐藏图表，收起后恢复。
+
+| 宠物 | HP | Atk | Def | SpA | SpD | Spe |
+| --- | --- | --- | --- | --- | --- | --- |
+| 花花 | 100 | 100 | 50 | 10 | 100 | 80 |
+| 小黑 | 150 | 150 | 100 | 100 | 80 | 150 |
 
 ## 多宠物模型
 

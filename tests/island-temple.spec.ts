@@ -13,7 +13,7 @@ test.beforeEach(async ({ page }, testInfo) => {
   if (testInfo.title.includes('focus aims')) {
     await page.route('**/site/home-features', (route) =>
       route.fulfill({
-        json: { lucarioHeadache: false, updatedAt: null },
+        json: { lucarioHeadache: false, headacheCount: 10, updatedAt: null },
       })
     )
   }

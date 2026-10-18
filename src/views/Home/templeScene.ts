@@ -30,7 +30,10 @@ import {
 import { subscribePointerSamples } from '@/utils/pointerSamples'
 import { preloadTempleAssets } from '@/utils/preloadTempleAssets'
 import { createSceneMatrixUpdater } from '@/utils/sceneMatrixUpdater'
-import { getTempleLabelCanvas } from '@/utils/templeLabelTextures'
+import {
+  createHeadacheLabelCanvas,
+  getTempleLabelCanvas,
+} from '@/utils/templeLabelTextures'
 
 import {
   createObeliskBaseGeometry,
@@ -827,6 +830,42 @@ export function createHomeTemple(
   )
   pedestalParts.forEach((value) => value.dispose())
   scene.add(pedestal)
+  const headacheCount = headache?.count
+  const headacheCaption =
+    headacheEnabled && Number.isSafeInteger(headacheCount) && headacheCount! > 0
+      ? `这是路卡的第${headacheCount}次头疼发作...`
+      : ''
+  const headacheCaptionMaterial = headacheCaption
+    ? material(
+        new THREE.MeshStandardMaterial({
+          map: labelTexture(createHeadacheLabelCanvas(headacheCaption)),
+          transparent: true,
+          depthWrite: false,
+          roughness: 1,
+          emissive: '#fff3f5',
+          emissiveIntensity: 0.35,
+          toneMapped: false,
+        })
+      )
+    : null
+  if (headacheCaptionMaterial) {
+    const caption = new THREE.Mesh(
+      geometry(new THREE.PlaneGeometry(4.2, 0.328125)),
+      headacheCaptionMaterial
+    )
+    // 贴在底座正面并避开右侧花花，作为子节点参与运镜、环境淡出和资源释放。
+    caption.position.set(-0.7, 0.42, 1.605)
+    caption.name = 'headache-caption'
+    pedestal.add(caption)
+  }
+  if (headacheCaption)
+    renderer.domElement.setAttribute(
+      'aria-label',
+      `${model.label}三维模型，${headacheCaption}`
+    )
+  stage.dataset.headacheCaption = headacheCaption
+  stage.dataset.headacheCount =
+    headacheCount === undefined ? '' : String(headacheCount)
   const statueGlow = new THREE.Mesh(
     geometry(new THREE.PlaneGeometry(10, 8)),
     material(
@@ -984,6 +1023,7 @@ export function createHomeTemple(
   // 原底座和倒影一起渐隐，保存原透明度，退出聚焦时可从当前帧连续恢复。
   const baseMaterials = new Set<THREE.MeshStandardMaterial>([
     plinthMaterial,
+    ...(headacheCaptionMaterial ? [headacheCaptionMaterial] : []),
     ...obelisks.map((item) => item.baseMaterial),
   ])
   const fadingBaseMaterials = [

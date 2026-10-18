@@ -25,7 +25,7 @@ import { useFloraPets } from '@/stores/floraPets'
 import { useSiteLoading } from '@/stores/siteLoading'
 import { useTempleNavigation } from '@/stores/templeNavigation'
 import { flashActionButton } from '@/utils/flashActionButton'
-import { readLucarioHeadache } from '@/utils/homeFeatures'
+import { readHomeFeatures } from '@/utils/homeFeatures'
 import { hasJourneyReturnState } from '@/utils/journeyReturnState'
 import { setSmoothScrollLocked } from '@/utils/smoothScroll'
 import AboutOverlay from '@/views/About/AboutOverlay.vue'
@@ -321,9 +321,9 @@ onMounted(async () => {
   // 全局地平线加载仅属于首次入场；站内返回沿用路由过渡。
   if (!siteEntryActive.value) loadingTask = siteLoading.beginTask('home-scene')
   try {
-    const [{ createHomeTemple }, headacheEnabled] = await Promise.all([
+    const [{ createHomeTemple }, homeFeatures] = await Promise.all([
       import('./templeScene'),
-      readLucarioHeadache(featureRequest.signal),
+      readHomeFeatures(featureRequest.signal),
     ])
     if (disposed || !stage.value) return
     scene = createHomeTemple(
@@ -407,7 +407,8 @@ onMounted(async () => {
         ...templeExperience,
         headache: templeExperience.headache && {
           ...templeExperience.headache,
-          mode: headacheEnabled ? 'headache' : 'normal',
+          mode: homeFeatures?.lucarioHeadache ? 'headache' : 'normal',
+          count: homeFeatures?.headacheCount,
         },
       },
       navigation.simpleEntrance || hasJourneyReturnState(),

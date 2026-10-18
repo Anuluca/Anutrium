@@ -14,7 +14,9 @@ test('media layout adapts to available space and restores its scroll and geometr
   const album = page.locator('.flora-album-gallery')
   const video = page.locator('.flora-video-gallery')
   await expect(album).toBeVisible({ timeout: 45000 })
-  const profile = layout.locator(':scope > .flora-pet-profile')
+  const profile = layout.locator(
+    ':scope > .flora-pet-overview > .flora-pet-profile'
+  )
   await expect(profile.locator('.flora-pet-level')).toHaveCount(1)
   await expect(
     profile.locator('.flora-pet-profile__moves .flora-moves')
@@ -56,11 +58,10 @@ test('media layout adapts to available space and restores its scroll and geometr
       const name = rect('.flora-moves .flora-move-card__name')
       const album = rect('.flora-album-gallery')
       const video = rect('.flora-video-gallery')
-      const heading = rect('.flora-media-region__slot:first-child h2')
       return {
         levelGap: name.top - level.bottom,
         leftAlignment: moves.left - level.left,
-        headingGap: heading.top - moves.bottom,
+        mediaGap: Math.min(album.top, video.top) - moves.bottom,
         album: album.toJSON(),
         video: video.toJSON(),
         order: [...document.querySelectorAll('.flora-media-panel')].map((el) =>
@@ -70,7 +71,7 @@ test('media layout adapts to available space and restores its scroll and geometr
     })
     expect(geometry.levelGap).toBeGreaterThanOrEqual(8)
     expect(Math.abs(geometry.leftAlignment)).toBeLessThanOrEqual(1)
-    expect(geometry.headingGap).toBeGreaterThanOrEqual(8)
+    expect(geometry.mediaGap).toBeGreaterThanOrEqual(0)
     expect(
       Math.abs(geometry.album.width - geometry.video.width)
     ).toBeLessThanOrEqual(1)

@@ -81,3 +81,42 @@ export function getTempleLabelCanvas(
   }
   return entry
 }
+
+// 发作文字随每次场景创建生成，避免把不断增长的次数永久缓存到 labels。
+export function createHeadacheLabelCanvas(text: string): LabelCanvas {
+  const canvas = document.createElement('canvas')
+  canvas.width = 2048
+  canvas.height = 160
+  const context = canvas.getContext('2d')!
+  const listeners = new Set<() => void>()
+  const font = '800 96px "UnboundedSans"'
+  const paint = () => {
+    context.clearRect(0, 0, canvas.width, canvas.height)
+    context.font = `${font}, sans-serif`
+    context.textAlign = 'center'
+    context.textBaseline = 'middle'
+    context.fillStyle = '#fff3f5'
+    context.fillText(
+      text,
+      canvas.width / 2,
+      canvas.height / 2,
+      canvas.width - 64
+    )
+  }
+  paint()
+  if (document.fonts && !document.fonts.check(font, text))
+    void document.fonts
+      .load(font, text)
+      .then(() => {
+        paint()
+        listeners.forEach((listener) => listener())
+      })
+      .catch(() => {})
+  return {
+    canvas,
+    subscribe(listener) {
+      listeners.add(listener)
+      return () => listeners.delete(listener)
+    },
+  }
+}

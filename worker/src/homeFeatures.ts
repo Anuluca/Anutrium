@@ -1,10 +1,89 @@
-import { type HomeFeatures, isHomeFeatures } from '../../src/types/homeFeatures'
+import { type HomeFeatures } from '../../src/types/homeFeatures'
 import { jsonResponse } from './http'
 
 const CONFIG_KEY = 'config/home-features.json'
 const headers = { 'Cache-Control': 'no-store' }
 const respond = (body: unknown, status = 200) =>
   jsonResponse(body, status, headers)
+
+interface StoredHomeFeatures {
+  lucarioHeadache: boolean
+  updatedAt: string | null
+  headacheBaseline: number
+  headacheEpisodes: { number: number; startedAt: string }[]
+}
+
+const validDate = (value: unknown): value is string =>
+  typeof value === 'string' && Number.isFinite(Date.parse(value))
+
+function parseStoredFeatures(value: unknown): {
+  config: StoredHomeFeatures
+  migrated: boolean
+} {
+  if (value === undefined)
+    return {
+      config: {
+        lucarioHeadache: false,
+        updatedAt: null,
+        headacheBaseline: 10,
+        headacheEpisodes: [],
+      },
+      migrated: true,
+    }
+  if (!value || typeof value !== 'object') throw new Error('invalid_config')
+  const data = value as Record<string, unknown>
+  if (
+    typeof data.lucarioHeadache !== 'boolean' ||
+    !(data.updatedAt === null || validDate(data.updatedAt))
+  )
+    throw new Error('invalid_config')
+  const state = {
+    lucarioHeadache: data.lucarioHeadache,
+    updatedAt: data.updatedAt,
+  }
+  // 旧配置读取时兼容 10 次历史基数；首次授权保存时持久化，保留当前模式。
+  if (!('headacheBaseline' in data) && !('headacheEpisodes' in data))
+    return {
+      config: { ...state, headacheBaseline: 10, headacheEpisodes: [] },
+      migrated: true,
+    }
+  if (
+    !Number.isSafeInteger(data.headacheBaseline) ||
+    (data.headacheBaseline as number) < 0 ||
+    !Array.isArray(data.headacheEpisodes)
+  )
+    throw new Error('invalid_history')
+  const baseline = data.headacheBaseline as number
+  const episodes: StoredHomeFeatures['headacheEpisodes'] = []
+  for (const [index, episode] of data.headacheEpisodes.entries()) {
+    if (
+      !episode ||
+      typeof episode !== 'object' ||
+      episode.number !== baseline + index + 1 ||
+      !validDate(episode.startedAt)
+    )
+      throw new Error('invalid_history')
+    episodes.push({ number: episode.number, startedAt: episode.startedAt })
+  }
+  if (!Number.isSafeInteger(baseline + episodes.length + 1))
+    throw new Error('invalid_count')
+  return {
+    config: {
+      ...state,
+      headacheBaseline: baseline,
+      headacheEpisodes: episodes,
+    },
+    migrated: false,
+  }
+}
+
+function publicFeatures(config: StoredHomeFeatures): HomeFeatures {
+  return {
+    lucarioHeadache: config.lucarioHeadache,
+    headacheCount: config.headacheBaseline + config.headacheEpisodes.length,
+    updatedAt: config.updatedAt,
+  }
+}
 
 async function authorized(request: Request, expected: string) {
   const provided =
@@ -79,28 +158,62 @@ export async function handleHomeFeatures(request: Request, env: Env) {
       )
         return respond({ error: 'invalid_update' }, 400)
 
-      const config: HomeFeatures = {
-        lucarioHeadache: update.lucarioHeadache,
-        updatedAt: new Date().toISOString(),
+      // 状态与发作记录在同一对象中提交，写入失败时不会出现只计数或只切换状态。
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const object = await env.FLORATRIUM_BUCKET.get(CONFIG_KEY)
+        const previous = parseStoredFeatures(
+          object ? await object.json() : undefined
+        )
+        const migrated = object && previous.migrated
+        if (
+          object &&
+          !migrated &&
+          previous.config.lucarioHeadache === update.lucarioHeadache
+        )
+          return respond(publicFeatures(previous.config))
+
+        const config = previous.config
+        if (!config.lucarioHeadache && update.lucarioHeadache) {
+          config.headacheEpisodes.push({
+            number:
+              config.headacheBaseline + config.headacheEpisodes.length + 1,
+            startedAt: new Date().toISOString(),
+          })
+        }
+        const changed = config.lucarioHeadache !== update.lucarioHeadache
+        config.lucarioHeadache = update.lucarioHeadache
+        if (changed) config.updatedAt = new Date().toISOString()
+        // ETag 条件写入：冲突后重读状态，已被其他请求开启时不会再增加次数。
+        const saved = await env.FLORATRIUM_BUCKET.put(
+          CONFIG_KEY,
+          JSON.stringify(config),
+          {
+            onlyIf: object
+              ? { etagMatches: object.etag }
+              : new Headers({ 'If-None-Match': '*' }),
+            httpMetadata: {
+              contentType: 'application/json',
+              cacheControl: 'no-store',
+            },
+          }
+        )
+        if (saved) {
+          const result = publicFeatures(config)
+          console.log(
+            JSON.stringify({ event: 'home_features_updated', ...result })
+          )
+          return respond(result)
+        }
       }
-      await env.FLORATRIUM_BUCKET.put(CONFIG_KEY, JSON.stringify(config), {
-        httpMetadata: {
-          contentType: 'application/json',
-          cacheControl: 'no-store',
-        },
-      })
-      console.log(JSON.stringify({ event: 'home_features_updated', ...config }))
-      return respond(config)
+      return respond({ error: 'home_features_conflict' }, 503)
     }
 
     const object = await env.FLORATRIUM_BUCKET.get(CONFIG_KEY)
-    if (!object) return respond({ lucarioHeadache: false, updatedAt: null })
-    const config: unknown = await object.json()
-    if (!isHomeFeatures(config)) throw new Error('invalid_config')
-    return respond({
-      lucarioHeadache: config.lucarioHeadache,
-      updatedAt: config.updatedAt,
-    })
+    const { config } = parseStoredFeatures(
+      object ? await object.json() : undefined
+    )
+    // 公开接口仅返回当前状态和总次数，不公开发作时间明细。GET 不写入存储。
+    return respond(publicFeatures(config))
   } catch {
     console.error(
       JSON.stringify({ event: 'home_features_failed', method: request.method })

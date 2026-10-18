@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, getCurrentInstance, nextTick, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Picture } from '@element-plus/icons-vue'
+import { Loading, Picture } from '@element-plus/icons-vue'
 
 import MediaGallery from '@/components/MediaGallery/index.vue'
 import MediaPhotoInfo from '@/components/MediaPhotoInfo/index.vue'
@@ -164,13 +164,16 @@ defineExpose({ closeExpanded })
         class="flora-album-gallery__viewport"
         data-lenis-nested-scroll
       >
-        <p
+        <div
           v-if="loading && !allItems.length"
-          class="flora-album-gallery__notice"
+          class="flora-album-gallery__loading"
           role="status"
+          :aria-label="t('loading')"
         >
-          {{ t('loading') }}
-        </p>
+          <el-icon :size="28" class="is-loading" aria-hidden="true">
+            <Loading />
+          </el-icon>
+        </div>
         <p
           v-else-if="error && !allItems.length"
           class="flora-album-gallery__notice"
@@ -510,6 +513,13 @@ defineExpose({ closeExpanded })
       outline: 1px solid currentColor !important;
       outline-offset: 2px;
     }
+  }
+  .flora-album-gallery__loading {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: var(--flora-theme-color);
   }
   .flora-album-gallery__notice {
     padding: 16px;

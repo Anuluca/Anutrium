@@ -43,6 +43,7 @@ try {
     assert.equal(response.headers.get('cache-control'), 'no-store')
     assert.deepEqual(await response.json(), {
       lucarioHeadache: false,
+      headacheCount: 10,
       updatedAt: null,
     })
     assert.equal((await call('/admin/home-features')).status, 401)
@@ -70,12 +71,113 @@ try {
       }
     }
   })
+  await test('only off-to-on transitions count, public reads never add records', async () => {
+    const bucket = await mf.getR2Bucket('FLORATRIUM_BUCKET')
+    const key = 'config/home-features.json'
+    await bucket.delete(key)
+    await call('/site/home-features')
+    assert.equal(
+      await bucket.get(key),
+      null,
+      'public reads do not initialize storage'
+    )
+    assert.equal(
+      (await (await write({ lucarioHeadache: false })).json()).headacheCount,
+      10
+    )
+    assert.equal(
+      (await (await write({ lucarioHeadache: true })).json()).headacheCount,
+      11
+    )
+    const first = await (await bucket.get(key)).text()
+    for (let index = 0; index < 3; index++) {
+      assert.equal(
+        (await (await write({ lucarioHeadache: true })).json()).headacheCount,
+        11
+      )
+      assert.equal(
+        (await (await call('/site/home-features')).json()).headacheCount,
+        11
+      )
+    }
+    assert.equal(
+      await (await bucket.get(key)).text(),
+      first,
+      'no-op saves preserve timestamps and history'
+    )
+    assert.equal(
+      (await (await write({ lucarioHeadache: false })).json()).headacheCount,
+      11
+    )
+    assert.equal(
+      (await (await write({ lucarioHeadache: true })).json()).headacheCount,
+      12
+    )
+    const stored = await (await bucket.get(key)).json()
+    assert.equal(stored.headacheBaseline, 10)
+    assert.deepEqual(
+      stored.headacheEpisodes.map((item) => item.number),
+      [11, 12]
+    )
+    for (const episode of stored.headacheEpisodes)
+      assert.ok(Number.isFinite(Date.parse(episode.startedAt)))
+    const publicState = await (await call('/site/home-features')).json()
+    assert.equal('headacheEpisodes' in publicState, false)
+    await write({ lucarioHeadache: false })
+  })
+  await test('concurrent first enables commit exactly one episode', async () => {
+    const bucket = await mf.getR2Bucket('FLORATRIUM_BUCKET')
+    const key = 'config/home-features.json'
+    for (const initial of [
+      undefined,
+      { lucarioHeadache: false, updatedAt: null },
+    ]) {
+      if (initial) await bucket.put(key, JSON.stringify(initial))
+      else await bucket.delete(key)
+      const responses = await Promise.all(
+        Array.from({ length: 8 }, () => write({ lucarioHeadache: true }))
+      )
+      for (const response of responses) {
+        assert.equal(response.status, 200)
+        assert.equal((await response.json()).headacheCount, 11)
+      }
+      const stored = await (await bucket.get(key)).json()
+      assert.equal(stored.headacheEpisodes.length, 1)
+      assert.equal(stored.headacheEpisodes[0].number, 11)
+    }
+    await write({ lucarioHeadache: false })
+  })
+  await test('legacy active config stays at ten during migration, which only happens once', async () => {
+    const bucket = await mf.getR2Bucket('FLORATRIUM_BUCKET')
+    const key = 'config/home-features.json'
+    const updatedAt = '2026-10-18T06:00:00.000Z'
+    await bucket.put(key, JSON.stringify({ lucarioHeadache: true, updatedAt }))
+    assert.deepEqual(await (await call('/site/home-features')).json(), {
+      lucarioHeadache: true,
+      headacheCount: 10,
+      updatedAt,
+    })
+    assert.equal(
+      (await (await write({ lucarioHeadache: true })).json()).headacheCount,
+      10
+    )
+    const migrated = await (await bucket.get(key)).text()
+    await write({ lucarioHeadache: true })
+    assert.equal(await (await bucket.get(key)).text(), migrated)
+    await write({ lucarioHeadache: false })
+    assert.equal(
+      (await (await write({ lucarioHeadache: true })).json()).headacheCount,
+      11
+    )
+    await write({ lucarioHeadache: false })
+  })
   await test('invalid JSON, oversized bodies and unknown fields cannot mutate saved config', async () => {
     for (const value of [
       null,
       {},
       { lucarioHeadache: 'true' },
       { lucarioHeadache: true, other: false },
+      { lucarioHeadache: true, headacheCount: 999 },
       { lucarioHeadache: 'a'.repeat(1100) },
     ])
       assert.equal((await write(value)).status, 400)
@@ -120,8 +222,30 @@ try {
   })
   await test('corrupt storage is reported as failure, and missing credentials fail closed', async () => {
     const bucket = await mf.getR2Bucket('FLORATRIUM_BUCKET')
-    await bucket.put('config/home-features.json', '{"lucarioHeadache":"true"}')
-    assert.equal((await call('/site/home-features')).status, 503)
+    for (const corrupt of [
+      '{"lucarioHeadache":"true"}',
+      'null',
+      '{',
+      JSON.stringify({
+        lucarioHeadache: false,
+        updatedAt: null,
+        headacheBaseline: 10,
+      }),
+      JSON.stringify({
+        lucarioHeadache: false,
+        updatedAt: null,
+        headacheBaseline: 10,
+        headacheEpisodes: [{ number: 12, startedAt: 'invalid' }],
+      }),
+    ]) {
+      await bucket.put('config/home-features.json', corrupt)
+      assert.equal((await call('/site/home-features')).status, 503)
+      assert.equal((await write({ lucarioHeadache: true })).status, 503)
+      assert.equal(
+        await (await bucket.get('config/home-features.json')).text(),
+        corrupt
+      )
+    }
     await mf.setOptions({
       ...options,
       bindings: { ALLOWED_ORIGINS: 'https://anuluca.com' },

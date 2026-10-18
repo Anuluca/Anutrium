@@ -2,6 +2,10 @@ import { pageThemeColors } from '@/config/pageThemes'
 
 import type { LocaleCode } from '../resolveLocalePair'
 
+export const PET_STAT_MAX = 150
+export type PetStatKey = 'hp' | 'atk' | 'def' | 'spa' | 'spd' | 'spe'
+export type PetStats = Record<PetStatKey, number>
+
 export interface PetProfile {
   id: string
   number: number
@@ -9,6 +13,7 @@ export interface PetProfile {
   name: Record<LocaleCode, string>
   type: Record<LocaleCode, string>
   gender: 'female' | 'male'
+  stats: PetStats
   model: 'sprigatito' | 'mightyena'
   themeColor: string
   ballColor?: string
@@ -32,6 +37,7 @@ export const pets: PetProfile[] = [
     name: { zhCn: '花花', en: 'Flora' },
     type: { zhCn: '狸花猫', en: 'Chinese Li Hua' },
     gender: 'female',
+    stats: { hp: 100, atk: 100, def: 50, spa: 10, spd: 100, spe: 80 },
     model: 'sprigatito',
     themeColor: '#8a2c1b',
     entrance: 'tilt',
@@ -49,6 +55,7 @@ export const pets: PetProfile[] = [
     name: { zhCn: '小黑', en: 'Hei' },
     type: { zhCn: '中华田园犬', en: 'Chinese Village Dog' },
     gender: 'male',
+    stats: { hp: 150, atk: 150, def: 100, spa: 100, spd: 80, spe: 150 },
     model: 'mightyena',
     pose: 'sit',
     rotationY: { home: 45, focus: 57 },

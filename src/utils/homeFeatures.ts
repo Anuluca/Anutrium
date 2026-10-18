@@ -1,4 +1,4 @@
-import { isHomeFeatures } from '@/types/homeFeatures'
+import { isHomeFeatures, type HomeFeatures } from '@/types/homeFeatures'
 
 const endpoint =
   import.meta.env.VITE_HOME_FEATURES_URL ||
@@ -6,25 +6,25 @@ const endpoint =
     ? 'https://steam-api.anuluca.com/site/home-features'
     : '/api/site/home-features')
 
-export async function readLucarioHeadache(
+export async function readHomeFeatures(
   signal?: AbortSignal
-): Promise<boolean> {
+): Promise<HomeFeatures | null> {
   const controller = new AbortController()
   const abort = () => controller.abort()
   signal?.addEventListener('abort', abort, { once: true })
   const timeout = setTimeout(abort, 2500)
   try {
-    if (signal?.aborted) return false
+    if (signal?.aborted) return null
     const response = await fetch(endpoint, {
       cache: 'no-store',
       credentials: 'omit',
       signal: controller.signal,
     })
-    if (!response.ok) return false
+    if (!response.ok) return null
     const config: unknown = await response.json()
-    return isHomeFeatures(config) ? config.lucarioHeadache : false
+    return isHomeFeatures(config) ? config : null
   } catch {
-    return false
+    return null
   } finally {
     clearTimeout(timeout)
     signal?.removeEventListener('abort', abort)
