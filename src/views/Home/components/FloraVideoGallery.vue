@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { MoreFilled, VideoCamera } from '@element-plus/icons-vue'
 
@@ -7,8 +7,8 @@ import JourneyVideoPlayer from '@/components/JourneyVideoPlayer/index.vue'
 import { petVideos } from '@/locales/dynamic/petVideos'
 import { getBilibiliEmbedUrl } from '@/utils/bilibiliVideo'
 import { getCardThumbnailUrl } from '@/utils/imageVariant'
-import { createScanlineMask } from '@/utils/scanlineMask'
 
+import { useFloraMediaPanel } from '../composables/useFloraMediaPanel'
 import FloraExpandButton from './FloraExpandButton.vue'
 
 const props = defineProps<{ petId: string; title: string; mobile: boolean }>()
@@ -16,7 +16,11 @@ const emit = defineEmits<{
   (event: 'expanded-change', expanded: boolean): void
 }>()
 const { locale } = useI18n()
-const expanded = ref(false)
+const { expanded, overflowMask, toggle, toggleFromSurface, closeExpanded } =
+  useFloraMediaPanel(
+    () => props.mobile,
+    (value) => emit('expanded-change', value)
+  )
 const allVideos = computed(() =>
   (petVideos[props.petId]?.videos || []).map((video) => ({
     ...video,
@@ -34,32 +38,12 @@ const featuredVideos = computed(() => {
 const videos = computed(() =>
   expanded.value ? allVideos.value : featuredVideos.value
 )
-const overflowMask = createScanlineMask({
-  seed: 'flora-album-overflow',
-  lines: 8,
-  solidFrom: 0.9,
-  irregularity: 0.65,
-})
-watch(expanded, (value) => emit('expanded-change', value))
 watch(
   () => props.petId,
   () => {
     expanded.value = false
   }
 )
-const toggle = () => {
-  expanded.value = !expanded.value
-}
-const toggleFromSurface = (event: MouseEvent) => {
-  if (!(event.target instanceof Element)) return
-  if (event.target.closest('button, a, input, video, [role="button"]')) return
-  expanded.value = !expanded.value
-}
-const closeExpanded = () => {
-  if (!expanded.value) return false
-  expanded.value = false
-  return true
-}
 defineExpose({ closeExpanded })
 </script>
 
@@ -215,8 +199,9 @@ defineExpose({ closeExpanded })
     inset: 0;
     mask-image: repeating-linear-gradient(
       to bottom,
-      transparent 0 1px,
-      #000 1px 4px
+      transparent 0 var(--flora-background-scanline-gap, 1px),
+      #000 var(--flora-background-scanline-gap, 1px)
+        var(--flora-background-scanline-period, 4px)
     );
   }
   h2 {
@@ -225,19 +210,25 @@ defineExpose({ closeExpanded })
   }
   &.is-mobile {
     .flora-video-gallery__more {
-      transform: translateY(-10px);
+      transform: none;
     }
     padding: 18px 24px;
     padding-bottom: 42px;
     &:not(.is-expanded) {
       .flora-video-gallery__viewport {
         position: absolute;
-        inset: 6px 24px;
+        inset: -2px 24px 2px;
         height: auto;
         gap: 24px;
+        overflow: hidden;
+      }
+      .flora-video-gallery__more {
+        flex-basis: min(96px, 70cqh);
+        width: min(96px, 70cqh);
+        height: min(96px, 70cqh);
       }
       :deep(.video-list) {
-        flex-basis: min(160px, calc((100cqh - 22px) * 16 / 9));
+        flex-basis: min(180px, calc((100cqh - 22px) * 16 / 9));
         grid-template-columns: minmax(0, 1fr);
       }
     }

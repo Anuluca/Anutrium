@@ -3,15 +3,22 @@ import { defineAsyncComponent, nextTick, ref, watch } from 'vue'
 import { useEventListener, useMediaQuery } from '@vueuse/core'
 
 import ScrollViewport from '@/components/ScrollViewport/index.vue'
+import { useOverlayScrollLock } from '@/composables/useOverlayScrollLock'
 import { useTempleNavigation } from '@/stores/templeNavigation'
 
 import { loadAboutContent } from './aboutContentLoader'
 
+const props = defineProps<{ viewport?: boolean }>()
 const emit = defineEmits<{ (event: 'closed'): void }>()
 const navigation = useTempleNavigation()
 const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)')
 const dialog = ref<HTMLElement | null>(null)
 const maskReady = ref(false)
+const visible = ref(false)
+useOverlayScrollLock(
+  'about-overlay',
+  () => props.viewport === true && visible.value
+)
 let returnFocus: HTMLElement | null = null
 const AboutContent = defineAsyncComponent(loadAboutContent)
 const close = () => {
@@ -24,6 +31,7 @@ const finishMaskEnter = () => {
 const finishMaskLeave = () => {
   if (navigation.aboutOpen) return
   maskReady.value = false
+  visible.value = false
   emit('closed')
   void nextTick(() => {
     if (!navigation.aboutOpen) returnFocus?.focus({ preventScroll: true })
@@ -33,6 +41,7 @@ watch(
   () => navigation.aboutOpen,
   async (open) => {
     if (open) {
+      visible.value = true
       // 下载与遮罩渐显并行，仍由 after-enter 决定实际挂载时机。
       void loadAboutContent().catch(() => undefined)
       maskReady.value = false
@@ -83,34 +92,41 @@ useEventListener(
 </script>
 
 <template>
-  <Transition
-    name="about-menu"
-    appear
-    :duration="reducedMotion ? 10 : 400"
-    @after-enter="finishMaskEnter"
-    @after-leave="finishMaskLeave"
-  >
-    <section
-      v-if="navigation.aboutOpen"
-      ref="dialog"
-      class="about-overlay no-rem"
-      role="dialog"
-      aria-modal="true"
-      aria-label="关于"
-      :data-mask-ready="maskReady"
-      tabindex="-1"
-      @click.self="close"
+  <Teleport to=".layout-page" :disabled="!viewport">
+    <Transition
+      name="about-menu"
+      appear
+      :duration="reducedMotion ? 10 : 400"
+      @after-enter="finishMaskEnter"
+      @after-leave="finishMaskLeave"
     >
-      <div class="about-overlay__mask" aria-hidden="true" @click="close" />
-      <div class="about-overlay__content no-rem" @click="close">
-        <ScrollViewport v-if="maskReady" edge-progress :progress-z-index="1200">
-          <Transition name="about-content" appear>
-            <AboutContent embedded @click.stop @close="close" />
-          </Transition>
-        </ScrollViewport>
-      </div>
-    </section>
-  </Transition>
+      <section
+        v-if="navigation.aboutOpen"
+        ref="dialog"
+        class="about-overlay no-rem"
+        :class="{ 'about-overlay--viewport': viewport }"
+        role="dialog"
+        aria-modal="true"
+        aria-label="关于"
+        :data-mask-ready="maskReady"
+        tabindex="-1"
+        @click.self="close"
+      >
+        <div class="about-overlay__mask" aria-hidden="true" @click="close" />
+        <div class="about-overlay__content no-rem" @click="close">
+          <ScrollViewport
+            v-if="maskReady"
+            edge-progress
+            :progress-z-index="1200"
+          >
+            <Transition name="about-content" appear>
+              <AboutContent embedded @click.stop @close="close" />
+            </Transition>
+          </ScrollViewport>
+        </div>
+      </section>
+    </Transition>
+  </Teleport>
 </template>
 
 <style lang="less" scoped>
@@ -121,6 +137,9 @@ useEventListener(
   outline: none;
   isolation: isolate;
   transition: opacity 0.4s ease;
+}
+.about-overlay--viewport.no-rem {
+  position: fixed;
 }
 .about-overlay.no-rem .about-overlay__mask {
   position: absolute;
@@ -140,7 +159,8 @@ useEventListener(
   );
   position: absolute;
   z-index: 1;
-  inset: var(--about-content-top) var(--temple-content-inset)
+  inset: var(--about-content-top)
+    var(--temple-content-inset, var(--page-inline-gutter, 6vw))
     var(--about-content-bottom);
   :deep(.scroll-viewport__scroll) {
     padding-right: 0;

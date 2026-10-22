@@ -796,7 +796,7 @@ defineExpose({
 
   &.is-bottom-anchored {
     // 父级中心已锚在线上，只需扣除晶体投影的半高，让下尖端落在线上。
-    transform: translateY(calc(0px - var(--crystal-half-height, 0px)));
+    transform: translateY(calc(var(--crystal-half-height, 0px) * -1));
   }
 
   &.is-transparent {

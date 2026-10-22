@@ -85,7 +85,7 @@ function publicFeatures(config: StoredHomeFeatures): HomeFeatures {
   }
 }
 
-async function authorized(request: Request, expected: string) {
+export async function authorized(request: Request, expected: string) {
   const provided =
     request.headers.get('Authorization')?.match(/^Bearer (.+)$/)?.[1] ?? ''
   const encoder = new TextEncoder()
@@ -97,7 +97,7 @@ async function authorized(request: Request, expected: string) {
   return crypto.subtle.timingSafeEqual(hashes[0], hashes[1])
 }
 
-async function readUpdate(request: Request): Promise<unknown> {
+export async function readUpdate(request: Request): Promise<unknown> {
   // 对实际接收的字节设限，不能仅信任 Content-Length。
   const reader = request.body?.getReader()
   if (!reader) throw new Error('missing_body')

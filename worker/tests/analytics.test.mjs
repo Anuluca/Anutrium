@@ -8,6 +8,7 @@ import { pathToFileURL } from 'node:url'
 
 const dir = await mkdtemp(join(tmpdir(), 'anutrium-analytics-'))
 await build({
+  external: ['cloudflare:workers'],
   entryPoints: ['src/analytics.ts'],
   bundle: true,
   format: 'esm',
@@ -189,7 +190,9 @@ try {
     const queries = batchQueries.slice(start)
     assert.equal(queries.length, 23)
     for (const query of queries)
-      assert.deepEqual(query.dateRanges, [{ startDate: 'today', endDate: 'today' }])
+      assert.deepEqual(query.dateRanges, [
+        { startDate: 'today', endDate: 'today' },
+      ])
   })
   await test('invalid ranges and missing credentials never call upstream', async () => {
     const count = calls.length

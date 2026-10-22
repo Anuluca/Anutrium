@@ -1,5 +1,12 @@
 <template>
-  <nav class="footer-social-links no-rem" aria-label="社交平台">
+  <nav
+    class="footer-social-links no-rem"
+    :class="{
+      'is-switch-active': switchActive,
+      'is-switch-instant': switchInstant,
+    }"
+    aria-label="社交平台"
+  >
     <template v-for="social in socialLinks" :key="social.type">
       <button
         v-if="social.type === 'WEIBO'"
@@ -108,9 +115,11 @@ interface FooterPlatformItem {
 withDefaults(
   defineProps<{
     switchActive?: boolean
+    switchInstant?: boolean
   }>(),
   {
     switchActive: false,
+    switchInstant: false,
   }
 )
 
@@ -191,16 +200,17 @@ const switchPlatform: FooterPlatformItem = {
   border: 0;
   color: #696969;
   background: transparent;
+  opacity: var(--footer-social-link-opacity, 1);
   text-decoration: none;
   cursor: pointer;
-  transition: color 0.3s ease,
+  transition: opacity 0.18s ease, color 0.3s ease,
     grid-template-columns 0.4s cubic-bezier(0.16, 1, 0.3, 1),
     column-gap 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 
   &::before {
     position: absolute;
     inset: 4px;
-    border-radius: 8px;
+    border-radius: 0;
     background: rgba(255, 255, 255, 0.08);
     opacity: 0;
     content: '';
@@ -215,7 +225,7 @@ const switchPlatform: FooterPlatformItem = {
     z-index: 1;
     width: 0;
     height: 2px;
-    border-radius: 1px;
+    border-radius: 0;
     background: var(--page-theme-color, #e23456);
     opacity: 0;
     content: '';
@@ -223,7 +233,6 @@ const switchPlatform: FooterPlatformItem = {
     transition: width 0.3s ease, opacity 0.3s ease;
   }
 
-  &:hover,
   &:focus-visible,
   &.is-active {
     color: var(--page-theme-color, #e23456);
@@ -247,14 +256,41 @@ const switchPlatform: FooterPlatformItem = {
     outline: 1px solid var(--page-theme-color, #e23456);
     outline-offset: 1px;
   }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      color: var(--page-theme-color, #e23456);
+
+      &::before {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      .footer-social-links__icon {
+        transform: scale(1.1);
+      }
+
+      &::after {
+        width: calc(100% - 32px);
+        opacity: 1;
+      }
+    }
+  }
 }
 
 .footer-social-links__switch {
-  --switch-icon-center: 20px;
+  --switch-icon-center: 50%;
 
   position: relative;
   display: flex;
   flex: 0 0 auto;
+}
+
+.footer-social-links.is-switch-instant {
+  .footer-social-links__item,
+  .footer-social-links__label {
+    transition: none;
+  }
 }
 
 .footer-social-links__divider {
@@ -262,6 +298,8 @@ const switchPlatform: FooterPlatformItem = {
   width: 12px;
   height: 18px;
   flex: 0 0 12px;
+  opacity: var(--footer-social-link-opacity, 1);
+  transition: opacity 0.18s ease;
 
   &::before {
     position: absolute;
@@ -292,10 +330,15 @@ const switchPlatform: FooterPlatformItem = {
     margin-left: 1px;
   }
 
-  &:hover,
   &:focus-visible,
   &.is-active {
     .footer-social-links__icon {
+      transform: scale(1.08);
+    }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover .footer-social-links__icon {
       transform: scale(1.08);
     }
   }

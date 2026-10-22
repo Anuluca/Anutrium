@@ -13,6 +13,7 @@ import {
 import { useTempleNavigation } from '@/stores/templeNavigation'
 import { preloadTempleAssets } from '@/utils/preloadTempleAssets'
 import { consumeJourneyReturnState } from '@/utils/journeyReturnState'
+import { readTempleSession } from '@/utils/templeSession'
 import {
   cancelRouteCurtain,
   coverRouteCurtain,
@@ -235,7 +236,7 @@ export const routes: RouteConfig[] = [
       titleEn: 'HOME',
       titleCn: '主页',
       fullFooter: false,
-      pageFooter: false,
+      pageFooter: true,
       pageLayout: 'main',
       ifShow: true,
     },
@@ -745,11 +746,26 @@ export const installRouterGuards = (router: Router) => {
       const explicitModule =
         templeModuleAtPath(to.path) ||
         templeModuleAtPath(`/${String(to.query.module || '')}`)
-      navigation.entryModule =
-        explicitModule ||
-        (from.name && from.name !== 'HOME'
-          ? navigation.returnModule || templeParentModule(from.path)
-          : null)
+      const session = from.matched.length === 0 ? readTempleSession() : null
+      // 菜单切换可能仍停在旧入口 URL；刷新恢复当前菜单，显式访问其他入口仍以路由为准。
+      const isReload =
+        typeof window !== 'undefined' &&
+        (
+          performance.getEntriesByType(
+            'navigation'
+          )[0] as PerformanceNavigationTiming
+        )?.type === 'reload'
+      const savedSession =
+        !explicitModule || (isReload && session?.path === to.fullPath)
+          ? session
+          : null
+      navigation.entryModule = savedSession
+        ? savedSession.selection
+        : explicitModule ||
+          (from.name && from.name !== 'HOME'
+            ? navigation.returnModule || templeParentModule(from.path)
+            : null)
+      if (savedSession) navigation.aboutOpen = savedSession.aboutOpen
       navigation.simpleEntrance =
         !!navigation.entryModule || (!!from.name && from.name !== 'HOME')
       if (

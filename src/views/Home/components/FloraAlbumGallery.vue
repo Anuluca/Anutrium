@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import { computed, getCurrentInstance, nextTick, ref, watch } from 'vue'
+import {
+  computed,
+  getCurrentInstance,
+  inject,
+  nextTick,
+  type Ref,
+  ref,
+} from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Loading, Picture } from '@element-plus/icons-vue'
 
@@ -8,14 +15,18 @@ import MediaPhotoInfo from '@/components/MediaPhotoInfo/index.vue'
 import { petAlbums } from '@/locales/dynamic/petAlbums'
 import { flashActionButton } from '@/utils/flashActionButton'
 import { getFloraCaptureDate } from '@/utils/floratriumMedia'
-import { createScanlineMask } from '@/utils/scanlineMask'
 
 import { useFloraAlbum } from '../composables/useFloraAlbum'
+import { useFloraMediaPanel } from '../composables/useFloraMediaPanel'
 import FloraAlbumStrip from './FloraAlbumStrip.vue'
 import FloraExpandButton from './FloraExpandButton.vue'
 
 const props = defineProps<{ petId: string; title: string; mobile?: boolean }>()
 const decorationFilterId = `flora-decoration-tint-${getCurrentInstance()?.uid}`
+const decorationTarget = inject<Ref<HTMLElement | null>>(
+  'flora-decoration-target',
+  ref(null)
+)
 const emit = defineEmits<{
   (event: 'expanded-change', expanded: boolean): void
 }>()
@@ -44,20 +55,19 @@ const { t } = useI18n({
     },
   },
 })
-const expanded = ref(false)
-const hasToggled = ref(false)
-watch(expanded, () => {
-  hasToggled.value = true
-  emit('expanded-change', expanded.value)
-})
+const {
+  expanded,
+  hasToggled,
+  overflowMask,
+  toggle,
+  toggleFromSurface,
+  closeExpanded,
+} = useFloraMediaPanel(
+  () => props.mobile,
+  (value) => emit('expanded-change', value)
+)
 const viewport = ref<HTMLElement | null>(null)
 const album = computed(() => petAlbums[props.petId])
-const overflowMask = createScanlineMask({
-  seed: 'flora-album-overflow',
-  lines: 8,
-  solidFrom: 0.9,
-  irregularity: 0.65,
-})
 const {
   allItems,
   loading,
@@ -96,20 +106,6 @@ const goToPage = async (target: number, event?: MouseEvent) => {
   if (event?.currentTarget instanceof HTMLButtonElement)
     flashActionButton(event.currentTarget)
   if (await loadPage(target)) await resetScroll()
-}
-const toggle = () => {
-  expanded.value = !expanded.value
-}
-const toggleFromSurface = (event: MouseEvent) => {
-  if (!(event.target instanceof Element)) return
-  // 照片和现有按钮继续执行各自操作；非交互空白区域切换相册展开状态。
-  if (event.target.closest('button, a, input, video, [role="button"]')) return
-  expanded.value = !expanded.value
-}
-const closeExpanded = () => {
-  if (!expanded.value) return false
-  expanded.value = false
-  return true
 }
 defineExpose({ closeExpanded })
 </script>
@@ -215,18 +211,25 @@ defineExpose({ closeExpanded })
         </filter>
       </defs>
     </svg>
-    <img
-      v-if="petId === 'huahua'"
-      class="flora-album-gallery__decoration"
-      :style="{ filter: `url(#${decorationFilterId})` }"
-      src="https://assets.anuluca.com/Floratrium/decorations/flora-corner-v1.avif"
-      width="480"
-      height="223"
-      alt=""
-      aria-hidden="true"
-      decoding="async"
-      draggable="false"
-    />
+    <Teleport
+      :to="decorationTarget || 'body'"
+      :disabled="!mobile || !decorationTarget"
+    >
+      <img
+        v-if="petId === 'huahua'"
+        class="flora-album-gallery__decoration no-rem"
+        :style="{
+          filter: `url(#${decorationFilterId}) drop-shadow(0 5px 8px rgb(0 0 0 / 85%))`,
+        }"
+        src="https://assets.anuluca.com/Floratrium/decorations/flora-corner-v1.avif"
+        width="480"
+        height="223"
+        alt=""
+        aria-hidden="true"
+        decoding="async"
+        draggable="false"
+      />
+    </Teleport>
     <FloraExpandButton
       class="flora-album-gallery__expand"
       icon-class="flora-album-gallery__expand-icon"
@@ -275,6 +278,20 @@ defineExpose({ closeExpanded })
 
 <style scoped lang="less">
 @import '../styles/floraMedia.less';
+.flora-album-gallery__decoration.no-rem {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  width: clamp(140px, 28%, 240px);
+  height: auto;
+  transform: translate(12%, 66%);
+  clip-path: inset(0 0 0 10%);
+  pointer-events: none;
+  user-select: none;
+  opacity: 1;
+  transition: opacity 300ms ease, visibility 0s;
+}
 .flora-album-gallery.no-rem {
   .flora-media-panel();
   display: flex;
@@ -388,20 +405,6 @@ defineExpose({ closeExpanded })
       }
     }
   }
-  .flora-album-gallery__decoration {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    z-index: 2;
-    width: clamp(140px, 28%, 240px);
-    height: auto;
-    transform: translate(12%, 66%);
-    clip-path: inset(0 0 0 10%);
-    pointer-events: none;
-    user-select: none;
-    opacity: 1;
-    transition: opacity 300ms ease, visibility 0s;
-  }
   .flora-album-gallery__background {
     position: absolute;
     inset: 0;
@@ -412,13 +415,15 @@ defineExpose({ closeExpanded })
     transition: opacity 200ms ease;
     -webkit-mask-image: repeating-linear-gradient(
       to bottom,
-      transparent 0 1px,
-      #000 1px 4px
+      transparent 0 var(--flora-background-scanline-gap, 1px),
+      #000 var(--flora-background-scanline-gap, 1px)
+        var(--flora-background-scanline-period, 4px)
     );
     mask-image: repeating-linear-gradient(
       to bottom,
-      transparent 0 1px,
-      #000 1px 4px
+      transparent 0 var(--flora-background-scanline-gap, 1px),
+      #000 var(--flora-background-scanline-gap, 1px)
+        var(--flora-background-scanline-period, 4px)
     );
     pointer-events: none;
     span {
@@ -540,12 +545,6 @@ defineExpose({ closeExpanded })
     }
 
     &.is-expanded {
-      .flora-album-gallery__decoration {
-        opacity: 0;
-        visibility: hidden;
-        transition: opacity 300ms ease, visibility 0s 300ms;
-      }
-
       .flora-album-gallery__viewport {
         margin-top: 20px;
         padding: 8px;

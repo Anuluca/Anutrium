@@ -1,9 +1,10 @@
 .footer-com {
   --footer-com-height: 26px;
+  --footer-com-bottom-inset: 10px;
   height: var(--footer-com-height);
   background-color: transparent;
   position: fixed;
-  bottom: 10px;
+  bottom: var(--footer-com-bottom-inset);
   left: var(--desktop-shell-inline-inset, var(--footer-com-inline-inset));
   width: calc(
     100vw - var(--desktop-shell-inline-inset, var(--footer-com-inline-inset)) -
@@ -18,6 +19,14 @@
   transform-origin: left bottom;
   opacity: 0;
   pointer-events: none;
+
+  &.footer-wide {
+    // Info 按钮宽 40px、图标宽 24px，补上内部留白以对齐图标可见边缘。
+    --footer-com-wide-inset: calc(var(--home-info-inline-inset) + ~'8PX');
+    left: var(--footer-com-wide-inset);
+    width: calc(100% - 2 * var(--footer-com-wide-inset));
+    box-sizing: border-box;
+  }
 
   .footer-content {
     display: flex;
@@ -486,12 +495,17 @@ body.light {
   screen and (max-width: 1024px) and (hover: none) and (pointer: coarse) {
   .footer-com {
     --footer-com-height: 39px;
+    --footer-com-bottom-inset: 2px;
     left: 0;
-    bottom: 2px;
-    width: calc(100vw);
+    width: 100vw;
     border: 0;
     box-sizing: border-box;
     box-shadow: none;
+
+    &.footer-wide {
+      left: 0;
+      width: 100vw;
+    }
 
     &,
     * {

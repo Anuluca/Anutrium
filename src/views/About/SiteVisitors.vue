@@ -91,7 +91,7 @@ onBeforeUnmount(pause)
           : '包含新站与旧站域名的已处理历史浏览量；数据可能延迟 24–48 小时。'
       "
     >
-      {{ en ? 'TOTAL VIEWS' : '总浏览量' }} <strong>{{ format(views) }}</strong>
+      {{ en ? 'TOTAL VIEWS' : '总访问量' }} <strong>{{ format(views) }}</strong>
     </span>
   </div>
 </template>

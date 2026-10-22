@@ -180,6 +180,17 @@
 }
 
 @media screen and (max-width: 767px) {
+  // 手机端保留向下缩窄，只移除横向位移与左右收拢。
+  .entry-overlay-container.is-background-exiting .entry-background {
+    border-radius: 0;
+    transform: translate3d(0, var(--entry-bg-target-y), 0)
+      scale(1, var(--entry-bg-target-scale-y));
+  }
+
+  .entry-overlay-container.is-background-fading .entry-background {
+    transition: opacity 0.76s ease;
+  }
+
   .logo-wrapper2 {
     width: calc(var(--entry-logo-height, min(215px, 57.5vw)) * 0.8);
     height: var(--entry-logo-height, min(215px, 57.5vw));

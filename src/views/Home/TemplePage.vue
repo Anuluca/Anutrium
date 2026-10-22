@@ -12,7 +12,9 @@ import {
 import { useRoute } from 'vue-router'
 
 import MobileScreenFrame from '@/components/MobileScreenFrame/index.vue'
+import PageFooter from '@/components/PageFooter/index.vue'
 import { decorationActivityKey } from '@/composables/useDecorationActivity'
+import { TEMPLE_SCENE_RISE } from '@/config/templeCamera'
 import { templeExperience } from '@/config/templeExperience'
 import {
   templeCategories,
@@ -44,7 +46,12 @@ const route = useRoute()
 const navigation = useTempleNavigation()
 const floraPets = useFloraPets()
 // 关闭期间继续保持背景休眠，待 About 离场结束后再恢复。
-const aboutBackgroundHidden = ref(navigation.aboutOpen)
+const aboutBackgroundHidden = computed({
+  get: () => navigation.aboutOverlayVisible,
+  set: (visible: boolean) => {
+    navigation.aboutOverlayVisible = visible
+  },
+})
 const restoreAboutBackground = () => {
   if (!navigation.aboutOpen) aboutBackgroundHidden.value = false
 }
@@ -53,7 +60,7 @@ watch(
   (open) => {
     if (open) aboutBackgroundHidden.value = true
   },
-  { flush: 'sync' }
+  { flush: 'sync', immediate: true }
 )
 provide(
   decorationActivityKey,
@@ -65,9 +72,14 @@ const config = props.presentation
 const shell = config.routeShell
 const stage = ref<HTMLElement | null>(null)
 const status = ref<'loading' | 'ready' | 'error'>('loading')
-const entranceFinished = ref(false)
+const entranceFinished = computed(() => navigation.entranceFinished)
 const selected = ref<TempleSelection | null>(null)
-const clockAwaitingSettle = ref(false)
+const clockAwaitingSettle = computed({
+  get: () => navigation.clockAwaitingSettle,
+  set: (waiting: boolean) => {
+    navigation.clockAwaitingSettle = waiting
+  },
+})
 const clockVisible = computed(
   () =>
     entranceFinished.value &&
@@ -357,7 +369,7 @@ onMounted(async () => {
             navigation.expanded = navigation.returnExpanded
         },
         entranceComplete: () => {
-          entranceFinished.value = true
+          navigation.entranceFinished = true
         },
         beforeReturn: () => {
           if (!menuCategory.value || !menu.value) return
@@ -408,7 +420,6 @@ onMounted(async () => {
         headache: templeExperience.headache && {
           ...templeExperience.headache,
           mode: homeFeatures?.lucarioHeadache ? 'headache' : 'normal',
-          count: homeFeatures?.headacheCount,
         },
       },
       navigation.simpleEntrance || hasJourneyReturnState(),
@@ -453,7 +464,10 @@ onUnmounted(() => {
       'temple-page--resizing': resizing,
       'temple-page--fullscreen-menu': config.menu.layout === 'fullscreen',
     }"
-    :style="config.menu.styles"
+    :style="[
+      config.menu.styles,
+      { '--temple-scene-rise': `${TEMPLE_SCENE_RISE * 100}svh` },
+    ]"
     :data-presentation="config.id"
     :data-route-shell="shell"
     aria-label="主页"
@@ -575,6 +589,7 @@ onUnmounted(() => {
           />
         </Transition>
 
+        <PageFooter variant="home" :visible="navigation.homeCornersVisible" />
         <p v-if="status === 'error'" class="lucario-status" role="alert">
           模型加载失败，请刷新页面重试
         </p>

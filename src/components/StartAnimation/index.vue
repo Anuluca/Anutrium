@@ -50,7 +50,8 @@ const loadingLineStyle = computed(() => {
       presentation.value.scene.homeCamera,
       reducedMotion.value ||
         navigation.simpleEntrance ||
-        hasJourneyReturnState()
+        hasJourneyReturnState(),
+      presentation.value.id === 'mobile'
     )}px`,
   }
 })

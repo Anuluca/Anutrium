@@ -1477,9 +1477,25 @@ test('mobile first-load desktop recommendation is fixed and closable', async ({
     'opacity'
   )
   await expect(alert).toBeHidden()
-  await page.locator('.logo-box').click()
-  await expect(page).toHaveURL(/\/$/)
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
   await expect(alert).toBeHidden()
+
+  const dismissUntil = await page.evaluate(() =>
+    Number.parseInt(
+      window.localStorage.getItem(
+        'anutrium:mobile-experience-alert-dismiss-until'
+      ) ?? '',
+      10
+    )
+  )
+  expect(dismissUntil).toBeGreaterThan(Date.now() + 2 * 24 * 60 * 60 * 1000)
+  expect(dismissUntil).toBeLessThanOrEqual(Date.now() + 3 * 24 * 60 * 60 * 1000)
+
+  await page.reload({ waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.entry-overlay-container')).toHaveCount(0, {
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+  await expect(page.locator('.mobile-experience-alert')).toHaveCount(0)
 })
 
 test('about content uses the full-width feathered hover field without a glass plate', async ({

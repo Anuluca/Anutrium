@@ -2,7 +2,11 @@
   <div
     ref="sectionRef"
     class="home-section-layout scroll-reveal-section"
-    :class="{ 'scroll-reveal-ready': isScrollRevealReady }"
+    :class="{
+      'scroll-reveal-ready': isScrollRevealReady,
+      'home-section-layout--background': hasBackground,
+      'home-section-layout--monochrome': monochrome,
+    }"
     data-sections-nav-item="true"
     :data-section-anchor="sectionAnchorId"
     :data-section-label="sectionLabel"
@@ -58,6 +62,8 @@ const props = defineProps<{
   titleEn?: string
   navigation?: boolean
   reveal?: boolean
+  hasBackground?: boolean
+  monochrome?: boolean
 }>()
 
 const { locale } = useI18n()
@@ -121,6 +127,27 @@ watch(
   column-gap: 0.7rem;
   row-gap: 20px;
   min-height: 100%;
+
+  &--monochrome {
+    --section-background-color: var(--section-monochrome-color, #b5b5b5);
+  }
+
+  &--background {
+    box-sizing: border-box;
+    padding: clamp(12px, 2vw, 24px);
+    background-color: color-mix(
+      in srgb,
+      var(--section-background-color, var(--page-theme-color, #e23456)) 4%,
+      transparent
+    );
+    background-image: repeating-linear-gradient(
+      to bottom,
+      var(--scanline-color) 0,
+      var(--scanline-color) 1px,
+      transparent 1px,
+      transparent 4px
+    );
+  }
 }
 
 .home-section-content {
@@ -142,8 +169,14 @@ watch(
   font-size: var(--section-number-font-size);
   line-height: 0.875;
   text-align: center;
-  -webkit-text-stroke: 1px #e23456;
-  text-shadow: 0 0 10px rgba(226, 52, 87, 0.27);
+  -webkit-text-stroke: 1px
+    var(--section-accent-color, var(--page-theme-color, #e23456));
+  text-shadow: 0 0 10px
+    color-mix(
+      in srgb,
+      var(--section-accent-color, var(--page-theme-color, #e23456)) 27%,
+      transparent
+    );
 }
 
 .home-section-panel {
@@ -167,7 +200,7 @@ watch(
   scroll-margin-top: 7rem;
   margin-bottom: 20px;
   padding: 0;
-  color: #e23456;
+  color: var(--section-accent-color, var(--page-theme-color, #e23456));
   font-family: 'Anton', 'alibaba-puhuiti';
   font-size: 1.3rem;
   font-weight: 900;
@@ -215,6 +248,7 @@ watch(
 .home-section-actions {
   grid-column: 3;
   justify-self: end;
+  transform: translateY(-9px);
 }
 
 @media screen and (max-aspect-ratio: @ratio-threshold) {

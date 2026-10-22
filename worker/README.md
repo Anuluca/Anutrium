@@ -77,3 +77,7 @@ yarn dev
 - 默认照片维护在 `src/locales/dynamic/petAlbums.ts`，不由在线刷新覆盖。
 - 展开全量相册后，每 15 秒刷新当前页；页面隐藏或相册收起时停止刷新。
 - 本地开发通过现有 Vite 服务的 `/__floratrium/media` 读取 `/Users/anuluca/Work/Space_Coding/R2/Floratrium/`，本地仅用于枚举清单，返回的媒体链接统一指向线上 `https://assets.anuluca.com`；页面缩略图复用旅程详情页的 R2 压缩参数。
+
+## 花花小窝喜爱度
+
+新增公开 `/floratrium/likes` 与管理 `/admin/floratrium/likes`，通过 `FLORA_LIKES` SQLite Durable Object 存储，管理鉴权复用 `HOME_FEATURES_TOKEN`。发布会应用 `flora-likes-v1` migration。接口、限额与统计说明见 [喜爱功能](../docs/flora-likes.md)。

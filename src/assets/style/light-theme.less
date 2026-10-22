@@ -1,7 +1,7 @@
 /* Loaded only when the light theme is active. */
 
 body.light {
-  color-scheme: light;
+  color-scheme: only light;
 
   .main-container,
   .home-page,
@@ -566,11 +566,6 @@ body.light {
     color: var(--text-muted) !important;
   }
 
-  .home-section-title,
-  .home-section-rail__num,
-  .sections-fixed-nav__item:hover,
-  .sections-fixed-nav__item:focus-visible,
-  .sections-fixed-nav__item.is-active,
   .archive-entry,
   .manifesto-intro span,
   .section-title .cn,
@@ -584,12 +579,26 @@ body.light {
     color: #e23456 !important;
   }
 
+  .home-section-title,
+  .sections-fixed-nav__item:hover,
+  .sections-fixed-nav__item:focus-visible,
+  .sections-fixed-nav__item.is-active {
+    color: var(
+      --section-accent-color,
+      var(--page-theme-color, #e23456)
+    ) !important;
+  }
+
   .sections-fixed-nav {
     background: rgba(255, 255, 255, 0.68) !important;
     box-shadow: 0 14px 32px rgba(0, 0, 0, 0.08) !important;
 
     &::before {
-      color: rgba(226, 52, 86, 0.1) !important;
+      color: color-mix(
+        in srgb,
+        var(--section-accent-color, var(--page-theme-color, #e23456)) 10%,
+        transparent
+      ) !important;
     }
   }
 
@@ -741,7 +750,6 @@ body.light {
   }
 
   .map-hud-label {
-    background: rgba(255, 255, 255, 0.78) !important;
     text-shadow: none !important;
   }
 

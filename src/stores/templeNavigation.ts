@@ -1,4 +1,4 @@
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { defineStore } from 'pinia'
 
 import {
@@ -7,13 +7,17 @@ import {
   type TempleEntryId,
   type TempleNavigationId,
 } from '@/config/templeNavigation'
+import { rememberTempleSession } from '@/utils/templeSession'
 
 export const useTempleNavigation = defineStore('temple-navigation', () => {
   const selected = ref<TempleCategoryId | null>(null)
   const companionFocused = ref(false)
   const statueFocused = ref(false)
   const aboutOpen = ref(false)
+  const aboutOverlayVisible = ref(false)
   const ready = ref(false)
+  const entranceFinished = ref(false)
+  const clockAwaitingSettle = ref(false)
   const expanded = ref(false)
   const requested = ref<Exclude<TempleNavigationId, 'about'> | null>(null)
   const revision = ref(0)
@@ -42,7 +46,21 @@ export const useTempleNavigation = defineStore('temple-navigation', () => {
       ? 'statue'
       : activeModule.value
   )
+  const isInitialScene = computed(
+    () => !activeSelection.value && !aboutOpen.value && !expanded.value
+  )
+  const homeCornersVisible = computed(
+    () =>
+      entranceFinished.value &&
+      !clockAwaitingSettle.value &&
+      !aboutOverlayVisible.value &&
+      isInitialScene.value
+  )
   const simpleEntrance = ref(false)
+  watch([activeSelection, aboutOpen, ready], ([selection, open, isReady]) => {
+    // 场景卸载的 reset 不应覆盖当前标签页的记忆。
+    if (isReady) rememberTempleSession({ selection, aboutOpen: open })
+  })
   const returnModule = ref<TempleCategoryId | null>(null)
   const returnExpanded = ref(false)
   const scrollPositions = reactive<Partial<Record<TempleCategoryId, number>>>(
@@ -53,6 +71,10 @@ export const useTempleNavigation = defineStore('temple-navigation', () => {
   function request(id: TempleNavigationId | null) {
     if (id === 'about') {
       aboutOpen.value = !aboutOpen.value
+      rememberTempleSession({
+        selection: activeSelection.value,
+        aboutOpen: aboutOpen.value,
+      })
       return
     }
     if (
@@ -66,6 +88,7 @@ export const useTempleNavigation = defineStore('temple-navigation', () => {
     expanded.value = false
     requested.value = id
     revision.value++
+    rememberTempleSession({ selection: id, aboutOpen: false })
   }
   function reset() {
     inlineDetailCloser = undefined
@@ -73,8 +96,11 @@ export const useTempleNavigation = defineStore('temple-navigation', () => {
     companionFocused.value = false
     statueFocused.value = false
     aboutOpen.value = false
+    aboutOverlayVisible.value = false
     expanded.value = false
     ready.value = false
+    entranceFinished.value = false
+    clockAwaitingSettle.value = false
     requested.value = null
     revision.value = 0
   }
@@ -84,6 +110,10 @@ export const useTempleNavigation = defineStore('temple-navigation', () => {
     entryModule,
     activeModule,
     activeSelection,
+    isInitialScene,
+    homeCornersVisible,
+    entranceFinished,
+    clockAwaitingSettle,
     simpleEntrance,
     returnModule,
     returnExpanded,
@@ -92,6 +122,7 @@ export const useTempleNavigation = defineStore('temple-navigation', () => {
     companionFocused,
     statueFocused,
     aboutOpen,
+    aboutOverlayVisible,
     ready,
     expanded,
     requested,

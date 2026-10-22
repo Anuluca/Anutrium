@@ -7,6 +7,12 @@
   VITE_GA4_MEASUREMENT_ID = "G-FEZS2B4N4L"
 
 [[redirects]]
+  from = "/api/floratrium/likes"
+  to = "https://steam-api.anuluca.com/floratrium/likes"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/api/site/home-features"
   to = "https://steam-api.anuluca.com/site/home-features"
   status = 200

@@ -1,14 +1,22 @@
 @primary-color: #e23456;
 
 :root {
+  color-scheme: only dark;
   --mobile-screen-frame-size: 0px;
   --mobile-screen-frame-inline-size: 0px;
   --mobile-screen-frame-color: #000;
   --desktop-shell-inline-inset: 2rem;
   --footer-com-inline-inset: 40px;
   --footer-com-mobile-inline-inset: 30px;
+  --home-info-inline-inset: max(
+    ~'16PX',
+    calc(
+      env(safe-area-inset-left) + var(--mobile-screen-frame-size, 0px) + ~'4PX'
+    )
+  );
   --page-inline-gutter: 6vw;
   --text-color: #fffff4;
+  --section-monochrome-color: #b5b5b5;
   --bg-color: #000;
   --opacity-color: #ffffff7a;
   --opacity-color2: rgba(255, 255, 255, 0.1);
@@ -46,7 +54,9 @@
 
 [data-theme='light'],
 .light {
+  color-scheme: only light;
   --text-color: #1f1f1f;
+  --section-monochrome-color: #333333;
   --bg-color: #ffffff;
   --opacity-color: #00000075;
   --opacity-color2: rgba(0, 0, 0, 0.1);

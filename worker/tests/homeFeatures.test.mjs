@@ -6,6 +6,7 @@ import { test } from 'node:test'
 
 const token = randomBytes(32).toString('hex')
 const bundle = await build({
+  external: ['cloudflare:workers'],
   entryPoints: ['src/index.ts'],
   bundle: true,
   format: 'esm',

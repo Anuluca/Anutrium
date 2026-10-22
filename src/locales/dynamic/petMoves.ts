@@ -6,9 +6,10 @@ export interface PetMove {
 }
 
 // Bulbapedia 的属性颜色模板：https://bulbapedia.bulbagarden.net/wiki/Category:Type_color_templates
+// 恶属性使用站内增亮、提高饱和度后的配色。
 export const moveTypes = {
   normal: { name: { zhCn: '一般', en: 'Normal' }, color: '#9FA19F' },
-  dark: { name: { zhCn: '恶', en: 'Dark' }, color: '#624D4E' },
+  dark: { name: { zhCn: '恶', en: 'Dark' }, color: '#A94F58' },
   psychic: { name: { zhCn: '超能力', en: 'Psychic' }, color: '#EF4179' },
   fairy: { name: { zhCn: '妖精', en: 'Fairy' }, color: '#EF70EF' },
   bug: { name: { zhCn: '虫', en: 'Bug' }, color: '#91A119' },

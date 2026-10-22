@@ -57,6 +57,22 @@ test('pet move cards show types and PP with forgotten moves in a scroll-safe mod
   expect(boxes[1].x).toBeGreaterThan(boxes[0].x)
   expect(boxes[2].y).toBeGreaterThan(boxes[0].y)
   expect(Math.abs(boxes[0].width - boxes[1].width)).toBeLessThanOrEqual(1)
+  if (info.project.name.includes('mobile')) {
+    const textBounds = await current.evaluateAll((cards) =>
+      cards.map((card) => ({
+        name: card
+          .querySelector('.flora-move-card__name > span')!
+          .getBoundingClientRect()
+          .toJSON(),
+        type: card
+          .querySelector('.flora-move-card__type')!
+          .getBoundingClientRect()
+          .toJSON(),
+      }))
+    )
+    for (const bounds of textBounds)
+      expect(bounds.name.right).toBeLessThanOrEqual(bounds.type.left + 1)
+  }
   await expect
     .poll(() =>
       panel.evaluate((element) => {
@@ -80,7 +96,10 @@ test('pet move cards show types and PP with forgotten moves in a scroll-safe mod
   await page.mouse.move(0, 0)
   for (const selector of [name, type, pp]) {
     const text = current.first().locator(selector)
-    await expect(text).toHaveCSS('-webkit-text-fill-color', 'rgba(0, 0, 0, 0)')
+    await expect(text).toHaveCSS(
+      '-webkit-text-fill-color',
+      selector === name ? 'rgba(0, 0, 0, 0)' : 'rgb(255, 255, 244)'
+    )
     expect(
       await text.evaluate(
         (element) =>
@@ -208,7 +227,7 @@ test('pet move cards show types and PP with forgotten moves in a scroll-safe mod
   )
   await expect(album.locator('.flora-album-gallery__title button')).toHaveCSS(
     'font-size',
-    info.project.name.includes('mobile') ? '44px' : '72px'
+    info.project.name.includes('mobile') ? '29.3333px' : '72px'
   )
   await albumButton.click()
   await expect(albumButton).toHaveText('COLLAPSE')

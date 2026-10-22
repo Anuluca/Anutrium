@@ -243,15 +243,11 @@ test('a slow earlier model cannot overwrite the last selection; failed models pr
   await expect(stage).toHaveAttribute('data-pet-id', 'huahua')
   await selectPet(page, 'xiaohei')
   // 清除已缓存的另一模型不可模拟下载失败，刷新后在首次下载时拦截。
-  await page.reload({ waitUntil: 'domcontentloaded' })
-  await expect(stage).toHaveAttribute('data-entrance-finished', 'true', {
+  // 直接进入宠物模块，避免刷新后的会话恢复与模型命中采样竞态。
+  await page.goto('/floratrium', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.flora-focus-layout')).toBeVisible({
     timeout: 30000,
   })
-  const point = (await stage.getAttribute('data-companion-screen'))!
-    .split(',')
-    .map(Number)
-  await page.mouse.click(point[0], point[1])
-  await expect(page.locator('.flora-focus-layout')).toBeVisible()
   await page.route('**/models/mightyena-sleep.bin.gz*', (route) =>
     route.abort()
   )

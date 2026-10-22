@@ -28,7 +28,10 @@
           height="720"
           decoding="async"
         />
-        <span class="video-play" aria-hidden="true"><span>▶</span></span>
+        <span class="video-play" aria-hidden="true">
+          <span class="video-play__icon" />
+          <span class="video-play__label">PLAY</span>
+        </span>
       </div>
       <strong class="video-title">{{ video.title }}</strong>
     </button>
@@ -99,6 +102,7 @@ import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { TopRight } from '@element-plus/icons-vue'
 
 import DiamondCloseBtn from '@/components/DiamondCloseBtn/index.vue'
+import { useFuzzyImageHover } from '@/composables/useFuzzyImageHover'
 import { useIntersectionActivation } from '@/composables/useIntersectionActivation'
 import { useOverlayScrollLock } from '@/composables/useOverlayScrollLock'
 
@@ -122,6 +126,7 @@ const emit = defineEmits<{
 }>()
 
 const videoListRef = ref<HTMLElement | null>(null)
+useFuzzyImageHover(videoListRef)
 const activeVideo = ref<VideoItem | null>(null)
 const entranceStarted = ref(false)
 let isVideoListVisible = false
@@ -269,8 +274,21 @@ onBeforeUnmount(() => {
   overflow: hidden;
   border: 1px solid rgb(68 68 68 / 28%);
   background: @bg;
-  box-shadow: 8px 10px 0 rgba(0, 0, 0, 0.213);
-  transition: border-color 0.25s, box-shadow 0.3s, transform 0.2s;
+  box-shadow: 0 0 6px 1px rgba(0, 0, 0, 0.213);
+  transition: box-shadow 0.3s, transform 0.2s;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.22) 0 1px,
+      transparent 1px 2px
+    );
+    pointer-events: none;
+  }
 
   img {
     position: absolute;
@@ -285,44 +303,97 @@ onBeforeUnmount(() => {
 
 .video-item:hover .video-frame,
 .video-item:focus-visible .video-frame {
-  border-color: @red;
-
   img {
     filter: brightness(0.82) saturate(1.08);
   }
 
   .video-play {
-    color: @red;
-    border-color: @red;
+    color: var(--page-theme-color, @red);
   }
 }
 
 .video-item:hover .video-title,
 .video-item:focus-visible .video-title {
-  color: @red;
+  color: var(--page-theme-color, @red);
+}
+
+:deep(.video-fuzzy) {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  filter: brightness(0.82) saturate(1.08);
 }
 
 .video-play {
   position: absolute;
+  z-index: 2;
   top: 50%;
   left: 50%;
   display: flex;
+  width: max-content;
   align-items: center;
-  justify-content: center;
-  width: 52px;
-  height: 52px;
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  border-radius: 50%;
+  gap: 12px;
   color: #fff;
-  background: rgba(5, 2, 6, 0.68);
-  font-size: 1.05rem;
-  line-height: 1;
-  transform: translate(-50%, -50%);
-  box-shadow: 0 0 22px rgba(176, 176, 176, 0.42);
+  transform: translate(-17px, -50%);
+  pointer-events: none;
+  transition: color 0.2s ease, transform 0.4s ease;
+}
 
-  span {
-    padding-top: 3px;
-    padding-left: 5px;
+.video-play__icon {
+  flex: none;
+  width: 42px;
+  height: 48px;
+  background: currentColor;
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+  -webkit-mask-image: repeating-linear-gradient(
+    to bottom,
+    #000 0 3px,
+    transparent 3px 5px
+  );
+  mask-image: repeating-linear-gradient(
+    to bottom,
+    #000 0 3px,
+    transparent 3px 5px
+  );
+  transform: scale(1);
+  transition: transform 0.4s ease;
+}
+
+.video-play__label {
+  flex: none;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateX(-100%);
+  font-family: 'UnboundedSans', sans-serif;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.expand-video-play() {
+  transform: translate(-50%, -50%);
+
+  .video-play__icon {
+    transform: scale(0.8);
+  }
+
+  .video-play__label {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.video-item:focus-visible .video-play {
+  .expand-video-play();
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .video-item:hover .video-play {
+    .expand-video-play();
   }
 }
 
@@ -521,6 +592,12 @@ onBeforeUnmount(() => {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .video-play,
+  .video-play__icon,
+  .video-play__label {
+    transition: none;
+  }
+
   .video-list:not(.is-entered) .video-item {
     opacity: 1;
     filter: none;

@@ -29,6 +29,7 @@ type VueAppElement = HTMLElement & {
 }
 
 const dynamicRouteSamples: Record<string, string> = {
+  '/:module(archive|flanerie|island|pokeyard|creative|floratrium)?': '/',
   '/flanerie/:vlogId': '/flanerie/nanchang',
   '/island/image-log/:albumId': '/island/image-log/covid',
   '/island/merch-photography/:collectionId':
@@ -48,7 +49,7 @@ const navigateWithRouter = async (page: Page, path: string) => {
     })
     .toBe(path)
   await page.waitForTimeout(850)
-  await expect(page.locator('.bottom-text')).toHaveCount(1, {
+  await expect(page.locator('.bottom-text, .page-footer-home')).toHaveCount(1, {
     timeout: PAGE_LOAD_TIMEOUT,
   })
 }
@@ -151,6 +152,10 @@ test('every PageFooter route keeps its copyright row clear of FooterCom', async 
   for (const path of pageFooterRoutes) {
     await test.step(path, async () => {
       await navigateWithRouter(page, path)
+      if (path === '/' || path === '/home2') {
+        await expect(page.locator('.page-footer-home')).toHaveCount(1)
+        return
+      }
       await page.evaluate(() => {
         document.body.scrollTop = document.body.scrollHeight
       })

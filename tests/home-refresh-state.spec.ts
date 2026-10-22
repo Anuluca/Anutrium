@@ -50,7 +50,7 @@ const expectInitialHome = async (page: Page, mobile: boolean) => {
     .toBeNull()
 }
 
-test('refresh after detail menu navigation restores the initial home without a click', async ({
+test('refresh after detail menu navigation retains the selected menu', async ({
   page,
 }, testInfo) => {
   test.setTimeout(90000)
@@ -77,7 +77,171 @@ test('refresh after detail menu navigation restores the initial home without a c
     )
     .toBeNull()
   await page.reload({ waitUntil: 'domcontentloaded' })
-  await expectInitialHome(page, mobile)
+  await expect(page.locator('.temple-page')).toHaveAttribute(
+    'data-selected',
+    'sprigatito',
+    { timeout: 30000 }
+  )
+})
+
+for (const selection of [
+  'archive',
+  'flanerie',
+  'island',
+  'pokeyard',
+  'statue',
+  'sprigatito',
+]) {
+  test(`refresh and same-tab revisit retain ${selection}`, async ({
+    page,
+  }, testInfo) => {
+    test.setTimeout(90000)
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    // 从不同的公开入口切换，覆盖地址仍为旧入口的情况。
+    await page.goto(selection === 'island' ? '/flanerie' : '/creative', {
+      waitUntil: 'domcontentloaded',
+    })
+    await expect(page.locator('.temple-page')).toHaveAttribute(
+      'data-settled',
+      'true',
+      { timeout: 30000 }
+    )
+    if (testInfo.project.name.includes('mobile'))
+      await page.getByRole('button', { name: '切换导航菜单' }).click()
+    await page
+      .locator(`[data-temple-nav="${selection}"]`)
+      .first()
+      .evaluate((element: HTMLElement) => element.click())
+    await expect(page.locator('.temple-page')).toHaveAttribute(
+      'data-selected',
+      selection,
+      { timeout: 30000 }
+    )
+    await page.reload({ waitUntil: 'domcontentloaded' })
+    await expect(page.locator('.temple-page')).toHaveAttribute(
+      'data-selected',
+      selection,
+      { timeout: 30000 }
+    )
+    await page.goto('/', { waitUntil: 'domcontentloaded' })
+    await expect(page.locator('.temple-page')).toHaveAttribute(
+      'data-selected',
+      selection,
+      { timeout: 30000 }
+    )
+  })
+}
+
+test('About survives reload and closing it restores the remembered background', async ({
+  page,
+}, testInfo) => {
+  test.setTimeout(90000)
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/creative', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.temple-page')).toHaveAttribute(
+    'data-settled',
+    'true',
+    { timeout: 30000 }
+  )
+  if (testInfo.project.name.includes('mobile'))
+    await page.getByRole('button', { name: '切换导航菜单' }).click()
+  await page
+    .locator('[data-temple-nav="about"]')
+    .first()
+    .evaluate((element: HTMLElement) => element.click())
+  await expect(page.locator('.about-overlay')).toBeVisible()
+  await page.reload({ waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.about-overlay')).toBeVisible({ timeout: 30000 })
+  await page.keyboard.press('Escape')
+  await expect(page.locator('.about-overlay')).toHaveCount(0)
+  await expect(page.locator('.temple-page')).toHaveAttribute(
+    'data-selected',
+    'island',
+    { timeout: 30000 }
+  )
+})
+
+test('HOME reset survives refresh and explicit module links override the memory', async ({
+  page,
+}) => {
+  test.setTimeout(90000)
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/creative', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.temple-page')).toHaveAttribute(
+    'data-settled',
+    'true',
+    { timeout: 30000 }
+  )
+  await page.locator('.logo-box').click()
+  await expect(page.locator('.temple-page')).toHaveAttribute(
+    'data-selected',
+    'none'
+  )
+  await page.reload({ waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.temple-stage')).toHaveAttribute(
+    'data-entrance-finished',
+    'true',
+    { timeout: 30000 }
+  )
+  await expect(page.locator('.temple-page')).toHaveAttribute(
+    'data-selected',
+    'none',
+    { timeout: 30000 }
+  )
+  await page.goto('/flanerie', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.temple-page')).toHaveAttribute(
+    'data-selected',
+    'flanerie',
+    { timeout: 30000 }
+  )
+})
+
+test('new windows start at home even when opener sessionStorage is copied', async ({
+  page,
+  context,
+}) => {
+  test.setTimeout(90000)
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/floratrium', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.temple-page')).toHaveAttribute(
+    'data-selected',
+    'sprigatito',
+    { timeout: 30000 }
+  )
+  const popupPromise = page.waitForEvent('popup')
+  await page.evaluate(() => window.open('/', '_blank'))
+  const popup = await popupPromise
+  await popup.emulateMedia({ reducedMotion: 'reduce' })
+  await expect(popup.locator('.temple-stage')).toHaveAttribute(
+    'data-entrance-finished',
+    'true',
+    { timeout: 30000 }
+  )
+  await expect(popup.locator('.temple-page')).toHaveAttribute(
+    'data-selected',
+    'none',
+    { timeout: 30000 }
+  )
+  await popup.close()
+  const freshTab = await context.newPage()
+  await freshTab.goto('/', { waitUntil: 'domcontentloaded' })
+  await expect(freshTab.locator('.temple-stage')).toHaveAttribute(
+    'data-entrance-finished',
+    'true',
+    { timeout: 30000 }
+  )
+  await expect(freshTab.locator('.temple-page')).toHaveAttribute(
+    'data-selected',
+    'none',
+    { timeout: 30000 }
+  )
+  await freshTab.close()
+  await page.reload({ waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.temple-page')).toHaveAttribute(
+    'data-selected',
+    'sprigatito',
+    { timeout: 30000 }
+  )
 })
 
 test('initial home load discards a leftover journey return marker', async ({

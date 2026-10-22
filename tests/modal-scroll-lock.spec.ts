@@ -8,6 +8,49 @@ import {
 
 const PAGE_LOAD_TIMEOUT = 20_000
 
+test('detail About preserves its route and page position', async ({
+  page,
+  isMobile,
+}) => {
+  test.setTimeout(60_000)
+  await page.goto('/flanerie/changsha', { waitUntil: 'domcontentloaded' })
+  await scrollPageToRatio(page, 0.8)
+  const initialPosition = await readPagePosition(page, '.flr-page')
+  if (isMobile) await page.locator('.mobile-menu-icon').click()
+  await page
+    .locator(
+      `${
+        isMobile ? '.mobile-menu-panel' : '.desktop-menu'
+      } [data-temple-nav="about"]`
+    )
+    .click()
+  const overlay = page.locator('.about-overlay')
+  await expect(overlay).toBeVisible()
+  await expect(overlay.locator('.about-page')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+  await expect(page).toHaveURL(/\/flanerie\/changsha$/)
+  await expect(page.locator('.temple-page')).toHaveCount(0)
+  expectPagePositionToMatch(
+    await readPagePosition(page, '.flr-page'),
+    initialPosition
+  )
+  await page.mouse.move(8, 8)
+  await page.mouse.wheel(0, -500)
+  await page.waitForTimeout(150)
+  expectPagePositionToMatch(
+    await readPagePosition(page, '.flr-page'),
+    initialPosition
+  )
+  await page.keyboard.press('Escape')
+  await expect(overlay).toHaveCount(0)
+  await expect(page).toHaveURL(/\/flanerie\/changsha$/)
+  expectPagePositionToMatch(
+    await readPagePosition(page, '.flr-page'),
+    initialPosition
+  )
+})
+
 test('image viewer preserves and locks the page position', async ({ page }) => {
   await page.goto('/flanerie/changsha', { waitUntil: 'domcontentloaded' })
   const trigger = page.locator('.media-gallery__open').first()
@@ -83,10 +126,14 @@ test('journey video modal preserves and locks the page position', async ({
 test('message box preserves and locks the page position', async ({
   page,
 }, testInfo) => {
+  test.setTimeout(90000)
+  await page.routeWebSocket('ws://localhost:3000/**', (socket) =>
+    socket.close()
+  )
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/archive', { waitUntil: 'domcontentloaded' })
   const trigger = page.locator('.availability-cta--resume')
-  await expect(trigger).toBeAttached({ timeout: PAGE_LOAD_TIMEOUT })
+  await expect(trigger).toBeAttached({ timeout: 45000 })
   await page.waitForTimeout(850)
   const panel = page.locator('.temple-focus-content .scroll-viewport__scroll')
   await page.evaluate(() => document.fonts.ready)

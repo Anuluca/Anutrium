@@ -35,9 +35,7 @@ test('focused desktop header keeps its full title centered with equal route gaps
   const shell = page.locator('.layout-page')
   await expect(shell).toHaveClass(/temple-header-balanced/)
   await expect(page.locator('.desktop-menu')).toBeVisible()
-  const aboutAction = page.locator(
-    '.menu-box:not(.menu-box--right) [data-temple-nav="about"]'
-  )
+  const aboutAction = page.locator('.home-about-action')
   await expect(aboutAction.locator('svg')).toBeVisible()
   await expect(aboutAction).toHaveText('')
   await expect(page.locator('.footer-about')).toHaveCount(0)
@@ -91,6 +89,7 @@ test('focused desktop header keeps its full title centered with equal route gaps
         element.classList.add('temple-header-balanced')
         return {
           routes,
+          info: rect(element.querySelector('.home-about-action')!),
           title: titleRect,
           titlePadding,
           gap,
@@ -109,24 +108,24 @@ test('focused desktop header keeps its full title centered with equal route gaps
         Math.abs(layout.routes[0].left - layout.previousLeft)
       ).toBeLessThanOrEqual(1)
       expect(
-        Math.abs(layout.routes[6].right - layout.previousRight)
+        Math.abs(layout.info.right - layout.previousRight)
       ).toBeLessThanOrEqual(1)
-      for (const index of [1, 2, 3, 5, 6])
+      for (const index of [1, 2, 4, 5])
         expect(
           layout.routes[index].left - layout.routes[index - 1].right
         ).toBeCloseTo(layout.gap, 0)
       expect(layout.titlePadding).toBeGreaterThanOrEqual(15)
-      expect(layout.title.left - layout.routes[3].right).toBeGreaterThanOrEqual(
+      expect(layout.title.left - layout.routes[2].right).toBeGreaterThanOrEqual(
         0
       )
-      expect(layout.routes[4].left - layout.title.right).toBeGreaterThanOrEqual(
+      expect(layout.routes[3].left - layout.title.right).toBeGreaterThanOrEqual(
         0
       )
     }
   }
   await aboutAction.click()
   await expect(page.locator('.about-overlay')).toBeVisible()
-  await expect(page.locator('.about-overlay .asset-credits')).toBeAttached()
+  await expect(page.locator('.about-overlay .passion-section')).toBeVisible()
   await expect(page.locator('.current-module-name')).toHaveText('ABOUT')
   await page.keyboard.press('Escape')
   await expect(page.locator('.about-overlay')).toHaveCount(0)

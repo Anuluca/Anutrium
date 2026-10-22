@@ -44,6 +44,10 @@
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
+const DISMISS_UNTIL_STORAGE_KEY =
+  'anutrium:mobile-experience-alert-dismiss-until'
+const DISMISS_DURATION = 3 * 24 * 60 * 60 * 1000
+
 const props = withDefaults(
   defineProps<{
     modelValue?: boolean
@@ -73,17 +77,42 @@ const displayMessage = computed(
 const displayCloseText = computed(
   () => props.closeText ?? t('mobileExperienceAlert.dismiss')
 )
-const visible = ref(props.modelValue)
+const isDismissed = () => {
+  if (typeof window === 'undefined') return false
+
+  try {
+    const dismissUntil = Number.parseInt(
+      window.localStorage.getItem(DISMISS_UNTIL_STORAGE_KEY) ?? '',
+      10
+    )
+    if (dismissUntil > Date.now()) return true
+    window.localStorage.removeItem(DISMISS_UNTIL_STORAGE_KEY)
+  } catch {
+    // 私密浏览等场景下 localStorage 不可用时，保持当前会话的默认展示逻辑。
+  }
+
+  return false
+}
+
+const visible = ref(props.modelValue && !isDismissed())
 
 watch(
   () => props.modelValue,
   (value) => {
-    visible.value = value
+    visible.value = value && !isDismissed()
   }
 )
 
 const close = () => {
   if (!visible.value) return
+  try {
+    window.localStorage.setItem(
+      DISMISS_UNTIL_STORAGE_KEY,
+      String(Date.now() + DISMISS_DURATION)
+    )
+  } catch {
+    // localStorage 不可用时不影响本次关闭。
+  }
   visible.value = false
   emit('update:modelValue', false)
   emit('close')

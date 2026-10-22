@@ -6,27 +6,45 @@
       :title="vlog.title"
     />
 
-    <DetailSections
+    <Sections
       v-if="videos.length"
       class="flr-video-panel"
+      has-background
+      monochrome
       section-number="1"
       :title="t('flanerie.videoLabel')"
-      :item-count="videos.length"
+      :title-en="t('flanerie.videoLabel', {}, { locale: 'en' })"
     >
+      <template #actions>
+        <SectionCount
+          :count="videos.length"
+          label="VIDEOS"
+          :fit-label="false"
+        />
+      </template>
       <JourneyVideoPlayer
         :videos="videos"
         @entrance-handoff="videoEntranceHandoff = true"
       />
-    </DetailSections>
+    </Sections>
 
-    <DetailSections
+    <Sections
       v-if="photos.length"
       ref="galleryRef"
       class="flr-gallery"
+      has-background
+      monochrome
       :section-number="videos.length ? 2 : 1"
       :title="t('flanerie.photoLabel')"
-      :item-count="photos.length"
+      :title-en="t('flanerie.photoLabel', {}, { locale: 'en' })"
     >
+      <template #actions>
+        <SectionCount
+          :count="photos.length"
+          label="PHOTOS"
+          :fit-label="false"
+        />
+      </template>
       <MediaGallery
         :items="paginatedPhotos"
         :get-media-label="getMediaLabel"
@@ -70,7 +88,7 @@
           {{ t('flanerie.nextPage') }}
         </button>
       </nav>
-    </DetailSections>
+    </Sections>
     <PageFooter />
   </div>
 </template>
@@ -81,13 +99,14 @@ import { useI18n } from 'vue-i18n'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 
 import DetailPageHeader from '@/components/DetailPageHeader/index.vue'
-import DetailSections from '@/components/DetailSections/index.vue'
 import JourneyVideoPlayer from '@/components/JourneyVideoPlayer/index.vue'
 import MediaGallery, {
   type GalleryMedia,
 } from '@/components/MediaGallery/index.vue'
 import MediaPhotoInfo from '@/components/MediaPhotoInfo/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
+import SectionCount from '@/components/SectionCount/index.vue'
+import Sections from '@/components/Sections/index.vue'
 import { getBilibiliEmbedUrl } from '@/utils/bilibiliVideo'
 import { markJourneyReturn } from '@/utils/journeyReturnState'
 
@@ -107,9 +126,7 @@ interface VideoItem extends JourneyVideo {
 }
 
 const PAGE_SIZE = 30
-const galleryRef = ref<{
-  scrollIntoView: (options?: ScrollIntoViewOptions) => void
-} | null>(null)
+const galleryRef = ref<InstanceType<typeof Sections> | null>(null)
 const currentPage = ref(1)
 const videoEntranceHandoff = ref(false)
 
@@ -140,7 +157,9 @@ const setPage = (page: number) => {
   if (page < 1 || page > totalPages.value || page === currentPage.value) return
 
   currentPage.value = page
-  galleryRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  galleryRef.value?.$el
+    .querySelector('.home-section-title')
+    ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
 onBeforeRouteLeave((to) => {

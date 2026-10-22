@@ -35,7 +35,10 @@ export function useAboutPanels() {
         ? mobile
           ? Math.max(0, shell.width - crewInset * 2)
           : shell.width / 3
-        : Math.min(700, shell.right - rect.left - 8)
+        : Math.min(
+            panelLayout.value === 'changelog' ? 1040 : 700,
+            shell.right - rect.left - 8
+          )
     panelLayoutWidth.value = width
     if (panelLayout.value === 'crew' && passionRef.value) {
       const availablePanelHeight =

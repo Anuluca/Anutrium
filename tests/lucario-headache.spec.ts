@@ -31,10 +31,8 @@ for (const reducedMotion of ['reduce', 'no-preference'] as const) {
     await expect(stage).toHaveAttribute('data-entrance-finished', 'true', {
       timeout: 20000,
     })
-    await expect(stage).toHaveAttribute(
-      'data-headache-caption',
-      '这是路卡的第10次头疼发作...'
-    )
+    await expect(stage).not.toHaveAttribute('data-headache-caption')
+    await expect(stage).not.toHaveAttribute('data-headache-count')
     await expect(stage).toHaveAttribute('data-headache-mix', '1.000')
     await expect(stage).toHaveAttribute('data-headache-redness', '1.000')
     await expect(stage).toHaveAttribute('data-headache-sticker', 'true')

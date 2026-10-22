@@ -74,6 +74,29 @@ export const templeNavigation = [
 ] as const
 export type TempleNavigationId = (typeof templeNavigation)[number]['id']
 
+export const templeNavigationById = new Map<
+  TempleNavigationId,
+  (typeof templeNavigation)[number]
+>(templeNavigation.map((item) => [item.id, item]))
+
+const menuItemsById = (ids: readonly TempleNavigationId[]) =>
+  ids.map((id) => templeNavigationById.get(id)!)
+
+// 只定义顺序，不复制配置；页头实例及重新渲染复用同一组导航项。
+export const templeMobileMenuItems = menuItemsById([
+  'statue',
+  'sprigatito',
+  'archive',
+  'flanerie',
+  'pokeyard',
+  'island',
+  'about',
+])
+export const templeDesktopMenuGroups = [
+  menuItemsById(['archive', 'flanerie', 'statue']),
+  menuItemsById(['sprigatito', 'pokeyard', 'island', 'about']),
+]
+
 // 模块入口与子页面归属共用映射，直接访问和返回首页使用同一规则。
 // 内部 island 标识属于 CREATIVE；公开 /island 入口对应中央 ISLAND 模型。
 export const templeModulePaths: Record<TempleCategoryId, string> = {

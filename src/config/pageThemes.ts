@@ -3,7 +3,7 @@ export const pageThemeColors: Readonly<Record<string, string>> = {
   ABOUT: '#e23456',
   ARCHIVE: '#3276fe',
   CRAFT: '#244392',
-  FLANERIE: '#8b5cc7',
+  FLANERIE: '#c44129',
   HOME: '#e23456',
   TEST2: '#e23456',
   ISLAND: '#ce4c87',

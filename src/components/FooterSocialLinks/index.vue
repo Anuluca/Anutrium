@@ -1,80 +1,83 @@
 <template>
   <div ref="switchMenuRef" class="footer-social-links-controller">
     <FooterSocialLinkBar
-      :switch-active="isSwitchPanelOpen"
+      :switch-active="isSwitchExpanded"
+      :switch-instant="isSwitchInstant"
       @open-steam="isSteamModalOpen = true"
       @open-weibo="isWeiboModalOpen = true"
-      @toggle-switch="isSwitchPanelOpen = !isSwitchPanelOpen"
+      @toggle-switch="toggleSwitchPanel"
     >
       <template #switch-panel>
-        <Transition name="switch-panel">
+        <Transition name="crt-effect" @after-leave="isSwitchExpanded = false">
           <div
             v-if="isSwitchPanelOpen"
             class="switch-friend-panel no-rem"
             role="dialog"
             aria-label="Nintendo Switch 好友信息"
           >
-            <div class="switch-friend-panel__profile">
-              <img
-                :src="NINTENDO_PROFILE_IMAGE_URL"
-                alt="Anuluca"
-                loading="lazy"
-                width="320"
-                height="320"
-                decoding="async"
-              />
-              <strong>Anuluca</strong>
-            </div>
-            <div class="switch-friend-panel__code-row">
-              <code
-                ><span class="switch-friend-panel__code-label">SW code: </span
-                >{{ NINTENDO_FRIEND_CODE }}</code
-              >
+            <div class="switch-friend-panel__surface">
+              <div class="switch-friend-panel__profile">
+                <img
+                  :src="NINTENDO_PROFILE_IMAGE_URL"
+                  alt="Anuluca"
+                  loading="lazy"
+                  width="320"
+                  height="320"
+                  decoding="async"
+                />
+                <strong>Anuluca</strong>
+              </div>
               <button
-                class="switch-friend-panel__copy"
+                class="switch-friend-panel__code-row"
                 :class="{ 'is-copied': isSwitchCodeCopied }"
                 type="button"
                 :aria-label="isSwitchCodeCopied ? '好友码已复制' : '复制好友码'"
-                :title="isSwitchCodeCopied ? '已复制' : '复制好友码'"
+                :title="isSwitchCodeCopied ? '已复制' : '点击复制好友码'"
                 @click.stop="copySwitchFriendCode"
               >
-                <svg
-                  v-if="isSwitchCodeCopied"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  aria-hidden="true"
+                <code
+                  ><span class="switch-friend-panel__code-label">SW code: </span
+                  >{{ NINTENDO_FRIEND_CODE }}</code
                 >
-                  <path d="m5 12 4 4L19 6" />
-                </svg>
-                <svg
-                  v-else
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  aria-hidden="true"
-                >
-                  <rect x="8" y="8" width="11" height="11" rx="1" />
-                  <path d="M16 6V5H5v11h1" />
-                </svg>
+                <span class="switch-friend-panel__copy" aria-hidden="true">
+                  <svg
+                    v-if="isSwitchCodeCopied"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    aria-hidden="true"
+                  >
+                    <path d="m5 12 4 4L19 6" />
+                  </svg>
+                  <svg
+                    v-else
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    aria-hidden="true"
+                  >
+                    <rect x="8" y="8" width="11" height="11" rx="1" />
+                    <path d="M16 6V5H5v11h1" />
+                  </svg>
+                </span>
               </button>
-            </div>
-            <a
-              class="switch-friend-panel__open"
-              :href="NINTENDO_FRIEND_URL"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <el-icon
-                class="switch-friend-panel__open-icon"
-                aria-hidden="true"
+              <a
+                class="switch-friend-panel__open"
+                :href="NINTENDO_FRIEND_URL"
+                target="_blank"
+                rel="noopener noreferrer"
               >
-                <Connection />
-              </el-icon>
-              跳转到 Nintendo Switch App
-            </a>
+                <el-icon
+                  class="switch-friend-panel__open-icon"
+                  aria-hidden="true"
+                >
+                  <Connection />
+                </el-icon>
+                跳转到 Nintendo Switch App
+              </a>
+            </div>
           </div>
         </Transition>
       </template>
@@ -110,7 +113,7 @@
 </template>
 
 <script setup lang="ts">
-import { onUnmounted, ref } from 'vue'
+import { nextTick, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Connection } from '@element-plus/icons-vue'
 import { onClickOutside, onKeyStroke } from '@vueuse/core'
@@ -132,10 +135,47 @@ import 'element-plus/es/components/message/style/css'
 const isWeiboModalOpen = ref(false)
 const isSteamModalOpen = ref(false)
 const isSwitchPanelOpen = ref(false)
+const isSwitchExpanded = ref(false)
+const isSwitchInstant = ref(false)
 const isSwitchCodeCopied = ref(false)
 const switchMenuRef = ref<HTMLElement | null>(null)
 let copyStatusTimer: number | null = null
+let switchOpenFrame: number | null = null
 const { t } = useI18n()
+
+const clearSwitchOpenFrame = () => {
+  if (switchOpenFrame === null) return
+  window.cancelAnimationFrame(switchOpenFrame)
+  switchOpenFrame = null
+}
+
+const closeSwitchPanel = () => {
+  clearSwitchOpenFrame()
+  isSwitchInstant.value = false
+  if (!isSwitchPanelOpen.value) {
+    isSwitchExpanded.value = false
+    return
+  }
+  isSwitchPanelOpen.value = false
+}
+
+const toggleSwitchPanel = async () => {
+  if (isSwitchExpanded.value) {
+    closeSwitchPanel()
+    return
+  }
+
+  isSwitchExpanded.value = true
+  isSwitchInstant.value = true
+  await nextTick()
+  switchOpenFrame = window.requestAnimationFrame(() => {
+    isSwitchPanelOpen.value = true
+    switchOpenFrame = window.requestAnimationFrame(() => {
+      isSwitchInstant.value = false
+      switchOpenFrame = null
+    })
+  })
+}
 
 const copySwitchFriendCode = async () => {
   await copyText(NINTENDO_FRIEND_CODE)
@@ -150,15 +190,16 @@ const copySwitchFriendCode = async () => {
 }
 
 onClickOutside(switchMenuRef, () => {
-  isSwitchPanelOpen.value = false
+  closeSwitchPanel()
 })
 
 onKeyStroke('Escape', () => {
-  isSwitchPanelOpen.value = false
+  closeSwitchPanel()
 })
 
 onUnmounted(() => {
   if (copyStatusTimer !== null) window.clearTimeout(copyStatusTimer)
+  clearSwitchOpenFrame()
 })
 </script>
 
@@ -173,21 +214,84 @@ onUnmounted(() => {
   left: var(--switch-icon-center);
   z-index: 20;
   width: 238px;
+  transform: translateX(-50%);
+}
+
+.switch-friend-panel__surface {
+  position: relative;
   box-sizing: border-box;
   padding: 10px;
-  border: 1px solid
-    color-mix(in srgb, var(--page-theme-color, #e23456) 35%, transparent);
-  border-radius: 5px;
   color: #d4d4d4;
-  background: rgba(8, 7, 10, 0.97);
+  background: rgba(8, 7, 10, 0.9);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
-  transform: translateX(-50%);
+  transform-origin: center;
+
+  &::before,
+  &::after {
+    position: absolute;
+    inset: -6px;
+    pointer-events: none;
+    content: '';
+  }
+
+  &::before {
+    background: linear-gradient(
+          var(--page-theme-color, #e23456),
+          var(--page-theme-color, #e23456)
+        )
+        0 0 / 16px 2px no-repeat,
+      linear-gradient(
+          var(--page-theme-color, #e23456),
+          var(--page-theme-color, #e23456)
+        )
+        0 0 / 2px 16px no-repeat,
+      linear-gradient(
+          var(--page-theme-color, #e23456),
+          var(--page-theme-color, #e23456)
+        )
+        100% 100% / 16px 2px no-repeat,
+      linear-gradient(
+          var(--page-theme-color, #e23456),
+          var(--page-theme-color, #e23456)
+        )
+        100% 100% / 2px 16px no-repeat;
+  }
+
+  &::after {
+    background: linear-gradient(
+          var(--page-theme-color, #e23456),
+          var(--page-theme-color, #e23456)
+        )
+        100% 0 / 16px 2px no-repeat,
+      linear-gradient(
+          var(--page-theme-color, #e23456),
+          var(--page-theme-color, #e23456)
+        )
+        100% 0 / 2px 16px no-repeat,
+      linear-gradient(
+          var(--page-theme-color, #e23456),
+          var(--page-theme-color, #e23456)
+        )
+        0 100% / 16px 2px no-repeat,
+      linear-gradient(
+          var(--page-theme-color, #e23456),
+          var(--page-theme-color, #e23456)
+        )
+        0 100% / 2px 16px no-repeat;
+  }
 }
 
 .switch-friend-panel__code-row {
   display: flex;
+  width: 100%;
+  box-sizing: border-box;
   align-items: center;
   gap: 8px;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
 
   code {
     flex: 1;
@@ -197,6 +301,17 @@ onUnmounted(() => {
     line-height: 32px;
     text-align: left;
     white-space: nowrap;
+  }
+  &:hover,
+  &:focus-visible {
+    .switch-friend-panel__copy {
+      color: var(--page-theme-color, #e23456);
+    }
+  }
+
+  &:focus-visible {
+    outline: 1px solid var(--page-theme-color, #e23456);
+    outline-offset: 2px;
   }
 }
 
@@ -255,8 +370,6 @@ onUnmounted(() => {
   padding: 0;
   border: 0;
   color: #9a9a9a;
-  background: transparent;
-  cursor: pointer;
   transition: color 0.2s ease;
 
   svg {
@@ -264,15 +377,8 @@ onUnmounted(() => {
     height: 16px;
   }
 
-  &:hover,
-  &:focus-visible,
-  &.is-copied {
+  .switch-friend-panel__code-row.is-copied & {
     color: var(--page-theme-color, #e23456);
-  }
-
-  &:focus-visible {
-    outline: 1px solid var(--page-theme-color, #e23456);
-    outline-offset: 2px;
   }
 }
 
@@ -319,15 +425,16 @@ onUnmounted(() => {
   }
 }
 
-.switch-panel-enter-active,
-.switch-panel-leave-active {
-  transition: opacity 0.2s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+:global(
+    .crt-effect-enter-active.switch-friend-panel .switch-friend-panel__surface
+  ) {
+  animation: anutriumCrtOn 0.46s cubic-bezier(0.19, 1, 0.22, 1) forwards;
 }
 
-.switch-panel-enter-from,
-.switch-panel-leave-to {
-  opacity: 0;
-  transform: translate(-50%, 8px);
+:global(
+    .crt-effect-leave-active.switch-friend-panel .switch-friend-panel__surface
+  ) {
+  animation: anutriumCrtOff 0.42s cubic-bezier(0.2, 1, 0.22, 1) forwards;
 }
 
 .footer-weibo-modal-content {
@@ -348,16 +455,19 @@ onUnmounted(() => {
     position: relative;
   }
 
-  :deep(.footer-social-links__switch) {
-    position: static;
-  }
-
   .switch-friend-panel.no-rem {
     right: auto;
-    left: 50%;
-    width: min(300px, calc(100vw - 24px));
-    padding: 16px;
+    left: var(--switch-icon-center);
+    width: min(272px, calc(100vw - 40px));
     transform: translateX(-50%);
+  }
+
+  :deep(.footer-social-links__switch) {
+    --switch-icon-center: 50%;
+  }
+
+  .switch-friend-panel__surface {
+    padding: 16px;
   }
 
   .switch-friend-panel__profile {
@@ -379,7 +489,7 @@ onUnmounted(() => {
 
     code {
       min-width: 0;
-      font-size: 28px;
+      font-size: 22px;
       line-height: 1.2;
     }
   }
@@ -411,11 +521,6 @@ onUnmounted(() => {
     font-size: 30px;
   }
 
-  .switch-panel-enter-from,
-  .switch-panel-leave-to {
-    transform: translate(-50%, 8px);
-  }
-
   .footer-weibo-modal-content {
     width: 100%;
     height: 100%;
@@ -424,8 +529,15 @@ onUnmounted(() => {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .switch-panel-enter-active,
-  .switch-panel-leave-active,
+  :global(
+      .crt-effect-enter-active.switch-friend-panel .switch-friend-panel__surface
+    ),
+  :global(
+      .crt-effect-leave-active.switch-friend-panel .switch-friend-panel__surface
+    ) {
+    animation: none;
+  }
+
   .switch-friend-panel__copy,
   .switch-friend-panel__open {
     transition: none;

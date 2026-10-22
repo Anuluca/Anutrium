@@ -2,7 +2,7 @@
   <span
     ref="sectionCountRef"
     class="section-count"
-    :style="{ '--section-count-scale-x': countScaleX }"
+    :style="{ '--section-count-scale-x': fitLabel ? countScaleX : 1 }"
   >
     <strong>
       <span ref="countTextRef" class="section-count__value">
@@ -26,9 +26,11 @@ const props = withDefaults(
   defineProps<{
     count: number
     label?: string
+    fitLabel?: boolean
   }>(),
   {
     label: 'ENTRIES',
+    fitLabel: true,
   }
 )
 
@@ -71,7 +73,11 @@ onBeforeUnmount(() => resizeObserver?.disconnect())
   strong {
     display: block;
     width: 100%;
-    color: rgb(226 52 86 / 58%);
+    color: color-mix(
+      in srgb,
+      var(--section-accent-color, var(--page-theme-color, #e23456)) 58%,
+      transparent
+    );
     font-family: 'UnboundedSans', sans-serif;
     font-size: clamp(1.35rem, 2.2vw, 2rem);
     font-weight: 400;

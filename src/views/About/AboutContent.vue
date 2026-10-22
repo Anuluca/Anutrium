@@ -174,45 +174,43 @@ useEventListener('scroll', invalidateCrosshairBounds, {
   capture: true,
   passive: true,
 })
+const renderPassionCrosshair = () => {
+  if (!crosshairPoint || !crosshairX.value || !crosshairY.value) return
+  const { section, x, y } = crosshairPoint
+  const rect =
+    crosshairBounds ?? (crosshairBounds = section.getBoundingClientRect())
+  // 只移动两条独立合成线，避免整个 Passion 子树重算样式和布局。
+  crosshairX.value.style.transform = `translate3d(${
+    x - rect.left - 0.5
+  }px, 0, 0)`
+  crosshairY.value.style.transform = `translate3d(0, ${
+    y - rect.top - 0.5
+  }px, 0)`
+  section.classList.add('is-crosshair-active')
+}
 const { cancel: cancelCrosshairUpdate, schedule: scheduleCrosshairUpdate } =
-  useFrameTask(() => {
-    if (!crosshairPoint) return
-    const { section, x, y } = crosshairPoint
-    const rect =
-      crosshairBounds ?? (crosshairBounds = section.getBoundingClientRect())
-    // 只移动两条独立合成线，避免继承变量使整个 Passion 子树重算样式和布局。
-    if (crosshairX.value)
-      crosshairX.value.style.transform = `translate3d(${
-        x - rect.left - 0.5
-      }px, 0, 0)`
-    if (crosshairY.value)
-      crosshairY.value.style.transform = `translate3d(0, ${
-        y - rect.top - 0.5
-      }px, 0)`
-  })
-const updatePassionCrosshair = (event: MouseEvent) => {
-  crosshairPoint = {
-    section: event.currentTarget as HTMLElement,
-    x: event.clientX,
-    y: event.clientY,
+  useFrameTask(renderPassionCrosshair)
+const updatePassionCrosshair = (event: PointerEvent) => {
+  if (event.pointerType === 'touch') return
+  const section = event.currentTarget as HTMLElement
+  const wasActive = section.classList.contains('is-crosshair-active')
+  crosshairPoint = { section, x: event.clientX, y: event.clientY }
+  // 入场时可能错过 pointerenter；首次移动也能恢复，先定位再显示。
+  if (!wasActive) {
+    crosshairBounds = section.getBoundingClientRect()
+    renderPassionCrosshair()
+    return
   }
   scheduleCrosshairUpdate()
 }
 
-const showPassionCrosshair = (event: MouseEvent) => {
-  const section = event.currentTarget as HTMLElement
-  crosshairBounds = section.getBoundingClientRect()
-  section.classList.add('is-crosshair-active')
-  updatePassionCrosshair(event)
-}
-
-const hidePassionCrosshair = (event: MouseEvent) => {
-  const section = event.currentTarget as HTMLElement
+const hidePassionCrosshair = () => {
   cancelCrosshairUpdate()
   crosshairPoint = null
   crosshairBounds = null
-  section.classList.remove('is-crosshair-active')
+  passionRef.value?.classList.remove('is-crosshair-active')
 }
+useEventListener('blur', hidePassionCrosshair)
 
 // Parsing belongs to locale changes, not repeated component renders.
 const changelogs = computed(() =>
@@ -221,6 +219,38 @@ const changelogs = computed(() =>
     details: log.details.map(parseMarkedText),
   }))
 )
+const activeChangelog = ref('')
+const changelogId = (version: string) =>
+  `changelog-${version.replace(/[^a-zA-Z0-9-]/g, '-')}`
+const updateActiveChangelog = () => {
+  const container = panelScrollRef.value
+  if (!container || visibleAboutPanel.value !== 'changelog') return
+  const entries = Array.from(
+    container.querySelectorAll<HTMLElement>('[data-changelog-version]')
+  )
+  const top = container.getBoundingClientRect().top
+  const current = entries.filter(
+    (entry) => entry.getBoundingClientRect().top <= top + 32
+  )
+  activeChangelog.value =
+    (current[current.length - 1] ?? entries[0])?.dataset.changelogVersion ?? ''
+}
+const jumpToChangelog = (version: string) => {
+  const container = panelScrollRef.value
+  const entry = container?.querySelector<HTMLElement>(
+    `#${changelogId(version)}`
+  )
+  if (!container || !entry) return
+  container.scrollTo({
+    top:
+      container.scrollTop +
+      entry.getBoundingClientRect().top -
+      container.getBoundingClientRect().top -
+      18,
+    behavior: 'auto',
+  })
+  activeChangelog.value = version
+}
 const neighbors = computed(() =>
   (tm('about.dynamic.neighbours') as NeighbourItem[]).map((neighbor) => ({
     ...neighbor,
@@ -253,12 +283,13 @@ const roadmapItems = computed(() =>
 
         <section
           ref="passionRef"
-          class="passion-section no-cursor no-rem"
+          class="passion-section no-rem"
           :class="{ 'is-motion-paused': passionMotionPaused }"
           :aria-label="t('about.brandColorName')"
-          @mouseenter="showPassionCrosshair"
-          @mousemove="updatePassionCrosshair"
-          @mouseleave="hidePassionCrosshair"
+          @pointerenter="updatePassionCrosshair"
+          @pointermove="updatePassionCrosshair"
+          @pointerleave="hidePassionCrosshair"
+          @pointercancel="hidePassionCrosshair"
           @click="handlePassionClick"
         >
           <div class="passion-back" />
@@ -301,7 +332,10 @@ const roadmapItems = computed(() =>
 
       <div
         class="about-update-dock about-panel-dock no-rem"
-        :class="{ 'is-crew-panel': panelLayout === 'crew' }"
+        :class="{
+          'is-crew-panel': panelLayout === 'crew',
+          'is-changelog-panel': panelLayout === 'changelog',
+        }"
         :style="{
           ...panelAnchorStyle,
           '--program-layout-width': `${panelLayoutWidth}px`,
@@ -362,6 +396,7 @@ const roadmapItems = computed(() =>
                 ref="panelScrollRef"
                 class="update-program__body-content"
                 data-lenis-nested-scroll
+                @scroll.passive="updateActiveChangelog"
               >
                 <div
                   v-if="visibleAboutPanel === 'changelog'"
@@ -370,12 +405,18 @@ const roadmapItems = computed(() =>
                 >
                   <section
                     v-for="log in changelogs"
+                    :id="changelogId(log.version)"
                     :key="log.version"
+                    :data-changelog-version="log.version"
                     class="update-program__entry"
                   >
                     <div class="update-program__meta">
                       <strong>{{ log.version }}</strong>
-                      <span v-if="log.codename">{{ log.codename }}</span>
+                      <span
+                        v-if="log.codename"
+                        class="update-program__codename"
+                        >{{ log.codename }}</span
+                      >
                       <time :datetime="log.date">{{ log.date }}</time>
                     </div>
                     <h3>{{ log.title }}</h3>
@@ -559,6 +600,33 @@ const roadmapItems = computed(() =>
                   <p class="staff-credits__closing">DRIVEN BY PASSION.</p>
                 </div>
               </div>
+              <nav
+                v-if="visibleAboutPanel === 'changelog'"
+                class="update-program__navigation"
+                :aria-label="
+                  locale === 'en' ? 'Version navigation' : '版本快捷导航'
+                "
+                data-lenis-nested-scroll
+              >
+                <button
+                  v-for="log in changelogs"
+                  :key="log.version"
+                  type="button"
+                  :aria-controls="changelogId(log.version)"
+                  :aria-current="
+                    (activeChangelog || changelogs[0]?.version) === log.version
+                      ? 'location'
+                      : undefined
+                  "
+                  @click="jumpToChangelog(log.version)"
+                >
+                  <strong>{{ log.version }}</strong>
+                  <span v-if="log.codename" class="update-program__codename"
+                    >★ {{ log.codename }}</span
+                  >
+                  <time :datetime="log.date">{{ log.date }}</time>
+                </button>
+              </nav>
               <PageScrollProgress
                 embedded
                 color="#E23456"

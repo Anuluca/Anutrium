@@ -162,12 +162,12 @@ test('module changes after simple entrance retain their colour animation', async
   expect(result.original).toBe('#3276fe')
   await expect(page.locator('.temple-stage')).toHaveAttribute(
     'data-statue-label-color',
-    '#8b5cc7',
+    '#c44129',
     { timeout: 10000 }
   )
   expect(
     result.colors.some(
-      (color) => color !== result.original && color !== '#8b5cc7'
+      (color) => color !== result.original && color !== '#c44129'
     )
   ).toBe(true)
 })

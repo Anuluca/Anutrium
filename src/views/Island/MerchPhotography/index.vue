@@ -655,8 +655,8 @@ onUnmounted(() => {
     grid-column: 1 / -1;
     --row-shelf-translate: var(--row-shelf-translate-desktop, 0px);
     height: 90px;
-    margin-right: calc(0px - var(--grid-side-padding));
-    margin-left: calc(0px - var(--grid-side-padding));
+    margin-right: calc(var(--grid-side-padding) * -1);
+    margin-left: calc(var(--grid-side-padding) * -1);
     pointer-events: none;
     transform: translateY(var(--row-shelf-translate));
 

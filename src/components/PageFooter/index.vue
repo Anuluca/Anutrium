@@ -1,6 +1,24 @@
 <template>
-  <div v-bind="attrs" class="page-footer-anchor" aria-hidden="true" />
-  <Teleport v-if="isFooterPortalReady" to="#page-footer-portal">
+  <Transition v-if="props.variant === 'home'" name="home-footer-fade">
+    <footer
+      v-show="props.visible"
+      class="page-footer-home no-rem"
+      :style="footerStyle"
+    >
+      <div class="page-footer-home__social">
+        <FooterSocialLinks />
+      </div>
+      <div class="page-footer-home__legal">
+        <FooterLegalText kind="license" />
+        <FooterLegalText kind="copyright" />
+      </div>
+    </footer>
+  </Transition>
+  <div v-else v-bind="attrs" class="page-footer-anchor" aria-hidden="true" />
+  <Teleport
+    v-if="props.variant !== 'home' && isFooterPortalReady"
+    to="#page-footer-portal"
+  >
     <footer
       ref="footerRef"
       class="bottom-text"
@@ -54,25 +72,9 @@
                   />
                 </button>
               </div>
-              <p class="footer-license">
-                The copyright statement for articles and pictures: free to
-                reprint, non-commercial, non-derivative, with attribution (
-                <a
-                  class="license"
-                  data-magnetic
-                  href="https://creativecommons.org/licenses/by-nc-nd/3.0/cn/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Creative Commons 3.0 license
-                </a>
-                ).
-              </p>
+              <FooterLegalText kind="license" />
               <FooterSocialLinks />
-              <p class="footer-copyright">
-                Designed & Engineered by Anuluca. © 2018-2026 Anuluca. All
-                rights reserved.
-              </p>
+              <FooterLegalText kind="copyright" />
             </div>
           </div>
         </div>
@@ -89,14 +91,20 @@ import FooterSocialLinks from '@/components/FooterSocialLinks/index.vue'
 import Logo from '@/components/Logo/index.vue'
 import { addPageResizeListener } from '@/utils/pageScroll'
 
+import FooterLegalText from './FooterLegalText.vue'
+
 const router = useRouter()
 const attrs = useAttrs()
 const props = withDefaults(
   defineProps<{
+    variant?: 'default' | 'home'
+    visible?: boolean
     interactive?: boolean
   }>(),
   {
     interactive: true,
+    variant: 'default',
+    visible: true,
   }
 )
 
@@ -299,10 +307,12 @@ const handleLogoMouseLeave = () => {
 const toHome = () => router.push('/')
 
 onMounted(() => {
-  isFooterPortalReady.value = true
-  reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-  reducedMotionQuery.addEventListener('change', updateMotionState)
-  document.addEventListener('visibilitychange', updateMotionState)
+  if (props.variant !== 'home') {
+    isFooterPortalReady.value = true
+    reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+    reducedMotionQuery.addEventListener('change', updateMotionState)
+    document.addEventListener('visibilitychange', updateMotionState)
+  }
   removePageResizeListener = addPageResizeListener(scheduleStickyFooterSizeSync)
 
   nextTick(() => {
@@ -321,6 +331,11 @@ onMounted(() => {
       if (footerRef.value) resizeObserver.observe(footerRef.value)
       if (footerPanelRef.value) resizeObserver.observe(footerPanelRef.value)
       if (footerComElement) resizeObserver.observe(footerComElement)
+    }
+
+    if (props.variant === 'home') {
+      syncFooterComOffset()
+      return
     }
 
     if ('IntersectionObserver' in window && footerRef.value) {
@@ -600,23 +615,118 @@ onUnmounted(() => {
   * {
     font-family: 'Anton', sans-serif;
   }
-
-  .license {
-    color: inherit;
-    text-decoration: underline;
-    cursor: pointer;
-    transition: color 0.1s, background-color 0.1s;
-
-    &:hover {
-      color: #000;
-      background-color: var(--page-theme-color, #e23456);
-    }
-  }
 }
 
 @media screen and (max-aspect-ratio: 1) {
   .bottom-text {
     --footer-com-offset: 0px;
+  }
+}
+
+.page-footer-home.no-rem {
+  --home-footer-inset: max(
+    24px,
+    calc(var(--mobile-screen-frame-size, 0px) + 12px)
+  );
+  position: absolute;
+  inset: auto var(--home-footer-inset)
+    max(var(--home-footer-inset), calc(var(--footer-com-offset, 0px) + 8px));
+  z-index: 105;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: #fff;
+  pointer-events: none;
+}
+.page-footer-home.no-rem .page-footer-home__social {
+  width: max-content;
+  max-width: 100%;
+  pointer-events: auto;
+  :deep(.footer-social-links) {
+    --footer-social-link-opacity: 0.5;
+    justify-content: center;
+    margin: 0;
+    padding-left: 0;
+  }
+
+  :deep(.footer-social-links.is-switch-active) {
+    --footer-social-link-opacity: 0.8;
+  }
+}
+@media (hover: hover) and (pointer: fine) {
+  .page-footer-home.no-rem .page-footer-home__social:hover {
+    :deep(.footer-social-links) {
+      --footer-social-link-opacity: 0.8;
+    }
+  }
+}
+.page-footer-home.no-rem .page-footer-home__legal {
+  width: max-content;
+  max-width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  font-family: 'Anton', sans-serif;
+  font-weight: 400;
+  font-size: clamp(12px, 0.96vw, 16px);
+  line-height: 1.5;
+  text-align: center;
+  opacity: 0.1;
+  pointer-events: auto;
+  p {
+    margin: 0;
+    flex-shrink: 0;
+    width: max-content;
+    white-space: nowrap;
+  }
+}
+@media (max-width: 768px) {
+  .page-footer-home.no-rem .page-footer-home__social {
+    :deep(.footer-social-links) {
+      flex-wrap: wrap;
+    }
+  }
+  .page-footer-home.no-rem .page-footer-home__legal {
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    font-family: 'Anton', sans-serif;
+    font-size: 10px;
+    .footer-license {
+      font-size: 9px;
+    }
+    p {
+      width: 100%;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+    .footer-copyright {
+      font-size: clamp(8.5px, 2.65vw, 10px);
+    }
+  }
+}
+
+.page-footer-home.no-rem.home-footer-fade-enter-active,
+.page-footer-home.no-rem.home-footer-fade-leave-active {
+  transition: opacity 400ms ease;
+  pointer-events: none;
+  :deep(*) {
+    pointer-events: none;
+  }
+}
+.page-footer-home.no-rem.home-footer-fade-enter-from,
+.page-footer-home.no-rem.home-footer-fade-leave-to {
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-footer-home.no-rem.home-footer-fade-enter-active,
+  .page-footer-home.no-rem.home-footer-fade-leave-active {
+    transition-duration: 10ms;
   }
 }
 </style>

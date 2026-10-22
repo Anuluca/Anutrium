@@ -362,7 +362,10 @@
     }
     :deep(.temple-backdrop) {
       z-index: 2;
-      bottom: max(64px, calc(env(safe-area-inset-bottom) + 24px));
+      bottom: calc(
+        max(64px, calc(env(safe-area-inset-bottom) + 24px)) +
+          var(--temple-scene-rise) + 20px
+      );
       width: calc(100% - 32px);
       left: 16px;
     }

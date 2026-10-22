@@ -97,13 +97,7 @@ const mapPlaces = computed<MapPlaceGroup[]>(() => {
   return Array.from(places.values())
 })
 
-const getMapTileUrl = () =>
-  visualStateStore.theme === 'light'
-    ? 'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png'
-    : 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.jpg'
-
 const updateMapTheme = () => {
-  tileLayer?.setUrl(getMapTileUrl())
   const fillOpacity = visualStateStore.theme === 'light' ? 0.07 : 0.13
   visitedRegionLayers.forEach((layer) => layer.setStyle({ fillOpacity }))
 }
@@ -213,13 +207,15 @@ const initMap = (L: any) => {
     minZoom: 2,
     maxZoom: 8,
     zoomControl: false,
-    attributionControl: false,
+    attributionControl: true,
     scrollWheelZoom: false,
   })
   mapInstance = map
 
-  tileLayer = L.tileLayer(getMapTileUrl(), {
-    subdomains: 'abcd',
+  map.attributionControl.setPrefix(false)
+  tileLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors',
     maxZoom: 8,
   }).addTo(map)
 
@@ -436,12 +432,42 @@ onUnmounted(() => {
   flex-direction: column;
   gap: 3px;
   padding-left: 10px;
-  border-left: 10px solid #e23456;
-  color: @red;
+  border-left: 10px solid transparent;
+  color: fade(@red, 80%);
   font-family: 'UnboundedSans', monospace;
   font-size: 0.55rem;
   letter-spacing: 3px;
-  opacity: 0.8;
+  pointer-events: none;
+
+  &::before {
+    position: absolute;
+    top: -20px;
+    left: -30px;
+    z-index: -1;
+    width: calc(100% + 180px);
+    aspect-ratio: 2;
+    content: '';
+    -webkit-backdrop-filter: ~'blur(10PX)';
+    backdrop-filter: ~'blur(10PX)';
+    -webkit-mask-image: radial-gradient(
+      ellipse farthest-side at top left,
+      #000 45%,
+      transparent 100%
+    );
+    mask-image: radial-gradient(
+      ellipse farthest-side at top left,
+      #000 45%,
+      transparent 100%
+    );
+  }
+
+  &::after {
+    position: absolute;
+    inset: 0 auto 0 -10px;
+    width: 10px;
+    background: fade(@red, 80%);
+    content: '';
+  }
 
   &__cn {
     font-family: 'alibaba-puhuiti', sans-serif;
@@ -517,7 +543,19 @@ onUnmounted(() => {
 }
 
 .travel-map-shell :deep(.leaflet-tile) {
-  filter: brightness(0.7) saturate(0.5) hue-rotate(180deg) invert(0.05);
+  filter: grayscale(1) invert(1) brightness(0.7);
+}
+
+.travel-map-shell :deep(.leaflet-control-attribution) {
+  font-size: 6px;
+  background: var(--bg-color);
+  color: var(--text-color);
+  pointer-events: auto;
+
+  a {
+    color: inherit;
+    text-decoration: underline;
+  }
 }
 
 .travel-map-shell :deep(.leaflet-control-zoom a) {

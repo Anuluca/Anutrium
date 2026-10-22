@@ -1,13 +1,11 @@
 <template>
   <header class="detail-section-header">
-    <div class="detail-section-header__title">
-      <span class="detail-section-header__number">
-        <slot name="number" />
-      </span>
-      <span class="detail-section-header__label">
-        <slot name="title" />
-      </span>
-    </div>
+    <span class="detail-section-header__number">
+      <slot name="number" />
+    </span>
+    <span class="detail-section-header__label">
+      <slot name="title" />
+    </span>
 
     <strong v-if="$slots.meta" class="detail-section-header__meta">
       <slot name="meta" />
@@ -17,21 +15,14 @@
 
 <style lang="less" scoped>
 .detail-section-header {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
   margin-bottom: 20px;
   padding-bottom: 10px;
-  border-bottom: 1px solid
-    color-mix(in srgb, var(--page-theme-color, #e23456) 28%, transparent);
-
-  &__title {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-  }
 
   &__number {
+    justify-self: start;
     display: inline-flex;
     align-items: center;
     align-self: center;
@@ -50,7 +41,8 @@
   &__label {
     display: inline-flex;
     align-items: center;
-    margin-left: 5px;
+    justify-content: center;
+    text-align: center;
     color: var(--page-theme-color, #e23456);
     font-family: 'alibaba-puhuiti', sans-serif;
     font-size: 0.68rem;
@@ -62,6 +54,7 @@
   }
 
   &__meta {
+    justify-self: end;
     display: inline-flex;
     align-items: baseline;
     gap: 7px;

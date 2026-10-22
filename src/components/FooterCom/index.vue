@@ -4,7 +4,6 @@ import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 
 import ThemeToggle from '@/components/ThemeToggle/index.vue'
-import { useFrameTask } from '@/composables/useFrameTask'
 import { visualState } from '@/stores'
 import { getCardMobileThumbnailUrl } from '@/utils/imageVariant'
 import { persistLocale, type SiteLocale } from '@/utils/locale'
@@ -29,8 +28,12 @@ interface BottomLineData {
 }
 
 const props = withDefaults(
-  defineProps<{ entryActive?: boolean; entryOverlayActive?: boolean }>(),
-  { entryActive: false, entryOverlayActive: false }
+  defineProps<{
+    entryActive?: boolean
+    entryOverlayActive?: boolean
+    widthMode?: 'default' | 'wide'
+  }>(),
+  { entryActive: false, entryOverlayActive: false, widthMode: 'default' }
 )
 
 const { locale, tm } = useI18n()
@@ -64,13 +67,15 @@ const cancelFooterGeometryAnimation = () => {
   footerGeometryAnimations = []
   footerResizing.value = false
 }
-const { schedule: scheduleFooterGeometry } = useFrameTask(() => {
+const updateFooterGeometry = (previousGeometry?: DOMRect) => {
   const element = footerElement.value
   const content = footerContent.value
   if (!element || !content) return
-  const before = footerGeometryAnimations.length
-    ? element.getBoundingClientRect()
-    : footerGeometry
+  const before =
+    previousGeometry ??
+    (footerGeometryAnimations.length
+      ? element.getBoundingClientRect()
+      : footerGeometry)
   cancelFooterGeometryAnimation()
   const after = element.getBoundingClientRect()
   footerGeometry = after
@@ -120,7 +125,26 @@ const { schedule: scheduleFooterGeometry } = useFrameTask(() => {
         cancelFooterGeometryAnimation()
     })
     .catch(() => undefined)
-})
+}
+
+let previousWidthModeGeometry: DOMRect | undefined
+watch(
+  () => props.widthMode,
+  () => {
+    previousWidthModeGeometry = footerElement.value?.getBoundingClientRect()
+    cancelFooterGeometryAnimation()
+  },
+  { flush: 'pre' }
+)
+watch(
+  () => props.widthMode,
+  () => {
+    // DOM 更新后、浏览器绘制前应用反向变换，避免先显示终点再跳回起点。
+    updateFooterGeometry(previousWidthModeGeometry)
+    previousWidthModeGeometry = undefined
+  },
+  { flush: 'post' }
+)
 const marqueeTrack = ref<HTMLElement | null>(null)
 const marqueeViewport = ref<HTMLElement | null>(null)
 const marqueeCopies = ref(2)
@@ -195,7 +219,17 @@ onMounted(() => {
   nextTick(() => {
     footerGeometry = footerElement.value?.getBoundingClientRect()
     if (footerElement.value && 'ResizeObserver' in window) {
-      footerGeometryObserver = new ResizeObserver(scheduleFooterGeometry)
+      footerGeometryObserver = new ResizeObserver(([entry]) => {
+        const size = entry.borderBoxSize[0]
+        if (
+          size &&
+          footerGeometry &&
+          Math.abs(size.inlineSize - footerGeometry.width) < 0.1 &&
+          Math.abs(size.blockSize - footerGeometry.height) < 0.1
+        )
+          return
+        updateFooterGeometry()
+      })
       footerGeometryObserver.observe(footerElement.value)
     }
     scheduleMarqueeUpdate()
@@ -318,6 +352,7 @@ watch(() => route.fullPath, hidePreview)
     ref="footerElement"
     :class="{
       'footer-com': true,
+      'footer-wide': props.widthMode === 'wide',
       'footer-ready': footerReady,
       'footer-above-entry-overlay': props.entryOverlayActive,
       'footer-expanded': footerExpanded,

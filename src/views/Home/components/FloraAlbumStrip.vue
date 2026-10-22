@@ -1,14 +1,10 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import {
-  useDocumentVisibility,
-  useElementVisibility,
-  usePreferredReducedMotion,
-  useResizeObserver,
-} from '@vueuse/core'
+import { usePreferredReducedMotion, useResizeObserver } from '@vueuse/core'
 import { gsap } from 'gsap'
 
 import SafeImageViewer from '@/components/SafeImageViewer/index.vue'
+import { useDecorationActivity } from '@/composables/useDecorationActivity'
 import type { FloraMedia } from '@/utils/floratriumMedia'
 import {
   getCardMobileThumbnailUrl,
@@ -19,10 +15,10 @@ const props = defineProps<{ items: FloraMedia[]; title: string }>()
 const viewport = ref<HTMLElement | null>(null)
 const viewerIndex = ref<number | null>(null)
 const readyUrls = ref(new Set<string>())
-const visibility = useDocumentVisibility()
-const inView = useElementVisibility(viewport)
+const active = useDecorationActivity(viewport)
 const reducedMotion = usePreferredReducedMotion()
 const urls = computed(() => props.items.map((item) => item.url))
+const urlSet = computed(() => new Set(urls.value))
 const photos = computed(() =>
   props.items.map((item) => ({
     ...item,
@@ -32,8 +28,7 @@ const photos = computed(() =>
 )
 const running = computed(
   () =>
-    visibility.value === 'visible' &&
-    inView.value &&
+    active.value &&
     reducedMotion.value !== 'reduce' &&
     viewerIndex.value === null &&
     photos.value.length > 1 &&
@@ -50,18 +45,17 @@ let resizeTimer: ReturnType<typeof setTimeout> | undefined
 let pointerFrame: number | undefined
 let bounds: DOMRect | undefined
 let pointer: { x: number; y: number } | undefined
-let drag:
-  | { x: number; y: number; position: number; pointerId: number }
-  | undefined
+let drag: { x: number; y: number; position: number } | undefined
 let dragged = false
+let disposed = false
+let needsRebuild = true
 let geometry = {
+  width: 0,
   height: 0,
   x: 0,
   y: 0,
   stepX: 0,
   lower: -1.5,
-  leftSlot: -1,
-  rightSlot: 3,
 }
 const modulo = (value: number, length: number) =>
   ((value % length) + length) % length
@@ -80,13 +74,14 @@ const syncPlayback = () => {
 const updateMagnet = () => {
   const position = currentPosition()
   const { x, y, stepX } = geometry
+  const upper = maxSlot()
+  const total = duration()
   for (const [index, card] of cards) {
     let scale = 1
     if (pointer && reducedMotion.value !== 'reduce') {
       const relative =
-        maxSlot() -
-        modulo((maxSlot() - index + position) * itemDuration, duration()) /
-          itemDuration
+        upper -
+        modulo((upper - index + position) * itemDuration, total) / itemDuration
       // 水平队列没有纵深缩放，直接计算中心，避免逐张读取 DOM 几何。
       const distance = Math.hypot(
         pointer.x - (x + relative * stepX),
@@ -130,14 +125,21 @@ const moveBy = (amount: number) => {
   })
 }
 const rebuild = () => {
-  if (!viewport.value) return
+  if (disposed || !viewport.value) return
+  const width = viewport.value.clientWidth
+  const height = viewport.value.clientHeight
+  // About 的 v-show 会把尺寸暂时变成 0；保留旧动画，恢复时无需重建或丢失播放位置。
+  if (width <= 0 || height <= 0) return
+  if (!needsRebuild && geometry.width === width && geometry.height === height) {
+    syncPlayback()
+    return
+  }
+  needsRebuild = false
   const position = animations.length ? currentPosition() : 0
   tween?.kill()
   tween = undefined
   animations.splice(0).forEach((animation) => animation.cancel())
   bounds = viewport.value.getBoundingClientRect()
-  const width = viewport.value.clientWidth
-  const height = viewport.value.clientHeight
   const cardHeight = Math.min(height * 0.92, 320, width * 0.86)
   const cardWidth = Math.min(cardHeight * 0.75, width * 0.46)
   const x = width * 0.36
@@ -151,13 +153,12 @@ const rebuild = () => {
   const leftSlot = (edgeInset - x) / stepX - 0.4
   const rightSlot = (width - edgeInset - x) / stepX
   geometry = {
+    width,
     height,
     x,
     y: height * 0.5,
     stepX,
     lower: leftSlot - 1,
-    leftSlot,
-    rightSlot,
   }
   viewport.value.style.setProperty('--card-width', `${cardWidth}px`)
   viewport.value.style.setProperty('--card-height', `${cardHeight}px`)
@@ -165,38 +166,38 @@ const rebuild = () => {
   viewport.value.style.setProperty('--surfer-y', `${geometry.y}px`)
   if (reducedMotion.value === 'reduce' || photos.value.length < 2) return
   // 每张卡片只有一个原生合成动画；首尾在视口外渐隐后循环，无复制照片、逐帧 Vue 更新或长页面占位。
+  const upper = maxSlot()
+  const lower = geometry.lower
+  const fade = Math.min(0.55, (rightSlot - leftSlot) / 3)
+  const exitFade = Math.min(0.4, fade)
+  const samples = [
+    ...new Set([
+      upper,
+      rightSlot,
+      rightSlot - fade,
+      leftSlot + exitFade,
+      leftSlot,
+      lower,
+    ]),
+  ]
+    .filter((relative) => relative >= lower && relative <= upper)
+    .sort((a, b) => b - a)
+  const keyframes = samples.map((relative) => ({
+    offset: (upper - relative) / photos.value.length,
+    zIndex: Math.round((upper - relative) * 100),
+    visibility:
+      relative <= leftSlot || relative >= rightSlot ? 'hidden' : 'visible',
+    transform: `translate3d(${relative * geometry.stepX}px, 0px, 0px)`,
+    opacity: Math.max(
+      0,
+      Math.min(
+        1,
+        (rightSlot - relative) / fade,
+        (relative - leftSlot) / exitFade
+      )
+    ),
+  }))
   for (const [index, element] of positions) {
-    const upper = maxSlot()
-    const lower = geometry.lower
-    const fade = Math.min(0.55, (rightSlot - leftSlot) / 3)
-    const exitFade = Math.min(0.4, fade)
-    const samples = [
-      ...new Set([
-        upper,
-        rightSlot,
-        rightSlot - fade,
-        leftSlot + exitFade,
-        leftSlot,
-        lower,
-      ]),
-    ]
-      .filter((relative) => relative >= lower && relative <= upper)
-      .sort((a, b) => b - a)
-    const keyframes = samples.map((relative) => ({
-      offset: (upper - relative) / photos.value.length,
-      zIndex: Math.round((upper - relative) * 100),
-      visibility:
-        relative <= leftSlot || relative >= rightSlot ? 'hidden' : 'visible',
-      transform: `translate3d(${relative * geometry.stepX}px, 0px, 0px)`,
-      opacity: Math.max(
-        0,
-        Math.min(
-          1,
-          (rightSlot - relative) / fade,
-          (relative - leftSlot) / exitFade
-        )
-      ),
-    }))
     const animation = element.animate(keyframes, {
       duration: duration(),
       iterations: Infinity,
@@ -213,10 +214,14 @@ useResizeObserver(viewport, () => {
   resizeTimer = setTimeout(rebuild, 100)
 })
 watch(running, syncPlayback)
-watch(reducedMotion, rebuild)
+watch(reducedMotion, () => {
+  needsRebuild = true
+  rebuild()
+})
 watch(
   () => props.items,
   async () => {
+    needsRebuild = true
     viewerIndex.value = null
     readyUrls.value = new Set()
     await nextTick()
@@ -224,7 +229,7 @@ watch(
   }
 )
 const markReady = (url: string) => {
-  if (urls.value.includes(url)) readyUrls.value.add(url)
+  if (urlSet.value.has(url)) readyUrls.value.add(url)
 }
 const onWheel = (event: WheelEvent) => {
   if (reducedMotion.value === 'reduce') return
@@ -276,7 +281,6 @@ const onPointerDown = (event: PointerEvent) => {
     x: event.clientX,
     y: event.clientY,
     position: currentPosition(),
-    pointerId: event.pointerId,
   }
 }
 const endDrag = () => {
@@ -305,16 +309,22 @@ const onKeydown = (event: KeyboardEvent) => {
 }
 onMounted(() => nextTick(rebuild))
 onBeforeUnmount(() => {
+  disposed = true
   tween?.kill()
   clearTimeout(resizeTimer)
   if (pointerFrame !== undefined) cancelAnimationFrame(pointerFrame)
   // Vue 的卸载钩子早于离场动画结束；先固化位置，取消原生动画时照片才不会跳回原点。
-  for (const element of positions.values()) {
+  const snapshots = Array.from(positions.values(), (element) => {
     const style = getComputedStyle(element)
-    element.style.transform = style.transform
-    element.style.opacity = style.opacity
-    element.style.zIndex = style.zIndex
-  }
+    return {
+      element,
+      transform: style.transform,
+      opacity: style.opacity,
+      zIndex: style.zIndex,
+    }
+  })
+  for (const { element, ...style } of snapshots)
+    Object.assign(element.style, style)
   animations.forEach((animation) => animation.cancel())
 })
 </script>

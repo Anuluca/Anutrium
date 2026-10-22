@@ -7,6 +7,7 @@ import {
   ref,
 } from 'vue'
 
+import { useFloraProfileFit } from '../composables/useFloraProfileFit'
 import FloraAlbumGallery from './FloraAlbumGallery.vue'
 import FloraVideoGallery from './FloraVideoGallery.vue'
 
@@ -23,6 +24,7 @@ const emit = defineEmits<{
   (event: 'expanded-change', expanded: boolean): void
 }>()
 const viewport = ref<HTMLElement | null>(null)
+const profileViewport = ref<HTMLElement | null>(null)
 const expandedPanel = ref<Panel | null>(null)
 const layerPanel = ref<Panel | null>(null)
 const scrollOffset = ref(0)
@@ -37,6 +39,12 @@ const setPanelRef = (
   if (instance) panels[panel] = instance as PanelInstance
   else delete panels[panel]
 }
+
+useFloraProfileFit(
+  profileViewport,
+  () => props.mobile,
+  () => [props.petId, props.mobile, props.albumTitle, props.videoTitle]
+)
 
 let motion: Animation | undefined
 let motionVersion = 0
@@ -134,7 +142,9 @@ defineExpose({
     :style="{ '--flora-media-scroll-offset': `${scrollOffset}px` }"
     data-lenis-nested-scroll
   >
-    <slot name="profile" :media-active="layerPanel !== null" />
+    <div ref="profileViewport" class="flora-media-region__profile">
+      <slot name="profile" :media-active="layerPanel !== null" />
+    </div>
     <div class="flora-media-region__panels">
       <div
         v-for="panel in panelOrder"
@@ -186,22 +196,28 @@ defineExpose({
   display: grid;
   flex: 1;
   grid-template-rows:
-    minmax(max-content, auto)
+    minmax(0, 1fr)
     minmax(
-      calc(var(--flora-media-min-height) + var(--flora-media-heading-space)),
-      calc(var(--flora-media-max-height) + var(--flora-media-heading-space))
+      0,
+      min(
+        48%,
+        calc(var(--flora-media-max-height) + var(--flora-media-heading-space))
+      )
     );
   min-width: 0;
   min-height: 0;
   box-sizing: border-box;
-  overflow: auto;
+  overflow: visible;
   overscroll-behavior: contain;
   overflow-anchor: none;
   pointer-events: auto;
   scrollbar-width: thin;
 
-  &.is-layer-active {
-    overflow: hidden;
+  .flora-media-region__profile {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+    min-width: 0;
+    min-height: 0;
   }
 
   .flora-media-region__panels {
@@ -234,24 +250,45 @@ defineExpose({
   }
 
   &.flora-media-region--mobile {
-    --flora-media-title-size: 44px;
+    --flora-media-title-size: calc(44px * 2 / 3);
+    --flora-media-title-icon-offset: 0em;
+    --flora-media-heading-gap: 0px;
     --flora-media-title-overlap: 0px;
     --media-title-offset: 8px;
     display: flex;
     flex-direction: column;
+    // 扩展滚动容器顶部可视区域，内边距保持资料内容的原有位置。
+    margin-top: calc(-1 * var(--flora-stats-top-bleed, 0px));
+    padding-top: var(--flora-stats-top-bleed, 0px);
+    overflow: clip;
+
+    .flora-media-region__profile {
+      display: block;
+      flex: none;
+    }
 
     .flora-media-region__panels {
-      display: flex;
-      flex: none;
-      flex-direction: column;
-      gap: 12px;
+      display: grid;
+      flex: 1;
+      grid-template-columns: minmax(0, 1fr);
+      // 扣除标题后，媒体内容本体按视频 2、相册 3 分配。
+      grid-template-rows:
+        minmax(
+          0,
+          calc(
+            (100% - 2 * var(--flora-media-heading-space)) * 2 / 5 +
+              var(--flora-media-heading-space)
+          )
+        )
+        minmax(0, 1fr);
+      gap: 0;
+      min-width: 0;
       min-height: 0;
       max-height: none;
     }
 
     .flora-media-region__slot {
-      flex: none;
-      height: calc(170px + var(--flora-media-heading-space));
+      height: auto;
     }
 
     :deep(.flora-media-panel.is-layer-panel) {

@@ -1,6 +1,75 @@
 @import url(./font.less);
 @import url(./variables.less);
 
+body .el-message {
+  --el-message-padding: 13px 18px;
+  --el-message-close-size: 18px;
+  border-radius: 0;
+  gap: 10px;
+  font-family: 'alibaba-puhuiti', sans-serif;
+  font-weight: 900;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+    animation: anutrium-message-flash 240ms steps(1, end);
+  }
+
+  .el-message__content {
+    font-size: 16px;
+  }
+
+  .el-message__icon {
+    font-size: 18px;
+  }
+
+  .el-message__badge {
+    --el-badge-font-size: 14px;
+    --el-badge-padding: 7px;
+    --el-badge-size: 21px;
+    top: -9px;
+    right: -9px;
+  }
+
+  .el-message__badge,
+  .el-badge__content {
+    border-radius: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &::after {
+      animation: none;
+    }
+  }
+}
+
+@keyframes anutrium-message-flash {
+  0%,
+  40% {
+    opacity: 0.85;
+  }
+  20%,
+  60%,
+  100% {
+    opacity: 0;
+  }
+}
+
+// 路由切换进度条复用当前页面主题色，覆盖 nprogress 的固定蓝色。
+#nprogress {
+  .bar {
+    background: var(--page-theme-color, #e23456);
+  }
+
+  .peg {
+    box-shadow: 0 0 10px var(--page-theme-color, #e23456);
+  }
+}
+
 :where(button, a[href], [role='button']):focus {
   outline: none !important;
 }
@@ -181,8 +250,8 @@ body:has(.flora-focus-layout--mobile.is-album-expanded) {
   .el-image-viewer__mask {
     background: rgb(0 0 0 / 88%);
     opacity: 1;
-    -webkit-backdrop-filter: blur(calc(14 * 1px));
-    backdrop-filter: blur(calc(14 * 1px));
+    -webkit-backdrop-filter: blur(14PX);
+    backdrop-filter: blur(14PX);
   }
   .el-image-viewer__progress {
     padding: 6px 12px;
@@ -242,14 +311,14 @@ body:has(.flora-focus-layout--mobile.is-album-expanded) {
     left: 0;
     border-left: 0;
     &::before {
-      top: calc(-16 * 1px);
-      right: calc(-16 * 1px);
+      top: -16PX;
+      right: -16PX;
       border-top-width: 2px;
       border-right-width: 2px;
     }
     &::after {
-      bottom: calc(-16 * 1px);
-      right: calc(-16 * 1px);
+      bottom: -16PX;
+      right: -16PX;
       border-bottom-width: 2px;
       border-right-width: 2px;
     }
@@ -266,26 +335,26 @@ body:has(.flora-focus-layout--mobile.is-album-expanded) {
     right: 0;
     border-right: 0;
     &::before {
-      top: calc(-16 * 1px);
-      left: calc(-16 * 1px);
+      top: -16PX;
+      left: -16PX;
       border-top-width: 2px;
       border-left-width: 2px;
     }
     &::after {
-      bottom: calc(-16 * 1px);
-      left: calc(-16 * 1px);
+      bottom: -16PX;
+      left: -16PX;
       border-bottom-width: 2px;
       border-left-width: 2px;
     }
   }
   .el-image-viewer__close {
     z-index: 3;
-    top: calc(24 * 1px);
-    right: calc(24 * 1px);
-    width: calc(28 * 1px);
-    height: calc(28 * 1px);
-    font-size: calc(24 * 1px);
-    border: calc(2 * 1px) solid var(--viewer-accent);
+    top: 24PX;
+    right: 24PX;
+    width: 28PX;
+    height: 28PX;
+    font-size: 24PX;
+    border: 2PX solid var(--viewer-accent);
     transform: rotate(45deg);
     box-shadow: none;
     .el-icon {
@@ -503,15 +572,15 @@ body:has(.flora-focus-layout--mobile.is-album-expanded) {
       &::before {
         top: auto;
         right: auto;
-        bottom: calc(-16 * 1px);
-        left: calc(-16 * 1px);
+        bottom: -16PX;
+        left: -16PX;
         border-width: 0 0 2px 2px;
       }
       &::after {
         top: auto;
         left: auto;
-        bottom: calc(-16 * 1px);
-        right: calc(-16 * 1px);
+        bottom: -16PX;
+        right: -16PX;
         border-width: 0 2px 2px 0;
       }
     }
@@ -530,15 +599,15 @@ body:has(.flora-focus-layout--mobile.is-album-expanded) {
       &::before {
         bottom: auto;
         right: auto;
-        top: calc(-16 * 1px);
-        left: calc(-16 * 1px);
+        top: -16PX;
+        left: -16PX;
         border-width: 2px 0 0 2px;
       }
       &::after {
         bottom: auto;
         left: auto;
-        top: calc(-16 * 1px);
-        right: calc(-16 * 1px);
+        top: -16PX;
+        right: -16PX;
         border-width: 2px 2px 0 0;
       }
     }
@@ -1100,8 +1169,8 @@ body .el-message-box {
   box-shadow: none;
   font-family: 'alibaba-puhuiti', sans-serif;
   font-weight: 900;
-  // 1px 不参与全站 rem 转换，确保提示文字保持可读的 18px。
-  font-size: calc(18 * 1px);
+  // 大写 PX 不参与全站 rem 转换，确保提示文字保持可读的 18px。
+  font-size: 18PX;
   line-height: 1.5;
   letter-spacing: -0.03em;
   transform-origin: center center;

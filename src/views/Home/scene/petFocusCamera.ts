@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 
+import { FLORA_MOBILE_FOCUS_VIEW_RATIO } from '@/config/floraLayout'
 import { type PetProfile, pets } from '@/locales/dynamic/pets'
 import type { FloraPetModelAsset } from '@/utils/floraPetModel'
 
@@ -134,7 +135,7 @@ export function createPetFocusCamera() {
       Math.max(focusSize.y, focusSize.x / camera.aspect) /
         (2 *
           Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) *
-          (mobile ? 0.22 : 0.45)) +
+          (mobile ? FLORA_MOBILE_FOCUS_VIEW_RATIO : 0.45)) +
       focusSize.z / 2
     const pitch = THREE.MathUtils.degToRad(currentPet.focusPitch)
     // 镜头方位独立于模型旋转，旋转宠物不会把镜头一起带到背面。
@@ -246,7 +247,7 @@ export function createPetFocusCamera() {
         Math.max(refFinalSize.y, refFinalSize.x / camera.aspect) /
           (2 *
             Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) *
-            (mobile ? 0.22 : 0.45)) +
+            (mobile ? FLORA_MOBILE_FOCUS_VIEW_RATIO : 0.45)) +
         refFinalSize.z / 2
       const extent =
         measure(

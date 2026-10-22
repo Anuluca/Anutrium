@@ -1168,7 +1168,7 @@ test('module colors synchronize the page and model and all crystals remain hover
   if (!testInfo.project.name.includes('mobile')) {
     for (const [id, color, index] of [
       ['archive', '#3276fe', 0],
-      ['flanerie', '#8b5cc7', 1],
+      ['flanerie', '#c44129', 1],
       ['island', '#ce4c87', 3],
       ['pokeyard', '#f1c640', 2],
     ] as const) {
@@ -1185,7 +1185,7 @@ test('module colors synchronize the page and model and all crystals remain hover
   }
   for (const [id, color] of [
     ['archive', '#3276fe'],
-    ['flanerie', '#8b5cc7'],
+    ['flanerie', '#c44129'],
     ['island', '#ce4c87'],
   ] as const) {
     await page
@@ -1512,7 +1512,7 @@ test('focused modules tint the half-screen zodiac and rotate to their configured
   await expect(chart).toHaveClass(/is-red-layout/)
   for (const [id, glyph, color] of [
     ['archive', '♒︎', '#3276fe'],
-    ['flanerie', '♐︎', '#8b5cc7'],
+    ['flanerie', '♐︎', '#c44129'],
     ['island', '♓︎', '#ce4c87'],
     ['pokeyard', '♌︎', '#f1c640'],
   ]) {
@@ -1828,7 +1828,7 @@ test('switching focus during submenu exit cancels the pending return', async ({
   await expect(page.locator('.journey-content')).toBeVisible()
   await expect(page.locator('.temple-stage')).toHaveAttribute(
     'data-theme-color',
-    '#8b5cc7'
+    '#c44129'
   )
 })
 

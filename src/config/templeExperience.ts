@@ -30,7 +30,6 @@ export interface TempleExperience {
   model: TempleModelDefinition
   headache?: {
     mode: 'normal' | 'headache'
-    count?: number
     bodyTwist: number
     upperArmTwist: number
     forearmTwist: number

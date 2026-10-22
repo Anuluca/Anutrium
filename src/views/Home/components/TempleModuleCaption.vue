@@ -59,8 +59,8 @@ const footerOffset = useFooterViewportOffset()
   line-height: 1;
   letter-spacing: -0.08em;
   opacity: 0.6;
-  -webkit-mask-image: linear-gradient(to top, #000, rgba(0, 0, 0, calc(1 / 6)));
-  mask-image: linear-gradient(to top, #000, rgba(0, 0, 0, calc(1 / 6)));
+  -webkit-mask-image: linear-gradient(to top, #000, rgba(0, 0, 0, 0.166667));
+  mask-image: linear-gradient(to top, #000, rgba(0, 0, 0, 0.166667));
   transform: scaleX(1.3);
   transform-origin: left bottom;
   pointer-events: none;

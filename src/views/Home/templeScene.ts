@@ -6,10 +6,14 @@ import {
   FLORA_LAYOUT_BOTTOM_GAP,
   FLORA_LAYOUT_GAP,
   FLORA_MOBILE_CHARACTER_HEIGHT_RATIO,
+  FLORA_MOBILE_FOCUS_SCENE_RISE,
   FLORA_MOBILE_MODEL_HEIGHT_RATIO,
   FLORA_MODEL_CENTER_X,
 } from '@/config/floraLayout'
-import { templeCamera } from '@/config/templeCamera'
+import {
+  getTempleSceneVerticalOffset,
+  templeCamera,
+} from '@/config/templeCamera'
 import {
   type TempleExperience,
   templeExperience,
@@ -30,10 +34,7 @@ import {
 import { subscribePointerSamples } from '@/utils/pointerSamples'
 import { preloadTempleAssets } from '@/utils/preloadTempleAssets'
 import { createSceneMatrixUpdater } from '@/utils/sceneMatrixUpdater'
-import {
-  createHeadacheLabelCanvas,
-  getTempleLabelCanvas,
-} from '@/utils/templeLabelTextures'
+import { getTempleLabelCanvas } from '@/utils/templeLabelTextures'
 
 import {
   createObeliskBaseGeometry,
@@ -72,7 +73,6 @@ interface TempleCallbacks {
 
 const MAX_RENDER_PIXELS = 2048 * 2048
 const DIAGNOSTIC_INTERVAL = 100
-const SCENE_VERTICAL_OFFSET = templeCamera.verticalOffset
 const INNER_OBELISK_ADVANCE = 3
 const INNER_STATUE_RETREAT = 5
 const OBELISK_SCALE = new THREE.Vector3(1.28, 1.22, 1.28)
@@ -112,6 +112,9 @@ export function createHomeTemple(
   simpleEntrance = false,
   initialPet: PetProfile = pets[0]
 ) {
+  const sceneVerticalOffset = getTempleSceneVerticalOffset(
+    config.id === 'mobile'
+  )
   let currentPet = initialPet
   let petChangeRevision = 0
   let petFadingOut = false
@@ -267,7 +270,7 @@ export function createHomeTemple(
     if (config.id !== 'mobile')
       return {
         x: FLORA_MODEL_CENTER_X - 0.5 + offsetX,
-        y: -SCENE_VERTICAL_OFFSET + 0.05,
+        y: -sceneVerticalOffset + 0.05,
       }
     // 以导航和页脚之间的实际可用高度构图；模型中心下移少许，为上方编号留空间。
     const stageTop = stage.getBoundingClientRect().top
@@ -290,7 +293,7 @@ export function createHomeTemple(
       y:
         (top + characterHeight * FLORA_MOBILE_MODEL_HEIGHT_RATIO) / viewHeight -
         0.5 -
-        SCENE_VERTICAL_OFFSET,
+        sceneVerticalOffset,
     }
   }
   const applyViewOffset = () => {
@@ -300,7 +303,10 @@ export function createHomeTemple(
       viewWidth,
       viewHeight,
       -viewWidth * focusFraming.x,
-      -viewHeight * (SCENE_VERTICAL_OFFSET + focusFraming.y),
+      -viewHeight * (sceneVerticalOffset + focusFraming.y) +
+        (config.id === 'mobile'
+          ? FLORA_MOBILE_FOCUS_SCENE_RISE * sprigatitoFocus.value
+          : 0),
       viewWidth,
       viewHeight
     )
@@ -735,6 +741,7 @@ export function createHomeTemple(
   const statueZ = -1.8
   const sleepingSprigatito = new THREE.Group()
   let reflectedSprigatito: THREE.Object3D | undefined
+  const petReflectionOpacity = config.id === 'mobile' ? 0.125 : 0.25
   // 手机端前排石柱更靠近镜头，将新叶喵适当收小、前移，保留完整睡姿。
   const sprigatitoForwardOffset = config.id === 'mobile' ? 6 : 3.2
   sleepingSprigatito.position.set(
@@ -830,42 +837,6 @@ export function createHomeTemple(
   )
   pedestalParts.forEach((value) => value.dispose())
   scene.add(pedestal)
-  const headacheCount = headache?.count
-  const headacheCaption =
-    headacheEnabled && Number.isSafeInteger(headacheCount) && headacheCount! > 0
-      ? `这是路卡的第${headacheCount}次头疼发作...`
-      : ''
-  const headacheCaptionMaterial = headacheCaption
-    ? material(
-        new THREE.MeshStandardMaterial({
-          map: labelTexture(createHeadacheLabelCanvas(headacheCaption)),
-          transparent: true,
-          depthWrite: false,
-          roughness: 1,
-          emissive: '#fff3f5',
-          emissiveIntensity: 0.35,
-          toneMapped: false,
-        })
-      )
-    : null
-  if (headacheCaptionMaterial) {
-    const caption = new THREE.Mesh(
-      geometry(new THREE.PlaneGeometry(4.2, 0.328125)),
-      headacheCaptionMaterial
-    )
-    // 贴在底座正面并避开右侧花花，作为子节点参与运镜、环境淡出和资源释放。
-    caption.position.set(-0.7, 0.42, 1.605)
-    caption.name = 'headache-caption'
-    pedestal.add(caption)
-  }
-  if (headacheCaption)
-    renderer.domElement.setAttribute(
-      'aria-label',
-      `${model.label}三维模型，${headacheCaption}`
-    )
-  stage.dataset.headacheCaption = headacheCaption
-  stage.dataset.headacheCount =
-    headacheCount === undefined ? '' : String(headacheCount)
   const statueGlow = new THREE.Mesh(
     geometry(new THREE.PlaneGeometry(10, 8)),
     material(
@@ -1023,7 +994,6 @@ export function createHomeTemple(
   // 原底座和倒影一起渐隐，保存原透明度，退出聚焦时可从当前帧连续恢复。
   const baseMaterials = new Set<THREE.MeshStandardMaterial>([
     plinthMaterial,
-    ...(headacheCaptionMaterial ? [headacheCaptionMaterial] : []),
     ...obelisks.map((item) => item.baseMaterial),
   ])
   const fadingBaseMaterials = [
@@ -1037,14 +1007,13 @@ export function createHomeTemple(
   }))
   // 淡化期间保持深度写入方式不变；完全透明的片元直接丢弃，避免残留遮挡。
   for (const entry of fadingBaseMaterials) entry.value.alphaTest = 0.0001
-  const statueLabelReveal = { value: config.id === 'mobile' ? 1 : 0 }
+  const statueLabelReveal = { value: 0 }
   const statueLabelFocus = { value: 0 }
   let statueLabelTarget = statueLabelReveal.value
   let statueLabelMotionStart = statueLabelReveal.value
   let statueLabelMotionTime = 0
   const syncStatueLabelTarget = (now: number) => {
     const target =
-      config.id === 'mobile' ||
       selected === 'statue' ||
       returningStatue ||
       statueView.mix > 0 ||
@@ -1568,12 +1537,12 @@ export function createHomeTemple(
     if (reflectedSprigatitoSurface) {
       reflectedSprigatitoSurface.visible = sprigatitoWireMix < 1
       reflectedSprigatitoSurface.material.opacity =
-        0.25 * (1 - sprigatitoWireMix) * petVisibility.value
+        petReflectionOpacity * (1 - sprigatitoWireMix) * petVisibility.value
     }
     if (reflectedSprigatitoWire) {
       reflectedSprigatitoWire.visible = sprigatitoWireMix > 0
       reflectedSprigatitoWire.material.opacity =
-        0.25 * sprigatitoWireMix * petVisibility.value
+        petReflectionOpacity * sprigatitoWireMix * petVisibility.value
     }
     if (reflectedSprigatitoWireDepth)
       reflectedSprigatitoWireDepth.visible =
@@ -3578,7 +3547,7 @@ export function createHomeTemple(
         )
         sprigatitoWire.name = 'sprigatito-wire'
         updatePetSize(sleepingModel)
-        reflectedSprigatito = mirror(sleepingSprigatito, 0.25)
+        reflectedSprigatito = mirror(sleepingSprigatito, petReflectionOpacity)
         reflectedSprigatitoSurface = reflectedSprigatito.getObjectByName(
           'sprigatito-surface'
         ) as THREE.Mesh

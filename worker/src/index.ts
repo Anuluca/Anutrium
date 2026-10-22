@@ -1,4 +1,5 @@
 import { handleAnalytics } from './analytics'
+import { handleFloraLikes } from './floraLikes'
 import { handleFloraMedia } from './floratrium'
 import { fetchGitHubContributions } from './github'
 import { handleHomeFeatures } from './homeFeatures'
@@ -9,6 +10,8 @@ import {
   withCors,
 } from './http'
 import { fetchSteamProfile } from './steam'
+
+export { FloraLikes } from './floraLikes'
 
 const PROFILE_CACHE_VERSION = '2'
 const GITHUB_CONTRIBUTIONS_CACHE_VERSION = '1'
@@ -67,6 +70,16 @@ const worker: ExportedHandler<Env> = {
         headers: getCorsHeaders(origin, allowedOrigins),
       })
     }
+
+    if (
+      url.pathname === '/floratrium/likes' ||
+      url.pathname === '/admin/floratrium/likes'
+    )
+      return withCors(
+        await handleFloraLikes(request, env),
+        origin,
+        allowedOrigins
+      )
 
     // 管理写入只在这个独立端点开放，其余既有接口继续只读。
     if (

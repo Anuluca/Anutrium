@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import ModalWrapper from '@/components/ModalWrapper/index.vue'
 import { petMoves } from '@/locales/dynamic/petMoves'
 
+import { useFloraMoveNameFit } from '../composables/useFloraMoveNameFit'
 import FloraExpandButton from './FloraExpandButton.vue'
 import FloraMoveCard from './FloraMoveCard.vue'
 
@@ -16,6 +17,12 @@ const forgottenTitle = computed(() =>
   language.value === 'en' ? 'Forgotten moves' : '已遗忘的招式'
 )
 const expanded = ref(false)
+const panel = ref<HTMLElement | null>(null)
+useFloraMoveNameFit(
+  panel,
+  () => props.mobile,
+  () => [props.petId, props.mobile, language.value]
+)
 watch(
   () => props.petId,
   () => {
@@ -27,12 +34,13 @@ watch(
 <template>
   <section
     v-if="collection"
+    ref="panel"
     class="flora-moves no-rem"
     :aria-label="language === 'en' ? 'Moves' : '招式'"
   >
     <ul class="flora-moves__list">
-      <li v-for="move in collection.current" :key="move.id">
-        <FloraMoveCard :move="move" />
+      <li v-for="(move, index) in collection.current" :key="move.id">
+        <FloraMoveCard :move="move" :enter-index="index" />
       </li>
     </ul>
     <FloraExpandButton
@@ -93,8 +101,12 @@ watch(
 }
 .flora-moves.no-rem {
   --flora-move-scale: var(--flora-profile-move-scale, 1.5);
-  --flora-scanline-gap: calc(1px / var(--flora-move-scale));
-  --flora-scanline-period: calc(3px / var(--flora-move-scale));
+  --flora-scanline-gap: calc(
+    var(--flora-detail-scanline-gap, 1px) / var(--flora-move-scale)
+  );
+  --flora-scanline-period: calc(
+    var(--flora-detail-scanline-period, 3px) / var(--flora-move-scale)
+  );
   position: relative;
   display: flow-root;
   opacity: 0.4;
@@ -106,8 +118,13 @@ watch(
     --flora-toggle-color: #000;
     --flora-toggle-background: repeating-linear-gradient(
       to bottom,
-      color-mix(in srgb, var(--flora-toggle-color) 45%, transparent) 0
-        var(--flora-scanline-gap),
+      color-mix(
+          in srgb,
+          var(--flora-toggle-color)
+            calc(var(--flora-detail-scanline-opacity, 0.45) * 100%),
+          transparent
+        )
+        0 var(--flora-scanline-gap),
       var(--flora-toggle-color) var(--flora-scanline-gap)
         var(--flora-scanline-period)
     );
@@ -126,12 +143,14 @@ watch(
     :deep(span) {
       -webkit-mask-image: repeating-linear-gradient(
         to bottom,
-        rgb(0 0 0 / 45%) 0 var(--flora-scanline-gap),
+        rgb(0 0 0 / var(--flora-detail-scanline-opacity, 0.45)) 0
+          var(--flora-scanline-gap),
         #000 var(--flora-scanline-gap) var(--flora-scanline-period)
       );
       mask-image: repeating-linear-gradient(
         to bottom,
-        rgb(0 0 0 / 45%) 0 var(--flora-scanline-gap),
+        rgb(0 0 0 / var(--flora-detail-scanline-opacity, 0.45)) 0
+          var(--flora-scanline-gap),
         #000 var(--flora-scanline-gap) var(--flora-scanline-period)
       );
       -webkit-text-fill-color: transparent;
@@ -148,14 +167,22 @@ watch(
     }
   }
   @media (max-width: 767px) {
+    button.flora-moves__toggle {
+      --flora-move-scale: 1;
+      zoom: 1;
+    }
+
     .flora-moves__list {
-      gap: 20px 8px;
+      gap: 5px 8px;
     }
   }
 }
 .flora-moves-modal.no-rem {
   padding: 24px;
   @media (max-width: 767px) {
+    --flora-detail-scanline-opacity: 0.8;
+    --flora-scanline-gap: 0.5px;
+    --flora-scanline-period: 1.5px;
     padding: 16px 8px;
   }
 }

@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n'
 
 import { moveTypes, type PetMove } from '@/locales/dynamic/petMoves'
 
-const props = defineProps<{ move: PetMove }>()
+const props = defineProps<{ move: PetMove; enterIndex?: number }>()
 const { locale } = useI18n()
 const language = computed(() => (locale.value === 'en' ? 'en' : 'zhCn'))
 const type = computed(() => moveTypes[props.move.type])
@@ -13,7 +13,11 @@ const type = computed(() => moveTypes[props.move.type])
 <template>
   <div
     class="flora-move-card no-rem is-clickable"
-    :style="{ '--move-color': type.color }"
+    :class="{ 'has-entrance': enterIndex !== undefined }"
+    :style="{
+      '--move-color': type.color,
+      '--move-enter-index': enterIndex ?? 0,
+    }"
     :data-move-type="move.type"
   >
     <strong class="flora-move-card__name"
@@ -26,6 +30,15 @@ const type = computed(() => moveTypes[props.move.type])
 
 <style scoped lang="less">
 .flora-move-card.no-rem {
+  --move-name-duration: 220ms;
+  --move-detail-duration: 550ms;
+  --move-enter-step: calc(
+    var(--move-name-duration) + var(--move-detail-duration) + 30ms
+  );
+  --move-enter-delay: calc(var(--move-enter-index) * var(--move-enter-step));
+  --move-detail-delay: calc(
+    var(--move-enter-delay) + var(--move-name-duration)
+  );
   position: relative;
   isolation: isolate;
   display: flex;
@@ -45,19 +58,21 @@ const type = computed(() => moveTypes[props.move.type])
   .flora-move-card__pp {
     -webkit-mask-image: repeating-linear-gradient(
       to bottom,
-      rgb(0 0 0 / 45%) 0 var(--flora-scanline-gap, 1px),
+      rgb(0 0 0 / var(--flora-detail-scanline-opacity, 0.45)) 0
+        var(--flora-scanline-gap, 1px),
       #000 var(--flora-scanline-gap, 1px) var(--flora-scanline-period, 3px)
     );
     mask-image: repeating-linear-gradient(
       to bottom,
-      rgb(0 0 0 / 45%) 0 var(--flora-scanline-gap, 1px),
+      rgb(0 0 0 / var(--flora-detail-scanline-opacity, 0.45)) 0
+        var(--flora-scanline-gap, 1px),
       #000 var(--flora-scanline-gap, 1px) var(--flora-scanline-period, 3px)
     );
   }
   .flora-move-card__type,
   .flora-move-card__pp {
-    -webkit-text-fill-color: transparent;
-    -webkit-text-stroke: 0.6px currentColor;
+    -webkit-text-fill-color: currentColor;
+    -webkit-text-stroke: 0;
   }
   &::before,
   &::after {
@@ -68,13 +83,15 @@ const type = computed(() => moveTypes[props.move.type])
     -webkit-mask-image: linear-gradient(to right, transparent, #000 45%),
       repeating-linear-gradient(
         to bottom,
-        rgb(0 0 0 / 45%) 0 var(--flora-scanline-gap, 1px),
+        rgb(0 0 0 / var(--flora-detail-scanline-opacity, 0.45)) 0
+          var(--flora-scanline-gap, 1px),
         #000 var(--flora-scanline-gap, 1px) var(--flora-scanline-period, 3px)
       );
     mask-image: linear-gradient(to right, transparent, #000 45%),
       repeating-linear-gradient(
         to bottom,
-        rgb(0 0 0 / 45%) 0 var(--flora-scanline-gap, 1px),
+        rgb(0 0 0 / var(--flora-detail-scanline-opacity, 0.45)) 0
+          var(--flora-scanline-gap, 1px),
         #000 var(--flora-scanline-gap, 1px) var(--flora-scanline-period, 3px)
       );
     -webkit-mask-composite: source-in;
@@ -84,10 +101,12 @@ const type = computed(() => moveTypes[props.move.type])
     content: '';
   }
   &::before {
+    --move-enter-opacity: 0.2;
     background: var(--move-color);
     opacity: 0.2;
   }
   &::after {
+    --move-enter-opacity: 0.5;
     border: 1px solid var(--move-color);
     opacity: 0.5;
   }
@@ -141,6 +160,19 @@ const type = computed(() => moveTypes[props.move.type])
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
+  &.has-entrance {
+    .flora-move-card__name > span {
+      animation: flora-move-name-enter var(--move-name-duration) ease
+        var(--move-enter-delay) backwards;
+    }
+    &::before,
+    &::after,
+    .flora-move-card__type,
+    .flora-move-card__pp {
+      animation: flora-move-details-enter var(--move-detail-duration)
+        cubic-bezier(0.22, 1, 0.36, 1) var(--move-detail-delay) backwards;
+    }
+  }
   @media (hover: hover) and (pointer: fine) {
     &:hover {
       &::before {
@@ -161,31 +193,60 @@ const type = computed(() => moveTypes[props.move.type])
     }
   }
   @media (max-width: 767px) {
-    height: 44px;
+    height: 22px;
     .flora-move-card__name {
-      font-size: 62px;
+      font-size: clamp(22px, 6vw, 28px);
+      -webkit-text-stroke-width: 0.7px;
+      transform: none;
     }
     .flora-move-card__type {
-      min-width: 36px;
-      padding: 3px 4px;
-      margin-left: 4px;
-      font-size: 10px;
+      min-width: 32px;
+      padding: 2px 3px;
+      margin-left: 2px;
+      font-size: 9px;
     }
     .flora-move-card__pp {
       width: 64px;
-      margin-left: 4px;
-      padding: 6px 9px 6px 16px;
+      margin-left: 2px;
+      padding: 0 9px 0 16px;
       font-size: 14px;
       clip-path: polygon(14px 0, 100% 0, 100% 100%, 0 100%);
     }
   }
   @media (prefers-reduced-motion: reduce) {
+    &.has-entrance {
+      &::before,
+      &::after,
+      .flora-move-card__name > span,
+      .flora-move-card__type,
+      .flora-move-card__pp {
+        animation: none;
+      }
+    }
     &,
     &::before,
     &::after,
     .flora-move-card__type {
       transition: none;
     }
+  }
+}
+@keyframes flora-move-name-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes flora-move-details-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-48px);
+  }
+  to {
+    opacity: var(--move-enter-opacity, 1);
+    transform: translateX(0);
   }
 }
 </style>

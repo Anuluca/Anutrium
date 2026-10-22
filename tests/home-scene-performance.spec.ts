@@ -169,6 +169,45 @@ test('about overlay pauses the covered home scene and resumes after closing', as
   )
 })
 
+test('About pauses the covered pet album and resumes its existing animations', async ({
+  page,
+}) => {
+  test.setTimeout(60000)
+  await page.route('https://assets.anuluca.com/Floratrium/**', (route) =>
+    route.fulfill({
+      contentType: 'image/svg+xml',
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="300" height="400"><rect width="300" height="400" fill="#e23456"/></svg>',
+    })
+  )
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await page.goto('/floratrium', { waitUntil: 'domcontentloaded' })
+  const strip = page.locator('.flora-album-strip')
+  await expect(strip).toHaveClass(/is-running/, { timeout: 45000 })
+  await expect(page.locator('.entry-overlay-container')).toHaveCount(0, {
+    timeout: 20000,
+  })
+  const position = strip.locator('.flora-album-strip__position').first()
+  const animation = await position.evaluateHandle((el) => el.getAnimations()[0])
+  await openHomeAboutOverlay(page)
+  await expect(page.locator('.about-overlay .about-page')).toBeVisible()
+  await expect
+    .poll(() => animation.evaluate((value) => value.playState))
+    .toBe('paused')
+  const time = await animation.evaluate((value) => Number(value.currentTime))
+  await page.waitForTimeout(250)
+  expect(await animation.evaluate((value) => Number(value.currentTime))).toBe(
+    time
+  )
+  await page.keyboard.press('Escape')
+  await expect(page.locator('.about-overlay')).toHaveCount(0)
+  await expect
+    .poll(() => animation.evaluate((value) => value.playState))
+    .toBe('running')
+  await expect
+    .poll(() => animation.evaluate((value) => Number(value.currentTime)))
+    .not.toBe(time)
+})
+
 test('head-only focus motion does not rewrite pillar hit regions', async ({
   page,
 }) => {

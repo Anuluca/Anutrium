@@ -82,7 +82,7 @@
     flex: 1 1 auto;
     width: 100%;
     height: auto;
-    margin: clamp(12px, 2dvh, 20px) 0 0;
+    margin: clamp(6px, 1dvh, 10px) 0 0;
     aspect-ratio: 2.7 / 1;
   }
 }
@@ -98,7 +98,7 @@
   > .passion-section {
     flex: 1 1 0;
     aspect-ratio: auto;
-    margin: 0;
+    margin: clamp(12px, 2dvh, 20px) 0 0;
     overflow: clip;
   }
 }
@@ -1109,6 +1109,20 @@
     height: 36px;
   }
 
+  &.is-changelog-panel .about-update-dock__panel {
+    .update-program__navigation,
+    .update-program__navigation * {
+      font-family: 'alibaba-puhuiti', sans-serif;
+      font-weight: 900;
+    }
+
+    .update-program__navigation .update-program__codename {
+      font-family: 'UnboundedSans', sans-serif;
+      font-weight: 400;
+      font-style: italic;
+    }
+  }
+
   &.is-crew-panel {
     left: auto;
     right: 28px;
@@ -1292,6 +1306,12 @@
   }
 
   .update-program__body.is-changelog {
+    --version-nav-width: 184px;
+
+    .update-program__body-content {
+      width: calc(var(--program-layout-width) - var(--version-nav-width) - 2px);
+    }
+
     &::before,
     &::after {
       position: absolute;
@@ -1561,6 +1581,54 @@
     font-weight: 900;
   }
 
+  .update-program__navigation {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    width: var(--version-nav-width);
+    height: var(--program-open-height);
+    overflow: auto;
+    overscroll-behavior: contain;
+    border-left: 1px solid var(--program-accent);
+    padding: 12px;
+
+    button {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: baseline;
+      gap: 5px 4px;
+      width: 100%;
+      padding: 12px 8px;
+      border: 0;
+      border-bottom: 1px solid
+        color-mix(in srgb, var(--program-ink) 20%, transparent);
+      background: transparent;
+      color: var(--program-ink);
+      text-align: left;
+
+      &:hover,
+      &[aria-current='location'] {
+        color: var(--program-accent);
+      }
+    }
+
+    strong {
+      font-size: 16px;
+    }
+    span {
+      justify-self: end;
+      white-space: nowrap;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    time {
+      grid-column: 1 / -1;
+      font-size: 12px;
+      opacity: 0.7;
+    }
+  }
+
   @media (max-width: 768px) {
     --program-open-height: 55dvh;
 
@@ -1599,6 +1667,29 @@
 
     .update-program__body-content {
       padding: 14px 18px 26px;
+    }
+
+    .update-program__body.is-changelog {
+      --version-nav-width: 108px;
+
+      .update-program__body-content {
+        padding-inline: 12px;
+      }
+    }
+
+    .update-program__navigation {
+      padding: 6px;
+
+      button {
+        padding: 10px 2px;
+      }
+      strong {
+        font-size: 13px;
+      }
+      span,
+      time {
+        font-size: 10px;
+      }
     }
 
     .update-program__entry h3 {

@@ -1,4 +1,4 @@
-import { isHomeFeatures, type HomeFeatures } from '@/types/homeFeatures'
+import { type HomeSceneFeatures, parseHomeFeatures } from '@/types/homeFeatures'
 
 const endpoint =
   import.meta.env.VITE_HOME_FEATURES_URL ||
@@ -8,7 +8,7 @@ const endpoint =
 
 export async function readHomeFeatures(
   signal?: AbortSignal
-): Promise<HomeFeatures | null> {
+): Promise<HomeSceneFeatures | null> {
   const controller = new AbortController()
   const abort = () => controller.abort()
   signal?.addEventListener('abort', abort, { once: true })
@@ -22,7 +22,7 @@ export async function readHomeFeatures(
     })
     if (!response.ok) return null
     const config: unknown = await response.json()
-    return isHomeFeatures(config) ? config : null
+    return parseHomeFeatures(config)
   } catch {
     return null
   } finally {

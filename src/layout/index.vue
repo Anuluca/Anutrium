@@ -7,7 +7,11 @@
       'entry-logo-ready': headerLogoReady,
       'temple-header-default': templeHeaderDefault,
       'temple-header-balanced':
-        isTempleRoute && !isMobile && !templeHeaderDefault,
+        isTempleRoute &&
+        !isMobile &&
+        !templeHeaderDefault &&
+        !isInitialAboutOpen,
+      'initial-about-open': isInitialAboutOpen,
       'no-menu': noMenuShellActive,
     }"
   >
@@ -22,13 +26,25 @@
       @click="dismissTempleFocusFromHeader"
     >
       <span class="header-hover-overlay" aria-hidden="true" />
-      <button
+      <div
         class="logo-box"
-        type="button"
-        :aria-label="locale === 'en' ? 'Return home' : '返回首页'"
         @click="returnHome"
+        @pointerover="rotateBrandIcon"
+        @pointerout="rotateBrandIcon"
       >
-        <Logo id="0" class="logo" :active="false" data-entry-logo-target />
+        <button
+          class="header-home-link"
+          type="button"
+          :aria-label="locale === 'en' ? 'Return home' : '返回首页'"
+        >
+          <Logo
+            id="0"
+            class="logo"
+            :active="false"
+            :style="{ '--brand-icon-rotation': `${brandIconRotation}deg` }"
+            data-entry-logo-target
+          />
+        </button>
         <Transition name="header-fade">
           <span
             v-if="
@@ -41,33 +57,43 @@
                 isTempleRoute && !isMobile && !showHeaderTitle,
             }"
           >
-            <span class="site-brand">Anutrium</span>
+            <button class="site-brand header-home-link" type="button">
+              Anutrium
+            </button>
             <Transition name="module-name" mode="out-in" :duration="560">
-              <span
+              <component
+                :is="moduleReturnPath ? RouterLink : 'span'"
                 v-if="displayedHeader.moduleName"
                 :key="displayedHeader.moduleName"
+                :to="moduleReturnPath || undefined"
                 :class="[
                   'current-module-name',
+                  { 'current-module-name--link': moduleReturnPath },
                   displayedHeader.moduleTheme &&
                     `current-module-name--${displayedHeader.moduleTheme}`,
                 ]"
+                @click="moduleReturnPath && $event.stopPropagation()"
               >
-                <span
-                  v-for="(character, index) in splitModuleName(
-                    displayedHeader.moduleName
-                  )"
-                  :key="`${character}:${index}`"
-                  class="module-name-character"
-                  :style="{
-                    '--module-character-delay': `${index * 24}ms`,
-                  }"
-                  >{{ character === ' ' ? '\u00a0' : character }}</span
-                >
-              </span>
+                <TextRoll
+                  v-if="moduleReturnPath"
+                  :text="displayedHeader.moduleName"
+                />
+                <template v-else>
+                  <span
+                    v-for="(character, index) in moduleNameCharacters"
+                    :key="`${character}:${index}`"
+                    class="module-name-character"
+                    :style="{
+                      '--module-character-delay': `${index * 24}ms`,
+                    }"
+                    >{{ character === ' ' ? '\u00a0' : character }}</span
+                  >
+                </template>
+              </component>
             </Transition>
           </span>
         </Transition>
-      </button>
+      </div>
 
       <Transition name="header-fade">
         <nav
@@ -84,8 +110,15 @@
             <li
               v-for="item in items"
               :key="item.id"
+              :aria-hidden="
+                isTempleRoute && item.id === 'about' ? true : undefined
+              "
               :class="[
                 'desktop-menu-item',
+                {
+                  'menu-about-placeholder':
+                    isTempleRoute && item.id === 'about',
+                },
                 item.id.toUpperCase(),
                 {
                   'is-active': activeNavigation === item.id,
@@ -95,6 +128,7 @@
               ]"
             >
               <button
+                v-if="!isTempleRoute || item.id !== 'about'"
                 type="button"
                 class="temple-nav-action"
                 :class="{
@@ -130,6 +164,26 @@
             </li>
           </ul>
         </nav>
+      </Transition>
+
+      <Transition name="home-corner-fade">
+        <button
+          v-if="!isMobile && showHomeAboutAction"
+          class="temple-nav-action home-about-action no-rem"
+          :class="{
+            'is-about-open': navigation.aboutOpen,
+            'is-initial-scene':
+              !navigation.activeSelection && !navigation.aboutOpen,
+          }"
+          type="button"
+          data-temple-nav="about"
+          :aria-label="locale === 'en' ? 'About' : '关于'"
+          :aria-pressed="navigation.aboutOpen"
+          :disabled="!navigation.ready"
+          @click="activateNavigation('about')"
+        >
+          <InfoFilled class="about-info-icon" aria-hidden="true" />
+        </button>
       </Transition>
     </header>
 
@@ -272,7 +326,7 @@
             </button>
           </div>
           <div class="mobile-menu-social-links" @click.stop>
-            <FooterSocialLinks />
+            <FooterSocialLinks v-if="!isTempleRoute" />
           </div>
           <div class="about-me">© 2018-2026 ANULUCA</div>
           <div class="mobile-footer-left" />
@@ -316,7 +370,9 @@
         route.path === '/about' || navigation.aboutOpen ? '#E23456' : undefined
       "
     />
+    <AboutOverlay v-if="!isTempleRoute" viewport />
     <button
+      v-if="!isMobile"
       class="fullscreen"
       type="button"
       :aria-label="locale === 'en' ? 'Toggle fullscreen' : '切换全屏'"
@@ -337,7 +393,7 @@ import {
   watch,
 } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute, useRouter } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { InfoFilled } from '@element-plus/icons-vue'
 
 import BackToTop from '@/components/BackToTop/index.vue'
@@ -346,11 +402,17 @@ import Logo from '@/components/Logo/index.vue'
 import MenuToggleIcon from '@/components/MenuToggleIcon/index.vue'
 import PageScrollProgress from '@/components/PageScrollProgress/index.vue'
 import TextRoll from '@/components/TextRoll/index.vue'
+import { useFrameTask } from '@/composables/useFrameTask'
 import { HOME_RETURN_TO_PASSION_EVENT } from '@/config/homeNavigation'
 import { isTempleMutedMenuItem } from '@/config/templeModelDisplay'
 import {
+  templeDesktopMenuGroups,
+  templeMobileMenuItems as mobileMenuItems,
+  templeModulePaths,
   templeNavigation,
+  templeNavigationById,
   type TempleNavigationId,
+  templeParentModule,
 } from '@/config/templeNavigation'
 import {
   finishRouteCursorLoading,
@@ -370,13 +432,18 @@ import {
   addPageScrollListener,
   getPageMaxScrollTop,
   getPageScrollTop,
-  scrollPageTo,
 } from '@/utils/pageScroll'
-import { setSmoothScrollLocked } from '@/utils/smoothScroll'
 import { ensureLightThemeStyles } from '@/utils/themeStyles'
+
+import { useMobileMenu } from './useMobileMenu'
+import { useRouteShellGeometry } from './useRouteShellGeometry'
+import { useTempleHeaderMotion } from './useTempleHeaderMotion'
 
 const FooterSocialLinks = defineAsyncComponent(
   () => import('@/components/FooterSocialLinks/index.vue')
+)
+const AboutOverlay = defineAsyncComponent(
+  () => import('@/views/About/AboutOverlay.vue')
 )
 
 const { locale } = useI18n()
@@ -397,6 +464,22 @@ const props = defineProps({
 const emit = defineEmits<{
   routeTransitionComplete: []
 }>()
+const layoutPage = ref<HTMLElement | null>(null)
+const brandIconRotation = ref(0)
+const rotateBrandIcon = (event: PointerEvent) => {
+  const isBrandTarget = (target: EventTarget | null) =>
+    target instanceof Element && Boolean(target.closest('.header-home-link'))
+  if (
+    event.pointerType === 'touch' ||
+    !isBrandTarget(event.target) ||
+    isBrandTarget(event.relatedTarget) ||
+    !window.matchMedia(
+      '(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)'
+    ).matches
+  )
+    return
+  brandIconRotation.value -= 360
+}
 const headerBottom = ref(0)
 const routeEntryActive = ref(false)
 provide('route-entry-active', routeEntryActive)
@@ -423,13 +506,12 @@ const isHomeRoute = computed(() => route.name === 'TEST2')
 const isTempleRoute = computed(() => route.name === 'HOME')
 const navigation = useTempleNavigation()
 const floraPets = useFloraPets()
+const isInitialAboutOpen = computed(
+  () =>
+    isTempleRoute.value && navigation.aboutOpen && !navigation.activeSelection
+)
 const dismissTempleFocusFromHeader = (event: MouseEvent) => {
-  if (
-    !isTempleRoute.value ||
-    !navigation.activeSelection ||
-    navigation.aboutOpen
-  )
-    return
+  if (!isTempleRoute.value) return
   if (
     event.target instanceof Element &&
     event.target.closest(
@@ -437,19 +519,23 @@ const dismissTempleFocusFromHeader = (event: MouseEvent) => {
     )
   )
     return
+  if (navigation.aboutOpen) {
+    navigation.request('about')
+    return
+  }
+  if (!navigation.activeSelection) return
   if (!navigation.closeInlineDetail()) navigation.request(null)
 }
 const wantsNavigation = computed(
   () =>
     !isTempleRoute.value || !!navigation.activeSelection || navigation.aboutOpen
 )
-const templeHeaderDefault = ref(!wantsNavigation.value)
-const navigationRevealed = ref(wantsNavigation.value)
 const showNavigation = computed(
   () =>
     wantsNavigation.value &&
     navigationRevealed.value &&
-    navigationEntryReady.value
+    navigationEntryReady.value &&
+    !isInitialAboutOpen.value
 )
 // 标题随聚焦立即淡入，路由入口继续等待 Logo 移动完成。
 const showHeaderTitle = computed(() =>
@@ -461,7 +547,6 @@ watch(
   [
     isTempleRoute,
     () => navigation.activeModule,
-    () => navigation.aboutOpen,
     () => navigation.companionFocused,
     () => floraPets.activePet.themeColor,
   ],
@@ -517,9 +602,9 @@ const headerPresentation = computed(() => {
       contentAligned: false,
       moduleName: navigation.aboutOpen
         ? 'ABOUT'
-        : templeNavigation.find(
-            (item) => item.id === navigation.activeSelection
-          )?.title || '',
+        : navigation.activeSelection
+        ? templeNavigationById.get(navigation.activeSelection)?.title || ''
+        : '',
       moduleTheme: '',
     }
   return {
@@ -530,146 +615,52 @@ const headerPresentation = computed(() => {
     moduleTheme: moduleThemeByPath[modulePath] || '',
   }
 })
-// 退出时保留文字布局，Logo 独立移动，避免渐隐中的菜单位置跳变。
-const lastTempleHeader = ref(headerPresentation.value)
-const displayedHeader = computed(() =>
-  isTempleRoute.value ? lastTempleHeader.value : headerPresentation.value
+const { templeHeaderDefault, navigationRevealed, displayedHeader } =
+  useTempleHeaderMotion({
+    root: layoutPage,
+    isTempleRoute,
+    wantsNavigation,
+    presentation: headerPresentation,
+  })
+const moduleNameCharacters = computed(() =>
+  Array.from(displayedHeader.value.moduleName)
 )
-let logoMotion: Animation | undefined
-let logoCentering = false
-let headerMotionRevision = 0
-const moveTempleLogo = async (centered: boolean) => {
-  const revision = ++headerMotionRevision
-  const logo = document.querySelector<HTMLElement>('.logo-box .logo')
-  const before = logo?.getBoundingClientRect()
-  logoMotion?.cancel()
-  logoCentering = centered
-  if (!centered) templeHeaderDefault.value = false
-  await nextTick()
-  if (!logo || !before || revision !== headerMotionRevision) return
-  const after = logo.getBoundingClientRect()
-  let targetX = after.x
-  let targetY = after.y
-  if (centered) {
-    // 回正布局清除负上边距；直接补偿居中对齐偏移，避免临时 display:none 中断标题渐隐。
-    const marginTop = parseFloat(
-      getComputedStyle(logo.parentElement!).marginTop
-    )
-    targetX = (window.innerWidth - after.width) / 2
-    targetY = after.y - marginTop / 2
-  }
-  const animation = logo.animate(
-    [
-      {
-        transform: `translate(${before.x - after.x}px, ${
-          before.y - after.y
-        }px)`,
-      },
-      {
-        transform: centered
-          ? `translate(${targetX - after.x}px, ${targetY - after.y}px)`
-          : 'none',
-      },
-    ],
-    {
-      duration: matchMedia('(prefers-reduced-motion: reduce)').matches
-        ? 1
-        : 2000,
-      easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
-      fill: 'forwards',
-    }
-  )
-  logoMotion = animation
-  try {
-    await animation.finished
-  } catch {
-    return false
-  }
-  if (revision !== headerMotionRevision) return false
-  if (centered) {
-    templeHeaderDefault.value = true
-    await nextTick()
-    if (revision !== headerMotionRevision) return false
-    logoCentering = false
-  }
-  animation.cancel()
-  return true
-}
-const centerTempleLogo = () => {
-  if (
-    isTempleRoute.value &&
-    !wantsNavigation.value &&
-    !templeHeaderDefault.value &&
-    !logoCentering
-  )
-    moveTempleLogo(true)
-}
-watch(
-  [wantsNavigation, headerPresentation],
-  async ([visible, presentation]) => {
-    if (visible) {
-      lastTempleHeader.value = presentation
-      if (templeHeaderDefault.value || logoCentering) {
-        navigationRevealed.value = false
-        if (await moveTempleLogo(false))
-          navigationRevealed.value = wantsNavigation.value
-      } else navigationRevealed.value = true
-    }
-    if (!visible) {
-      navigationRevealed.value = false
-      centerTempleLogo()
-    }
-    if (!isTempleRoute.value) {
-      templeHeaderDefault.value = false
-      navigationRevealed.value = true
-    }
-  }
-)
-onUnmounted(() => {
-  headerMotionRevision++
-  logoMotion?.cancel()
-})
-const splitModuleName = (moduleName: string) => Array.from(moduleName)
 const isInnerMenuRoute = computed(
   () =>
     typeof route.meta.activeMenu === 'string' &&
     normalizeMenuPath(route.path) !== currentRouter.value
 )
-const layoutPage = ref<HTMLElement | null>(null)
+const moduleReturnPath = computed(() => {
+  if (isTempleRoute.value) return null
+  const parent = templeParentModule(route.path)
+  return parent
+    ? templeModulePaths[parent]
+    : isInnerMenuRoute.value
+    ? currentRouter.value
+    : null
+})
 const routerContainer = ref<HTMLElement | null>(null)
 const isScrolled = ref(false)
 const layoutShow = ref(false)
 const theme = computed(() => visualStateStore.theme)
-const menuItems = templeNavigation
-const menuItemById = new Map(menuItems.map((item) => [item.id, item]))
-const mobileMenuItems = [
-  menuItemById.get('statue')!,
-  menuItemById.get('sprigatito')!,
-  ...menuItems.filter((item) => !['statue', 'sprigatito'].includes(item.id)),
-]
-const balancedMenuItems = (
-  [
-    'archive',
-    'flanerie',
-    'statue',
-    'about',
-    'sprigatito',
-    'pokeyard',
-    'island',
-  ] as const
-).map((id) => menuItemById.get(id)!)
+const routeMenuGroups = [templeNavigation]
 const desktopMenuGroups = computed(() =>
-  isTempleRoute.value
-    ? [balancedMenuItems.slice(0, 4), balancedMenuItems.slice(4)]
-    : [menuItems]
+  isTempleRoute.value ? templeDesktopMenuGroups : routeMenuGroups
 )
 const activeNavigation = computed(() =>
   route.path === '/about' || navigation.aboutOpen
     ? 'about'
     : navigation.activeSelection
 )
+const showHomeAboutAction = computed(
+  () => isTempleRoute.value && navigation.entranceFinished
+)
 const activateNavigation = async (id: TempleNavigationId) => {
   closeMobileMenu()
+  if (id === 'about') {
+    navigation.request(id)
+    return
+  }
   if (!isTempleRoute.value) {
     await router.push('/')
     // 详情离场会写入旅程返回标记；菜单已指定目标，不再恢复旅程位置。
@@ -696,22 +687,21 @@ const noMenuShellActive = ref(!!route.meta?.noMenu)
 let pendingNoMenuShell = noMenuShellActive.value
 
 const isMobile = computed(() => visualStateStore.deviceType !== 'desktop')
-const isMobileMenuOpen = ref(false)
-const isMobileMenuMounted = ref(false)
-const isMobileMenuClosing = ref(false)
-let isMobileScrollLocked = false
-let lockedMobileScrollY = 0
+const {
+  isMobileMenuOpen,
+  isMobileMenuMounted,
+  isMobileMenuClosing,
+  toggleMobileMenu,
+  closeMobileMenu,
+} = useMobileMenu(isMobile)
 let removePageScrollListener: (() => void) | null = null
 let removePageScrollEndListener: (() => void) | null = null
 let removePageResizeListener: (() => void) | null = null
 let pageResizeObserver: ResizeObserver | null = null
 let headerResizeObserver: ResizeObserver | null = null
-let pageMetricsFrameId: number | null = null
 let backgroundTopInsetTimer: number | null = null
 let headerScrolledTimer: number | null = null
 let headerScrollLayoutActivatedAt: number | null = null
-let mobileMenuOpenFrameId: number | null = null
-let mobileMenuUnmountTimer: number | null = null
 
 let documentScrollTop = 0
 let scrollProgress = 0
@@ -720,7 +710,7 @@ let documentHeaderScrollProgress = 0
 let renderedHeaderScrollProgress = ''
 let isHeaderFullyScrolled = false
 const isPageScrollable = ref(false)
-const headerElement = ref<{ $el?: HTMLElement } | HTMLElement | null>(null)
+const headerElement = ref<HTMLElement | null>(null)
 const pageScrollProgressElement = ref<{
   setProgress: (progress: number) => void
 } | null>(null)
@@ -737,49 +727,12 @@ const isHeaderScrollLayoutActive = ref(false)
 const isEntryContentRefreshing = ref(false)
 let logoTimer: number | null = null
 let navigationEntryTimer: number | null = null
-let islandGeometryUnlockTimer: number | null = null
-let removeRouteGeometryGuard: (() => void) | null = null
-let lockedIslandRouteGeometry: {
-  element: HTMLElement
-  position: string
-  top: string
-  left: string
-  width: string
-  height: string
-  margin: string
-} | null = null
-let lockedRouterContainerGeometry: {
-  position: string
-  top: string
-  left: string
-  width: string
-  height: string
-  margin: string
-} | null = null
 let hasPlayedEntryAnimation = false
-const ISLAND_ROUTE_NAME = 'TEST'
-const ISLAND_GEOMETRY_UNLOCK_DELAY = 260
 const ENTRY_LOGO_REVEAL_DELAY = 900
 const ENTRY_NAVIGATION_REVEAL_DELAY = 300
-const ENTRY_LOGO_REVEAL_DURATION = 300
 const HEADER_SCROLL_DISTANCE = 100
 const HEADER_SCROLL_PROGRESS_EPSILON = 0.001
 const HEADER_BACKGROUND_CUTOUT_DELAY = 260
-const MOBILE_MENU_EXIT_DURATION = 650
-const islandShellClasses = ['island-pc-shell', 'island-mobile-shell'] as const
-const islandLeavingClasses = [
-  'island-pc-shell-leaving',
-  'island-mobile-shell-leaving',
-] as const
-const routeShellClasses = [
-  ...islandShellClasses,
-  ...islandLeavingClasses,
-] as const
-const islandLeavingClassByRouteShell = {
-  'island-pc': 'island-pc-shell-leaving',
-  'island-mobile': 'island-mobile-shell-leaving',
-} as const
-
 const clearEntryAnimationTimers = () => {
   if (navigationEntryTimer !== null) {
     window.clearTimeout(navigationEntryTimer)
@@ -800,11 +753,8 @@ const startEntryAnimation = () => {
   layoutShow.value = props.contentActive
 
   logoTimer = window.setTimeout(() => {
+    logoTimer = null
     headerLogoReady.value = true
-
-    logoTimer = window.setTimeout(() => {
-      logoTimer = null
-    }, ENTRY_LOGO_REVEAL_DURATION)
   }, ENTRY_LOGO_REVEAL_DELAY)
 }
 
@@ -818,79 +768,6 @@ const toggleFullscreen = async () => {
   } catch (error) {
     console.error(`Error attempting to toggle fullscreen: ${error}`)
   }
-}
-
-const clearMobileMenuTimers = () => {
-  if (mobileMenuOpenFrameId !== null) {
-    window.cancelAnimationFrame(mobileMenuOpenFrameId)
-    mobileMenuOpenFrameId = null
-  }
-  if (mobileMenuUnmountTimer !== null) {
-    window.clearTimeout(mobileMenuUnmountTimer)
-    mobileMenuUnmountTimer = null
-  }
-}
-
-const openMobileMenu = async () => {
-  clearMobileMenuTimers()
-  isMobileMenuClosing.value = false
-  isMobileMenuMounted.value = true
-  await nextTick()
-  mobileMenuOpenFrameId = window.requestAnimationFrame(() => {
-    mobileMenuOpenFrameId = null
-    isMobileMenuOpen.value = true
-  })
-}
-
-const toggleMobileMenu = () => {
-  if (isMobileMenuOpen.value || mobileMenuOpenFrameId !== null) {
-    closeMobileMenu()
-    return
-  }
-
-  void openMobileMenu()
-}
-
-const closeMobileMenu = () => {
-  clearMobileMenuTimers()
-  isMobileMenuClosing.value = isMobileMenuOpen.value
-  isMobileMenuOpen.value = false
-  if (!isMobileMenuMounted.value) return
-
-  mobileMenuUnmountTimer = window.setTimeout(() => {
-    mobileMenuUnmountTimer = null
-    isMobileMenuMounted.value = false
-    isMobileMenuClosing.value = false
-  }, MOBILE_MENU_EXIT_DURATION)
-}
-
-const preventBackgroundTouchMove = (event: TouchEvent) => {
-  event.preventDefault()
-}
-
-const lockMobilePageScroll = () => {
-  if (isMobileScrollLocked) return
-
-  isMobileScrollLocked = true
-  lockedMobileScrollY = getPageScrollTop()
-  setSmoothScrollLocked('mobile-menu', true)
-  document.documentElement.classList.add('mobile-menu-scroll-locked')
-  document.body.classList.add('mobile-menu-scroll-locked')
-  document.addEventListener('touchmove', preventBackgroundTouchMove, {
-    passive: false,
-  })
-}
-
-const unlockMobilePageScroll = () => {
-  if (!isMobileScrollLocked) return
-
-  isMobileScrollLocked = false
-  const scrollY = lockedMobileScrollY
-  setSmoothScrollLocked('mobile-menu', false)
-  document.documentElement.classList.remove('mobile-menu-scroll-locked')
-  document.body.classList.remove('mobile-menu-scroll-locked')
-  document.removeEventListener('touchmove', preventBackgroundTouchMove)
-  scrollPageTo({ top: scrollY })
 }
 
 const clearHeaderScrolledTimer = () => {
@@ -945,14 +822,8 @@ const renderHeaderScrollProgress = (nextProgress: number) => {
   scheduleHeaderScrolledState()
 }
 
-const getHeaderElement = () => {
-  const target = headerElement.value
-  if (target instanceof HTMLElement) return target
-  return target?.$el instanceof HTMLElement ? target.$el : null
-}
-
 const syncHeaderBottom = () => {
-  const header = getHeaderElement()
+  const header = headerElement.value
   if (!header) return
 
   const baseBottom = header.offsetTop + header.offsetHeight
@@ -1025,8 +896,6 @@ const syncScrollState = () => {
   )
 }
 
-const handleScroll = () => syncScrollState()
-
 const refreshPageMetrics = () => {
   syncHeaderBottom()
   cachedPageMaxScrollTop = getPageMaxScrollTop()
@@ -1037,13 +906,8 @@ const refreshPageMetrics = () => {
   }
 }
 
-const schedulePageMetricsRefresh = () => {
-  if (pageMetricsFrameId !== null) return
-  pageMetricsFrameId = window.requestAnimationFrame(() => {
-    pageMetricsFrameId = null
-    refreshPageMetrics()
-  })
-}
+const { schedule: schedulePageMetricsRefresh } =
+  useFrameTask(refreshPageMetrics)
 
 const returnHome = () => {
   if (isTempleRoute.value) {
@@ -1071,120 +935,15 @@ const toggleTheme = async () => {
   visualStateStore.setTheme(nextTheme)
 }
 
-const clearIslandGeometryUnlockTimer = () => {
-  if (islandGeometryUnlockTimer === null) return
-
-  window.clearTimeout(islandGeometryUnlockTimer)
-  islandGeometryUnlockTimer = null
-}
-
-const hasIslandShellClass = () =>
-  routeShellClasses.some((className) =>
-    document.body.classList.contains(className)
-  )
-
-const markIslandRouteLeaving = (leavingElement: Element) => {
-  const routeShell = leavingElement.getAttribute('data-route-shell')
-  const leavingClass =
-    islandLeavingClassByRouteShell[
-      routeShell as keyof typeof islandLeavingClassByRouteShell
-    ]
-
-  if (!leavingClass) return false
-
-  document.body.classList.add(leavingClass)
-  return true
-}
-
-const restoreIslandRouteGeometry = () => {
-  if (lockedIslandRouteGeometry) {
-    const { element, position, top, left, width, height, margin } =
-      lockedIslandRouteGeometry
-    Object.assign(element.style, {
-      position,
-      top,
-      left,
-      width,
-      height,
-      margin,
-    })
-    lockedIslandRouteGeometry = null
-  }
-
-  if (lockedRouterContainerGeometry && routerContainer.value) {
-    Object.assign(routerContainer.value.style, lockedRouterContainerGeometry)
-    lockedRouterContainerGeometry = null
-  }
-}
-
-const lockIslandRouteGeometry = (leavingElement: Element) => {
-  if (lockedIslandRouteGeometry?.element === leavingElement) return
-
-  clearIslandGeometryUnlockTimer()
-  restoreIslandRouteGeometry()
-  const isIslandRoute = markIslandRouteLeaving(leavingElement)
-  const shouldLockGeometry =
-    isIslandRoute || leavingElement.classList.contains('game-page-layout')
-  if (!shouldLockGeometry) return
-
-  if (leavingElement instanceof HTMLElement) {
-    const container = routerContainer.value
-    if (container) {
-      const containerBounds = container.getBoundingClientRect()
-      lockedRouterContainerGeometry = {
-        position: container.style.position,
-        top: container.style.top,
-        left: container.style.left,
-        width: container.style.width,
-        height: container.style.height,
-        margin: container.style.margin,
-      }
-      Object.assign(container.style, {
-        position: 'fixed',
-        top: `${containerBounds.top}px`,
-        left: `${containerBounds.left}px`,
-        width: `${containerBounds.width}px`,
-        height: `${containerBounds.height}px`,
-        margin: '0',
-      })
-    }
-
-    const bounds = leavingElement.getBoundingClientRect()
-    lockedIslandRouteGeometry = {
-      element: leavingElement,
-      position: leavingElement.style.position,
-      top: leavingElement.style.top,
-      left: leavingElement.style.left,
-      width: leavingElement.style.width,
-      height: leavingElement.style.height,
-      margin: leavingElement.style.margin,
-    }
-    Object.assign(leavingElement.style, {
-      position: 'fixed',
-      top: `${bounds.top}px`,
-      left: `${bounds.left}px`,
-      width: `${bounds.width}px`,
-      height: `${bounds.height}px`,
-      margin: '0',
-    })
-  }
-
-  scheduleIslandGeometryUnlock()
-}
-
-const unlockIslandRouteGeometry = () => {
-  clearIslandGeometryUnlockTimer()
-  restoreIslandRouteGeometry()
+const {
+  lockIslandRouteGeometry,
+  unlockIslandRouteGeometry,
+  scheduleIslandGeometryUnlock,
+} = useRouteShellGeometry(routerContainer, () => {
   activePageLayout.value = pendingPageLayout
   noMenuShellActive.value = pendingNoMenuShell
-  document.body.classList.remove(...islandLeavingClasses)
-
-  if (route.name !== ISLAND_ROUTE_NAME && route.name !== 'HOME') {
-    document.body.classList.remove(...islandShellClasses)
-  }
-
   void nextTick(schedulePageMetricsRefresh)
-}
+})
 
 const completeRouteLeave = () => {
   unlockIslandRouteGeometry()
@@ -1208,70 +967,25 @@ const completeRouteTransition = () => {
   emit('routeTransitionComplete')
 }
 
-const scheduleIslandGeometryUnlock = () => {
-  if (
-    route.name === ISLAND_ROUTE_NAME ||
-    route.name === 'HOME' ||
-    !hasIslandShellClass() ||
-    islandGeometryUnlockTimer !== null
-  ) {
-    return
-  }
-
-  const leavingElement = lockedIslandRouteGeometry?.element
-  let fallbackDelay = ISLAND_GEOMETRY_UNLOCK_DELAY
-  if (leavingElement) {
-    const style = getComputedStyle(leavingElement)
-    const milliseconds = (value: string) =>
-      parseFloat(value) * (value.trim().endsWith('ms') ? 1 : 1000)
-    const delays = style.transitionDelay.split(',').map(milliseconds)
-    const durations = style.transitionDuration.split(',').map(milliseconds)
-    // 超时兜底须晚于真实 CSS 离场；固定 260ms 会在慢过渡中提前恢复盒模型。
-    fallbackDelay = Math.max(
-      fallbackDelay,
-      ...durations.map(
-        (duration, index) => duration + delays[index % delays.length] + 100
-      )
-    )
-  }
-  islandGeometryUnlockTimer = window.setTimeout(
-    unlockIslandRouteGeometry,
-    fallbackDelay
-  )
-}
-
 onMounted(() => {
   if (props.entryActive) startEntryAnimation()
   refreshPageMetrics()
-  removePageScrollListener = addPageScrollListener(handleScroll)
+  removePageScrollListener = addPageScrollListener(syncScrollState)
   removePageScrollEndListener = addPageScrollEndListener(refreshPageMetrics)
   removePageResizeListener = addPageResizeListener(schedulePageMetricsRefresh)
   if (routerContainer.value) {
     pageResizeObserver = new ResizeObserver(schedulePageMetricsRefresh)
     pageResizeObserver.observe(routerContainer.value)
   }
-  const header = getHeaderElement()
+  const header = headerElement.value
   if (header) {
     headerResizeObserver = new ResizeObserver(syncHeaderBottom)
     headerResizeObserver.observe(header)
     syncHeaderBottom()
   }
-  removeRouteGeometryGuard = router.beforeEach((to, from) => {
-    // 同一路由组件只更新模块、参数或查询，不离场，也不能留下固定定位锁。
-    if (to.fullPath === from.fullPath || to.name === from.name) return true
-
-    const leavingElement = routerContainer.value?.firstElementChild
-    if (leavingElement) lockIslandRouteGeometry(leavingElement)
-    return true
-  })
 })
 
 onUnmounted(() => {
-  clearIslandGeometryUnlockTimer()
-  restoreIslandRouteGeometry()
-  document.body.classList.remove(...islandShellClasses, ...islandLeavingClasses)
-  unlockMobilePageScroll()
-  clearMobileMenuTimers()
   clearBackgroundTopInsetTimer()
   clearHeaderScrolledTimer()
   visualStateStore.setBackgroundTopInset(0)
@@ -1281,16 +995,10 @@ onUnmounted(() => {
   removePageScrollEndListener = null
   removePageResizeListener?.()
   removePageResizeListener = null
-  removeRouteGeometryGuard?.()
-  removeRouteGeometryGuard = null
   pageResizeObserver?.disconnect()
   pageResizeObserver = null
   headerResizeObserver?.disconnect()
   headerResizeObserver = null
-  if (pageMetricsFrameId !== null) {
-    window.cancelAnimationFrame(pageMetricsFrameId)
-    pageMetricsFrameId = null
-  }
   clearEntryAnimationTimers()
 })
 
@@ -1347,9 +1055,6 @@ watch(backToTopElement, (component) => {
   component?.setScrollState(documentScrollTop, scrollProgress)
 })
 
-watch(isMobileMenuMounted, (mounted) => {
-  if (!mounted && !wantsNavigation.value) centerTempleLogo()
-})
 watch(showNavigation, (visible) => {
   if (!visible) closeMobileMenu()
 })
@@ -1359,16 +1064,6 @@ watch(isHeaderScrollLayoutActive, () => {
 })
 
 watch(isScrolled, scheduleBackgroundTopInset, { flush: 'sync' })
-
-watch([isMobile, isMobileMenuOpen], ([mobile, menuOpen]) => {
-  if (mobile && menuOpen) {
-    lockMobilePageScroll()
-    return
-  }
-
-  unlockMobilePageScroll()
-  if (!mobile) closeMobileMenu()
-})
 
 watch(
   () => route.fullPath,

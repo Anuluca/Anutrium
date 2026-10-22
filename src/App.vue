@@ -63,6 +63,10 @@ const entryOverlayHidden = ref(false)
 const footerTeleportReady = ref(false)
 const pageContentActive = ref(true)
 const isTempleRoute = computed(() => route.name === 'HOME')
+const templeNavigation = useTempleNavigation()
+const footerWidthMode = computed(() =>
+  isTempleRoute.value && templeNavigation.isInitialScene ? 'wide' : 'default'
+)
 const siteLoading = useSiteLoading()
 watch(
   isTempleRoute,
@@ -281,6 +285,7 @@ watch(
   />
   <Teleport to="body" :disabled="!footerTeleportReady">
     <FooterCom
+      :width-mode="footerWidthMode"
       :entry-active="isTempleRoute ? sceneEntryReady : entryAnimationReady"
       :entry-overlay-active="!entryOverlayHidden"
     />
