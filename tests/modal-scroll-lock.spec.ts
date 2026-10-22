@@ -31,6 +31,21 @@ test('detail About preserves its route and page position', async ({
   })
   await expect(page).toHaveURL(/\/flanerie\/changsha$/)
   await expect(page.locator('.temple-page')).toHaveCount(0)
+  if (!isMobile) {
+    const info = page.locator('.desktop-menu [data-temple-nav="about"]')
+    await expect(info.locator('svg')).toHaveCSS('color', 'rgb(226, 52, 86)')
+    expect(
+      await info.evaluate((element) => {
+        const bounds = element.getBoundingClientRect()
+        return element.contains(
+          document.elementFromPoint(
+            bounds.left + bounds.width / 2,
+            bounds.top + bounds.height / 2
+          )
+        )
+      })
+    ).toBe(true)
+  }
   expectPagePositionToMatch(
     await readPagePosition(page, '.flr-page'),
     initialPosition

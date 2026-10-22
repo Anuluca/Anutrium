@@ -114,6 +114,10 @@ test('focused desktop header keeps its full title centered with equal route gaps
         expect(
           layout.routes[index].left - layout.routes[index - 1].right
         ).toBeCloseTo(layout.gap, 0)
+      expect(layout.info.left - layout.routes[5].right).toBeCloseTo(
+        layout.gap / 2,
+        0
+      )
       expect(layout.titlePadding).toBeGreaterThanOrEqual(15)
       expect(layout.title.left - layout.routes[2].right).toBeGreaterThanOrEqual(
         0
@@ -127,6 +131,10 @@ test('focused desktop header keeps its full title centered with equal route gaps
   await expect(page.locator('.about-overlay')).toBeVisible()
   await expect(page.locator('.about-overlay .passion-section')).toBeVisible()
   await expect(page.locator('.current-module-name')).toHaveText('ABOUT')
+  await expect(aboutAction.locator('svg')).toHaveCSS(
+    'color',
+    'rgb(226, 52, 86)'
+  )
   await page.keyboard.press('Escape')
   await expect(page.locator('.about-overlay')).toHaveCount(0)
   await expect(page.locator('.current-module-name')).toHaveText('CREATIVE')
