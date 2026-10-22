@@ -85,7 +85,7 @@ for (const reducedMotion of ['reduce', 'no-preference'] as const) {
 }
 
 for (const mode of ['headache', 'normal'] as const) {
-  test(`${mode} pillar focus preserves its head tracking behavior`, async ({
+  test(`${mode} pillar focus tracks the module and restores its home head behavior`, async ({
     page,
   }) => {
     await page.routeWebSocket('ws://localhost:3000/**', (socket) =>
@@ -106,6 +106,13 @@ for (const mode of ['headache', 'normal'] as const) {
     await expect(stage).toHaveAttribute('data-entrance-finished', 'true', {
       timeout: 45000,
     })
+    const viewport = page.viewportSize()!
+    const yaw = async () =>
+      Number((await stage.getAttribute('data-head-rotation'))!.split(',')[1])
+    await page.mouse.move(viewport.width * 0.85, viewport.height * 0.5)
+    await expect.poll(yaw).toBeGreaterThan(0.05)
+    await page.mouse.move(viewport.width * 0.15, viewport.height * 0.5)
+    await expect.poll(yaw).toBeLessThan(-0.05)
     await page
       .locator('[data-obelisk="pokeyard"]')
       .evaluate((element: HTMLButtonElement) => element.click())
@@ -117,17 +124,22 @@ for (const mode of ['headache', 'normal'] as const) {
       'data-settled',
       'true'
     )
-    await expect(stage).toHaveAttribute(
-      'data-head-aim',
-      mode === 'headache' ? 'pointer' : 'pokeyard'
-    )
-    const viewport = page.viewportSize()!
-    const yaw = async () =>
-      Number((await stage.getAttribute('data-head-rotation'))!.split(',')[1])
+    await expect(stage).toHaveAttribute('data-head-aim', 'pokeyard')
     await page.mouse.move(viewport.width * 0.85, viewport.height * 0.5)
-    if (mode === 'headache') await expect.poll(yaw).toBeLessThan(-0.05)
-    else await expect.poll(yaw).toBeGreaterThan(0.05)
+    await expect.poll(yaw).toBeGreaterThan(0.05)
+    const focusedYaw = await yaw()
     await page.mouse.move(viewport.width * 0.15, viewport.height * 0.5)
+    await expect.poll(yaw).toBeCloseTo(focusedYaw, 3)
+    if (mode === 'headache')
+      await expect(stage).toHaveAttribute('data-headache-mix', '1.000')
+
+    await page.keyboard.press('Escape')
+    await expect(page.locator('.temple-page')).toHaveAttribute(
+      'data-settled',
+      'true'
+    )
+    await expect(stage).toHaveAttribute('data-head-aim', 'pointer')
+    await page.mouse.move(viewport.width * 0.85, viewport.height * 0.5)
     await expect.poll(yaw).toBeGreaterThan(0.05)
   })
 }

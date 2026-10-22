@@ -1576,9 +1576,7 @@ export function createHomeTemple(
     const followHead = !entranceActive && !returningStatue
     const headacheActive =
       headacheEnabled && selected !== 'statue' && selected !== 'island'
-    const aimAtObelisk = !!focusedObelisk && !headacheActive
-    if (headacheActive && focusedObelisk && !returningPillar)
-      headTarget.copy(pointerTarget)
+    const aimAtObelisk = !!focusedObelisk
     if (focusedObelisk && aimAtObelisk && rig.enabled) {
       // 从当前世界坐标计算朝向，运镜和柱子推进时连续追踪；限制转角保护颈部形变。
       const yaw = THREE.MathUtils.clamp(
@@ -1598,7 +1596,7 @@ export function createHomeTemple(
       headCurrent.copy(headTarget)
     if (followHead) {
       if (reducedMotion) headCurrent.copy(headTarget)
-      else if (!headacheActive && headFocusMotion.progress < 1)
+      else if (headFocusMotion.progress < 1)
         headCurrent.lerpVectors(
           headFocusStart,
           headTarget,
@@ -1662,18 +1660,16 @@ export function createHomeTemple(
     setStageData('headacheMode', headacheMix === 0 ? 'normal' : 'headache')
     setStageData('headacheMix', headacheMix.toFixed(3))
     setStageData('headacheSticker', String(dizzySticker.visible))
-    // 头疼姿态聚焦时仍反向跟随鼠标；正常姿态保留方尖碑注视。
-    const pointerDirection = aimAtObelisk ? 1 : 1 - 2 * headacheMix
     headAngles.set(
       THREE.MathUtils.degToRad(
         rig.enabled
           ? rig.restPitch -
               (headache?.headLeanBack ?? 0) * headacheMix +
-              headCurrent.y * rig.pointerPitch * pointerDirection
+              headCurrent.y * rig.pointerPitch
           : 0
       ),
       THREE.MathUtils.degToRad(
-        rig.enabled ? headCurrent.x * rig.pointerYaw * pointerDirection : 0
+        rig.enabled ? headCurrent.x * rig.pointerYaw : 0
       ),
       THREE.MathUtils.degToRad((headache?.headTilt ?? 0) * headacheMix)
     )
@@ -3092,21 +3088,13 @@ export function createHomeTemple(
     const hoverChanged = hovered !== nextHover
     hovered = nextHover
     if (
-      (!selected ||
-        selected === 'statue' ||
-        (headacheEnabled && selected !== 'island')) &&
+      (!selected || selected === 'statue') &&
       !entranceActive &&
       !returningStatue &&
       !returningPillar
     )
       headTarget.copy(pointerTarget)
-    if (
-      !selected ||
-      selected === 'statue' ||
-      (headacheEnabled && selected !== 'island') ||
-      hoverChanged
-    )
-      invalidate()
+    if (!selected || selected === 'statue' || hoverChanged) invalidate()
   }
   let unsubscribe: (() => void) | undefined
   const syncActivity = () => {
@@ -3140,9 +3128,7 @@ export function createHomeTemple(
     diagnosticsDirty = true
     pointerTarget.set(0, 0)
     if (
-      (!selected ||
-        selected === 'statue' ||
-        (headacheEnabled && selected !== 'island')) &&
+      (!selected || selected === 'statue') &&
       !returningStatue &&
       !returningPillar
     )
