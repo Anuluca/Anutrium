@@ -225,9 +225,19 @@ test('pet move cards show types and PP with forgotten moves in a scroll-safe mod
     'font-size',
     info.project.name.includes('mobile') ? '18px' : '36px'
   )
-  await expect(album.locator('.flora-album-gallery__title button')).toHaveCSS(
-    'font-size',
-    info.project.name.includes('mobile') ? '29.3333px' : '72px'
+  const tabSizes = await album
+    .locator('.flora-album-gallery__title button')
+    .evaluateAll((buttons) =>
+      buttons.map((button) => parseFloat(getComputedStyle(button).fontSize))
+    )
+  expect(tabSizes).toHaveLength(2)
+  expect(tabSizes[0]).toBeCloseTo(tabSizes[1], 2)
+  expect(tabSizes[0]).toBeCloseTo(
+    Math.min(
+      info.project.name.includes('mobile') ? (44 * 2) / 3 : 72,
+      (await album.boundingBox())!.width * 0.075
+    ),
+    2
   )
   await albumButton.click()
   await expect(albumButton).toHaveText('COLLAPSE')

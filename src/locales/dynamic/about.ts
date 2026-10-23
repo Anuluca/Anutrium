@@ -33,15 +33,35 @@ const aboutDynamic = {
     {
       version: 'v2.0',
       codename: 'MIRAGE',
-      date: '2026-10-22',
+      date: '2026-10-23',
       title: {
-        zhCn: '3D场景交互升级，FLORATRIUM正式上线',
-        en: '3D SCENE INTERACTION UPDATE & FLORATRIUM LAUNCH',
+        zhCn: '3D场景交互升级，「花花小窝」页面正式上线',
+        en: '3D SCENE INTERACTION UPDATE & 「花花小窝」页面 LAUNCH',
       },
       details: [
         {
           zhCn: '重构__首页与二级页面的空间交互体系__：以实时渲染的三维场景（3D Scene）与模型交互承载内容入口，统一场景导航、视角切换与页面过渡；',
           en: 'Rebuilt the __spatial interaction system for the home and secondary pages__: real-time 3D scenes and interactive models now serve as content entry points, with unified scene navigation, camera transitions, and page transitions;',
+        },
+        {
+          zhCn: '__「花花小窝」页面__开发完成并正式上线：支持查看宠物信息、浏览相册与视频，并可点击喜爱为宠物增加喜爱数；',
+          en: '__「花花小窝」页面__ is complete and now live: view pet profiles, browse photos and videos, and show affection with the like button;',
+        },
+        {
+          zhCn: '__「创作」页面__开发完成并正式上线：包含__摄影、绘画、设计创作与工具__模块，支持浏览摄影与绘画作品、查看绘画过程及设计作品详情，并使用实用工具；',
+          en: 'The __Creative page__ is complete and now live, featuring __Photography, Illustration, Design, and Craft__ sections: browse photography and illustrations, view drawing processes and design details, and access practical tools;',
+        },
+        {
+          zhCn: '__「关于」页__新增__制作人员与资源鸣谢__展示，集中介绍项目制作分工与所用资源的作者及来源；',
+          en: 'Added __production credits and resource acknowledgements__ to the __About__ page, highlighting production roles and the creators and sources of project resources;',
+        },
+        {
+          zhCn: '新增首页__路卡利欧「头疼模式」__，丰富模型的动作表现与交互反馈；',
+          en: 'Added __Lucario’s "Headache Mode"__ to the home scene, expanding model animations and interaction feedback;',
+        },
+        {
+          zhCn: '__旅程地图__接入__OpenStreetMap__，完善地图浏览体验；',
+          en: 'Integrated __OpenStreetMap__ into the __Journey Map__ to improve map browsing;',
         },
         {
           zhCn: '接入__Steam Web API__，支持展示Steam游戏库信息；',
@@ -52,23 +72,7 @@ const aboutDynamic = {
           en: 'Integrated __Google Analytics 4 (GA4)__ for page-view tracking and traffic analysis;',
         },
         {
-          zhCn: '新增首页__路卡利欧「头疼模式」__，丰富模型的动作表现与交互反馈；',
-          en: 'Added __Lucario’s "Headache Mode"__ to the home scene, expanding model animations and interaction feedback;',
-        },
-        {
-          zhCn: '__FLORATRIUM__开发完成并正式上线：支持查看宠物信息、浏览相册与视频，并可点击喜爱为宠物增加喜爱数；',
-          en: '__FLORATRIUM__ is complete and now live: view pet profiles, browse photos and videos, and show affection with the like button;',
-        },
-        {
-          zhCn: '__旅程地图__接入__OpenStreetMap__，完善地图浏览体验；',
-          en: 'Integrated __OpenStreetMap__ into the __Journey Map__ to improve map browsing;',
-        },
-        {
-          zhCn: '__「关于」页__新增__制作人员与资源鸣谢__展示，集中介绍项目制作分工与所用资源的作者及来源；',
-          en: 'Added __production credits and resource acknowledgements__ to the __About__ page, highlighting production roles and the creators and sources of project resources;',
-        },
-        {
-          zhCn: '优化全站__用户界面（UI）、操作流程与移动端适配__，完善布局、交互反馈和细节表现。',
+          zhCn: '优化全站__UI、操作流程与移动端适配__，完善布局、交互反馈和细节表现。',
           en: 'Refined the site-wide __user interface (UI), interaction flows, and mobile layouts__, improving layout consistency, interaction feedback, and visual details.',
         },
       ],

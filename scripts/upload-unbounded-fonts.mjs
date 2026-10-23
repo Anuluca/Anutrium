@@ -1,5 +1,14 @@
 import { spawnSync } from 'node:child_process'
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import {
+  constants,
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -22,6 +31,36 @@ const run = (args) => {
 run(['scripts/check-unbounded-fonts.mjs'])
 const generated = path.join(root, 'scripts/fonts/generated')
 const manifest = JSON.parse(readFileSync(path.join(generated, 'manifest.json')))
+// 全量同步会删除本地没有的远端对象；上传前保留同一份有哈希的字体文件。
+const mirrorRoot =
+  process.env.FONT_R2_MIRROR_ROOT || path.resolve(root, '../R2')
+if (
+  process.env.FONT_R2_MIRROR_ROOT ||
+  existsSync(path.join(mirrorRoot, '全量同步R2.sh'))
+) {
+  if (!existsSync(mirrorRoot))
+    throw new Error(`R2 mirror root does not exist: ${mirrorRoot}`)
+  const mirrorDirectory = path.join(mirrorRoot, 'fonts/unbounded')
+  mkdirSync(mirrorDirectory, { recursive: true })
+  for (const file of [
+    ...manifest.shards.map((shard) => shard.file),
+    'OFL.txt',
+  ]) {
+    const source = path.join(generated, file)
+    const destination = path.join(mirrorDirectory, file)
+    if (existsSync(destination)) {
+      if (!readFileSync(source).equals(readFileSync(destination)))
+        throw new Error(
+          `Refusing to overwrite a different local R2 font: ${destination}`
+        )
+      continue
+    }
+    copyFileSync(source, destination, constants.COPYFILE_EXCL)
+  }
+  console.log(
+    `Font mirror verified: ${manifest.shards.length} shards and license (${mirrorDirectory})`
+  )
+}
 const temporary = mkdtempSync(path.join(tmpdir(), 'anutrium-fonts-'))
 const wrangler = path.join(
   root,

@@ -28,6 +28,8 @@ export const useTempleNavigation = defineStore('temple-navigation', () => {
   const closeInlineDetail = () => inlineDetailCloser?.() ?? false
 
   const entryModule = ref<TempleEntryId | null>(null)
+  const entryExpanded = ref<boolean | null>(null)
+  const requestedExpanded = ref(false)
   // 返回时场景尚未就绪，先用路由已解析的模块保持页头和星盘布局。
   const activeModule = computed(() => {
     if (selected.value) return selected.value
@@ -68,7 +70,7 @@ export const useTempleNavigation = defineStore('temple-navigation', () => {
   )
 
   // 导航与三维拾取共享同一可用性配置；加载期间只保留最后一次操作。
-  function request(id: TempleNavigationId | null) {
+  function request(id: TempleNavigationId | null, expand = false) {
     if (id === 'about') {
       aboutOpen.value = !aboutOpen.value
       rememberTempleSession({
@@ -87,6 +89,7 @@ export const useTempleNavigation = defineStore('temple-navigation', () => {
     aboutOpen.value = false
     expanded.value = false
     requested.value = id
+    requestedExpanded.value = expand
     revision.value++
     rememberTempleSession({ selection: id, aboutOpen: false })
   }
@@ -102,12 +105,16 @@ export const useTempleNavigation = defineStore('temple-navigation', () => {
     entranceFinished.value = false
     clockAwaitingSettle.value = false
     requested.value = null
+    requestedExpanded.value = false
+    entryExpanded.value = null
     revision.value = 0
   }
   return {
     setInlineDetailCloser,
     closeInlineDetail,
     entryModule,
+    entryExpanded,
+    requestedExpanded,
     activeModule,
     activeSelection,
     isInitialScene,

@@ -145,7 +145,7 @@ test('mobile HOME clears focus and overrides module restoration when returning f
   await page.evaluate(() =>
     (
       document.querySelector('.layout-page') as any
-    ).__vueParentComponent.proxy.$router.push('/craft')
+    ).__vueParentComponent.proxy.$router.push('/colorPalette')
   )
   await expect(root).toHaveCount(0, { timeout: 15000 })
   // 模拟旅程详情保留的恢复标记，HOME 应同时覆盖这类自动聚焦。
@@ -760,7 +760,7 @@ test('fullscreen home leaves without changing its page or router geometry', asyn
     requestAnimationFrame(tick)
     ;(
       document.querySelector('.layout-page') as any
-    ).__vueParentComponent.proxy.$router.push('/craft')
+    ).__vueParentComponent.proxy.$router.push('/colorPalette')
   })
   await expect(page.locator('.temple-page')).toHaveCount(0, { timeout: 15000 })
   const data = await page.evaluate(() => (window as any).leaveGeometry)

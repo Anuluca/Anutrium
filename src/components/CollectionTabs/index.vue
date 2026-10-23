@@ -1,7 +1,7 @@
 <template>
   <nav
     class="collection-tabs"
-    :class="`collection-tabs--${size}`"
+    :class="[`collection-tabs--${size}`, `collection-tabs--${variant}`]"
     :style="{ '--collection-tab-count': items.length }"
     role="tablist"
   >
@@ -25,10 +25,14 @@
       :aria-selected="item.id === modelValue"
       @click="$emit('update:modelValue', item.id)"
     >
-      <span class="collection-tab__index">{{ index + 1 }}</span>
+      <span v-if="variant !== 'text'" class="collection-tab__index">
+        {{ index + 1 }}
+      </span>
       <span class="collection-tab__copy">
         <strong>{{ item.title }}</strong>
-        <small v-if="item.subtitle">{{ item.subtitle }}</small>
+        <small v-if="item.subtitle && variant !== 'text'">
+          {{ item.subtitle }}
+        </small>
       </span>
       <span class="collection-tab__count">{{ item.count }}</span>
     </button>
@@ -56,9 +60,11 @@ withDefaults(
     items: CollectionTabItem[]
     modelValue: string
     size?: 'small' | 'middle' | 'big'
+    variant?: 'default' | 'text'
   }>(),
   {
     size: 'middle',
+    variant: 'default',
   }
 )
 
@@ -287,6 +293,49 @@ defineEmits<{
 @media (max-width: 768px) {
   .collection-tab::before {
     background-image: var(--collection-cover-mobile);
+  }
+}
+.collection-tabs--text {
+  margin: 0;
+  border: 0;
+
+  .collection-tab {
+    display: flex;
+    justify-content: flex-start;
+    align-items: baseline;
+    gap: 12px;
+    min-height: 0;
+    padding: 0 0 12px;
+    border: 0;
+    background: transparent;
+    opacity: 0.5;
+    transition: opacity 0.3s ease;
+
+    &::before,
+    &::after {
+      display: none;
+    }
+
+    &.is-active,
+    &:hover,
+    &:focus-visible {
+      background: transparent;
+      opacity: 1;
+    }
+
+    .collection-tab__copy strong {
+      font-family: 'UnboundedSans', sans-serif;
+      font-weight: 400;
+      -webkit-mask-image: linear-gradient(to bottom, #000, transparent);
+      mask-image: linear-gradient(to bottom, #000, transparent);
+    }
+
+    .collection-tab__count {
+      display: inline-block;
+      color: var(--collection-accent);
+      font-size: var(--collection-tab-title-size);
+      font-weight: 400;
+    }
   }
 }
 </style>

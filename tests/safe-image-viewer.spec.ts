@@ -102,13 +102,10 @@ test('viewer theme, navigation hit areas, square tools and cursor work together'
   expect(closeSize).toEqual({ width: '28px', height: '28px' })
   if (mobile) {
     const bottomCard = (await next.boundingBox())!
-    const topCard = (await viewer
-      .locator('.el-image-viewer__prev')
-      .boundingBox())!
+    await expect(viewer.locator('.el-image-viewer__prev')).toBeHidden()
     const toolbar = (await viewer
       .locator('.el-image-viewer__actions')
       .boundingBox())!
-    expect(topCard.y).toBeLessThanOrEqual(1)
     expect(bottomCard.y + bottomCard.height).toBeCloseTo(
       page.viewportSize()!.height,
       0
@@ -122,19 +119,22 @@ test('viewer theme, navigation hit areas, square tools and cursor work together'
   await expect(image).not.toHaveAttribute('src', firstUrl!)
   await expect(image).toHaveCSS('filter', 'brightness(1)')
   const corners = viewer.locator('.safe-image-viewer__corners')
-  await expect(corners).toBeVisible()
-  await expect
-    .poll(async () => {
-      const photo = (await image.boundingBox())!
-      const frame = (await corners.boundingBox())!
-      return Math.max(
-        Math.abs(frame.x + frame.width / 2 - photo.x - photo.width / 2),
-        Math.abs(frame.y + frame.height / 2 - photo.y - photo.height / 2),
-        Math.abs(frame.width - photo.width - 32),
-        Math.abs(frame.height - photo.height - 32)
-      )
-    })
-    .toBeLessThanOrEqual(1)
+  if (mobile) await expect(corners).toBeHidden()
+  else {
+    await expect(corners).toBeVisible()
+    await expect
+      .poll(async () => {
+        const photo = (await image.boundingBox())!
+        const frame = (await corners.boundingBox())!
+        return Math.max(
+          Math.abs(frame.x + frame.width / 2 - photo.x - photo.width / 2),
+          Math.abs(frame.y + frame.height / 2 - photo.y - photo.height / 2),
+          Math.abs(frame.width - photo.width - 32),
+          Math.abs(frame.height - photo.height - 32)
+        )
+      })
+      .toBeLessThanOrEqual(1)
+  }
   if (mobile) {
     const client = await page.context().newCDPSession(page)
     const original = (await image.boundingBox())!
@@ -173,7 +173,10 @@ test('viewer theme, navigation hit areas, square tools and cursor work together'
     await pinch(100, 40)
     const fitted = (await image.boundingBox())!
     expect(fitted.width).toBeCloseTo(original.width, 0)
-    await expect(next).toHaveCSS('opacity', '1')
+    await expect(viewer.locator('.el-image-viewer__prev')).toHaveCSS(
+      'opacity',
+      '1'
+    )
     await touch('touchStart', [{ ...center, id: 1 }])
     await touch('touchMove', [{ x: center.x + 50, y: center.y + 50, id: 1 }])
     await touch('touchEnd', [])
@@ -181,7 +184,7 @@ test('viewer theme, navigation hit areas, square tools and cursor work together'
     expect((await image.boundingBox())!.y).toBeCloseTo(fitted.y, 0)
     const beforeSwipe = await image.getAttribute('src')
     await touch('touchStart', [{ ...center, id: 1 }])
-    await touch('touchMove', [{ x: center.x, y: center.y - 100, id: 1 }])
+    await touch('touchMove', [{ x: center.x, y: center.y + 100, id: 1 }])
     await touch('touchEnd', [])
     await expect(image).not.toHaveAttribute('src', beforeSwipe!)
     await client.detach()
@@ -191,26 +194,35 @@ test('viewer theme, navigation hit areas, square tools and cursor work together'
       page.viewportSize()!.width / 2,
       page.viewportSize()!.height / 2
     )
-    await next.hover()
+    const previous = viewer.locator('.el-image-viewer__prev')
+    await previous.hover()
     await expect(image).toHaveCSS('filter', 'brightness(0.5)')
     await expect(corners).toHaveCSS('opacity', '0')
     await expect(corners).toHaveCSS('animation-name', 'viewer-corner-out')
-    expect(
-      await next.evaluate(
-        (element) => getComputedStyle(element, '::before').animationName
+    await expect
+      .poll(() =>
+        previous.evaluate(
+          (element) => getComputedStyle(element, '::before').opacity
+        )
       )
-    ).toBe('viewer-corner-in')
+      .toBe('1')
     await viewer.locator('.el-image-viewer__close').hover()
     await expect(image).toHaveCSS('filter', 'brightness(1)')
     await expect(corners).toHaveCSS('opacity', '1')
-    await expect(corners).toHaveCSS('animation-name', 'viewer-corner-in')
     expect(
-      await next.evaluate(
+      await corners.evaluate(
         (element) => getComputedStyle(element, '::before').animationName
       )
-    ).toBe('viewer-corner-out')
+    ).toBe('viewer-corner-in')
+    await expect
+      .poll(() =>
+        previous.evaluate(
+          (element) => getComputedStyle(element, '::before').opacity
+        )
+      )
+      .toBe('0')
     for (const control of [
-      next,
+      previous,
       viewer.locator('.el-image-viewer__close'),
       tools.first(),
     ]) {

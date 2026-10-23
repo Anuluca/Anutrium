@@ -37,7 +37,7 @@
         <div class="collection-grid" :class="{ 'is-empty': !group.totalCount }">
           <div class="collection-grid__pegboard" aria-hidden="true" />
           <template
-            v-for="(collection, collectionIndex) in group.visibleCollections"
+            v-for="(collection, collectionIndex) in group.collections"
             :key="collection.id"
           >
             <MerchCollectionCard
@@ -56,17 +56,11 @@
             />
             <div
               v-if="
-                shouldRenderRowShelf(
-                  collectionIndex,
-                  group.visibleCollections.length
-                )
+                shouldRenderRowShelf(collectionIndex, group.collections.length)
               "
               class="collection-grid__row-shelf"
               :class="
-                getRowShelfClasses(
-                  collectionIndex,
-                  group.visibleCollections.length
-                )
+                getRowShelfClasses(collectionIndex, group.collections.length)
               "
               :style="getRowShelfStyle(collectionIndex)"
               aria-hidden="true"
@@ -87,12 +81,6 @@
             <span class="collection-grid__shelf-base" />
           </div>
         </div>
-        <div
-          v-if="group.hasMore"
-          class="collection-load-sentinel"
-          :data-merch-group="group.id"
-          aria-hidden="true"
-        />
       </section>
     </main>
 
@@ -101,7 +89,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, reactive, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
@@ -110,11 +98,7 @@ import MerchCollectionCard, {
   type MerchCollectionCardData,
 } from '@/components/MerchCollectionCard/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
-import {
-  getPageScrollElement,
-  getPageScrollTop,
-  scrollPageTo,
-} from '@/utils/pageScroll'
+import { getPageScrollTop, scrollPageTo } from '@/utils/pageScroll'
 
 type MerchCategoryId = 'pokemon' | 'tokusatsu' | 'other'
 
@@ -165,15 +149,8 @@ const MERCH_RETURN_SCROLL_KEY = 'anutrium:merch-photography:scroll-top'
 const RETURN_TARGET_HIGHLIGHT_DURATION = 1200
 const TARGET_SHELF_DISTANCE_ROW_INDEX = 2
 const SHELF_DISTANCE_ROW_STEP = 2.82
-const COLLECTION_BATCH_SIZE = 8
-const visibleCollectionCounts = reactive<Record<MerchCategoryId, number>>({
-  pokemon: COLLECTION_BATCH_SIZE,
-  tokusatsu: 0,
-  other: 0,
-})
 let returnTargetTimer: number | undefined
 let isPageUnmounted = false
-let collectionObserver: IntersectionObserver | undefined
 
 interface MerchReturnState {
   collectionId: string
@@ -195,74 +172,15 @@ const collections = computed<MerchCollectionCardData[]>(() =>
 const collectionGroups = computed(() =>
   merchCategoryMeta.map((category) => {
     const groupCollections = merchPhotos.value[category.id] || []
-    const visibleCount = visibleCollectionCounts[category.id]
 
     return {
       id: category.id,
       title: locale.value === 'en' ? category.title.en : category.title.zhCn,
       totalCount: groupCollections.length,
-      visibleCollections: groupCollections.slice(0, visibleCount),
-      hasMore: visibleCount < groupCollections.length,
+      collections: groupCollections,
     }
   })
 )
-
-const revealCollection = (collectionId: string) => {
-  for (const category of merchCategoryMeta) {
-    const groupCollections = merchPhotos.value[category.id] || []
-    const collectionIndex = groupCollections.findIndex(
-      (collection) => collection.id === collectionId
-    )
-    if (collectionIndex < 0) continue
-
-    visibleCollectionCounts[category.id] = Math.max(
-      visibleCollectionCounts[category.id],
-      collectionIndex + 1
-    )
-    return
-  }
-}
-
-const loadNextCollectionBatch = (groupId: MerchCategoryId) => {
-  const totalCount = merchPhotos.value[groupId]?.length || 0
-  visibleCollectionCounts[groupId] = Math.min(
-    totalCount,
-    visibleCollectionCounts[groupId] + COLLECTION_BATCH_SIZE
-  )
-}
-
-const observeCollectionSentinels = () => {
-  collectionObserver?.disconnect()
-  if (!('IntersectionObserver' in window)) {
-    for (const category of merchCategoryMeta) {
-      visibleCollectionCounts[category.id] =
-        merchPhotos.value[category.id]?.length || 0
-    }
-    return
-  }
-
-  collectionObserver = new IntersectionObserver(
-    (entries) => {
-      for (const entry of entries) {
-        if (!entry.isIntersecting) continue
-        const groupId = (entry.target as HTMLElement).dataset.merchGroup as
-          | MerchCategoryId
-          | undefined
-        if (groupId) loadNextCollectionBatch(groupId)
-      }
-      void nextTick(observeCollectionSentinels)
-    },
-    {
-      root: getPageScrollElement(),
-      rootMargin: '0px 0px -10% 0px',
-      threshold: 0,
-    }
-  )
-
-  document
-    .querySelectorAll<HTMLElement>('.collection-load-sentinel')
-    .forEach((element) => collectionObserver?.observe(element))
-}
 
 const getCollectionIndex = (collectionId: string) =>
   String(
@@ -313,7 +231,6 @@ const waitForAnimationFrames = (count: number) =>
   })
 
 const restoreReturnState = async (returnState: MerchReturnState) => {
-  revealCollection(returnState.collectionId)
   activeReturnedCollectionId.value = returnState.collectionId
   await nextTick()
 
@@ -384,7 +301,7 @@ const getSectionEntryStyle = (groupIndex: number) => ({
 
 const getCollectionEntryStyle = (collectionIndex: number) => ({
   '--card-entry-delay': `calc(var(--section-entry-delay) + ${
-    840 + collectionIndex * 150
+    180 + collectionIndex * 60
   }ms)`,
 })
 
@@ -418,7 +335,6 @@ onMounted(() => {
   document
     .querySelectorAll<HTMLElement>('.collection-card--expanding')
     .forEach((element) => element.remove())
-  void nextTick(observeCollectionSentinels)
 
   const returnState = consumeReturnState()
   if (!returnState) return
@@ -430,8 +346,6 @@ onMounted(() => {
 onUnmounted(() => {
   isPageUnmounted = true
   if (returnTargetTimer) window.clearTimeout(returnTargetTimer)
-  collectionObserver?.disconnect()
-  collectionObserver = undefined
 })
 </script>
 
@@ -461,9 +375,8 @@ onUnmounted(() => {
     }
 
     :deep(.collection-card-entry.is-return-target .collection-card-shell) {
-      box-shadow: 0 0 78px rgba(226, 52, 86, 0.38),
-        0 30px 72px rgba(0, 0, 0, 0.62);
-      transform: translateY(-8px) translateZ(12px) scale(1.025);
+      box-shadow: 0 0 24px rgba(226, 52, 86, 0.38);
+      transform: translateY(-8px) scale(1.025);
     }
   }
 
@@ -492,9 +405,6 @@ onUnmounted(() => {
 
   position: relative;
   padding: 0;
-  perspective: 1200px;
-  content-visibility: auto;
-  contain-intrinsic-size: auto 980px;
   isolation: isolate;
 
   & + & {
@@ -578,18 +488,12 @@ onUnmounted(() => {
   row-gap: 0;
   min-height: 280px;
   padding: clamp(64px, 6vw, 88px) var(--grid-side-padding) 0;
-  transform-style: preserve-3d;
 
   :deep(.collection-card-entry) {
     z-index: 4;
-    animation: merch-card-drop-entry 0.86s cubic-bezier(0.22, 0.61, 0.36, 1)
-      both;
+    animation: merch-card-entry 0.45s cubic-bezier(0.22, 0.61, 0.36, 1)
+      backwards;
     animation-delay: var(--card-entry-delay);
-  }
-
-  :deep(.collection-card-entry .collection-card-shell::after) {
-    animation: merch-card-top-entry 0.52s cubic-bezier(0.22, 0.61, 0.36, 1) both;
-    animation-delay: calc(var(--card-entry-delay) + 120ms);
   }
 
   &__pegboard {
@@ -668,9 +572,8 @@ onUnmounted(() => {
   &__shelf,
   &__row-shelf {
     transform-origin: top center;
-    transform-style: preserve-3d;
-    animation: merch-shelf-flip-entry 0.58s cubic-bezier(0.22, 0.61, 0.36, 1)
-      both;
+    animation: merch-shelf-entry 0.45s cubic-bezier(0.22, 0.61, 0.36, 1)
+      backwards;
     animation-delay: calc(var(--section-entry-delay) + 180ms);
   }
 
@@ -771,48 +674,27 @@ onUnmounted(() => {
   }
 }
 
-@keyframes merch-shelf-flip-entry {
+@keyframes merch-shelf-entry {
   0% {
     opacity: 0;
-    transform: translateY(calc(-32px + var(--row-shelf-translate, 0px)))
-      rotateX(-72deg);
-  }
-
-  58% {
-    opacity: 1;
-    transform: translateY(calc(4px + var(--row-shelf-translate, 0px)))
-      rotateX(8deg);
+    transform: translateY(calc(-16px + var(--row-shelf-translate, 0px)));
   }
 
   100% {
     opacity: 1;
-    transform: translateY(var(--row-shelf-translate, 0px)) rotateX(0deg);
+    transform: translateY(var(--row-shelf-translate, 0px));
   }
 }
 
-@keyframes merch-card-drop-entry {
+@keyframes merch-card-entry {
   0% {
     opacity: 0;
-    transform: translateY(-64px);
+    transform: translateY(-16px);
   }
 
   100% {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@keyframes merch-card-top-entry {
-  0% {
-    opacity: 0;
-    top: -1px;
-    height: 0;
-  }
-
-  100% {
-    opacity: 1;
-    top: var(--box-top-offset);
-    height: var(--box-top-height);
   }
 }
 

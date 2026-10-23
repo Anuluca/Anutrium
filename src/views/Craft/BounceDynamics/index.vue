@@ -1,6 +1,6 @@
 <template>
   <ToolPageLayout
-    back-path="/craft?type=work"
+    back-path="/creative?current=craft&type=work"
     page-class="bounce-tool"
     title="弹力球"
     :recommended-tools="recommendedTools"

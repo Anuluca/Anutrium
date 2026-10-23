@@ -12,6 +12,7 @@ import {
 } from '@/config/floraLayout'
 import {
   getTempleSceneVerticalOffset,
+  TEMPLE_FOCUS_DURATION,
   templeCamera,
 } from '@/config/templeCamera'
 import {
@@ -36,6 +37,7 @@ import { preloadTempleAssets } from '@/utils/preloadTempleAssets'
 import { createSceneMatrixUpdater } from '@/utils/sceneMatrixUpdater'
 import { getTempleLabelCanvas } from '@/utils/templeLabelTextures'
 
+import { createDollyCameraMotion } from './scene/dollyCamera'
 import {
   createObeliskBaseGeometry,
   createObeliskBodyGeometry,
@@ -99,7 +101,12 @@ const STATUE_LABEL_HOVER_DURATION =
   (STATUE_LABEL_TEXT.length - 1) * STATUE_LABEL_STAGGER
 const STATUE_LABEL_DOCK_OFFSET = 24
 const STATUE_PREVIEW_SCALE = 1.5
-const STATUE_PREVIEW_VERTICAL_OFFSET = 0.12
+const STATUE_PREVIEW_VERTICAL_OFFSET = 0.26
+// 焦距增至主页的 3 倍：tan(FOV / 2) 与焦距成反比。
+const STATUE_PREVIEW_FOV = THREE.MathUtils.radToDeg(
+  2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(templeCamera.fov / 2)) / 3)
+)
+const STATUE_PREVIEW_PITCH = -4
 // 保留缩头前的宽度基准，避免头部变小后自动放大整个模型。
 const SPRIGATITO_REFERENCE_WIDTH = 0.2963257431983948
 
@@ -1574,8 +1581,7 @@ export function createHomeTemple(
     if (statueWire) statueWire.visible = statueView.mix > 0
     if (statueWireDepth) statueWireDepth.visible = statueView.mix > 0
     const followHead = !entranceActive && !returningStatue
-    const headacheActive =
-      headacheEnabled && selected !== 'statue' && selected !== 'island'
+    const headacheActive = headacheEnabled && selected !== 'statue'
     const aimAtObelisk = !!focusedObelisk
     if (focusedObelisk && aimAtObelisk && rig.enabled) {
       // 从当前世界坐标计算朝向，运镜和柱子推进时连续追踪；限制转角保护颈部形变。
@@ -1587,9 +1593,12 @@ export function createHomeTemple(
         -THREE.MathUtils.degToRad(rig.focusYawLimit),
         THREE.MathUtils.degToRad(rig.focusYawLimit)
       )
+      // 抵消头疼姿态的后仰，再用现有低头角度作为聚焦目标，与转头共用插值。
+      const focusPitch =
+        headNodDegrees + (headacheActive ? headache?.headLeanBack ?? 0 : 0)
       headTarget.set(
         yaw / Math.max((rig.pointerYaw * Math.PI) / 180, 0.001),
-        -rig.restPitch / Math.max(rig.pointerPitch, 0.001)
+        (focusPitch - rig.restPitch) / Math.max(rig.pointerPitch, 0.001)
       )
     }
     if (simpleEntrance && entranceActive && aimAtObelisk)
@@ -1623,7 +1632,7 @@ export function createHomeTemple(
       statue.rotation.z = 0
       moving ||= Math.abs(statue.rotation.y - yaw) > 0.00001
     }
-    // 全身 ISLAND 预览及创作模块恢复正常，返回默认首页时平滑恢复头疼姿态。
+    // 仅中央模型的全身预览恢复正常；二级模块保留头疼姿态。
     const headacheTarget = headacheActive ? 1 : 0
     headacheMix = reducedMotion
       ? headacheTarget
@@ -2299,7 +2308,7 @@ export function createHomeTemple(
     const side = Math.sign(category.x)
     const distance =
       (6.1 * OBELISK_SCALE.y) /
-      (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * 0.68)
+      (2 * Math.tan(THREE.MathUtils.degToRad(templeCamera.fov / 2)) * 0.68)
     const yaw = -side * THREE.MathUtils.degToRad(category.z < 0 ? 27.5 : 17.5)
     const pitch = THREE.MathUtils.degToRad(FOCUS_LOOK_UP_DEGREES)
     // 围绕碑身中心降低机位并仰视，仍按同一距离和左右偏移构图；位置与视点一起缓动。
@@ -2315,7 +2324,7 @@ export function createHomeTemple(
         ? config.scene.focus.outerPlacement
         : config.scene.focus.innerPlacement) *
       distance *
-      Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) *
+      Math.tan(THREE.MathUtils.degToRad(templeCamera.fov / 2)) *
       camera.aspect
     // 先按内侧 1/4、3/4 屏、外侧更靠边构图，再统一偏移投影；碑身高度保持 68%。
     const position = new THREE.Vector3(
@@ -2331,15 +2340,24 @@ export function createHomeTemple(
     }
   }
   const fullStatuePose = () => {
-    const halfFov = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))
+    const halfFov = Math.tan(THREE.MathUtils.degToRad(STATUE_PREVIEW_FOV / 2))
     const distance =
       (Math.max(statueSize.y, statueSize.x / camera.aspect) /
         (2 * halfFov * 0.8) +
         statueSize.z / 2) /
       STATUE_PREVIEW_SCALE
     const target = new THREE.Vector3(0, statueSize.y / 2, statueZ)
+    const pitch = THREE.MathUtils.degToRad(STATUE_PREVIEW_PITCH)
     return {
-      position: target.clone().add(new THREE.Vector3(0, 0, distance)),
+      position: target
+        .clone()
+        .add(
+          new THREE.Vector3(
+            0,
+            Math.sin(pitch) * distance,
+            Math.cos(pitch) * distance
+          )
+        ),
       target,
     }
   }
@@ -2350,10 +2368,13 @@ export function createHomeTemple(
   const selectedPose = () => {
     if (selected === 'statue') return fullStatuePose()
     if (selected === 'sprigatito') {
+      const framingCamera = camera.clone()
+      framingCamera.fov = templeCamera.fov
+      framingCamera.updateProjectionMatrix()
       return petFocusCamera({
         geometry: sprigatitoMesh!.geometry,
         reference: floraReferenceModel,
-        camera,
+        camera: framingCamera,
         pet: currentPet,
         position: sleepingSprigatito.position,
         scale: sleepingSprigatito.scale,
@@ -2615,8 +2636,7 @@ export function createHomeTemple(
     callbacks.select(selected)
     transition?.kill()
     const item = focusedObelisk
-    const duration = reducedMotion || immediate ? 0.01 : 1.65
-    const returnDelay = returningStatue && !reducedMotion ? 0.4 : 0
+    const duration = reducedMotion || immediate ? 0.01 : TEMPLE_FOCUS_DURATION
     const statueTransition = selected === 'statue' || wasStatue
     const environmentDuration = Math.min(STATUE_ENVIRONMENT_DURATION, duration)
     transitionActive = true
@@ -2684,11 +2704,7 @@ export function createHomeTemple(
         ease: 'power2.inOut',
         onUpdate: markProjectionDirty,
       },
-      selected === 'sprigatito'
-        ? returnDelay + duration * 0.75
-        : wasSprigatito
-        ? returnDelay + duration
-        : 0
+      selected === 'sprigatito' ? duration * 0.75 : wasSprigatito ? duration : 0
     )
     // 头部使用完整时长的角度插值；视角完成独立通知内容挂载，不等待转头或导航渐显。
     tweenIfChanged(
@@ -2707,15 +2723,12 @@ export function createHomeTemple(
         callbacks.settled()
       },
       [],
-      returnDelay + duration
+      duration
     )
     tweenIfChanged(
       entranceHeadDip,
       {
-        value:
-          item && !(headacheEnabled && selected !== 'island')
-            ? 0
-            : headNodDegrees,
+        value: item ? 0 : headNodDegrees,
         duration: item || wasPillar ? duration * 2 : duration,
         ease: 'power2.inOut',
       },
@@ -2727,7 +2740,7 @@ export function createHomeTemple(
         {
           x: 0,
           y: 0,
-          duration: returnDelay || duration,
+          duration,
           ease: 'power2.inOut',
         },
         0
@@ -2736,14 +2749,14 @@ export function createHomeTemple(
         entranceHeadDip,
         {
           value: headNodDegrees,
-          duration: returnDelay || duration,
+          duration,
           ease: 'power2.inOut',
         },
         0
       )
       tweenIfChanged(
         statue.rotation,
-        { y: 0, z: 0, duration: returnDelay || duration, ease: 'power2.inOut' },
+        { y: 0, z: 0, duration, ease: 'power2.inOut' },
         0
       )
     }
@@ -2755,7 +2768,7 @@ export function createHomeTemple(
         ease: 'power2.inOut',
         onUpdate: markProjectionDirty,
       },
-      returnDelay
+      0
     )
     const heroTitle = stage.querySelector<HTMLElement>('.temple-backdrop')
     tweenIfChanged(
@@ -2767,7 +2780,7 @@ export function createHomeTemple(
           : Math.min(0.45, duration),
         ease: 'power2.out',
       },
-      returnDelay
+      0
     )
     if (heroTitle)
       tweenIfChanged(
@@ -2778,13 +2791,13 @@ export function createHomeTemple(
           duration: statueTransition ? environmentDuration : duration * 0.65,
           ease: statueTransition ? 'power2.inOut' : 'power2.out',
         },
-        returnDelay
+        0
       )
     const pose = selectedPose()
     tweenIfChanged(
       statueView,
       { mix: selected === 'statue' ? 1 : 0, duration, ease: 'power2.inOut' },
-      returnDelay
+      0
     )
     // 保留当前裁切面作为起点，跟随模型升降逐步释放下半身；中途反向也不会跳变。
     tweenIfChanged(
@@ -2794,7 +2807,7 @@ export function createHomeTemple(
         duration,
         ease: 'power3.inOut',
       },
-      returnDelay
+      0
     )
     tweenIfChanged(
       focusFraming,
@@ -2814,8 +2827,48 @@ export function createHomeTemple(
         ease: 'power3.inOut',
         onUpdate: applyViewOffset,
       },
-      returnDelay
+      0
     )
+    const useDollyCamera = selected === 'statue' || returningStatue
+    if (useDollyCamera) {
+      const targetFov =
+        selected === 'statue' ? STATUE_PREVIEW_FOV : templeCamera.fov
+      const updateCamera = createDollyCameraMotion(
+        camera,
+        lookAt,
+        pose,
+        targetFov
+      )
+      const dolly = { progress: 0 }
+      // 视点、俯仰、投影尺度与模型升起共用进度；方向归一化，避免混合角度压缩距离。
+      tweenIfChanged(
+        dolly,
+        {
+          progress: 1,
+          duration,
+          ease: 'power3.inOut',
+          onUpdate: () => {
+            updateCamera(dolly.progress)
+            markProjectionDirty()
+          },
+        },
+        0
+      )
+    } else {
+      tweenIfChanged(
+        camera,
+        {
+          fov: templeCamera.fov,
+          duration,
+          ease: 'power3.inOut',
+          onUpdate: () => {
+            camera.updateProjectionMatrix()
+            markProjectionDirty()
+          },
+        },
+        0
+      )
+    }
     if (selected === 'sprigatito') {
       // 模型保持原朝向，相机沿最短圆弧转到头朝画面右侧的侧视机位。
       const offset = camera.position.clone().sub(pose.target)
@@ -2856,9 +2909,9 @@ export function createHomeTemple(
             markProjectionDirty()
           },
         },
-        returnDelay
+        0
       )
-    } else
+    } else if (!useDollyCamera)
       tweenIfChanged(
         camera.position,
         {
@@ -2869,20 +2922,21 @@ export function createHomeTemple(
           ease: 'power3.inOut',
           onUpdate: markProjectionDirty,
         },
-        returnDelay
+        0
       )
-    tweenIfChanged(
-      lookAt,
-      {
-        x: pose.target.x,
-        y: pose.target.y,
-        z: pose.target.z,
-        duration,
-        ease: 'power3.inOut',
-        onUpdate: markProjectionDirty,
-      },
-      returnDelay
-    )
+    if (!useDollyCamera)
+      tweenIfChanged(
+        lookAt,
+        {
+          x: pose.target.x,
+          y: pose.target.y,
+          z: pose.target.z,
+          duration,
+          ease: 'power3.inOut',
+          onUpdate: markProjectionDirty,
+        },
+        0
+      )
     tweenIfChanged(
       statue.position,
       {
@@ -2896,7 +2950,7 @@ export function createHomeTemple(
         ease: 'power3.inOut',
         onUpdate: markProjectionDirty,
       },
-      returnDelay
+      0
     )
     for (const [index, obelisk] of obelisks.entries()) {
       tweenIfChanged(
@@ -2911,7 +2965,7 @@ export function createHomeTemple(
           ease: 'power3.inOut',
           onUpdate: markProjectionDirty,
         },
-        returnDelay
+        0
       )
       tweenIfChanged(
         obelisk,
@@ -2920,7 +2974,7 @@ export function createHomeTemple(
           duration: duration * 0.65,
           ease: 'power2.out',
         },
-        returnDelay
+        0
       )
       moveShaft(
         transition,
@@ -2931,7 +2985,7 @@ export function createHomeTemple(
           ? 0
           : -OBELISK_ENTRANCE_DEPTH,
         statueTransition ? environmentDuration : duration,
-        returnDelay
+        0
       )
     }
     if (immediate) {

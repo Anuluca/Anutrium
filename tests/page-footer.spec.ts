@@ -74,7 +74,7 @@ const readPageFooterHorizontalGeometry = async (page: Page) =>
 test('PageFooter keeps its geometry after leaving the personal bay', async ({
   page,
 }) => {
-  await page.goto('/craft', { waitUntil: 'domcontentloaded' })
+  await page.goto('/colorPalette', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.bottom-text')).toHaveCount(1, {
     timeout: PAGE_LOAD_TIMEOUT,
   })
@@ -89,9 +89,9 @@ test('PageFooter keeps its geometry after leaving the personal bay', async ({
 
   await page.evaluate(async () => {
     const app = document.querySelector<VueAppElement>('#app')
-    await app?.__vue_app__?.config.globalProperties.$router.push('/craft')
+    await app?.__vue_app__?.config.globalProperties.$router.push('/colorPalette')
   })
-  await expect.poll(async () => new URL(page.url()).pathname).toBe('/craft')
+  await expect.poll(async () => new URL(page.url()).pathname).toBe('/colorPalette')
   await expect(page.locator('.bottom-text')).toHaveCount(1, {
     timeout: PAGE_LOAD_TIMEOUT,
   })

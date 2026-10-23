@@ -26,7 +26,8 @@
   background-color: #0a0411;
   contain: layout paint style;
   isolation: isolate;
-  transition: --stage-opacity 1.16s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: --stage-opacity var(--chart-transition-duration, 1.16s)
+    var(--chart-transition-easing, cubic-bezier(0.22, 1, 0.36, 1));
 
   &.has-background-top-inset {
     clip-path: inset(var(--background-top-inset) 0 0);
@@ -194,7 +195,8 @@
 .zodiac-stage {
   z-index: var(--layer-zodiac);
   color: var(--chart-primary);
-  transition: transform 1.16s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform var(--chart-transition-duration, 1.16s)
+    var(--chart-transition-easing, cubic-bezier(0.22, 1, 0.36, 1));
 }
 
 .zodiac-gradient-layer,
@@ -222,7 +224,8 @@
   border-radius: 50%;
   transform: rotate(var(--route-rotation));
   transform-origin: center;
-  transition: transform 1.24s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform var(--chart-transition-duration, 1.24s)
+    var(--chart-transition-easing, cubic-bezier(0.22, 1, 0.36, 1));
   &::before,
   &::after {
     position: absolute;

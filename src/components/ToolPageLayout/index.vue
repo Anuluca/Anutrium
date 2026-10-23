@@ -3,7 +3,7 @@
     <section class="tool-page-stage">
       <DetailPageHeader
         :back-label="backLabel"
-        :back-path="backPath"
+        :back-path="craftBackPath"
         :subtitle="subtitle"
         :title="title"
       />
@@ -17,6 +17,7 @@
       v-if="showRecommendations"
       class="tool-recommendation-row"
       :recommended-tools="recommendedTools"
+      :collection-path="craftBackPath"
     />
     <div
       v-else
@@ -28,11 +29,15 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { onBeforeRouteLeave } from 'vue-router'
+
 import DetailPageHeader from '@/components/DetailPageHeader/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
 import ToolRecommendationRow, {
   type RecommendedTool,
 } from '@/components/ToolRecommendationRow/index.vue'
+import { useCraftNavigation } from '@/stores/craftNavigation'
 
 withDefaults(
   defineProps<{
@@ -46,12 +51,20 @@ withDefaults(
   }>(),
   {
     backLabel: 'CRAFT',
-    backPath: '/craft',
+    backPath: '/creative?current=craft',
     recommendedTools: () => [],
     showRecommendations: true,
     subtitle: '',
   }
 )
+const craftNavigation = useCraftNavigation()
+const craftBackPath = computed(
+  () => craftNavigation.origin?.path || '/creative?current=craft'
+)
+onBeforeRouteLeave((to) => {
+  craftNavigation.restoring =
+    to.name === 'HOME' && to.fullPath === craftNavigation.origin?.path
+})
 </script>
 
 <style lang="less" scoped>

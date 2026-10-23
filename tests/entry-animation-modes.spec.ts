@@ -54,7 +54,7 @@ for (const reducedMotion of ['no-preference', 'reduce'] as const) {
         )
       }).observe(document, { childList: true, subtree: true, attributes: true })
     })
-    for (const path of ['/flanerie/nanchang', '/craft']) {
+    for (const path of ['/flanerie/nanchang', '/colorPalette']) {
       await page.goto(path, { waitUntil: 'domcontentloaded' })
       const overlay = page.locator('.entry-overlay-container')
       await expect(overlay).toHaveClass(/entry-mode--centered/)
@@ -74,8 +74,8 @@ for (const reducedMotion of ['no-preference', 'reduce'] as const) {
       ).toBeLessThanOrEqual(1)
       await expect(overlay).toHaveCount(0, { timeout: 15000 })
       await expect(page.locator('.loading-line__projection')).toHaveCount(0)
-      if (path === '/craft')
-        await expect(page.locator('.craft-page')).toBeVisible()
+      if (path === '/colorPalette')
+        await expect(page.locator('.palette-tool')).toBeVisible()
       else await expect(page.locator('.detail-sections-nav')).toBeAttached()
     }
   })

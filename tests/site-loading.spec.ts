@@ -148,8 +148,8 @@ test('returning to home skips the global loader and reuses model downloads', asy
     'true',
     { timeout: 30000 }
   )
-  await push(page, '/craft')
-  await expect(page.locator('.craft-page')).toBeVisible()
+  await push(page, '/colorPalette')
+  await expect(page.locator('.palette-tool')).toBeVisible()
   await page.evaluate(() => {
     const probe = {
       seen: false,
@@ -210,8 +210,8 @@ test('failed home preparation releases the site loader and can be retried on ret
   })
   await expect(page.locator('.entry-loading-progress')).toHaveCount(0)
   await page.unroute('**/models/lucario-island.bin*')
-  await push(page, '/craft')
-  await expect(page.locator('.craft-page')).toBeVisible()
+  await push(page, '/colorPalette')
+  await expect(page.locator('.palette-tool')).toBeVisible()
   await push(page, '/')
   await expect(page.locator('.temple-stage')).toHaveAttribute(
     'data-entrance-finished',

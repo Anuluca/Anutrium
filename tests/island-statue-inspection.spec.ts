@@ -228,9 +228,9 @@ test('clicking the statue exits pillar focus and inspection leaves without shift
         }
       }
     >('#app')
-    await app!.__vue_app__!.config.globalProperties.$router.push('/craft')
+    await app!.__vue_app__!.config.globalProperties.$router.push('/colorPalette')
   })
-  await expect(page.locator('.craft-page')).toBeVisible()
+  await expect(page.locator('.palette-tool')).toBeVisible()
   await expect(root).toHaveCount(0)
   await expect(page.locator('.el-menu-layout-all')).toBeVisible()
   await expect(page.locator('.footer-com')).toBeVisible()

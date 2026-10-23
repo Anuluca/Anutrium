@@ -585,7 +585,6 @@ const moduleThemeByPath: Readonly<Record<string, ModuleHeaderTheme>> = {
   '/archive': 'archive',
   '/flanerie': 'flanerie',
   '/island': 'island',
-  '/craft': 'craft',
   '/about': 'about',
 }
 const moduleRouteByPath = new Map(

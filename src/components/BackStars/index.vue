@@ -27,6 +27,7 @@ interface Props {
   particleFps?: number
   topInset?: number
   entryActive?: boolean
+  layoutTransitionDuration?: number
 }
 
 interface ZodiacSign {
@@ -48,8 +49,17 @@ const props = withDefaults(defineProps<Props>(), {
   particleFps: 60,
   topInset: 0,
   entryActive: true,
+  layoutTransitionDuration: undefined,
 })
 const STATIC_CHART_SRC = '/images/zodiac-chart-static.svg?v=20260927-1'
+// 缓动采样与实例状态无关，避免 topInset 等布局变化时重复分配数组和字符串。
+const chartTransitionEasing = `linear(${Array.from(
+  { length: 33 },
+  (_, index) => {
+    const progress = index / 32
+    return progress < 0.5 ? 8 * progress ** 4 : 1 - (-2 * progress + 2) ** 4 / 2
+  }
+).join(',')})`
 
 const polarPercent = (radius: number, angle: number): CSSProperties => {
   const radians = (angle * Math.PI) / 180
@@ -145,6 +155,15 @@ const stageStyle = computed(() => ({
 }))
 const containerStyle = computed(() => ({
   '--background-top-inset': `${Math.max(0, props.topInset)}px`,
+  '--chart-transition-duration':
+    props.layoutTransitionDuration === undefined
+      ? undefined
+      : `${props.layoutTransitionDuration}s`,
+  // 采样 GSAP power3.inOut 的四次缓动，使星盘与三维相机保持相同进度。
+  '--chart-transition-easing':
+    props.layoutTransitionDuration === undefined
+      ? undefined
+      : chartTransitionEasing,
 }))
 const themeParticleColor = ref('#e23456')
 const chartTinted = computed(() => props.tinted || props.layout === 'red')

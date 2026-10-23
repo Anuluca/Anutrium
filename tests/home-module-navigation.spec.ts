@@ -78,8 +78,8 @@ test('module return restores focus, expansion and panel scroll with simple entra
     element.scrollTop = 260
   })
   const scrollTop = await root.evaluate((element) => element.scrollTop)
-  await push(page, '/craft')
-  await expect(page.locator('.craft-page')).toBeVisible()
+  await push(page, '/colorPalette')
+  await expect(page.locator('.palette-tool')).toBeVisible()
   await page.locator('.logo-box').click()
   await ready(page, 'archive')
   await expect(page.locator('.temple-stage')).toHaveAttribute(
@@ -238,10 +238,10 @@ test('test harbor has the requested four groups and toolbox link', async ({
     .nth(1)
     .getByRole('button', { name: /工具箱/ })
     .click()
-  await expect(page).toHaveURL(/\/craft$/)
+  await expect(page).toHaveURL(/\/creative\?current=craft$/)
 })
 
-test('simple entrance fades the whole model and focus straightens head pitch', async ({
+test('simple entrance fades the whole model and focus lowers head pitch', async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' })
@@ -250,12 +250,13 @@ test('simple entrance fades the whole model and focus straightens head pitch', a
   const stage = page.locator('.temple-stage')
   await expect(stage).toHaveAttribute('data-entrance-mode', 'simple')
   await expect
-    .poll(async () =>
-      Math.abs(
-        Number((await stage.getAttribute('data-head-rotation'))!.split(',')[0])
-      )
-    )
-    .toBeLessThan(0.001)
+    .poll(async () => {
+      const [x, y, z, w] = (await stage.getAttribute('data-head-rotation'))!
+        .split(',')
+        .map(Number)
+      return Math.asin(Math.max(-1, Math.min(1, 2 * (w * x - y * z))))
+    })
+    .toBeCloseTo((10 * Math.PI) / 180, 3)
   await expect(stage).toHaveAttribute('data-head-nod-angle', '0.000')
 })
 

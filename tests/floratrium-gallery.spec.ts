@@ -122,9 +122,12 @@ test('responsive album sizing, expansion and character rail placement', async ({
     'opacity',
     mobile ? '1' : '0.6'
   )
-  await expect(gallery.locator('.flora-album-gallery__title')).toHaveCSS(
-    'font-size',
-    mobile ? '29.3333px' : '72px'
+  const titleSize = await gallery
+    .locator('.flora-album-gallery__title')
+    .evaluate((title) => parseFloat(getComputedStyle(title).fontSize))
+  expect(titleSize).toBeCloseTo(
+    Math.min(mobile ? (44 * 2) / 3 : 72, collapsedAlbumBounds.width * 0.075),
+    2
   )
   await expect(gallery.locator('.flora-album-gallery__expand')).toHaveCSS(
     'font-size',
@@ -200,6 +203,9 @@ test('responsive album sizing, expansion and character rail placement', async ({
         right: innerWidth - bounds.right,
         inset: getComputedStyle(viewport).paddingLeft,
         viewportTopGap: viewport.getBoundingClientRect().top - bounds.top,
+        titleHeight: element
+          .querySelector('.flora-album-gallery__title')!
+          .getBoundingClientRect().height,
         listTopGap:
           element.querySelector('.media-gallery')!.getBoundingClientRect().top -
           viewport.getBoundingClientRect().top,
@@ -214,7 +220,7 @@ test('responsive album sizing, expansion and character rail placement', async ({
     expect(layout.left).toBeCloseTo(collapsedAlbumBounds.x, 0)
     expect(layout.right).toBeCloseTo(collapsedAlbumBounds.x, 0)
     expect(layout.inset).toBe('8px')
-    expect(layout.viewportTopGap).toBeCloseTo(20, 0)
+    expect(layout.viewportTopGap).toBeCloseTo(layout.titleHeight + 16, 0)
     expect(layout.listTopGap).toBeCloseTo(8, 0)
     expect(layout.footerTop).toBe('8px')
     expect(layout.pagerLeftGap).toBeCloseTo(8, 0)
@@ -437,8 +443,12 @@ test('online defaults, upward expansion, paging, refresh and pet reset preserve 
   })
   expect(layout.titleFont).toContain('UnboundedSans')
   expect(layout.titleWeight).toBe('400')
-  expect(layout.titleSize).toBe(
-    info.project.name.includes('mobile') ? '29.3333px' : '72px'
+  expect(parseFloat(layout.titleSize)).toBeCloseTo(
+    Math.min(
+      info.project.name.includes('mobile') ? (44 * 2) / 3 : 72,
+      (layout.stripRight - layout.stripLeft) * 0.075
+    ),
+    2
   )
   expect(layout.titleTop).toBeLessThan(layout.overflowBottom)
   expect(layout.titleBottom).toBeGreaterThan(layout.overflowTop)
@@ -960,12 +970,12 @@ test('album surfaces toggle expansion while selected and full photos preview', a
   await expect(gallery).toHaveClass(/is-expanded/)
   await gallery.click({ position: { x: 4, y: 4 } })
   await expect(gallery).not.toHaveClass(/is-expanded/)
-  await gallery.locator('.flora-album-gallery__title button').click()
+  // 花花的标题用于切换相册标签，展开与收起统一由展开按钮控制。
+  await gallery.getByRole('tab').first().click()
+  await expect(gallery).not.toHaveClass(/is-expanded/)
+  await gallery.locator('.flora-album-gallery__expand').click()
   await expect(gallery).toHaveClass(/is-expanded/)
-  // 手机展开后标题随边框移出视口，直接触发按钮验证同一收起逻辑。
-  await gallery
-    .locator('.flora-album-gallery__title button')
-    .evaluate((button: HTMLButtonElement) => button.click())
+  await gallery.locator('.flora-album-gallery__expand').click()
   await expect(gallery).not.toHaveClass(/is-expanded/)
   await page.emulateMedia({ reducedMotion: 'no-preference' })
   await expect

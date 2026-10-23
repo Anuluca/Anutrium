@@ -3,7 +3,8 @@ import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 import BackStars from '@/components/BackStars/index.vue'
-import { templeCategories } from '@/config/templeNavigation'
+import { TEMPLE_FOCUS_DURATION } from '@/config/templeCamera'
+import { templeCategoryById } from '@/config/templeNavigation'
 import type { ZodiacSignId } from '@/config/zodiacThemes'
 import { visualState } from '@/stores'
 import { useTempleNavigation } from '@/stores/templeNavigation'
@@ -24,7 +25,6 @@ const useDeepBlackBackground = computed(
 )
 
 const craftRouteNames = new Set([
-  'CRAFT',
   'COLORPALETTE',
   'EASESTUDIO',
   'METRONOME',
@@ -37,8 +37,7 @@ const craftRouteNames = new Set([
 const requestedActiveSign = computed<ZodiacSignId>(() => {
   if (isTempleRoute.value) {
     return (
-      templeCategories.find((item) => item.id === navigation.activeModule)
-        ?.zodiacSign || 'pisces'
+      templeCategoryById.get(navigation.activeModule)?.zodiacSign || 'pisces'
     )
   }
   const routeName = String(route.name || '')
@@ -109,6 +108,9 @@ const motionActive = computed(
       :deep-black="useDeepBlackBackground"
       :active-sign="activeSign"
       :layout="zodiacLayout"
+      :layout-transition-duration="
+        isTempleRoute ? TEMPLE_FOCUS_DURATION : undefined
+      "
       :tinted="isTempleRoute"
       :particles-visible="particlesVisible"
       :motion-active="motionActive"

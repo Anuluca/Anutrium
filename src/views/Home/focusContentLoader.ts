@@ -1,7 +1,10 @@
 import type { Component } from 'vue'
 
 import type { TempleCategoryId } from '@/config/templeNavigation'
-import { ensureRouteMessages } from '@/locales/routeMessages'
+import {
+  ensureMessageDomain,
+  ensureRouteMessages,
+} from '@/locales/routeMessages'
 
 const loads = new Map<TempleCategoryId, Promise<Component>>()
 
@@ -21,6 +24,13 @@ export function loadTempleFocusContent(category: TempleCategoryId) {
       const [component] = await Promise.all([
         import('@/views/Flânerie/JourneyContent.vue'),
         ensureRouteMessages('FLANERIE'),
+      ])
+      return component.default
+    }
+    if (category === 'island') {
+      const [component] = await Promise.all([
+        import('@/views/Island/CreativeContent.vue'),
+        ensureMessageDomain('craft'),
       ])
       return component.default
     }

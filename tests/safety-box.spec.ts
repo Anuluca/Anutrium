@@ -283,7 +283,7 @@ test('safety box keeps its geometry stable while leaving the route', async ({
     }
 
     sample()
-    await router.push('/craft')
+    await router.push('/colorPalette')
     await new Promise<void>((resolve) => {
       const timeout = window.setTimeout(resolve, 500)
       const waitForLeave = () => {

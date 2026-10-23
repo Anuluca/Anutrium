@@ -48,6 +48,7 @@ const { t, locale } = useI18n({
       loadError: '模型加载失败，请重新点击精灵球重试。',
       levelRule: '等级 = 当前年月 − 出生年月（月数）',
       album: '相册',
+      floraAlbum: '花花相册',
       video: '视频',
     },
     en: {
@@ -57,6 +58,7 @@ const { t, locale } = useI18n({
       loadError: 'Model could not load. Select the Poké Ball again to retry.',
       levelRule: 'Level = months since birth',
       album: 'Album',
+      floraAlbum: 'Flora Album',
       video: 'Videos',
     },
   },
@@ -79,7 +81,9 @@ const petLevel = computed(() => {
 })
 const activeBallIndex = computed(() => pets.indexOf(activePet.value) + 1)
 const petLocale = computed(() => (locale.value === 'en' ? 'en' : 'zhCn'))
-const albumTitle = computed(() => t('album'))
+const albumTitle = computed(() =>
+  t(activePet.value.id === 'huahua' ? 'floraAlbum' : 'album')
+)
 const petNumber = computed(() =>
   String(activePet.value.number).padStart(3, '0')
 )
@@ -380,7 +384,7 @@ const layoutBorders = useLayoutBorders()
         :video-title="t('video')"
         @expanded-change="albumExpanded = $event"
       >
-        <template #profile="{ mediaActive }">
+        <template #profile>
           <div class="flora-pet-overview">
             <div class="flora-pet-profile">
               <div class="flora-pet-profile__header">
@@ -520,23 +524,16 @@ const layoutBorders = useLayoutBorders()
                       </template>
                     </ElPopover>
                   </Teleport>
-                  <FloraPetMemo
-                    :pet="activePet"
-                    :class="{ 'is-hidden': mediaActive }"
-                  />
+                  <FloraPetMemo :pet="activePet" />
                 </div>
                 <FloraStatsChart
                   class="flora-pet-stats"
-                  :class="{ 'is-hidden': mediaActive }"
                   :stats="activePet.stats"
                   :nature="activePet.nature"
                   :name="activePet.name[petLocale]"
                 />
               </div>
-              <div
-                class="flora-pet-profile__moves"
-                :class="{ 'is-hidden': mediaActive }"
-              >
+              <div class="flora-pet-profile__moves">
                 <FloraMovesPanel
                   :key="activePet.id"
                   :pet-id="activePet.id"

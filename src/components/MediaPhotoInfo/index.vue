@@ -1,24 +1,22 @@
 <template>
   <div
     class="photo-info__inner"
-    :style="{ '--photo-info-time-padding': `${timeDividerPadding}px` }"
+    :style="{
+      '--photo-info-meta-gap': `${Math.max(0, timeDividerPadding / 2)}px`,
+    }"
   >
     <span class="photo-info__device">{{ item.device || '' }}</span>
-    <span
-      class="photo-info__time"
-      :class="{
-        'photo-info__time--divided': item.time && item.location,
-      }"
-    >
-      {{ item.time || '' }}
-    </span>
-    <span v-if="item.location" class="photo-info__location">
-      <Location
-        v-if="item.location"
-        class="photo-info__location-icon"
+    <span class="photo-info__meta">
+      <span v-if="item.time" class="photo-info__time">{{ item.time }}</span>
+      <span
+        v-if="item.time && item.location"
+        class="photo-info__divider"
         aria-hidden="true"
       />
-      <span>{{ item.location || '' }}</span>
+      <span v-if="item.location" class="photo-info__location">
+        <Location class="photo-info__location-icon" aria-hidden="true" />
+        <span>{{ item.location }}</span>
+      </span>
     </span>
   </div>
 </template>
@@ -52,7 +50,8 @@ withDefaults(
     position: relative;
     z-index: 1;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: ~'4PX';
     align-items: center;
     min-height: 28px;
     padding: 4px 12px 5px;
@@ -60,13 +59,13 @@ withDefaults(
     font-family: @cjk;
     font-size: 0.48rem;
     line-height: 1.25;
-    text-align: center;
+    text-align: left;
 
     > span {
       position: relative;
       min-width: 0;
       overflow: hidden;
-      padding: 0 10px;
+      padding: 0;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
@@ -82,16 +81,26 @@ withDefaults(
   &__time {
     font-family: @cjk;
     font-weight: 900;
-    padding-right: 0 !important;
+    white-space: nowrap;
+  }
 
-    &--divided {
-      padding-right: var(--photo-info-time-padding) !important;
-      background: linear-gradient(
-          color-mix(in srgb, var(--page-theme-color, #e23456) 52%, transparent),
-          color-mix(in srgb, var(--page-theme-color, #e23456) 52%, transparent)
-        )
-        right center / 8px 1px no-repeat;
-    }
+  &__inner > &__meta {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--photo-info-meta-gap);
+    overflow: visible;
+    padding: 0;
+  }
+
+  &__divider {
+    flex: 0 0 ~'8PX';
+    height: ~'1PX';
+    background: color-mix(
+      in srgb,
+      var(--page-theme-color, #e23456) 52%,
+      transparent
+    );
   }
 
   &__location {
@@ -99,11 +108,10 @@ withDefaults(
     font-weight: 900;
     display: inline-flex;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: flex-start;
     gap: 4px;
     overflow: visible !important;
-    padding-left: 8px !important;
-    text-align: right;
+    text-align: left;
     white-space: normal !important;
 
     span {
@@ -124,10 +132,17 @@ withDefaults(
     min-height: 26px;
     padding: 3px 6px 4px;
     font-size: 0.4rem;
+  }
+}
 
-    > span {
-      padding: 0 5px;
-    }
+@media (max-width: 768px) {
+  .photo-info__inner {
+    grid-template-columns: minmax(0, 1fr);
+    padding-left: ~'18PX';
+  }
+
+  .photo-info__inner > .photo-info__meta {
+    justify-content: flex-start;
   }
 }
 </style>

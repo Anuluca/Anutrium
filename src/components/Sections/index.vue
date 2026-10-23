@@ -25,20 +25,20 @@
       <span class="home-section-rail__num">{{ formattedSectionNumber }}</span>
     </aside>
 
-    <div class="home-section-panel">
-      <div class="home-section-title-row scroll-reveal-title">
-        <h2 :id="sectionAnchorId" class="home-section-title">
-          <span class="home-section-title__text">{{ title }}</span>
-          <span v-if="shouldShowTitleEn" class="home-section-title__en">
-            {{ titleEn }}
-          </span>
-        </h2>
-        <div v-if="$slots.actions" class="home-section-actions">
-          <slot name="actions" />
-        </div>
+    <div class="home-section-title-row scroll-reveal-title">
+      <h2 :id="sectionAnchorId" class="home-section-title">
+        <span class="home-section-title__text">{{ title }}</span>
+        <span v-if="shouldShowTitleEn" class="home-section-title__en">
+          {{ titleEn }}
+        </span>
+      </h2>
+      <div v-if="$slots.actions" class="home-section-actions">
+        <slot name="actions" />
       </div>
+    </div>
 
-      <div class="home-section-content scroll-reveal-content">
+    <div ref="contentRef" class="home-section-content scroll-reveal-content">
+      <div ref="contentInnerRef" class="home-section-content__inner">
         <slot />
       </div>
     </div>
@@ -51,6 +51,7 @@ import { useI18n } from 'vue-i18n'
 
 import SectionNavigation from '@/components/SectionNavigation/index.vue'
 import { useScrollReveal } from '@/composables/useScrollReveal'
+import { useSectionBodyReveal } from '@/composables/useSectionBodyReveal'
 import {
   toSectionAnchorSlug,
   useSectionNavigation,
@@ -68,15 +69,8 @@ const props = defineProps<{
 
 const { locale } = useI18n()
 const sectionRef = ref<HTMLElement | null>(null)
-const { isReady: isScrollRevealReady } =
-  props.reveal === false
-    ? { isReady: ref(false) }
-    : useScrollReveal({
-        rootMargin: '0px 0px -12% 0px',
-        target: sectionRef,
-        threshold: 0.04,
-      })
-
+const contentRef = ref<HTMLElement | null>(null)
+const contentInnerRef = ref<HTMLElement | null>(null)
 const formattedSectionNumber = computed(() =>
   String(props.sectionNumber).padStart(2, '0')
 )
@@ -109,6 +103,20 @@ const {
     element.querySelector<HTMLElement>(`#${anchorId}`),
 })
 
+const revealContent = useSectionBodyReveal(contentRef, contentInnerRef, {
+  immediate: props.reveal === false,
+  onComplete: announceNavigationRefresh,
+})
+const { isReady: isScrollRevealReady } =
+  props.reveal === false
+    ? { isReady: ref(false) }
+    : useScrollReveal({
+        rootMargin: '0px 0px -12% 0px',
+        target: sectionRef,
+        threshold: 0.04,
+        onReveal: revealContent,
+      })
+
 watch(
   () => [props.sectionNumber, props.title, props.titleEn, locale.value],
   announceNavigationRefresh
@@ -116,9 +124,14 @@ watch(
 </script>
 
 <style lang="less" scoped>
+:global(
+    section:has(> .home-section-layout:not(.home-section-layout--monochrome))
+  ) {
+  padding-bottom: 0 !important;
+}
+
 .home-section-layout {
-  --section-heading-height: 2.02rem;
-  --section-number-font-size: 2.2rem;
+  --section-number-font-size: 2.05rem;
 
   position: relative;
   display: grid;
@@ -151,8 +164,15 @@ watch(
 }
 
 .home-section-content {
+  grid-row: 2;
+  grid-column: 1 / -1;
+  min-width: 0;
   content-visibility: auto;
   contain-intrinsic-size: auto 480px;
+}
+
+.home-section-content__inner {
+  display: flow-root;
 }
 
 .home-section-rail {
@@ -177,17 +197,6 @@ watch(
       var(--section-accent-color, var(--page-theme-color, #e23456)) 27%,
       transparent
     );
-}
-
-.home-section-panel {
-  display: contents;
-  min-width: 0;
-}
-
-.home-section-content {
-  grid-row: 2;
-  grid-column: 1 / -1;
-  min-width: 0;
 }
 
 .home-section-title {
@@ -248,21 +257,18 @@ watch(
 .home-section-actions {
   grid-column: 3;
   justify-self: end;
-  transform: translateY(-9px);
+  transform: translateY(-2px);
 }
 
 @media screen and (max-aspect-ratio: @ratio-threshold) {
   .home-section-layout {
-    --section-heading-height: 2.09rem;
-    --section-number-font-size: 2.25rem;
+    --section-number-font-size: 2.1rem;
 
-    grid-template-columns: max-content minmax(0, 1fr);
     column-gap: 0.8rem;
   }
 
   .home-section-title-row {
     gap: 10px;
-    padding-top: 0;
   }
 
   .home-section-title-row .home-section-title {
@@ -270,25 +276,30 @@ watch(
     margin-top: -0.04em;
     font-size: 1.35rem;
   }
+
+  .home-section-actions {
+    transform: translateY(-6px);
+  }
 }
 
 // 横屏手机的宽高比会命中桌面规则，这里仅同步标题头部的移动端几何。
 @media screen and (max-width: 1024px) and (hover: none) and (pointer: coarse) {
   .home-section-layout {
-    --section-heading-height: 2.09rem;
-    --section-number-font-size: 2.25rem;
+    --section-number-font-size: 2.1rem;
 
     column-gap: 0.8rem;
   }
 
   .home-section-title-row {
-    padding-top: 0;
-
     .home-section-title {
       min-width: 0;
       margin-top: -0.04em;
       font-size: 1.35rem;
     }
+  }
+
+  .home-section-actions {
+    transform: translateY(-6px);
   }
 }
 </style>

@@ -190,6 +190,7 @@ function scheduleRootFontSizeUpdate() {
 const startAnimationFinished = () => {
   entryAnimationReady.value = true
   syncSmoothScrollForRoute()
+  if (pageContentActive.value) return
   if (pageContentRemountTimer !== null) {
     window.clearTimeout(pageContentRemountTimer)
   }
@@ -210,7 +211,8 @@ const startAnimationHidden = () => {
 }
 
 const unmountPageContent = () => {
-  if (isTempleRoute.value) return
+  // 收藏品页保留首次挂载，避免开场结束后重建全部卡片并重播入场。
+  if (isTempleRoute.value || route.name === 'ISLAND_MERCH_PHOTOGRAPHY') return
   pageContentActive.value = false
 }
 

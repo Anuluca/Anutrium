@@ -4,96 +4,152 @@
     class="media-gallery"
     :class="{
       'media-gallery--four-columns': columns === 4,
+      'media-gallery--six-columns': columns === 6,
+      'media-gallery--preview': displayMode === 'preview',
       'media-gallery--staggered': staggeredEntrance,
       'media-gallery--preserve-image-colors': preserveImageColors,
       'is-entered': entranceStarted,
     }"
   >
-    <article
-      v-for="(media, index) in items"
-      :key="media.url"
-      class="media-gallery__card"
-      :style="getEntranceStyle(index)"
+    <div
+      v-if="items.length"
+      class="media-gallery__toolbar no-rem"
+      role="group"
+      :aria-label="locale === 'en' ? 'Gallery mode' : '相册显示模式'"
     >
-      <div
-        class="media-gallery__shell"
-        :style="{
-          '--media-aspect-ratio': mediaAspectRatios.get(media.url) || 1,
-        }"
+      <slot name="toolbar-start" />
+      <button
+        type="button"
+        :aria-pressed="displayMode === 'list'"
+        :aria-label="locale === 'en' ? 'LIST' : '列表模式'"
+        :title="locale === 'en' ? 'LIST' : '列表模式'"
+        @click="setDisplayMode('list')"
+      >
+        <Grid aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        :aria-pressed="displayMode === 'preview'"
+        :aria-label="locale === 'en' ? 'PREVIEW' : '大图预览'"
+        :title="locale === 'en' ? 'PREVIEW' : '大图预览'"
+        @click="setDisplayMode('preview')"
+      >
+        <PictureIcon aria-hidden="true" />
+      </button>
+    </div>
+    <template v-if="displayMode === 'list'">
+      <article
+        v-for="(media, index) in items"
+        :key="media.url"
+        class="media-gallery__card"
+        :style="getEntranceStyle(index)"
       >
         <div
-          class="media-gallery__frame"
-          :class="{ 'is-loading': !loadedMediaUrls.has(media.url) }"
+          class="media-gallery__shell"
+          :style="{
+            '--media-aspect-ratio': mediaAspectRatios.get(media.url) || 1,
+          }"
         >
-          <div class="media-gallery__stage">
-            <button
-              v-if="isVideoUrl(media.url)"
-              class="media-gallery__open"
-              type="button"
-              :aria-label="getLabel(media)"
-              @click="openViewer(media.url)"
-            >
-              <video
-                :src="nearbyVideoUrls.has(media.url) ? media.url : undefined"
-                :data-video-src="media.url"
+          <div
+            class="media-gallery__frame"
+            :class="{ 'is-loading': !loadedMediaUrls.has(media.url) }"
+          >
+            <div class="media-gallery__stage">
+              <button
+                v-if="isVideoUrl(media.url)"
+                class="media-gallery__open"
+                type="button"
                 :aria-label="getLabel(media)"
-                loop
-                muted
-                playsinline
-                preload="none"
-                @loadedmetadata="markVideoLoaded($event, media.url)"
-              />
-            </button>
-            <button
-              v-else
-              class="media-gallery__open media-gallery__open--image"
-              type="button"
-              :aria-label="getLabel(media)"
-              @click="openViewer(media.url)"
-              @pointerenter="startCincoHover"
-              @pointerleave="leaveCincoHover"
-              @pointercancel="stopCincoHover"
-            >
-              <picture>
-                <source
-                  media="(max-width: 768px)"
-                  :srcset="getMediaMobileThumbnailUrl(media)"
+                @click="openViewer(media.url)"
+              >
+                <video
+                  :src="nearbyVideoUrls.has(media.url) ? media.url : undefined"
+                  :data-video-src="media.url"
+                  :aria-label="getLabel(media)"
+                  loop
+                  muted
+                  playsinline
+                  preload="none"
+                  @loadedmetadata="markVideoLoaded($event, media.url)"
                 />
-                <img
-                  :src="getMediaThumbnailUrl(media)"
-                  :alt="getLabel(media)"
-                  :data-media-url="media.url"
-                  loading="lazy"
-                  decoding="async"
-                  width="768"
-                  height="576"
-                  @load="markImageDecoded($event, media.url)"
-                />
-              </picture>
-            </button>
+              </button>
+              <button
+                v-else
+                class="media-gallery__open media-gallery__open--image"
+                type="button"
+                :aria-label="getLabel(media)"
+                @click="openViewer(media.url)"
+                @pointerenter="startCincoHover"
+                @pointerleave="leaveCincoHover"
+                @pointercancel="stopCincoHover"
+              >
+                <picture>
+                  <source
+                    media="(max-width: 768px)"
+                    :srcset="getMediaMobileThumbnailUrl(media)"
+                  />
+                  <img
+                    :src="getMediaThumbnailUrl(media)"
+                    :alt="getLabel(media)"
+                    :data-media-url="media.url"
+                    loading="lazy"
+                    decoding="async"
+                    width="768"
+                    height="576"
+                    @load="markImageDecoded($event, media.url)"
+                  />
+                </picture>
+              </button>
+            </div>
+          </div>
+
+          <div
+            v-if="showInfo && $slots.info && shouldShowMediaInfo(media)"
+            class="media-gallery__info"
+          >
+            <slot name="info" :item="media" :index="index" />
           </div>
         </div>
-
+      </article>
+    </template>
+    <SafeImageViewer
+      v-else-if="items.length"
+      class="media-gallery__preview"
+      inline
+      :url-list="previewUrls"
+      :labels="previewLabels"
+      :initial-index="previewIndex"
+      @switch="previewIndex = $event"
+      @open="openViewer(previewUrls[$event])"
+    >
+      <template v-if="showInfo && $slots.info" #info="{ index }">
         <div
-          v-if="$slots.info && shouldShowMediaInfo(media)"
+          v-if="items[index] && shouldShowMediaInfo(items[index])"
           class="media-gallery__info"
         >
-          <slot name="info" :item="media" :index="index" />
+          <slot name="info" :item="items[index]" :index="index" />
         </div>
-      </div>
-    </article>
+      </template>
+    </SafeImageViewer>
 
     <SafeImageViewer
       v-if="showViewer"
       :url-list="previewUrls"
       :initial-index="currentImageIndex"
+      @switch="previewIndex = $event"
       @close="showViewer = false"
-    />
+    >
+      <template v-if="$slots.info && hasPreviewInfo" #info="{ index }">
+        <slot name="info" :item="items[index]" :index="index" />
+      </template>
+    </SafeImageViewer>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { Grid, Picture as PictureIcon } from '@element-plus/icons-vue'
 
 import SafeImageViewer from '@/components/SafeImageViewer/index.vue'
 import { useImageCincoHover } from '@/composables/useImageCincoHover'
@@ -116,15 +172,17 @@ const props = withDefaults(
     items: GalleryMedia[]
     getMediaLabel?: (media: GalleryMedia) => string
     showMediaInfo?: (media: GalleryMedia) => boolean
+    showInfo?: boolean
     staggeredEntrance?: boolean
     entranceReady?: boolean
     entranceStepMs?: number
     preserveImageColors?: boolean
-    columns?: 3 | 4
+    columns?: 3 | 4 | 6
   }>(),
   {
     getMediaLabel: (media: GalleryMedia) => media.title || 'Photo',
     showMediaInfo: () => true,
+    showInfo: false,
     staggeredEntrance: false,
     entranceReady: true,
     entranceStepMs: 70,
@@ -132,6 +190,20 @@ const props = withDefaults(
     columns: 3,
   }
 )
+
+const { locale } = useI18n()
+const displayMode = ref<'list' | 'preview'>('list')
+const previewIndex = ref(0)
+const previewLabels = computed(() => props.items.map(getLabel))
+const setDisplayMode = async (mode: 'list' | 'preview') => {
+  if (displayMode.value === mode) return
+  stopCincoHover()
+  getVideoElements().forEach((video) => video.pause())
+  displayMode.value = mode
+  await nextTick()
+  observeNearbyVideos()
+  observeVisibleVideos()
+}
 
 const VIDEO_FILE_PATTERN = /\.(?:mov|mp4|webm|m4v|ogv)(?:[?#].*)?$/i
 const galleryRef = ref<HTMLElement | null>(null)
@@ -144,6 +216,13 @@ const loadedMediaUrls = reactive(new Set<string>())
 const mediaAspectRatios = reactive(new Map<string, number>())
 const nearbyVideoUrls = reactive(new Set<string>())
 const showViewer = ref(false)
+defineExpose({
+  closeViewer: () => {
+    if (!showViewer.value) return false
+    showViewer.value = false
+    return true
+  },
+})
 const currentImageIndex = ref(0)
 const entranceStarted = ref(!props.staggeredEntrance)
 let isGalleryVisible = false
@@ -169,6 +248,16 @@ const getMediaMobileThumbnailUrl = (media: GalleryMedia) =>
   mediaIndex.value.thumbnails.get(media.url)?.mobile
 const getLabel = (media: GalleryMedia) => props.getMediaLabel(media)
 const shouldShowMediaInfo = (media: GalleryMedia) => props.showMediaInfo(media)
+// 列表信息的开关不影响全屏预览；切图后只展示当前媒体实际携带的信息。
+const hasPreviewInfo = computed(() => {
+  const media = props.items[previewIndex.value]
+  return Boolean(
+    media &&
+      !isVideoUrl(media.url) &&
+      shouldShowMediaInfo(media) &&
+      (media.title || media.device || media.location || media.time)
+  )
+})
 const getVideoElements = () =>
   galleryRef.value?.querySelectorAll<HTMLVideoElement>(
     'video[data-video-src]'
@@ -215,6 +304,7 @@ const openViewer = (url: string) => {
   const imageIndex = previewUrls.value.indexOf(url)
   if (imageIndex < 0) return
   currentImageIndex.value = imageIndex
+  previewIndex.value = imageIndex
   showViewer.value = true
 }
 
@@ -334,6 +424,7 @@ watch(
   async () => {
     stopCincoHover()
     showViewer.value = false
+    previewIndex.value = 0
     const currentUrls = currentMediaUrls.value
     // 列表切换会复用同 URL 的图片节点，不能清空其状态并等待不会重发的 load 事件。
     for (const url of loadedMediaUrls)
@@ -379,18 +470,72 @@ onBeforeUnmount(() => {
 </script>
 
 <style lang="less" scoped>
+@import '@/assets/style/mediaCincoHover.less';
 .media-gallery {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0;
-  align-items: stretch;
+  align-items: start;
+  align-content: start;
+}
+.media-gallery.media-gallery--six-columns {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.media-gallery__toolbar.no-rem {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0;
+  padding: 0 0 16px;
+
+  button {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 36px;
+    padding: 8px;
+    border: 1px solid transparent;
+    color: var(--text-color);
+    background: transparent;
+    font: 12px 'alibaba-puhuiti', sans-serif;
+    cursor: pointer;
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    &[aria-pressed='true'] {
+      color: var(--page-theme-color, #e23456);
+      border-color: currentColor;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--page-theme-color, #e23456);
+      outline-offset: 3px;
+    }
+  }
+}
+
+.media-gallery__preview {
+  grid-column: 1 / -1;
+  min-width: 0;
+
+  .media-gallery__info {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .media-gallery__card {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: subgrid;
+  grid-row: span 2;
+  align-items: stretch;
   min-width: 0;
   width: 100%;
   padding: 14px 10px;
@@ -408,7 +553,7 @@ onBeforeUnmount(() => {
     background: rgba(255, 255, 255, 0.05);
     pointer-events: none;
   }
-  &:nth-child(3n)::after {
+  &:nth-of-type(3n)::after {
     display: none;
   }
 }
@@ -420,7 +565,8 @@ onBeforeUnmount(() => {
   transform: scale(0.9);
 }
 
-.media-gallery--staggered:not(.is-entered) .media-gallery__info {
+.media-gallery--staggered:not(.is-entered):not(.media-gallery--preview)
+  .media-gallery__info {
   opacity: 0;
   transform: translateY(8px);
 }
@@ -452,7 +598,8 @@ onBeforeUnmount(() => {
   animation-delay: var(--media-gallery-entry-delay, 0ms);
 }
 
-.media-gallery--staggered.is-entered .media-gallery__info {
+.media-gallery--staggered.is-entered:not(.media-gallery--preview)
+  .media-gallery__info {
   animation: media-gallery-info-in 0.36s ease-out both;
   animation-delay: calc(var(--media-gallery-entry-delay, 0ms) + 0.54s);
 }
@@ -461,18 +608,21 @@ onBeforeUnmount(() => {
 .media-gallery__frame,
 .media-gallery__stage {
   width: 100%;
+  min-width: 0;
   max-width: 100%;
 }
 
 .media-gallery__shell {
-  // 以实际媒体比例计算宽度；固定图片区高度仍用于对齐信息栏。
+  // 宽度按媒体比例收敛；两层子网格共享每行的图片区和信息栏高度。
   width: min(
     100%,
     calc(var(--media-gallery-max-height) * var(--media-aspect-ratio))
   );
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: subgrid;
+  grid-row: span 2;
+  align-items: stretch;
   margin-right: auto;
   margin-left: auto;
 }
@@ -480,7 +630,9 @@ onBeforeUnmount(() => {
 .media-gallery__frame {
   position: relative;
   z-index: 1;
-  height: var(--media-gallery-max-height);
+  height: auto;
+  aspect-ratio: var(--media-aspect-ratio, 1);
+  align-self: stretch;
   flex: none;
   max-height: var(--media-gallery-max-height);
 
@@ -500,7 +652,6 @@ onBeforeUnmount(() => {
   }
 
   &.is-loading {
-    height: var(--media-gallery-max-height);
     overflow: hidden;
 
     &::before {
@@ -517,13 +668,6 @@ onBeforeUnmount(() => {
       animation: media-placeholder-shimmer 1.5s ease-in-out infinite;
     }
 
-    .media-gallery__stage {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-    }
-
     img,
     video {
       opacity: 0;
@@ -532,6 +676,8 @@ onBeforeUnmount(() => {
 }
 
 .media-gallery__stage {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -580,23 +726,7 @@ onBeforeUnmount(() => {
     display: contents;
   }
 
-  :deep(.media-gallery__cinco-surface) {
-    position: absolute;
-    z-index: 1;
-    display: grid;
-    overflow: hidden;
-    pointer-events: none;
-  }
-
-  :deep(.media-gallery__cinco-layer) {
-    position: relative;
-    grid-area: 1 / 1 / -1 / -1;
-    width: 100%;
-    height: 100%;
-    background-position: 50% 50%;
-    background-repeat: no-repeat;
-    background-size: cover;
-  }
+  .media-cinco-hover();
 }
 
 .media-gallery__info {
@@ -687,10 +817,10 @@ onBeforeUnmount(() => {
 }
 
 @media (min-width: 901px) {
-  .media-gallery__card:nth-child(3n + 1) {
+  .media-gallery__card:nth-of-type(3n + 1) {
     padding-left: 0;
   }
-  .media-gallery__card:nth-child(3n) {
+  .media-gallery__card:nth-of-type(3n) {
     padding-right: 0;
   }
   .media-gallery--four-columns {
@@ -703,10 +833,10 @@ onBeforeUnmount(() => {
       &::after {
         display: block;
       }
-      &:nth-child(4n + 1) {
+      &:nth-of-type(4n + 1) {
         padding-left: 0;
       }
-      &:nth-child(4n) {
+      &:nth-of-type(4n) {
         padding-right: 0;
         &::after {
           display: none;
@@ -726,19 +856,19 @@ onBeforeUnmount(() => {
     border-bottom-color: rgba(255, 255, 255, 0.04);
     --media-gallery-max-height: clamp(150px, 42vw, 220px);
 
-    &:nth-child(odd) {
+    &:nth-of-type(odd) {
       padding-left: 0;
     }
-    &:nth-child(even) {
+    &:nth-of-type(even) {
       padding-right: 0;
     }
 
     &::after,
-    &:not(:nth-child(3n))::after {
+    &:not(:nth-of-type(3n))::after {
       display: none;
     }
 
-    &:nth-child(odd)::after {
+    &:nth-of-type(odd)::after {
       position: absolute;
       top: 0;
       right: 0;
@@ -763,7 +893,8 @@ onBeforeUnmount(() => {
   }
 
   .media-gallery--staggered:not(.is-entered) .media-gallery__frame,
-  .media-gallery--staggered:not(.is-entered) .media-gallery__info {
+  .media-gallery--staggered:not(.is-entered):not(.media-gallery--preview)
+    .media-gallery__info {
     opacity: 1;
     clip-path: none;
     filter: none;
@@ -772,7 +903,8 @@ onBeforeUnmount(() => {
 
   .media-gallery--staggered.is-entered .media-gallery__frame,
   .media-gallery--staggered.is-entered .media-gallery__frame::after,
-  .media-gallery--staggered.is-entered .media-gallery__info {
+  .media-gallery--staggered.is-entered:not(.media-gallery--preview)
+    .media-gallery__info {
     animation: none;
   }
 }

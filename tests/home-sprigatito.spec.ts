@@ -337,20 +337,16 @@ test('Huahua focus keeps the full page and route container stable during route l
       })
     const probe = { before: read(), frames: [] as number[][][] }
     ;(window as any).huahuaLeaveGeometry = probe
-    const observer = new MutationObserver(() => {
-      if (!root.classList.contains('route-leave-active')) return
-      observer.disconnect()
-      const tick = () => {
-        if (!root.isConnected) return
-        probe.frames.push(read())
-        requestAnimationFrame(tick)
-      }
-      tick()
-    })
-    observer.observe(root, { attributes: true, attributeFilter: ['class'] })
+    // 路由遮罩接管离场后，不再依赖旧的 route-leave-active 类名。
+    const tick = () => {
+      if (!root.isConnected) return
+      probe.frames.push(read())
+      requestAnimationFrame(tick)
+    }
+    tick()
     ;(
       document.querySelector('.layout-page') as any
-    ).__vueParentComponent.proxy.$router.push('/craft')
+    ).__vueParentComponent.proxy.$router.push('/colorPalette')
   })
   await expect(page.locator('.temple-page')).toHaveCount(0, { timeout: 15000 })
   const probe = await page.evaluate(

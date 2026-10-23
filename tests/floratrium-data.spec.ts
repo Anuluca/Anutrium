@@ -1,7 +1,82 @@
 import { expect, test } from '@playwright/test'
 
 import { FLORA_MEDIA_INDEX_TTL_MS } from '../src/utils/floratriumMedia'
-import { loadFloraMediaPage } from '../worker/src/floratrium'
+import { handleFloraMedia, loadFloraMediaPage } from '../worker/src/floratrium'
+
+test('creative albums restrict prefixes, filter images and paginate 15 items with expiring indexes', async ({
+  browserName,
+}, info) => {
+  test.skip(
+    info.project.name.includes('mobile'),
+    `${browserName} 服务端逻辑共用`
+  )
+  const prefixes: string[] = []
+  const delimiters: (string | undefined)[] = []
+  let uploaded = false
+  const bucket = {
+    list: async ({
+      prefix,
+      delimiter,
+    }: {
+      prefix: string
+      delimiter?: string
+    }) => {
+      prefixes.push(prefix)
+      delimiters.push(delimiter)
+      const keys = Array.from(
+        { length: 31 },
+        (_, i) => `${prefix}${String(i).padStart(3, '0')}.webp`
+      )
+      if (uploaded) keys.push(`${prefix}999.webp`)
+      keys.push(
+        `${prefix}video.mp4`,
+        `${prefix}.hidden.webp`,
+        `${prefix}test_originals/a.webp`,
+        `${prefix}progress/nested.webp`,
+        `${prefix}progress/deeper/nested.webp`
+      )
+      return { objects: keys.sort().map((key) => ({ key })), truncated: false }
+    },
+  } as Parameters<typeof loadFloraMediaPage>[0]
+  const first = await loadFloraMediaPage(bucket, 'photography')
+  expect(first.items).toHaveLength(15)
+  expect(first.nextCursor).toBe('15')
+  expect(first.totalItems).toBe(31)
+  expect(first.totalPages).toBe(3)
+  expect(
+    (await loadFloraMediaPage(bucket, 'photography', '30')).items
+  ).toHaveLength(1)
+  const illustration = await loadFloraMediaPage(bucket, 'illustration')
+  expect(illustration.totalItems).toBe(31)
+  const process = await loadFloraMediaPage(bucket, 'illustrationProcess')
+  expect(process.totalItems).toBe(31)
+  expect(
+    process.items.every((item) =>
+      item.key.startsWith('Creative/illustration/prgress/')
+    )
+  ).toBe(true)
+  expect(delimiters).toEqual(['/', '/', '/'])
+  expect(prefixes).toEqual([
+    'Creative/Photography/',
+    'Creative/illustration/',
+    'Creative/illustration/prgress/',
+  ])
+  const now = Date.now
+  try {
+    uploaded = true
+    Date.now = () => now() + FLORA_MEDIA_INDEX_TTL_MS + 1
+    const refreshed = await loadFloraMediaPage(bucket, 'photography')
+    expect(refreshed.totalItems).toBe(32)
+    expect(refreshed.items[0].key).toBe('Creative/Photography/999.webp')
+  } finally {
+    Date.now = now
+  }
+  const response = await handleFloraMedia(
+    new URL('https://example.com/floratrium/media?pet=../Creative'),
+    { FLORATRIUM_BUCKET: bucket } as Parameters<typeof handleFloraMedia>[1]
+  )
+  expect(response.status).toBe(400)
+})
 
 test('media indexes expire, isolate pets and buckets, and never cache failed scans', async ({
   browserName,

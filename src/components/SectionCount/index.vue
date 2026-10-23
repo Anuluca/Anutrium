@@ -1,24 +1,20 @@
 <template>
-  <span
-    ref="sectionCountRef"
-    class="section-count"
-    :style="{ '--section-count-scale-x': fitLabel ? countScaleX : 1 }"
-  >
+  <span class="section-count">
     <strong>
-      <span ref="countTextRef" class="section-count__value">
-        <CountUp
-          :to="normalizedCount"
-          :min-digits="2"
-          @end="updateCountScale"
-        />
+      <span class="section-count__value">
+        <CountUp :to="normalizedCount" :min-digits="2" />
       </span>
     </strong>
-    <small ref="labelRef">{{ label }}</small>
+    <small>
+      <span v-for="(character, index) in labelCharacters" :key="index">{{
+        character
+      }}</span>
+    </small>
   </span>
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed } from 'vue'
 
 import CountUp from '@/components/CountUp/index.vue'
 
@@ -26,97 +22,77 @@ const props = withDefaults(
   defineProps<{
     count: number
     label?: string
-    fitLabel?: boolean
   }>(),
   {
     label: 'ENTRIES',
-    fitLabel: true,
   }
 )
 
 const normalizedCount = computed(() => Math.max(0, Math.trunc(props.count)))
 
-const sectionCountRef = ref<HTMLElement | null>(null)
-const countTextRef = ref<HTMLElement | null>(null)
-const labelRef = ref<HTMLElement | null>(null)
-const countScaleX = ref(1)
-let resizeObserver: ResizeObserver | null = null
-
-const updateCountScale = () => {
-  const countTextWidth = countTextRef.value?.offsetWidth || 0
-  const labelWidth = labelRef.value?.offsetWidth || 0
-
-  if (!countTextWidth || !labelWidth) return
-  const nextScale = (labelWidth / countTextWidth) * 1.04
-  if (Math.abs(nextScale - countScaleX.value) < 0.001) return
-  countScaleX.value = nextScale
-}
-
-onMounted(() => {
-  resizeObserver = new ResizeObserver(updateCountScale)
-  if (sectionCountRef.value) resizeObserver.observe(sectionCountRef.value)
-  void nextTick(updateCountScale)
-})
-
-onBeforeUnmount(() => resizeObserver?.disconnect())
+const labelCharacters = computed(() => Array.from(props.label))
 </script>
 
 <style lang="less" scoped>
 .section-count {
-  display: inline-flex;
+  display: inline-grid;
+  grid-template-columns: max-content;
   flex: none;
-  flex-direction: column;
-  gap: 3px;
-  align-items: center;
+  gap: 3.3px;
+  justify-items: center;
   line-height: 1;
 
   strong {
     display: block;
-    width: 100%;
+    width: max-content;
     color: color-mix(
       in srgb,
       var(--section-accent-color, var(--page-theme-color, #e23456)) 58%,
       transparent
     );
     font-family: 'UnboundedSans', sans-serif;
-    font-size: clamp(1.35rem, 2.2vw, 2rem);
+    font-size: clamp(1.485rem, 2.42vw, 2.2rem);
     font-weight: 400;
     text-align: center;
 
     .section-count__value {
       display: inline-block;
-      transform: scaleX(var(--section-count-scale-x));
-      transform-origin: center;
     }
   }
 
   small {
-    display: block;
-    width: max-content;
+    display: flex;
+    justify-self: stretch;
+    justify-content: space-between;
+    gap: 0.04em;
     color: rgb(255 255 255 / 30%);
     font-family: 'UnboundedSans', sans-serif;
-    font-size: 0.42rem;
-    letter-spacing: 0.04em;
+    font-size: 0.462rem;
+    white-space: pre;
+
+    > span:only-child {
+      margin-inline: auto;
+    }
   }
 }
 
 @media (max-width: 768px) {
   .section-count {
-    gap: 2px;
+    gap: 2.2px;
 
     strong {
-      font-size: 1.75rem;
+      font-size: 1.925rem;
     }
 
     small {
-      font-size: 0.34rem;
+      font-size: 0.374rem;
     }
   }
 }
 
 @media (max-width: 1024px) and (hover: none) and (pointer: coarse) {
   .section-count strong {
-    font-size: 1.75rem;
+    font-size: 1.925rem;
   }
 }
 </style>

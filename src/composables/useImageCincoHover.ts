@@ -44,7 +44,7 @@ export function useImageCincoHover() {
           filter: 'brightness(400%) saturate(200%)',
         },
         {
-          scale: 1.3,
+          scale: 1,
           filter: 'brightness(100%) saturate(100%)',
         },
         0

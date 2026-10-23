@@ -43,7 +43,11 @@ const pageRoutes = [
   { path: '/', selector: '.temple-page', title: /HOME|Anutrium/ },
   { path: '/archive', selector: '.archives-page', title: /ARCHIVE|作品集/ },
   { path: '/flanerie', selector: '.flanerie-page', title: /FLÂNERIE|旅程/ },
-  { path: '/craft', selector: '.craft-page', title: /CRAFT|工具/ },
+  {
+    path: '/creative?current=craft',
+    selector: '.craft-content',
+    title: /HOME|Anutrium/,
+  },
   { path: '/about', selector: '.about-page', title: /ABOUT|关于/ },
   {
     path: '/test',
@@ -418,7 +422,7 @@ test('page hero title only highlights the hovered character', async ({
 
 test('page hero title stays fixed while switching between title pages', async ({
   page,
-}, testInfo) => {
+}, _testInfo) => {
   await page.goto('/archive', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.archives-page')).toBeVisible({
     timeout: PAGE_LOAD_TIMEOUT,
@@ -438,7 +442,7 @@ test('page hero title stays fixed while switching between title pages', async ({
     ).__pageHeroTitleTransitionProbe = probe
 
     const sampleTitlePosition = () => {
-      if (location.pathname !== '/craft') {
+      if (location.pathname !== '/about') {
         requestAnimationFrame(sampleTitlePosition)
         return
       }
@@ -469,14 +473,13 @@ test('page hero title stays fixed while switching between title pages', async ({
     requestAnimationFrame(sampleTitlePosition)
   })
 
-  if (testInfo.project.name.includes('mobile')) {
-    await page.locator('.mobile-menu-icon').click()
-    await page.locator('.mobile-menu-items a[href="/craft"]').click()
-  } else {
-    await page.locator('.menu-box a[href="/craft"]').click()
-  }
+  await page.evaluate(() =>
+    (
+      document.querySelector('#app') as any
+    ).__vue_app__.config.globalProperties.$router.push('/about')
+  )
 
-  await expect(page.locator('.craft-page')).toBeVisible({
+  await expect(page.locator('.about-page')).toBeVisible({
     timeout: PAGE_LOAD_TIMEOUT,
   })
   await expect(page.locator('.archives-page')).toHaveCount(0)
@@ -496,7 +499,7 @@ test('page hero title stays fixed while switching between title pages', async ({
     .toBe(true)
 
   const titleLayout = await page.evaluate(() => {
-    const placeholder = document.querySelector('.craft-page .page-hero-title')!
+    const placeholder = document.querySelector('.about-page .page-hero-title')!
     const viewport = placeholder.querySelector('.page-hero-title__clip')!
     const placeholderBounds = placeholder.getBoundingClientRect()
     const viewportBounds = viewport.getBoundingClientRect()
@@ -914,7 +917,7 @@ test('archive and craft use their exchanged representative zodiac signs', async 
 }) => {
   const routeSigns = [
     { path: '/archive', sign: '♒' },
-    { path: '/craft', sign: '♊' },
+    { path: '/colorPalette', sign: '♊' },
   ]
 
   for (const routeSign of routeSigns) {
@@ -2428,8 +2431,8 @@ test('mobile personal bay works use a taller two-by-two grid', async ({
 test('cards and harbor panels use the changelog flip entrance', async ({
   page,
 }, testInfo) => {
-  await page.goto('/craft', { waitUntil: 'domcontentloaded' })
-  await expect(page.locator('.craft-page')).toBeVisible({
+  await page.goto('/creative?current=craft', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.craft-content')).toBeVisible({
     timeout: PAGE_LOAD_TIMEOUT,
   })
 
@@ -2439,7 +2442,7 @@ test('cards and harbor panels use the changelog flip entrance', async ({
         .animationName
 
     return {
-      filter: getAnimationName('.craft-filter'),
+      filter: getAnimationName('.craft-controls'),
       card: getAnimationName('.shared-tool-card'),
       image: getAnimationName('.shared-tool-card .tl-card__img-wrap'),
       index: getAnimationName('.shared-tool-card .tl-card__index'),
@@ -2677,7 +2680,7 @@ test('mobile tool grids use one taller card per row', async ({
 
   const samples = [
     { grid: '.home-craft-grid', path: '/' },
-    { grid: '.tl-grid', path: '/craft' },
+    { grid: '.tl-grid', path: '/creative?current=craft' },
   ]
 
   for (const sample of samples) {
@@ -2785,7 +2788,13 @@ test('mobile pages respect route layout gutters without clipping home overflow',
 }, testInfo) => {
   test.skip(!testInfo.project.name.includes('mobile'))
 
-  for (const path of ['/', '/archive', '/craft', '/about', '/flanerie']) {
+  for (const path of [
+    '/',
+    '/archive',
+    '/colorPalette',
+    '/about',
+    '/flanerie',
+  ]) {
     await page.goto(path, { waitUntil: 'domcontentloaded' })
     await expect(page.locator('.main-container')).toBeAttached({
       timeout: PAGE_LOAD_TIMEOUT,
@@ -2833,14 +2842,6 @@ test('mobile collection tabs double all shared text sizes', async ({
   test.skip(!testInfo.project.name.includes('mobile'))
 
   const samples = [
-    {
-      indexSize: 0.8,
-      minHeight: 96,
-      paddingTop: 12,
-      path: '/craft',
-      subtitleSize: 0.56,
-      titleSize: 1.12,
-    },
     {
       indexSize: 1.24,
       minHeight: 180,
@@ -3163,7 +3164,7 @@ test('mobile fixed page navigation hides at the page bottom', async ({
 
 test('particle background remains active after route navigation', async ({
   page,
-}, testInfo) => {
+}, _testInfo) => {
   await page.goto('/about', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.about-page')).toBeVisible({
     timeout: PAGE_LOAD_TIMEOUT,
@@ -3177,14 +3178,13 @@ test('particle background remains active after route navigation', async ({
     'running'
   )
 
-  if (testInfo.project.name.includes('mobile')) {
-    await page.locator('.mobile-menu-icon').click()
-    await page.locator('.mobile-menu-items a[href="/craft"]').click()
-  } else {
-    await page.locator('.menu-box a[href="/craft"]').click()
-  }
+  await page.evaluate(() =>
+    (
+      document.querySelector('#app') as any
+    ).__vue_app__.config.globalProperties.$router.push('/colorPalette')
+  )
 
-  await expect(page.locator('.craft-page')).toBeVisible({
+  await expect(page.locator('.palette-tool')).toBeVisible({
     timeout: PAGE_LOAD_TIMEOUT,
   })
   await expect
@@ -3359,11 +3359,12 @@ test('personal bay keeps its geometry stable throughout route leave', async ({
     sampleFrame()
   }, islandSelector)
 
-  const destinationLink = isMobileProject
-    ? page.locator('.mobile-menu-items a[href="/craft"]')
-    : page.locator('.menu-box a[href="/craft"]')
-  await destinationLink.click()
-  await expect(page.locator('.craft-page')).toBeVisible({
+  await page.evaluate(() =>
+    (
+      document.querySelector('#app') as any
+    ).__vue_app__.config.globalProperties.$router.push('/colorPalette')
+  )
+  await expect(page.locator('.palette-tool')).toBeVisible({
     timeout: PAGE_LOAD_TIMEOUT,
   })
 

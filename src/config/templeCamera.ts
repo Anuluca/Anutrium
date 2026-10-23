@@ -1,4 +1,5 @@
 export const TEMPLE_SCENE_RISE = 0.04
+export const TEMPLE_FOCUS_DURATION = 1.65
 export const TEMPLE_MOBILE_SCENE_RISE = 0.05
 
 // 加载线与三维场景共用机位、地平线和投影偏移，避免两段动画衔接时跳位。

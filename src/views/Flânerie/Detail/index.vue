@@ -16,11 +16,7 @@
       :title-en="t('flanerie.videoLabel', {}, { locale: 'en' })"
     >
       <template #actions>
-        <SectionCount
-          :count="videos.length"
-          label="VIDEOS"
-          :fit-label="false"
-        />
+        <SectionCount :count="videos.length" label="VIDEOS" />
       </template>
       <JourneyVideoPlayer
         :videos="videos"
@@ -39,11 +35,7 @@
       :title-en="t('flanerie.photoLabel', {}, { locale: 'en' })"
     >
       <template #actions>
-        <SectionCount
-          :count="photos.length"
-          label="PHOTOS"
-          :fit-label="false"
-        />
+        <SectionCount :count="photos.length" label="PHOTOS" />
       </template>
       <MediaGallery
         :items="paginatedPhotos"

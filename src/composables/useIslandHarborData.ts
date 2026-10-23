@@ -25,11 +25,6 @@ export interface LatestPage {
   img: string
 }
 
-interface PhotographyGroupSummary {
-  photos?: unknown[]
-  photoGroups?: Array<{ photos: unknown[] }>
-}
-
 export const createIslandPlaceholder = (
   label: string,
   width = 760,
@@ -48,23 +43,6 @@ export const useIslandHarborData = () => {
   const { t, tm } = useI18n()
   const router = useRouter()
 
-  const photographyPhotoCount = computed(() => {
-    const groups = tm(
-      'island.modules.photography.photoWorks.data.groups'
-    ) as PhotographyGroupSummary[]
-
-    return groups.reduce(
-      (total, group) =>
-        total +
-        (group.photos?.length ||
-          group.photoGroups?.reduce(
-            (groupTotal, photoGroup) => groupTotal + photoGroup.photos.length,
-            0
-          ) ||
-          0),
-      0
-    )
-  })
   const merchCollectionCount = computed(
     () =>
       Object.values(
@@ -73,10 +51,6 @@ export const useIslandHarborData = () => {
           unknown[]
         >
       ).flat().length
-  )
-  const illustrationItemCount = computed(
-    () =>
-      (tm('island.modules.works.illustration.data.photos') as unknown[]).length
   )
   const studyNoteList = computed(
     () =>
@@ -93,54 +67,11 @@ export const useIslandHarborData = () => {
 
   const harborSections: HarborSection[] = [
     {
-      id: 'works',
-      title: '艺术',
-      subtitle: 'ART',
-      progress: '78%',
-      items: [
-        {
-          title: '摄影',
-          subtitle: 'PHOTO WORKS',
-          get count() {
-            return `${photographyPhotoCount.value} PICS`
-          },
-          get img() {
-            return t('island.modules.photography.photoWorks.img')
-          },
-          path: '/island/photography',
-        },
-        {
-          title: '绘画',
-          subtitle: 'ILLUSTRATION',
-          get count() {
-            return `${illustrationItemCount.value} ITEMS`
-          },
-          get img() {
-            return t('island.modules.works.illustration.img')
-          },
-          path: '/island/illustration',
-        },
-      ],
-    },
-    {
       id: 'creative',
       title: '创意',
       subtitle: 'CREATIVE',
       progress: '0%',
       items: [
-        {
-          title: '工具箱',
-          subtitle: 'TOOLBOX',
-          count: '7 TOOLS',
-          img: createIslandPlaceholder('TOOLBOX'),
-          path: '/craft',
-        },
-        {
-          title: '设计创作',
-          subtitle: 'DESIGN',
-          count: '0 ITEMS',
-          img: developingPlaceholder,
-        },
         {
           title: '实验室',
           subtitle: 'LABORATORY',

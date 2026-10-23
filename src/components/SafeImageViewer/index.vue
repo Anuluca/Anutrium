@@ -1,8 +1,22 @@
 <template>
+  <InlineImagePreview
+    v-if="inline"
+    :url-list="urlList"
+    :labels="labels"
+    :initial-index="initialIndex"
+    @switch="emit('switch', $event)"
+    @open="emit('open', $event)"
+  >
+    <template v-if="$slots.info" #info="scope">
+      <slot name="info" v-bind="scope" />
+    </template>
+  </InlineImagePreview>
   <ElImageViewer
+    v-else
     :url-list="viewerUrls"
     :initial-index="initialIndex"
     :z-index="zIndex"
+    :infinite="false"
     :hide-on-click-modal="hideOnClickModal"
     :teleported="teleported"
     @close="handleClose"
@@ -32,21 +46,26 @@
     </div>
     <div ref="corners" class="safe-image-viewer__corners" aria-hidden="true" />
     <template #toolbar="{ actions, reset }">
-      <button
-        v-for="tool in activeVideo ? [] : tools"
-        :key="tool.action"
-        type="button"
-        class="safe-image-viewer__tool"
-        :class="{ 'is-fit-toggle': tool.action === 'reset' }"
-        :aria-label="tool.label"
-        @click="
-          onToolClick($event, () =>
-            tool.action === 'reset' ? reset() : actions(tool.action)
-          )
-        "
-      >
-        <ElIcon><component :is="tool.icon" /></ElIcon>
-      </button>
+      <div v-if="$slots.info && !activeVideo" class="safe-image-viewer__info">
+        <slot name="info" :index="activeIndex" />
+      </div>
+      <div class="safe-image-viewer__tools">
+        <button
+          v-for="tool in activeVideo ? [] : tools"
+          :key="tool.action"
+          type="button"
+          class="safe-image-viewer__tool"
+          :class="{ 'is-fit-toggle': tool.action === 'reset' }"
+          :aria-label="tool.label"
+          @click="
+            onToolClick($event, () =>
+              tool.action === 'reset' ? reset() : actions(tool.action)
+            )
+          "
+        >
+          <ElIcon><component :is="tool.icon" /></ElIcon>
+        </button>
+      </div>
     </template>
   </ElImageViewer>
 </template>
@@ -72,8 +91,14 @@ import { ElIcon, ElImageViewer } from 'element-plus'
 
 import { useOverlayScrollLock } from '@/composables/useOverlayScrollLock'
 import { flashActionButton } from '@/utils/flashActionButton'
+import {
+  decorateImageViewerNavigation,
+  flashImageViewerNavigation,
+  syncImageViewerNavigationCutouts,
+} from '@/utils/imageViewerNavigation'
 import { bindImageViewerTouch } from '@/utils/imageViewerTouch'
-import { createScanlineMask } from '@/utils/scanlineMask'
+
+import InlineImagePreview from './InlineImagePreview.vue'
 
 import 'element-plus/theme-chalk/dark/css-vars.css'
 
@@ -86,17 +111,23 @@ const props = withDefaults(
     teleported?: boolean
     urlList: string[]
     zIndex?: number
+    inline?: boolean
+    labels?: string[]
   }>(),
   {
     hideOnClickModal: true,
     initialIndex: 0,
     teleported: true,
     zIndex: 10010,
+    inline: false,
+    labels: () => [],
   }
 )
 
 const emit = defineEmits<{
   close: []
+  switch: [index: number]
+  open: [index: number]
 }>()
 const { locale } = useI18n()
 const ACTION_FLASH_DURATION = 180
@@ -143,18 +174,8 @@ const flashNavigation = (nav: HTMLElement) => {
   if (!fill) return
   navigationFlashes.get(fill)?.cancel()
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-  const background = getComputedStyle(fill).backgroundImage
-  // 只闪烁带扫描线和文字镂空的填充层，保留按钮原有轮廓。
-  const animation = fill.animate(
-    [
-      { background: '#1dcba9', offset: 0 },
-      { background, offset: 0.25 },
-      { background: '#1dcba9', offset: 0.5 },
-      { background, offset: 0.75 },
-      { background, offset: 1 },
-    ].map((frame) => ({ ...frame, easing: 'steps(1, end)' })),
-    { duration: ACTION_FLASH_DURATION }
-  )
+  const animation = flashImageViewerNavigation(nav)
+  if (!animation) return
   navigationFlashes.set(fill, animation)
   const clear = () => {
     if (navigationFlashes.get(fill) === animation)
@@ -195,6 +216,7 @@ const handleSwitch = async (index: number) => {
   requestedDirection = 0
   videoPlayer.value?.pause()
   activeIndex.value = index
+  emit('switch', index)
   isImageLoading.value = !activeVideo.value
   void nextTick(syncCorners)
   clearSwitchAnimations()
@@ -277,59 +299,9 @@ const handleSwitch = async (index: number) => {
   ])
 }
 const syncNavigationCutouts = () => {
-  if (!wrapper?.isConnected) return
-  for (const surface of wrapper.querySelectorAll<HTMLElement>(
-    '.safe-image-viewer__nav-surface'
-  )) {
-    const nav = surface.parentElement!
-    const label = nav.querySelector<HTMLElement>(
-      '.safe-image-viewer__nav-label'
-    )!
-    const width = nav.clientWidth
-    const height = nav.clientHeight
-    if (!width || !height) continue
-    const style = getComputedStyle(label)
-    const size = parseFloat(style.fontSize)
-    const canvas = document.createElement('canvas')
-    const ratio = Math.min(window.devicePixelRatio || 1, 2)
-    canvas.width = Math.ceil(width * ratio)
-    canvas.height = Math.ceil(height * ratio)
-    const context = canvas.getContext('2d')
-    if (!context) continue
-    context.scale(ratio, ratio)
-    context.fillStyle = '#fff'
-    context.fillRect(0, 0, width, height)
-    // 完全扣除字形；扫描线空隙的透明度由独立遮罩控制。
-    context.globalCompositeOperation = 'destination-out'
-    context.globalAlpha = 1
-    context.font = `400 ${size}px Anton`
-    context.textAlign = 'center'
-    const drawText = (text: string, y: number) => {
-      const metrics = context.measureText(text)
-      context.fillText(
-        text,
-        width / 2,
-        y +
-          (metrics.actualBoundingBoxAscent - metrics.actualBoundingBoxDescent) /
-            2
-      )
-    }
-    const text = label.textContent ?? ''
-    if (style.writingMode === 'horizontal-tb') {
-      drawText(text, height / 2)
-    } else {
-      Array.from(text).forEach((character, index) =>
-        drawText(
-          character,
-          height / 2 + (index - (text.length - 1) / 2) * size * 1.08
-        )
-      )
-    }
-    const mask = `url("${canvas.toDataURL()}")`
-    surface.style.maskImage = mask
-    surface.style.webkitMaskImage = mask
-  }
+  if (wrapper) syncImageViewerNavigationCutouts(wrapper)
 }
+
 let closeTimer: ReturnType<typeof setTimeout> | undefined
 const handleClose = () => {
   if (closeTimer !== undefined) return
@@ -394,6 +366,11 @@ const syncCorners = () => {
     cornerStyle = { display: 'none' }
     return
   }
+  // 底栏按未缩放图片及两侧各 16px 的四角装饰对齐，缩放、拖动时保持操作位置稳定。
+  wrapper?.style.setProperty(
+    '--viewer-info-bar-width',
+    `${image.offsetWidth + 32}px`
+  )
   const nativeScale = Number(
     /scale\(([^)]+)\)/.exec(image.style.transform)?.[1] ?? 1
   )
@@ -452,40 +429,7 @@ onMounted(async () => {
   for (const nav of wrapper.querySelectorAll<HTMLElement>(
     '.el-image-viewer__prev, .el-image-viewer__next'
   )) {
-    const fill = document.createElement('span')
-    fill.className = 'safe-image-viewer__nav-fill'
-    fill.setAttribute('aria-hidden', 'true')
-    const scanlineOptions = {
-      seed: nav.classList.contains('el-image-viewer__prev')
-        ? 'flora-number-viewer-prev'
-        : 'flora-number-viewer-next',
-      lines: 32,
-      solidFrom: 1,
-      topCoverage: 0.3,
-      bottomCoverage: 0.94,
-      irregularity: 0.65,
-      gapOpacity: 0.4,
-    }
-    fill.style.setProperty(
-      '--viewer-nav-scanlines',
-      createScanlineMask({ ...scanlineOptions, direction: 'to right' })
-    )
-    fill.style.setProperty(
-      '--viewer-nav-scanlines-mobile',
-      createScanlineMask({ ...scanlineOptions, direction: 'to bottom' })
-    )
-    const surface = document.createElement('span')
-    surface.className = 'safe-image-viewer__nav-surface'
-    surface.setAttribute('aria-hidden', 'true')
-    surface.append(fill)
-    nav.append(surface)
-    const label = document.createElement('span')
-    label.className = 'safe-image-viewer__nav-label'
-    label.setAttribute('aria-hidden', 'true')
-    label.textContent = nav.classList.contains('el-image-viewer__prev')
-      ? 'PREV'
-      : 'NEXT'
-    nav.append(label)
+    decorateImageViewerNavigation(nav)
   }
   void document.fonts.load('400 112px Anton', 'PREV NEXT').then(() => {
     if (!wrapper?.isConnected) return
@@ -573,10 +517,97 @@ const tools = computed(
     ] as const
 )
 
-useOverlayScrollLock('safe-image-viewer', () => true)
+useOverlayScrollLock('safe-image-viewer', () => !props.inline)
 </script>
 
 <style lang="less">
+.el-image-viewer__wrapper
+  .el-image-viewer__actions:has(.safe-image-viewer__tools) {
+  background: transparent;
+}
+
+.safe-image-viewer__tools {
+  display: flex;
+  flex: 0 1 auto;
+  min-width: 0;
+  background: rgb(11 8 12 / 84%);
+}
+
+.el-image-viewer__wrapper
+  .el-image-viewer__actions:has(.safe-image-viewer__info) {
+  width: min(var(--viewer-info-bar-width, 100vw), 100vw);
+  box-sizing: border-box;
+  container-type: inline-size;
+
+  .el-image-viewer__actions__inner {
+    align-items: stretch;
+    gap: ~'8PX';
+  }
+
+  .safe-image-viewer__tool {
+    flex-shrink: 1;
+    min-width: 0;
+  }
+
+  @media (max-width: 768px) {
+    width: 100%;
+
+    .safe-image-viewer__tools {
+      flex: 0 0 40%;
+      max-width: ~'176PX';
+      align-items: center;
+    }
+
+    .safe-image-viewer__tool {
+      flex: 1 1 0;
+      width: 0;
+      height: min(10cqi, ~'44PX');
+      font-size: min(6cqi, ~'22PX');
+    }
+  }
+}
+
+.el-image-viewer__wrapper .safe-image-viewer__info {
+  display: flex;
+  align-items: center;
+  flex: 1 0 20%;
+  min-width: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+  text-align: left;
+  background: rgb(16 14 17 / 86%);
+
+  > * {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  @media (max-width: 768px) {
+    .photo-info__inner {
+      grid-template-columns: minmax(0, 1fr);
+      gap: ~'4PX';
+      padding: ~'6PX 10PX 6PX 18PX';
+      font-size: ~'13PX';
+    }
+
+    .photo-info__inner > .photo-info__meta {
+      justify-content: flex-start;
+    }
+  }
+}
+
+.el-image-viewer__wrapper .el-image-viewer__btn.is-disabled {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .el-image-viewer__wrapper .safe-image-viewer__corners,
+  .inline-image-preview .safe-image-viewer__corners {
+    visibility: hidden;
+  }
+}
+
 .safe-image-viewer__placeholder {
   position: absolute;
   top: 50%;

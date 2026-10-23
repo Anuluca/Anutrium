@@ -13,7 +13,6 @@
       >
         <span class="collection-card__media">
           <picture>
-            <source media="(max-width: 768px)" :srcset="primaryMobileCover" />
             <img
               class="collection-card__cover collection-card__cover--primary"
               :style="coverStyle"
@@ -58,10 +57,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
-import {
-  getCardMobileThumbnailUrl,
-  getCardThumbnailUrl,
-} from '@/utils/imageVariant'
+import { getCardThumbnailUrl } from '@/utils/imageVariant'
 
 export interface MerchCollectionCardData {
   id: string
@@ -93,11 +89,6 @@ const EXPAND_ANIMATION_DURATION = 1440
 
 const primaryCover = computed(() =>
   getCardThumbnailUrl(props.collection.photos[0]?.url || props.collection.cover)
-)
-const primaryMobileCover = computed(() =>
-  getCardMobileThumbnailUrl(
-    props.collection.photos[0]?.url || props.collection.cover
-  )
 )
 
 const subtitleDisplayParts = computed(() =>
@@ -136,11 +127,13 @@ const handleSelect = () => {
   }
 
   isOpening.value = true
-  const sourceCard = cardElement.value
+  const sourceImage = cardElement.value?.querySelector('img')
 
-  if (sourceCard) {
-    const bounds = sourceCard.getBoundingClientRect()
-    const transitionCard = sourceCard.cloneNode(true) as HTMLElement
+  if (sourceImage) {
+    // 只复制已加载的封面；在插入前读取几何，避免复制整卡及插入后强制布局。
+    const bounds = sourceImage.getBoundingClientRect()
+    const objectPosition = window.getComputedStyle(sourceImage).objectPosition
+    const transitionImage = sourceImage.cloneNode(false) as HTMLImageElement
     const isMobileViewport = window.matchMedia('(max-width: 900px)').matches
     const scale = isMobileViewport
       ? (window.innerHeight * EXPAND_OVERSCAN) / bounds.height
@@ -148,29 +141,34 @@ const handleSelect = () => {
     const translateX = window.innerWidth / 2 - (bounds.left + bounds.width / 2)
     const translateY = window.innerHeight / 2 - (bounds.top + bounds.height / 2)
 
-    transitionCard.classList.remove('is-opening')
-    transitionCard.classList.add('collection-card--expanding')
-    transitionCard.setAttribute('aria-hidden', 'true')
-    Object.assign(transitionCard.style, {
+    transitionImage.className =
+      'collection-card-transition collection-card--expanding'
+    transitionImage.alt = ''
+    transitionImage.setAttribute('aria-hidden', 'true')
+    transitionImage.loading = 'eager'
+    Object.assign(transitionImage.style, {
       top: `${bounds.top}px`,
       left: `${bounds.left}px`,
       width: `${bounds.width}px`,
       height: `${bounds.height}px`,
+      objectPosition,
     })
-    transitionCard.querySelectorAll('img').forEach((image) => {
-      image.setAttribute('loading', 'eager')
-    })
-    transitionCard.style.setProperty('--expand-x', `${translateX}px`)
-    transitionCard.style.setProperty('--expand-y', `${translateY}px`)
-    transitionCard.style.setProperty('--expand-scale', `${scale}`)
-    document.body.appendChild(transitionCard)
-    transitionCard.getBoundingClientRect()
-    transitionCard.classList.add('is-expanded')
-
-    window.setTimeout(
-      () => transitionCard.remove(),
-      EXPAND_ANIMATION_DURATION + 80
+    document.body.appendChild(transitionImage)
+    const animation = transitionImage.animate(
+      [
+        { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+        {
+          transform: `translate(${translateX}px, ${translateY}px) scale(${scale})`,
+          opacity: 0,
+        },
+      ],
+      {
+        duration: EXPAND_ANIMATION_DURATION,
+        easing: 'cubic-bezier(0.2, 0.82, 0.2, 1)',
+      }
     )
+    const removeTransitionImage = () => transitionImage.remove()
+    animation.finished.then(removeTransitionImage, removeTransitionImage)
   }
 
   emit('select', props.collection.id)
@@ -183,7 +181,6 @@ const handleSelect = () => {
   display: block;
   min-width: 0;
   aspect-ratio: 3 / 4;
-  transform-style: preserve-3d;
 }
 
 .collection-card-shell {
@@ -197,12 +194,9 @@ const handleSelect = () => {
   min-width: 0;
   overflow: visible;
   box-shadow: 8px 15px 22px rgba(0, 0, 0, 0.5);
-  transform: translateZ(12px);
   transform-origin: center bottom;
-  transform-style: preserve-3d;
   opacity: 1;
-  transition: box-shadow 0.52s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 0.52s cubic-bezier(0.22, 1, 0.36, 1),
+  transition: opacity 0.52s cubic-bezier(0.22, 1, 0.36, 1),
     transform 0.52s cubic-bezier(0.22, 1, 0.36, 1);
 
   &::before,
@@ -213,7 +207,7 @@ const handleSelect = () => {
   }
 
   &::before {
-    inset: -72px -86px -82px;
+    inset: -24px;
     z-index: -1;
     opacity: 0;
     background: radial-gradient(
@@ -227,7 +221,6 @@ const handleSelect = () => {
         rgba(118, 72, 255, 0.22),
         transparent 64%
       );
-    filter: blur(32px);
     transform: scale(0.82);
     transition: opacity 0.52s ease,
       transform 0.52s cubic-bezier(0.22, 1, 0.36, 1);
@@ -261,7 +254,6 @@ const handleSelect = () => {
   background: linear-gradient(145deg, #29272d, #101014 56%, #1d1015);
   text-align: left;
   cursor: pointer;
-  transform-style: preserve-3d;
   border: 1px solid rgb(77, 77, 77);
 
   &__media {
@@ -280,9 +272,7 @@ const handleSelect = () => {
       z-index: 5;
       content: '';
       pointer-events: none;
-      box-shadow: inset 0 0 22px rgba(0, 0, 0, 0.96),
-        inset 0 -34px 28px -10px rgba(0, 0, 0, 0.98);
-      transition: box-shadow 0.32s ease;
+      box-shadow: inset 0 0 22px rgba(0, 0, 0, 0.96);
     }
   }
 
@@ -294,10 +284,9 @@ const handleSelect = () => {
     height: 100%;
     object-fit: cover;
     object-position: var(--cover-position-x, 50%) var(--cover-position-y, 0%);
-    filter: brightness(0.88);
     transform: scale(1);
     transform-origin: center center;
-    transition: filter 0.32s ease, opacity 0.14s ease,
+    transition: opacity 0.14s ease,
       transform 0.48s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
@@ -417,9 +406,7 @@ const handleSelect = () => {
   .collection-card-shell {
     &:hover {
       z-index: 4;
-      box-shadow: 0 0 84px rgba(226, 52, 86, 0.34),
-        0 32px 76px rgba(0, 0, 0, 0.66);
-      transform: translateY(-10px) translateZ(12px) scale(1.025);
+      transform: translateY(-10px) scale(1.025);
 
       &::before {
         opacity: 1;
@@ -427,13 +414,7 @@ const handleSelect = () => {
       }
 
       .collection-card__cover {
-        filter: brightness(1);
         transform: translateY(3.5%) scale(1.08);
-      }
-
-      .collection-card__media::after {
-        box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.72),
-          inset 0 -32px 26px -10px rgba(0, 0, 0, 0.88);
       }
     }
   }
@@ -445,47 +426,15 @@ const handleSelect = () => {
   pointer-events: none;
 }
 
-.collection-card-entry.collection-card--expanding {
+.collection-card-transition {
   position: fixed;
   z-index: 9999;
+  display: block;
+  max-width: none;
   margin: 0;
   pointer-events: none;
-  transform: none;
+  object-fit: cover;
   transform-origin: center;
-  transition: transform 1.44s cubic-bezier(0.2, 0.82, 0.2, 1),
-    box-shadow 1.44s cubic-bezier(0.2, 0.82, 0.2, 1), opacity 1.16s ease 0.16s;
-
-  &.is-expanded {
-    opacity: 0;
-
-    .collection-card__cover {
-      opacity: 0;
-    }
-  }
-
-  &.is-expanded,
-  &.is-expanded:hover {
-    transform: translate(var(--expand-x), var(--expand-y))
-      scale(var(--expand-scale));
-  }
-
-  &.is-expanded {
-    .collection-card-shell::after {
-      top: 0;
-      height: 0;
-      opacity: 0;
-      clip-path: polygon(50% 0, 50% 0, 100% 100%, 0 100%);
-    }
-  }
-}
-
-.collection-card-entry.is-opening {
-  .collection-card-shell::after {
-    top: -1px;
-    height: 0;
-    opacity: 0;
-    clip-path: polygon(50% 0, 50% 0, 100% 100%, 0 100%);
-  }
 }
 
 @media (max-width: 900px) {

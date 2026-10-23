@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import {
   type Component,
+  computed,
   nextTick,
   onBeforeUnmount,
+  provide,
   ref,
   shallowRef,
   watch,
@@ -10,9 +12,11 @@ import {
 import { useResizeObserver } from '@vueuse/core'
 
 import ScrollViewport from '@/components/ScrollViewport/index.vue'
+import { sectionFadeOnlyKey } from '@/composables/useSectionBodyReveal'
 import type { TempleCategoryId } from '@/config/templeNavigation'
 import { useTempleNavigation } from '@/stores/templeNavigation'
 
+import { useTempleSectionScroll } from '../composables/useTempleSectionScroll'
 import { loadTempleFocusContent } from '../focusContentLoader'
 
 const props = defineProps<{
@@ -32,11 +36,28 @@ let loadRevision = 0
 const viewport = ref<InstanceType<typeof ScrollViewport> | null>(null)
 const archive = ref<{ closeInlineDetail: () => boolean } | null>(null)
 defineExpose({
+  getScrollRoot: () => viewport.value?.scrollRoot,
   closeInlineDetail: () => archive.value?.closeInlineDetail() ?? false,
   refreshGeometry: () => viewport.value?.measure(),
 })
+const hasSectionTarget = useTempleSectionScroll({
+  root: () => viewport.value?.scrollRoot,
+  category: () => props.category,
+  ready: () => !!component.value && !failed.value,
+  resizing: () => props.resizing,
+})
+const fadeOnly = computed(
+  () =>
+    hasSectionTarget.value ||
+    (navigation.scrollPositions[props.category] ?? 0) > 0
+)
+provide(sectionFadeOnlyKey, fadeOnly)
 let scrollRestored = false
 const restoreScroll = async () => {
+  if (hasSectionTarget.value) {
+    scrollRestored = true
+    return
+  }
   const root = viewport.value?.scrollRoot
   const saved = navigation.scrollPositions[props.category]
   if (!root || saved === undefined || scrollRestored) return
@@ -89,8 +110,8 @@ watch(() => props.category, loadContent, { immediate: true })
     class="temple-focus-content"
     :class="{
       'is-expanded': props.expanded,
-      'is-placeholder':
-        props.category === 'island' || props.category === 'pokeyard',
+      'is-placeholder': props.category === 'pokeyard',
+      'is-scroll-targeted': fadeOnly,
     }"
     :data-content="props.category"
     edge-progress
@@ -98,11 +119,13 @@ watch(() => props.category, loadContent, { immediate: true })
     <template #default="{ scrollRoot }">
       <component
         :is="component"
-        v-if="component && props.category === 'archive'"
+        v-if="component && ['archive', 'island'].includes(props.category)"
         ref="archive"
         embedded
         :detail-target="props.detailTarget"
-        :inline-details="!props.expanded && navigation.selected === 'archive'"
+        :inline-details="
+          !props.expanded && navigation.selected === props.category
+        "
       />
       <component
         :is="component"
@@ -140,6 +163,12 @@ watch(() => props.category, loadContent, { immediate: true })
   :deep(.is-embedded .misc-grid),
   :deep(.is-embedded .vlog-grid) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  &.is-scroll-targeted {
+    :deep(.home-section-content),
+    :deep(.tool-list) {
+      content-visibility: visible;
+    }
   }
   &:not(.is-expanded) :deep(.availability-github) {
     top: 50%;

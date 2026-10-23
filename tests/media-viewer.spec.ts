@@ -68,6 +68,7 @@ test('mixed media preview opens videos, switches back to images and releases pla
   const viewer = page.locator('.el-image-viewer__wrapper')
   const video = viewer.locator('video')
   await expect(video).toBeVisible()
+  await expect(viewer.locator('.el-image-viewer__next')).toBeHidden()
   await expect(video).toHaveAttribute('src', '/fixture.mp4')
   await expect(video).toHaveAttribute('controls', '')
   await expect
@@ -81,6 +82,9 @@ test('mixed media preview opens videos, switches back to images and releases pla
   await page.locator('.el-image-viewer__prev').click()
   await expect(video).toHaveCount(0)
   await expect(viewer.locator('.el-image-viewer__img')).toBeVisible()
+  await expect(viewer.locator('.el-image-viewer__prev')).toBeHidden()
+  await page.keyboard.press('ArrowLeft')
+  await expect(viewer.locator('video')).toHaveCount(0)
   await expect(viewer.locator('.safe-image-viewer__tool')).toHaveCount(5)
   await page.locator('.el-image-viewer__next').click()
   await expect(video).toBeVisible()

@@ -7,6 +7,9 @@ import type {
 import NProgress from 'nprogress'
 import { pageThemeColors } from '@/config/pageThemes'
 import {
+  parseTempleExpanded,
+  templeCategoryById,
+  type TempleCategoryId,
   templeModuleAtPath,
   templeParentModule,
 } from '@/config/templeNavigation'
@@ -370,20 +373,6 @@ export const routes: RouteConfig[] = [
     },
   },
   {
-    path: '/craft',
-    name: 'CRAFT',
-    component: () => import('@/views/Craft/index.vue'),
-    meta: {
-      updatedAt: '2026-07-08',
-      titleEn: 'CRAFT',
-      titleCn: '工具',
-      fullFooter: true,
-      pageFooter: true,
-      pageLayout: 'sub',
-      ifShow: false,
-    },
-  },
-  {
     path: '/about',
     name: 'ABOUT',
     component: () => import('@/views/About/index.vue'),
@@ -685,7 +674,11 @@ export const syncPageTheme = (
 ) => {
   if (typeof document === 'undefined') return
   const rootStyle = document.documentElement.style
-  const pageGroup = moduleGroup || getPageThemeGroup(route)
+  // 首页内部 island 标识对应 CREATIVE，独立 ISLAND 页面仍使用原主题。
+  const pageGroup =
+    route.name === 'HOME' && moduleGroup === 'ISLAND'
+      ? 'CREATIVE'
+      : moduleGroup || getPageThemeGroup(route)
   if (pageGroup === 'ABOUT') {
     if (!rootStyle.getPropertyValue('--page-theme-color'))
       rootStyle.setProperty('--page-theme-color', pageThemeColors.HOME)
@@ -746,8 +739,21 @@ export const installRouterGuards = (router: Router) => {
       const explicitModule =
         templeModuleAtPath(to.path) ||
         templeModuleAtPath(`/${String(to.query.module || '')}`)
-      const session = from.matched.length === 0 ? readTempleSession() : null
-      // 菜单切换可能仍停在旧入口 URL；刷新恢复当前菜单，显式访问其他入口仍以路由为准。
+      const expanded =
+        explicitModule &&
+        templeCategoryById.has(explicitModule as TempleCategoryId)
+          ? parseTempleExpanded(to.query.isExpand)
+          : null
+      // popstate 在守卫执行前已切换 history.current；push/replace 此时仍指向来源页。
+      // 从详情历史返回时恢复离开前的菜单，避免旧入口 URL 覆盖实际选择。
+      const isHistoryReturn =
+        !!from.name &&
+        from.name !== 'HOME' &&
+        router.options.history.state.current === to.fullPath
+      const session =
+        from.matched.length === 0 || isHistoryReturn
+          ? readTempleSession()
+          : null
       const isReload =
         typeof window !== 'undefined' &&
         (
@@ -756,7 +762,8 @@ export const installRouterGuards = (router: Router) => {
           )[0] as PerformanceNavigationTiming
         )?.type === 'reload'
       const savedSession =
-        !explicitModule || (isReload && session?.path === to.fullPath)
+        !explicitModule ||
+        ((isReload || isHistoryReturn) && session?.path === to.fullPath)
           ? session
           : null
       navigation.entryModule = savedSession
@@ -765,6 +772,9 @@ export const installRouterGuards = (router: Router) => {
           (from.name && from.name !== 'HOME'
             ? navigation.returnModule || templeParentModule(from.path)
             : null)
+      // 参数只属于对应入口，不能把已恢复的初始场景或其他模块展开。
+      navigation.entryExpanded =
+        navigation.entryModule === explicitModule ? expanded : null
       if (savedSession) navigation.aboutOpen = savedSession.aboutOpen
       navigation.simpleEntrance =
         !!navigation.entryModule || (!!from.name && from.name !== 'HOME')
@@ -773,7 +783,7 @@ export const installRouterGuards = (router: Router) => {
         explicitModule !== navigation.selected &&
         (to.path !== from.path || to.query.module !== from.query.module)
       )
-        navigation.request(explicitModule)
+        navigation.request(explicitModule, expanded ?? false)
     }
     await ensureRouteMessages(to.name)
     return true
@@ -790,7 +800,7 @@ export const installRouterGuards = (router: Router) => {
     await coverRouteCurtain(to.fullPath)
   })
 
-  router.afterEach((to, _from, failure) => {
+  router.afterEach((to, from, failure) => {
     if (typeof window === 'undefined') return
 
     NProgress.done()
@@ -804,6 +814,15 @@ export const installRouterGuards = (router: Router) => {
 
     syncSeoMeta(to)
     const navigation = useTempleNavigation()
+    // 同一模块只改查询参数时不重选方尖碑，否则场景会把重复选择当作退出。
+    if (
+      to.name === 'HOME' &&
+      from.name === 'HOME' &&
+      to.query.isExpand !== from.query.isExpand &&
+      navigation.selected &&
+      navigation.selected === navigation.entryModule
+    )
+      navigation.expanded = navigation.entryExpanded ?? false
     syncPageTheme(
       to,
       to.name === 'HOME'

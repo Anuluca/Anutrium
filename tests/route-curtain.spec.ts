@@ -122,8 +122,8 @@ test('reduced motion skips the wipe and keeps navigation usable', async ({
 }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await openDetail(page)
-  await push(page, '/craft')
-  await expect(page.locator('.craft-page')).toBeVisible()
+  await push(page, '/colorPalette')
+  await expect(page.locator('.palette-tool')).toBeVisible()
   await expect(page.locator('.route-curtain')).toHaveCount(0)
 })
 
@@ -190,12 +190,12 @@ test('aborted and superseded navigations remove the curtain', async ({
     const app = document.querySelector('#app') as any
     const router = app.__vue_app__.config.globalProperties.$router
     const removeGuard = router.beforeResolve((to: { path: string }) =>
-      to.path === '/craft' ? false : undefined
+      to.path === '/colorPalette' ? false : undefined
     )
-    await router.push('/craft')
+    await router.push('/colorPalette')
     removeGuard()
     const abortedClean = !document.querySelector('.route-curtain')
-    const first = router.push('/craft')
+    const first = router.push('/colorPalette')
     await new Promise((resolve) => setTimeout(resolve, 120))
     await Promise.allSettled([first, router.push('/flanerie/nanchang')])
     return { abortedClean }
@@ -216,16 +216,19 @@ test('centered logo covers a delayed route chunk and stays until slow page resou
   const chunkGate = new Promise<void>((resolve) => {
     releaseChunk = resolve
   })
-  await page.route('**/src/views/Craft/index.vue', async (route) => {
-    await chunkGate
-    await route.continue()
-  })
+  await page.route(
+    '**/src/views/Craft/ColorPalette/index.vue',
+    async (route) => {
+      await chunkGate
+      await route.continue()
+    }
+  )
   await openDetail(page)
   await page.evaluate(async () => {
     const { useSiteLoading } = await import('/src/stores/siteLoading.ts')
     useSiteLoading().beginTask('curtain-slow-resource')
     const app = document.querySelector('#app') as any
-    void app.__vue_app__.config.globalProperties.$router.push('/craft')
+    void app.__vue_app__.config.globalProperties.$router.push('/colorPalette')
   })
   const curtain = page.locator('.route-curtain')
   const logo = curtain.locator('.route-curtain-logo')
@@ -245,8 +248,8 @@ test('centered logo covers a delayed route chunk and stays until slow page resou
     path: `.tmp/route-curtain-logo-${info.project.name}.png`,
   })
   releaseChunk()
-  await expect(page).toHaveURL(/\/craft$/)
-  await expect(page.locator('.craft-page')).toBeAttached()
+  await expect(page).toHaveURL(/\/colorPalette$/)
+  await expect(page.locator('.palette-tool')).toBeAttached()
   // 覆盖旧版 8 秒提前揭幕和 12 秒强制清理的边界。
   await page.waitForTimeout(13000)
   await expect(curtain).toHaveAttribute('data-phase', 'covered')
@@ -349,9 +352,9 @@ test('a new navigation during the wipe cannot reveal or remove its curtain', asy
     const { useSiteLoading } = await import('/src/stores/siteLoading.ts')
     useSiteLoading().beginTask('curtain-replacement')
     const app = document.querySelector('#app') as any
-    void app.__vue_app__.config.globalProperties.$router.push('/craft')
+    void app.__vue_app__.config.globalProperties.$router.push('/colorPalette')
   })
-  await expect(page).toHaveURL(/\/craft$/)
+  await expect(page).toHaveURL(/\/colorPalette$/)
   await expect(curtain).toHaveAttribute('data-phase', 'covered')
   await expect(curtain).toHaveAttribute('data-logo-phase', 'breathing')
   await expect(curtain.locator('.route-curtain-logo')).toBeVisible()
@@ -371,7 +374,7 @@ test('a new navigation during the wipe cannot reveal or remove its curtain', asy
     useSiteLoading().cancelTask('curtain-replacement')
   })
   await expect(curtain).toHaveCount(0)
-  await expect(page.locator('.craft-page')).toBeVisible()
+  await expect(page.locator('.palette-tool')).toBeVisible()
 })
 
 test('a failed route chunk removes the early curtain and keeps the old page usable', async ({
@@ -379,11 +382,15 @@ test('a failed route chunk removes the early curtain and keeps the old page usab
 }) => {
   test.setTimeout(60000)
   await openDetail(page)
-  await page.route('**/src/views/Craft/index.vue', (route) => route.abort())
+  await page.route('**/src/views/Craft/ColorPalette/index.vue', (route) =>
+    route.abort()
+  )
   const failed = await page.evaluate(async () => {
     const app = document.querySelector('#app') as any
     try {
-      await app.__vue_app__.config.globalProperties.$router.push('/craft')
+      await app.__vue_app__.config.globalProperties.$router.push(
+        '/colorPalette'
+      )
       return false
     } catch {
       return true
@@ -446,7 +453,7 @@ test('logo draws while loading, breathes during mounting and stops when the page
         probe.drawnAt = performance.now()
         probe.drawnFrame = probe.frame
       }
-      if (document.querySelector('.craft-page') && !probe.mountedPhase)
+      if (document.querySelector('.palette-tool') && !probe.mountedPhase)
         probe.mountedPhase = curtain.dataset.logoPhase || ''
       if (curtain.dataset.phase === 'reveal') {
         probe.revealAt = performance.now()
@@ -469,8 +476,8 @@ test('logo draws while loading, breathes during mounting and stops when the page
       attributeFilter: ['data-phase', 'data-logo-phase'],
     })
   })
-  await push(page, '/craft')
-  await expect(page.locator('.craft-page')).toBeAttached()
+  await push(page, '/colorPalette')
+  await expect(page.locator('.palette-tool')).toBeAttached()
   await expect(page.locator('.route-curtain')).toHaveCount(0)
   const probe = await page.evaluate(() => (window as any).curtainMountProbe)
   expect(probe.mountedPhase).toBe('breathing')

@@ -120,7 +120,7 @@ watch(
     display: none !important;
   }
 
-  :deep(.media-gallery__card:nth-child(odd)::after) {
+  :deep(.media-gallery__card:nth-of-type(odd)::after) {
     position: absolute;
     top: 0;
     right: 0;

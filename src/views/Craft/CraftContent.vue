@@ -1,18 +1,21 @@
 <template>
-  <div class="craft-page main-container">
-    <PageHeroTitle />
+  <div
+    ref="contentRoot"
+    class="craft-content"
+    :class="{ 'is-embedded': embedded, 'is-expanded': expanded }"
+  >
+    <div class="craft-controls craft-enter craft-enter--filter">
+      <div class="craft-filter" :data-category="activeCategory">
+        <CollectionTabs
+          aria-label="Craft categories"
+          :items="categoryTabs"
+          :model-value="activeCategory"
+          size="small"
+          variant="text"
+          @update:model-value="selectCategoryTab"
+        />
+      </div>
 
-    <div class="craft-filter craft-enter craft-enter--filter">
-      <CollectionTabs
-        aria-label="Craft categories"
-        :items="categoryTabs"
-        :model-value="activeCategory"
-        size="small"
-        @update:model-value="selectCategoryTab"
-      />
-    </div>
-
-    <div class="craft-workspace craft-enter craft-enter--list">
       <FilterRail
         :accent-color="activeCategory === 'work' ? '#3c5de8' : '#e8284a'"
         aria-label="Craft tag filters"
@@ -21,13 +24,16 @@
         :show-avatar="false"
         @update:model-value="selectToolFilter"
       />
+    </div>
 
+    <div class="craft-workspace craft-enter craft-enter--list">
       <div class="tool-list">
         <div class="tl-grid">
           <ToolCard
             v-for="(tool, i) in filteredTools"
             :key="`${activeCategory}-${activeTag || 'all'}-${tool.id}`"
             class="craft-tool-card"
+            :data-craft-tool="tool.id"
             :tool="tool"
             :index="i"
             :total="filteredTools.length"
@@ -41,10 +47,6 @@
         </div>
       </div>
     </div>
-
-    <div class="craft-page-footer craft-enter craft-enter--footer">
-      <PageFooter />
-    </div>
   </div>
 </template>
 
@@ -52,6 +54,7 @@
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
+import { useMutationObserver } from '@vueuse/core'
 
 import CollectionTabs, {
   type CollectionTabItem,
@@ -59,11 +62,37 @@ import CollectionTabs, {
 import FilterRail, {
   type FilterRailItem,
 } from '@/components/FilterRail/index.vue'
-import PageFooter from '@/components/PageFooter/index.vue'
-import PageHeroTitle from '@/components/PageHeroTitle/index.vue'
 import ToolCard from '@/components/ToolCard/index.vue'
+import { useScrollReveal } from '@/composables/useScrollReveal'
+import { useCraftNavigation } from '@/stores/craftNavigation'
 import { trackToolClick } from '@/utils/analytics'
 
+defineProps<{ embedded?: boolean; expanded?: boolean }>()
+
+const contentRoot = ref<HTMLElement | null>(null)
+const revealTarget = ref<HTMLElement | null>(null)
+const { refresh: observeEntrance } = useScrollReveal({
+  target: revealTarget,
+  rootMargin: '0px',
+  threshold: 0,
+})
+const activateEntrance = () => {
+  const root = contentRoot.value
+  if (!root || revealTarget.value) return
+  const menu = root.closest('.temple-menu')
+  // 场景聚焦前面板仍在排版，避免将隐藏阶段的临时位置判为已进入可视区。
+  if (menu && !menu.classList.contains('is-visible')) return
+  revealTarget.value = root
+  observeEntrance()
+  stopMenuObserver()
+}
+const { stop: stopMenuObserver } = useMutationObserver(
+  () => contentRoot.value?.closest('.temple-menu'),
+  activateEntrance,
+  { attributes: true, attributeFilter: ['class'] }
+)
+watch(contentRoot, activateEntrance, { flush: 'post' })
+const craftNavigation = useCraftNavigation()
 const { locale, tm } = useI18n()
 const route = useRoute()
 const router = useRouter()
@@ -145,12 +174,6 @@ const categoryTabs = computed<CollectionTabItem[]>(() =>
           : locale.value === 'zhCn'
           ? '生活'
           : 'GENERAL',
-      subtitle:
-        locale.value === 'zhCn'
-          ? category === 'work'
-            ? 'WORK'
-            : 'GENERAL'
-          : undefined,
       count: bucket?.tools.length ?? 0,
       accentColor: category === 'work' ? '#3c5de8' : '#e8284a',
       coverUrl: bucket?.coverUrl,
@@ -205,6 +228,27 @@ const selectToolFilter = (filterId: string) => {
 }
 
 const openTool = (tool: NormalizedTool) => {
+  const root = contentRoot.value?.closest<HTMLElement>(
+    '.scroll-viewport__scroll'
+  )
+  const card = contentRoot.value?.querySelector<HTMLElement>(
+    `[data-craft-tool="${tool.id}"]`
+  )
+  const transform = card ? getComputedStyle(card).transform : 'none'
+  const translateY =
+    transform === 'none' ? 0 : new DOMMatrixReadOnly(transform).m42
+  craftNavigation.origin = {
+    path: route.fullPath,
+    toolId: tool.id,
+    tag: activeTag.value,
+    offset:
+      root && card
+        ? card.getBoundingClientRect().top -
+          root.getBoundingClientRect().top -
+          translateY
+        : 0,
+  }
+  craftNavigation.restoring = false
   trackToolClick({
     id: tool.id,
     title: tool.title,
@@ -224,25 +268,107 @@ watch(
   },
   { immediate: true }
 )
+if (
+  craftNavigation.restoring &&
+  craftNavigation.origin?.path === route.fullPath
+) {
+  activeTag.value = craftNavigation.origin.tag
+  craftNavigation.restoring = false
+}
 </script>
 
 <style lang="less" scoped>
 @muted: rgb(83, 83, 83);
 @mono: 'Anton', monospace;
 
-.craft-page {
+.craft-content {
+  --craft-entry-play-state: paused;
   width: 100%;
   color: #fff;
+
+  &.is-revealed {
+    --craft-entry-play-state: running;
+  }
+}
+
+.craft-controls {
+  position: relative;
+  margin-bottom: 8px;
+
+  :deep(.collection-tabs),
+  :deep(.filter-rail) {
+    position: relative;
+    z-index: 1;
+  }
 }
 
 .craft-filter {
-  margin: 0 0 15px;
+  --craft-tab-inset: 6px;
+  position: relative;
+  margin: 0;
+
+  &::before,
+  &::after {
+    position: absolute;
+    inset: 0;
+    content: '';
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+  }
+
+  &::before {
+    background: linear-gradient(to right, rgba(60, 93, 232, 0.22), transparent);
+  }
+
+  &::after {
+    background: linear-gradient(to left, rgba(232, 40, 74, 0.22), transparent);
+  }
+
+  &[data-category='work']::before,
+  &[data-category='general']::after {
+    opacity: 1;
+  }
+
+  :deep(.collection-tabs--text .collection-tab) {
+    padding-block: var(--craft-tab-inset);
+    transition: opacity 0.3s ease, padding 0.3s ease;
+
+    &.is-active:first-child {
+      padding-left: 16px;
+    }
+
+    &.is-active:last-child {
+      padding-right: 16px;
+    }
+
+    &:last-child {
+      justify-content: flex-end;
+    }
+  }
+
+  :deep(.collection-tab__copy strong) {
+    font-size: calc(var(--collection-tab-title-size) * 2);
+  }
+
+  :deep(.collection-tab:not(.is-active) .collection-tab__copy strong) {
+    -webkit-text-fill-color: transparent;
+    -webkit-text-stroke: 1px currentColor;
+  }
+
+  :deep(.collection-tabs--text .collection-tab .collection-tab__count) {
+    margin-left: calc(-12px - 0.22em);
+    font-size: calc(var(--collection-tab-title-size) * 1.3);
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+    transform: translateY(-0.06em);
+  }
 }
 
 .craft-enter {
   opacity: 0;
   will-change: opacity, transform;
   animation: craftSectionIn 0.82s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-play-state: var(--craft-entry-play-state);
 }
 
 .craft-enter--filter {
@@ -254,10 +380,6 @@ watch(
 
 .craft-enter--list {
   animation-delay: 0.16s;
-}
-
-.craft-enter--footer {
-  animation-delay: 0.34s;
 }
 
 @keyframes craftSectionIn {
@@ -288,11 +410,41 @@ watch(
   contain-intrinsic-size: 940px;
 }
 
-.craft-workspace {
-  display: grid;
-  grid-template-columns: 172px minmax(0, 1fr);
-  align-items: start;
-  column-gap: clamp(18px, 2.5vw, 34px);
+.craft-controls {
+  :deep(.filter-rail) {
+    position: relative;
+    inset: auto;
+    margin-bottom: 0;
+    flex-direction: row;
+    gap: 2px;
+    max-height: none;
+    padding: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-right: 0;
+    border-bottom: 1px solid var(--border-color);
+
+    button {
+      width: auto;
+      min-width: 0;
+      padding: 8px 12px 13px;
+
+      &::after {
+        top: auto;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        width: auto;
+        height: 2px;
+        transform: scaleX(0);
+        transform-origin: left;
+      }
+
+      &.is-active::after {
+        transform: scaleX(1);
+      }
+    }
+  }
 }
 
 .tool-list {
@@ -302,7 +454,7 @@ watch(
 
 .tl-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 24px 20px;
   margin-left: 2px;
   margin-right: 2px;
@@ -320,24 +472,32 @@ watch(
   text-align: center;
 }
 
-@media (max-width: 900px) {
-  .craft-workspace {
-    display: block;
-  }
+.craft-content.is-embedded .tl-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
 
+.craft-content.is-embedded.is-expanded .tl-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+@media (max-width: 900px) {
   .tl-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 600px) {
-  .tl-grid {
+  .tl-grid,
+  .craft-content.is-embedded .tl-grid,
+  .craft-content.is-embedded.is-expanded .tl-grid {
     grid-template-columns: 1fr;
   }
 }
 
 @media screen and (max-aspect-ratio: 1) {
-  .tl-grid {
+  .tl-grid,
+  .craft-content.is-embedded .tl-grid,
+  .craft-content.is-embedded.is-expanded .tl-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 }

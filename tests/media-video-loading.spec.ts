@@ -47,6 +47,9 @@ test('gallery frames share a height and align information below mixed media', as
   )
   await page.route(/\.mp4(?:\?|$)/i, (route) => route.abort())
   await page.goto('/flanerie/changsha', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.layout-page')).toHaveClass(/\blayout-show\b/, {
+    timeout: 20000,
+  })
   const cards = page.locator('.media-gallery__card')
   await expect(page.locator('.media-gallery__info').first()).toBeAttached()
   const portrait = page

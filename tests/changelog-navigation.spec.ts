@@ -20,7 +20,7 @@ test('changelog navigation jumps within the panel without moving the page', asyn
   await expect(panel).toBeVisible()
   const navigation = panel.locator('.update-program__navigation')
   await expect(navigation).toContainText('MIRAGE')
-  await expect(navigation).toContainText('2026-10-22')
+  await expect(navigation).toContainText('2026-10-23')
   const initialScroll = await page.evaluate(() => window.scrollY)
   await navigation.getByRole('button', { name: /v1\.0/ }).click()
   await expect(

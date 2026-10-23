@@ -9,7 +9,6 @@ import {
   ref,
   watch,
 } from 'vue'
-import { useRoute } from 'vue-router'
 
 import MobileScreenFrame from '@/components/MobileScreenFrame/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
@@ -42,7 +41,6 @@ import { loadTempleFocusContent } from './focusContentLoader'
 import type { createHomeTemple, TempleSelection } from './templeScene'
 
 const props = defineProps<{ presentation: TemplePresentation }>()
-const route = useRoute()
 const navigation = useTempleNavigation()
 const floraPets = useFloraPets()
 // 关闭期间继续保持背景休眠，待 About 离场结束后再恢复。
@@ -171,12 +169,13 @@ let expandClickFlash: Animation | undefined
 const toggleExpanded = async (event: MouseEvent) => {
   if (config.menu.layout === 'fullscreen' || resizing.value || !menu.value)
     return
+  const scroll = focusContent.value?.getScrollRoot()
+  if (!scroll) return
   expandClickFlash = flashActionButton(event.currentTarget as HTMLButtonElement)
   const revision = ++resizeRevision
   resizing.value = true
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
   const pane = menu.value
-  const scroll = pane.querySelector<HTMLElement>('.scroll-viewport__scroll')!
   const scrollTop = scroll.scrollTop
   const expanding = !navigation.expanded
   const before = pane.getBoundingClientRect()
@@ -226,10 +225,49 @@ const toggleExpanded = async (event: MouseEvent) => {
 const category = computed(() =>
   menuCategory.value ? templeCategoryById.get(menuCategory.value) : undefined
 )
+const scrollMenuFromBackground = (event: WheelEvent) => {
+  if (
+    config.menu.layout !== 'sidebar' ||
+    !settled.value ||
+    !menuRevealed.value ||
+    navigation.expanded ||
+    resizing.value ||
+    navigation.aboutOpen ||
+    event.ctrlKey ||
+    !event.deltaY
+  )
+    return
+  const target = event.target
+  if (
+    !(target instanceof Element) ||
+    target.closest(
+      '.temple-menu, .temple-work-detail, [data-lenis-nested-scroll]'
+    )
+  )
+    return
+  const root = focusContent.value?.getScrollRoot()
+  if (!root) return
+  event.preventDefault()
+  // 转发输入也会中断带 current 参数的自动定位，避免与用户滚动争抢位置。
+  root.dispatchEvent(new WheelEvent('wheel', event))
+  const unit =
+    event.deltaMode === WheelEvent.DOM_DELTA_PAGE
+      ? root.clientHeight
+      : event.deltaMode === WheelEvent.DOM_DELTA_LINE
+      ? parseFloat(getComputedStyle(root).lineHeight) || 16
+      : 1
+  root.scrollBy({
+    top: event.deltaY * unit,
+    behavior: 'instant' as ScrollBehavior,
+  })
+}
 const buttons = new Map<string, HTMLElement>()
 let scene: ReturnType<typeof createHomeTemple> | undefined
 const sceneActive = computed(
-  () => !aboutBackgroundHidden.value && (!navigation.expanded || resizing.value)
+  // 带参进入全屏时仍需完成方尖碑聚焦，settled 后再暂停被遮挡的场景。
+  () =>
+    !aboutBackgroundHidden.value &&
+    (!navigation.expanded || resizing.value || !settled.value)
 )
 watch(sceneActive, (active) => scene?.setActive(active), { flush: 'post' })
 watch(aboutBackgroundHidden, (hidden) => scene?.setOccluded(hidden), {
@@ -243,7 +281,7 @@ const closeInlineDetail = () =>
   (selected.value === 'sprigatito' &&
     (floraFocusLayout.value?.closeExpandedAlbum() ?? false)) ||
   (config.id === 'desktop' &&
-    navigation.selected === 'archive' &&
+    (navigation.selected === 'archive' || navigation.selected === 'island') &&
     !navigation.expanded &&
     !navigation.aboutOpen &&
     (focusContent.value?.closeInlineDetail() ?? false))
@@ -273,7 +311,10 @@ const setButton = (id: string, element: unknown) => {
 watch(
   () => navigation.revision,
   () => {
-    if (navigation.ready) scene?.select(navigation.requested)
+    if (navigation.ready) {
+      scene?.select(navigation.requested)
+      navigation.expanded = navigation.requestedExpanded
+    }
   }
 )
 watch(
@@ -352,7 +393,7 @@ onMounted(async () => {
           const initialModule =
             (navigation.revision
               ? navigation.requested
-              : navigation.entryModule || route.query.module) ??
+              : navigation.entryModule) ??
             (hasJourneyReturnState() ? 'flanerie' : undefined)
           if (
             initialModule === 'statue' ||
@@ -365,8 +406,11 @@ onMounted(async () => {
               initialModule as TempleSelection,
               navigation.simpleEntrance
             )
-          if (initialModule === navigation.returnModule)
-            navigation.expanded = navigation.returnExpanded
+          navigation.expanded = navigation.revision
+            ? navigation.requestedExpanded
+            : navigation.entryExpanded ??
+              (initialModule === navigation.returnModule &&
+                navigation.returnExpanded)
         },
         entranceComplete: () => {
           navigation.entranceFinished = true
@@ -481,18 +525,21 @@ onUnmounted(() => {
         class="temple-underlay"
         :inert="aboutBackgroundHidden || undefined"
         :aria-hidden="aboutBackgroundHidden"
+        @wheel="scrollMenuFromBackground"
       >
         <div
           ref="stage"
           class="lucario-stage temple-stage"
           :aria-busy="status === 'loading'"
         >
-          <FloraFocusLayout
-            v-if="selected === 'sprigatito' && settled"
-            ref="floraFocusLayout"
-            :mobile="config.id === 'mobile'"
-            @select-pet="selectPet"
-          />
+          <Transition name="flora-focus-fade" appear>
+            <FloraFocusLayout
+              v-if="selected === 'sprigatito' && settled"
+              ref="floraFocusLayout"
+              :mobile="config.id === 'mobile'"
+              @select-pet="selectPet"
+            />
+          </Transition>
           <MobileScreenFrame v-if="config.id === 'mobile'" />
           <TempleBackdrop />
           <Transition name="temple-clock-reveal" appear>
@@ -522,6 +569,7 @@ onUnmounted(() => {
           v-if="config.id === 'desktop'"
           ref="workDetailTarget"
           class="temple-work-detail"
+          :class="{ 'temple-work-detail--creative': menuCategory === 'island' }"
           :inert="!settled || resizing || navigation.aboutOpen || undefined"
         />
         <Transition

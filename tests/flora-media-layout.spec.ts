@@ -156,7 +156,7 @@ test('media layout adapts to available space and restores its scroll and geometr
     expect(Math.abs(geometry.leftAlignment)).toBeLessThanOrEqual(1)
     expect(geometry.mediaGap).toBeGreaterThanOrEqual(0)
     expect(
-      Math.abs(geometry.album.width - geometry.video.width)
+      Math.abs(geometry.album.width - geometry.video.width * (mobile ? 1 : 1.5))
     ).toBeLessThanOrEqual(1)
     if (!mobile)
       expect(
@@ -310,9 +310,9 @@ test('media layout adapts to available space and restores its scroll and geometr
     requestAnimationFrame(sample)
     void (
       document.querySelector('#app') as any
-    ).__vue_app__.config.globalProperties.$router.push('/craft')
+    ).__vue_app__.config.globalProperties.$router.push('/colorPalette')
   })
-  await expect(page.locator('.craft-page')).toBeVisible({ timeout: 30000 })
+  await expect(page.locator('.palette-tool')).toBeVisible({ timeout: 30000 })
   const leaving = await page.evaluate(
     () => (window as any).floraLayoutLeaveProbe
   )

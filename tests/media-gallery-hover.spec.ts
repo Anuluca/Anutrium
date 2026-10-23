@@ -16,7 +16,7 @@ test.beforeEach(async ({ page }) => {
   await expect(page.locator('.flr-page')).toBeVisible({ timeout: 20_000 })
 })
 
-test('Cinco preserves reference motion without hue rotation and supports re-entry', async ({
+test('Cinco settles at normal size without hue rotation and supports re-entry', async ({
   page,
 }, info) => {
   test.skip(info.project.name.includes('mobile'))
@@ -38,6 +38,10 @@ test('Cinco preserves reference motion without hue rotation and supports re-entr
     const moduleURL = source.match(/from ["']([^"']*\/gsap\.js[^"']*)/)?.[1]
     if (!moduleURL) throw new Error('GSAP module not found')
     const { gsap } = await import(moduleURL)
+    // 模块加载可能超过动画时长，重新触发悬停后再采样时间线。
+    surface.parentElement?.dispatchEvent(
+      new PointerEvent('pointerenter', { pointerType: 'mouse' })
+    )
     const [bottom, top] = [...surface.children] as HTMLElement[]
     const timeline = gsap.getTweensOf(bottom)[0].parent
     timeline.pause(0)
@@ -55,28 +59,28 @@ test('Cinco preserves reference motion without hue rotation and supports re-entr
     timeline.play()
     return frames
   })
-  // 沿用参考站 Fx5 的运动参数，按用户要求移除色相旋转。
+  // 保留裁切与亮度变化，缩放最终回到图片正常尺寸。
   const reference = [
     { scale: 1.5, brightness: 4, saturate: 2, inset: 0 },
     {
-      scale: 1.4458,
+      scale: 1.3645,
       brightness: 3.187,
       saturate: 1.729,
       inset: 13.55,
     },
     {
-      scale: 1.4024,
+      scale: 1.256,
       brightness: 2.536,
       saturate: 1.512,
       inset: 24.4,
     },
     {
-      scale: 1.3432,
+      scale: 1.108,
       brightness: 1.648,
       saturate: 1.216,
       inset: 39.2,
     },
-    { scale: 1.3, brightness: 1, saturate: 1, inset: 50 },
+    { scale: 1, brightness: 1, saturate: 1, inset: 50 },
   ]
   for (let index = 0; index < frames.length; index++) {
     const actual = frames[index]

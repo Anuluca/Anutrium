@@ -181,9 +181,9 @@ test('home keeps route-leave geometry within one pixel', async ({ page }) => {
     ;(window as any).homeLeaveProbe = probe
     void (
       document.querySelector('#app') as any
-    ).__vue_app__.config.globalProperties.$router.push('/craft')
+    ).__vue_app__.config.globalProperties.$router.push('/colorPalette')
   })
-  await expect(page.locator('.craft-page')).toBeVisible()
+  await expect(page.locator('.palette-tool')).toBeVisible()
   const probe = await page.evaluate(() => (window as any).homeLeaveProbe)
   expect(probe.leaving).toBeGreaterThan(0)
   expect(probe.maxShift).toBeLessThanOrEqual(1)

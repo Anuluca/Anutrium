@@ -1,6 +1,6 @@
 <template>
   <nav class="tool-recommendation-row" aria-label="推荐工具">
-    <RouterLink class="tool-recommendation-row__link" to="/craft">
+    <RouterLink class="tool-recommendation-row__link" :to="collectionPath">
       工具集
     </RouterLink>
     <span class="tool-recommendation-row__separator">|</span>
@@ -26,9 +26,11 @@ export interface RecommendedTool {
 
 const props = withDefaults(
   defineProps<{
+    collectionPath?: string
     recommendedTools?: RecommendedTool[]
   }>(),
   {
+    collectionPath: '/creative?current=craft',
     recommendedTools: () => [],
   }
 )

@@ -1,12 +1,17 @@
 <template>
   <button
+    ref="cardRoot"
     type="button"
     class="shared-work-card"
-    :style="{ '--work-card-accent': pageThemeColors.ARCHIVE }"
+    :style="{
+      '--work-card-accent': themeColor || pageThemeColors.ARCHIVE,
+    }"
     :class="{
       'shared-work-card--always-visible': displayMode === 'always-visible',
       'shared-work-card--grid-background': background === 'grid',
+      'shared-work-card--current': current,
     }"
+    :aria-current="current ? 'true' : undefined"
     @click="emit('select', work)"
   >
     <picture v-if="work.img && background !== 'grid'" class="work-card-picture">
@@ -38,16 +43,18 @@
         {{ work.time }}
       </small>
     </span>
-    <i class="work-card-corner work-card-corner--tl" />
-    <i class="work-card-corner work-card-corner--tr" />
-    <i class="work-card-corner work-card-corner--bl" />
-    <i class="work-card-corner work-card-corner--br" />
+    <i class="work-card-corner work-card-corner--tl no-rem" />
+    <i class="work-card-corner work-card-corner--tr no-rem" />
+    <i class="work-card-corner work-card-corner--bl no-rem" />
+    <i class="work-card-corner work-card-corner--br no-rem" />
   </button>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { useMutationObserver } from '@vueuse/core'
 
+import { useScrollReveal } from '@/composables/useScrollReveal'
 import { pageThemeColors } from '@/config/pageThemes'
 import {
   getCardMobileThumbnailUrl,
@@ -62,13 +69,41 @@ const props = withDefaults(
     displayMode?: 'always-visible'
     background?: 'grid'
     imageLoading?: 'eager' | 'lazy'
+    themeColor?: string
+    current?: boolean
   }>(),
   {
     displayMode: undefined,
     background: undefined,
     imageLoading: 'lazy',
+    themeColor: undefined,
+    current: false,
   }
 )
+
+const cardRoot = ref<HTMLElement | null>(null)
+const revealTarget = ref<HTMLElement | null>(null)
+const { refresh: observeEntrance } = useScrollReveal({
+  target: revealTarget,
+  rootMargin: '0px',
+  threshold: 0,
+})
+const activateEntrance = () => {
+  const card = cardRoot.value
+  if (!card || revealTarget.value) return
+  const menu = card.closest('.temple-menu')
+  // 等面板实际显示后再观察，避免遮罩动画在隐藏的场景聚焦阶段提前播放。
+  if (menu && !menu.classList.contains('is-visible')) return
+  revealTarget.value = card
+  observeEntrance()
+  stopMenuObserver()
+}
+const { stop: stopMenuObserver } = useMutationObserver(
+  () => cardRoot.value?.closest('.temple-menu'),
+  activateEntrance,
+  { attributes: true, attributeFilter: ['class'] }
+)
+watch(cardRoot, activateEntrance, { flush: 'post' })
 
 const cardImage = computed(() => getCardThumbnailUrl(props.work.img ?? ''))
 const cardMobileImage = computed(() =>
@@ -96,6 +131,22 @@ const emit = defineEmits<{
   background: #0d0d0e;
   box-shadow: 0 0.35rem 0.9rem rgba(0, 0, 0, 0.22);
   cursor: pointer;
+
+  &::before {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    content: '';
+    background: var(--work-card-accent);
+    pointer-events: none;
+    animation: workCardReveal 800ms cubic-bezier(0.4, 0, 0.2, 1) both paused;
+  }
+
+  &.is-revealed {
+    &::before {
+      animation-play-state: running;
+    }
+  }
 
   &::after {
     position: absolute;
@@ -215,35 +266,86 @@ const emit = defineEmits<{
     transform 260ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.work-card-corner {
+.work-card-corner.no-rem {
   position: absolute;
   z-index: 3;
   width: 0.25rem;
   height: 0.25rem;
-  background: var(--work-card-accent);
   opacity: 0;
   transform: scale(0);
   transition: opacity 160ms ease-out, transform 180ms ease-out;
   pointer-events: none;
 
-  &--tl {
+  &::before,
+  &::after {
+    position: absolute;
+    content: '';
+    transition: opacity 200ms ease,
+      translate 400ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  &::before {
+    inset: 0;
+    background: var(--work-card-accent);
+  }
+  &::after {
+    width: 8px;
+    height: 8px;
+    box-sizing: border-box;
+    border: 0 solid var(--work-card-accent);
+    opacity: 0;
+    translate: var(--corner-entry-x) var(--corner-entry-y);
+  }
+
+  &.work-card-corner--tl {
+    --corner-entry-x: -20px;
+    --corner-entry-y: -20px;
     top: 0.55rem;
     left: 0.55rem;
+    &::after {
+      top: 0;
+      left: 0;
+      border-top-width: 2px;
+      border-left-width: 2px;
+    }
   }
 
-  &--tr {
+  &.work-card-corner--tr {
+    --corner-entry-x: 20px;
+    --corner-entry-y: -20px;
     top: 0.55rem;
     right: 0.55rem;
+    &::after {
+      top: 0;
+      right: 0;
+      border-top-width: 2px;
+      border-right-width: 2px;
+    }
   }
 
-  &--bl {
+  &.work-card-corner--bl {
+    --corner-entry-x: -20px;
+    --corner-entry-y: 20px;
     bottom: 0.55rem;
     left: 0.55rem;
+    &::after {
+      bottom: 0;
+      left: 0;
+      border-bottom-width: 2px;
+      border-left-width: 2px;
+    }
   }
 
-  &--br {
+  &.work-card-corner--br {
+    --corner-entry-x: 20px;
+    --corner-entry-y: 20px;
     right: 0.55rem;
     bottom: 0.55rem;
+    &::after {
+      right: 0;
+      bottom: 0;
+      border-bottom-width: 2px;
+      border-right-width: 2px;
+    }
   }
 }
 
@@ -267,9 +369,7 @@ const emit = defineEmits<{
 
   .work-card-corner {
     transform: scale(1);
-    transition: opacity 180ms ease-out, transform 180ms ease-out,
-      width 720ms cubic-bezier(0.16, 1, 0.3, 1),
-      height 720ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition: opacity 180ms ease-out, transform 180ms ease-out;
   }
 }
 
@@ -320,6 +420,14 @@ const emit = defineEmits<{
       opacity: 1;
     }
 
+    .work-card-corner::before {
+      opacity: 0;
+    }
+    .work-card-corner::after {
+      opacity: 1;
+      translate: 0 0;
+    }
+
     .work-card-stack {
       max-height: 2.5rem;
       margin-top: 0.2rem;
@@ -336,12 +444,6 @@ const emit = defineEmits<{
   .shared-work-card--always-visible:hover {
     .work-card-image {
       filter: brightness(0.62);
-    }
-
-    .work-card-corner {
-      width: 0.5rem;
-      height: 0.5rem;
-      opacity: 0.5;
     }
   }
 
@@ -373,10 +475,94 @@ const emit = defineEmits<{
   }
 }
 
+.work-card-info::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  content: '';
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    color-mix(in srgb, var(--work-card-accent) 28%, transparent) 34%,
+    color-mix(in srgb, var(--work-card-accent) 78%, transparent) 72%,
+    var(--work-card-accent) 100%
+  );
+  opacity: 0;
+  transition: opacity 280ms ease-out;
+}
+.work-card-info {
+  text-shadow: 0 0 0 rgba(0, 0, 0, 0);
+  transition: opacity 160ms ease-out, text-shadow 280ms ease-out;
+  small {
+    transition: color 280ms ease-out;
+  }
+}
+.shared-work-card.shared-work-card--current {
+  .work-card-image {
+    filter: none;
+  }
+  .work-card-info {
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
+    &::before {
+      opacity: 1;
+    }
+    small {
+      color: #fff;
+    }
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .shared-work-card {
+    animation: none;
+    &::before {
+      display: none;
+      animation: none;
+    }
+  }
   .work-card-image,
-  .work-card-corner {
+  .work-card-corner,
+  .work-card-corner::before,
+  .work-card-corner::after,
+  .work-card-info,
+  .work-card-info::before,
+  .work-card-info small {
     transition-duration: 0.01ms;
+  }
+}
+
+@keyframes workCardReveal {
+  from {
+    // 偶奇填充保留外框、挖空中心；等比例百分比让镂空始终保持卡片宽高比。
+    clip-path: polygon(
+      evenodd,
+      0 0,
+      100% 0,
+      100% 100%,
+      0 100%,
+      0 0,
+      50% 50%,
+      50% 50%,
+      50% 50%,
+      50% 50%,
+      50% 50%
+    );
+  }
+  to {
+    clip-path: polygon(
+      evenodd,
+      0 0,
+      100% 0,
+      100% 100%,
+      0 100%,
+      0 0,
+      0 0,
+      100% 0,
+      100% 100%,
+      0 100%,
+      0 0
+    );
   }
 }
 </style>

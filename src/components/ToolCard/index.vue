@@ -116,6 +116,7 @@ const { locale } = useI18n()
   cursor: pointer;
   transform-origin: center top;
   animation: toolCardIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) var(--delay, 0s) both;
+  animation-play-state: var(--craft-entry-play-state, running);
   transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1),
     border-color 0.3s ease, box-shadow 0.3s ease;
 
@@ -178,6 +179,7 @@ const { locale } = useI18n()
   z-index: 2;
   animation: toolCardMediaRise 0.52s cubic-bezier(0.16, 1, 0.3, 1)
     calc(var(--delay, 0s) + 0.14s) both;
+  animation-play-state: var(--craft-entry-play-state, running);
 
   &-num,
   &-slash,
@@ -212,6 +214,7 @@ const { locale } = useI18n()
   background: @bg;
   animation: toolCardMediaRise 0.52s cubic-bezier(0.16, 1, 0.3, 1)
     calc(var(--delay, 0s) + 0.14s) both;
+  animation-play-state: var(--craft-entry-play-state, running);
   transition: width 0.2s;
 }
 

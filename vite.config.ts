@@ -201,7 +201,6 @@ export default defineConfig({
       '/flanerie/nanjing',
       '/flanerie/singapore',
       '/flanerie/pingtandao',
-      '/craft',
       '/colorPalette',
       '/easeStudio',
       '/metronome',

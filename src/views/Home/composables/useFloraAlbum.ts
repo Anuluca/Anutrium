@@ -3,9 +3,10 @@ import { useDocumentVisibility, useIntervalFn } from '@vueuse/core'
 
 import { petAlbums } from '@/locales/dynamic/petAlbums'
 import {
-  FLORA_MEDIA_PAGE_SIZE,
   type FloraMedia,
   type FloraMediaPage,
+  isMediaAlbumId,
+  mediaAlbums,
 } from '@/utils/floratriumMedia'
 
 const origin = import.meta.env.DEV
@@ -21,12 +22,18 @@ const pathname = import.meta.env.DEV
   ? '/floratrium/media'
   : '/api/floratrium/media'
 
-const fetchPage = async (
+const resolveAlbum = (id: string) => {
+  const album = petAlbums[id]?.folder || id
+  if (!isMediaAlbumId(album)) throw new Error('Invalid album')
+  return album
+}
+export const fetchFloraMediaPage = async (
   petId: string,
   cursor: string,
   signal: AbortSignal
 ): Promise<FloraMediaPage> => {
-  const query = new URLSearchParams({ pet: petAlbums[petId].folder })
+  const album = resolveAlbum(petId)
+  const query = new URLSearchParams({ pet: album })
   if (cursor) query.set('cursor', cursor)
   const response = await fetch(`${origin}${pathname}?${query}`, {
     signal,
@@ -36,7 +43,7 @@ const fetchPage = async (
   const page: FloraMediaPage = await response.json()
   if (
     !Array.isArray(page?.items) ||
-    page.items.length > FLORA_MEDIA_PAGE_SIZE ||
+    page.items.length > mediaAlbums[album].pageSize ||
     page.items.some(
       (item) =>
         !item ||
@@ -46,7 +53,9 @@ const fetchPage = async (
     ) ||
     !(page.nextCursor === null || typeof page.nextCursor === 'string') ||
     (page.totalPages !== undefined &&
-      (!Number.isSafeInteger(page.totalPages) || page.totalPages < 1))
+      (!Number.isSafeInteger(page.totalPages) || page.totalPages < 1)) ||
+    (page.totalItems !== undefined &&
+      (!Number.isSafeInteger(page.totalItems) || page.totalItems < 0))
   )
     throw new Error('Invalid album response')
   return page
@@ -66,7 +75,8 @@ const sameItems = (previous: FloraMedia[], next: FloraMedia[]) =>
 export const useFloraAlbum = (
   petId: () => string,
   expanded: Ref<boolean>,
-  beforePageChange: () => void
+  beforePageChange?: () => void,
+  options: { prefetch?: boolean } = {}
 ) => {
   const loading = ref(false)
   const error = ref(false)
@@ -74,6 +84,7 @@ export const useFloraAlbum = (
   const pageCursors = ref([''])
   const pageIndex = ref(0)
   const totalPages = ref<number | null>(null)
+  const totalItems = ref<number | null>(null)
   const visibility = useDocumentVisibility()
   let controller: AbortController | undefined
   let revision = 0
@@ -89,10 +100,16 @@ export const useFloraAlbum = (
     pageCursors.value = ['']
     pageIndex.value = 0
     totalPages.value = null
+    totalItems.value = null
     error.value = false
   }
   const refresh = async (quiet = false) => {
-    if (!expanded.value || visibility.value !== 'visible') return
+    // Creative 在折叠状态预取一次首页以取得总数，不启动后台轮询。
+    if (
+      visibility.value !== 'visible' ||
+      (!expanded.value && !(options.prefetch && totalItems.value === null))
+    )
+      return
     // 慢请求仍在进行时跳过轮询，避免每 15 秒中断并重新下载同一页。
     if (quiet && controller) return
     stopRequest()
@@ -107,14 +124,14 @@ export const useFloraAlbum = (
     }, 15000)
     if (!quiet) loading.value = true
     try {
-      const page = await fetchPage(
+      const page = await fetchFloraMediaPage(
         petId(),
         pageCursors.value[pageIndex.value],
         requestController.signal
       )
       if (requestRevision !== revision) return
       // 保留未变化的数组引用，避免重建预览、重启视频及重新绑定观察器。
-      if (!sameItems(allItems.value, page.items)) allItems.value = page.items
+      if (page.totalItems !== undefined) totalItems.value = page.totalItems
       if (
         Number.isSafeInteger(page.totalPages) &&
         page.totalPages! > 0 &&
@@ -124,9 +141,18 @@ export const useFloraAlbum = (
         pageCursors.value = Array.from(
           { length: page.totalPages! },
           (_, index) =>
-            index === 0 ? '' : String(index * FLORA_MEDIA_PAGE_SIZE)
+            index === 0
+              ? ''
+              : String(index * mediaAlbums[resolveAlbum(petId())].pageSize)
         )
       }
+      // 删除图片使当前页失效时，重新请求最后一个有效页。
+      if (page.totalPages !== undefined && pageIndex.value >= page.totalPages) {
+        pageIndex.value = page.totalPages - 1
+        await refresh()
+        return
+      }
+      if (!sameItems(allItems.value, page.items)) allItems.value = page.items
       // 旧接口未提供总页数时只发现下一页，不再为页码预扫描全部相册。
       if (page.totalPages === undefined) {
         totalPages.value = null
@@ -160,7 +186,7 @@ export const useFloraAlbum = (
     )
       return false
     stopRequest()
-    beforePageChange()
+    beforePageChange?.()
     pageIndex.value = target - 1
     allItems.value = []
     error.value = false
@@ -173,20 +199,40 @@ export const useFloraAlbum = (
   const { pause, resume } = useIntervalFn(() => void refresh(true), 15000, {
     immediate: false,
   })
-  watch([expanded, visibility], ([open, visible], [wasOpen]) => {
-    if (open && !wasOpen) reset()
-    if (open && visible === 'visible') {
-      void refresh()
-      resume()
-    } else {
-      pause()
-      stopRequest()
-    }
-  })
+  watch(
+    [expanded, visibility],
+    ([open, visible], previous) => {
+      const wasOpen = previous?.[0]
+      if (open && !wasOpen) {
+        const count = totalItems.value
+        // 预取的首页可立即展示，后台仍刷新；其他页重新打开时回到首页。
+        const firstPage =
+          options.prefetch && pageIndex.value === 0 ? allItems.value : []
+        reset()
+        totalItems.value = count
+        allItems.value = firstPage
+      }
+      if (open && visible === 'visible') {
+        void refresh()
+        resume()
+      } else {
+        pause()
+        stopRequest()
+        if (
+          options.prefetch &&
+          visible === 'visible' &&
+          totalItems.value === null
+        )
+          void refresh()
+      }
+    },
+    { immediate: true }
+  )
   watch(petId, () => {
     stopRequest()
     expanded.value = false
     reset()
+    if (options.prefetch) void refresh()
   })
   onScopeDispose(() => {
     pause()
@@ -199,6 +245,7 @@ export const useFloraAlbum = (
     pageCursors,
     pageIndex,
     totalPages,
+    totalItems,
     refresh,
     goToPage,
     changePage,

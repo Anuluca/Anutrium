@@ -17,7 +17,7 @@ withDefaults(
     expanded: false,
     mobile: false,
     label: undefined,
-    fontFamily: 'Anton',
+    fontFamily: 'UnboundedSans',
     iconClass: undefined,
     icon: undefined,
   }
@@ -56,6 +56,11 @@ onBeforeUnmount(() => flash?.cancel())
 @import '../styles/floraMedia.less';
 button.flora-expand-button.no-rem {
   .flora-media-expand-control();
+
+  > span {
+    transform: translateY(-0.06em);
+  }
+
   &.is-mobile {
     .flora-media-expand-control-mobile();
   }

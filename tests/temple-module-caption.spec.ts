@@ -91,7 +91,7 @@ test('module caption changes preserve fullscreen leaving geometry', async ({
     const initial = nodes.map((node) => node.getBoundingClientRect())
     const deltas: number[] = []
     const app = (document.querySelector('#app') as any).__vue_app__
-    const navigation = app.config.globalProperties.$router.push('/craft')
+    const navigation = app.config.globalProperties.$router.push('/colorPalette')
     await new Promise<void>((resolve) => {
       const sample = () => {
         if (!nodes[0].isConnected) return resolve()

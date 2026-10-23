@@ -325,7 +325,7 @@
                 class="home-craft-more"
                 :color="page.color"
                 label="MORE CRAFTS"
-                to="/craft"
+                to="/creative?current=craft"
               />
             </div>
             <div v-if="page.id === 'about'" class="home-about-gallery">

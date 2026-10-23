@@ -41,7 +41,7 @@ export const templeCategories = [
     roman: 'IV',
     title: 'CREATIVE',
     label: '创作',
-    themeColor: pageThemeColors.ISLAND,
+    themeColor: pageThemeColors.CREATIVE,
     zodiacSign: 'pisces',
     x: 6.9,
     z: 3,
@@ -117,6 +117,13 @@ const moduleByPath = new Map<string, TempleEntryId>([
 export const templeModuleAtPath = (path: string): TempleEntryId | null =>
   moduleByPath.get(path.replace(/\/+$/, '')) ?? null
 
+// 无效或重复参数不覆盖现有的站内返回状态。
+export const parseTempleExpanded = (value: unknown): boolean | null => {
+  if (value === 'true' || value === '1') return true
+  if (value === 'false' || value === '0') return false
+  return null
+}
+
 export const templeParentModule = (path: string): TempleCategoryId | null => {
   if (path.startsWith('/flanerie/')) return 'flanerie'
   if (path.startsWith('/pokeyard/')) return 'pokeyard'
@@ -127,7 +134,6 @@ export const templeParentModule = (path: string): TempleCategoryId | null => {
   )
     return 'island'
   if (
-    path === '/craft' ||
     /^\/(colorPalette|easeStudio|metronome|bounceDynamics|htmlEntities|base64Codec|imageBase64|ai-playground)(\/|$)/.test(
       path
     )

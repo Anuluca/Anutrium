@@ -6,13 +6,16 @@ import {
   createFloraMediaPage,
   FLORA_MEDIA_INDEX_TTL_MS,
   type FloraAlbumId,
-  getFloraMediaType,
+  isAlbumMediaKey,
+  isMediaAlbumId,
+  mediaAlbums,
 } from '../../src/utils/floratriumMedia'
 
 const FLORA_LOCAL_ROOT = '/Users/anuluca/Work/Space_Coding/R2'
 const readMedia = async (
   directory: string,
-  prefix: string
+  prefix: string,
+  albumId: FloraAlbumId
 ): Promise<string[]> => {
   const entries = await readdir(directory, { withFileTypes: true })
   const files: string[] = []
@@ -24,11 +27,17 @@ const readMedia = async (
     )
       continue
     const name = `${prefix}${entry.name}`
-    if (entry.isDirectory())
-      files.push(
-        ...(await readMedia(path.join(directory, entry.name), `${name}/`))
-      )
-    else if (entry.isFile() && getFloraMediaType(name)) files.push(name)
+    if (entry.isDirectory()) {
+      if (mediaAlbums[albumId].recursive)
+        files.push(
+          ...(await readMedia(
+            path.join(directory, entry.name),
+            `${name}/`,
+            albumId
+          ))
+        )
+    } else if (entry.isFile() && isAlbumMediaKey(name, albumId))
+      files.push(name)
   }
   return files
 }
@@ -46,7 +55,7 @@ export const floratriumDevPlugin = (): Plugin => ({
       const cursor = url.searchParams.get('cursor') || '0'
       const offset = Number(cursor)
       if (
-        (pet !== 'flora' && pet !== 'hei') ||
+        !isMediaAlbumId(pet) ||
         !/^\d+$/.test(cursor) ||
         !Number.isSafeInteger(offset) ||
         request.method !== 'GET'
@@ -62,14 +71,22 @@ export const floratriumDevPlugin = (): Plugin => ({
         if (!index || index.expiresAt <= Date.now()) {
           // 本地只枚举键名，图片和视频仍直接请求线上 R2。
           const keys = await readMedia(
-            path.join(FLORA_LOCAL_ROOT, 'Floratrium', pet),
-            `Floratrium/${pet}/`
+            path.join(FLORA_LOCAL_ROOT, mediaAlbums[pet].prefix),
+            mediaAlbums[pet].prefix,
+            pet
           )
           keys.sort().reverse()
-          index = { keys, expiresAt: Date.now() + FLORA_MEDIA_INDEX_TTL_MS }
+          index = {
+            keys,
+            expiresAt: Date.now() + FLORA_MEDIA_INDEX_TTL_MS,
+          }
           indexes.set(pet, index)
         }
-        response.end(JSON.stringify(createFloraMediaPage(index.keys, offset)))
+        response.end(
+          JSON.stringify(
+            createFloraMediaPage(index.keys, offset, mediaAlbums[pet].pageSize)
+          )
+        )
       } catch {
         response.statusCode = 503
         response.end(JSON.stringify({ error: 'Local album unavailable' }))

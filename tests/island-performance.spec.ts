@@ -192,8 +192,8 @@ test('island stops idle GPU work, uses static buffers and reuses downloaded asse
 test('sampled pointer preserves the final position and cancels pending work', async ({
   page,
 }) => {
-  await page.goto('/craft', { waitUntil: 'domcontentloaded' })
-  await expect(page.locator('.craft-page')).toBeVisible()
+  await page.goto('/colorPalette', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.palette-tool')).toBeVisible()
   const result = await page.evaluate(async () => {
     const moduleURL = '/src/utils/pointerSamples.ts'
     const { subscribePointerSamples } = await import(

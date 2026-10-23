@@ -216,7 +216,7 @@ test('footer geometry switches once and animates transforms without stretching f
 }, info) => {
   test.skip(info.project.name.includes('mobile'), '移动端页脚没有桌面边距')
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto('/craft')
+  await page.goto('/colorPalette')
   const footer = page.locator('.footer-com')
   await expect(footer).toHaveClass(/footer-expanded/)
   await page.evaluate(() => document.fonts.ready)
@@ -267,7 +267,7 @@ test('ready label bitmaps are reused without painting again when the same font c
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto('/craft')
+  await page.goto('/colorPalette')
   await page.evaluate(() => document.fonts.ready)
   const result = await page.evaluate(async () => {
     const url = '/src/utils/templeLabelTextures.ts'

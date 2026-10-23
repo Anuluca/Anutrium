@@ -691,7 +691,7 @@ test('home unmounts each previous secondary section when the next one enters', a
     },
     craft: {
       color: 'rgb(36, 67, 146)',
-      href: '/craft',
+      href: '/creative?current=craft',
       label: 'MORE CRAFTS',
     },
     flanerie: {

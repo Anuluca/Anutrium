@@ -10,6 +10,10 @@ const bottomLine = {
       zhCn: '不要暂停我的音乐',
       en: "DON'T PAUSE MY MUSIC",
     },
+    {
+      zhCn: '正因为有各种各样的想法，世界才会变得更加广阔。',
+      en: 'THE WORLD GROWS WIDER BECAUSE OF ALL THE DIFFERENT IDEAS IN IT.',
+    },
   ],
   recommand: [
     {

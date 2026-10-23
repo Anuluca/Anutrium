@@ -172,11 +172,11 @@ test('baked neck reduction adds no folded faces or open seams', async () => {
 test('island canvas fills its stage after navigation from another page', async ({
   page,
 }) => {
-  await page.goto('/craft', { waitUntil: 'domcontentloaded' })
+  await page.goto('/colorPalette', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.footer-bottom-gradient--ready')).toBeAttached({
     timeout: 15000,
   })
-  await expect(page.locator('.craft-page')).toBeVisible()
+  await expect(page.locator('.palette-tool')).toBeVisible()
   await page.evaluate(() =>
     (
       document.querySelector('.layout-page') as any

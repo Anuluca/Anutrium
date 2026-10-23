@@ -596,7 +596,7 @@ test('keeps page geometry stable while leaving the route', async ({ page }) => {
     }
 
     sample()
-    await router.push('/craft')
+    await router.push('/colorPalette')
     await new Promise<void>((resolve) => {
       const timeout = window.setTimeout(resolve, 500)
       const waitForLeave = () => {

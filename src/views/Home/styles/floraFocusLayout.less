@@ -63,10 +63,6 @@
       position: absolute;
       inset: 0;
     }
-    &.is-hidden {
-      visibility: hidden;
-      pointer-events: none;
-    }
   }
 
   .flora-pet-profile {
@@ -88,20 +84,12 @@
   .flora-pet-profile__identity {
     min-width: 0;
     padding-right: 16px;
-    :deep(.is-hidden) {
-      visibility: hidden;
-      pointer-events: none;
-    }
   }
 
   .flora-pet-profile__moves {
     flex: none;
     width: 100%;
     margin-top: 0;
-    &.is-hidden {
-      visibility: hidden;
-      pointer-events: none;
-    }
   }
 
   .flora-pet-level {
@@ -567,8 +555,7 @@
       height: 32px;
     }
 
-    .flora-focus-layout__character,
-    .flora-pet-level {
+    .flora-focus-layout__character {
       opacity: 1;
       transition: opacity 250ms ease, visibility 0s;
     }
@@ -577,31 +564,24 @@
       :deep(.flora-album-gallery__decoration) {
         opacity: 0;
         visibility: hidden;
+        transition: opacity 300ms ease, visibility 0s 300ms;
       }
 
-      .flora-focus-layout__character,
-      .flora-pet-level {
+      .flora-focus-layout__character {
         opacity: 0;
         visibility: hidden;
         transition: opacity 250ms ease, visibility 0s 250ms;
-      }
-
-      .flora-pet-level {
-        // 移除入场动画的填充状态，避免其 opacity: 1 覆盖展开时的渐隐。
-        animation: none;
       }
     }
 
     @media (prefers-reduced-motion: reduce) {
       &.is-album-expanded {
-        .flora-focus-layout__character,
-        .flora-pet-level {
+        .flora-focus-layout__character {
           transition: none;
         }
       }
 
-      .flora-focus-layout__character,
-      .flora-pet-level {
+      .flora-focus-layout__character {
         transition: none;
       }
     }

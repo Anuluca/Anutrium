@@ -2,7 +2,9 @@ import {
   createFloraMediaPage,
   FLORA_MEDIA_INDEX_TTL_MS,
   type FloraAlbumId,
-  getFloraMediaType,
+  isAlbumMediaKey,
+  isMediaAlbumId,
+  mediaAlbums,
 } from '../../src/utils/floratriumMedia'
 import { jsonResponse } from './http'
 
@@ -31,12 +33,14 @@ const listMediaKeys = async (bucket: R2Bucket, pet: FloraAlbumId) => {
   // R2 的分页结果已经按键名正序排列，过滤后只需反转，不再重复排序。
   do {
     const result = await bucket.list({
-      prefix: `Floratrium/${pet}/`,
+      prefix: mediaAlbums[pet].prefix,
+      // Creative 只枚举直属对象，R2 将子目录合并为前缀而不返回其图片。
+      ...(!mediaAlbums[pet].recursive ? { delimiter: '/' } : {}),
       limit: 1000,
       ...(cursor ? { cursor } : {}),
     })
     for (const object of result.objects)
-      if (getFloraMediaType(object.key)) keys.push(object.key)
+      if (isAlbumMediaKey(object.key, pet)) keys.push(object.key)
     if (!result.truncated) break
     if (!result.cursor || seen.has(result.cursor))
       throw new Error('Repeated album cursor')
@@ -58,14 +62,18 @@ export const loadFloraMediaPage = async (
     offset < 0
   )
     throw new Error('Invalid album cursor')
-  return createFloraMediaPage(await loadMediaIndex(bucket, pet), offset)
+  return createFloraMediaPage(
+    await loadMediaIndex(bucket, pet),
+    offset,
+    mediaAlbums[pet].pageSize
+  )
 }
 
 export const handleFloraMedia = async (url: URL, env: Env) => {
   const pet = url.searchParams.get('pet')
   const cursor = url.searchParams.get('cursor') || undefined
   if (
-    (pet !== 'flora' && pet !== 'hei') ||
+    !isMediaAlbumId(pet) ||
     (cursor && (!/^\d+$/.test(cursor) || !Number.isSafeInteger(Number(cursor))))
   )
     return jsonResponse({ error: 'Invalid album request' }, 400)

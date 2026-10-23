@@ -142,7 +142,11 @@ defineExpose({
     :style="{ '--flora-media-scroll-offset': `${scrollOffset}px` }"
     data-lenis-nested-scroll
   >
-    <div ref="profileViewport" class="flora-media-region__profile">
+    <div
+      ref="profileViewport"
+      class="flora-media-region__profile"
+      :inert="layerPanel !== null || undefined"
+    >
       <slot name="profile" :media-active="layerPanel !== null" />
     </div>
     <div class="flora-media-region__panels">
@@ -183,12 +187,16 @@ defineExpose({
 .flora-media-region.no-rem {
   --flora-media-title-size: 72px;
   --flora-media-title-line-height: 1.2;
+  --flora-media-expanded-rise: 16px;
   --flora-media-heading-gap: -40px;
   --flora-media-heading-space: calc(
     var(--flora-media-title-size) * var(--flora-media-title-line-height) +
       var(--flora-media-heading-gap)
   );
-  --flora-media-expanded-inset: calc(var(--flora-pet-level-size) + 24px);
+  --flora-media-expanded-heading-space: calc(
+    var(--flora-media-title-size) * var(--flora-media-title-line-height) -
+      var(--flora-media-title-overlap, 4px)
+  );
   --flora-media-min-height: 180px;
   --flora-media-max-height: clamp(280px, 38vh, 380px);
 
@@ -218,11 +226,21 @@ defineExpose({
     grid-template-rows: minmax(0, 1fr);
     min-width: 0;
     min-height: 0;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 350ms ease, visibility 0s;
+  }
+
+  &.is-layer-active .flora-media-region__profile {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 350ms ease, visibility 0s 350ms;
   }
 
   .flora-media-region__panels {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
     gap: 16px;
     min-height: 0;
   }
@@ -237,15 +255,16 @@ defineExpose({
   :deep(.flora-media-panel.is-layer-panel) {
     position: absolute;
     top: calc(
-      var(--flora-media-expanded-inset) + var(--flora-media-heading-space) +
-        var(--flora-media-scroll-offset)
+      var(--flora-media-scroll-offset) +
+        var(--flora-media-expanded-heading-space) -
+        var(--flora-media-expanded-rise)
     );
     left: 0;
     z-index: 5;
     width: 100%;
     height: calc(
-      100% - var(--flora-media-expanded-inset) -
-        var(--flora-media-heading-space)
+      100% - var(--flora-media-expanded-heading-space) +
+        var(--flora-media-expanded-rise)
     );
   }
 
@@ -297,6 +316,15 @@ defineExpose({
       left: calc(var(--flora-inline-inset) + 1px);
       width: calc(100% - 2 * var(--flora-inline-inset) - 2px);
       height: 100dvh;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flora-media-region.no-rem {
+    .flora-media-region__profile,
+    &.is-layer-active .flora-media-region__profile {
+      transition: none;
     }
   }
 }

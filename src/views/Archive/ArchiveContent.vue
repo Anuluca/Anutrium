@@ -27,6 +27,7 @@
             v-for="work in group.works"
             :key="work.id"
             :work="work"
+            :current="inlineDetail && selectedWork?.id === work.id"
             display-mode="always-visible"
             @select="openDetail"
           />
@@ -53,6 +54,7 @@
             background="grid"
             display-mode="always-visible"
             :work="item"
+            :current="inlineDetail && selectedWork?.id === item.id"
             @select="openDetail"
           />
         </div>

@@ -26,7 +26,6 @@ const routeMessageDomains: Record<string, MessageDomain[]> = {
   ARCHIVE: ['archive'],
   FLANERIE: ['flanerie'],
   FLANERIE_DETAIL: ['flanerie'],
-  CRAFT: ['craft'],
   COLORPALETTE: ['craft'],
   EASESTUDIO: ['craft'],
   METRONOME: ['craft'],
@@ -48,7 +47,7 @@ const routeMessageDomains: Record<string, MessageDomain[]> = {
 
 const messageLoads = new Map<MessageDomain, Promise<void>>()
 
-const loadMessageDomain = (domain: MessageDomain) => {
+export const ensureMessageDomain = (domain: MessageDomain) => {
   const cachedLoad = messageLoads.get(domain)
   if (cachedLoad) return cachedLoad
 
@@ -78,5 +77,5 @@ export const ensureRouteMessages = (routeName: unknown) => {
   if (typeof routeName !== 'string') return Promise.resolve()
 
   const domains = routeMessageDomains[routeName] || []
-  return Promise.all(domains.map(loadMessageDomain)).then(() => undefined)
+  return Promise.all(domains.map(ensureMessageDomain)).then(() => undefined)
 }

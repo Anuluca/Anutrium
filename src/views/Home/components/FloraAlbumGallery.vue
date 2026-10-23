@@ -6,20 +6,26 @@ import {
   nextTick,
   type Ref,
   ref,
+  watch,
 } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Loading, Picture } from '@element-plus/icons-vue'
 
 import MediaGallery from '@/components/MediaGallery/index.vue'
 import MediaPhotoInfo from '@/components/MediaPhotoInfo/index.vue'
+import {
+  floraFriendAlbums,
+  floraFriendsFeatured,
+} from '@/locales/dynamic/floraFriends'
 import { petAlbums } from '@/locales/dynamic/petAlbums'
-import { flashActionButton } from '@/utils/flashActionButton'
 import { getFloraCaptureDate } from '@/utils/floratriumMedia'
 
 import { useFloraAlbum } from '../composables/useFloraAlbum'
 import { useFloraMediaPanel } from '../composables/useFloraMediaPanel'
+import FloraAlbumPagination from './FloraAlbumPagination.vue'
 import FloraAlbumStrip from './FloraAlbumStrip.vue'
 import FloraExpandButton from './FloraExpandButton.vue'
+import FloraFriendsIcon from './FloraFriendsIcon.vue'
 
 const props = defineProps<{ petId: string; title: string; mobile?: boolean }>()
 const decorationFilterId = `flora-decoration-tint-${getCurrentInstance()?.uid}`
@@ -30,7 +36,7 @@ const decorationTarget = inject<Ref<HTMLElement | null>>(
 const emit = defineEmits<{
   (event: 'expanded-change', expanded: boolean): void
 }>()
-const { t } = useI18n({
+const { t, locale } = useI18n({
   useScope: 'local',
   messages: {
     zhCn: {
@@ -42,6 +48,7 @@ const { t } = useI18n({
       empty: '暂无图片或视频',
       unknownDate: '日期未知',
       page: '第 {page} 页',
+      friends: '花花的邻居们',
     },
     en: {
       previous: 'Previous',
@@ -52,6 +59,7 @@ const { t } = useI18n({
       empty: 'No photos or videos',
       unknownDate: 'Unknown date',
       page: 'Page {page}',
+      friends: 'Flora’s Neighbors',
     },
   },
 })
@@ -68,6 +76,23 @@ const {
 )
 const viewport = ref<HTMLElement | null>(null)
 const album = computed(() => petAlbums[props.petId])
+const activeTab = ref<'album' | 'friends'>('album')
+const isFriends = computed(
+  () => props.petId === 'huahua' && activeTab.value === 'friends'
+)
+const activeTitle = computed(() =>
+  isFriends.value ? t('friends') : props.title
+)
+const featuredItems = computed(() =>
+  isFriends.value ? floraFriendsFeatured : album.value.defaults
+)
+// 朋友相册使用静态清单，切换过去后暂停原相册的请求和轮询。
+const mainAlbumExpanded = computed({
+  get: () => expanded.value && !isFriends.value,
+  set: (value: boolean) => {
+    if (!value) expanded.value = false
+  },
+})
 const {
   allItems,
   loading,
@@ -77,8 +102,7 @@ const {
   totalPages,
   refresh,
   goToPage: loadPage,
-  changePage: loadAdjacentPage,
-} = useFloraAlbum(() => props.petId, expanded, cancelPageMedia)
+} = useFloraAlbum(() => props.petId, mainAlbumExpanded, cancelPageMedia)
 function cancelPageMedia() {
   // 先释放旧页的图片候选源和视频连接，避免资源继续占用新页下载队列。
   viewport.value
@@ -99,12 +123,37 @@ const resetScroll = async () => {
   await nextTick()
   viewport.value?.scrollTo({ top: 0 })
 }
-const changePage = async (direction: -1 | 1) => {
-  if (await loadAdjacentPage(direction)) await resetScroll()
+const selectTab = (tab: 'album' | 'friends') => {
+  if (activeTab.value === tab) return
+  cancelPageMedia()
+  activeTab.value = tab
+  void resetScroll()
 }
-const goToPage = async (target: number, event?: MouseEvent) => {
-  if (event?.currentTarget instanceof HTMLButtonElement)
-    flashActionButton(event.currentTarget)
+const navigateTabs = (event: KeyboardEvent) => {
+  if (props.petId !== 'huahua') return
+  if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
+  event.preventDefault()
+  selectTab(
+    event.key === 'Home'
+      ? 'album'
+      : event.key === 'End'
+      ? 'friends'
+      : isFriends.value
+      ? 'album'
+      : 'friends'
+  )
+  const tabs = event.currentTarget as HTMLElement
+  void nextTick(() =>
+    tabs.querySelector<HTMLButtonElement>('[aria-selected="true"]')?.focus()
+  )
+}
+watch(
+  () => props.petId,
+  () => {
+    activeTab.value = 'album'
+  }
+)
+const goToPage = async (target: number) => {
   if (await loadPage(target)) await resetScroll()
 }
 defineExpose({ closeExpanded })
@@ -118,11 +167,13 @@ defineExpose({ closeExpanded })
       'is-clickable': true,
       'has-toggled': hasToggled,
       'flora-album-gallery--mobile': mobile,
+      'has-friends-tabs': petId === 'huahua',
     }"
     :style="{
       '--album-overflow-mask': overflowMask,
+      '--album-title-fit': locale === 'en' ? '4.7cqw' : '7.5cqw',
     }"
-    :aria-label="title"
+    :aria-label="activeTitle"
     @click.stop="toggleFromSurface"
   >
     <div
@@ -136,69 +187,143 @@ defineExpose({ closeExpanded })
         :style="{ '--blade-index': blade - 1 }"
       />
     </div>
-    <h2 class="flora-album-gallery__title">
-      <button
-        type="button"
-        :aria-expanded="expanded"
-        @click.stop="expanded = !expanded"
-      >
-        <Picture aria-hidden="true" focusable="false" />
-        <span>{{ title }}</span>
-      </button>
-    </h2>
-    <Transition name="album-mode" mode="out-in">
-      <FloraAlbumStrip
-        v-if="!expanded"
-        key="selected"
-        :items="album.defaults"
-        :title="title"
-      />
-      <div
-        v-else
-        key="all"
-        ref="viewport"
-        class="flora-album-gallery__viewport"
-        data-lenis-nested-scroll
-      >
-        <div
-          v-if="loading && !allItems.length"
-          class="flora-album-gallery__loading"
-          role="status"
-          :aria-label="t('loading')"
+    <div
+      class="flora-album-gallery__title"
+      :class="{ 'flora-album-gallery__tabs': petId === 'huahua' }"
+      :role="petId === 'huahua' ? 'tablist' : undefined"
+      :aria-label="title"
+      @keydown="navigateTabs"
+    >
+      <h2>
+        <button
+          :id="`flora-album-tab-${petId}`"
+          type="button"
+          :role="petId === 'huahua' ? 'tab' : undefined"
+          :aria-selected="petId === 'huahua' ? !isFriends : undefined"
+          :tabindex="petId === 'huahua' && isFriends ? -1 : 0"
+          :aria-controls="`flora-album-content-${petId}`"
+          :aria-expanded="petId !== 'huahua' ? expanded : undefined"
+          @click.stop="petId === 'huahua' ? selectTab('album') : toggle()"
         >
-          <el-icon :size="28" class="is-loading" aria-hidden="true">
-            <Loading />
-          </el-icon>
-        </div>
-        <p
-          v-else-if="error && !allItems.length"
-          class="flora-album-gallery__notice"
-          role="alert"
+          <Picture aria-hidden="true" focusable="false" />
+          <span>{{ title }}</span>
+        </button>
+      </h2>
+      <Transition name="flora-friends-heading-fade" appear>
+        <h2
+          v-if="petId === 'huahua'"
+          class="flora-album-gallery__friends-heading"
         >
-          {{ t('error') }}
-          <button type="button" @click="refresh()">{{ t('retry') }}</button>
-        </p>
-        <p v-else-if="!allItems.length" class="flora-album-gallery__notice">
-          {{ t('empty') }}
-        </p>
-        <MediaGallery
-          v-else
-          :columns="4"
-          :items="allItems"
-          :get-media-label="() => title"
-          preserve-image-colors
-        >
-          <template #info="{ item }">
-            <MediaPhotoInfo
-              :item="{
-                time: getFloraCaptureDate(item.url) || t('unknownDate'),
-              }"
-              :time-divider-padding="0"
+          <button
+            :id="`flora-friends-tab-${petId}`"
+            type="button"
+            role="tab"
+            :aria-selected="isFriends"
+            :tabindex="isFriends ? 0 : -1"
+            :aria-controls="`flora-album-content-${petId}`"
+            @click.stop="selectTab('friends')"
+          >
+            <FloraFriendsIcon
+              class="flora-album-gallery__cat-icon"
+              aria-hidden="true"
+              focusable="false"
             />
+            <span>{{ t('friends') }}</span>
+          </button>
+        </h2>
+      </Transition>
+    </div>
+    <div
+      :id="`flora-album-content-${petId}`"
+      class="flora-album-gallery__content"
+      :role="petId === 'huahua' ? 'tabpanel' : undefined"
+      :aria-labelledby="
+        isFriends ? `flora-friends-tab-${petId}` : `flora-album-tab-${petId}`
+      "
+    >
+      <Transition name="album-mode" mode="out-in">
+        <FloraAlbumStrip
+          v-if="!expanded"
+          :key="`selected-${activeTab}`"
+          :items="featuredItems"
+          :title="activeTitle"
+        />
+        <div
+          v-else
+          :key="`all-${activeTab}`"
+          ref="viewport"
+          class="flora-album-gallery__viewport"
+          data-lenis-nested-scroll
+        >
+          <template v-if="isFriends">
+            <section
+              v-for="group in floraFriendAlbums"
+              :key="group.id"
+              class="flora-album-gallery__friend-group"
+              @click.stop
+            >
+              <MediaGallery
+                :columns="4"
+                :items="group.items"
+                :get-media-label="
+                  () => group.name[locale === 'en' ? 'en' : 'zhCn']
+                "
+                preserve-image-colors
+              >
+                <template #toolbar-start>
+                  <h3>{{ group.name[locale === 'en' ? 'en' : 'zhCn'] }}</h3>
+                </template>
+                <template #info="{ item }">
+                  <MediaPhotoInfo
+                    :item="{
+                      time: getFloraCaptureDate(item.url) || t('unknownDate'),
+                    }"
+                    :time-divider-padding="0"
+                  />
+                </template>
+              </MediaGallery>
+            </section>
           </template>
-        </MediaGallery>
-      </div>
-    </Transition>
+          <div
+            v-else-if="loading && !allItems.length"
+            class="flora-album-gallery__loading"
+            role="status"
+            :aria-label="t('loading')"
+          >
+            <el-icon :size="28" class="is-loading" aria-hidden="true">
+              <Loading />
+            </el-icon>
+          </div>
+          <p
+            v-else-if="error && !allItems.length"
+            class="flora-album-gallery__notice"
+            role="alert"
+          >
+            {{ t('error') }}
+            <button type="button" @click="refresh()">{{ t('retry') }}</button>
+          </p>
+          <p v-else-if="!allItems.length" class="flora-album-gallery__notice">
+            {{ t('empty') }}
+          </p>
+          <MediaGallery
+            v-else
+            :columns="4"
+            :items="allItems"
+            :get-media-label="() => title"
+            preserve-image-colors
+          >
+            <template #info="{ item }">
+              <MediaPhotoInfo
+                :item="{
+                  time: getFloraCaptureDate(item.url) || t('unknownDate'),
+                }"
+                :time-divider-padding="0"
+              />
+            </template>
+          </MediaGallery>
+        </div>
+      </Transition>
+    </div>
     <svg width="0" height="0" aria-hidden="true" style="position: absolute">
       <defs>
         <filter :id="decorationFilterId" color-interpolation-filters="sRGB">
@@ -237,41 +362,14 @@ defineExpose({ closeExpanded })
       :mobile="mobile"
       @click="toggle"
     />
-    <footer v-if="expanded" class="flora-album-gallery__footer">
-      <nav class="flora-album-gallery__pagination" aria-label="相册分页">
-        <button
-          type="button"
-          :aria-label="t('previous')"
-          :disabled="pageIndex === 0"
-          @click="changePage(-1)"
-        >
-          <span
-            class="flora-album-gallery__page-arrow is-previous"
-            aria-hidden="true"
-          />
-        </button>
-        <div class="flora-album-gallery__page-numbers">
-          <button
-            v-for="page in totalPages ?? pageCursors.length"
-            :key="page"
-            type="button"
-            :aria-label="t('page', { page })"
-            :aria-current="page === pageIndex + 1 ? 'page' : undefined"
-            :disabled="page > pageCursors.length"
-            @click="goToPage(page, $event)"
-          >
-            {{ page }}
-          </button>
-        </div>
-        <button
-          type="button"
-          :aria-label="t('next')"
-          :disabled="!pageCursors[pageIndex + 1]"
-          @click="changePage(1)"
-        >
-          <span class="flora-album-gallery__page-arrow" aria-hidden="true" />
-        </button>
-      </nav>
+    <footer v-if="expanded && !isFriends" class="flora-album-gallery__footer">
+      <FloraAlbumPagination
+        :page="pageIndex + 1"
+        :page-count="totalPages ?? pageCursors.length"
+        :available-pages="pageCursors.length"
+        :mobile="mobile"
+        @select="goToPage"
+      />
     </footer>
   </section>
 </template>
@@ -299,9 +397,65 @@ defineExpose({ closeExpanded })
   --album-background: var(--flora-theme-color);
   animation: album-fade-in 450ms ease;
 
+  &.has-friends-tabs {
+    container-type: inline-size;
+    --flora-media-expanded-heading-space: calc(
+      min(var(--flora-media-title-size, 72px), var(--album-title-fit)) *
+        var(--flora-media-title-line-height, 1.2) -
+        var(--flora-media-title-overlap, 4px)
+    );
+  }
+
+  .flora-album-gallery__content {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .flora-album-gallery__friend-group {
+    margin-bottom: 28px;
+
+    h3 {
+      grid-area: 1 / 1 / 2 / -1;
+      min-width: 0;
+      margin: 0;
+      padding-inline: 76px;
+      box-sizing: border-box;
+      text-align: center;
+      pointer-events: none;
+      color: #fff;
+      font: 900 20px / 1.4 'alibaba-puhuiti', sans-serif;
+      text-shadow: 0 2px 6px rgb(0 0 0 / 35%);
+    }
+
+    :deep(.media-gallery__toolbar) {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 38px 38px;
+      align-items: center;
+
+      > button:first-of-type {
+        grid-area: 1 / 2;
+        z-index: 1;
+      }
+
+      > button:last-of-type {
+        grid-area: 1 / 3;
+        z-index: 1;
+      }
+    }
+
+    &:last-child {
+      margin-bottom: 60px;
+    }
+  }
+
   &.is-expanded {
     .flora-album-gallery__background {
       opacity: 0.4;
+    }
+    .flora-album-gallery__viewport {
+      margin-top: 20px;
     }
     &::before {
       background: color-mix(in srgb, var(--flora-theme-color) 40%, transparent);
@@ -369,10 +523,6 @@ defineExpose({ closeExpanded })
     overflow: auto;
     overscroll-behavior: contain;
   }
-  &.is-expanded:not(.flora-album-gallery--mobile)
-    .flora-album-gallery__viewport {
-    margin-top: 20px;
-  }
   @media (max-width: 900px) {
     .flora-album-gallery__viewport {
       padding-inline: 35px;
@@ -395,6 +545,10 @@ defineExpose({ closeExpanded })
     z-index: 2;
     pointer-events: auto;
     transition: opacity 200ms ease;
+    h2 {
+      margin: 0;
+      font: inherit;
+    }
     button {
       .flora-media-title-content();
       padding: 0;
@@ -402,6 +556,32 @@ defineExpose({ closeExpanded })
       text-align: left;
       &:disabled {
         opacity: 1;
+      }
+    }
+  }
+  .flora-album-gallery__tabs {
+    display: flex;
+    align-items: center;
+    gap: 0.35em;
+    max-width: calc(100% - 2 * var(--media-title-offset, 12px));
+    font-size: min(var(--flora-media-title-size, 72px), var(--album-title-fit));
+
+    button {
+      opacity: 1;
+      transition: opacity 200ms ease;
+      padding: 0;
+
+      &[aria-selected='false'] {
+        opacity: 0.5;
+
+        span {
+          -webkit-text-fill-color: transparent;
+          -webkit-text-stroke: 1px currentColor;
+        }
+      }
+
+      .flora-album-gallery__cat-icon {
+        stroke-width: 2;
       }
     }
   }
@@ -466,43 +646,6 @@ defineExpose({ closeExpanded })
     animation-name: album-blade-open;
     animation-delay: calc(var(--blade-index) * 24ms);
   }
-  .flora-album-gallery__page-numbers {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 4px;
-    button[aria-current='page'] {
-      background: #fffff4;
-      color: #000;
-    }
-  }
-  .flora-album-gallery__pagination {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    button:hover {
-      background: #e23456;
-      color: #000;
-    }
-  }
-  .flora-album-gallery__page-arrow {
-    display: inline-block;
-    width: 0.8em;
-    height: 0.8em;
-    background: currentColor;
-    clip-path: polygon(0 0, 100% 50%, 0 100%);
-    vertical-align: middle;
-    &.is-previous {
-      transform: rotate(180deg);
-    }
-  }
-  &:not(.flora-album-gallery--mobile) .flora-album-gallery__pagination {
-    gap: 12px;
-    button {
-      padding: 6px 9px;
-      font-size: 18px;
-    }
-  }
   button:where(:not(.flora-expand-button)) {
     padding: 4px 6px;
     border: 0;
@@ -535,6 +678,13 @@ defineExpose({ closeExpanded })
     --album-toggle-width: 80px;
     --album-toggle-right: 8px;
 
+    &:not(.is-expanded) .flora-album-gallery__tabs {
+      min-height: calc(
+        var(--flora-media-title-size) *
+          var(--flora-media-title-line-height, 1.2)
+      );
+    }
+
     :deep(.flora-album-strip.no-rem) {
       width: 100%;
       padding: 6px 8px;
@@ -545,6 +695,20 @@ defineExpose({ closeExpanded })
     }
 
     &.is-expanded {
+      &.has-friends-tabs {
+        .flora-album-gallery__title {
+          top: 8px;
+          bottom: auto;
+        }
+
+        .flora-album-gallery__viewport {
+          margin-top: calc(
+            min(var(--flora-media-title-size, 72px), var(--album-title-fit)) *
+              var(--flora-media-title-line-height, 1.2) + 16px
+          );
+        }
+      }
+
       .flora-album-gallery__viewport {
         margin-top: 20px;
         padding: 8px;
@@ -626,6 +790,21 @@ defineExpose({ closeExpanded })
   }
   100% {
     transform: scaleY(1);
+  }
+}
+
+.flora-friends-heading-fade-enter-active,
+.flora-friends-heading-fade-leave-active {
+  transition: opacity 350ms ease;
+}
+.flora-friends-heading-fade-enter-from,
+.flora-friends-heading-fade-leave-to {
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .flora-friends-heading-fade-enter-active,
+  .flora-friends-heading-fade-leave-active {
+    transition: none;
   }
 }
 </style>

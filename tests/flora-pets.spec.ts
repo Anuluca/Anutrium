@@ -196,7 +196,7 @@ test('pets switch their model, identity and theme, survive home and route return
   await page.evaluate(() =>
     (
       document.querySelector('.layout-page') as any
-    ).__vueParentComponent.proxy.$router.push('/craft')
+    ).__vueParentComponent.proxy.$router.push('/colorPalette')
   )
   await expect(root).toHaveCount(0)
   await page.evaluate(() =>

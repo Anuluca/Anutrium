@@ -9,7 +9,10 @@
     :lock-scroll="false"
     transition="crt-effect"
     class="modal-wrapper-dialog no-rem"
-    :class="{ 'modal-wrapper-dialog--flush-desktop': flushDesktop }"
+    :class="{
+      'modal-wrapper-dialog--flush-desktop': flushDesktop,
+      'modal-wrapper-dialog--work-detail': closePlacement === 'work-detail',
+    }"
     :style="{
       '--modal-width': typeof width === 'number' ? `${width}px` : width,
       '--modal-theme-color': themeColor || 'var(--page-theme-color, #e23456)',
@@ -21,16 +24,28 @@
       <DiamondCloseBtn :title="closeTitle" @click="requestClose" />
     </div>
 
-    <div class="corner corner-tl" />
-    <div class="corner corner-tr" />
     <div class="corner corner-bl" />
     <div class="corner corner-br" />
 
     <div class="modal-scanlines" />
 
-    <div class="modal-scroll-region" data-lenis-nested-scroll>
+    <div v-if="$slots.header" class="modal-fixed-header">
+      <slot name="header" />
+    </div>
+
+    <div
+      ref="scrollRegion"
+      class="modal-scroll-region"
+      data-lenis-nested-scroll
+    >
       <slot />
     </div>
+    <PageScrollProgress
+      class="modal-scroll-progress"
+      embedded
+      :scroll-target="scrollRegion"
+      color="var(--modal-theme-color, var(--page-theme-color, #e23456))"
+    />
   </ElDialog>
 
   <Teleport v-if="title && backgroundTitleTarget" :to="backgroundTitleTarget">
@@ -65,6 +80,7 @@ import { nextTick, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { ElDialog } from 'element-plus'
 
 import DiamondCloseBtn from '@/components/DiamondCloseBtn/index.vue'
+import PageScrollProgress from '@/components/PageScrollProgress/index.vue'
 import { useOverlayScrollLock } from '@/composables/useOverlayScrollLock'
 
 import 'element-plus/theme-chalk/dark/css-vars.css'
@@ -80,11 +96,13 @@ const props = withDefaults(
     closeTitle?: string
     appendToBody?: boolean
     flushDesktop?: boolean
+    closePlacement?: 'external-bottom' | 'work-detail'
   }>(),
   {
     appendToBody: true,
     closeTitle: 'Close (ESC)',
     flushDesktop: false,
+    closePlacement: 'external-bottom',
     themeColor: undefined,
     title: undefined,
     width: '1280px',
@@ -98,6 +116,7 @@ const emit = defineEmits<{
 }>()
 
 const dialogVisible = ref(false)
+const scrollRegion = ref<HTMLElement | null>(null)
 const backgroundTitleEntered = ref(false)
 const backgroundTitleScrolling = ref(false)
 const backgroundTitleVisible = ref(false)
@@ -236,7 +255,7 @@ const handleClosed = () => {
   }
 
   &--visible {
-    opacity: 0.1;
+    opacity: 0.2;
   }
 
   &--scrolling {
@@ -264,7 +283,7 @@ const handleClosed = () => {
     color: transparent;
     -webkit-text-fill-color: transparent;
     -webkit-text-stroke-color: var(--modal-background-title-color);
-    -webkit-text-stroke-width: clamp(1px, 0.12vw, 2px);
+    -webkit-text-stroke-width: clamp(2px, 0.24vw, 4px);
   }
 }
 
@@ -302,18 +321,6 @@ const handleClosed = () => {
   z-index: 5;
   pointer-events: none;
 
-  &-tl {
-    top: 10px;
-    left: 10px;
-    border-right: 0;
-    border-bottom: 0;
-  }
-  &-tr {
-    top: 10px;
-    right: 10px;
-    border-left: 0;
-    border-bottom: 0;
-  }
   &-bl {
     bottom: 10px;
     left: 10px;
@@ -363,6 +370,11 @@ const handleClosed = () => {
   }
 }
 
+.modal-fixed-header {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
 .modal-scroll-region {
   display: flex;
   width: 100%;
@@ -371,6 +383,11 @@ const handleClosed = () => {
   flex-direction: column;
   overflow: auto;
   overscroll-behavior: contain;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 .modal-wrapper-dialog {
@@ -384,6 +401,28 @@ const handleClosed = () => {
 
 .modal-close-row {
   display: contents;
+}
+
+.modal-wrapper-dialog--work-detail {
+  .modal-close-row .diamond-close-btn {
+    top: 14px;
+    right: 14px;
+    left: auto;
+    transform: none;
+  }
+  @media (max-width: 768px) {
+    .modal-close-row {
+      display: flex;
+      flex: 0 0 auto;
+      justify-content: flex-end;
+      margin-bottom: 8px;
+    }
+    .modal-close-row .diamond-close-btn {
+      position: relative;
+      top: auto;
+      right: auto;
+    }
+  }
 }
 
 .modal-wrapper-dialog .modal-aside,

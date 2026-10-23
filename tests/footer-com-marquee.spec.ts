@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 test.beforeEach(async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto('/craft', { waitUntil: 'domcontentloaded' })
+  await page.goto('/colorPalette', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.footer-com')).toHaveClass(/footer-expanded/, {
     timeout: 20000,
   })

@@ -196,6 +196,74 @@ test('HOME reset survives refresh and explicit module links override the memory'
   )
 })
 
+for (const entry of [
+  { path: '/creative?isExpand=true&current=ILLUSTRATION', selection: 'island' },
+  {
+    path: '/?module=archive&isExpand=true&current=OTHER',
+    selection: 'archive',
+  },
+  { path: '/flanerie?current=EVENTS', selection: 'flanerie' },
+]) {
+  test(`reset after ${entry.path} survives reload without replaying entry parameters`, async ({
+    page,
+  }) => {
+    test.setTimeout(90000)
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.goto(entry.path, { waitUntil: 'domcontentloaded' })
+    await expect(page.locator('.temple-page')).toHaveAttribute(
+      'data-selected',
+      entry.selection,
+      { timeout: 30000 }
+    )
+    await expect(page.locator('.temple-page')).toHaveAttribute(
+      'data-settled',
+      'true',
+      { timeout: 30000 }
+    )
+    await expect(page.locator('.entry-overlay-container')).toHaveCount(0, {
+      timeout: 30000,
+    })
+    await page.locator('.logo-box').click()
+    await expect(page.locator('.temple-page')).toHaveAttribute(
+      'data-selected',
+      'none'
+    )
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            JSON.parse(sessionStorage.getItem('anutrium:temple:session')!)
+              .selection
+        )
+      )
+      .toBeNull()
+    expect(new URL(page.url()).pathname + new URL(page.url()).search).toBe(
+      entry.path
+    )
+    await page.reload({ waitUntil: 'domcontentloaded' })
+    await expect(page.locator('.temple-stage')).toHaveAttribute(
+      'data-entrance-finished',
+      'true',
+      { timeout: 30000 }
+    )
+    await expect(page.locator('.temple-page')).toHaveAttribute(
+      'data-selected',
+      'none'
+    )
+    await expect(page.locator('.temple-page')).not.toHaveClass(
+      /temple-page--expanded/
+    )
+    await expect(page.locator('.temple-menu')).toHaveCount(0)
+    // 正常访问链接仍按 URL 进入，只有刷新相同地址才恢复当前场景。
+    await page.goto(entry.path, { waitUntil: 'domcontentloaded' })
+    await expect(page.locator('.temple-page')).toHaveAttribute(
+      'data-selected',
+      entry.selection,
+      { timeout: 30000 }
+    )
+  })
+}
+
 test('new windows start at home even when opener sessionStorage is copied', async ({
   page,
   context,

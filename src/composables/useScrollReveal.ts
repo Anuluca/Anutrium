@@ -18,6 +18,7 @@ interface ScrollRevealOptions {
   once?: boolean
   rootMargin?: string | (() => string)
   threshold?: number | number[]
+  onReveal?: (element: HTMLElement) => void
 }
 
 export const useScrollReveal = (options: ScrollRevealOptions = {}) => {
@@ -29,6 +30,7 @@ export const useScrollReveal = (options: ScrollRevealOptions = {}) => {
     once = true,
     rootMargin = '0px 0px -18% 0px',
     threshold = 0.16,
+    onReveal,
   } = options
   const reducedMotion = usePreferredReducedMotion()
   const isReady = ref(false)
@@ -48,6 +50,7 @@ export const useScrollReveal = (options: ScrollRevealOptions = {}) => {
     elements.forEach((element) => {
       if (exitClass) element.classList.remove(exitClass)
       element.classList.add(revealedClass)
+      onReveal?.(element)
     })
   }
 
@@ -94,6 +97,7 @@ export const useScrollReveal = (options: ScrollRevealOptions = {}) => {
           if (isVisible) {
             if (exitClass) element.classList.remove(exitClass)
             element.classList.add(revealedClass)
+            onReveal?.(element)
             revealedElements.add(element)
             if (once) observer?.unobserve(element)
             return
