@@ -84,7 +84,15 @@ export const floratriumDevPlugin = (): Plugin => ({
         }
         response.end(
           JSON.stringify(
-            createFloraMediaPage(index.keys, offset, mediaAlbums[pet].pageSize)
+            createFloraMediaPage(
+              index.keys,
+              pet === 'flora' && url.searchParams.get('collection') === '1'
+                ? 0
+                : offset,
+              pet === 'flora' && url.searchParams.get('collection') === '1'
+                ? Math.max(1, index.keys.length)
+                : mediaAlbums[pet].pageSize
+            )
           )
         )
       } catch {

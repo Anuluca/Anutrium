@@ -7,7 +7,6 @@ import ThemeToggle from '@/components/ThemeToggle/index.vue'
 import { visualState } from '@/stores'
 import { getCardMobileThumbnailUrl } from '@/utils/imageVariant'
 import { persistLocale, type SiteLocale } from '@/utils/locale'
-import { ensureLightThemeStyles } from '@/utils/themeStyles'
 
 import './index.less'
 
@@ -156,8 +155,6 @@ let reducedMotionQuery: MediaQueryList | null = null
 let hasPlayedEntryAnimation = false
 const FOOTER_ENTRY_DELAY = 800
 let footerEntryTimer: number | null = null
-const isThemeSwitching = ref(false)
-let themeSwitchTimer: number | null = null
 const isDev = import.meta.env.DEV
 const preview = ref<{ src: string; left: number; bottom: number } | null>(null)
 let previewQuery: MediaQueryList | null = null
@@ -257,7 +254,6 @@ onUnmounted(() => {
   previewQuery?.removeEventListener('change', hidePreview)
   window.removeEventListener('resize', hidePreview)
   if (marqueeFrame !== null) window.cancelAnimationFrame(marqueeFrame)
-  if (themeSwitchTimer !== null) window.clearTimeout(themeSwitchTimer)
   if (footerEntryTimer !== null) window.clearTimeout(footerEntryTimer)
   marqueeResizeObserver?.disconnect()
   marqueeResizeObserver = null
@@ -309,25 +305,11 @@ const changeLanguage = (lang: SiteLocale) => {
   locale.value = lang
 }
 
-const changeTheme = async (isDark: boolean) => {
-  const newTheme = isDark ? 'dark' : 'light'
-  if (newTheme === 'light') await ensureLightThemeStyles()
-
-  if (route.path === '/test2') {
-    isThemeSwitching.value = true
-    themeSwitchTimer = window.setTimeout(() => {
-      visualStateStore.setTheme(newTheme)
-      isThemeSwitching.value = false
-      themeSwitchTimer = null
-    }, 150)
-  } else {
-    visualStateStore.setTheme(newTheme)
-  }
-}
-
 const isDarkTheme = computed({
   get: () => visualStateStore.theme === 'dark',
-  set: changeTheme,
+  set: (isDark: boolean) => {
+    void visualStateStore.setTheme(isDark ? 'dark' : 'light')
+  },
 })
 
 watch(
@@ -377,7 +359,7 @@ watch(() => route.fullPath, hidePreview)
             :disabled="locale === 'zhCn'"
             @click="changeLanguage('zhCn')"
           >
-            <span>汉语</span>
+            <span>中文</span>
           </button>
           <button
             type="button"
@@ -388,7 +370,7 @@ watch(() => route.fullPath, hidePreview)
           </button>
           <button
             type="button"
-            class="el-button el-button--danger is-link"
+            class="el-button el-button--danger is-link english"
             :disabled="locale === 'en'"
             @click="changeLanguage('en')"
           >
@@ -481,13 +463,4 @@ watch(() => route.fullPath, hidePreview)
       </div>
     </Transition>
   </div>
-  <Teleport to="body">
-    <div
-      v-if="isThemeSwitching"
-      class="theme-switch-overlay"
-      aria-hidden="true"
-    >
-      <span />
-    </div>
-  </Teleport>
 </template>

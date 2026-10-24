@@ -2,7 +2,7 @@
   <div class="study-notes-page main-container">
     <DetailPageHeader
       back-label="ISLAND"
-      back-path="/test"
+      back-path="/island"
       :title="t('island.modules.notes.studyNotes.title')"
     />
 

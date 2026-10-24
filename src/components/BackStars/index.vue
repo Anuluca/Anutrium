@@ -123,6 +123,7 @@ let backdropAnimation: Animation | null = null
 let backdropStyleObserver: MutationObserver | null = null
 let backdropTransitionRevision = 0
 let backdropTargetColor = ''
+let backdropStyleSignature = ''
 const isReducedMotion = ref(false)
 let reducedMotionQuery: MediaQueryList | null = null
 let removePageResizeListener: (() => void) | null = null
@@ -174,10 +175,15 @@ const particleQuantity = computed(() =>
   Math.round((isMobileViewport.value ? 25 : 100) * 1.3)
 )
 
-const getBackdropTargetColor = () => {
+const getBackdropTargetColor = (
+  rootStyle: CSSStyleDeclaration,
+  themeColor: string
+) => {
+  // 首页透明画布下方也使用浅色底，避免模型周围仍残留深色背景。
+  if (props.theme === 'light' && props.tinted)
+    return `color-mix(in srgb, ${themeColor} 3%, #faf9f6)`
   if (props.deepBlack) return '#030303'
 
-  const rootStyle = window.getComputedStyle(document.documentElement)
   const backgroundVariable =
     props.theme === 'light'
       ? '--page-theme-background-light'
@@ -188,8 +194,6 @@ const getBackdropTargetColor = () => {
 
   if (explicitBackground) return explicitBackground
 
-  const themeColor =
-    rootStyle.getPropertyValue('--page-theme-color').trim() || '#e23456'
   return `color-mix(in srgb, color-mix(in srgb, ${themeColor} 45%, #000) 50%, #0a0411)`
 }
 
@@ -223,12 +227,13 @@ const getCurrentBackdropColor = () => {
 }
 
 const updateBackdropColor = async (immediate = false) => {
+  const rootStyle = window.getComputedStyle(document.documentElement)
   themeParticleColor.value =
-    window
-      .getComputedStyle(document.documentElement)
-      .getPropertyValue('--page-theme-color')
-      .trim() || '#e23456'
-  const targetColor = getBackdropTargetColor()
+    rootStyle.getPropertyValue('--page-theme-color').trim() || '#e23456'
+  const targetColor = getBackdropTargetColor(
+    rootStyle,
+    themeParticleColor.value
+  )
   if (targetColor === backdropTargetColor) return
 
   if (!backdropBaseColor.value || immediate || isReducedMotion.value) {
@@ -268,6 +273,23 @@ const scheduleBackdropColorUpdate = () => {
     backdropUpdateRafId = null
     void updateBackdropColor()
   })
+}
+
+const readBackdropStyleSignature = () => {
+  const style = document.documentElement.style
+  return [
+    style.getPropertyValue('--page-theme-color'),
+    style.getPropertyValue('--page-theme-background-dark'),
+    style.getPropertyValue('--page-theme-background-light'),
+  ].join('|')
+}
+
+const handleBackdropStyleChange = () => {
+  // 滚动和布局也会更新根节点 style；只有主题变量变化才读取计算样式。
+  const signature = readBackdropStyleSignature()
+  if (signature === backdropStyleSignature) return
+  backdropStyleSignature = signature
+  scheduleBackdropColorUpdate()
 }
 
 const clearParticleRevealFrames = () => {
@@ -328,9 +350,11 @@ watch(
   }
 )
 
-watch([() => props.theme, () => props.deepBlack], scheduleBackdropColorUpdate, {
-  flush: 'post',
-})
+watch(
+  [() => props.theme, () => props.deepBlack, () => props.tinted],
+  scheduleBackdropColorUpdate,
+  { flush: 'post' }
+)
 
 const updateHeroScale = () => {
   const viewportWidth = window.innerWidth
@@ -404,7 +428,8 @@ onMounted(() => {
   isReducedMotion.value = reducedMotionQuery.matches
   reducedMotionQuery.addEventListener('change', handleReducedMotionChange)
   removePageResizeListener = addPageResizeListener(scheduleHeroScaleUpdate)
-  backdropStyleObserver = new MutationObserver(scheduleBackdropColorUpdate)
+  backdropStyleSignature = readBackdropStyleSignature()
+  backdropStyleObserver = new MutationObserver(handleBackdropStyleChange)
   backdropStyleObserver.observe(document.documentElement, {
     attributes: true,
     attributeFilter: ['style'],

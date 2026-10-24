@@ -47,8 +47,7 @@
     "three": "^0.182.0",
     "vue": "^3.2.47",
     "vue-i18n": "^9.2.2",
-    "vue-router": "^4.1.6",
-    "xiangqi.js": "git+https://github.com/lengyanyu258/xiangqi.js.git#f9019ac2303d4b80ef0b82fd0515bfb55a80a62b"
+    "vue-router": "^4.1.6"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.0",

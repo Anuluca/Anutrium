@@ -443,3 +443,27 @@
     opacity: 0.45;
   }
 }
+
+.star-container.light.is-theme-tinted {
+  background-color: #faf9f6;
+
+  &::before {
+    background: none;
+  }
+
+  &::after {
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.018) 0 1px,
+      transparent 1px 4px
+    );
+  }
+
+  &.is-red-layout {
+    --stage-opacity: 0.22;
+  }
+
+  .particle-viewport.is-visible {
+    opacity: 0.48;
+  }
+}

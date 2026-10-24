@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import {
   computed,
+  defineAsyncComponent,
   nextTick,
   onBeforeUnmount,
   onMounted,
   onUnmounted,
   provide,
   ref,
+  shallowRef,
   watch,
 } from 'vue'
 
@@ -22,6 +24,8 @@ import {
 } from '@/config/templeNavigation'
 import type { TemplePresentation } from '@/config/templePresentation'
 import { pets } from '@/locales/dynamic/pets'
+import { ensureMessageDomain } from '@/locales/routeMessages'
+import { visualState } from '@/stores'
 import { useFloraPets } from '@/stores/floraPets'
 import { useSiteLoading } from '@/stores/siteLoading'
 import { useTempleNavigation } from '@/stores/templeNavigation'
@@ -38,11 +42,28 @@ import TempleClock from './components/TempleClock.vue'
 import TempleModuleCaption from './components/TempleModuleCaption.vue'
 import { useTempleEntry } from './composables/useTempleEntry'
 import { loadTempleFocusContent } from './focusContentLoader'
-import type { createHomeTemple, TempleSelection } from './templeScene'
+import type {
+  createHomeTemple,
+  IslandModelAnchors,
+  TempleSelection,
+} from './templeScene'
+
+const IslandFocusLayout = defineAsyncComponent(() =>
+  Promise.all([
+    ensureMessageDomain('island'),
+    import('./components/IslandFocusLayout.vue'),
+  ]).then(([, component]) => component.default)
+)
+const islandAnchors = shallowRef<IslandModelAnchors | null>(null)
 
 const props = defineProps<{ presentation: TemplePresentation }>()
 const navigation = useTempleNavigation()
 const floraPets = useFloraPets()
+const visual = visualState()
+watch(
+  () => visual.theme,
+  (theme) => scene?.setColorMode(theme)
+)
 // 关闭期间继续保持背景休眠，待 About 离场结束后再恢复。
 const aboutBackgroundHidden = computed({
   get: () => navigation.aboutOverlayVisible,
@@ -443,6 +464,21 @@ onMounted(async () => {
             void loadTempleFocusContent(id).catch(() => {})
           if (id === 'statue' || id === 'sprigatito') menuCategory.value = null
         },
+        islandAnchors: (anchors) => {
+          const previous = islandAnchors.value
+          if (
+            previous &&
+            Object.keys(anchors).every((key) => {
+              const id = key as keyof IslandModelAnchors
+              return (
+                Math.abs(previous[id].x - anchors[id].x) < 0.25 &&
+                Math.abs(previous[id].y - anchors[id].y) < 0.25
+              )
+            })
+          )
+            return
+          islandAnchors.value = anchors
+        },
         settled: () => {
           if (resolveMenuExit) return
           menuCategory.value =
@@ -469,6 +505,7 @@ onMounted(async () => {
       navigation.simpleEntrance || hasJourneyReturnState(),
       floraPets.activePet
     )
+    scene.setColorMode(visual.theme)
     scene.setOccluded(aboutBackgroundHidden.value)
     scene.setActive(sceneActive.value)
   } catch (error) {
@@ -540,6 +577,11 @@ onUnmounted(() => {
               @select-pet="selectPet"
             />
           </Transition>
+          <IslandFocusLayout
+            v-if="selected === 'statue' && settled"
+            :anchors="islandAnchors"
+            :mobile="config.id === 'mobile'"
+          />
           <MobileScreenFrame v-if="config.id === 'mobile'" />
           <TempleBackdrop />
           <Transition name="temple-clock-reveal" appear>

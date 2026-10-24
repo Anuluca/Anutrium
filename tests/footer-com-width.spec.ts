@@ -3,7 +3,17 @@ import { expect, test } from '@playwright/test'
 test('footer width changes animate before paint and remain continuous when reversed', async ({
   page,
 }) => {
+  test.setTimeout(90000)
+  await page.routeWebSocket('ws://localhost:3000/**', (socket) =>
+    socket.close()
+  )
   await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.temple-stage')).toHaveAttribute(
+    'data-entrance-finished',
+    'true',
+    { timeout: 60000 }
+  )
+  await expect(page.locator('.entry-overlay-container')).toHaveCount(0)
   await expect(page.locator('.footer-wide')).toBeAttached()
   const transitions = await page.evaluate(async () => {
     const footer = document.querySelector<HTMLElement>('.footer-com')!
@@ -13,7 +23,6 @@ test('footer width changes animate before paint and remain continuous when rever
     const frame = () =>
       new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
     const left = () => footer.getBoundingClientRect().left
-    navigation.ready = true
     await frame()
     await frame()
     const sample = async (selected: string | null, count: number) => {

@@ -57,8 +57,17 @@ import {
   createPetFocusCamera,
   createPetScreenBounds,
 } from './scene/petFocusCamera'
+import { createThemeTint, type ThemeTintEntry } from './scene/themeTint'
 
 export type TempleSelection = TempleCategoryId | 'statue' | 'sprigatito'
+
+export interface IslandModelAnchors {
+  chest: { x: number; y: number }
+  rightHand: { x: number; y: number }
+  leftHand: { x: number; y: number }
+  rightBraid: { x: number; y: number }
+  leftBraid: { x: number; y: number }
+}
 
 interface TempleCallbacks {
   waitForRouteEnter: () => Promise<void>
@@ -69,6 +78,7 @@ interface TempleCallbacks {
   beforeReturn: () => Promise<void> | undefined
   dismissBackground?: () => boolean
   select: (id: TempleSelection | null) => void
+  islandAnchors?: (anchors: IslandModelAnchors) => void
   settled: () => void
   error: (error: unknown) => void
 }
@@ -101,7 +111,7 @@ const STATUE_LABEL_HOVER_DURATION =
   (STATUE_LABEL_TEXT.length - 1) * STATUE_LABEL_STAGGER
 const STATUE_LABEL_DOCK_OFFSET = 24
 const STATUE_PREVIEW_SCALE = 1.5
-const STATUE_PREVIEW_VERTICAL_OFFSET = 0.26
+const STATUE_PREVIEW_VERTICAL_OFFSET = 0.18
 // 焦距增至主页的 3 倍：tan(FOV / 2) 与焦距成反比。
 const STATUE_PREVIEW_FOV = THREE.MathUtils.radToDeg(
   2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(templeCamera.fov / 2)) / 3)
@@ -122,6 +132,7 @@ export function createHomeTemple(
   const sceneVerticalOffset = getTempleSceneVerticalOffset(
     config.id === 'mobile'
   )
+  let lightMode = false
   let currentPet = initialPet
   let petChangeRevision = 0
   let petFadingOut = false
@@ -524,6 +535,7 @@ export function createHomeTemple(
       capLines.visible = false
     }
     const labelAccent = { value: new THREE.Color('#f52e5b') }
+    const labelInk = { value: new THREE.Color('#ffffff') }
     const labelMaterial = material(
       new THREE.MeshBasicMaterial({
         map: labelTexture(getTempleLabelCanvas(category.roman, category.title)),
@@ -534,13 +546,14 @@ export function createHomeTemple(
     )
     labelMaterial.onBeforeCompile = (shader) => {
       shader.uniforms.labelAccent = labelAccent
+      shader.uniforms.labelInk = labelInk
       shader.fragmentShader =
-        'uniform vec3 labelAccent;\n' +
+        'uniform vec3 labelAccent;uniform vec3 labelInk;\n' +
         shader.fragmentShader.replace(
           '#include <map_fragment>',
           `#include <map_fragment>
         float accentMask=1.-smoothstep(0.35,0.75,diffuseColor.g/max(diffuseColor.r,0.00001));
-        diffuseColor.rgb=mix(diffuseColor.rgb,labelAccent,accentMask);`
+        diffuseColor.rgb=mix(diffuseColor.rgb*labelInk,labelAccent,accentMask);`
         )
     }
     labelMaterial.customProgramCacheKey = () => 'temple-label-accent-v1'
@@ -652,6 +665,7 @@ export function createHomeTemple(
       capHaloMaterial,
       labelMaterial,
       labelAccent,
+      labelInk,
       glowMaterial,
       beamMaterial,
       beam,
@@ -1082,30 +1096,51 @@ export function createHomeTemple(
   // 独立于底座和环境消隐，雕像聚焦时字样仍持续显示。
   scene.add(statueLabel)
   let reflectedStatue: THREE.Object3D | undefined
-  const themeColor = new THREE.Color('#e23456')
-  const themeOrigin = themeColor.getHSL({ h: 0, s: 0, l: 0 })
-  const tintTargets: {
-    color: THREE.Color
-    h: number
-    s: number
-    l: number
-    current: THREE.Color
-    start: THREE.Color
-    target: THREE.Color
-  }[] = []
-  const tintByColor = new Map<THREE.Color, (typeof tintTargets)[number]>()
-  const trackTint = (color: THREE.Color) => {
-    const hsl = color.getHSL({ h: 0, s: 0, l: 0 })
-    if (hsl.s <= 0.08 || tintByColor.has(color)) return
-    const entry = {
-      color,
-      ...hsl,
-      current: color.clone(),
-      start: color.clone(),
-      target: color.clone(),
+  const themeTint = createThemeTint('#e23456')
+  const {
+    color: themeColor,
+    origin: themeOrigin,
+    targets: tintTargets,
+    byColor: tintByColor,
+    track: trackTint,
+  } = themeTint
+  // 深色沿用原始地面基色；浅色仅替换基准明度和饱和度，两者共用主题色缓动。
+  const floorLightPalette = new Map(
+    (
+      [
+        ['nearColor', '#f4f1ed'],
+        ['farColor', '#e9e1df'],
+        ['sheenColor', '#020101'],
+      ] as const
+    ).map(([name, color]) => [
+      floor.material.uniforms[name].value as THREE.Color,
+      new THREE.Color(color).getHSL({ h: 0, s: 0, l: 0 }),
+    ])
+  )
+  const floorColors = [...floorLightPalette.keys()]
+  const lightStoneColors = new Set<THREE.Color>([
+    plinthMaterial.color,
+    ...obelisks.flatMap((item) => [
+      item.surface.color,
+      item.baseMaterial.color,
+    ]),
+  ])
+  const lightUniformColors = new Map([
+    [ambient.color, new THREE.Color('#fff5ee')],
+    [key.color, new THREE.Color('#fffaf5')],
+  ])
+  const white = new THREE.Color('#ffffff')
+  const stoneHsl = { h: 0, s: 0, l: 0 }
+  const refineTintTarget = (item: ThemeTintEntry) => {
+    if (item.color === statueLabelMaterial.color) item.target.copy(themeColor)
+    if (!lightMode) return
+    if (lightStoneColors.has(item.color)) {
+      item.target.getHSL(stoneHsl)
+      item.target.setHSL(stoneHsl.h, stoneHsl.s * 0.22, 0.58)
     }
-    tintTargets.push(entry)
-    tintByColor.set(color, entry)
+    const fixedColor = lightUniformColors.get(item.color)
+    if (fixedColor) item.target.copy(fixedColor)
+    if (item.color === rim.color) item.target.lerp(white, 0.5)
   }
   // 只改颜色 uniform，不重建材质、模型、纹理或后处理通道。
   const themeBlend = { value: 1 }
@@ -1113,28 +1148,18 @@ export function createHomeTemple(
   let themeTransition: gsap.core.Tween | undefined
   const applyThemeTint = () => {
     themeTintRevision++
-    // 直接混合当前色和目标色；快速切换时从当前帧继续，避免颜色跳变。
-    const progress = themeBlend.value
-    for (const item of tintTargets) {
-      item.current.copy(item.start).lerp(item.target, progress)
-      item.color.copy(item.current)
-    }
+    themeTint.apply(themeBlend.value)
     invalidate()
   }
   const setThemeColor = (color: string, animate = true) => {
-    const hsl = themeColor.set(color).getHSL({ h: 0, s: 0, l: 0 })
     themeTransition?.kill()
-    for (const item of tintTargets) {
-      item.start.copy(item.current)
-      // 字样使用完整主题色，其余对象保留各自的明暗层次。
-      if (item.color === statueLabelMaterial.color) item.target.copy(themeColor)
-      else
-        item.target.setHSL(
-          item.h + hsl.h - themeOrigin.h,
-          Math.min(1, (item.s * hsl.s) / themeOrigin.s),
-          item.l
-        )
-    }
+    themeTint.prepare(
+      color,
+      lightMode ? floorLightPalette : undefined,
+      refineTintTarget
+    )
+    for (const obelisk of obelisks)
+      obelisk.labelInk.value.set(lightMode ? '#29252b' : '#ffffff')
     stage.dataset.themeColor = color
     if (
       !animate ||
@@ -1261,11 +1286,14 @@ export function createHomeTemple(
   )
   // 网格复用模型的静态顶点及头部变形，裁切平面数量固定，切换只更新 uniform 和透明度。
   wireMaterial.onBeforeCompile = chromeMaterial.onBeforeCompile
-  // 仅写深度的实体遮住背面网格，实体材质淡出后仍保持相同的可见线条密度。
+  // 半透明黑色表面同时写入深度，压暗背后的卡片并遮住背面线框。
   const wireDepthMaterial = material(
     new THREE.MeshBasicMaterial({
-      colorWrite: false,
+      color: 0x000000,
+      colorWrite: true,
+      opacity: 0,
       transparent: true,
+      toneMapped: false,
       depthTest: true,
       depthWrite: true,
       polygonOffset: true,
@@ -1311,6 +1339,10 @@ export function createHomeTemple(
       const base = tintByColor.get(color)!
       return {
         base,
+        lightTarget:
+          color === item.surface.color || color === item.baseMaterial.color
+            ? new THREE.Color().setHSL(hsl.h, hsl.s * 0.22, 0.58)
+            : undefined,
         target:
           color === item.labelAccent.value || item.crystalTints.includes(color)
             ? item.hoverColor.clone()
@@ -1364,6 +1396,7 @@ export function createHomeTemple(
   }
 
   const screenPoint = new THREE.Vector3()
+  const islandNodAxis = new THREE.Vector3(1, 0, 0)
   const hitPoints = [
     [-0.65, 0.1, 0.65],
     [-0.65, 0.1, -0.65],
@@ -1574,6 +1607,7 @@ export function createHomeTemple(
       chromeMaterial.needsUpdate = true
     }
     wireMaterial.opacity = statueView.mix
+    wireDepthMaterial.opacity = 0.55 * statueView.mix
     if (statueMesh) {
       statueMesh.visible = statueView.mix < 1
       statueMesh.renderOrder = statueOnly ? 4 : 0
@@ -1840,7 +1874,8 @@ export function createHomeTemple(
     if (Math.abs(environmentHover.value - environmentHoverTarget) > 0.001)
       hoverMoving = true
     else environmentHover.value = environmentHoverTarget
-    const environmentBrightness = 1 - environmentHover.value * 0.58
+    const environmentBrightness =
+      1 - environmentHover.value * (lightMode ? 0.18 : 0.58)
     const environmentAppearanceChanged =
       appearance.brightness !== environmentBrightness ||
       appearance.themeRevision !== themeTintRevision
@@ -1850,13 +1885,16 @@ export function createHomeTemple(
       for (const entry of tintTargets) {
         entry.color.copy(entry.current)
         // 常态字样保持当前主题色，不参与聚焦时的背景压暗。
-        if (entry.color !== statueLabelMaterial.color)
+        if (
+          entry.color !== statueLabelMaterial.color &&
+          !(lightMode && floorLightPalette.has(entry.color))
+        )
           entry.color.multiplyScalar(environmentBrightness)
       }
-      ambient.intensity = 0.65 * environmentBrightness
-      key.intensity = 1.6 * environmentBrightness
-      rim.intensity = 2.8 * environmentBrightness
-      statueLight.intensity = 42 * environmentBrightness
+      ambient.intensity = (lightMode ? 1.5 : 0.65) * environmentBrightness
+      key.intensity = (lightMode ? 2.3 : 1.6) * environmentBrightness
+      rim.intensity = (lightMode ? 1.4 : 2.8) * environmentBrightness
+      statueLight.intensity = (lightMode ? 16 : 42) * environmentBrightness
     }
     if (
       environmentAppearanceChanged ||
@@ -1889,7 +1927,8 @@ export function createHomeTemple(
         .copy(tint.current)
         .lerp(sprigatitoHoverColor, sprigatitoHover.value)
         .multiplyScalar(
-          1 - (environmentHover.value - sprigatitoHover.value) * 0.58
+          (1 - (environmentHover.value - sprigatitoHover.value) * 0.58) *
+            (lightMode ? 0.55 : 1)
         )
       surface.envMapIntensity = 2.5 + sprigatitoHover.value * 0.8
       // 给宠物暗面补足基础亮度，颜色跟随主题和悬停状态，避免纯金属背光时近乎全黑。
@@ -1948,11 +1987,16 @@ export function createHomeTemple(
       obeliskAppearance[hoverIndex + 1] = item.strength
       reflectionAppearanceChanged = true
       const brightness =
-        1 - (environmentHover.value - item.hoverStrength) * 0.58
+        1 -
+        (environmentHover.value - item.hoverStrength) *
+          (lightMode ? 0.18 : 0.58)
       for (const entry of obeliskTints[index])
         entry.base.color
           .copy(entry.base.current)
-          .lerp(entry.target, item.hoverStrength)
+          .lerp(
+            lightMode && entry.lightTarget ? entry.lightTarget : entry.target,
+            item.hoverStrength
+          )
           .multiplyScalar(brightness)
       item.surface.envMapIntensity = 0.55 * brightness
       item.baseMaterial.envMapIntensity = 0.6 * brightness
@@ -1988,6 +2032,8 @@ export function createHomeTemple(
         copy.emissive.copy(source.emissive)
         copy.emissiveIntensity = source.emissiveIntensity
         copy.envMapIntensity = source.envMapIntensity
+        copy.metalness = source.metalness
+        copy.roughness = source.roughness
       }
       for (const entry of reflectionColors) entry.copy.copy(entry.source)
     }
@@ -2041,6 +2087,10 @@ export function createHomeTemple(
       setStageData('statueSheen', chromeMaterial.envMapIntensity.toFixed(3))
       setStageData('statueColor', `#${chromeMaterial.color.getHexString()}`)
       setStageData(
+        'floorColors',
+        floorColors.map((color) => `#${color.getHexString()}`).join(',')
+      )
+      setStageData(
         'statueBodyRotation',
         statue.rotation.toArray().slice(0, 3).join(',')
       )
@@ -2052,6 +2102,11 @@ export function createHomeTemple(
         statueView.mix === 1 ? 'wireframe' : 'chrome'
       )
       setStageData('statueWireOpacity', statueView.mix.toFixed(3))
+      setStageData('statueFillOpacity', wireDepthMaterial.opacity.toFixed(3))
+      setStageData(
+        'statueFillColor',
+        `#${wireDepthMaterial.color.getHexString()}`
+      )
       setStageData('statueClipHeight', String(-statueClipPlane.constant))
       setStageData(
         'statueHolyLight',
@@ -2206,6 +2261,48 @@ export function createHomeTemple(
       )
     }
     drawScene()
+    if (selected === 'statue' && statueMesh && callbacks.islandAnchors) {
+      // 锚点取自当前路卡网格的胸刺、双手与双辫，随模型世界矩阵与镜头一起投影。
+      const projectAnchor = (
+        x: number,
+        y: number,
+        z: number,
+        followsHead = false
+      ) => {
+        screenPoint.set(x, y, z)
+        // 辫子属于头部，复用着色器的两次旋转，确保转头时端点仍贴合辫子。
+        if (followsHead)
+          screenPoint
+            .sub(headNodPivot.value)
+            .applyAxisAngle(islandNodAxis, headNodAngle.value)
+            .add(headNodPivot.value)
+            .sub(headPivot.value)
+            .applyQuaternion(headQuaternion)
+            .add(headPivot.value)
+        screenPoint.applyMatrix4(statueMesh!.matrixWorld).project(camera)
+        return {
+          x: (screenPoint.x * 0.5 + 0.5) * viewWidth,
+          y: (0.5 - screenPoint.y * 0.5) * viewHeight,
+        }
+      }
+      callbacks.islandAnchors({
+        chest: projectAnchor(0, 2.04385, 0.34162),
+        rightHand: projectAnchor(-0.568, 1.059, 0.185),
+        leftHand: projectAnchor(0.568, 1.059, 0.185),
+        rightBraid: projectAnchor(
+          -0.37229,
+          2.27173 + neckExtension,
+          -0.19638,
+          true
+        ),
+        leftBraid: projectAnchor(
+          0.37229,
+          2.27173 + neckExtension,
+          -0.19638,
+          true
+        ),
+      })
+    }
     if (publishDiagnostics) {
       setStageData('renderFrames', String(renderer.info.render.frame))
       setStageData('gpuGeometries', String(renderer.info.memory.geometries))
@@ -3700,7 +3797,7 @@ export function createHomeTemple(
             trackTint((object.material as THREE.MeshPhysicalMaterial).color)
           }
         })
-        setThemeColor(experience.themeColor, false)
+        setThemeColor(stage.dataset.themeColor || experience.themeColor, false)
         surface.computeBoundingBox()
         const bounds = surface.boundingBox!
         bounds.getSize(statueSize).multiplyScalar(modelScale)
@@ -3747,6 +3844,18 @@ export function createHomeTemple(
     select,
     pick: click,
     setThemeColor,
+    setColorMode: (mode: 'light' | 'dark') => {
+      if (stage.dataset.colorMode === mode) return
+      lightMode = mode === 'light'
+      stage.dataset.colorMode = mode
+      chromeMaterial.metalness = lightMode ? 0.72 : 1
+      chromeMaterial.roughness = lightMode ? 0.22 : 0.09
+      if (sprigatitoSurface) {
+        sprigatitoSurface.metalness = chromeMaterial.metalness
+        sprigatitoSurface.roughness = chromeMaterial.roughness
+      }
+      setThemeColor(stage.dataset.themeColor || experience.themeColor, false)
+    },
     setPet,
     // 页面决定场景是否可见，场景统一管理动画时钟、指针订阅和绘制的暂停/恢复。
     setActive: (active: boolean) => {

@@ -29,7 +29,6 @@ import {
   installGoogleAnalytics,
 } from '@/utils/analytics'
 import { startSmoothScroll, stopSmoothScroll } from '@/utils/smoothScroll'
-import { ensureLightThemeStyles } from '@/utils/themeStyles'
 import { scheduleTypekitLoad } from '@/utils/typekit'
 
 const BackController = defineAsyncComponent(
@@ -212,7 +211,7 @@ const startAnimationHidden = () => {
 
 const unmountPageContent = () => {
   // 收藏品页保留首次挂载，避免开场结束后重建全部卡片并重播入场。
-  if (isTempleRoute.value || route.name === 'ISLAND_MERCH_PHOTOGRAPHY') return
+  if (isTempleRoute.value || route.name === 'ISLAND_MERCH') return
   pageContentActive.value = false
 }
 
@@ -225,8 +224,7 @@ onMounted(async () => {
     passive: true,
   })
   const savedTheme = localStorage.getItem('theme')
-  if (savedTheme === 'light') await ensureLightThemeStyles()
-  visualStateStore.setTheme(savedTheme === 'light' ? 'light' : 'dark')
+  await visualStateStore.setTheme(savedTheme === 'light' ? 'light' : 'dark')
   syncSeoMeta(route)
   const navigation = useTempleNavigation()
   syncPageTheme(

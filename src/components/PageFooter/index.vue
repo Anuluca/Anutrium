@@ -636,7 +636,7 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  color: #fff;
+  color: var(--text-color);
   pointer-events: none;
 }
 .page-footer-home.no-rem .page-footer-home__social {

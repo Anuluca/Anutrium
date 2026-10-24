@@ -1,5 +1,9 @@
 <template>
-  <nav class="filter-rail" data-lenis-nested-scroll>
+  <nav
+    class="filter-rail"
+    :class="{ 'filter-rail--horizontal': horizontal }"
+    data-lenis-nested-scroll
+  >
     <button
       v-for="item in items"
       :key="item.id"
@@ -66,6 +70,7 @@ withDefaults(
     items: FilterRailItem[]
     modelValue: string
     showAvatar?: boolean
+    horizontal?: boolean
   }>(),
   {
     accentColor: '#e23456',
@@ -266,6 +271,40 @@ defineEmits<{
     &__avatar {
       width: 40px;
       height: 40px;
+    }
+  }
+}
+.filter-rail.filter-rail--horizontal {
+  position: relative;
+  inset: auto;
+  margin-bottom: 0;
+  flex-direction: row;
+  gap: 2px;
+  max-height: none;
+  padding: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border-right: 0;
+  border-bottom: 1px solid var(--border-color);
+
+  button {
+    width: auto;
+    min-width: 0;
+    padding: 8px 12px 13px;
+
+    &::after {
+      top: auto;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      width: auto;
+      height: 2px;
+      transform: scaleX(0);
+      transform-origin: left;
+    }
+
+    &.is-active::after {
+      transform: scaleX(1);
     }
   }
 }

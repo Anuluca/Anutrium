@@ -365,6 +365,13 @@ test('illustration uses its configured preview, full R2 collection and independe
       files[0]
     )}`
   )
+  const viewer = page.locator('.el-image-viewer__wrapper')
+  const info = viewer.locator('.safe-image-viewer__info')
+  await expect(info.locator('.photo-info__device')).toHaveText('表里')
+  await expect(info.locator('.photo-info__time')).toHaveText('2024-01-22')
+  await viewer.locator('.el-image-viewer__next').click()
+  await expect(info.locator('.photo-info__device')).toHaveText('彗星拳')
+  await expect(info.locator('.photo-info__time')).toHaveText('2024-08-10')
   await page.locator('.el-image-viewer__close').click()
   await expect(page.locator('.el-image-viewer__wrapper')).toHaveCount(0)
   await drawing.locator('.creative-illustration__toggle').click()

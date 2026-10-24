@@ -11,6 +11,7 @@ import {
 import { useI18n } from 'vue-i18n'
 import { Loading, Picture } from '@element-plus/icons-vue'
 
+import FilterRail from '@/components/FilterRail/index.vue'
 import MediaGallery from '@/components/MediaGallery/index.vue'
 import MediaPhotoInfo from '@/components/MediaPhotoInfo/index.vue'
 import {
@@ -18,7 +19,13 @@ import {
   floraFriendsFeatured,
 } from '@/locales/dynamic/floraFriends'
 import { petAlbums } from '@/locales/dynamic/petAlbums'
-import { getFloraCaptureDate } from '@/utils/floratriumMedia'
+import {
+  floraAlbumStages,
+  floraAlbumTags,
+  getFloraAlbumStage,
+  matchesFloraAlbumTag,
+} from '@/utils/floraAlbum'
+import { getFloraCaptureDate, mediaAlbums } from '@/utils/floratriumMedia'
 
 import { useFloraAlbum } from '../composables/useFloraAlbum'
 import { useFloraMediaPanel } from '../composables/useFloraMediaPanel'
@@ -49,6 +56,8 @@ const { t, locale } = useI18n({
       unknownDate: '日期未知',
       page: '第 {page} 页',
       friends: '花花的邻居们',
+      filters: '花花相册分类',
+      unclassified: '未分类',
     },
     en: {
       previous: 'Previous',
@@ -60,6 +69,8 @@ const { t, locale } = useI18n({
       unknownDate: 'Unknown date',
       page: 'Page {page}',
       friends: 'Flora’s Neighbors',
+      filters: 'Flora album filters',
+      unclassified: 'Unclassified',
     },
   },
 })
@@ -100,9 +111,91 @@ const {
   pageCursors,
   pageIndex,
   totalPages,
+  totalItems,
   refresh,
   goToPage: loadPage,
-} = useFloraAlbum(() => props.petId, mainAlbumExpanded, cancelPageMedia)
+} = useFloraAlbum(() => props.petId, mainAlbumExpanded, cancelPageMedia, {
+  complete: () => props.petId === 'huahua',
+})
+const activeTag = ref('all')
+const tagItems = computed(() =>
+  floraAlbumTags.map((tag) => ({
+    id: tag.id,
+    title: tag[locale.value === 'en' ? 'en' : 'zhCn'],
+    count: allItems.value.filter((item) => matchesFloraAlbumTag(item, tag.id))
+      .length,
+  }))
+)
+const collectionPage = ref(1)
+const matchedItems = computed(() => {
+  if (props.petId !== 'huahua') return allItems.value
+  if (activeTag.value !== 'all')
+    return allItems.value
+      .filter((item) => matchesFloraAlbumTag(item, activeTag.value))
+      .sort((a, b) =>
+        (a.key.split('/').pop() || '').localeCompare(
+          b.key.split('/').pop() || ''
+        )
+      )
+  // 先按阶段排好完整清单，再分页，避免相同阶段在不同页之间交错。
+  const stages = [...floraAlbumStages.map((stage) => stage.id), 'unknown']
+  return stages.flatMap((stage) =>
+    allItems.value.filter((item) => getFloraAlbumStage(item) === stage)
+  )
+})
+const collectionPageCount = computed(() =>
+  Math.max(1, Math.ceil(matchedItems.value.length / mediaAlbums.flora.pageSize))
+)
+const visibleItems = computed(() =>
+  props.petId === 'huahua'
+    ? matchedItems.value.slice(
+        (collectionPage.value - 1) * mediaAlbums.flora.pageSize,
+        collectionPage.value * mediaAlbums.flora.pageSize
+      )
+    : allItems.value
+)
+watch([() => props.petId, activeTag, mainAlbumExpanded], () => {
+  collectionPage.value = 1
+})
+watch(collectionPageCount, (count) => {
+  collectionPage.value = Math.min(collectionPage.value, count)
+})
+const albumGroups = computed(() => {
+  if (props.petId !== 'huahua')
+    return [{ id: 'main', title: '', items: visibleItems.value }]
+  if (activeTag.value !== 'all')
+    return [
+      {
+        id: activeTag.value,
+        title: '',
+        items: visibleItems.value,
+      },
+    ]
+  const buckets = new Map<string, typeof allItems.value>()
+  for (const item of visibleItems.value) {
+    const stage = getFloraAlbumStage(item)
+    const items = buckets.get(stage) || []
+    items.push(item)
+    buckets.set(stage, items)
+  }
+  const groups = floraAlbumStages.map((stage) => ({
+    id: stage.id as string,
+    title: `【${stage[locale.value === 'en' ? 'en' : 'zhCn']}（${
+      stage.range
+    }）】`,
+    items: buckets.get(stage.id) || [],
+  }))
+  const unknown = buckets.get('unknown')
+  if (unknown?.length)
+    groups.push({ id: 'unknown', title: t('unclassified'), items: unknown })
+  return groups.filter((group) => group.items.length)
+})
+const selectTag = (tag: string) => {
+  if (activeTag.value === tag) return
+  cancelPageMedia()
+  activeTag.value = tag
+  void resetScroll()
+}
 function cancelPageMedia() {
   // 先释放旧页的图片候选源和视频连接，避免资源继续占用新页下载队列。
   viewport.value
@@ -151,9 +244,23 @@ watch(
   () => props.petId,
   () => {
     activeTab.value = 'album'
+    activeTag.value = 'all'
   }
 )
 const goToPage = async (target: number) => {
+  if (props.petId === 'huahua') {
+    if (
+      !Number.isInteger(target) ||
+      target < 1 ||
+      target > collectionPageCount.value ||
+      target === collectionPage.value
+    )
+      return
+    cancelPageMedia()
+    collectionPage.value = target
+    await resetScroll()
+    return
+  }
   if (await loadPage(target)) await resetScroll()
 }
 defineExpose({ closeExpanded })
@@ -251,76 +358,111 @@ defineExpose({ closeExpanded })
         <div
           v-else
           :key="`all-${activeTab}`"
-          ref="viewport"
-          class="flora-album-gallery__viewport"
-          data-lenis-nested-scroll
+          class="flora-album-gallery__expanded"
+          :class="{ 'has-tag-filters': petId === 'huahua' && !isFriends }"
         >
-          <template v-if="isFriends">
-            <section
-              v-for="group in floraFriendAlbums"
-              :key="group.id"
-              class="flora-album-gallery__friend-group"
-              @click.stop
-            >
-              <MediaGallery
-                :columns="4"
-                :items="group.items"
-                :get-media-label="
-                  () => group.name[locale === 'en' ? 'en' : 'zhCn']
-                "
-                preserve-image-colors
-              >
-                <template #toolbar-start>
-                  <h3>{{ group.name[locale === 'en' ? 'en' : 'zhCn'] }}</h3>
-                </template>
-                <template #info="{ item }">
-                  <MediaPhotoInfo
-                    :item="{
-                      time: getFloraCaptureDate(item.url) || t('unknownDate'),
-                    }"
-                    :time-divider-padding="0"
-                  />
-                </template>
-              </MediaGallery>
-            </section>
-          </template>
+          <FilterRail
+            v-if="petId === 'huahua' && !isFriends"
+            class="flora-album-gallery__filters"
+            horizontal
+            :items="tagItems"
+            :model-value="activeTag"
+            :show-avatar="false"
+            accent-color="var(--flora-theme-color)"
+            :aria-label="t('filters')"
+            @click.stop
+            @update:model-value="selectTag"
+          />
           <div
-            v-else-if="loading && !allItems.length"
-            class="flora-album-gallery__loading"
-            role="status"
-            :aria-label="t('loading')"
+            ref="viewport"
+            class="flora-album-gallery__viewport"
+            data-lenis-nested-scroll
           >
-            <el-icon :size="28" class="is-loading" aria-hidden="true">
-              <Loading />
-            </el-icon>
-          </div>
-          <p
-            v-else-if="error && !allItems.length"
-            class="flora-album-gallery__notice"
-            role="alert"
-          >
-            {{ t('error') }}
-            <button type="button" @click="refresh()">{{ t('retry') }}</button>
-          </p>
-          <p v-else-if="!allItems.length" class="flora-album-gallery__notice">
-            {{ t('empty') }}
-          </p>
-          <MediaGallery
-            v-else
-            :columns="4"
-            :items="allItems"
-            :get-media-label="() => title"
-            preserve-image-colors
-          >
-            <template #info="{ item }">
-              <MediaPhotoInfo
-                :item="{
-                  time: getFloraCaptureDate(item.url) || t('unknownDate'),
-                }"
-                :time-divider-padding="0"
-              />
+            <template v-if="isFriends">
+              <section
+                v-for="group in floraFriendAlbums"
+                :key="group.id"
+                class="flora-album-gallery__friend-group"
+              >
+                <MediaGallery
+                  :columns="4"
+                  :items="group.items"
+                  :get-media-label="
+                    () => group.name[locale === 'en' ? 'en' : 'zhCn']
+                  "
+                  preserve-image-colors
+                >
+                  <template #toolbar-start>
+                    <h3>{{ group.name[locale === 'en' ? 'en' : 'zhCn'] }}</h3>
+                  </template>
+                  <template #info="{ item }">
+                    <MediaPhotoInfo
+                      :item="{
+                        time: getFloraCaptureDate(item.url) || t('unknownDate'),
+                      }"
+                      :time-divider-padding="0"
+                    />
+                  </template>
+                </MediaGallery>
+              </section>
             </template>
-          </MediaGallery>
+            <div
+              v-else-if="loading && !allItems.length"
+              class="flora-album-gallery__loading"
+              role="status"
+              :aria-label="t('loading')"
+            >
+              <el-icon :size="28" class="is-loading" aria-hidden="true">
+                <Loading />
+              </el-icon>
+            </div>
+            <p
+              v-else-if="error && !allItems.length"
+              class="flora-album-gallery__notice"
+              role="alert"
+            >
+              {{ t('error') }}
+              <button type="button" @click="refresh()">{{ t('retry') }}</button>
+            </p>
+            <p v-else-if="!allItems.length" class="flora-album-gallery__notice">
+              {{ t('empty') }}
+            </p>
+            <template v-else>
+              <p
+                v-if="!albumGroups.some((group) => group.items.length)"
+                class="flora-album-gallery__notice"
+              >
+                {{ t('empty') }}
+              </p>
+              <section
+                v-for="group in albumGroups"
+                :key="`${petId}-${activeTag}-${collectionPage}-${group.id}`"
+                :class="{
+                  'flora-album-gallery__stage-group': petId === 'huahua',
+                }"
+                :data-stage="group.id"
+              >
+                <MediaGallery
+                  :columns="4"
+                  :items="group.items"
+                  :get-media-label="() => title"
+                  preserve-image-colors
+                >
+                  <template v-if="group.title" #toolbar-start>
+                    <h3>{{ group.title }}</h3>
+                  </template>
+                  <template #info="{ item }">
+                    <MediaPhotoInfo
+                      :item="{
+                        time: getFloraCaptureDate(item.url) || t('unknownDate'),
+                      }"
+                      :time-divider-padding="0"
+                    />
+                  </template>
+                </MediaGallery>
+              </section>
+            </template>
+          </div>
         </div>
       </Transition>
     </div>
@@ -364,9 +506,16 @@ defineExpose({ closeExpanded })
     />
     <footer v-if="expanded && !isFriends" class="flora-album-gallery__footer">
       <FloraAlbumPagination
-        :page="pageIndex + 1"
-        :page-count="totalPages ?? pageCursors.length"
-        :available-pages="pageCursors.length"
+        :total-items="petId === 'huahua' ? matchedItems.length : totalItems"
+        :page="petId === 'huahua' ? collectionPage : pageIndex + 1"
+        :page-count="
+          petId === 'huahua'
+            ? collectionPageCount
+            : totalPages ?? pageCursors.length
+        "
+        :available-pages="
+          petId === 'huahua' ? collectionPageCount : pageCursors.length
+        "
         :mobile="mobile"
         @select="goToPage"
       />
@@ -413,19 +562,20 @@ defineExpose({ closeExpanded })
     min-height: 0;
   }
 
-  .flora-album-gallery__friend-group {
+  .flora-album-gallery__friend-group,
+  .flora-album-gallery__stage-group {
     margin-bottom: 28px;
 
     h3 {
-      grid-area: 1 / 1 / 2 / -1;
+      grid-area: 1 / 1;
       min-width: 0;
       margin: 0;
-      padding-inline: 76px;
+      padding-inline: 0;
       box-sizing: border-box;
-      text-align: center;
+      text-align: left;
       pointer-events: none;
       color: #fff;
-      font: 900 20px / 1.4 'alibaba-puhuiti', sans-serif;
+      font: 900 24px / 1.4 'alibaba-puhuiti', sans-serif;
       text-shadow: 0 2px 6px rgb(0 0 0 / 35%);
     }
 
@@ -450,12 +600,33 @@ defineExpose({ closeExpanded })
     }
   }
 
+  .flora-album-gallery__stage-group h3 {
+    font-size: 20px;
+    overflow-wrap: anywhere;
+  }
+  .flora-album-gallery__expanded {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+  }
+  :deep(.flora-album-gallery__filters.filter-rail--horizontal) {
+    flex-shrink: 0;
+    margin: 0 30px 20px;
+    padding-top: 12px;
+  }
+  .has-tag-filters .flora-album-gallery__viewport {
+    padding-top: 0;
+  }
   &.is-expanded {
     .flora-album-gallery__background {
       opacity: 0.4;
     }
-    .flora-album-gallery__viewport {
+    .flora-album-gallery__expanded {
       margin-top: 20px;
+      &.has-tag-filters {
+        margin-top: 0;
+      }
     }
     &::before {
       background: color-mix(in srgb, var(--flora-theme-color) 40%, transparent);
@@ -526,6 +697,9 @@ defineExpose({ closeExpanded })
   @media (max-width: 900px) {
     .flora-album-gallery__viewport {
       padding-inline: 35px;
+    }
+    :deep(.flora-album-gallery__filters.filter-rail--horizontal) {
+      margin-inline: 35px;
     }
     &.is-expanded .flora-album-gallery__footer {
       padding-bottom: 76px;
@@ -678,6 +852,11 @@ defineExpose({ closeExpanded })
     --album-toggle-width: 80px;
     --album-toggle-right: 8px;
 
+    .flora-album-gallery__friend-group h3,
+    .flora-album-gallery__stage-group h3 {
+      font-size: 20px;
+    }
+
     &:not(.is-expanded) .flora-album-gallery__tabs {
       min-height: calc(
         var(--flora-media-title-size) *
@@ -701,17 +880,32 @@ defineExpose({ closeExpanded })
           bottom: auto;
         }
 
-        .flora-album-gallery__viewport {
+        .flora-album-gallery__expanded {
           margin-top: calc(
             min(var(--flora-media-title-size, 72px), var(--album-title-fit)) *
               var(--flora-media-title-line-height, 1.2) + 16px
           );
+          &.has-tag-filters {
+            margin-top: calc(
+              min(var(--flora-media-title-size, 72px), var(--album-title-fit)) *
+                var(--flora-media-title-line-height, 1.2) + 8px
+            );
+          }
         }
       }
 
-      .flora-album-gallery__viewport {
+      .flora-album-gallery__expanded {
         margin-top: 20px;
+      }
+      :deep(.flora-album-gallery__filters.filter-rail--horizontal) {
+        margin-inline: 8px;
+        padding-top: 8px;
+      }
+      .flora-album-gallery__viewport {
         padding: 8px;
+      }
+      .has-tag-filters .flora-album-gallery__viewport {
+        padding-top: 0;
       }
 
       .flora-album-gallery__footer {

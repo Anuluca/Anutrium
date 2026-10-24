@@ -96,7 +96,7 @@ defineExpose({ setProgress })
   z-index: 1200;
   width: 4px;
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.5);
+  background: transparent;
   pointer-events: none;
   transition: top 0.24s ease;
 
@@ -124,12 +124,6 @@ defineExpose({ setProgress })
     transition: transform var(--page-scroll-progress-transition-duration, 0ms)
       cubic-bezier(0.2, 0.8, 0.2, 1);
     will-change: transform;
-  }
-}
-
-@media (max-width: 768px) {
-  .page-scroll-progress.no-rem {
-    background: transparent;
   }
 }
 </style>

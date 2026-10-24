@@ -1,0 +1,116 @@
+// 仅浅色样式包加载；图片上的白色标注继续由媒体组件维护。
+body.light .temple-page.no-rem {
+  .flora-moves.no-rem {
+    opacity: 0.85;
+  }
+
+  .flora-pet-memo.no-rem {
+    --flora-memo-opacity: 0.8;
+
+    strong {
+      -webkit-text-fill-color: currentColor;
+      -webkit-text-stroke: 0;
+    }
+  }
+
+  .flora-pet-level .flora-pet-level__plate {
+    opacity: 0.85;
+  }
+
+  .flora-move-card {
+    color: var(--text-color);
+  }
+
+  .flora-move-card .flora-move-card__name {
+    color: color-mix(in srgb, var(--move-color) 60%, #1f1f1f);
+    -webkit-text-fill-color: currentColor;
+    -webkit-text-stroke: 0;
+  }
+
+  .flora-stats-chart.no-rem {
+    opacity: 0.85;
+
+    text {
+      text-shadow: none;
+    }
+
+    .flora-stats-chart__boundary {
+      fill: var(--surface-color-soft);
+    }
+
+    .flora-stats-chart__value {
+      fill: var(--text-color);
+      opacity: 0.8;
+    }
+
+    .is-increased text {
+      fill: #b72040;
+    }
+
+    .is-decreased text {
+      fill: #2167ac;
+    }
+  }
+
+  .flora-identity-bar__gender {
+    text-shadow: none;
+  }
+
+  .flora-move-card .flora-move-card__pp {
+    color: #fffff4;
+  }
+
+  .flora-like__message {
+    color: var(--text-color);
+    background: var(--surface-color-solid);
+    box-shadow: 0 4px 14px var(--shadow-color);
+  }
+
+  .flora-video-gallery__upcoming {
+    color: var(--text-muted);
+  }
+
+  button.flora-expand-button.no-rem {
+    background: var(--surface-color-solid);
+    color: var(--text-color);
+    box-shadow: 0 4px 14px var(--shadow-color);
+
+    &:hover,
+    &:focus-visible {
+      background: var(--page-theme-color);
+      color: #fff;
+    }
+  }
+
+  .flora-album-gallery__pagination button[aria-current='page'] {
+    background: var(--text-color);
+    color: var(--bg-color);
+  }
+  .temple-underlay::after {
+    background: linear-gradient(
+      var(--temple-menu-shade-direction),
+      rgba(250, 249, 246, 0.98) 0%,
+      rgba(250, 249, 246, 0.94) 28%,
+      rgba(250, 249, 246, 0.65) 45%,
+      transparent 62%
+    );
+  }
+
+  .temple-fullscreen-shade {
+    background: var(--surface-color-solid);
+  }
+
+  &.temple-page--mobile {
+    .temple-underlay::after {
+      background: rgba(250, 249, 246, 0.96);
+    }
+
+    .temple-stage::after {
+      background: linear-gradient(to bottom, var(--bg-color), transparent);
+    }
+  }
+}
+
+body.light .page-footer-home.no-rem .page-footer-home__legal {
+  opacity: 0.55;
+}

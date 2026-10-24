@@ -31,6 +31,33 @@ const aboutDynamic = {
   ],
   changelogs: [
     {
+      version: 'v2.1',
+      published: false,
+      date: '',
+      title: {
+        zhCn: 'Floratrium 相册更新',
+        en: 'FLORATRIUM ALBUM UPDATE',
+      },
+      details: [
+        {
+          zhCn: '__ISLAND 模块__新增__想法、笔记与宅__入口卡片，支持路卡利欧模型部位连线、悬停反色与点击闪烁跳转；收藏品路由及相关命名统一简化为 __merch__。',
+          en: 'Added __Ideas, Notes, and Otaku__ cards to __Island__, with links to Lucario’s body parts, inverted hover colors, and flashing navigation. Simplified collectible routes and related names to __merch__.',
+        },
+        {
+          zhCn: '花花相册新增__按文件名日期划分的四个成长阶段__，并复用创作页工具标签栏，支持__全部、特写、睡觉、MEME、球、与咪咪一起、战斗、绝育期间__的中英文分类；全部按阶段展示，标签按文件名关键词筛选并平铺展示。',
+          en: 'Added __four date-based life stages__ to Flora’s album and reused the Creative tool tag bar for bilingual __All, Closeup, Sleep, Meme, Ball, With Mimi, Battle, and Sterilization__ filters. All groups media by stage; other tags match filename keywords and display a flat gallery.',
+        },
+        {
+          zhCn: 'Floratrium 新增__【花花的朋友们】相册__。',
+          en: 'Added the __【花花的朋友们】 album__ to Floratrium.',
+        },
+        {
+          zhCn: '新增旅程：__"青阳"__、__"赣州"__、__"汕头"__、__"潮州"__、__"广州"__；',
+          en: 'Added journeys: __"Qingyang"__, __"Ganzhou"__, __"Shantou"__, __"Chaozhou"__, and __"Guangzhou"__;',
+        },
+      ],
+    },
+    {
       version: 'v2.0',
       codename: 'MIRAGE',
       date: '2026-10-23',

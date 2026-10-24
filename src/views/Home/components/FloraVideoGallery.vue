@@ -159,7 +159,7 @@ defineExpose({ closeExpanded })
   pointer-events: auto;
   cursor: pointer;
   isolation: isolate;
-  color: #fffff4;
+  color: var(--text-color);
   &::before,
   &::after {
     position: absolute;

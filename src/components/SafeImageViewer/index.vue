@@ -3,6 +3,7 @@
     v-if="inline"
     :url-list="urlList"
     :labels="labels"
+    :titles="titles"
     :initial-index="initialIndex"
     @switch="emit('switch', $event)"
     @open="emit('open', $event)"
@@ -22,6 +23,12 @@
     @close="handleClose"
     @switch="handleSwitch"
   >
+    <OverlayBackgroundTitle
+      v-if="backgroundTitle && !activeVideo"
+      class="safe-image-viewer__background-title"
+      :title="backgroundTitle"
+      :active="!closing"
+    />
     <div
       v-if="isImageLoading && !activeVideo"
       ref="loadingPlaceholder"
@@ -89,6 +96,7 @@ import {
 } from '@element-plus/icons-vue'
 import { ElIcon, ElImageViewer } from 'element-plus'
 
+import OverlayBackgroundTitle from '@/components/OverlayBackgroundTitle/index.vue'
 import { useOverlayScrollLock } from '@/composables/useOverlayScrollLock'
 import { flashActionButton } from '@/utils/flashActionButton'
 import {
@@ -113,6 +121,7 @@ const props = withDefaults(
     zIndex?: number
     inline?: boolean
     labels?: string[]
+    titles?: string[]
   }>(),
   {
     hideOnClickModal: true,
@@ -121,6 +130,7 @@ const props = withDefaults(
     zIndex: 10010,
     inline: false,
     labels: () => [],
+    titles: () => [],
   }
 )
 
@@ -145,6 +155,8 @@ let resizeObserver: ResizeObserver | undefined
 let navigationObserver: ResizeObserver | undefined
 let unbindTouch: (() => void) | undefined
 const activeIndex = ref(props.initialIndex)
+const closing = ref(false)
+const backgroundTitle = computed(() => props.titles[activeIndex.value]?.trim())
 const videoPlayer = ref<HTMLVideoElement | null>(null)
 const isImageLoading = ref(true)
 const loadingPlaceholder = ref<HTMLElement | null>(null)
@@ -305,6 +317,7 @@ const syncNavigationCutouts = () => {
 let closeTimer: ReturnType<typeof setTimeout> | undefined
 const handleClose = () => {
   if (closeTimer !== undefined) return
+  closing.value = true
   videoPlayer.value?.pause()
   ++switchVersion
   clearSwitchAnimations()
@@ -521,6 +534,22 @@ useOverlayScrollLock('safe-image-viewer', () => !props.inline)
 </script>
 
 <style lang="less">
+.el-image-viewer__wrapper {
+  .safe-image-viewer__background-title {
+    z-index: 0;
+  }
+
+  .el-image-viewer__canvas {
+    position: relative;
+    z-index: 1;
+    pointer-events: none;
+
+    .el-image-viewer__img {
+      pointer-events: auto;
+    }
+  }
+}
+
 .el-image-viewer__wrapper
   .el-image-viewer__actions:has(.safe-image-viewer__tools) {
   background: transparent;

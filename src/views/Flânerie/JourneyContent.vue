@@ -338,7 +338,7 @@ onUnmounted(() => {
 }
 
 .vlog-section {
-  padding: 0 0 30px;
+  padding: 24px 0 30px;
   overflow-x: hidden;
   overflow-x: clip;
 }

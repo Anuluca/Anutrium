@@ -188,7 +188,7 @@ import {
 } from '@/utils/dailySafeBox'
 
 const safeBoxScene =
-  'https://assets.anuluca.com/Island/myGames/sleeping-dogs/safe-box-scene.webp'
+  'https://assets.anuluca.com/Island/playground/sleeping-dogs/safe-box-scene.webp'
 
 type Direction = -1 | 1
 type GamePhase = 'cracking' | 'open'

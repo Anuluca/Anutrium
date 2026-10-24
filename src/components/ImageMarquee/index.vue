@@ -70,9 +70,14 @@
     <SafeImageViewer
       v-if="viewerIndex !== null"
       :url-list="urls"
+      :titles="items.map((item) => item.title || '')"
       :initial-index="viewerIndex"
       @close="viewerIndex = null"
-    />
+    >
+      <template v-if="$slots.info" #info="{ index }">
+        <slot name="info" :item="items[index]" :index="index" />
+      </template>
+    </SafeImageViewer>
   </div>
 </template>
 

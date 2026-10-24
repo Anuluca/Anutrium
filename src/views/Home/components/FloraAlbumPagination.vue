@@ -8,10 +8,11 @@ const props = withDefaults(
   defineProps<{
     page: number
     pageCount: number
+    totalItems?: number | null
     availablePages?: number
     mobile?: boolean
   }>(),
-  { availablePages: undefined, mobile: false }
+  { availablePages: undefined, totalItems: null, mobile: false }
 )
 const emit = defineEmits<{ (event: 'select', page: number): void }>()
 const { locale } = useI18n()
@@ -33,38 +34,47 @@ const selectPage = (page: number, event: MouseEvent) => {
     :class="{ 'is-mobile': mobile }"
     :aria-label="labels.pagination"
   >
-    <button
-      type="button"
-      :aria-label="labels.previous"
-      :disabled="page <= 1"
-      @click="emit('select', page - 1)"
-    >
-      <span
-        class="flora-album-gallery__page-arrow is-previous"
-        aria-hidden="true"
-      />
-    </button>
-    <div class="flora-album-gallery__page-numbers">
+    <span v-if="totalItems != null" class="flora-album-gallery__page-total">
+      {{
+        locale === 'en'
+          ? `${totalItems} images (${pageCount} pages)`
+          : `共${totalItems}张图片 (${pageCount}页)`
+      }}
+    </span>
+    <div class="flora-album-gallery__page-controls">
       <button
-        v-for="number in pageCount"
-        :key="number"
         type="button"
-        :aria-label="locale === 'en' ? `Page ${number}` : `第 ${number} 页`"
-        :aria-current="number === page ? 'page' : undefined"
-        :disabled="number > available"
-        @click="selectPage(number, $event)"
+        :aria-label="labels.previous"
+        :disabled="page <= 1"
+        @click="emit('select', page - 1)"
       >
-        {{ number }}
+        <span
+          class="flora-album-gallery__page-arrow is-previous"
+          aria-hidden="true"
+        />
+      </button>
+      <div class="flora-album-gallery__page-numbers">
+        <button
+          v-for="number in pageCount"
+          :key="number"
+          type="button"
+          :aria-label="locale === 'en' ? `Page ${number}` : `第 ${number} 页`"
+          :aria-current="number === page ? 'page' : undefined"
+          :disabled="number > available"
+          @click="selectPage(number, $event)"
+        >
+          {{ number }}
+        </button>
+      </div>
+      <button
+        type="button"
+        :aria-label="labels.next"
+        :disabled="page >= available"
+        @click="emit('select', page + 1)"
+      >
+        <span class="flora-album-gallery__page-arrow" aria-hidden="true" />
       </button>
     </div>
-    <button
-      type="button"
-      :aria-label="labels.next"
-      :disabled="page >= available"
-      @click="emit('select', page + 1)"
-    >
-      <span class="flora-album-gallery__page-arrow" aria-hidden="true" />
-    </button>
   </nav>
 </template>
 
@@ -72,8 +82,29 @@ const selectPage = (page: number, event: MouseEvent) => {
 .flora-album-gallery__pagination.no-rem {
   display: flex;
   align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  max-width: 100%;
   gap: 8px;
   color: inherit;
+
+  .flora-album-gallery__page-total {
+    flex: none;
+    font: 400 14px / 1.4 'alibaba-puhuiti', sans-serif;
+    white-space: nowrap;
+  }
+
+  .flora-album-gallery__page-controls {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    max-width: 100%;
+    gap: inherit;
+
+    > button {
+      flex: none;
+    }
+  }
 
   button {
     padding: 4px 6px;
@@ -95,6 +126,11 @@ const selectPage = (page: number, event: MouseEvent) => {
       outline: 1px solid currentColor !important;
       outline-offset: 2px;
     }
+  }
+
+  &.is-mobile .flora-album-gallery__page-total {
+    flex-basis: 100%;
+    text-align: left;
   }
 
   &:not(.is-mobile) {

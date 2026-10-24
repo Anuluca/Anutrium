@@ -255,7 +255,7 @@ const travelDestinations = [
       zhCn: '我妈妈的家乡。',
       en: "My mother's hometown.",
     },
-    img: 'https://assets.anuluca.com/Flanerie/cities/chizhou/05.jpg',
+    img: 'https://assets.anuluca.com/Flanerie/cities/chizhou/20.jpg',
     location: {
       id: 'anhui',
       name: {
@@ -317,30 +317,53 @@ const travelDestinations = [
       },
       {
         location: {
-          zhCn: '忘记是什么野山了。',
-          en: 'I forgot which wild mountain this was.',
+          zhCn: '步行街',
+          en: 'Pedestrian Street',
         },
-        time: '2020',
-        device: 'MI 6',
-        url: 'https://assets.anuluca.com/Flanerie/cities/chizhou/05.jpg',
+        time: '2026',
+        device: 'SONY RX100M6',
+        url: 'https://assets.anuluca.com/Flanerie/cities/chizhou/20.jpg',
+      },
+    ],
+  },
+  {
+    id: 'qingyang',
+    category: 'visited',
+    title: { zhCn: '安徽·青阳', en: 'ANHUI · QINGYANG' },
+    mapLabel: { zhCn: '青阳', en: 'Qingyang' },
+    date: '2026',
+    tagline: { zhCn: '', en: '' },
+    img: 'https://assets.anuluca.com/Flanerie/cities/qingyang/20261002_153852_compressed_0ef7f397f0d6.webp',
+    location: {
+      id: 'anhui',
+      name: { zhCn: '安徽', en: 'Anhui' },
+      lat: 31.8206,
+      lng: 117.2272,
+    },
+    photos: [
+      {
+        url: 'https://assets.anuluca.com/Flanerie/cities/qingyang/20261004_135232_compressed_fdb857b11249.webp',
       },
       {
-        location: {
-          zhCn: '草。',
-          en: 'Grass.',
-        },
-        time: '2020',
-        device: 'iPhone 12 mini',
-        url: 'https://assets.anuluca.com/Flanerie/cities/chizhou/07.jpg',
+        url: 'https://assets.anuluca.com/Flanerie/cities/qingyang/20261004_113539_compressed_00fb48b0f79e.webp',
       },
       {
-        location: {
-          zhCn: '妈妈老家前的小道。',
-          en: "The path in front of my mother's old home.",
-        },
-        time: '2020',
-        device: 'iPhone 12 mini',
-        url: 'https://assets.anuluca.com/Flanerie/cities/chizhou/08.jpg',
+        url: 'https://assets.anuluca.com/Flanerie/cities/qingyang/20261003_121309_compressed_49b12f37d129.webp',
+      },
+      {
+        url: 'https://assets.anuluca.com/Flanerie/cities/qingyang/20261002_153852_compressed_0ef7f397f0d6.webp',
+      },
+      {
+        url: 'https://assets.anuluca.com/Flanerie/cities/qingyang/20261002_152802_compressed_a92620668d88.webp',
+      },
+      {
+        url: 'https://assets.anuluca.com/Flanerie/cities/qingyang/20261002_152730_compressed_505a31a262b4.webp',
+      },
+      {
+        url: 'https://assets.anuluca.com/Flanerie/cities/qingyang/20261002_152446_compressed_39a870022148.webp',
+      },
+      {
+        url: 'https://assets.anuluca.com/Flanerie/cities/qingyang/20261002_093024_compressed_a4fb59103394.webp',
       },
       {
         location: {
@@ -349,16 +372,35 @@ const travelDestinations = [
         },
         time: '2020',
         device: 'SONY RX100M6',
-        url: 'https://assets.anuluca.com/Flanerie/cities/chizhou/09.jpg',
+        url: 'https://assets.anuluca.com/Flanerie/cities/qingyang/09.jpg',
       },
       {
         location: {
-          zhCn: '步行街',
-          en: 'Pedestrian Street',
+          zhCn: '妈妈老家前的小道。',
+          en: "The path in front of my mother's old home.",
         },
-        time: '2026',
-        device: 'SONY RX100M6',
-        url: 'https://assets.anuluca.com/Flanerie/cities/chizhou/20.jpg',
+        time: '2020',
+        device: 'iPhone 12 mini',
+        url: 'https://assets.anuluca.com/Flanerie/cities/qingyang/08.jpg',
+      },
+      {
+        location: {
+          zhCn: '草。',
+          en: 'Grass.',
+        },
+        time: '2020',
+        device: 'iPhone 12 mini',
+        url: 'https://assets.anuluca.com/Flanerie/cities/qingyang/07.jpg',
+      },
+      { url: 'https://assets.anuluca.com/Flanerie/cities/qingyang/06.jpg' },
+      {
+        location: {
+          zhCn: '忘记是什么野山了。',
+          en: 'I forgot which wild mountain this was.',
+        },
+        time: '2020',
+        device: 'MI 6',
+        url: 'https://assets.anuluca.com/Flanerie/cities/qingyang/05.jpg',
       },
     ],
   },
@@ -1101,6 +1143,32 @@ const travelDestinations = [
         time: '2026',
         device: 'Sony RX100M6',
         url: 'https://assets.anuluca.com/Flanerie/cities/jiujiang/IMG_8778.jpg',
+      },
+    ],
+  },
+  {
+    id: 'ganzhou',
+    category: 'visited',
+    title: { zhCn: '江西·赣州', en: 'JIANGXI · GANZHOU' },
+    mapLabel: { zhCn: '赣州', en: 'Ganzhou' },
+    date: '2024',
+    tagline: { zhCn: '', en: '' },
+    img: 'https://assets.anuluca.com/Flanerie/cities/ganzhou/20260608_020730_modified_time_compressed_b88eca1925eb.webp',
+    location: {
+      id: 'jiangxi',
+      name: { zhCn: '江西', en: 'Jiangxi' },
+      lat: 28.682,
+      lng: 115.8582,
+    },
+    photos: [
+      {
+        url: 'https://assets.anuluca.com/Flanerie/cities/ganzhou/20241111_155255_compressed_6f2ee4c7582c.mp4',
+      },
+      {
+        url: 'https://assets.anuluca.com/Flanerie/cities/ganzhou/20260608_020727_modified_time_compressed_c8f55a29ff8f.webp',
+      },
+      {
+        url: 'https://assets.anuluca.com/Flanerie/cities/ganzhou/20260608_020730_modified_time_compressed_b88eca1925eb.webp',
       },
     ],
   },
@@ -1887,6 +1955,129 @@ const travelDestinations = [
         time: '2024',
         device: 'iPhone 12 mini',
         url: 'https://assets.anuluca.com/Flanerie/cities/shanghai/IMG_7402.jpg',
+      },
+    ],
+  },
+  {
+    id: 'shantou',
+    category: 'visited',
+    title: { zhCn: '广东·汕头', en: 'GUANGDONG · SHANTOU' },
+    mapLabel: { zhCn: '汕头', en: 'Shantou' },
+    date: '2026',
+    tagline: { zhCn: '', en: '' },
+    img: 'https://assets.anuluca.com/Flanerie/cities/shantou/20260904_185044_compressed_fc8418521430.webp',
+    location: {
+      id: 'guangdong',
+      name: { zhCn: '广东', en: 'Guangdong' },
+      lat: 23.1291,
+      lng: 113.2644,
+    },
+    videos: [
+      {
+        title: { zhCn: 'VLOG 1', en: 'VLOG 1' },
+        cover:
+          'https://assets.anuluca.com/other/videoCover/0cc4eeb11a3236cd49d4481cfc1cdba95882f62e.jpg@672w_378h_1c.avif',
+        bvid: 'BV12TaS6YEDu',
+        url: 'https://www.bilibili.com/video/BV12TaS6YEDu',
+        orientation: 'landscape',
+      },
+      {
+        title: { zhCn: 'VLOG 2', en: 'VLOG 2' },
+        cover:
+          'https://assets.anuluca.com/other/videoCover/41f8b021276376b4199603d8714546ce1390f08f.jpg@672w_378h_1c.webp',
+        bvid: 'BV1tLYN6VE5w',
+        url: 'https://www.bilibili.com/video/BV1tLYN6VE5w',
+        orientation: 'landscape',
+      },
+    ],
+    photos: [
+      {
+        url: 'https://assets.anuluca.com/Flanerie/cities/shantou/20260902_203811_compressed_03494e614078.webp',
+      },
+      {
+        url: 'https://assets.anuluca.com/Flanerie/cities/shantou/20260903_155437_compressed_8b287a92d0d2.webp',
+      },
+      {
+        url: 'https://assets.anuluca.com/Flanerie/cities/shantou/20260903_155724_compressed_501b2fa39ad4.webp',
+      },
+      {
+        url: 'https://assets.anuluca.com/Flanerie/cities/shantou/20260903_163337_compressed_8efc6ef55ca0.webp',
+      },
+      {
+        url: 'https://assets.anuluca.com/Flanerie/cities/shantou/20260903_170447_compressed_2e38d450747b.webp',
+      },
+      {
+        url: 'https://assets.anuluca.com/Flanerie/cities/shantou/20260904_121434_compressed_f55ef6ba64f1.webp',
+      },
+      {
+        url: 'https://assets.anuluca.com/Flanerie/cities/shantou/20260904_122342_compressed_f8d1345f0d15.webp',
+      },
+      {
+        url: 'https://assets.anuluca.com/Flanerie/cities/shantou/20260904_123017_compressed_9c44b7593e17.webp',
+      },
+      {
+        url: 'https://assets.anuluca.com/Flanerie/cities/shantou/20260904_140139_compressed_8d7767541af7.webp',
+      },
+      {
+        url: 'https://assets.anuluca.com/Flanerie/cities/shantou/20260904_185044_compressed_fc8418521430.webp',
+      },
+      {
+        url: 'https://assets.anuluca.com/Flanerie/cities/shantou/20260904_192256_modified_time_compressed_53373eb7abde.webp',
+      },
+      {
+        url: 'https://assets.anuluca.com/Flanerie/cities/shantou/20260904_214650_modified_time_compressed_17d2cbeb90ff.webp',
+      },
+      {
+        url: 'https://assets.anuluca.com/Flanerie/cities/shantou/20260905_131950_modified_time_compressed_eaa84edc49fa.webp',
+      },
+      {
+        url: 'https://assets.anuluca.com/Flanerie/cities/shantou/20260905_133231_compressed_e0dfd094b5e0.webp',
+      },
+    ],
+  },
+  {
+    id: 'chaozhou',
+    category: 'visited',
+    title: { zhCn: '广东·潮州', en: 'GUANGDONG · CHAOZHOU' },
+    mapLabel: { zhCn: '潮州', en: 'Chaozhou' },
+    date: '2026',
+    tagline: { zhCn: '', en: '' },
+    img: 'https://assets.anuluca.com/Flanerie/cities/chaozhou/20260902_140420_modified_time_compressed_cf76c1f76dba.webp',
+    location: {
+      id: 'guangdong',
+      name: { zhCn: '广东', en: 'Guangdong' },
+      lat: 23.1291,
+      lng: 113.2644,
+    },
+    photos: [
+      {
+        url: 'https://assets.anuluca.com/Flanerie/cities/chaozhou/20260902_140420_modified_time_compressed_cf76c1f76dba.webp',
+      },
+    ],
+  },
+  {
+    id: 'guangzhou',
+    category: 'visited',
+    title: { zhCn: '广东·广州', en: 'GUANGDONG · GUANGZHOU' },
+    mapLabel: { zhCn: '广州', en: 'Guangzhou' },
+    date: '2026',
+    tagline: { zhCn: '', en: '' },
+    img: 'https://assets.anuluca.com/Flanerie/cities/guangzhou/20260714_134549_modified_time_compressed_71b4a0aa4e23.webp',
+    location: {
+      id: 'guangdong',
+      name: { zhCn: '广东', en: 'Guangdong' },
+      lat: 23.1291,
+      lng: 113.2644,
+    },
+    photos: [
+      {
+        url: 'https://assets.anuluca.com/Flanerie/cities/guangzhou/20260714_134549_modified_time_compressed_71b4a0aa4e23.webp',
+      },
+      {
+        url: 'https://assets.anuluca.com/Flanerie/cities/guangzhou/20260714_134551_modified_time_compressed_88ae46beaaa6.webp',
+      },
+      {
+        url: 'https://assets.anuluca.com/Flanerie/cities/guangzhou/20260714_134553_modified_time_compressed_0d6dfaec545b.webp',
       },
     ],
   },

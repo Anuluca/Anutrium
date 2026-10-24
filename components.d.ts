@@ -61,6 +61,7 @@ declare module '@vue/runtime-core' {
     ModalContentTitle: typeof import('./src/components/ModalContentTitle/index.vue')['default']
     ModalWrapper: typeof import('./src/components/ModalWrapper/index.vue')['default']
     NotFoundContent: typeof import('./src/components/NotFoundContent/index.vue')['default']
+    OverlayBackgroundTitle: typeof import('./src/components/OverlayBackgroundTitle/index.vue')['default']
     PageFooter: typeof import('./src/components/PageFooter/index.vue')['default']
     PageHeroTitle: typeof import('./src/components/PageHeroTitle/index.vue')['default']
     PageScrollProgress: typeof import('./src/components/PageScrollProgress/index.vue')['default']

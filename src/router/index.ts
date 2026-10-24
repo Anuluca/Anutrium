@@ -261,9 +261,9 @@ export const routes: RouteConfig[] = [
     },
   },
   {
-    path: '/island/merch-photography',
-    name: 'ISLAND_MERCH_PHOTOGRAPHY',
-    component: () => import('@/views/Island/MerchPhotography/index.vue'),
+    path: '/island/merch',
+    name: 'ISLAND_MERCH',
+    component: () => import('@/views/Island/Merch/index.vue'),
     meta: {
       activeMenu: '/island',
       titleEn: 'COLLECTIBLES',
@@ -277,9 +277,9 @@ export const routes: RouteConfig[] = [
     },
   },
   {
-    path: '/island/merch-photography/:collectionId',
-    name: 'ISLAND_MERCH_PHOTOGRAPHY_DETAIL',
-    component: () => import('@/views/Island/MerchPhotography/Detail/index.vue'),
+    path: '/island/merch/:collectionId',
+    name: 'ISLAND_MERCH_DETAIL',
+    component: () => import('@/views/Island/Merch/Detail/index.vue'),
     meta: {
       activeMenu: '/island',
       titleEn: 'COLLECTIBLES',
@@ -537,23 +537,6 @@ export const routes: RouteConfig[] = [
       activeMenu: '/island',
       titleEn: '保险箱小游戏',
       titleCn: '保险箱小游戏',
-      fullFooter: true,
-      pageFooter: true,
-      pageLayout: 'sub',
-      ifShow: false,
-      noMenu: true,
-      starBackground: 'deep-black',
-    },
-  },
-  {
-    path: '/games/chineseChessCardGames/chineseChess',
-    name: 'CHINESE_CHESS',
-    component: () =>
-      import('@/views/Games/ChineseChessCardGames/ChineseChess/index.vue'),
-    meta: {
-      activeMenu: '/island',
-      titleEn: '中国象棋',
-      titleCn: '中国象棋',
       fullFooter: true,
       pageFooter: true,
       pageLayout: 'sub',

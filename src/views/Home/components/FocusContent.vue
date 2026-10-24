@@ -149,7 +149,7 @@ watch(() => props.category, loadContent, { immediate: true })
 
 <style lang="less" scoped>
 .temple-focus-content {
-  color: #fff;
+  color: var(--text-color);
   container-type: inline-size;
   box-sizing: border-box;
   padding-top: var(--temple-menu-header-gap);

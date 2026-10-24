@@ -2,7 +2,7 @@
   <div v-if="collection" class="merch-detail-page main-container">
     <DetailPageHeader
       back-label="MERCH"
-      back-path="/island/merch-photography"
+      back-path="/island/merch"
       :title="collection.title"
     />
 
@@ -16,11 +16,11 @@
         staggered-entrance
       >
         <template #info="{ item: photo }">
-          <div class="merch-photo-title">{{ photo.title }}</div>
+          <div class="merch-media-title">{{ photo.title }}</div>
         </template>
       </MediaGallery>
       <div v-else class="merch-gallery__empty">
-        {{ t('island.modules.photography.merchPhotos.empty') }}
+        {{ t('island.modules.photography.merch.empty') }}
       </div>
     </main>
 
@@ -39,7 +39,7 @@ import MediaGallery, {
 } from '@/components/MediaGallery/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
 
-interface MerchPhoto extends GalleryMedia {
+interface MerchMedia extends GalleryMedia {
   url: string
   title?: string
 }
@@ -48,33 +48,32 @@ interface MerchCollection {
   id: string
   title: string
   cover?: string
-  photos: MerchPhoto[]
+  photos: MerchMedia[]
 }
 
-type MerchPhotoGroups = Record<string, MerchCollection[]>
+type MerchGroups = Record<string, MerchCollection[]>
 
 const route = useRoute()
 const router = useRouter()
 const { t, tm } = useI18n()
-const MERCH_RETURN_FLAG_KEY = 'anutrium:merch-photography:returning-from-detail'
-const MERCH_RETURN_COLLECTION_KEY =
-  'anutrium:merch-photography:selected-collection'
+const MERCH_RETURN_FLAG_KEY = 'anutrium:merch:returning-from-detail'
+const MERCH_RETURN_COLLECTION_KEY = 'anutrium:merch:selected-collection'
 const collectionId = computed(() => route.params.collectionId as string)
 const collection = computed(() => {
   const collections = Object.values(
-    tm('island.modules.photography.merchPhotos.data') as MerchPhotoGroups
+    tm('island.modules.photography.merch.data') as MerchGroups
   ).flat()
 
   return collections.find((item) => item.id === collectionId.value)
 })
 
 const getMediaLabel = (media: GalleryMedia) =>
-  media.title || t('island.modules.photography.merchPhotos.title')
+  media.title || t('island.modules.photography.merch.title')
 const showMediaInfo = (media: GalleryMedia) => Boolean(media.title)
 
 onBeforeRouteLeave((to) => {
   if (typeof window === 'undefined') return
-  if (to.name !== 'ISLAND_MERCH_PHOTOGRAPHY') return
+  if (to.name !== 'ISLAND_MERCH') return
 
   window.sessionStorage.setItem(MERCH_RETURN_FLAG_KEY, 'true')
   window.sessionStorage.setItem(MERCH_RETURN_COLLECTION_KEY, collectionId.value)
@@ -136,7 +135,7 @@ watch(
   padding: 54px 0 36px;
 }
 
-.merch-photo-title {
+.merch-media-title {
   display: grid;
   place-items: center;
   min-height: 28px;
@@ -168,7 +167,7 @@ watch(
     padding-top: 38px;
   }
 
-  .merch-photo-title {
+  .merch-media-title {
     min-height: 26px;
     padding: 3px 6px 4px;
     font-size: 0.4rem;

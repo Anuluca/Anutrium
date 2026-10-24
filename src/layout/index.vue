@@ -309,7 +309,7 @@
               :aria-label="
                 theme === 'light' ? 'Switch to dark theme' : '切换为浅色主题'
               "
-              @click="toggleTheme"
+              @click="visualStateStore.toggleTheme()"
             >
               <span v-if="theme === 'light'" class="first sun">
                 <HeaderThemeIcon kind="sun" />
@@ -433,7 +433,6 @@ import {
   getPageMaxScrollTop,
   getPageScrollTop,
 } from '@/utils/pageScroll'
-import { ensureLightThemeStyles } from '@/utils/themeStyles'
 
 import { useMobileMenu } from './useMobileMenu'
 import { useRouteShellGeometry } from './useRouteShellGeometry'
@@ -631,6 +630,7 @@ const isInnerMenuRoute = computed(
 )
 const moduleReturnPath = computed(() => {
   if (isTempleRoute.value) return null
+  if (/^\/island\/(study-notes|merch)(\/|$)/.test(route.path)) return '/island'
   const parent = templeParentModule(route.path)
   return parent
     ? templeModulePaths[parent]
@@ -926,12 +926,6 @@ const toggleLanguage = () => {
   locale.value = nextLocale
   persistLocale(nextLocale)
   syncSeoMeta(route)
-}
-
-const toggleTheme = async () => {
-  const nextTheme = visualStateStore.theme === 'light' ? 'dark' : 'light'
-  if (nextTheme === 'light') await ensureLightThemeStyles()
-  visualStateStore.setTheme(nextTheme)
 }
 
 const {

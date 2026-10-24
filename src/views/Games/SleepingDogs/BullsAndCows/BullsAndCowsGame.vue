@@ -160,9 +160,9 @@ import {
 } from '@/utils/dailyBullsAndCows'
 
 const referenceScene =
-  'https://assets.anuluca.com/Island/myGames/sleeping-dogs/game-reference.jpg'
+  'https://assets.anuluca.com/Island/playground/sleeping-dogs/game-reference.jpg'
 const stageBackground =
-  'https://assets.anuluca.com/Island/myGames/sleeping-dogs/game-stage-background.jpg'
+  'https://assets.anuluca.com/Island/playground/sleeping-dogs/game-stage-background.jpg'
 
 type GamePhase = 'active' | 'success' | 'failed'
 type IntroPhase = 'entering' | 'loading' | 'ready'

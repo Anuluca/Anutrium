@@ -86,12 +86,12 @@ const date = computed(() => {
   );
   min-width: 0;
   margin-top: var(--flora-profile-memo-gap, 20px);
-  color: #fffff4;
+  color: var(--text-color);
   font-family: 'UnboundedSans', sans-serif;
   font-size: var(--flora-profile-memo-size, clamp(45px, 4.7cqw, 62px));
   line-height: 1.15;
   overflow-wrap: anywhere;
-  opacity: 0.3;
+  opacity: var(--flora-memo-opacity, 0.3);
   animation: flora-memo-enter var(--flora-memo-enter-duration)
     cubic-bezier(0.22, 1, 0.36, 1) var(--flora-memo-enter-delay) both;
   -webkit-mask-image: repeating-linear-gradient(
@@ -171,7 +171,7 @@ const date = computed(() => {
     transform: translateX(80px);
   }
   to {
-    opacity: 0.3;
+    opacity: var(--flora-memo-opacity, 0.3);
     transform: translateX(0);
   }
 }

@@ -110,13 +110,10 @@ test('album fills its container and fades profile content while category titles 
         return {
           inToolbar: toolbar.contains(title),
           centerDelta: Math.abs((a.top + a.bottom - b.top - b.bottom) / 2),
-          horizontalCenterDelta: Math.abs(
-            (a.left + a.right - row.left - row.right) / 2
-          ),
-          textCenterDelta: Math.abs(
-            (text.left + text.right - row.left - row.right) / 2
-          ),
+          leftDelta: Math.abs(a.left - row.left),
+          textLeftDelta: Math.abs(text.left - row.left),
           font: style.fontFamily,
+          fontSize: style.fontSize,
           weight: style.fontWeight,
           color: style.color,
           shadow: style.textShadow,
@@ -127,9 +124,10 @@ test('album fills its container and fades profile content while category titles 
   for (const row of rows) {
     expect(row.inToolbar).toBe(true)
     expect(row.centerDelta).toBeLessThanOrEqual(1)
-    expect(row.horizontalCenterDelta).toBeLessThanOrEqual(1)
-    expect(row.textCenterDelta).toBeLessThanOrEqual(1)
+    expect(row.leftDelta).toBeLessThanOrEqual(1)
+    expect(row.textLeftDelta).toBeLessThanOrEqual(1)
     expect(row.font).toContain('alibaba-puhuiti')
+    expect(row.fontSize).toBe(mobile ? '20px' : '24px')
     expect(row.weight).toBe('900')
     expect(row.color).toBe('rgb(255, 255, 255)')
     expect(row.shadow).not.toBe('none')

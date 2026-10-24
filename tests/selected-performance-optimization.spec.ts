@@ -305,6 +305,7 @@ test('ready label bitmaps are reused without painting again when the same font c
 test('theme and hover appearance keep companion light colors and reflections synchronized', async ({
   page,
 }, info) => {
+  test.setTimeout(90000)
   await page.route('**/src/views/Home/templeScene.ts*', async (route) => {
     const response = await route.fetch()
     const source = await response.text()

@@ -32,8 +32,7 @@ const dynamicRouteSamples: Record<string, string> = {
   '/:module(archive|flanerie|island|pokeyard|creative|floratrium)?': '/',
   '/flanerie/:vlogId': '/flanerie/nanchang',
   '/island/image-log/:albumId': '/island/image-log/covid',
-  '/island/merch-photography/:collectionId':
-    '/island/merch-photography/lucarioNoArm',
+  '/island/merch/:collectionId': '/island/merch/lucarioNoArm',
 }
 
 const navigateWithRouter = async (page: Page, path: string) => {
@@ -89,9 +88,13 @@ test('PageFooter keeps its geometry after leaving the personal bay', async ({
 
   await page.evaluate(async () => {
     const app = document.querySelector<VueAppElement>('#app')
-    await app?.__vue_app__?.config.globalProperties.$router.push('/colorPalette')
+    await app?.__vue_app__?.config.globalProperties.$router.push(
+      '/colorPalette'
+    )
   })
-  await expect.poll(async () => new URL(page.url()).pathname).toBe('/colorPalette')
+  await expect
+    .poll(async () => new URL(page.url()).pathname)
+    .toBe('/colorPalette')
   await expect(page.locator('.bottom-text')).toHaveCount(1, {
     timeout: PAGE_LOAD_TIMEOUT,
   })

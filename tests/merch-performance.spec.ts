@@ -35,7 +35,7 @@ test('merch cards render together and finish entry before scrolling', async ({
     }
   })
 
-  await page.goto('/island/merch-photography', {
+  await page.goto('/island/merch', {
     waitUntil: 'domcontentloaded',
   })
   const cards = page.locator('.collection-card')
@@ -115,7 +115,7 @@ test('merch cards render together and finish entry before scrolling', async ({
 test('merch cover transition stays lightweight and back restores scroll position', async ({
   page,
 }) => {
-  await page.goto('/island/merch-photography', {
+  await page.goto('/island/merch', {
     waitUntil: 'domcontentloaded',
   })
   await expect(page.locator('.entry-overlay-container')).toHaveCount(0, {
@@ -149,7 +149,7 @@ test('merch cover transition stays lightweight and back restores scroll position
   await expect(page.locator('.merch-detail-page')).toBeVisible()
   // 浏览器可能在实际点击前微调卡片位置，按导航瞬间记录的位置校验返回。
   const scrollTop = await page.evaluate(() =>
-    Number(sessionStorage.getItem('anutrium:merch-photography:scroll-top'))
+    Number(sessionStorage.getItem('anutrium:merch:scroll-top'))
   )
   expect(scrollTop).toBeGreaterThan(0)
   const transition = await page.evaluate(
@@ -225,7 +225,7 @@ test('fullscreen page keeps its geometry while leaving for merch', async ({
       }
     }
     void app.__vue_app__.config.globalProperties.$router.push(
-      '/island/merch-photography'
+      '/island/merch'
     )
   })
   await expect(page.locator('.merch-page')).toBeVisible({ timeout: 30000 })

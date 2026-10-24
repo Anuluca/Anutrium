@@ -78,7 +78,7 @@ export const pets: PetProfile[] = [
     gender: 'male',
     stats: { hp: 150, atk: 150, def: 100, spa: 100, spd: 80, spe: 150 },
     nature: 'timid',
-    metPlace: { zhCn: '安徽省池州市', en: 'Chizhou, Anhui' },
+    metPlace: { zhCn: '安徽省青阳县', en: 'Qingyang County, Anhui' },
     characteristic: { zhCn: '对声音敏感。', en: "It's alert to sounds!" },
     model: 'mightyena',
     pose: 'sit',

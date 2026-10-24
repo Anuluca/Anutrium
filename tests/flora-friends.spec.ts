@@ -102,6 +102,21 @@ test('friend tabs switch featured and grouped static albums without listing or p
   }
   await expect(gallery.locator('.flora-album-gallery__footer')).toHaveCount(0)
   expect(listings).toBe(0)
+  const toolbar = gallery.locator('.media-gallery__toolbar').first()
+  await toolbar.getByRole('button', { name: '大图预览', exact: true }).click()
+  await expect(gallery).toHaveClass(/is-expanded/)
+  await toolbar.getByRole('button', { name: '列表模式', exact: true }).click()
+  await expect(gallery).toHaveClass(/is-expanded/)
+  await toolbar.click({ position: { x: 4, y: 4 } })
+  await expect(gallery).not.toHaveClass(/is-expanded/)
+  await expect(friends).toHaveAttribute('aria-selected', 'true')
+  await expect(
+    gallery.locator('.flora-album-strip__group:not([aria-hidden]) img')
+  ).toHaveCount(8)
+  await gallery.getByRole('button', { name: 'EXPAND', exact: true }).click()
+  await expect(
+    gallery.locator('.flora-album-gallery__friend-group')
+  ).toHaveCount(4)
   await main.click()
   await expect(main).toHaveAttribute('aria-selected', 'true')
   await expect.poll(() => listings).toBeGreaterThan(0)

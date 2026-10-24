@@ -228,8 +228,12 @@
 
         span {
           font-family: 'UnboundedSans';
-          font-size: 13px;
+          font-size: 12px;
           letter-spacing: 1px;
+        }
+        &.english span {
+          font-size: 15px;
+          transform: translateY(-1px);
         }
         &.is-disabled,
         &:disabled {
@@ -469,25 +473,45 @@
   }
 }
 
-body.light {
-  .footer-com {
-    background-color: transparent;
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    border-block-color: transparent;
+body.light .footer-com {
+  border: 0;
 
-    .left,
-    .right {
-      background-color: rgba(255, 255, 255, 0.86);
-    }
+  .left,
+  .right {
+    background-color: rgba(255, 255, 255, 0.86);
+  }
 
-    .left .language .el-button.is-disabled,
-    .right .mark {
-      color: rgba(0, 0, 0, 0.72) !important;
-    }
+  .left .language .el-button.is-disabled,
+  .right .mark {
+    color: rgba(0, 0, 0, 0.72) !important;
+  }
 
-    .center {
-      --ticker-text: #343e3b;
+  .center {
+    --ticker-text: #343e3b;
+
+    .expand .footer-reveal-track {
+      background-image: radial-gradient(
+        circle,
+        rgb(52 62 59 / 12%) 0.5px,
+        transparent 0.5px
+      );
+      background-color: rgba(250, 249, 246, 0.68);
+
+      .recommend .recommend-title {
+        -webkit-text-stroke: 0;
+        color: var(--page-theme-color, @primary-color);
+        opacity: 1;
+      }
+
+      .recommend .recommend-date {
+        opacity: 0.72;
+      }
     }
+  }
+
+  .right .mark:hover,
+  .right .mark:focus-visible {
+    color: var(--page-theme-color, @primary-color) !important;
   }
 }
 
@@ -526,39 +550,5 @@ body.light {
         opacity: 1;
       }
     }
-  }
-
-  body.light .footer-com {
-    border-color: rgb(26 11 14);
-    border-top-width: 0;
-    border-right-width: 1px;
-    border-bottom-width: 0;
-    border-left-width: 1px;
-    box-shadow: none;
-  }
-}
-
-.theme-switch-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 10000;
-  display: grid;
-  place-items: center;
-  background: rgba(0, 0, 0, 0.2);
-  pointer-events: none;
-
-  span {
-    width: 28px;
-    height: 28px;
-    border: 3px solid rgba(255, 255, 255, 0.28);
-    border-top-color: var(--page-theme-color, @primary-color);
-    border-radius: 50%;
-    animation: footer-theme-spinner 0.72s linear infinite;
-  }
-}
-
-@keyframes footer-theme-spinner {
-  to {
-    transform: rotate(1turn);
   }
 }

@@ -157,7 +157,7 @@ test('pet stats use a shared 150 scale, follow pet selection and fit the profile
     await expect(page.locator('.flora-pet-memo')).toContainText(
       pet === 'huahua' ? "It's somewhat stubborn!" : "It's alert to sounds!"
     )
-    await switchLanguage('汉语')
+    await switchLanguage('中文')
     const groups = await chart
       .locator('g[data-stat]')
       .evaluateAll((elements) =>

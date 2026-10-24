@@ -30,11 +30,13 @@ const resolveAlbum = (id: string) => {
 export const fetchFloraMediaPage = async (
   petId: string,
   cursor: string,
-  signal: AbortSignal
+  signal: AbortSignal,
+  complete = false
 ): Promise<FloraMediaPage> => {
   const album = resolveAlbum(petId)
   const query = new URLSearchParams({ pet: album })
   if (cursor) query.set('cursor', cursor)
+  if (complete && album === 'flora') query.set('collection', '1')
   const response = await fetch(`${origin}${pathname}?${query}`, {
     signal,
     cache: 'no-store',
@@ -43,7 +45,7 @@ export const fetchFloraMediaPage = async (
   const page: FloraMediaPage = await response.json()
   if (
     !Array.isArray(page?.items) ||
-    page.items.length > mediaAlbums[album].pageSize ||
+    (!complete && page.items.length > mediaAlbums[album].pageSize) ||
     page.items.some(
       (item) =>
         !item ||
@@ -76,7 +78,7 @@ export const useFloraAlbum = (
   petId: () => string,
   expanded: Ref<boolean>,
   beforePageChange?: () => void,
-  options: { prefetch?: boolean } = {}
+  options: { prefetch?: boolean; complete?: () => boolean } = {}
 ) => {
   const loading = ref(false)
   const error = ref(false)
@@ -127,7 +129,8 @@ export const useFloraAlbum = (
       const page = await fetchFloraMediaPage(
         petId(),
         pageCursors.value[pageIndex.value],
-        requestController.signal
+        requestController.signal,
+        options.complete?.()
       )
       if (requestRevision !== revision) return
       // 保留未变化的数组引用，避免重建预览、重启视频及重新绑定观察器。

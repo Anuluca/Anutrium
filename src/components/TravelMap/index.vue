@@ -790,8 +790,8 @@ onUnmounted(() => {
   }
 
   .travel-map-shell :deep(.map-place-menu) {
-    min-width: max-content;
-    max-width: min(560px, 72vw);
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .travel-map-shell :deep(.map-place-list) {
@@ -800,7 +800,9 @@ onUnmounted(() => {
 
   .travel-map-shell :deep(.map-place-option) {
     width: auto;
-    white-space: nowrap;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 }
 

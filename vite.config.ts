@@ -8,7 +8,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 import { floratriumDevPlugin } from './scripts/lib/floratriumDevPlugin'
 import imageLog from './src/locales/dynamic/island/Photography/imageLog'
-import merchPhotos from './src/locales/dynamic/island/Photography/merchPhotos'
+import merch from './src/locales/dynamic/island/Photography/merch'
 
 const path = require('path')
 
@@ -24,11 +24,8 @@ const lastUpdate = new Intl.DateTimeFormat('zh-CN', {
   day: '2-digit',
 }).format(new Date(lastCommitTime))
 
-const merchPhotographyDetailRoutes = Object.values(merchPhotos).flatMap(
-  (collections) =>
-    collections.map(
-      (collection) => `/island/merch-photography/${collection.id}`
-    )
+const merchDetailRoutes = Object.values(merch).flatMap((collections) =>
+  collections.map((collection) => `/island/merch/${collection.id}`)
 )
 const imageLogDetailRoutes = imageLog.map(
   (album) => `/island/image-log/${album.id}`
@@ -213,8 +210,8 @@ export default defineConfig({
       '/floratrium',
       '/creative',
       '/island/photography',
-      '/island/merch-photography',
-      ...merchPhotographyDetailRoutes,
+      '/island/merch',
+      ...merchDetailRoutes,
       '/island/image-log',
       ...imageLogDetailRoutes,
       '/island/illustration',
@@ -222,7 +219,6 @@ export default defineConfig({
       '/island/study-notes',
       '/games/sleepingdogs/bullsAndCows',
       '/games/sleepingdogs/saftybox',
-      '/games/chineseChessCardGames/chineseChess',
       '/ai-playground/arknightxpersona3reload',
     ],
   },

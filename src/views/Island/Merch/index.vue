@@ -10,8 +10,8 @@
   >
     <DetailPageHeader
       back-label="ISLAND"
-      back-path="/test"
-      :title="t('island.modules.photography.merchPhotos.title')"
+      back-path="/island"
+      :title="t('island.modules.photography.merch.title')"
     />
 
     <main class="collection-index">
@@ -48,7 +48,7 @@
               }"
               :collection="collection"
               :count-label="
-                t('island.modules.photography.merchPhotos.collectionLabel')
+                t('island.modules.photography.merch.collectionLabel')
               "
               :index="getCollectionIndex(collection.id)"
               :style="getCollectionEntryStyle(collectionIndex)"
@@ -102,7 +102,7 @@ import { getPageScrollTop, scrollPageTo } from '@/utils/pageScroll'
 
 type MerchCategoryId = 'pokemon' | 'tokusatsu' | 'other'
 
-type MerchPhotoGroups = Record<MerchCategoryId, MerchCollectionCardData[]>
+type MerchGroups = Record<MerchCategoryId, MerchCollectionCardData[]>
 
 interface MerchCategoryMeta {
   id: MerchCategoryId
@@ -142,10 +142,9 @@ const isReturnEntryActive = ref(false)
 const hasReturnedFromDetail = ref(false)
 const activeReturnedCollectionId = ref<string | null>(null)
 const returnTransformOriginY = ref('50%')
-const MERCH_RETURN_FLAG_KEY = 'anutrium:merch-photography:returning-from-detail'
-const MERCH_RETURN_COLLECTION_KEY =
-  'anutrium:merch-photography:selected-collection'
-const MERCH_RETURN_SCROLL_KEY = 'anutrium:merch-photography:scroll-top'
+const MERCH_RETURN_FLAG_KEY = 'anutrium:merch:returning-from-detail'
+const MERCH_RETURN_COLLECTION_KEY = 'anutrium:merch:selected-collection'
+const MERCH_RETURN_SCROLL_KEY = 'anutrium:merch:scroll-top'
 const RETURN_TARGET_HIGHLIGHT_DURATION = 1200
 const TARGET_SHELF_DISTANCE_ROW_INDEX = 2
 const SHELF_DISTANCE_ROW_STEP = 2.82
@@ -161,17 +160,17 @@ const returnEntryStyle = computed(() => ({
   '--merch-return-origin-y': returnTransformOriginY.value,
 }))
 
-const merchPhotos = computed<MerchPhotoGroups>(() => {
-  return tm('island.modules.photography.merchPhotos.data') as MerchPhotoGroups
+const merch = computed<MerchGroups>(() => {
+  return tm('island.modules.photography.merch.data') as MerchGroups
 })
 
 const collections = computed<MerchCollectionCardData[]>(() =>
-  Object.values(merchPhotos.value).flat()
+  Object.values(merch.value).flat()
 )
 
 const collectionGroups = computed(() =>
   merchCategoryMeta.map((category) => {
-    const groupCollections = merchPhotos.value[category.id] || []
+    const groupCollections = merch.value[category.id] || []
 
     return {
       id: category.id,
@@ -316,7 +315,7 @@ const openCollection = (collectionId: string) => {
     )
   }
 
-  router.push(`/island/merch-photography/${collectionId}`)
+  router.push(`/island/merch/${collectionId}`)
 }
 
 const handleReturnEntryEnd = (event: AnimationEvent) => {

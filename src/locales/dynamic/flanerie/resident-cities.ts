@@ -503,6 +503,15 @@ const residentCities = [
         device: 'Samsung i8268',
         url: 'https://assets.anuluca.com/Flanerie/cities/nanchang/YRXli4.jpg',
       },
+      {
+        url: 'https://assets.anuluca.com/Flanerie/cities/nanchang/20260611_150338_compressed_e5483b5eeb3c.webp',
+      },
+      {
+        url: 'https://assets.anuluca.com/Flanerie/cities/nanchang/20260611_152438_compressed_2c4265e38d55.webp',
+      },
+      {
+        url: 'https://assets.anuluca.com/Flanerie/cities/nanchang/20260721_180930_modified_time_compressed_df1968c8e5d4.webp',
+      },
     ],
   },
   {

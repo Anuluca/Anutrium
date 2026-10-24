@@ -28,7 +28,7 @@ test('photography grids use thumbnails but the viewer keeps original URLs', asyn
 test('merchandise cards and galleries use card thumbnails', async ({
   page,
 }) => {
-  await page.goto('/island/merch-photography', {
+  await page.goto('/island/merch', {
     waitUntil: 'domcontentloaded',
   })
   await expect(page.locator('.collection-card__cover').first()).toHaveAttribute(
@@ -36,7 +36,7 @@ test('merchandise cards and galleries use card thumbnails', async ({
     cardThumbnailPattern
   )
 
-  await page.goto('/island/merch-photography/lucarioNoArm', {
+  await page.goto('/island/merch/lucarioNoArm', {
     waitUntil: 'domcontentloaded',
   })
   await expect(

@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia'
 
+import { ensureLightThemeStyles } from '@/utils/themeStyles'
+
 type Theme = 'light' | 'dark'
 
 type DeviceType = 'mobile' | 'tablet' | 'desktop'
@@ -9,6 +11,8 @@ type ZodiacLayout = 'hero' | 'content'
 export default defineStore('visualState', {
   state: (): {
     theme: Theme
+    pendingTheme: Theme | null
+    themeRequestRevision: number
     deviceType: DeviceType
     zodiacLayout: ZodiacLayout
     homeStarfieldVisible: boolean
@@ -18,6 +22,8 @@ export default defineStore('visualState', {
     pageScrollProgressOverride: number | null
   } => ({
     theme: 'dark',
+    pendingTheme: null,
+    themeRequestRevision: 0,
     deviceType: 'desktop',
     zodiacLayout: 'hero',
     homeStarfieldVisible: true,
@@ -28,43 +34,38 @@ export default defineStore('visualState', {
   }),
 
   actions: {
-    /**
-     * 设置主题并更新本地存储和DOM
-     * @param theme - 要设置的主题 ('light' | 'dark')
-     */
-    setTheme(theme: Theme): void {
-      if (theme !== 'light' && theme !== 'dark') {
-        console.warn(`Invalid theme value: ${theme}. Using 'dark' as fallback.`)
-        theme = 'dark'
+    async setTheme(theme: Theme): Promise<boolean> {
+      if (typeof document === 'undefined') return false
+      if (theme !== 'light' && theme !== 'dark') theme = 'dark'
+
+      const revision = ++this.themeRequestRevision
+      this.pendingTheme = theme
+      try {
+        if (theme === 'light') await ensureLightThemeStyles()
+        // 后来的选择优先，防止浅色样式加载完成后覆盖用户刚切回的深色。
+        if (revision !== this.themeRequestRevision) return false
+
+        if (localStorage.getItem('theme') !== theme)
+          localStorage.setItem('theme', theme)
+        for (const element of [document.documentElement, document.body]) {
+          element.classList.toggle('light', theme === 'light')
+          element.classList.toggle('dark', theme === 'dark')
+          if (element.dataset.theme !== theme) element.dataset.theme = theme
+        }
+        this.theme = theme
+        return true
+      } catch (error) {
+        console.error('主题切换失败，保留当前主题', error)
+        return false
+      } finally {
+        if (revision === this.themeRequestRevision) this.pendingTheme = null
       }
-
-      localStorage.setItem('theme', theme)
-
-      const bodyElement = document.body
-      const rootElement = document.documentElement
-      if (theme === 'dark') {
-        bodyElement.classList.remove('light')
-        bodyElement.classList.add('dark')
-        rootElement.classList.remove('light')
-        rootElement.classList.add('dark')
-      } else {
-        bodyElement.classList.add('light')
-        bodyElement.classList.remove('dark')
-        rootElement.classList.add('light')
-        rootElement.classList.remove('dark')
-      }
-      rootElement.dataset.theme = theme
-      bodyElement.dataset.theme = theme
-
-      this.theme = theme
     },
 
-    /**
-     * 切换主题
-     */
-    toggleTheme(): void {
-      const newTheme: Theme = this.theme === 'light' ? 'dark' : 'light'
-      this.setTheme(newTheme)
+    toggleTheme(): Promise<boolean> {
+      return this.setTheme(
+        (this.pendingTheme ?? this.theme) === 'light' ? 'dark' : 'light'
+      )
     },
 
     /**

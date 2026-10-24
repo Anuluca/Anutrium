@@ -2,7 +2,7 @@ import game from './Game/Game'
 import essaysTalks from './Notes/essaysTalks'
 import studyNotes from './Notes/studyNotes'
 import imageLog from './Photography/imageLog'
-import merchPhotos from './Photography/merchPhotos'
+import merch from './Photography/merch'
 import photoWorks from './Photography/photoWorks'
 import designGoods from './Works/designGoods'
 import experiments from './Works/experiments'
@@ -157,7 +157,7 @@ const tracks = [
 
 const islandDynamic = {
   photoWorks,
-  merchPhotos,
+  merch,
   imageLog,
   works: {
     illustration,

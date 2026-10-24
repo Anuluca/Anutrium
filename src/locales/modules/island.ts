@@ -49,7 +49,7 @@ const island = {
         img: 'https://assets.anuluca.com/Island/picWork/normal/DSC00812-01-01.jpeg',
         data: dynamic.photoWorks,
       },
-      merchPhotos: {
+      merch: {
         title: {
           zhCn: '收藏品',
           en: 'COLLECTIBLES',
@@ -66,8 +66,8 @@ const island = {
           zhCn: '这组影像仍在准备中',
           en: 'THIS COLLECTION IS IN DEVELOPMENT',
         },
-        img: 'https://assets.anuluca.com/Island/picMerch/lucarioonearm/DSC01408.jpg',
-        data: dynamic.merchPhotos,
+        img: 'https://assets.anuluca.com/Island/merch/lucarioonearm/DSC01408.jpg',
+        data: dynamic.merch,
       },
       imageLog: {
         title: {

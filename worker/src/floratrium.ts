@@ -53,7 +53,8 @@ const listMediaKeys = async (bucket: R2Bucket, pet: FloraAlbumId) => {
 export const loadFloraMediaPage = async (
   bucket: R2Bucket,
   pet: FloraAlbumId,
-  initialCursor?: string
+  initialCursor?: string,
+  complete = false
 ) => {
   const offset = Number(initialCursor || 0)
   if (
@@ -62,10 +63,13 @@ export const loadFloraMediaPage = async (
     offset < 0
   )
     throw new Error('Invalid album cursor')
+  const keys = await loadMediaIndex(bucket, pet)
   return createFloraMediaPage(
-    await loadMediaIndex(bucket, pet),
-    offset,
-    mediaAlbums[pet].pageSize
+    keys,
+    complete && pet === 'flora' ? 0 : offset,
+    complete && pet === 'flora'
+      ? Math.max(1, keys.length)
+      : mediaAlbums[pet].pageSize
   )
 }
 
@@ -79,7 +83,12 @@ export const handleFloraMedia = async (url: URL, env: Env) => {
     return jsonResponse({ error: 'Invalid album request' }, 400)
   try {
     return jsonResponse(
-      await loadFloraMediaPage(env.FLORATRIUM_BUCKET, pet, cursor),
+      await loadFloraMediaPage(
+        env.FLORATRIUM_BUCKET,
+        pet,
+        cursor,
+        url.searchParams.get('collection') === '1'
+      ),
       200,
       {
         'Cache-Control': 'no-store',

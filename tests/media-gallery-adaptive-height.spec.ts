@@ -27,7 +27,7 @@ for (const mode of ['mixed', 'square']) {
         })
       }
     )
-    await page.goto('/island/merch-photography/lucarioNoArm', {
+    await page.goto('/island/merch/lucarioNoArm', {
       waitUntil: 'domcontentloaded',
     })
     await expect(page.locator('.layout-page')).toHaveClass(/\blayout-show\b/, {

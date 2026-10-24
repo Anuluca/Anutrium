@@ -17,6 +17,7 @@
       </div>
 
       <FilterRail
+        horizontal
         :accent-color="activeCategory === 'work' ? '#3c5de8' : '#e8284a'"
         aria-label="Craft tag filters"
         :items="toolFilterItems"
@@ -408,43 +409,6 @@ if (
 .tool-list {
   content-visibility: auto;
   contain-intrinsic-size: 940px;
-}
-
-.craft-controls {
-  :deep(.filter-rail) {
-    position: relative;
-    inset: auto;
-    margin-bottom: 0;
-    flex-direction: row;
-    gap: 2px;
-    max-height: none;
-    padding: 0;
-    overflow-x: auto;
-    overflow-y: hidden;
-    border-right: 0;
-    border-bottom: 1px solid var(--border-color);
-
-    button {
-      width: auto;
-      min-width: 0;
-      padding: 8px 12px 13px;
-
-      &::after {
-        top: auto;
-        right: 0;
-        bottom: 0;
-        left: 0;
-        width: auto;
-        height: 2px;
-        transform: scaleX(0);
-        transform-origin: left;
-      }
-
-      &.is-active::after {
-        transform: scaleX(1);
-      }
-    }
-  }
 }
 
 .tool-list {

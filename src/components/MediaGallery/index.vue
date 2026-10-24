@@ -118,6 +118,7 @@
       inline
       :url-list="previewUrls"
       :labels="previewLabels"
+      :titles="items.map((item) => item.title || '')"
       :initial-index="previewIndex"
       @switch="previewIndex = $event"
       @open="openViewer(previewUrls[$event])"
@@ -135,6 +136,7 @@
     <SafeImageViewer
       v-if="showViewer"
       :url-list="previewUrls"
+      :titles="items.map((item) => item.title || '')"
       :initial-index="currentImageIndex"
       @switch="previewIndex = $event"
       @close="showViewer = false"

@@ -74,6 +74,7 @@
                   class="creative-photography__pagination creative-media__pagination no-rem"
                 >
                   <FloraAlbumPagination
+                    :total-items="photography.totalItems"
                     :page="photography.page"
                     :page-count="photography.pageCount"
                     :mobile="mobile"
@@ -114,10 +115,19 @@
                 v-if="!illustration.expanded"
                 key="preview"
                 class="creative-illustration__preview"
-                :items="creativeIllustrationPreview"
+                :items="illustrationPreviewItems"
                 :title="locale === 'en' ? 'Illustration' : '绘画'"
                 direction="right"
-              />
+              >
+                <template #info="{ item }">
+                  <MediaPhotoInfo
+                    :item="{
+                      device: item.title,
+                      time: item.time,
+                    }"
+                  />
+                </template>
+              </ImageMarquee>
               <div
                 v-else
                 key="all"
@@ -169,6 +179,7 @@
                   class="creative-illustration__pagination creative-media__pagination no-rem"
                 >
                   <FloraAlbumPagination
+                    :total-items="illustration.totalItems"
                     :page="illustration.page"
                     :page-count="illustration.pageCount"
                     :mobile="mobile"
@@ -300,21 +311,22 @@ const navigation = useTempleNavigation()
 const mobile = useMediaQuery('(max-width: 768px)')
 const photography = reactive(useCreativeMediaPanel('photography'))
 const illustration = reactive(useCreativeMediaPanel('illustration'))
-const illustrationInfo = computed(() =>
-  illustration.items.map((item) => ({
-    ...item,
-    ...getCreativeImageInfo(item.url),
-  }))
-)
-const illustrationItems = computed(() =>
-  illustrationInfo.value.map((item) => ({
+const withIllustrationInfo = <T extends { url: string }>(item: T) => {
+  const info = getCreativeImageInfo(item.url)
+  return {
     ...item,
     title:
       locale.value === 'en'
-        ? item.titleEn || item.title
-        : item.title || item.titleEn,
-    time: item.date || undefined,
-  }))
+        ? info.titleEn || info.title
+        : info.title || info.titleEn,
+    time: info.date || undefined,
+  }
+}
+const illustrationPreviewItems = computed(() =>
+  creativeIllustrationPreview.map(withIllustrationInfo)
+)
+const illustrationItems = computed(() =>
+  illustration.items.map(withIllustrationInfo)
 )
 const processTitle = computed(() =>
   locale.value === 'en' ? 'DRAW PROGRESS' : '绘画过程'
@@ -393,9 +405,10 @@ const sections = computed(() => [
   justify-content: center;
   box-sizing: border-box;
   min-height: 80px;
-  padding: 12px 0;
+  padding: 12px 130px;
 
   @media (max-width: 768px) {
+    padding-inline: 110px;
     min-height: 54px;
   }
 }

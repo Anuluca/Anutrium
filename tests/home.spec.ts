@@ -60,7 +60,7 @@ const pageRoutes = [
     title: /PHOTOGRAPHY|摄影作品/,
   },
   {
-    path: '/island/merch-photography',
+    path: '/island/merch',
     selector: '.merch-page',
     title: /COLLECTIBLES|收藏品/,
   },
@@ -3537,8 +3537,8 @@ test('detail back navigation restores the previous scroll position', async ({
     .toBeLessThanOrEqual(2)
 })
 
-test('merch photography detail page renders', async ({ page }) => {
-  await page.goto('/island/merch-photography/pokemondoll', {
+test('merch detail page renders', async ({ page }) => {
+  await page.goto('/island/merch/pokemondoll', {
     waitUntil: 'domcontentloaded',
   })
 
@@ -3618,7 +3618,7 @@ test('image log groups fall back when English labels are missing', async ({
 
 for (const galleryRoute of [
   '/island/photography',
-  '/island/merch-photography/pokemondoll',
+  '/island/merch/pokemondoll',
 ]) {
   test(`${galleryRoute} uses the journey detail shutter entrance`, async ({
     page,

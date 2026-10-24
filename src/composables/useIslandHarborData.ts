@@ -46,10 +46,7 @@ export const useIslandHarborData = () => {
   const merchCollectionCount = computed(
     () =>
       Object.values(
-        tm('island.modules.photography.merchPhotos.data') as Record<
-          string,
-          unknown[]
-        >
+        tm('island.modules.photography.merch.data') as Record<string, unknown[]>
       ).flat().length
   )
   const studyNoteList = computed(
@@ -67,9 +64,9 @@ export const useIslandHarborData = () => {
 
   const harborSections: HarborSection[] = [
     {
-      id: 'creative',
-      title: '创意',
-      subtitle: 'CREATIVE',
+      id: 'ideas',
+      title: '想法',
+      subtitle: 'IDEAS',
       progress: '0%',
       items: [
         {
@@ -98,8 +95,8 @@ export const useIslandHarborData = () => {
           path: '/island/study-notes',
         },
         {
-          title: '杂谈',
-          subtitle: 'ESSAYS & TALKS',
+          title: '杂记',
+          subtitle: 'MISCELLANY',
           count: '0 ARTICLES',
           img: developingPlaceholder,
         },
@@ -124,9 +121,9 @@ export const useIslandHarborData = () => {
             return `${merchCollectionCount.value} COLLECTIONS`
           },
           get img() {
-            return t('island.modules.photography.merchPhotos.img')
+            return t('island.modules.photography.merch.img')
           },
-          path: '/island/merch-photography',
+          path: '/island/merch',
         },
       ],
     },

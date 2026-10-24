@@ -1,5 +1,3 @@
-import { petAlbums } from './petAlbums'
-
 interface PetVideo {
   bvid: string
   title: { zhCn: string; en: string }
@@ -11,7 +9,6 @@ interface PetVideoCollection {
   videos: PetVideo[]
 }
 
-// cover 暂用对应宠物照片，收到正式视频封面后仅替换此字段。
 export const petVideos: Record<string, PetVideoCollection> = {
   huahua: {
     featured: ['BV19bt3zgEbF'],
@@ -19,7 +16,8 @@ export const petVideos: Record<string, PetVideoCollection> = {
       {
         bvid: 'BV19bt3zgEbF',
         title: { zhCn: '花花视频档案 #1', en: 'Flora Video Archive #1' },
-        cover: petAlbums.huahua.defaults[0].url,
+        cover:
+          'https://assets.anuluca.com/other/videoCover/dc149db5fd2cfd0443b1c637b1bdcd41d637f7b1.jpg@672w_378h_1c.avif',
         url: 'https://www.bilibili.com/video/BV19bt3zgEbF',
       },
     ],
@@ -33,7 +31,8 @@ export const petVideos: Record<string, PetVideoCollection> = {
           zhCn: '「记录」外婆家的小黑',
           en: '「Record」Hei at Grandma’s',
         },
-        cover: petAlbums.xiaohei.defaults[0].url,
+        cover:
+          'https://assets.anuluca.com/other/videoCover/d450c430b6b1850d23d08c1a1f731a8b3cbdb3dc.jpg@672w_378h_1c_!web-search-common-cover.webp',
         url: 'https://www.bilibili.com/video/BV1pMRKYPENz/',
       },
     ],

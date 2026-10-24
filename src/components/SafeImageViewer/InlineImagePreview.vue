@@ -15,6 +15,13 @@
         '--inline-info-height': `${infoHeight}px`,
       }"
     >
+      <div class="inline-image-preview__background" aria-hidden="true">
+        <OverlayBackgroundTitle
+          v-if="activeTitle && !isVideoUrl(activeUrl)"
+          :title="activeTitle"
+          embedded
+        />
+      </div>
       <button
         class="el-image-viewer__btn el-image-viewer__prev"
         type="button"
@@ -129,6 +136,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
+import OverlayBackgroundTitle from '@/components/OverlayBackgroundTitle/index.vue'
 import { getCardThumbnailUrl } from '@/utils/imageVariant'
 import {
   decorateImageViewerNavigation,
@@ -140,9 +148,10 @@ const props = withDefaults(
   defineProps<{
     urlList: string[]
     labels: string[]
+    titles?: string[]
     initialIndex?: number
   }>(),
-  { initialIndex: 0 }
+  { initialIndex: 0, titles: () => [] }
 )
 const emit = defineEmits<{
   switch: [index: number]
@@ -152,6 +161,7 @@ const { locale } = useI18n()
 const activeIndex = ref(0)
 const thumbnails = computed(() => props.urlList.map(getCardThumbnailUrl))
 const activeUrl = computed(() => props.urlList[activeIndex.value])
+const activeTitle = computed(() => props.titles[activeIndex.value]?.trim())
 const activeLabel = computed(
   () =>
     props.labels[activeIndex.value] ||
@@ -337,6 +347,7 @@ onBeforeUnmount(() => {
     )
   );
   position: relative;
+  isolation: isolate;
   height: var(--inline-stage-height);
 
   .el-image-viewer__prev,
@@ -383,6 +394,14 @@ onBeforeUnmount(() => {
   }
 }
 
+.inline-image-preview__background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
 .inline-image-preview__canvas {
   position: relative;
   box-sizing: border-box;
@@ -397,6 +416,7 @@ onBeforeUnmount(() => {
 
 .inline-image-preview__figure {
   position: relative;
+  z-index: 1;
   width: min(
     100%,
     calc(var(--inline-image-max-height) * var(--inline-media-ratio, 1))
@@ -467,7 +487,8 @@ onBeforeUnmount(() => {
       z-index: 1;
       content: '';
       color: var(--viewer-accent);
-      background: linear-gradient(currentColor 0 0) top left / 12px 1px no-repeat,
+      background: linear-gradient(currentColor 0 0) top left / 12px 1px
+          no-repeat,
         linear-gradient(currentColor 0 0) top left / 1px 12px no-repeat,
         linear-gradient(currentColor 0 0) top right / 12px 1px no-repeat,
         linear-gradient(currentColor 0 0) top right / 1px 12px no-repeat,

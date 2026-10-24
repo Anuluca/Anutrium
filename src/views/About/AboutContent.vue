@@ -21,6 +21,7 @@ import SiteVisitors from './SiteVisitors.vue'
 
 interface ChangelogItem {
   version: string
+  published?: boolean
   codename: string | null
   date: string
   title: string
@@ -214,10 +215,12 @@ useEventListener('blur', hidePassionCrosshair)
 
 // Parsing belongs to locale changes, not repeated component renders.
 const changelogs = computed(() =>
-  (tm('about.dynamic.changelogs') as ChangelogItem[]).map((log) => ({
-    ...log,
-    details: log.details.map(parseMarkedText),
-  }))
+  (tm('about.dynamic.changelogs') as ChangelogItem[])
+    .filter((log) => log.published !== false)
+    .map((log) => ({
+      ...log,
+      details: log.details.map(parseMarkedText),
+    }))
 )
 const activeChangelog = ref('')
 const changelogId = (version: string) =>

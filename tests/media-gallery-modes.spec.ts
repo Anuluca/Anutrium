@@ -21,12 +21,12 @@ test('gallery defaults to list and previews one original with navigation and all
   page.on('request', (request) => {
     const url = new URL(request.url())
     if (
-      url.pathname.includes('/Island/picMerch/') &&
+      url.pathname.includes('/Island/merch/') &&
       !url.searchParams.has('image')
     )
       originals.push(request.url())
   })
-  await page.goto('/island/merch-photography/lucarioNoArm', {
+  await page.goto('/island/merch/lucarioNoArm', {
     waitUntil: 'domcontentloaded',
   })
   await expect(page.locator('.layout-page')).toHaveClass(/\blayout-show\b/, {

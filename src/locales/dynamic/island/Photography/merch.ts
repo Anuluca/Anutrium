@@ -1,4 +1,4 @@
-const merchPhotos = {
+const merch = {
   pokemon: [
     {
       id: 'lucarioNoArm',
@@ -12,21 +12,21 @@ const merchPhotos = {
       },
       photos: [
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/lucarioonearm/DSC01408.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/lucarioonearm/DSC01408.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/lucarioonearm/DSC01427.JPG',
+          url: 'https://assets.anuluca.com/Island/merch/lucarioonearm/DSC01427.JPG',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/lucarioonearm/IMG_3538.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/lucarioonearm/IMG_3538.jpg',
           title: {
             zhCn: '',
             en: '',
@@ -46,21 +46,21 @@ const merchPhotos = {
       },
       photos: [
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/Koraidon&Miraidon/IMG_2048.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/Koraidon&Miraidon/IMG_2048.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/Koraidon&Miraidon/DSC05113.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/Koraidon&Miraidon/DSC05113.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/Koraidon&Miraidon/IMG_1779.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/Koraidon&Miraidon/IMG_1779.jpg',
           title: {
             zhCn: '',
             en: '',
@@ -80,63 +80,63 @@ const merchPhotos = {
       },
       photos: [
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/Ceruledge&Charcadet/DSC05345.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/Ceruledge&Charcadet/DSC05345.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/Ceruledge&Charcadet/IMG_2838.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/Ceruledge&Charcadet/IMG_2838.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/Ceruledge&Charcadet/IMG_2857.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/Ceruledge&Charcadet/IMG_2857.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/Ceruledge&Charcadet/IMG_2869.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/Ceruledge&Charcadet/IMG_2869.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/Ceruledge&Charcadet/IMG_2879.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/Ceruledge&Charcadet/IMG_2879.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/Ceruledge&Charcadet/IMG_2880.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/Ceruledge&Charcadet/IMG_2880.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/Ceruledge&Charcadet/IMG_2881.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/Ceruledge&Charcadet/IMG_2881.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/Ceruledge&Charcadet/IMG_2882.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/Ceruledge&Charcadet/IMG_2882.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/Ceruledge&Charcadet/DSC06275.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/Ceruledge&Charcadet/DSC06275.jpg',
           title: {
             zhCn: '',
             en: '',
@@ -156,14 +156,14 @@ const merchPhotos = {
       },
       photos: [
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/aceburn/DSC02627ps.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/aceburn/DSC02627ps.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/aceburn/DSC02651.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/aceburn/DSC02651.jpg',
           title: {
             zhCn: '',
             en: '',
@@ -183,21 +183,21 @@ const merchPhotos = {
       },
       photos: [
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/arceus/IMG_1313_ps.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/arceus/IMG_1313_ps.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/arceus/IMG_1317_ps.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/arceus/IMG_1317_ps.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/arceus/IMG_1310_ps.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/arceus/IMG_1310_ps.jpg',
           title: {
             zhCn: 'LA风格',
             en: 'LA Style',
@@ -218,14 +218,14 @@ const merchPhotos = {
       coverOffsetX: '20%',
       photos: [
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/darkryie/DSC01416.JPG',
+          url: 'https://assets.anuluca.com/Island/merch/darkryie/DSC01416.JPG',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/darkryie/DSC01410.JPG',
+          url: 'https://assets.anuluca.com/Island/merch/darkryie/DSC01410.JPG',
           title: {
             zhCn: '',
             en: '',
@@ -245,7 +245,7 @@ const merchPhotos = {
       },
       photos: [
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/Decidueye/IMG_35553.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/Decidueye/IMG_35553.jpg',
           title: {
             zhCn: '',
             en: '',
@@ -265,14 +265,14 @@ const merchPhotos = {
       },
       photos: [
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/Dragapult/IMG_1323_ps.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/Dragapult/IMG_1323_ps.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/Dragapult/IMG_1324_ps (1).jpg',
+          url: 'https://assets.anuluca.com/Island/merch/Dragapult/IMG_1324_ps (1).jpg',
           title: {
             zhCn: '',
             en: '',
@@ -292,70 +292,70 @@ const merchPhotos = {
       },
       photos: [
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/metagross/IMG_1727.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/metagross/IMG_1727.jpg',
           title: {
             zhCn: '拼装（金属漆重涂）',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/metagross/IMG_1731.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/metagross/IMG_1731.jpg',
           title: {
             zhCn: '拼装（金属漆重涂）',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/metagross/IMG_1722.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/metagross/IMG_1722.jpg',
           title: {
             zhCn: '拼装（金属漆重涂）',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/metagross/IMG_1702.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/metagross/IMG_1702.jpg',
           title: {
             zhCn: '拼装（金属漆重涂）',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/metagross/IMG_1703.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/metagross/IMG_1703.jpg',
           title: {
             zhCn: '拼装（金属漆重涂）',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/metagross/IMG_1678.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/metagross/IMG_1678.jpg',
           title: {
             zhCn: '拼装（金属漆重涂）',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/metagross/IMG_1704.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/metagross/IMG_1704.jpg',
           title: {
             zhCn: '拼装（金属漆重涂）',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/metagross/IMG_1714.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/metagross/IMG_1714.jpg',
           title: {
             zhCn: '拼装（金属漆重涂）',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/metagross/IMG_1651.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/metagross/IMG_1651.jpg',
           title: {
             zhCn: '拼装',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/metacross/deXAXt.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/metacross/deXAXt.jpg',
           title: {
             zhCn: '掌动',
             en: '',
@@ -375,21 +375,21 @@ const merchPhotos = {
       },
       photos: [
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/raykuza/DSC01295.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/raykuza/DSC01295.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/raykuza/DSC01306.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/raykuza/DSC01306.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/raykuza/DSC01359.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/raykuza/DSC01359.jpg',
           title: {
             zhCn: '',
             en: '',
@@ -409,14 +409,14 @@ const merchPhotos = {
       },
       photos: [
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/pokemonpawn/DSC00405.JPG',
+          url: 'https://assets.anuluca.com/Island/merch/pokemonpawn/DSC00405.JPG',
           title: {
             zhCn: '代欧奇希斯',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/pokemonpawn/DSC00408.JPG',
+          url: 'https://assets.anuluca.com/Island/merch/pokemonpawn/DSC00408.JPG',
           title: {
             zhCn: '木守宫',
             en: '',
@@ -436,21 +436,21 @@ const merchPhotos = {
       },
       photos: [
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/pokemonCard/IMG_9347.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/pokemonCard/IMG_9347.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/pokemonCard/IMG_4784.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/pokemonCard/IMG_4784.jpg',
           title: {
             zhCn: '玛俐的决心礼盒',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/pokemonCard/IMG_4809.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/pokemonCard/IMG_4809.jpg',
           title: {
             zhCn: '玛俐',
             en: '',
@@ -477,63 +477,63 @@ const merchPhotos = {
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/pokemondoll/IMG_9563.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/pokemondoll/IMG_9563.jpg',
           title: {
             zhCn: '火伊布',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/pokemondoll/IMG_7811.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/pokemondoll/IMG_7811.jpg',
           title: {
             zhCn: '彩粉蝶',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/pokemondoll/IMG_6857.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/pokemondoll/IMG_6857.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/pokemondoll/IMG_6532.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/pokemondoll/IMG_6532.jpg',
           title: {
             zhCn: '妙喵',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/pokemondoll/IMG_4605.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/pokemondoll/IMG_4605.jpg',
           title: {
             zhCn: '皮卡丘（方可梦）',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/pokemondoll/IMG_4604.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/pokemondoll/IMG_4604.jpg',
           title: {
             zhCn: '皮卡丘（方可梦）',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/pokemondoll/IMG_4586.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/pokemondoll/IMG_4586.jpg',
           title: {
             zhCn: '蕾冠王',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/pokemondoll/IMG_0459.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/pokemondoll/IMG_0459.jpg',
           title: {
             zhCn: '利欧路扭蛋',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/pokemondoll/DSC05406.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/pokemondoll/DSC05406.jpg',
           title: {
             zhCn: '利欧路',
             en: '',
@@ -561,7 +561,7 @@ const merchPhotos = {
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/pokemondoll/IMG_4272.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/pokemondoll/IMG_4272.jpg',
           title: {
             zhCn: '呆火鳄 in 南昌艾溪湖公园',
             en: '',
@@ -575,98 +575,98 @@ const merchPhotos = {
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/pokemondoll/IMG_20190508_232826-01.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/pokemondoll/IMG_20190508_232826-01.jpg',
           title: {
             zhCn: '路卡利欧Pokedoll 2009款',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/pokemondoll/IMG_20190508_231130-01.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/pokemondoll/IMG_20190508_231130-01.jpg',
           title: {
             zhCn: '雷伊布',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/pokemondoll/IMG_20190508_231610-01.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/pokemondoll/IMG_20190508_231610-01.jpg',
           title: {
             zhCn: '小合影',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/pokemondoll/DSC00578.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/pokemondoll/DSC00578.jpg',
           title: {
             zhCn: '路卡利欧',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/pokemondoll/IMG_23122.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/pokemondoll/IMG_23122.jpg',
           title: {
             zhCn: '火伊布',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/pokemondoll/IMG_5052.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/pokemondoll/IMG_5052.jpg',
           title: {
             zhCn: '小合影',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/pokemondoll/IMG_5288.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/pokemondoll/IMG_5288.jpg',
           title: {
             zhCn: '叉字蝠',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/pokemondoll/IMG_5256.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/pokemondoll/IMG_5256.jpg',
           title: {
             zhCn: '叉字蝠',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/pokemondoll/e8870e67ly1g388s2m192j20u014hb2a.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/pokemondoll/e8870e67ly1g388s2m192j20u014hb2a.jpg',
           title: {
             zhCn: '路卡利欧',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/pokemondoll/DSC02706.JPG',
+          url: 'https://assets.anuluca.com/Island/merch/pokemondoll/DSC02706.JPG',
           title: {
             zhCn: '小卡比兽（宝可梦Cafe店员）',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/pokemondoll/IMG_0734.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/pokemondoll/IMG_0734.jpg',
           title: {
             zhCn: '小合影',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/pokemondoll/IMG_0734.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/pokemondoll/IMG_0734.jpg',
           title: {
             zhCn: '小合影',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/Scorbunny/IMG_3569.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/Scorbunny/IMG_3569.jpg',
           title: {
             zhCn: '小合影',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/Scorbunny/IMG_3563.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/Scorbunny/IMG_3563.jpg',
           title: {
             zhCn: '炎兔儿',
             en: '',
@@ -688,7 +688,7 @@ const merchPhotos = {
       },
       photos: [
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/black/dVDcjK.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/black/dVDcjK.jpg',
           title: {
             zhCn: '',
             en: '',
@@ -708,7 +708,7 @@ const merchPhotos = {
       },
       photos: [
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/blacksun/IMG_3293 (1).jpg',
+          url: 'https://assets.anuluca.com/Island/merch/blacksun/IMG_3293 (1).jpg',
           title: {
             zhCn: '',
             en: '',
@@ -728,7 +728,7 @@ const merchPhotos = {
       },
       photos: [
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/golzan/IMG_3297.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/golzan/IMG_3297.jpg',
           title: {
             zhCn: '',
             en: '',
@@ -748,14 +748,14 @@ const merchPhotos = {
       },
       photos: [
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/ohpheno/dVD0AJ.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/ohpheno/dVD0AJ.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/ohpheno/dVDDhR.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/ohpheno/dVDDhR.jpg',
           title: {
             zhCn: '',
             en: '',
@@ -776,7 +776,7 @@ const merchPhotos = {
       coverOffsetY: '40%',
       photos: [
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/revice/dVDBN9.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/revice/dVDBN9.jpg',
           title: {
             zhCn: '',
             en: '',
@@ -797,21 +797,21 @@ const merchPhotos = {
       coverOffsetY: '20%',
       photos: [
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/rider01/deOTkF.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/rider01/deOTkF.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/rider01/dVrSCn.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/rider01/dVrSCn.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/rider01/dVrp3q.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/rider01/dVrp3q.jpg',
           title: {
             zhCn: '',
             en: '',
@@ -832,7 +832,7 @@ const merchPhotos = {
       coverOffsetY: '35%',
       photos: [
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/riderVulcan/DSC01193333.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/riderVulcan/DSC01193333.jpg',
           title: {
             zhCn: '',
             en: '',
@@ -852,7 +852,7 @@ const merchPhotos = {
       },
       photos: [
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/riderThouthen/DSC00690.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/riderThouthen/DSC00690.jpg',
           title: {
             zhCn: '',
             en: '',
@@ -873,14 +873,14 @@ const merchPhotos = {
       coverOffsetY: '10%',
       photos: [
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/riderBuster/IMG_25292.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/riderBuster/IMG_25292.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/riderBuster/IMG_25342.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/riderBuster/IMG_25342.jpg',
           title: {
             zhCn: '',
             en: '',
@@ -901,28 +901,28 @@ const merchPhotos = {
       coverOffsetY: '20%',
       photos: [
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/riderDeno/DSC0164612.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/riderDeno/DSC0164612.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/riderDeno/DSC0166112.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/riderDeno/DSC0166112.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/riderDeno/DSC0169126.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/riderDeno/DSC0169126.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/riderDeno/DSC0112693.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/riderDeno/DSC0112693.jpg',
           title: {
             zhCn: '',
             en: '',
@@ -943,35 +943,35 @@ const merchPhotos = {
       coverOffsetY: '40%',
       photos: [
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/momotaros/DSC017441.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/momotaros/DSC017441.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/momotaros/DSC0174212.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/momotaros/DSC0174212.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/momotaros/DSC0172612.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/momotaros/DSC0172612.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/momotaros/DSC01741564.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/momotaros/DSC01741564.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/momotaros/00073 IMG_4093.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/momotaros/00073 IMG_4093.jpg',
           title: {
             zhCn: '',
             en: '',
@@ -992,14 +992,14 @@ const merchPhotos = {
       coverOffsetY: '20%',
       photos: [
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/riderHibiki/DSC01561217.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/riderHibiki/DSC01561217.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/riderHibiki/DSC01541227.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/riderHibiki/DSC01541227.jpg',
           title: {
             zhCn: '',
             en: '',
@@ -1022,21 +1022,21 @@ const merchPhotos = {
       coverOffsetY: '40%',
       photos: [
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/akemihomura/dbZtWn.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/akemihomura/dbZtWn.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/akemihomura/e8870e67gy1gb2933xj74j227u2ygqv5.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/akemihomura/e8870e67gy1gb2933xj74j227u2ygqv5.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/akemihomura/e8870e67gy1gb2936ewp3j21zn2nje81.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/akemihomura/e8870e67gy1gb2936ewp3j21zn2nje81.jpg',
           title: {
             zhCn: '',
             en: '',
@@ -1056,21 +1056,21 @@ const merchPhotos = {
       },
       photos: [
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/madoka/DSC01872.JPG',
+          url: 'https://assets.anuluca.com/Island/merch/madoka/DSC01872.JPG',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/madoka/DSC01879.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/madoka/DSC01879.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/madoka/DSC01870.JPG',
+          url: 'https://assets.anuluca.com/Island/merch/madoka/DSC01870.JPG',
           title: {
             zhCn: '',
             en: '',
@@ -1091,35 +1091,35 @@ const merchPhotos = {
       coverOffsetY: '40%',
       photos: [
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/honoka/dVDAfI.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/honoka/dVDAfI.jpg',
           title: {
             zhCn: '常服',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/honoka/dVDM7Q.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/honoka/dVDM7Q.jpg',
           title: {
             zhCn: '常服',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/honoka/dVDZ1P.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/honoka/dVDZ1P.jpg',
           title: {
             zhCn: '演出服',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/honoka/dVDVpt.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/honoka/dVDVpt.jpg',
           title: {
             zhCn: '演出服',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/honoka/dVD1ts.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/honoka/dVD1ts.jpg',
           title: {
             zhCn: '演出服',
             en: '',
@@ -1139,56 +1139,56 @@ const merchPhotos = {
       },
       photos: [
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/wargraymon/weibo.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/wargraymon/weibo.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/wargraymon/IMG_4607.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/wargraymon/IMG_4607.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/wargraymonIMG_4608.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/wargraymonIMG_4608.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/wargraymon/IMG_4609.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/wargraymon/IMG_4609.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/wargraymon/IMG_4610.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/wargraymon/IMG_4610.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/wargraymon/IMG_4611.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/wargraymon/IMG_4611.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/wargraymon/IMG_4612.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/wargraymon/IMG_4612.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/wargraymon/IMG_4613.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/wargraymon/IMG_4613.jpg',
           title: {
             zhCn: '',
             en: '',
@@ -1208,14 +1208,14 @@ const merchPhotos = {
       },
       photos: [
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/metalGaruru/0V97bd.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/metalGaruru/0V97bd.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/metalGaruru/DgViff.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/metalGaruru/DgViff.jpg',
           title: {
             zhCn: '',
             en: '',
@@ -1235,21 +1235,21 @@ const merchPhotos = {
       },
       photos: [
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/Imperialdramon/DSC01719.JPG',
+          url: 'https://assets.anuluca.com/Island/merch/Imperialdramon/DSC01719.JPG',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/Imperialdramon/00068 IMG_3763.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/Imperialdramon/00068 IMG_3763.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/Imperialdramon/ChatGPT Image 2026年7月11日 14_24_14.png',
+          url: 'https://assets.anuluca.com/Island/merch/Imperialdramon/ChatGPT Image 2026年7月11日 14_24_14.png',
           title: {
             zhCn: '',
             en: '',
@@ -1269,7 +1269,7 @@ const merchPhotos = {
       },
       photos: [
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/kk/DSC00393.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/kk/DSC00393.jpg',
           title: {
             zhCn: '',
             en: '',
@@ -1289,7 +1289,7 @@ const merchPhotos = {
       },
       photos: [
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/mash/dVDlkj.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/mash/dVDlkj.jpg',
           title: {
             zhCn: '',
             en: '',
@@ -1309,7 +1309,7 @@ const merchPhotos = {
       },
       photos: [
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/NuGundam/IMG_3292.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/NuGundam/IMG_3292.jpg',
           title: {
             zhCn: '',
             en: '',
@@ -1329,35 +1329,35 @@ const merchPhotos = {
       },
       photos: [
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/spiderman/dVDvNj.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/spiderman/dVDvNj.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/spiderman/dVDx4s.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/spiderman/dVDx4s.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/spiderman/deXF1A.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/spiderman/deXF1A.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/spiderman/deXk6I.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/spiderman/deXk6I.jpg',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/spiderman/dVr9g0.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/spiderman/dVr9g0.jpg',
           title: {
             zhCn: '',
             en: '',
@@ -1378,7 +1378,7 @@ const merchPhotos = {
       coverOffsetY: '40%',
       photos: [
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/stormtroper/djXW28.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/stormtroper/djXW28.jpg',
           title: {
             zhCn: '',
             en: '',
@@ -1398,14 +1398,14 @@ const merchPhotos = {
       },
       photos: [
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/tomica/DSC00455.JPG',
+          url: 'https://assets.anuluca.com/Island/merch/tomica/DSC00455.JPG',
           title: {
             zhCn: '',
             en: '',
           },
         },
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/tomica/DSC00474.JPG',
+          url: 'https://assets.anuluca.com/Island/merch/tomica/DSC00474.JPG',
           title: {
             zhCn: '',
             en: '',
@@ -1425,7 +1425,7 @@ const merchPhotos = {
       },
       photos: [
         {
-          url: 'https://assets.anuluca.com/Island/picMerch/other/IMG_3539.jpg',
+          url: 'https://assets.anuluca.com/Island/merch/other/IMG_3539.jpg',
           title: {
             zhCn: '暧昧酱',
             en: '',
@@ -1436,4 +1436,4 @@ const merchPhotos = {
   ],
 } as const
 
-export default merchPhotos
+export default merch
