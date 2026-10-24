@@ -52,7 +52,7 @@
       />
     </div>
     <div ref="corners" class="safe-image-viewer__corners" aria-hidden="true" />
-    <template #toolbar="{ actions, reset }">
+    <template #toolbar="{ actions }">
       <div v-if="$slots.info && !activeVideo" class="safe-image-viewer__info">
         <slot name="info" :index="activeIndex" />
       </div>
@@ -62,13 +62,8 @@
           :key="tool.action"
           type="button"
           class="safe-image-viewer__tool"
-          :class="{ 'is-fit-toggle': tool.action === 'reset' }"
           :aria-label="tool.label"
-          @click="
-            onToolClick($event, () =>
-              tool.action === 'reset' ? reset() : actions(tool.action)
-            )
-          "
+          @click="onToolClick($event, () => actions(tool.action))"
         >
           <ElIcon><component :is="tool.icon" /></ElIcon>
         </button>
@@ -78,33 +73,21 @@
 </template>
 
 <script setup lang="ts">
-import {
-  computed,
-  type CSSProperties,
-  nextTick,
-  onBeforeUnmount,
-  onMounted,
-  ref,
-} from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import {
-  FullScreen,
-  RefreshLeft,
-  RefreshRight,
-  ZoomIn,
-  ZoomOut,
-} from '@element-plus/icons-vue'
+import { Minus, Plus } from '@element-plus/icons-vue'
 import { ElIcon, ElImageViewer } from 'element-plus'
 
 import OverlayBackgroundTitle from '@/components/OverlayBackgroundTitle/index.vue'
 import { useOverlayScrollLock } from '@/composables/useOverlayScrollLock'
 import { flashActionButton } from '@/utils/flashActionButton'
+import { createImageViewerGeometry } from '@/utils/imageViewerGeometry'
 import {
-  decorateImageViewerNavigation,
+  bindImageViewerNavigation,
   flashImageViewerNavigation,
-  syncImageViewerNavigationCutouts,
 } from '@/utils/imageViewerNavigation'
-import { bindImageViewerTouch } from '@/utils/imageViewerTouch'
+import { bindImageViewerGestures } from '@/utils/imageViewerGestures'
+import { isVideoUrl } from '@/utils/mediaPreview'
 
 import InlineImagePreview from './InlineImagePreview.vue'
 
@@ -146,22 +129,16 @@ const onToolClick = (event: MouseEvent, action: () => void) => {
   action()
 }
 const corners = ref<HTMLElement | null>(null)
-let cornerStyle: CSSProperties = { display: 'none' }
-let decoratedImage: HTMLImageElement | null = null
 let wrapper: HTMLElement | null = null
-let image: HTMLImageElement | null = null
-let mutationObserver: MutationObserver | undefined
-let resizeObserver: ResizeObserver | undefined
-let navigationObserver: ResizeObserver | undefined
-let unbindTouch: (() => void) | undefined
+let geometry: ReturnType<typeof createImageViewerGeometry> | undefined
+let unbindNavigation: (() => void) | undefined
+let unbindGestures: (() => void) | undefined
 const activeIndex = ref(props.initialIndex)
 const closing = ref(false)
 const backgroundTitle = computed(() => props.titles[activeIndex.value]?.trim())
 const videoPlayer = ref<HTMLVideoElement | null>(null)
 const isImageLoading = ref(true)
 const loadingPlaceholder = ref<HTMLElement | null>(null)
-const isVideoUrl = (url: string) =>
-  /\.(?:mov|mp4|webm|m4v|ogv)(?:[?#].*)?$/i.test(url)
 const activeVideo = computed(() => {
   const url = props.urlList[activeIndex.value]
   return url && isVideoUrl(url) ? url : null
@@ -181,17 +158,12 @@ let outgoingImage: HTMLImageElement | null = null
 const switchAnimations = new Set<Animation>()
 const navigationFlashes = new Map<HTMLElement, Animation>()
 const flashNavigation = (nav: HTMLElement) => {
-  if (nav.classList.contains('is-disabled')) return
-  const fill = nav.querySelector<HTMLElement>('.safe-image-viewer__nav-fill')
-  if (!fill) return
-  navigationFlashes.get(fill)?.cancel()
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+  navigationFlashes.get(nav)?.cancel()
   const animation = flashImageViewerNavigation(nav)
   if (!animation) return
-  navigationFlashes.set(fill, animation)
+  navigationFlashes.set(nav, animation)
   const clear = () => {
-    if (navigationFlashes.get(fill) === animation)
-      navigationFlashes.delete(fill)
+    if (navigationFlashes.get(nav) === animation) navigationFlashes.delete(nav)
   }
   animation.onfinish = clear
   animation.oncancel = clear
@@ -230,14 +202,18 @@ const handleSwitch = async (index: number) => {
   activeIndex.value = index
   emit('switch', index)
   isImageLoading.value = !activeVideo.value
-  void nextTick(syncCorners)
   clearSwitchAnimations()
   if (activeVideo.value) {
     syncCorners()
     return
   }
-  if (!wrapper || window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+  if (
+    !wrapper ||
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  ) {
+    void nextTick(syncCorners)
     return
+  }
   const oldImage = wrapper.querySelector<HTMLImageElement>(
     '.el-image-viewer__img'
   )
@@ -310,9 +286,6 @@ const handleSwitch = async (index: number) => {
     { translate: '0 0', opacity: 1 },
   ])
 }
-const syncNavigationCutouts = () => {
-  if (wrapper) syncImageViewerNavigationCutouts(wrapper)
-}
 
 let closeTimer: ReturnType<typeof setTimeout> | undefined
 const handleClose = () => {
@@ -358,79 +331,24 @@ const clearNavigationHover = (event: PointerEvent) => {
   )
     wrapper?.classList.remove('is-hover-dimmed')
 }
-const syncCorners = () => {
-  if (activeVideo.value) {
-    isImageLoading.value = false
-    if (corners.value) corners.value.style.display = 'none'
-    return
-  }
-  const current =
-    wrapper?.querySelector<HTMLImageElement>('.el-image-viewer__img') ?? null
-  // complete 在加载成功和失败时都会变为 true，错误状态交还原有预览组件。
-  isImageLoading.value = !current || !current.complete
-  if (current !== image) {
-    resizeObserver?.disconnect()
-    image = current
-    if (image) resizeObserver?.observe(image)
-  }
-  if (!image?.naturalWidth) {
-    wrapper?.classList.remove('is-image-zoomed')
-    if (corners.value) corners.value.style.display = 'none'
-    cornerStyle = { display: 'none' }
-    return
-  }
-  // 底栏按未缩放图片及两侧各 16px 的四角装饰对齐，缩放、拖动时保持操作位置稳定。
-  wrapper?.style.setProperty(
-    '--viewer-info-bar-width',
-    `${image.offsetWidth + 32}px`
-  )
-  const nativeScale = Number(
-    /scale\(([^)]+)\)/.exec(image.style.transform)?.[1] ?? 1
-  )
-  wrapper?.classList.toggle(
-    'is-image-zoomed',
-    nativeScale * Number(image.style.scale || 1) > 1.01
-  )
-  if (decoratedImage !== image) {
-    decoratedImage = image
-    // 装饰层独立播放动画，不触发图片预览组件重新渲染。
-    for (const animation of corners.value?.getAnimations() ?? [])
-      if ((animation as CSSAnimation).animationName === 'viewer-corner-in')
-        animation.currentTime = 0
-  }
-  // 使用未变换的布局尺寸，并复制图片变换，使装饰同步旋转、缩放和拖动。
-  const nextStyle: CSSProperties = {
-    display: 'block',
-    left: `${image.offsetLeft - 16}px`,
-    top: `${image.offsetTop - 16}px`,
-    width: `${image.offsetWidth + 32}px`,
-    height: `${image.offsetHeight + 32}px`,
-    transform: image.style.transform,
-    scale: image.style.scale,
-    translate: image.style.translate,
-    transition: image.style.transition,
-  }
-  // 装饰尺寸直接写入独立 DOM；观察图片变换不会再引发 Vue 组件渲染。
-  if (
-    Object.keys(nextStyle).some(
-      (key) =>
-        nextStyle[key as keyof CSSProperties] !==
-        cornerStyle[key as keyof CSSProperties]
-    ) ||
-    Object.keys(nextStyle).length !== Object.keys(cornerStyle).length
-  ) {
-    if (corners.value) Object.assign(corners.value.style, nextStyle)
-    cornerStyle = nextStyle
-  }
-}
+const syncCorners = () => geometry?.sync()
 onMounted(async () => {
   await nextTick()
   wrapper =
     corners.value?.closest<HTMLElement>('.el-image-viewer__wrapper') ?? null
-  if (!wrapper) return
-  unbindTouch = bindImageViewerTouch(
+  if (!wrapper || !corners.value) return
+  geometry = createImageViewerGeometry(
     wrapper,
-    syncCorners,
+    corners.value,
+    () => Boolean(activeVideo.value),
+    (loading) => {
+      isImageLoading.value = loading
+    }
+  )
+  unbindNavigation = bindImageViewerNavigation(wrapper)
+  unbindGestures = bindImageViewerGestures(
+    wrapper,
+    geometry.sync,
     clearSwitchAnimations,
     (direction) => {
       const nav = wrapper?.querySelector<HTMLElement>(
@@ -439,93 +357,38 @@ onMounted(async () => {
       if (nav && !nav.classList.contains('is-disabled')) nav.click()
     }
   )
-  for (const nav of wrapper.querySelectorAll<HTMLElement>(
-    '.el-image-viewer__prev, .el-image-viewer__next'
-  )) {
-    decorateImageViewerNavigation(nav)
-  }
-  void document.fonts.load('400 112px Anton', 'PREV NEXT').then(() => {
-    if (!wrapper?.isConnected) return
-    syncNavigationCutouts()
-    navigationObserver = new ResizeObserver(syncNavigationCutouts)
-    wrapper
-      .querySelectorAll('.el-image-viewer__prev, .el-image-viewer__next')
-      .forEach((nav) => navigationObserver?.observe(nav))
-  })
-  resizeObserver = new ResizeObserver(syncCorners)
-  mutationObserver = new MutationObserver((records) => {
-    if (
-      records.some(
-        (record) =>
-          record.target instanceof HTMLImageElement ||
-          (record.type === 'childList' &&
-            record.target instanceof Element &&
-            record.target.classList.contains('el-image-viewer__canvas'))
-      )
-    )
-      syncCorners()
-  })
-  mutationObserver.observe(wrapper, {
-    subtree: true,
-    childList: true,
-    attributes: true,
-    attributeFilter: ['style', 'src'],
-  })
-  wrapper.addEventListener('load', syncCorners, true)
-  wrapper.addEventListener('error', syncCorners, true)
   wrapper.addEventListener('pointerover', markNavigationHovered)
   wrapper.addEventListener('pointerout', clearNavigationHover)
   wrapper.addEventListener('click', recordSwitchDirection, true)
   document.addEventListener('keydown', recordSwitchDirection, true)
-  window.addEventListener('resize', syncCorners)
-  syncCorners()
 })
 onBeforeUnmount(() => {
   videoPlayer.value?.pause()
   for (const animation of navigationFlashes.values()) animation.cancel()
   navigationFlashes.clear()
-  unbindTouch?.()
+  unbindGestures?.()
+  unbindNavigation?.()
+  geometry?.dispose()
   ++switchVersion
   clearSwitchAnimations()
   clearTimeout(closeTimer)
-  mutationObserver?.disconnect()
-  resizeObserver?.disconnect()
-  navigationObserver?.disconnect()
-  wrapper?.removeEventListener('load', syncCorners, true)
-  wrapper?.removeEventListener('error', syncCorners, true)
   wrapper?.removeEventListener('pointerover', markNavigationHovered)
   wrapper?.removeEventListener('pointerout', clearNavigationHover)
   wrapper?.removeEventListener('click', recordSwitchDirection, true)
   document.removeEventListener('keydown', recordSwitchDirection, true)
-  window.removeEventListener('resize', syncCorners)
 })
 const tools = computed(
   () =>
     [
       {
         action: 'zoomOut',
-        icon: ZoomOut,
+        icon: Minus,
         label: locale.value === 'en' ? 'Zoom out' : '缩小',
       },
       {
         action: 'zoomIn',
-        icon: ZoomIn,
+        icon: Plus,
         label: locale.value === 'en' ? 'Zoom in' : '放大',
-      },
-      {
-        action: 'reset',
-        icon: FullScreen,
-        label: locale.value === 'en' ? 'Toggle image fit' : '切换图片适配',
-      },
-      {
-        action: 'anticlockwise',
-        icon: RefreshLeft,
-        label: locale.value === 'en' ? 'Rotate left' : '向左旋转',
-      },
-      {
-        action: 'clockwise',
-        icon: RefreshRight,
-        label: locale.value === 'en' ? 'Rotate right' : '向右旋转',
       },
     ] as const
 )
@@ -552,6 +415,7 @@ useOverlayScrollLock('safe-image-viewer', () => !props.inline)
 
 .el-image-viewer__wrapper
   .el-image-viewer__actions:has(.safe-image-viewer__tools) {
+  z-index: 2;
   background: transparent;
 }
 
@@ -582,14 +446,13 @@ useOverlayScrollLock('safe-image-viewer', () => !props.inline)
     width: 100%;
 
     .safe-image-viewer__tools {
-      flex: 0 0 40%;
-      max-width: ~'176PX';
+      flex: 0 0 auto;
       align-items: center;
     }
 
     .safe-image-viewer__tool {
-      flex: 1 1 0;
-      width: 0;
+      flex: 0 0 min(10cqi, ~'44PX');
+      width: min(10cqi, ~'44PX');
       height: min(10cqi, ~'44PX');
       font-size: min(6cqi, ~'22PX');
     }
@@ -605,6 +468,15 @@ useOverlayScrollLock('safe-image-viewer', () => !props.inline)
   box-sizing: border-box;
   text-align: left;
   background: rgb(16 14 17 / 86%);
+
+  .photo-info__device {
+    padding-left: 4px;
+    font-size: 1.45em;
+    font-family: 'alibaba-puhuiti', sans-serif;
+    font-weight: 900;
+    // 字号增大时保留原行框高度，避免撑高信息栏。
+    line-height: calc(1.25em / 1.45);
+  }
 
   > * {
     width: 100%;

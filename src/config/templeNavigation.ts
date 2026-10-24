@@ -97,6 +97,18 @@ export const templeDesktopMenuGroups = [
   menuItemsById(['sprigatito', 'pokeyard', 'island', 'about']),
 ]
 
+export const templeRouteDesktopMenuGroups = [
+  menuItemsById([
+    'archive',
+    'flanerie',
+    'pokeyard',
+    'island',
+    'statue',
+    'sprigatito',
+    'about',
+  ]),
+]
+
 // 模块入口与子页面归属共用映射，直接访问和返回首页使用同一规则。
 // 内部 island 标识属于 CREATIVE；公开 /island 入口对应中央 ISLAND 模型。
 export const templeModulePaths: Record<TempleCategoryId, string> = {

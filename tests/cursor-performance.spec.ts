@@ -145,6 +145,146 @@ test.describe('desktop cursor', () => {
     await expect(cursor).not.toHaveClass(/is-loading/)
   })
 
+  test('wheel bursts keep one morph animation without position writes and stop after idle', async ({
+    page,
+  }) => {
+    const cursor = page.locator('.cursor-position')
+    const shape = cursor.locator('.cursor-shape')
+    const body = cursor.locator('.cursor-body')
+    const result = await cursor.evaluate(async (cursor) => {
+      const delay = (ms: number) =>
+        new Promise((resolve) => setTimeout(resolve, ms))
+      document.body.dispatchEvent(
+        new PointerEvent('pointerover', { bubbles: true })
+      )
+      await delay(500)
+      let writes = 0
+      const observer = new MutationObserver((records) => {
+        writes += records.length
+      })
+      observer.observe(cursor, { attributes: true, attributeFilter: ['style'] })
+      const body = cursor.querySelector('.cursor-body')!
+      const wheel = () =>
+        window.dispatchEvent(new WheelEvent('wheel', { deltaY: 20 }))
+      wheel()
+      await delay(30)
+      const animation = body.getAnimations()[0]
+      let sameAnimation = !!animation
+      let maxStretch = 1
+      for (let index = 0; index < 8; index++) {
+        for (let burst = 0; burst < 100; burst++) wheel()
+        await delay(110)
+        sameAnimation &&= body.getAnimations()[0] === animation
+        maxStretch = Math.max(
+          maxStretch,
+          new DOMMatrixReadOnly(getComputedStyle(body).transform).a
+        )
+      }
+      observer.disconnect()
+      return { writes, sameAnimation, maxStretch }
+    })
+    expect(result.writes).toBe(0)
+    expect(result.sameAnimation).toBe(true)
+    expect(result.maxStretch).toBeGreaterThan(1.2)
+    await expect(shape).not.toHaveClass(/is-scrolling/)
+    await expect(body).toHaveCSS('transform', 'none')
+
+    await page.evaluate(() =>
+      window.dispatchEvent(
+        new WheelEvent('wheel', { deltaY: 20, ctrlKey: true })
+      )
+    )
+    await expect(shape).not.toHaveClass(/is-scrolling/)
+    await page.mouse.wheel(0, 50)
+    await expect(shape).toHaveClass(/is-scrolling/)
+    await page.evaluate(() => window.dispatchEvent(new Event('blur')))
+    await expect(shape).not.toHaveClass(/is-scrolling/)
+  })
+
+  test('scroll end eases from the current ellipse back to a circle', async ({
+    page,
+  }) => {
+    const body = page.locator('.cursor-body')
+    const result = await page
+      .locator('.cursor-position')
+      .evaluate(async (cursor) => {
+        document.body.dispatchEvent(
+          new PointerEvent('pointerover', { bubbles: true })
+        )
+        window.dispatchEvent(new WheelEvent('wheel', { deltaY: 20 }))
+        await new Promise((resolve) => requestAnimationFrame(resolve))
+        const body = cursor.querySelector('.cursor-body')!
+        const shape = cursor.querySelector('.cursor-shape')!
+        const morph = body
+          .getAnimations()
+          .find((animation) => animation instanceof CSSAnimation)!
+        // 固定在最大椭圆，验证结束时保留当前形态，再逐渐恢复。
+        morph.pause()
+        morph.currentTime = 400
+        const stretch = () =>
+          new DOMMatrixReadOnly(getComputedStyle(body).transform).a
+        const before = stretch()
+        await new Promise<void>((resolve, reject) => {
+          const started = performance.now()
+          const check = () => {
+            if (!shape.classList.contains('is-scrolling')) resolve()
+            else if (performance.now() - started > 2000)
+              reject(new Error('Scroll did not end'))
+            else requestAnimationFrame(check)
+          }
+          requestAnimationFrame(check)
+        })
+        const start = stretch()
+        await new Promise((resolve) => setTimeout(resolve, 80))
+        const middle = stretch()
+        return { before, start, middle }
+      })
+    expect(result.before).toBeCloseTo(1.3)
+    expect(result.start).toBeGreaterThan(1.2)
+    expect(result.middle).toBeGreaterThan(1)
+    expect(result.middle).toBeLessThan(result.start)
+    await expect(body).toHaveCSS('transform', 'none')
+    await expect
+      .poll(() => body.evaluate((element) => element.getAnimations().length))
+      .toBe(0)
+  })
+
+  test('scroll morph respects interactive, loading and reduced motion states', async ({
+    page,
+  }) => {
+    const cursor = page.locator('.cursor-position')
+    const shape = cursor.locator('.cursor-shape')
+    const body = cursor.locator('.cursor-body')
+    await page.locator('button').first().dispatchEvent('pointerover')
+    await page.mouse.wheel(0, 20)
+    await expect(shape).toHaveClass(/is-active/)
+    await expect(shape).not.toHaveClass(/is-scrolling/)
+    await expect(body).toHaveCSS('animation-name', 'none')
+    await page.evaluate(async () => {
+      document.body.dispatchEvent(
+        new PointerEvent('pointerover', { bubbles: true })
+      )
+      const moduleURL = '/src/stores/cursorState.ts'
+      const { default: useCursorState } = await import(
+        /* @vite-ignore */ moduleURL
+      )
+      useCursorState().startLoading('cursor-scroll-audit')
+      window.dispatchEvent(new WheelEvent('wheel', { deltaY: 20 }))
+    })
+    await expect(shape).not.toHaveClass(/is-scrolling/)
+    await expect(body).toHaveCSS('animation-name', 'none')
+    await page.evaluate(async () => {
+      const moduleURL = '/src/stores/cursorState.ts'
+      const { default: useCursorState } = await import(
+        /* @vite-ignore */ moduleURL
+      )
+      useCursorState().stopLoading('cursor-scroll-audit')
+    })
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.mouse.wheel(0, 20)
+    await expect(body).toHaveCSS('animation-name', 'none')
+  })
+
   test('resets pressed state on blur and suspends input and animation while hidden', async ({
     page,
   }) => {

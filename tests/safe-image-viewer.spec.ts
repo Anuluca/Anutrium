@@ -28,12 +28,8 @@ test('viewer theme, navigation hit areas, square tools and cursor work together'
   await expect(viewer).not.toHaveClass(/viewer-fade-enter-active/)
   const mobile = info.project.name.includes('mobile')
   const tools = viewer.locator('.safe-image-viewer__tool')
-  await expect(tools).toHaveCount(5)
-  for (let i = 0; i < 5; i++) {
-    if (mobile && i === 2) {
-      await expect(tools.nth(i)).toBeHidden()
-      continue
-    }
+  await expect(tools).toHaveCount(2)
+  for (let i = 0; i < 2; i++) {
     await expect(tools.nth(i)).toBeVisible({ timeout: 20000 })
     const size = await tools.nth(i).boundingBox()
     expect(Math.abs(size!.width - size!.height)).toBeLessThanOrEqual(1)
@@ -250,7 +246,6 @@ test('viewer theme, navigation hit areas, square tools and cursor work together'
   }
   await page.mouse.move(10, 10)
   await tools.nth(1).click()
-  await tools.nth(4).click()
   await expect
     .poll(() =>
       page.evaluate(

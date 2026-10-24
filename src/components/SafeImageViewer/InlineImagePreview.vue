@@ -17,8 +17,9 @@
     >
       <div class="inline-image-preview__background" aria-hidden="true">
         <OverlayBackgroundTitle
-          v-if="activeTitle && !isVideoUrl(activeUrl)"
+          v-if="activeTitle && !activeIsVideo"
           :title="activeTitle"
+          :paused="!stageActive"
           embedded
         />
       </div>
@@ -35,7 +36,7 @@
       <div class="inline-image-preview__canvas" :aria-busy="loading">
         <figure class="inline-image-preview__figure">
           <video
-            v-if="isVideoUrl(activeUrl)"
+            v-if="activeIsVideo"
             :key="activeUrl"
             ref="videoRef"
             :src="activeUrl"
@@ -72,7 +73,7 @@
             <slot name="info" :index="activeIndex" />
           </div>
           <span
-            v-if="!loading && !failed && !isVideoUrl(activeUrl)"
+            v-if="!loading && !failed && !activeIsVideo"
             class="safe-image-viewer__corners"
             aria-hidden="true"
           />
@@ -82,7 +83,7 @@
         </span>
         <div v-if="failed" class="inline-image-preview__status" role="status">
           {{ locale === 'en' ? 'Unable to load media' : '媒体加载失败' }}
-          <button v-if="!isVideoUrl(activeUrl)" type="button" @click="retry">
+          <button v-if="!activeIsVideo" type="button" @click="retry">
             {{ locale === 'en' ? 'Retry' : '重试' }}
           </button>
         </div>
@@ -115,7 +116,9 @@
         }${locale === 'en' ? '' : ' 张：'} ${labels[index] || ''}`"
         @click="select(index)"
       >
-        <span v-if="isVideoUrl(url)" class="inline-image-preview__video-label"
+        <span
+          v-if="videoUrls.has(url)"
+          class="inline-image-preview__video-label"
           >VIDEO</span
         >
         <img
@@ -133,16 +136,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useResizeObserver } from '@vueuse/core'
 
 import OverlayBackgroundTitle from '@/components/OverlayBackgroundTitle/index.vue'
+import { useDecorationActivity } from '@/composables/useDecorationActivity'
 import { getCardThumbnailUrl } from '@/utils/imageVariant'
 import {
-  decorateImageViewerNavigation,
+  bindImageViewerNavigation,
   flashImageViewerNavigation,
-  syncImageViewerNavigationCutouts,
 } from '@/utils/imageViewerNavigation'
+import { isVideoUrl } from '@/utils/mediaPreview'
 
 const props = withDefaults(
   defineProps<{
@@ -159,30 +164,32 @@ const emit = defineEmits<{
 }>()
 const { locale } = useI18n()
 const activeIndex = ref(0)
-const thumbnails = computed(() => props.urlList.map(getCardThumbnailUrl))
+const videoUrls = computed(() => new Set(props.urlList.filter(isVideoUrl)))
+const thumbnails = computed(() =>
+  props.urlList.map((url) =>
+    videoUrls.value.has(url) ? '' : getCardThumbnailUrl(url)
+  )
+)
 const activeUrl = computed(() => props.urlList[activeIndex.value])
+const activeIsVideo = computed(() => videoUrls.value.has(activeUrl.value))
 const activeTitle = computed(() => props.titles[activeIndex.value]?.trim())
 const activeLabel = computed(
   () =>
     props.labels[activeIndex.value] ||
     (locale.value === 'en' ? 'Photo' : '图片')
 )
-const stageRef = ref<HTMLElement>()
+const stageRef = ref<HTMLElement | null>(null)
+const stageActive = useDecorationActivity(stageRef)
 const infoRef = ref<HTMLElement>()
 const infoHeight = ref(0)
 const mediaAspectRatio = ref(1)
 const isNavigationHovered = ref(false)
-let navigationObserver: ResizeObserver | undefined
-let infoObserver: ResizeObserver | undefined
-let isUnmounted = false
 const navigationFlashes = new Set<Animation>()
 const loading = ref(true)
 const failed = ref(false)
 const retryCount = ref(0)
 const thumbnailsRef = ref<HTMLElement>()
 const videoRef = ref<HTMLVideoElement>()
-const isVideoUrl = (url: string) =>
-  /\.(?:mov|mp4|webm|m4v|ogv)(?:[?#].*)?$/i.test(url)
 
 const revealThumbnail = async () => {
   await nextTick()
@@ -224,7 +231,10 @@ const handleKeydown = (event: KeyboardEvent) => {
   select(index)
 }
 
-const handleError = () => {
+const handleError = (event: Event) => {
+  const media = event.currentTarget as HTMLImageElement | HTMLVideoElement
+  if (!media.isConnected || media.getAttribute('src') !== activeUrl.value)
+    return
   loading.value = false
   failed.value = true
 }
@@ -241,23 +251,31 @@ watch(
       0,
       Math.min(props.initialIndex, props.urlList.length - 1)
     )
-    void revealThumbnail()
   },
   { immediate: true }
 )
 watch(activeUrl, () => {
   loading.value = true
   failed.value = false
-  void revealThumbnail()
+  retryCount.value = 0
+  isNavigationHovered.value = false
+})
+watch([activeIndex, () => props.urlList], revealThumbnail, {
+  immediate: true,
+  flush: 'post',
 })
 const handleImageLoaded = (event: Event) => {
   const image = event.currentTarget as HTMLImageElement
+  if (!image.isConnected || image.getAttribute('src') !== activeUrl.value)
+    return
   if (image.naturalHeight)
     mediaAspectRatio.value = image.naturalWidth / image.naturalHeight
   loading.value = false
 }
 const handleVideoLoaded = (event: Event) => {
   const video = event.currentTarget as HTMLVideoElement
+  if (!video.isConnected || video.getAttribute('src') !== activeUrl.value)
+    return
   if (video.videoHeight)
     mediaAspectRatio.value = video.videoWidth / video.videoHeight
   loading.value = false
@@ -283,37 +301,21 @@ const handleNavigationEnter = (event: PointerEvent) => {
   ;(event.currentTarget as HTMLElement).classList.add('has-hovered')
   isNavigationHovered.value = true
 }
-onMounted(async () => {
-  const stage = stageRef.value
-  if (!stage) return
-  stage
-    .querySelectorAll<HTMLElement>(
-      '.el-image-viewer__prev, .el-image-viewer__next'
-    )
-    .forEach(decorateImageViewerNavigation)
-  const sync = () => syncImageViewerNavigationCutouts(stage)
-  navigationObserver = new ResizeObserver(sync)
-  stage
-    .querySelectorAll<HTMLElement>(
-      '.el-image-viewer__prev, .el-image-viewer__next'
-    )
-    .forEach((nav) => navigationObserver?.observe(nav))
-  sync()
-  void document.fonts.load('400 112px Anton', 'PREV NEXT').then(() => {
-    if (!isUnmounted) sync()
-  })
-  if (infoRef.value) {
-    infoObserver = new ResizeObserver(() => {
-      infoHeight.value = infoRef.value?.offsetHeight || 0
-    })
-    infoObserver.observe(infoRef.value)
-  }
+watch(
+  stageRef,
+  (stage, _previous, onCleanup) => {
+    if (stage) onCleanup(bindImageViewerNavigation(stage))
+  },
+  { flush: 'post' }
+)
+useResizeObserver(infoRef, () => {
+  infoHeight.value = infoRef.value?.offsetHeight || 0
+})
+watch(infoRef, (element) => {
+  if (!element) infoHeight.value = 0
 })
 onBeforeUnmount(() => {
-  isUnmounted = true
   videoRef.value?.pause()
-  navigationObserver?.disconnect()
-  infoObserver?.disconnect()
   for (const animation of navigationFlashes) animation.cancel()
 })
 </script>

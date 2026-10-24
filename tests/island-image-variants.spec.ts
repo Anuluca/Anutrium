@@ -44,19 +44,9 @@ test('merchandise cards and galleries use card thumbnails', async ({
   ).toHaveAttribute('src', cardThumbnailPattern)
 })
 
-test('image-log cards and global pet artwork use card thumbnails', async ({
-  page,
-}) => {
+test('image-log cards use card thumbnails', async ({ page }) => {
   await page.goto('/island/image-log', { waitUntil: 'domcontentloaded' })
   await expect(
     page.locator('.image-log-album-card img').first()
   ).toHaveAttribute('src', cardThumbnailPattern)
-  await expect(page.locator('.pet-teaser__cat')).toHaveAttribute(
-    'src',
-    cardThumbnailPattern
-  )
-  await expect(page.locator('.pet-teaser__ears')).toHaveAttribute(
-    'src',
-    cardThumbnailPattern
-  )
 })

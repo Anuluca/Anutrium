@@ -11,20 +11,39 @@
         :class="{ 'detail-page-header--compact': isCompact }"
         :style="isCompact ? compactStyle : undefined"
       >
-        <div class="detail-page-header__content">
+        <div
+          ref="contentRef"
+          class="detail-page-header__content no-rem"
+          @click="handleContentClick"
+        >
           <button
             class="detail-page-header__back"
             type="button"
+            :aria-disabled="backPending || undefined"
             @click="goBack"
           >
+            <span class="detail-page-header__back-symbol" aria-hidden="true" />
             <DecodeText :text="backLabel" />
           </button>
-          <div class="detail-page-header__heading">
+          <div
+            class="detail-page-header__heading"
+            :role="isCompact ? 'button' : undefined"
+            :tabindex="isCompact ? 0 : undefined"
+            :aria-label="isCompact ? '回到页面顶部' : undefined"
+            @keydown.enter.prevent="scrollToTop"
+            @keydown.space.prevent="scrollToTop"
+          >
             <h1><DecodeText :text="title" /></h1>
             <p v-if="subtitle" class="detail-page-header__subtitle">
               <DecodeText :text="subtitle" />
             </p>
           </div>
+          <span
+            v-if="isCompact"
+            class="detail-page-header__progress"
+            :style="{ transform: `scaleX(${readingProgress})` }"
+            aria-hidden="true"
+          />
         </div>
       </header>
     </Teleport>
@@ -36,10 +55,13 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { onBeforeRouteLeave, useRouter } from 'vue-router'
 
 import DecodeText from '@/components/DecodeText/index.vue'
+import { flashActionButton } from '@/utils/flashActionButton'
 import {
   addPageResizeListener,
   addPageScrollListener,
+  getPageMaxScrollTop,
   getPageScrollTop,
+  scrollPageTo,
 } from '@/utils/pageScroll'
 
 const props = defineProps<{
@@ -52,7 +74,10 @@ const props = defineProps<{
 const router = useRouter()
 const anchorRef = ref<HTMLElement | null>(null)
 const headerRef = ref<HTMLElement | null>(null)
+const contentRef = ref<HTMLElement | null>(null)
 const isCompact = ref(false)
+const backPending = ref(false)
+const readingProgress = ref(0)
 const anchorHeight = ref(0)
 const compactBounds = ref({ top: 0, left: 0, width: 0 })
 const compactStyle = computed(() => ({
@@ -65,11 +90,18 @@ let removeResizeListener: (() => void) | undefined
 let menuObserver: ResizeObserver | undefined
 let leaving = false
 let fadeAnimation: Animation | undefined
+let backFlash: Animation | undefined
+let topFlash: Animation | undefined
 let transitioning = false
 let desiredCompact = false
 let menuElement: Element | null = null
 let menuFollowFrame = 0
 let menuFollowUntil = 0
+const updateReadingProgress = () => {
+  const max = getPageMaxScrollTop()
+  readingProgress.value =
+    max > 0 ? Math.min(1, Math.max(0, getPageScrollTop() / max)) : 0
+}
 
 const updateBounds = () => {
   if (!anchorRef.value) return
@@ -84,8 +116,10 @@ const updateBounds = () => {
     next.top !== current.top ||
     next.left !== current.left ||
     next.width !== current.width
-  )
+  ) {
     compactBounds.value = next
+  }
+  updateReadingProgress()
   return bounds
 }
 
@@ -131,6 +165,7 @@ const setCompact = async (compact: boolean) => {
       }
       isCompact.value = desiredCompact
       await nextTick()
+      updateReadingProgress()
       if (isCompact.value) followMenuTransition()
       if (!reducedMotion) await fade(0, 1, 430)
       fadeAnimation?.cancel()
@@ -170,16 +205,21 @@ onMounted(() => {
     menuObserver = new ResizeObserver(updateBounds)
     menuObserver.observe(menuElement)
   }
+  updateReadingProgress()
 })
 
 onBeforeRouteLeave(() => {
   leaving = true
+  backFlash?.cancel()
+  topFlash?.cancel()
   fadeAnimation?.cancel()
   // 路由离场前将固定层移回占位，避免 Teleport 内容越过路由遮罩残留。
   isCompact.value = false
 })
 
 onBeforeUnmount(() => {
+  backFlash?.cancel()
+  topFlash?.cancel()
   cancelAnimationFrame(menuFollowFrame)
   removeScrollListener?.()
   removeResizeListener?.()
@@ -187,7 +227,61 @@ onBeforeUnmount(() => {
   fadeAnimation?.cancel()
 })
 
-const goBack = () => {
+const handleContentClick = (event: MouseEvent) => {
+  if ((event.target as HTMLElement).closest('.detail-page-header__back')) return
+  scrollToTop()
+}
+
+const scrollToTop = () => {
+  if (
+    !isCompact.value ||
+    leaving ||
+    backPending.value ||
+    topFlash?.playState === 'running' ||
+    !contentRef.value
+  )
+    return
+  const content = contentRef.value
+  const accentColor =
+    getComputedStyle(content).getPropertyValue('--page-theme-color').trim() ||
+    '#e23456'
+  topFlash = flashActionButton(content, 180, {
+    accentColor,
+    restColor: accentColor,
+  })
+  scrollPageTo({
+    top: 0,
+    behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      ? 'auto'
+      : 'smooth',
+  })
+}
+
+const goBack = async (event: MouseEvent) => {
+  if (backPending.value || leaving) return
+  backPending.value = true
+  const button = event.currentTarget as HTMLButtonElement
+  const accentColor =
+    getComputedStyle(button).getPropertyValue('--page-theme-color').trim() ||
+    '#e23456'
+
+  try {
+    backFlash = flashActionButton(button, 180, {
+      accentColor,
+      restColor: accentColor,
+    })
+    await backFlash?.finished
+    if (leaving) return
+    navigateBack()
+  } catch {
+    // 动画被卸载或其他导航取消时，不再触发延迟跳转。
+  } finally {
+    backFlash = undefined
+    backPending.value = false
+  }
+}
+
+const navigateBack = () => {
   const previousPath = window.history.state?.back
   const expectedPath = router.resolve(props.backPath).fullPath
 
@@ -238,31 +332,57 @@ const goBack = () => {
     z-index: 6;
     display: inline-block;
     margin: 0;
-    padding: 0;
+    padding: 0 0 0 2px;
     border: 0;
     color: var(--page-theme-color, #e23456);
     background: transparent;
     font-family: 'UnboundedSans', 'Courier New', monospace;
     font-size: 17px;
     letter-spacing: 0.1em;
-    transform: scaleX(0.9);
+    transform: translateX(-4px) scaleX(0.9);
     transform-origin: center;
     cursor: pointer;
-    transition: color 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease;
     user-select: none;
 
-    &::before {
-      content: '// ';
+    &:hover {
+      color: #000;
+      background-color: var(--page-theme-color, #e23456);
+
+      .detail-page-header__back-symbol::before {
+        opacity: 0;
+        transform: translateY(-6px);
+      }
+
+      .detail-page-header__back-symbol::after {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+  }
+
+  &__back-symbol {
+    display: inline-grid;
+    margin-right: 0.3em;
+    vertical-align: baseline;
+
+    // 两组符号共用网格单元，以较宽者持续占位，悬停时仅改变位移和透明度。
+    &::before,
+    &::after {
+      grid-area: 1 / 1;
+      transition: transform 0.2s ease, opacity 0.2s ease;
     }
 
-    &:hover {
-      color: var(--page-theme-color, #e23456);
-      transform: translateX(-4px) scaleX(0.9);
+    &::before {
+      content: '//';
+      opacity: 1;
+      transform: translateY(0);
+    }
 
-      &::before {
-        color: var(--page-theme-color, #e23456);
-        content: '<< ';
-      }
+    &::after {
+      content: '<<';
+      opacity: 0;
+      transform: translateX(6px);
     }
   }
 
@@ -323,9 +443,13 @@ const goBack = () => {
   padding: 10px 12px;
 
   .detail-page-header__content {
+    position: relative;
     flex-direction: row;
-    gap: clamp(12px, 2vw, 24px);
-    padding: 4px 10px;
+    gap: 0;
+    padding: 0;
+    color: var(--page-theme-color, #e23456);
+    cursor: pointer;
+    transition: color 0.2s ease, background-color 0.2s ease;
     background: color-mix(in srgb, var(--bg-color, #000) 90%, transparent);
   }
 
@@ -336,12 +460,50 @@ const goBack = () => {
   }
 
   .detail-page-header__back {
+    display: inline-flex;
+    align-items: center;
+    align-self: stretch;
     flex: none;
+    padding: 4px;
+    color: inherit;
+    transition: background-color 0.2s ease;
     transform: none;
     letter-spacing: 0;
+
+    &:hover {
+      color: #000;
+    }
   }
 
-  h1 {
+  .detail-page-header__content:hover:not(
+      :has(.detail-page-header__back:hover)
+    ) {
+    color: #000;
+    background: var(--page-theme-color, #e23456);
+  }
+
+  .detail-page-header__heading {
+    align-self: stretch;
+    align-items: center;
+    padding: 4px 10px 4px clamp(12px, 2vw, 24px);
+  }
+
+  .detail-page-header__progress {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    left: 0;
+    height: 2px;
+    z-index: 7;
+    background: currentColor;
+    transform-origin: left center;
+    pointer-events: none;
+  }
+
+  h1,
+  &:hover h1 {
+    color: inherit;
+    text-shadow: none;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -350,6 +512,11 @@ const goBack = () => {
   .detail-page-header__subtitle {
     display: none;
   }
+}
+
+.detail-page-header--compact .detail-page-header__content.no-rem {
+  max-width: 100%;
+  box-shadow: 0 3px 14px 1px rgba(0, 0, 0, 0.45);
 }
 
 @media (max-width: 768px) {
@@ -387,6 +554,9 @@ const goBack = () => {
 
 @media (prefers-reduced-motion: reduce) {
   .detail-page-header__back,
+  .detail-page-header__content,
+  .detail-page-header__back-symbol::before,
+  .detail-page-header__back-symbol::after,
   .detail-page-header h1 {
     transition: none;
   }

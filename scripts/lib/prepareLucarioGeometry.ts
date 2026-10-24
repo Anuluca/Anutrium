@@ -684,7 +684,53 @@ export async function prepareLucarioGeometry() {
           )
         ) ?? 0
     }
+    // 在减面结束后采集骨骼位移，避免仅调整腿姿就改变头颈的减面拓扑。
+    const sampleSkin = () => {
+      const points: number[][] = []
+      gltf.scene.traverse((object) => {
+        if (!(object instanceof THREE.Mesh)) return
+        if (object instanceof THREE.SkinnedMesh) object.skeleton.update()
+        for (
+          let index = 0;
+          index < object.geometry.getAttribute('position').count;
+          index++
+        ) {
+          points.push(
+            object
+              .getVertexPosition(index, new THREE.Vector3())
+              .applyMatrix4(object.matrixWorld)
+              .toArray()
+          )
+        }
+      })
+      return points
+    }
+    const legRest = sampleSkin()
+    const legInwardDegrees = 5
+    for (const side of ['L', 'R']) {
+      const thigh = gltf.scene.getObjectByName(`${side}Thigh`)
+      const foot = gltf.scene.getObjectByName(`${side}Foot`)
+      if (!thigh || !foot) continue
+      const direction = Math.sign(thigh.getWorldPosition(new THREE.Vector3()).x)
+      const angle = THREE.MathUtils.degToRad(-direction * legInwardDegrees)
+      const axis = new THREE.Vector3(0, 0, 1)
+      // 从髋关节收拢整条腿，保持腿长；脚掌反向补偿，避免内翻。
+      rotateBoneInWorld(
+        thigh,
+        new THREE.Quaternion().setFromAxisAngle(axis, angle)
+      )
+      rotateBoneInWorld(
+        foot,
+        new THREE.Quaternion().setFromAxisAngle(axis, -angle)
+      )
+    }
+    const legPosed = sampleSkin()
+    const legPoseSamples = legRest.map((point, index) => [
+      ...point,
+      ...point.map((value, axis) => legPosed[index][axis] - value),
+    ])
     return {
+      legPoseSamples,
       positions: Array.from(surfacePositions.array),
       normals: Array.from(normals.array),
       weights: Array.from(weights),
@@ -698,6 +744,7 @@ export async function prepareLucarioGeometry() {
         .toArray(),
       size: size.toArray(),
       stats: {
+        legInwardDegrees,
         originalFaces,
         simplifiedFaces,
         removedDentalFaces,

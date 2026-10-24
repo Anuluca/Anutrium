@@ -148,6 +148,7 @@ const onMenuContentReady = (id: TempleCategoryId) => {
 const menu = ref<HTMLElement | null>(null)
 const workDetailTarget = ref<HTMLElement | null>(null)
 const focusContent = ref<InstanceType<typeof FocusContent> | null>(null)
+const moduleFooterTarget = ref<HTMLElement | null>(null)
 const floraFocusLayout = ref<InstanceType<typeof FloraFocusLayout> | null>(null)
 const finishMenuReveal = (event: TransitionEvent) => {
   // transform 不触发 ResizeObserver；入场结束后只测量一次，修正固定滚动进度条的位置。
@@ -659,6 +660,7 @@ onUnmounted(() => {
                 :detail-target="workDetailTarget"
                 @loading="onMenuContentLoading"
                 @ready="onMenuContentReady"
+                @footer-target="moduleFooterTarget = $event"
               />
             </div>
           </section>
@@ -679,7 +681,11 @@ onUnmounted(() => {
           />
         </Transition>
 
-        <PageFooter variant="home" :visible="navigation.homeCornersVisible" />
+        <PageFooter
+          variant="home"
+          :visible="navigation.homeCornersVisible"
+          :embedded-target="moduleFooterTarget"
+        />
         <p v-if="status === 'error'" class="lucario-status" role="alert">
           模型加载失败，请刷新页面重试
         </p>

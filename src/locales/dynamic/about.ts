@@ -40,8 +40,8 @@ const aboutDynamic = {
       },
       details: [
         {
-          zhCn: '__ISLAND 模块__新增__想法、笔记与宅__入口卡片，支持路卡利欧模型部位连线、悬停反色与点击闪烁跳转；收藏品路由及相关命名统一简化为 __merch__。',
-          en: 'Added __Ideas, Notes, and Otaku__ cards to __Island__, with links to Lucario’s body parts, inverted hover colors, and flashing navigation. Simplified collectible routes and related names to __merch__.',
+          zhCn: '__ISLAND 模块__新增__想法、笔记与宅__入口卡片，支持路卡利欧模型部位连线、悬停反色与点击闪烁跳转；首页进入时保留原模型材质，运镜末段以__扫描光带__缓慢切换为黑色线框，扫描与独立柔和缓动的放大、下移同步起止，运镜逐渐变为广角透视，扫描完成后启用鼠标跟随，返回首页时先回正身体与头部，再同步扫描恢复与退镜，直接平滑缩回首页初始位置；模型双腿略微收拢并保持脚掌平稳；收藏品路由及相关命名统一简化为 __merch__。',
+          en: 'Added __Ideas, Notes, and Otaku__ cards to __Island__, with links to Lucario’s body parts, inverted hover colors, and flashing navigation. A slower __scan band__ starts near the end of the camera move and converts the home model to black wireframe. The scan and an independently paced, softly eased zoom and downward shift start and finish together as the camera widens its perspective; mouse tracking starts after scanning finishes. Returning home centers the body and head, then restores the material while smoothly retreating directly to the original home position and scale. Brought the legs slightly closer together while keeping the feet level. Simplified collectible routes and related names to __merch__.',
         },
         {
           zhCn: '花花相册新增__按文件名日期划分的四个成长阶段__，并复用创作页工具标签栏，支持__全部、特写、睡觉、MEME、球、与咪咪一起、战斗、绝育期间__的中英文分类；全部按阶段展示，标签按文件名关键词筛选并平铺展示。',

@@ -85,7 +85,7 @@ test('mixed media preview opens videos, switches back to images and releases pla
   await expect(viewer.locator('.el-image-viewer__prev')).toBeHidden()
   await page.keyboard.press('ArrowLeft')
   await expect(viewer.locator('video')).toHaveCount(0)
-  await expect(viewer.locator('.safe-image-viewer__tool')).toHaveCount(5)
+  await expect(viewer.locator('.safe-image-viewer__tool')).toHaveCount(2)
   await page.locator('.el-image-viewer__next').click()
   await expect(video).toBeVisible()
   await video.evaluate((element) => {

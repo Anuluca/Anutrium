@@ -67,7 +67,6 @@ declare module '@vue/runtime-core' {
     PageScrollProgress: typeof import('./src/components/PageScrollProgress/index.vue')['default']
     PageUpdatedStamp: typeof import('./src/components/PageUpdatedStamp/index.vue')['default']
     ParticlesBg: typeof import('./src/components/ParticlesBg/index.vue')['default']
-    PetTeaserLink: typeof import('./src/components/PetTeaserLink.vue')['default']
     RadiantText: typeof import('./src/components/ui/radiant-text/RadiantText.vue')['default']
     RandomTypedText: typeof import('./src/components/RandomTypedText/index.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']

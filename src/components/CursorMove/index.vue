@@ -18,6 +18,7 @@
         :class="{
           'is-active': isInteractiveCursor,
           'is-moving': isMoving && !isLoading && !isInteractiveCursor,
+          'is-scrolling': isScrolling && !isLoading && !isInteractiveCursor,
         }"
       >
         <div class="cursor-body" />
@@ -53,6 +54,7 @@ const follower = { x: 0, y: 0 }
 const isHovering = ref(false)
 const isClicked = ref(false)
 const isMoving = ref(false)
+const isScrolling = ref(false)
 const shouldHideCursor = ref(false)
 const isPageVisible = ref(true)
 const hasPointerPosition = ref(false)
@@ -69,6 +71,73 @@ let unsubscribePointerSamples = null
 let finePointerQuery = null
 let hasPendingPointerMove = false
 let shouldSnapToPointer = true
+const scrollIdleDelay = 220
+let lastWheelTime = 0
+let scrollIdleTimer = null
+let scrollReturnAnimation = null
+
+const cancelScrollReturn = () => {
+  scrollReturnAnimation?.cancel()
+  scrollReturnAnimation = null
+}
+
+const stopScrollAnimation = () => {
+  cancelScrollReturn()
+  if (scrollIdleTimer !== null) window.clearTimeout(scrollIdleTimer)
+  scrollIdleTimer = null
+  isScrolling.value = false
+}
+
+const checkScrollIdle = () => {
+  const remaining = scrollIdleDelay - (performance.now() - lastWheelTime)
+  if (remaining > 0) {
+    scrollIdleTimer = window.setTimeout(checkScrollIdle, remaining)
+    return
+  }
+  scrollIdleTimer = null
+  const body = cursorElement.value?.querySelector('.cursor-body')
+  if (
+    body &&
+    !isLoading.value &&
+    !isInteractiveCursor.value &&
+    body
+      .getAnimations()
+      .some((animation) =>
+        animation.animationName?.includes('cursor-scroll-morph')
+      )
+  ) {
+    // 仅结束时读取一次当前形态，由浏览器插值恢复，避免逐帧执行 JS。
+    cancelScrollReturn()
+    scrollReturnAnimation = body.animate(
+      [
+        { transform: getComputedStyle(body).transform },
+        { transform: isMoving.value ? 'scale(1.2)' : 'scale(1)' },
+      ],
+      { duration: 240, easing: 'cubic-bezier(0.25, 1, 0.5, 1)' }
+    )
+    scrollReturnAnimation.onfinish = () => {
+      scrollReturnAnimation = null
+    }
+  }
+  isScrolling.value = false
+}
+
+const onWheel = (event) => {
+  if (
+    event.ctrlKey ||
+    (!event.deltaX && !event.deltaY) ||
+    !isCustomCursorReady.value ||
+    shouldHideCursor.value
+  )
+    return
+
+  // 高频滚轮只更新时间；共用一个结束计时器，不启动位置渲染或重启动画。
+  lastWheelTime = performance.now()
+  if (scrollIdleTimer !== null) return
+  cancelScrollReturn()
+  isScrolling.value = true
+  scrollIdleTimer = window.setTimeout(checkScrollIdle, scrollIdleDelay)
+}
 
 const shouldTrackCursor = computed(() => {
   return props.enabled && hasFinePointer.value
@@ -103,6 +172,7 @@ const syncCursorTarget = (target) => {
   isHovering.value =
     !shouldHideCursor.value && !!element?.closest(INTERACTIVE_CURSOR_SELECTOR)
   if (shouldHideCursor.value) {
+    stopScrollAnimation()
     shouldSnapToPointer = true
     stopRender()
   }
@@ -139,6 +209,7 @@ const onPointerOut = (event) => {
 }
 
 const onPointerLeaveViewport = () => {
+  stopScrollAnimation()
   hasPendingPointerMove = false
   shouldSnapToPointer = true
   isPointerInside.value = false
@@ -228,9 +299,11 @@ const addPointerListeners = () => {
   window.addEventListener('pointerup', onPointerUp, true)
   window.addEventListener('pointercancel', onPointerUp, true)
   window.addEventListener('blur', onPointerLeaveViewport)
+  window.addEventListener('wheel', onWheel, { passive: true, capture: true })
 }
 
 const removePointerListeners = () => {
+  stopScrollAnimation()
   if (!unsubscribePointerSamples) {
     stopRender()
     return
@@ -244,6 +317,7 @@ const removePointerListeners = () => {
   window.removeEventListener('pointerup', onPointerUp, true)
   window.removeEventListener('pointercancel', onPointerUp, true)
   window.removeEventListener('blur', onPointerLeaveViewport)
+  window.removeEventListener('wheel', onWheel, true)
   isHovering.value = false
   shouldHideCursor.value = false
   hasPointerPosition.value = false
@@ -283,6 +357,7 @@ onUnmounted(() => {
 watch(isCustomCursorReady, syncNativeCursor, { flush: 'sync' })
 
 watch(shouldAnimateCursor, syncPointerListeners)
+watch([isLoading, isInteractiveCursor], cancelScrollReturn)
 </script>
 
 <style>
@@ -398,6 +473,27 @@ watch(shouldAnimateCursor, syncPointerListeners)
   transform: scale(1.2);
 }
 
+.cursor-shape.is-scrolling .cursor-body {
+  animation: cursor-scroll-morph 800ms ease-in-out infinite;
+}
+
+@keyframes cursor-scroll-morph {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.3, 0.77);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cursor-shape.is-scrolling .cursor-body {
+    animation: none;
+  }
+}
+
 .cursor-position.is-loading {
   .cursor-scale {
     transform: none;
@@ -426,7 +522,8 @@ watch(shouldAnimateCursor, syncPointerListeners)
 
 .cursor-position.is-hidden {
   .cursor-shape,
-  .cursor-scale {
+  .cursor-scale,
+  .cursor-body {
     animation-play-state: paused;
   }
 }

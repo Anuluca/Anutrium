@@ -1,5 +1,8 @@
 <template>
-  <Transition v-if="props.variant === 'home'" name="home-footer-fade">
+  <Transition
+    v-if="props.variant === 'home' && !props.embeddedTarget"
+    name="home-footer-fade"
+  >
     <footer
       v-show="props.visible"
       class="page-footer-home no-rem"
@@ -14,15 +17,26 @@
       </div>
     </footer>
   </Transition>
-  <div v-else v-bind="attrs" class="page-footer-anchor" aria-hidden="true" />
+  <div
+    v-else-if="!props.embeddedTarget"
+    v-bind="attrs"
+    class="page-footer-anchor"
+    aria-hidden="true"
+  />
   <Teleport
-    v-if="props.variant !== 'home' && isFooterPortalReady"
-    to="#page-footer-portal"
+    v-if="
+      props.embeddedTarget || (props.variant !== 'home' && isFooterPortalReady)
+    "
+    :to="props.embeddedTarget || '#page-footer-portal'"
   >
     <footer
       ref="footerRef"
       class="bottom-text"
-      :class="{ 'motion-paused': isMotionPaused }"
+      :class="{
+        'motion-paused': isMotionPaused,
+        'is-embedded': !!props.embeddedTarget,
+        'no-rem': !!props.embeddedTarget,
+      }"
       :style="footerStyle"
       :aria-hidden="props.interactive ? undefined : 'true'"
       :inert="!props.interactive"
@@ -30,7 +44,7 @@
       @mousemove="handleLogoMouseMove"
       @mouseleave="handleLogoMouseLeave"
     >
-      <div class="tl-marquee" aria-hidden="true">
+      <div v-if="!props.embeddedTarget" class="tl-marquee" aria-hidden="true">
         <div class="tl-marquee__inner">
           <span v-for="n in 36" :key="n">
             ANUTRIUM &nbsp;&nbsp; 路卡庭院 &nbsp;&nbsp;
@@ -73,8 +87,9 @@
                 </button>
               </div>
               <FooterLegalText kind="license" />
-              <FooterSocialLinks />
+              <FooterSocialLinks v-if="!props.embeddedTarget" />
               <FooterLegalText kind="copyright" />
+              <FooterSocialLinks v-if="props.embeddedTarget" />
             </div>
           </div>
         </div>
@@ -84,7 +99,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, useAttrs } from 'vue'
+import {
+  computed,
+  nextTick,
+  onMounted,
+  onUnmounted,
+  ref,
+  useAttrs,
+  watch,
+} from 'vue'
 import { useRouter } from 'vue-router'
 
 import FooterSocialLinks from '@/components/FooterSocialLinks/index.vue'
@@ -100,11 +123,13 @@ const props = withDefaults(
     variant?: 'default' | 'home'
     visible?: boolean
     interactive?: boolean
+    embeddedTarget?: HTMLElement | null
   }>(),
   {
     interactive: true,
     variant: 'default',
     visible: true,
+    embeddedTarget: null,
   }
 )
 
@@ -306,13 +331,42 @@ const handleLogoMouseLeave = () => {
 
 const toHome = () => router.push('/')
 
+const observeFooterElements = () => {
+  observer?.disconnect()
+  resizeObserver?.disconnect()
+  cachedRect = null
+  if (footerRef.value) resizeObserver?.observe(footerRef.value)
+  if (footerPanelRef.value) resizeObserver?.observe(footerPanelRef.value)
+  if (footerComElement) resizeObserver?.observe(footerComElement)
+
+  if ('IntersectionObserver' in window && footerRef.value) {
+    observer = new IntersectionObserver(
+      ([entry]) => {
+        isFooterVisible.value = entry.isIntersecting
+        updateMotionState()
+      },
+      { threshold: 0.08 }
+    )
+    observer.observe(footerRef.value)
+  } else {
+    isFooterVisible.value = !!footerRef.value
+    updateMotionState()
+  }
+  scheduleStickyFooterSizeSync()
+}
+
+// 同一页脚在首页与模块面板间切换时，重新监听实际挂载的元素。
+watch([footerRef, footerPanelRef], () => nextTick(observeFooterElements), {
+  flush: 'post',
+})
+
 onMounted(() => {
   if (props.variant !== 'home') {
     isFooterPortalReady.value = true
-    reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-    reducedMotionQuery.addEventListener('change', updateMotionState)
-    document.addEventListener('visibilitychange', updateMotionState)
   }
+  reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+  reducedMotionQuery.addEventListener('change', updateMotionState)
+  document.addEventListener('visibilitychange', updateMotionState)
   removePageResizeListener = addPageResizeListener(scheduleStickyFooterSizeSync)
 
   nextTick(() => {
@@ -328,31 +382,10 @@ onMounted(() => {
 
     if ('ResizeObserver' in window) {
       resizeObserver = new ResizeObserver(handleObservedFooterResize)
-      if (footerRef.value) resizeObserver.observe(footerRef.value)
-      if (footerPanelRef.value) resizeObserver.observe(footerPanelRef.value)
-      if (footerComElement) resizeObserver.observe(footerComElement)
     }
 
-    if (props.variant === 'home') {
-      syncFooterComOffset()
-      return
-    }
-
-    if ('IntersectionObserver' in window && footerRef.value) {
-      observer = new IntersectionObserver(
-        ([entry]) => {
-          isFooterVisible.value = entry.isIntersecting
-          updateMotionState()
-        },
-        { threshold: 0.08 }
-      )
-      observer.observe(footerRef.value)
-    } else {
-      isFooterVisible.value = true
-      updateMotionState()
-    }
-
-    scheduleStickyFooterSizeSync()
+    syncFooterComOffset()
+    observeFooterElements()
   })
 })
 
@@ -465,12 +498,7 @@ onUnmounted(() => {
 .bottom-text {
   --footer-com-offset: 26px;
   --page-footer-marquee-gap: 48px;
-  --page-footer-surface-background: radial-gradient(
-      35% 80% at 30% 0%,
-      rgba(255, 255, 255, 0.08),
-      transparent 100%
-    ),
-    rgba(0, 0, 0, 0.62);
+  --page-footer-surface-background: rgba(0, 0, 0, 0.62);
 
   position: relative;
   isolation: isolate;
@@ -620,6 +648,56 @@ onUnmounted(() => {
 @media screen and (max-aspect-ratio: 1) {
   .bottom-text {
     --footer-com-offset: 0px;
+  }
+}
+
+.bottom-text.is-embedded.no-rem {
+  width: 100%;
+  padding: 48px 0 0;
+  clip-path: none;
+  font-size: 12px;
+  line-height: 20px;
+
+  > .page-footer-sticky-clip {
+    height: auto;
+    clip-path: none;
+  }
+
+  .page-footer-sticky-layer {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    width: 100%;
+    height: auto;
+    transform: none;
+
+    &::before {
+      display: none;
+    }
+  }
+
+  .page-footer-panel {
+    position: relative;
+    top: auto;
+  }
+
+  .footer-license {
+    padding: 0 16px 1.3px;
+  }
+
+  .footer-copyright {
+    padding-top: 1.3px;
+  }
+
+  :deep(.footer-social-links) {
+    justify-content: center;
+    flex-wrap: wrap;
+    padding-left: 0;
+  }
+
+  .page-footer-content__edge,
+  .footer-copyright::before {
+    display: none;
   }
 }
 

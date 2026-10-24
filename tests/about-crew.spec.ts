@@ -71,13 +71,9 @@ test('crew panel preserves page position, fits its container and restores the br
     'STAFF & CREDITS'
   )
   await expect(panel.locator('.staff-credits__role')).toHaveCount(8)
-  await expect(panel.locator('.staff-credits__model-name')).toHaveText([
-    '路卡利欧',
-    '新叶喵',
-    '大狼犬',
-  ])
-  await expect(page.locator('.about-page')).toContainText(
-    '大狼犬（Mightyena）素材'
+  await expect(panel.locator('.staff-credits__model-name')).toHaveCount(0)
+  await expect(page.locator('.asset-credits').last()).not.toContainText(
+    /Lucario|Sprigatito|Mightyena|三维模型/
   )
   expect((await brand.boundingBox())!.x).toBeLessThan(brandBefore.x - 10)
   expect((await crystal.boundingBox())!.x).toBeLessThan(crystalBefore.x - 10)

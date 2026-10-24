@@ -70,7 +70,7 @@
     <SafeImageViewer
       v-if="viewerIndex !== null"
       :url-list="urls"
-      :titles="items.map((item) => item.title || '')"
+      :titles="titles"
       :initial-index="viewerIndex"
       @close="viewerIndex = null"
     >
@@ -139,6 +139,7 @@ const photos = computed(() =>
   }))
 )
 const urls = computed(() => props.items.map((photo) => photo.url))
+const titles = computed(() => props.items.map((photo) => photo.title || ''))
 const width = ref(0)
 const height = ref(280)
 const aspectSum = computed(() =>

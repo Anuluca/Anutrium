@@ -104,7 +104,7 @@
         line-height: 35px;
         text-shadow: 0 0 8px var(--opacity-color);
 
-        &:first-of-type {
+        &.signal-heading {
           font-size: 60px;
           line-height: 60px;
           text-shadow: none;
@@ -128,7 +128,7 @@
           animation: shineFont 5s linear infinite;
         }
 
-        &:last-of-type {
+        &.last-show-text {
           width: 0;
           white-space: nowrap;
           background-color: var(--opacity-color);
@@ -304,7 +304,7 @@
       bottom: 0;
       width: 760px;
 
-      p:first-of-type {
+      p.signal-heading {
         font-size: 50px;
         line-height: 60px;
 
@@ -313,11 +313,32 @@
         }
       }
 
-      p:last-of-type {
+      p.last-show-text {
         font-size: 25px;
         height: 30px;
         line-height: 30px;
       }
+    }
+  }
+}
+
+.not-found-page.main-container.is-title-only.no-rem .inner {
+  width: 1000px;
+  height: 350px;
+
+  .show-text p.signal-heading {
+    font-size: var(--error-title-size, 110px);
+    line-height: 1.15;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 768px) {
+    width: 800px;
+    height: 400px;
+
+    .show-text p.signal-heading {
+      font-size: var(--error-title-size, 100px);
     }
   }
 }

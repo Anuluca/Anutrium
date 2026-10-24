@@ -37,9 +37,6 @@ const BackController = defineAsyncComponent(
 const CursorMove = defineAsyncComponent(
   () => import('@/components/CursorMove/index.vue')
 )
-const PetTeaserLink = defineAsyncComponent(
-  () => import('@/components/PetTeaserLink.vue')
-)
 const StartAnimation = defineAsyncComponent(
   () => import('@/components/StartAnimation/index.vue')
 )
@@ -75,16 +72,6 @@ watch(
     else siteLoading.cancelTask('home-scene')
   },
   { immediate: true, flush: 'sync' }
-)
-const petTeaserHiddenPaths = new Set([
-  '/',
-  '/404',
-  '/island',
-  '/home2',
-  '/test',
-])
-const shouldShowPetTeaser = computed(
-  () => !isTempleRoute.value && !petTeaserHiddenPaths.has(route.path)
 )
 
 interface VlogSeoItem {
@@ -272,11 +259,6 @@ watch(
     :scene-entry-active="sceneEntryReady"
     :content-active="pageContentActive"
     @route-transition-complete="syncSmoothScrollForRoute"
-  />
-  <PetTeaserLink
-    v-if="shouldShowPetTeaser"
-    :entry-active="entryAnimationReady"
-    :hide-at-top="route.path === '/about'"
   />
   <div
     class="footer-bottom-gradient"

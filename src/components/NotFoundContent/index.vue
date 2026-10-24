@@ -2,9 +2,20 @@
 import { getCurrentInstance, onMounted, onUnmounted, ref } from 'vue'
 import { useMediaQuery, useResizeObserver } from '@vueuse/core'
 
-const props = withDefaults(defineProps<{ embedded?: boolean }>(), {
-  embedded: false,
-})
+const props = withDefaults(
+  defineProps<{
+    embedded?: boolean
+    code?: string
+    title?: string
+    actionLabel?: string
+  }>(),
+  {
+    embedded: false,
+    code: '404',
+    title: 'SIGNAL LOST',
+    actionLabel: 'RETURN TO HOME',
+  }
+)
 const emit = defineEmits<{ returnHome: [] }>()
 const maskId = `porygon-draw-mask-${getCurrentInstance()!.uid}`
 const isEntered = ref(false)
@@ -74,6 +85,7 @@ onUnmounted(() => {
     :class="{
       'is-entered': isEntered,
       'is-embedded': props.embedded,
+      'is-title-only': !props.code,
       'no-rem': props.embedded || isCompact,
     }"
   >
@@ -193,21 +205,25 @@ onUnmounted(() => {
       </div>
       <div class="show-text">
         <div class="signal-interference" aria-hidden="true" />
-        <p>
+        <p class="signal-heading">
           <span class="signal-title">
-            <span class="signal-code">404</span> SIGNAL LOST
+            <span v-if="props.code" class="signal-code">{{ props.code }}</span>
+            {{ props.title }}
           </span>
         </p>
-        <p
-          class="last-show-text"
-          role="button"
-          tabindex="0"
-          @click="emit('returnHome')"
-          @keydown.enter="emit('returnHome')"
-          @keydown.space.prevent="emit('returnHome')"
-        >
-          -> RETURN TO HOME
-        </p>
+        <slot name="action">
+          <p
+            class="last-show-text"
+            role="button"
+            tabindex="0"
+            @click="emit('returnHome')"
+            @keydown.enter="emit('returnHome')"
+            @keydown.space.prevent="emit('returnHome')"
+          >
+            -> {{ props.actionLabel }}
+          </p>
+        </slot>
+        <slot name="after-action" />
       </div>
     </div>
   </div>

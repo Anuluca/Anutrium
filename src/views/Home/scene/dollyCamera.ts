@@ -1,5 +1,11 @@
 import * as THREE from 'three'
 
+// 两端速度、加速度均为零；前 40% 平滑提速，后段缓慢收尾，区别于页面转场。
+export function easeIslandFocusZoom(progress: number) {
+  const t = Math.max(0, Math.min(1, progress))
+  return t * t * t * (20 + t * (-45 + t * (36 - 10 * t)))
+}
+
 interface CameraPose {
   position: THREE.Vector3
   target: THREE.Vector3
@@ -10,8 +16,10 @@ export function createDollyCameraMotion(
   camera: THREE.PerspectiveCamera,
   lookAt: THREE.Vector3,
   pose: CameraPose,
-  targetFov: number
+  targetFov: number,
+  targetZoom?: number
 ) {
+  const startZoom = camera.zoom
   const startFov = camera.fov
   const startTarget = lookAt.clone()
   const endTarget = pose.target.clone()
@@ -25,6 +33,8 @@ export function createDollyCameraMotion(
   endDirection.normalize()
 
   return (progress: number) => {
+    if (targetZoom !== undefined)
+      camera.zoom = THREE.MathUtils.lerp(startZoom, targetZoom, progress)
     camera.fov = THREE.MathUtils.lerp(startFov, targetFov, progress)
     lookAt.copy(startTarget).lerp(endTarget, progress)
     const projectedDistance = THREE.MathUtils.lerp(

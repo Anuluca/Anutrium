@@ -543,51 +543,6 @@ const roadmapItems = computed(() =>
                     </div>
                   </section>
                   <section class="staff-credits__group">
-                    <h3>{{ t('about.staff.models') }}</h3>
-                    <p class="staff-credits__model-details">
-                      <strong class="staff-credits__model-name">{{
-                        t('about.staff.lucario')
-                      }}</strong
-                      ><br />{{ t('about.staff.modelSource') }}: Pokémon 3D
-                      API<br />{{ t('about.staff.repository') }}:
-                      <a
-                        href="https://github.com/Pokemon-3D-api/assets"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        >Pokemon-3D-api/assets</a
-                      >
-                    </p>
-                    <p class="staff-credits__model-details">
-                      <strong class="staff-credits__model-name">{{
-                        t('about.staff.sprigatito')
-                      }}</strong
-                      ><br />{{ t('about.staff.modelSource') }}:
-                      <a
-                        href="https://archive.vg-resource.com/post-677666.html"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        >The VG Resource · Pokémon Model Ripping Project</a
-                      >
-                    </p>
-                    <p class="staff-credits__model-details">
-                      <strong class="staff-credits__model-name">{{
-                        t('about.staff.mightyena')
-                      }}</strong
-                      ><br />{{ t('about.staff.modelSource') }}:
-                      <a
-                        href="https://archive.vg-resource.com/thread-25872.html"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        >The VG Resource · Pokémon Model Ripping Project ·
-                        RTB</a
-                      >
-                    </p>
-                    <p class="staff-credits__model-details staff-credits__ip">
-                      {{ t('about.staff.originalIP') }}:<br />Nintendo ·
-                      Creatures Inc. · GAME FREAK inc.
-                    </p>
-                  </section>
-                  <section class="staff-credits__group">
                     <h3>{{ t('about.staff.thanks') }}</h3>
                     <p>{{ t('about.staff.huahua') }}</p>
                     <p class="staff-credits__audience">
@@ -783,33 +738,6 @@ const roadmapItems = computed(() =>
             target="_blank"
             rel="noopener noreferrer"
             >{{ t('about.assetCredits.official') }}</a
-          >
-        </p>
-        <p>
-          {{ t('about.assetCredits.lucario') }}
-          <a
-            href="https://github.com/Pokemon-3D-api/assets#%EF%B8%8F-license--credits"
-            target="_blank"
-            rel="noopener noreferrer"
-            >{{ t('about.assetCredits.modelSource') }}</a
-          >
-        </p>
-        <p>
-          {{ t('about.assetCredits.sprigatito') }}
-          <a
-            href="https://archive.vg-resource.com/post-677666.html"
-            target="_blank"
-            rel="noopener noreferrer"
-            >{{ t('about.assetCredits.modelSource') }}</a
-          >
-        </p>
-        <p>
-          {{ t('about.assetCredits.mightyena') }}
-          <a
-            href="https://archive.vg-resource.com/thread-25872.html"
-            target="_blank"
-            rel="noopener noreferrer"
-            >{{ t('about.assetCredits.modelSource') }}</a
           >
         </p>
       </div>

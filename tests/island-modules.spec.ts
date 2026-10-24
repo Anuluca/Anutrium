@@ -1,5 +1,11 @@
 import { expect, test } from '@playwright/test'
 
+test.beforeEach(async ({ page }) => {
+  await page.routeWebSocket('ws://localhost:3000/**', (socket) =>
+    socket.close()
+  )
+})
+
 test('Island fills the inset container, projects body anchors and shares hover colors', async ({
   page,
 }, info) => {
@@ -231,9 +237,9 @@ test('Island fills the inset container, projects body anchors and shares hover c
     'color',
     'rgb(226, 52, 86)'
   )
-  await page.evaluate(async () => {
-    const { default: i18n } = await import('/src/locales/index.ts')
-    i18n.global.locale.value = 'en'
+  await page.evaluate(() => {
+    const app = document.querySelector('#app') as any
+    app.__vue_app__.config.globalProperties.$i18n.locale = 'en'
   })
   await expect(root.locator('.island-panels h2')).toHaveText([
     'IDEAS',

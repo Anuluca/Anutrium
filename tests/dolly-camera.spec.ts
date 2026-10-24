@@ -1,7 +1,10 @@
 import { expect, test } from '@playwright/test'
 import * as THREE from 'three'
 
-import { createDollyCameraMotion } from '../src/views/Home/scene/dollyCamera'
+import {
+  createDollyCameraMotion,
+  easeIslandFocusZoom,
+} from '../src/views/Home/scene/dollyCamera'
 
 const homeFov = 38
 const islandFov = THREE.MathUtils.radToDeg(
@@ -78,4 +81,57 @@ test('interrupting a dolly starts from its current camera and leaves its pose in
   expect(camera.fov).toBe(homeFov)
   expect(home.position.toArray()).toEqual([0, 1, 20])
   expect(island.position.toArray()).toEqual([0, 3, 42])
+})
+
+test('return zoom shares the camera path and can be interrupted without a scale jump', () => {
+  const camera = new THREE.PerspectiveCamera(islandFov, 16 / 9)
+  camera.position.copy(island.position)
+  camera.zoom = 1.04
+  const lookAt = island.target.clone()
+  const backward = createDollyCameraMotion(camera, lookAt, home, homeFov, 1)
+  backward(0)
+  expect(camera.zoom).toBe(1.04)
+  expect(camera.position.distanceTo(island.position)).toBeLessThan(1e-10)
+  backward(0.5)
+  expect(camera.zoom).toBeGreaterThan(1)
+  expect(camera.zoom).toBeLessThan(1.04)
+  expect(camera.position.distanceTo(island.position)).toBeGreaterThan(1)
+  const interrupted = camera.position.clone()
+  const zoom = camera.zoom
+  const forward = createDollyCameraMotion(camera, lookAt, island, islandFov)
+  forward(0)
+  expect(camera.position.distanceTo(interrupted)).toBeLessThan(1e-10)
+  expect(camera.zoom).toBe(zoom)
+  // 未请求倍率联动的入场运镜，不得覆盖另一条缩放动画正在写入的值。
+  camera.zoom = 1.03
+  forward(0.8)
+  expect(camera.zoom).toBe(1.03)
+  backward(1)
+  expect(camera.zoom).toBe(1)
+  expect(camera.position.distanceTo(home.position)).toBeLessThan(1e-10)
+})
+
+test('Island zoom eases in gently and settles without overshoot or a hard stop', () => {
+  expect(easeIslandFocusZoom(-0.1)).toBe(0)
+  expect(easeIslandFocusZoom(1.1)).toBe(1)
+  const values = Array.from({ length: 101 }, (_, i) =>
+    easeIslandFocusZoom(i / 100)
+  )
+  for (let i = 1; i < values.length; i++) {
+    expect(values[i]).toBeGreaterThanOrEqual(values[i - 1])
+    expect(values[i]).toBeLessThanOrEqual(1)
+  }
+  const step = 0.0001
+  const speed = (t: number) =>
+    (easeIslandFocusZoom(t + step) - easeIslandFocusZoom(t)) / step
+  expect(speed(0)).toBeLessThan(0.00001)
+  expect(speed(1 - step)).toBeLessThan(0.00001)
+  const acceleration = (t: number) => (speed(t + step) - speed(t)) / step
+  expect(Math.abs(acceleration(0))).toBeLessThan(0.02)
+  expect(Math.abs(acceleration(1 - 2 * step))).toBeLessThan(0.02)
+  const speeds = Array.from({ length: 100 }, (_, i) => speed(i / 100))
+  const peak = speeds.indexOf(Math.max(...speeds))
+  expect(peak).toBeGreaterThanOrEqual(38)
+  expect(peak).toBeLessThanOrEqual(42)
+  expect(speed(0.9)).toBeLessThan(speed(0.1))
 })

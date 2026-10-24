@@ -358,10 +358,6 @@
       </router-view>
       <div id="page-footer-portal" class="page-footer-portal" />
     </div>
-    <BackToTop
-      ref="backToTopElement"
-      :suppressed="isMobile && isMobileMenuOpen"
-    />
     <PageScrollProgress
       v-if="shouldShowPageScrollProgress"
       ref="pageScrollProgressElement"
@@ -396,7 +392,6 @@ import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { InfoFilled } from '@element-plus/icons-vue'
 
-import BackToTop from '@/components/BackToTop/index.vue'
 import HeaderThemeIcon from '@/components/HeaderThemeIcon.vue'
 import Logo from '@/components/Logo/index.vue'
 import MenuToggleIcon from '@/components/MenuToggleIcon/index.vue'
@@ -409,10 +404,10 @@ import {
   templeDesktopMenuGroups,
   templeMobileMenuItems as mobileMenuItems,
   templeModulePaths,
-  templeNavigation,
   templeNavigationById,
   type TempleNavigationId,
   templeParentModule,
+  templeRouteDesktopMenuGroups,
 } from '@/config/templeNavigation'
 import {
   finishRouteCursorLoading,
@@ -642,9 +637,8 @@ const routerContainer = ref<HTMLElement | null>(null)
 const isScrolled = ref(false)
 const layoutShow = ref(false)
 const theme = computed(() => visualStateStore.theme)
-const routeMenuGroups = [templeNavigation]
 const desktopMenuGroups = computed(() =>
-  isTempleRoute.value ? templeDesktopMenuGroups : routeMenuGroups
+  isTempleRoute.value ? templeDesktopMenuGroups : templeRouteDesktopMenuGroups
 )
 const activeNavigation = computed(() =>
   route.path === '/about' || navigation.aboutOpen
@@ -702,7 +696,6 @@ let backgroundTopInsetTimer: number | null = null
 let headerScrolledTimer: number | null = null
 let headerScrollLayoutActivatedAt: number | null = null
 
-let documentScrollTop = 0
 let scrollProgress = 0
 let cachedPageMaxScrollTop = 0
 let documentHeaderScrollProgress = 0
@@ -712,9 +705,6 @@ const isPageScrollable = ref(false)
 const headerElement = ref<HTMLElement | null>(null)
 const pageScrollProgressElement = ref<{
   setProgress: (progress: number) => void
-} | null>(null)
-const backToTopElement = ref<{
-  setScrollState: (scrollTop: number, progress: number) => void
 } | null>(null)
 const shouldShowPageScrollProgress = computed(
   () =>
@@ -879,14 +869,12 @@ const scheduleBackgroundTopInset = () => {
 
 const syncScrollState = () => {
   const scrollTop = getPageScrollTop()
-  documentScrollTop = scrollTop
   scrollProgress = cachedPageMaxScrollTop
     ? Math.min(100, (scrollTop / cachedPageMaxScrollTop) * 100)
     : 0
   pageScrollProgressElement.value?.setProgress(
     visualStateStore.pageScrollProgressOverride ?? scrollProgress
   )
-  backToTopElement.value?.setScrollState(documentScrollTop, scrollProgress)
 
   documentHeaderScrollProgress = Math.min(1, scrollTop / HEADER_SCROLL_DISTANCE)
   const homeProgress = visualStateStore.homeHeaderScrollProgress
@@ -1042,10 +1030,6 @@ watch(pageScrollProgressElement, (component) => {
   component?.setProgress(
     visualStateStore.pageScrollProgressOverride ?? scrollProgress
   )
-})
-
-watch(backToTopElement, (component) => {
-  component?.setScrollState(documentScrollTop, scrollProgress)
 })
 
 watch(showNavigation, (visible) => {

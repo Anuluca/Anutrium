@@ -4,7 +4,6 @@
     class="media-gallery"
     :class="{
       'media-gallery--four-columns': columns === 4,
-      'media-gallery--six-columns': columns === 6,
       'media-gallery--preview': displayMode === 'preview',
       'media-gallery--staggered': staggeredEntrance,
       'media-gallery--preserve-image-colors': preserveImageColors,
@@ -42,7 +41,7 @@
         v-for="(media, index) in items"
         :key="media.url"
         class="media-gallery__card"
-        :style="getEntranceStyle(index)"
+        :style="entranceStyles[index]"
       >
         <div
           class="media-gallery__shell"
@@ -56,16 +55,17 @@
           >
             <div class="media-gallery__stage">
               <button
-                v-if="isVideoUrl(media.url)"
+                v-if="mediaIndex.videoUrls.has(media.url)"
                 class="media-gallery__open"
                 type="button"
-                :aria-label="getLabel(media)"
-                @click="openViewer(media.url)"
+                :aria-label="previewLabels[index]"
+                @click="openViewer(index)"
               >
                 <video
+                  :ref="(element) => setVideoElement(media.url, element)"
                   :src="nearbyVideoUrls.has(media.url) ? media.url : undefined"
                   :data-video-src="media.url"
-                  :aria-label="getLabel(media)"
+                  :aria-label="previewLabels[index]"
                   loop
                   muted
                   playsinline
@@ -77,8 +77,8 @@
                 v-else
                 class="media-gallery__open media-gallery__open--image"
                 type="button"
-                :aria-label="getLabel(media)"
-                @click="openViewer(media.url)"
+                :aria-label="previewLabels[index]"
+                @click="openViewer(index)"
                 @pointerenter="startCincoHover"
                 @pointerleave="leaveCincoHover"
                 @pointercancel="stopCincoHover"
@@ -90,7 +90,7 @@
                   />
                   <img
                     :src="getMediaThumbnailUrl(media)"
-                    :alt="getLabel(media)"
+                    :alt="previewLabels[index]"
                     :data-media-url="media.url"
                     loading="lazy"
                     decoding="async"
@@ -118,10 +118,10 @@
       inline
       :url-list="previewUrls"
       :labels="previewLabels"
-      :titles="items.map((item) => item.title || '')"
+      :titles="previewTitles"
       :initial-index="previewIndex"
       @switch="previewIndex = $event"
-      @open="openViewer(previewUrls[$event])"
+      @open="openViewer"
     >
       <template v-if="showInfo && $slots.info" #info="{ index }">
         <div
@@ -136,8 +136,8 @@
     <SafeImageViewer
       v-if="showViewer"
       :url-list="previewUrls"
-      :titles="items.map((item) => item.title || '')"
-      :initial-index="currentImageIndex"
+      :titles="previewTitles"
+      :initial-index="previewIndex"
       @switch="previewIndex = $event"
       @close="showViewer = false"
     >
@@ -149,9 +149,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue'
+import {
+  type ComponentPublicInstance,
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  reactive,
+  ref,
+  watch,
+} from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Grid, Picture as PictureIcon } from '@element-plus/icons-vue'
+import { useDocumentVisibility } from '@vueuse/core'
 
 import SafeImageViewer from '@/components/SafeImageViewer/index.vue'
 import { useImageCincoHover } from '@/composables/useImageCincoHover'
@@ -160,6 +169,7 @@ import {
   getCardMobileThumbnailUrl,
   getCardThumbnailUrl,
 } from '@/utils/imageVariant'
+import { isVideoUrl } from '@/utils/mediaPreview'
 
 export interface GalleryMedia {
   url: string
@@ -179,7 +189,7 @@ const props = withDefaults(
     entranceReady?: boolean
     entranceStepMs?: number
     preserveImageColors?: boolean
-    columns?: 3 | 4 | 6
+    columns?: 3 | 4
   }>(),
   {
     getMediaLabel: (media: GalleryMedia) => media.title || 'Photo',
@@ -194,9 +204,9 @@ const props = withDefaults(
 )
 
 const { locale } = useI18n()
+const documentVisibility = useDocumentVisibility()
 const displayMode = ref<'list' | 'preview'>('list')
 const previewIndex = ref(0)
-const previewLabels = computed(() => props.items.map(getLabel))
 const setDisplayMode = async (mode: 'list' | 'preview') => {
   if (displayMode.value === mode) return
   stopCincoHover()
@@ -207,7 +217,6 @@ const setDisplayMode = async (mode: 'list' | 'preview') => {
   observeVisibleVideos()
 }
 
-const VIDEO_FILE_PATTERN = /\.(?:mov|mp4|webm|m4v|ogv)(?:[?#].*)?$/i
 const galleryRef = ref<HTMLElement | null>(null)
 const {
   start: startCincoHover,
@@ -225,55 +234,68 @@ defineExpose({
     return true
   },
 })
-const currentImageIndex = ref(0)
 const entranceStarted = ref(!props.staggeredEntrance)
 let isGalleryVisible = false
 
-const isVideoUrl = (url: string) => VIDEO_FILE_PATTERN.test(url)
 const mediaIndex = computed(() => {
   const urls = new Set<string>()
+  const videoUrls = new Set<string>()
   const thumbnails = new Map<string, { desktop: string; mobile: string }>()
   for (const media of props.items) {
     urls.add(media.url)
-    if (isVideoUrl(media.url)) continue
+    if (isVideoUrl(media.url)) {
+      videoUrls.add(media.url)
+      continue
+    }
     thumbnails.set(media.url, {
       desktop: getCardThumbnailUrl(media.url),
       mobile: getCardMobileThumbnailUrl(media.url),
     })
   }
-  return { urls, thumbnails }
+  return { urls, videoUrls, thumbnails }
 })
+const previewUrls = computed(() => props.items.map((media) => media.url))
+const previewTitles = computed(() =>
+  props.items.map((media) => media.title || '')
+)
+const previewLabels = computed(() => props.items.map(props.getMediaLabel))
 // 加载状态与宽高比会多次触发渲染，缩略图 URL 只在媒体列表变化时解析。
 const getMediaThumbnailUrl = (media: GalleryMedia) =>
   mediaIndex.value.thumbnails.get(media.url)?.desktop
 const getMediaMobileThumbnailUrl = (media: GalleryMedia) =>
   mediaIndex.value.thumbnails.get(media.url)?.mobile
-const getLabel = (media: GalleryMedia) => props.getMediaLabel(media)
 const shouldShowMediaInfo = (media: GalleryMedia) => props.showMediaInfo(media)
 // 列表信息的开关不影响全屏预览；切图后只展示当前媒体实际携带的信息。
 const hasPreviewInfo = computed(() => {
   const media = props.items[previewIndex.value]
   return Boolean(
     media &&
-      !isVideoUrl(media.url) &&
+      !mediaIndex.value.videoUrls.has(media.url) &&
       shouldShowMediaInfo(media) &&
       (media.title || media.device || media.location || media.time)
   )
 })
-const getVideoElements = () =>
-  galleryRef.value?.querySelectorAll<HTMLVideoElement>(
-    'video[data-video-src]'
-  ) ?? []
-const getEntranceStyle = (index: number) =>
+const videoElements = new Map<string, HTMLVideoElement>()
+const setVideoElement = (
+  url: string,
+  element: Element | ComponentPublicInstance | null
+) => {
+  if (element instanceof HTMLVideoElement) videoElements.set(url, element)
+  else videoElements.delete(url)
+}
+const getVideoElements = () => [...videoElements.values()]
+const shouldObserveVideos = () =>
+  displayMode.value === 'list' && mediaIndex.value.videoUrls.size > 0
+const entranceStyles = computed(() =>
   props.staggeredEntrance
-    ? {
+    ? props.items.map((_media, index) => ({
         '--media-gallery-entry-delay': `${Math.max(
           0,
           index * props.entranceStepMs
         )}ms`,
-      }
-    : undefined
-const previewUrls = computed(() => props.items.map((media) => media.url))
+      }))
+    : []
+)
 const currentMediaUrls = computed(() => mediaIndex.value.urls)
 
 const markMediaLoaded = (url: string) => {
@@ -302,11 +324,9 @@ const markVideoLoaded = (event: Event, url: string) => {
   markMediaLoaded(url)
 }
 
-const openViewer = (url: string) => {
-  const imageIndex = previewUrls.value.indexOf(url)
-  if (imageIndex < 0) return
-  currentImageIndex.value = imageIndex
-  previewIndex.value = imageIndex
+const openViewer = (index: number) => {
+  if (index < 0 || index >= props.items.length) return
+  previewIndex.value = index
   showViewer.value = true
 }
 
@@ -358,19 +378,28 @@ const { refresh: observeGalleryEntrance } = useIntersectionActivation(
 )
 
 const visibleVideoElements = new WeakSet<HTMLVideoElement>()
+const pendingVideoPlays = new WeakSet<HTMLVideoElement>()
+let disposed = false
+const canPlayVideo = (video: HTMLVideoElement) =>
+  !disposed &&
+  !showViewer.value &&
+  documentVisibility.value === 'visible' &&
+  visibleVideoElements.has(video) &&
+  video.isConnected
 const playVisibleVideo = async (video: HTMLVideoElement) => {
   const source = video.dataset.videoSrc
-  if (!source) return
-
-  nearbyVideoUrls.add(source)
-  await nextTick()
-  if (
-    showViewer.value ||
-    !visibleVideoElements.has(video) ||
-    !video.isConnected
-  )
-    return
-  await video.play().catch(() => undefined)
+  if (!source || pendingVideoPlays.has(video)) return
+  pendingVideoPlays.add(video)
+  try {
+    nearbyVideoUrls.add(source)
+    await nextTick()
+    if (!canPlayVideo(video)) return
+    await video.play().catch(() => undefined)
+    // play() 异步完成时，用户可能已切图、关闭页面或滚出可视区。
+    if (!canPlayVideo(video)) video.pause()
+  } finally {
+    pendingVideoPlays.delete(video)
+  }
 }
 
 const { refresh: observeNearbyVideos } = useIntersectionActivation(
@@ -384,10 +413,11 @@ const { refresh: observeNearbyVideos } = useIntersectionActivation(
     })
   },
   {
+    enabled: shouldObserveVideos,
     rootMargin: '400px 0px',
     threshold: 0,
     onUnsupported: () => {
-      getVideoElements()?.forEach((video) => {
+      getVideoElements().forEach((video) => {
         const source = video.dataset.videoSrc
         if (source) nearbyVideoUrls.add(source)
       })
@@ -411,9 +441,10 @@ const { refresh: observeVisibleVideos } = useIntersectionActivation(
     })
   },
   {
+    enabled: shouldObserveVideos,
     threshold: [0, 0.1],
     onUnsupported: () => {
-      getVideoElements()?.forEach((video) => {
+      getVideoElements().forEach((video) => {
         visibleVideoElements.add(video)
         void playVisibleVideo(video)
       })
@@ -423,7 +454,9 @@ const { refresh: observeVisibleVideos } = useIntersectionActivation(
 
 watch(
   () => props.items,
-  async () => {
+  async (_items, _previous, onCleanup) => {
+    let cancelled = false
+    onCleanup(() => (cancelled = true))
     stopCincoHover()
     showViewer.value = false
     previewIndex.value = 0
@@ -436,6 +469,7 @@ watch(
     nearbyVideoUrls.clear()
     void replayEntrance()
     await nextTick()
+    if (cancelled) return
     // 缓存图片可能在 DOM 更新前已完成加载；仅将真正加载成功的图片解除占位状态。
     galleryRef.value
       ?.querySelectorAll<HTMLImageElement>('img[data-media-url]')
@@ -458,30 +492,29 @@ watch(
   }
 )
 
-watch(showViewer, (open) => {
+watch([showViewer, documentVisibility], ([open, visibility]) => {
   if (open) stopCincoHover()
-  getVideoElements()?.forEach((video) => {
-    if (open) video.pause()
+  getVideoElements().forEach((video) => {
+    if (open || visibility !== 'visible') video.pause()
     else if (visibleVideoElements.has(video)) void playVisibleVideo(video)
   })
 })
 
 onBeforeUnmount(() => {
-  getVideoElements()?.forEach((video) => video.pause())
+  disposed = true
+  getVideoElements().forEach((video) => video.pause())
 })
 </script>
 
 <style lang="less" scoped>
 @import '@/assets/style/mediaCincoHover.less';
 .media-gallery {
+  --media-gallery-columns: 3;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--media-gallery-columns), minmax(0, 1fr));
   gap: 0;
   align-items: start;
   align-content: start;
-}
-.media-gallery.media-gallery--six-columns {
-  grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 
 .media-gallery__toolbar.no-rem {
@@ -635,7 +668,6 @@ onBeforeUnmount(() => {
   height: auto;
   aspect-ratio: var(--media-aspect-ratio, 1);
   align-self: stretch;
-  flex: none;
   max-height: var(--media-gallery-max-height);
 
   &::before {
@@ -826,7 +858,7 @@ onBeforeUnmount(() => {
     padding-right: 0;
   }
   .media-gallery--four-columns {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    --media-gallery-columns: 4;
 
     .media-gallery__card {
       padding-right: 10px;
@@ -850,7 +882,7 @@ onBeforeUnmount(() => {
 
 @media (max-width: 900px) {
   .media-gallery {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    --media-gallery-columns: 2;
   }
 
   .media-gallery__card {
@@ -865,21 +897,13 @@ onBeforeUnmount(() => {
       padding-right: 0;
     }
 
-    &::after,
-    &:not(:nth-of-type(3n))::after {
+    &::after {
       display: none;
     }
 
     &:nth-of-type(odd)::after {
-      position: absolute;
-      top: 0;
-      right: 0;
-      bottom: 0;
       display: block;
-      width: 1px;
-      content: '';
       background: rgba(255, 255, 255, 0.04);
-      pointer-events: none;
     }
   }
 

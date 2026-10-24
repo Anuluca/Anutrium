@@ -1,9 +1,15 @@
-type ContactType = 'TWITTER' | 'WEIBO' | 'BILIBILI' | 'GITHUB' | 'MAIL'
+type ContactType =
+  | 'TWITTER'
+  | 'WEIBO'
+  | 'BILIBILI'
+  | 'GITHUB'
+  | 'WECHAT'
+  | 'MAIL'
 
 interface ContactLink {
   type: ContactType
   label: string
-  href: string
+  href?: string
 }
 
 export const FOOTER_SOCIAL_ORDER = [
@@ -11,10 +17,13 @@ export const FOOTER_SOCIAL_ORDER = [
   'WEIBO',
   'BILIBILI',
   'GITHUB',
+  'WECHAT',
   'MAIL',
 ] as const
 
 export type FooterSocialType = (typeof FOOTER_SOCIAL_ORDER)[number]
+
+export const WECHAT_ID = 'anugamine'
 
 export const WEIBO_WIDGET_URL =
   'https://widget.weibo.com/weiboshow/index.php?language=&width=0&height=520&fansRow=1&ptype=1&speed=0&skin=10&isTitle=1&noborder=1&isWeibo=1&isFans=1&uid=8248788427&verifier=4357a699&dpc=1'
@@ -47,6 +56,10 @@ const contactLinks: ContactLink[] = [
     type: 'BILIBILI',
     label: 'BILIBILI',
     href: 'https://space.bilibili.com/128735968',
+  },
+  {
+    type: 'WECHAT',
+    label: 'WECHAT',
   },
   {
     type: 'MAIL',

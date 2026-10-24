@@ -2571,7 +2571,7 @@ test('mobile menu reuses the footer social link bar', async ({
   const linkBar = menu.locator('.mobile-menu-social-links')
   await expect(menu).toHaveClass(/\bactive\b/)
   await expect(linkBar.locator('.footer-social-links')).toBeVisible()
-  await expect(linkBar.locator('.footer-social-links__item')).toHaveCount(7)
+  await expect(linkBar.locator('.footer-social-links__item')).toHaveCount(8)
   await expect(menu.locator('.contact-item')).toHaveCount(0)
 
   await expect

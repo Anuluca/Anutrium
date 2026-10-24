@@ -9,8 +9,11 @@ import {
   shallowRef,
   watch,
 } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useResizeObserver } from '@vueuse/core'
 
+import FooterSocialLinkBar from '@/components/FooterSocialLinkBar/index.vue'
+import NotFoundContent from '@/components/NotFoundContent/index.vue'
 import ScrollViewport from '@/components/ScrollViewport/index.vue'
 import { sectionFadeOnlyKey } from '@/composables/useSectionBodyReveal'
 import type { TempleCategoryId } from '@/config/templeNavigation'
@@ -26,10 +29,19 @@ const props = defineProps<{
   detailTarget?: HTMLElement | null
 }>()
 const navigation = useTempleNavigation()
+const { locale } = useI18n()
+const loadErrorTitle = computed(() =>
+  locale.value === 'en' ? 'RESOURCE LOAD FAILED' : '资源获取失败'
+)
 const emit = defineEmits<{
   (event: 'loading', category: TempleCategoryId): void
   (event: 'ready', category: TempleCategoryId): void
+  (event: 'footer-target', target: HTMLElement | null): void
 }>()
+const footerTarget = ref<HTMLElement | null>(null)
+watch(footerTarget, (target) => emit('footer-target', target), {
+  flush: 'post',
+})
 const component = shallowRef<Component>()
 const failed = ref(false)
 let loadRevision = 0
@@ -74,6 +86,7 @@ useResizeObserver(
   restoreScroll
 )
 onBeforeUnmount(() => {
+  emit('footer-target', null)
   loadRevision++
   if (viewport.value?.scrollRoot)
     navigation.scrollPositions[props.category] =
@@ -111,6 +124,7 @@ watch(() => props.category, loadContent, { immediate: true })
     :class="{
       'is-expanded': props.expanded,
       'is-placeholder': props.category === 'pokeyard',
+      'is-failed': failed,
       'is-scroll-targeted': fadeOnly,
     }"
     :data-content="props.category"
@@ -140,9 +154,36 @@ watch(() => props.category, loadContent, { immediate: true })
         embedded
         @return-home="navigation.request(null)"
       />
-      <p v-else-if="failed" role="alert">
-        内容加载失败，<button type="button" @click="loadContent">重试</button>
-      </p>
+      <NotFoundContent
+        v-else-if="failed"
+        class="resource-load-error"
+        embedded
+        code=""
+        :title="loadErrorTitle"
+        :style="locale === 'en' ? { '--error-title-size': '60px' } : undefined"
+        action-label="RETRY"
+        role="alert"
+        :aria-label="loadErrorTitle"
+        @return-home="loadContent"
+      >
+        <template #after-action>
+          <div class="resource-load-error__contact no-rem">
+            <span>CONTACT ME：</span>
+            <FooterSocialLinkBar
+              :types="['WECHAT', 'MAIL']"
+              :show-platforms="false"
+            />
+          </div>
+        </template>
+      </NotFoundContent>
+      <div
+        v-if="
+          component &&
+          ['archive', 'flanerie', 'island'].includes(props.category)
+        "
+        ref="footerTarget"
+        class="temple-module-footer"
+      />
     </template>
   </ScrollViewport>
 </template>
@@ -156,7 +197,8 @@ watch(() => props.category, loadContent, { immediate: true })
   :deep(.scroll-viewport__scroll) {
     padding-right: 0;
   }
-  &.is-placeholder :deep(.scroll-viewport__scroll > div) {
+  &.is-placeholder :deep(.scroll-viewport__scroll > div),
+  &.is-failed :deep(.scroll-viewport__scroll > div) {
     height: 100%;
   }
   :deep(.is-embedded .works-grid),
@@ -197,6 +239,51 @@ watch(() => props.category, loadContent, { immediate: true })
   }
   :deep(.section-count strong) {
     color: color-mix(in srgb, var(--page-theme-color) 58%, transparent);
+  }
+}
+
+.resource-load-error__contact.no-rem {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 72px;
+  font-size: 29px;
+  line-height: 1.4;
+  white-space: nowrap;
+
+  :deep(.footer-social-links) {
+    justify-content: flex-start;
+    margin: 0;
+    padding: 0;
+  }
+
+  :deep(.footer-social-links__item) {
+    width: auto;
+    height: 56px;
+    padding: 0 12px;
+    grid-template-columns: 32px minmax(0, 0fr);
+    color: var(--text-color);
+  }
+
+  :deep(.footer-social-links__icon) {
+    width: 32px;
+    height: 32px;
+    flex-basis: 32px;
+  }
+
+  :deep(.footer-social-links__label) {
+    font-size: 22px;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    :deep(.footer-social-links__item:hover),
+    :deep(.footer-social-links__item:focus-visible) {
+      grid-template-columns: 32px minmax(0, 1fr);
+      color: var(--page-theme-color);
+    }
   }
 }
 </style>

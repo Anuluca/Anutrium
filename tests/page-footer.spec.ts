@@ -328,6 +328,7 @@ test('every PageFooter route keeps its copyright row clear of FooterCom', async 
         'WEIBO',
         'BILIBILI',
         'GITHUB',
+        'WECHAT',
         'MAIL',
         'STEAM',
         'SWITCH',
@@ -486,7 +487,7 @@ test('mobile footer social link bar uses enlarged tap targets', async ({
       }
     })
 
-  expect(geometry.itemSizes).toHaveLength(7)
+  expect(geometry.itemSizes).toHaveLength(8)
   geometry.itemSizes.forEach((size) => {
     expect(size).toBeGreaterThanOrEqual(32)
     expect(size).toBeLessThanOrEqual(36)

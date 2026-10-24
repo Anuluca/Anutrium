@@ -9,11 +9,12 @@
   >
     <template v-for="social in socialLinks" :key="social.type">
       <button
-        v-if="social.type === 'WEIBO'"
+        v-if="social.type === 'WEIBO' || social.type === 'WECHAT'"
         class="footer-social-links__item"
         type="button"
         :aria-label="social.label"
-        @click="emit('openWeibo')"
+        :title="social.type === 'WECHAT' ? wechatCopyLabel : undefined"
+        @click="handleSocialClick(social.type)"
       >
         <svg
           class="footer-social-links__icon"
@@ -21,7 +22,10 @@
           fill="currentColor"
           aria-hidden="true"
         >
-          <path :d="social.icon" />
+          <path
+            :d="social.icon"
+            :fill-rule="social.type === 'WECHAT' ? 'evenodd' : undefined"
+          />
         </svg>
         <span class="footer-social-links__label" aria-hidden="true">
           {{ social.label }}
@@ -49,9 +53,14 @@
       </a>
     </template>
 
-    <span class="footer-social-links__divider" aria-hidden="true" />
+    <span
+      v-if="showPlatforms"
+      class="footer-social-links__divider"
+      aria-hidden="true"
+    />
 
     <button
+      v-if="showPlatforms"
       class="footer-social-links__item footer-social-links__item--steam"
       type="button"
       aria-label="STEAM"
@@ -68,7 +77,7 @@
       <span class="footer-social-links__label" aria-hidden="true">STEAM</span>
     </button>
 
-    <span class="footer-social-links__switch">
+    <span v-if="showPlatforms" class="footer-social-links__switch">
       <button
         class="footer-social-links__item"
         :class="{ 'is-active': switchActive }"
@@ -96,14 +105,21 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useMediaQuery } from '@vueuse/core'
+
 import contactLinks, {
   FOOTER_SOCIAL_ORDER,
   type FooterSocialType,
+  WECHAT_ID,
 } from '@/locales/modules/contactLinks'
+import { copyText } from '@/utils/clipboard'
+import { showSuccessMessage } from '@/utils/elementMessage'
 
 interface FooterSocialLink {
   type: FooterSocialType
-  href: string
+  href?: string
   label: string
   icon: string
 }
@@ -112,14 +128,18 @@ interface FooterPlatformItem {
   icon: string
 }
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     switchActive?: boolean
     switchInstant?: boolean
+    types?: readonly FooterSocialType[]
+    showPlatforms?: boolean
   }>(),
   {
     switchActive: false,
     switchInstant: false,
+    types: () => FOOTER_SOCIAL_ORDER,
+    showPlatforms: true,
   }
 )
 
@@ -128,6 +148,43 @@ const emit = defineEmits<{
   openWeibo: []
   toggleSwitch: []
 }>()
+
+const { locale } = useI18n()
+const isTouchDevice = useMediaQuery('(pointer: coarse)')
+const shouldOpenWeChat = computed(
+  () =>
+    isTouchDevice.value &&
+    typeof navigator !== 'undefined' &&
+    !/MicroMessenger/i.test(navigator.userAgent)
+)
+const wechatCopyLabel = computed(() => {
+  if (locale.value === 'en') {
+    return `WeChat ID: ${WECHAT_ID} (${
+      shouldOpenWeChat.value ? 'copy and open WeChat' : 'click to copy'
+    })`
+  }
+  return `微信号：${WECHAT_ID}（${
+    shouldOpenWeChat.value ? '复制并打开微信' : '点击复制'
+  }）`
+})
+const handleSocialClick = async (type: FooterSocialType) => {
+  if (type === 'WEIBO') {
+    emit('openWeibo')
+    return
+  }
+  await copyText(WECHAT_ID)
+  showSuccessMessage(
+    locale.value === 'en'
+      ? `WeChat ID copied: ${WECHAT_ID}${
+          isTouchDevice.value ? '. Paste it into WeChat search to add.' : ''
+        }`
+      : `微信号已复制：${WECHAT_ID}${
+          isTouchDevice.value ? '，请在微信中粘贴搜索添加' : ''
+        }`
+  )
+  // 仅尝试唤起应用；个人微信号仍需在微信内粘贴搜索，浏览器可能拦截跳转。
+  if (shouldOpenWeChat.value) window.location.assign('weixin://')
+}
 
 const iconPaths: Record<FooterSocialType, string> = {
   TWITTER:
@@ -138,6 +195,8 @@ const iconPaths: Record<FooterSocialType, string> = {
     'M7.17 2.25 9.6 5.2h4.8l2.43-2.95 1.3 1.08-1.54 1.87H19a3 3 0 0 1 3 3v9.55a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V8.2a3 3 0 0 1 3-3h2.41L5.87 3.33zM5 7a1.2 1.2 0 0 0-1.2 1.2v9.55A1.2 1.2 0 0 0 5 18.95h14a1.2 1.2 0 0 0 1.2-1.2V8.2A1.2 1.2 0 0 0 19 7zm2.1 4.15h1.8v3.7H7.1zm8 0h1.8v3.7h-1.8z',
   GITHUB:
     'M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.21 11.39.6.11.79-.26.79-.58v-2.23c-3.34.72-4.03-1.42-4.03-1.42-.55-1.39-1.33-1.76-1.33-1.76-1.09-.74.08-.73.08-.73 1.21.09 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.49 1 .11-.78.42-1.31.76-1.61-2.66-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23A11.5 11.5 0 0 1 12 5.8c1.02 0 2.05.14 3.01.4 2.29-1.55 3.3-1.23 3.3-1.23.65 1.65.24 2.87.12 3.18.77.84 1.23 1.91 1.23 3.22 0 4.61-2.81 5.62-5.48 5.92.43.37.82 1.1.82 2.22v3.3c0 .32.19.69.8.57A12 12 0 0 0 12 0z',
+  WECHAT:
+    'M9 2C4.6 2 1 4.9 1 8.5c0 2 1.1 3.8 2.8 5L3 16l3-1.5c.7.2 1.4.4 2.2.4A7.6 7.6 0 0 1 8 13c0-3.8 3.6-6.8 8-6.8h.5C15.4 3.7 12.5 2 9 2ZM6 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2Zm5 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2Zm5 1.5c-3.9 0-7 2.5-7 5.5s3.1 5.5 7 5.5c.7 0 1.4-.1 2-.3l2.7 1.3-.7-2.2c1.8-1 3-2.5 3-4.3 0-3-3.1-5.5-7-5.5ZM13.5 11a1 1 0 1 1 0 2 1 1 0 0 1 0-2Zm5 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2Z',
   MAIL: 'M2 4h20v16H2zm2 2v1.18l8 5.34 8-5.34V6zm16 12V9.58l-8 5.33-8-5.33V18z',
 }
 
@@ -146,22 +205,25 @@ const socialLabels: Record<FooterSocialType, string> = {
   WEIBO: 'WEIBO',
   BILIBILI: 'BILIBILI',
   GITHUB: 'GITHUB',
+  WECHAT: 'WECHAT',
   MAIL: 'MAIL',
 }
 
 const contactLinkMap = new Map(contactLinks.map((link) => [link.type, link]))
 
-const socialLinks = FOOTER_SOCIAL_ORDER.map((type): FooterSocialLink => {
-  const link = contactLinkMap.get(type)
-  if (!link) throw new Error(`Missing footer social link: ${type}`)
+const socialLinks = computed(() =>
+  props.types.map((type): FooterSocialLink => {
+    const link = contactLinkMap.get(type)
+    if (!link) throw new Error(`Missing footer social link: ${type}`)
 
-  return {
-    ...link,
-    label: socialLabels[type],
-    type,
-    icon: iconPaths[type],
-  }
-})
+    return {
+      ...link,
+      label: socialLabels[type],
+      type,
+      icon: iconPaths[type],
+    }
+  })
+)
 
 const steamPlatform: FooterPlatformItem = {
   icon: 'M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658a3.39 3.39 0 0 1 1.912-.59h.188l2.861-4.142v-.059a4.524 4.524 0 1 1 4.419 4.528l-4.076 2.911v.159a3.396 3.396 0 0 1-6.721.669L.436 15.27A12.004 12.004 0 1 0 11.979 0ZM7.54 18.21l-1.473-.61a2.55 2.55 0 1 0 3.274-3.457 2.53 2.53 0 0 0-1.878-.03l1.523.63a1.878 1.878 0 1 1-1.446 3.467Zm8.4-12.318a3.015 3.015 0 1 0 0 6.03 3.015 3.015 0 0 0 0-6.03Zm.007.744a2.266 2.266 0 1 1 0 4.531 2.266 2.266 0 0 1 0-4.531Z',
@@ -174,7 +236,7 @@ const switchPlatform: FooterPlatformItem = {
 
 <style lang="less" scoped>
 .footer-social-links {
-  --collapsed-links-width: 292px;
+  --collapsed-links-width: 332px;
 
   display: flex;
   box-sizing: border-box;

@@ -3,6 +3,7 @@
     class="modal-background-title"
     :class="{
       'modal-background-title--embedded': embedded,
+      'modal-background-title--paused': paused,
       'modal-background-title--entered': entered,
       'modal-background-title--scrolling': scrolling,
       'modal-background-title--visible': entered && active,
@@ -34,8 +35,9 @@ const props = withDefaults(
     active?: boolean
     color?: string
     embedded?: boolean
+    paused?: boolean
   }>(),
-  { active: true, color: undefined, embedded: false }
+  { active: true, color: undefined, embedded: false, paused: false }
 )
 const entered = ref(false)
 const scrolling = ref(false)
@@ -94,7 +96,7 @@ onBeforeUnmount(clearTimers)
     opacity: 0.2;
   }
 
-  &--scrolling {
+  &--scrolling:not(.modal-background-title--paused) {
     .modal-background-title__track {
       animation-play-state: running;
     }

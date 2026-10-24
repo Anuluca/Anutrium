@@ -37,7 +37,10 @@ import { preloadTempleAssets } from '@/utils/preloadTempleAssets'
 import { createSceneMatrixUpdater } from '@/utils/sceneMatrixUpdater'
 import { getTempleLabelCanvas } from '@/utils/templeLabelTextures'
 
-import { createDollyCameraMotion } from './scene/dollyCamera'
+import {
+  createDollyCameraMotion,
+  easeIslandFocusZoom,
+} from './scene/dollyCamera'
 import {
   createObeliskBaseGeometry,
   createObeliskBodyGeometry,
@@ -53,6 +56,7 @@ import {
   installHeadacheTint,
   installHeadRig,
 } from './scene/materials'
+import { createModelScan } from './scene/modelScan'
 import {
   createPetFocusCamera,
   createPetScreenBounds,
@@ -101,6 +105,12 @@ const OBELISK_ENTRANCE_DEPTH = 7.5
 const OBELISK_BASE_TOP = 0.34
 const HOLY_LIGHT_COLOR = '#E23455'
 const STATUE_ENVIRONMENT_DURATION = 1.6
+const STATUE_SCAN_DURATION = 2.2
+const STATUE_SCAN_ADVANCE = 0.75
+const STATUE_REALIGN_DURATION = 0.25
+const STATUE_FOCUS_ZOOM = 1.3
+const STATUE_ZOOM_VERTICAL_OFFSET = 0.06
+const STATUE_ZOOM_DURATION = 1
 const STATUE_ENVIRONMENT_EXPANSION = 0.18
 const STATUE_LABEL_TEXT = 'ISLAND'
 const STATUE_LABEL_CHARACTER_DURATION = 0.18
@@ -111,11 +121,9 @@ const STATUE_LABEL_HOVER_DURATION =
   (STATUE_LABEL_TEXT.length - 1) * STATUE_LABEL_STAGGER
 const STATUE_LABEL_DOCK_OFFSET = 24
 const STATUE_PREVIEW_SCALE = 1.5
-const STATUE_PREVIEW_VERTICAL_OFFSET = 0.18
-// 焦距增至主页的 3 倍：tan(FOV / 2) 与焦距成反比。
-const STATUE_PREVIEW_FOV = THREE.MathUtils.radToDeg(
-  2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(templeCamera.fov / 2)) / 3)
-)
+const STATUE_PREVIEW_VERTICAL_OFFSET = 0.21
+// 聚焦时逐渐拉宽视角，同时由现有 Dolly 运镜补偿距离，保留主体放大和广角透视。
+const STATUE_PREVIEW_FOV = 48
 const STATUE_PREVIEW_PITCH = -4
 // 保留缩头前的宽度基准，避免头部变小后自动放大整个模型。
 const SPRIGATITO_REFERENCE_WIDTH = 0.2963257431983948
@@ -263,6 +271,7 @@ export function createHomeTemple(
   let selected: TempleSelection | null = null
   let transition: gsap.core.Timeline | undefined
   let transitionActive = false
+  let statueRestorePending = false
   let entranceActive = false
   let cameraMoving = false
   const entranceHeadDip = { value: 0 }
@@ -314,6 +323,10 @@ export function createHomeTemple(
         sceneVerticalOffset,
     }
   }
+  // 位移直接跟随缩放进度，入场同步下移，回程随退镜连续归位。
+  const statueZoomDrop = () =>
+    THREE.MathUtils.clamp((camera.zoom - 1) / (STATUE_FOCUS_ZOOM - 1), 0, 1) *
+    STATUE_ZOOM_VERTICAL_OFFSET
   const applyViewOffset = () => {
     if (!viewWidth || !viewHeight) return
     // 调整相机投影，让雕像、碑身、圣光和倒影整体让出菜单空间；点击投影使用同一相机。
@@ -321,7 +334,7 @@ export function createHomeTemple(
       viewWidth,
       viewHeight,
       -viewWidth * focusFraming.x,
-      -viewHeight * (sceneVerticalOffset + focusFraming.y) +
+      -viewHeight * (sceneVerticalOffset + focusFraming.y + statueZoomDrop()) +
         (config.id === 'mobile'
           ? FLORA_MOBILE_FOCUS_SCENE_RISE * sprigatitoFocus.value
           : 0),
@@ -1244,6 +1257,7 @@ export function createHomeTemple(
   let stickerReveal = 0
   const statueClipPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.52)
   const statueView = { mix: 0 }
+  let statueScanGlow: THREE.Mesh | undefined
   const statueSize = new THREE.Vector3()
   let statueHalfY = statue.position.y
   let statueFullY = statue.position.y
@@ -1305,6 +1319,27 @@ export function createHomeTemple(
   wireDepthMaterial.onBeforeCompile = chromeMaterial.onBeforeCompile
   // 只给实体及其镜像增加染色，线框和深度通道保持原有用途。
   installHeadacheTint(chromeMaterial, headacheRedness, headacheHeightRange)
+  const statueScan = createModelScan(wireMaterial.color)
+  statueScan.install(chromeMaterial, 'chrome')
+  statueScan.install(wireMaterial, 'converted')
+  statueScan.install(wireDepthMaterial, 'converted')
+  const scanGlowMaterial = material(
+    new THREE.MeshBasicMaterial({
+      transparent: true,
+      depthWrite: false,
+      depthTest: false,
+      blending: THREE.AdditiveBlending,
+      toneMapped: false,
+      clippingPlanes: [statueClipPlane],
+    })
+  )
+  installHeadRig(scanGlowMaterial, {
+    headRotation,
+    headPivot,
+    headNodPivot,
+    headNodAngle,
+  })
+  statueScan.install(scanGlowMaterial, 'glow')
   for (const value of materials) {
     if ('color' in value && value !== dizzySticker.material)
       trackTint((value as THREE.MeshBasicMaterial).color)
@@ -1362,6 +1397,7 @@ export function createHomeTemple(
       chromeMaterial,
       wireMaterial,
       wireDepthMaterial,
+      scanGlowMaterial,
       statueLabelMaterial,
       dizzySticker.material,
     ])
@@ -1597,24 +1633,25 @@ export function createHomeTemple(
     pedestal.visible = environmentVisible
     sleepingSprigatito.visible = environmentVisible
     statueGlow.visible = environmentVisible
-    // 回程立即恢复环境深度测试，底座出现时就能遮挡模型，而非等材质淡出结束才恢复。
-    chromeMaterial.depthTest = !statueOnly
-    chromeMaterial.opacity = 1 - statueView.mix
-    // 全不透明时深度测试已处理正反面遮挡，省去透明材质的第二遍模型绘制。
-    const singlePass = chromeMaterial.opacity === 1
-    if (chromeMaterial.forceSinglePass !== singlePass) {
-      chromeMaterial.forceSinglePass = singlePass
-      chromeMaterial.needsUpdate = true
-    }
-    wireMaterial.opacity = statueView.mix
-    wireDepthMaterial.opacity = 0.55 * statueView.mix
+    // 构图与材质使用独立进度：运镜末段开始扫描，返回首页先完成材质恢复。
+    chromeMaterial.depthTest = true
+    chromeMaterial.opacity = 1
+    chromeMaterial.forceSinglePass = true
+    const scanProgress = statueScan.progress.value
+    const scanning = scanProgress > 0 && scanProgress < 1
+    wireMaterial.opacity = scanProgress > 0 ? 1 : 0
+    wireDepthMaterial.opacity = scanProgress > 0 ? 0.55 : 0
     if (statueMesh) {
-      statueMesh.visible = statueView.mix < 1
+      statueMesh.visible = scanProgress < 1
       statueMesh.renderOrder = statueOnly ? 4 : 0
     }
-    if (statueWire) statueWire.visible = statueView.mix > 0
-    if (statueWireDepth) statueWireDepth.visible = statueView.mix > 0
-    const followHead = !entranceActive && !returningStatue
+    if (statueWire) statueWire.visible = scanProgress > 0
+    if (statueWireDepth) statueWireDepth.visible = scanProgress > 0
+    if (statueScanGlow) statueScanGlow.visible = scanning
+    const statueMouseFollow =
+      statueOnly && !cameraMoving && scanProgress === 1 && !statueRestorePending
+    const followHead =
+      !entranceActive && !returningStatue && (!statueOnly || statueMouseFollow)
     const headacheActive = headacheEnabled && selected !== 'statue'
     const aimAtObelisk = !!focusedObelisk
     if (focusedObelisk && aimAtObelisk && rig.enabled) {
@@ -1655,7 +1692,7 @@ export function createHomeTemple(
       petHeadMoving ||
       (followHead && headCurrent.distanceToSquared(headTarget) > 0.000001)
     if (!moving && followHead) headCurrent.copy(headTarget)
-    if (statueOnly) {
+    if (statueMouseFollow) {
       const yaw = THREE.MathUtils.degToRad(pointerTarget.x * rig.bodyYaw)
       statue.rotation.y = THREE.MathUtils.damp(
         statue.rotation.y,
@@ -2099,9 +2136,33 @@ export function createHomeTemple(
       setStageData('statueFullY', statueFullY.toFixed(4))
       setStageData(
         'materialPhase',
-        statueView.mix === 1 ? 'wireframe' : 'chrome'
+        scanProgress === 1 ? 'wireframe' : scanning ? 'scanning' : 'chrome'
       )
-      setStageData('statueWireOpacity', statueView.mix.toFixed(3))
+      setStageData('statueWireOpacity', wireMaterial.opacity.toFixed(3))
+      setStageData('statueScanProgress', scanProgress.toFixed(4))
+      setStageData(
+        'statueRestoring',
+        String(statueRestorePending || returningStatue)
+      )
+      setStageData(
+        'statueReturnPhase',
+        statueRestorePending
+          ? 'aligning'
+          : returningStatue
+          ? 'scanning'
+          : 'none'
+      )
+      setStageData('statueMouseFollow', String(statueMouseFollow))
+      setStageData(
+        'statueHeadPointer',
+        headCurrent
+          .toArray()
+          .map((value) => value.toFixed(5))
+          .join(',')
+      )
+      setStageData('cameraMoving', String(cameraMoving))
+      setStageData('statueChromeOpacity', chromeMaterial.opacity.toFixed(3))
+      setStageData('statueScanGlow', String(scanning))
       setStageData('statueFillOpacity', wireDepthMaterial.opacity.toFixed(3))
       setStageData(
         'statueFillColor',
@@ -2367,6 +2428,8 @@ export function createHomeTemple(
           .join(',')
       )
       setStageData('cameraFov', String(camera.fov))
+      setStageData('cameraZoom', camera.zoom.toFixed(4))
+      setStageData('statueZoomDrop', statueZoomDrop().toFixed(4))
       setStageData(
         'visibleObelisks',
         obelisks
@@ -2467,6 +2530,7 @@ export function createHomeTemple(
     if (selected === 'sprigatito') {
       const framingCamera = camera.clone()
       framingCamera.fov = templeCamera.fov
+      framingCamera.zoom = 1
       framingCamera.updateProjectionMatrix()
       return petFocusCamera({
         geometry: sprigatitoMesh!.geometry,
@@ -2663,7 +2727,8 @@ export function createHomeTemple(
   const select = (
     id: TempleSelection | null,
     immediate = false,
-    menuExited = false
+    menuExited = false,
+    statueAligned = false
   ) => {
     if (!ready || disposed || entranceActive) return
     if (
@@ -2675,10 +2740,68 @@ export function createHomeTemple(
       return
     const next = selected === id ? null : id
     if (next === selected) return
+    if (statueRestorePending && !next) return
     if (menuExitPending && !next && !menuExited) return
     const revision = ++selectionRevision
     const wasStatue = selected === 'statue'
     const wasSprigatito = selected === 'sprigatito'
+    if (wasStatue && !next && !immediate && !reducedMotion && !statueAligned) {
+      // 先回正，再让扫描、缩小与退镜交叠推进；全过程关闭鼠标跟随。
+      // 非空模块选择和外部路由离场不经过这段等待；重复返回也不重启扫描。
+      transition?.kill()
+      statueRestorePending = true
+      transitionActive = true
+      cameraMoving = false
+      diagnosticsDirty = true
+      motionStart = performance.now()
+      transition = gsap
+        .timeline({
+          paused: true,
+          onUpdate: () => {
+            diagnosticsDirty = true
+            invalidate()
+          },
+          onComplete: () => {
+            if (disposed || revision !== selectionRevision) return
+            statueRestorePending = false
+            transitionActive = false
+            select(null, immediate, menuExited, true)
+          },
+        })
+        .to(
+          headCurrent,
+          {
+            x: 0,
+            y: 0,
+            duration: STATUE_REALIGN_DURATION,
+            ease: 'power2.inOut',
+          },
+          0
+        )
+        .to(
+          statue.rotation,
+          {
+            x: 0,
+            y: 0,
+            z: 0,
+            duration: STATUE_REALIGN_DURATION,
+            ease: 'power2.inOut',
+          },
+          0
+        )
+        .to(
+          entranceHeadDip,
+          {
+            value: headNodDegrees,
+            duration: STATUE_REALIGN_DURATION,
+            ease: 'power2.inOut',
+          },
+          0
+        )
+      invalidate()
+      return
+    }
+    statueRestorePending = false
     // 首次进入时记录屏幕起点；中途反向或再次点击继续使用同一路径，避免跳位。
     if (next === 'statue' && statueView.mix === 0) {
       screenPoint.copy(statueLabel.position)
@@ -2733,8 +2856,24 @@ export function createHomeTemple(
     callbacks.select(selected)
     transition?.kill()
     const item = focusedObelisk
-    const duration = reducedMotion || immediate ? 0.01 : TEMPLE_FOCUS_DURATION
+    const duration =
+      reducedMotion || immediate
+        ? 0.01
+        : returningStatue
+        ? STATUE_SCAN_DURATION
+        : TEMPLE_FOCUS_DURATION
     const statueTransition = selected === 'statue' || wasStatue
+    const quick = reducedMotion || immediate
+    const scanDuration = quick
+      ? 0.01
+      : selected === 'statue' || returningStatue
+      ? STATUE_SCAN_DURATION *
+        Math.abs((selected === 'statue' ? 1 : 0) - statueScan.progress.value)
+      : 0.65
+    const scanStart =
+      selected === 'statue' && !quick
+        ? Math.max(0, duration - STATUE_SCAN_ADVANCE)
+        : 0
     const environmentDuration = Math.min(STATUE_ENVIRONMENT_DURATION, duration)
     transitionActive = true
     motionStart = performance.now()
@@ -2831,7 +2970,7 @@ export function createHomeTemple(
       },
       0
     )
-    if (returningStatue) {
+    if (returningStatue || selected === 'statue') {
       tweenIfChanged(
         headCurrent,
         {
@@ -2896,6 +3035,40 @@ export function createHomeTemple(
       { mix: selected === 'statue' ? 1 : 0, duration, ease: 'power2.inOut' },
       0
     )
+    // 扫描与放大共用场景时间轴，中断和后台恢复时一起取消或继续。
+    if (statueScan.progress.value !== (selected === 'statue' ? 1 : 0))
+      transition.to(
+        statueScan.progress,
+        {
+          value: selected === 'statue' ? 1 : 0,
+          duration: scanDuration,
+          ease: 'power1.inOut',
+          onUpdate: () => {
+            diagnosticsDirty = true
+          },
+        },
+        scanStart
+      )
+    // 独立柔和缓动与扫描同步起止；回程倍率并入退镜，不单独原地缩小。
+    const targetZoom = selected === 'statue' ? STATUE_FOCUS_ZOOM : 1
+    if (!returningStatue && camera.zoom !== targetZoom)
+      transition.to(
+        camera,
+        {
+          zoom: targetZoom,
+          duration: quick
+            ? 0.01
+            : selected === 'statue'
+            ? scanDuration
+            : STATUE_ZOOM_DURATION,
+          ease: selected === 'statue' ? easeIslandFocusZoom : 'power2.inOut',
+          onUpdate: () => {
+            applyViewOffset()
+            diagnosticsDirty = true
+          },
+        },
+        scanStart
+      )
     // 保留当前裁切面作为起点，跟随模型升降逐步释放下半身；中途反向也不会跳变。
     tweenIfChanged(
       statueClipPlane,
@@ -2934,7 +3107,8 @@ export function createHomeTemple(
         camera,
         lookAt,
         pose,
-        targetFov
+        targetFov,
+        returningStatue ? 1 : undefined
       )
       const dolly = { progress: 0 }
       // 视点、俯仰、投影尺度与模型升起共用进度；方向归一化，避免混合角度压缩距离。
@@ -2946,7 +3120,7 @@ export function createHomeTemple(
           ease: 'power3.inOut',
           onUpdate: () => {
             updateCamera(dolly.progress)
-            markProjectionDirty()
+            applyViewOffset()
           },
         },
         0
@@ -3326,6 +3500,8 @@ export function createHomeTemple(
     updateSceneMatrices()
     camera.lookAt(lookAt)
     camera.updateMatrixWorld()
+    // 扫描表面也预热实际裁切变体；此时进度为 0，片元全部丢弃，不影响首页画面。
+    if (statueScanGlow) statueScanGlow.visible = true
     // 模型与倒影在开放交互前完成预编译和纹理上传，聚焦只改变镜头与可见性。
     await renderer.compileAsync(scene, camera)
     if (disposed) return
@@ -3337,6 +3513,7 @@ export function createHomeTemple(
     await renderer.compileAsync(scene, camera)
     if (disposed) return
     renderer.render(scene, camera)
+    if (statueScanGlow) statueScanGlow.visible = false
     setStageData('shaderWarmup', 'complete')
   }
   const createPetGeometry = (sleepingModel: FloraPetModelAsset) => {
@@ -3801,6 +3978,7 @@ export function createHomeTemple(
         surface.computeBoundingBox()
         const bounds = surface.boundingBox!
         bounds.getSize(statueSize).multiplyScalar(modelScale)
+        statueScan.bounds.value.set(bounds.min.y, bounds.max.y - bounds.min.y)
         statueHalfY = statue.position.y
         statueFullY = (metadata.center[1] - bounds.min.y) * modelScale
         statueWire = new THREE.Mesh(surface, wireMaterial)
@@ -3817,6 +3995,12 @@ export function createHomeTemple(
           if (selected === 'statue') renderer.clearDepth()
         }
         statue.add(statueWireDepth)
+        statueScanGlow = new THREE.Mesh(surface, scanGlowMaterial)
+        statueScanGlow.position.copy(mesh.position)
+        statueScanGlow.morphTargetInfluences = mesh.morphTargetInfluences
+        statueScanGlow.renderOrder = 7
+        statueScanGlow.visible = false
+        statue.add(statueScanGlow)
         installTempleFade()
         for (const [name, value] of Object.entries(metadata.stats))
           stage.dataset[name] = String(value)

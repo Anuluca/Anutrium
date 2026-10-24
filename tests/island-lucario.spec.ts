@@ -388,3 +388,25 @@ test('island simplifies its model and follows the pointer with its head, then le
     )
   expect(errors).toEqual([])
 })
+
+test('baked legs stand closer together without crossing the feet', async () => {
+  const [json, bytes] = await Promise.all([
+    readFile(resolve('public/models/lucario-island.json'), 'utf8'),
+    readFile(resolve('public/models/lucario-island.bin')),
+  ])
+  const metadata = JSON.parse(json)
+  const { positions } = metadata.attributes
+  const feet: number[] = []
+  for (let index = 0; index < positions.count / 3; index++) {
+    const y = bytes.readFloatLE(positions.offset + index * 12 + 4)
+    if (y < 0.3) feet.push(bytes.readFloatLE(positions.offset + index * 12))
+  }
+  expect(metadata.stats.legInwardDegrees).toBe(5)
+  expect(feet.some((x) => x < 0)).toBe(true)
+  expect(feet.some((x) => x > 0)).toBe(true)
+  const gap = Math.min(...feet.map(Math.abs)) * 2
+  // 原站姿脚间距约 0.563、外沿宽约 1.307；收腿后仍须保留正的脚间距。
+  expect(gap).toBeGreaterThan(0.3)
+  expect(gap).toBeLessThan(0.5)
+  expect(Math.max(...feet) - Math.min(...feet)).toBeLessThan(1.25)
+})

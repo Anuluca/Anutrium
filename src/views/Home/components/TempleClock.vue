@@ -67,6 +67,8 @@ onBeforeUnmount(() => window.clearTimeout(timer))
 }
 
 .temple-clock__tagline {
+  position: relative;
+  left: 0.16em;
   margin: 0;
   font-size: 1.2em;
   font-weight: 400;

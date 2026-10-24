@@ -1,6 +1,9 @@
 import { createScanlineMask } from '@/utils/scanlineMask'
 
+const maskSignatures = new WeakMap<HTMLElement, string>()
+
 export const decorateImageViewerNavigation = (nav: HTMLElement) => {
+  if (nav.querySelector('.safe-image-viewer__nav-surface')) return
   const fill = document.createElement('span')
   fill.className = 'safe-image-viewer__nav-fill'
   fill.setAttribute('aria-hidden', 'true')
@@ -37,7 +40,10 @@ export const decorateImageViewerNavigation = (nav: HTMLElement) => {
   nav.append(label)
 }
 
-export const syncImageViewerNavigationCutouts = (wrapper: HTMLElement) => {
+const syncImageViewerNavigationCutouts = (
+  wrapper: HTMLElement,
+  force = false
+) => {
   if (!wrapper.isConnected) return
   for (const surface of wrapper.querySelectorAll<HTMLElement>(
     '.safe-image-viewer__nav-surface'
@@ -51,8 +57,11 @@ export const syncImageViewerNavigationCutouts = (wrapper: HTMLElement) => {
     if (!width || !height) continue
     const style = getComputedStyle(label)
     const size = parseFloat(style.fontSize)
-    const canvas = document.createElement('canvas')
     const ratio = Math.min(window.devicePixelRatio || 1, 2)
+    const text = label.textContent ?? ''
+    const signature = `${width}:${height}:${size}:${ratio}:${style.writingMode}:${text}`
+    if (!force && maskSignatures.get(surface) === signature) continue
+    const canvas = document.createElement('canvas')
     canvas.width = Math.ceil(width * ratio)
     canvas.height = Math.ceil(height * ratio)
     const context = canvas.getContext('2d')
@@ -75,7 +84,6 @@ export const syncImageViewerNavigationCutouts = (wrapper: HTMLElement) => {
             2
       )
     }
-    const text = label.textContent ?? ''
     if (style.writingMode === 'horizontal-tb') {
       drawText(text, height / 2)
     } else {
@@ -89,6 +97,43 @@ export const syncImageViewerNavigationCutouts = (wrapper: HTMLElement) => {
     const mask = `url("${canvas.toDataURL()}")`
     surface.style.maskImage = mask
     surface.style.webkitMaskImage = mask
+    maskSignatures.set(surface, signature)
+  }
+}
+
+/** 两种预览共用生命周期；尺寸未变时复用遮罩，同一帧只绘制一次。 */
+export const bindImageViewerNavigation = (root: HTMLElement) => {
+  let disposed = false
+  let frame = 0
+  const sync = () => {
+    if (frame || disposed) return
+    frame = requestAnimationFrame(() => {
+      frame = 0
+      syncImageViewerNavigationCutouts(root)
+    })
+  }
+  const observer = new ResizeObserver(sync)
+  for (const nav of root.querySelectorAll<HTMLElement>(
+    '.el-image-viewer__prev, .el-image-viewer__next'
+  )) {
+    decorateImageViewerNavigation(nav)
+    observer.observe(nav)
+  }
+  sync()
+  void document.fonts
+    .load('400 112px Anton', 'PREV NEXT')
+    .then(() => {
+      if (disposed) return
+      cancelAnimationFrame(frame)
+      frame = 0
+      // 字体加载后的字形与回退字体不同，需要刷新相同尺寸的遮罩。
+      syncImageViewerNavigationCutouts(root, true)
+    })
+    .catch(() => undefined)
+  return () => {
+    disposed = true
+    cancelAnimationFrame(frame)
+    observer.disconnect()
   }
 }
 
