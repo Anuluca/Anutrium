@@ -1,0 +1,54 @@
+// 沉浸模式只淡化绘制内容，保留首页原有布局。
+body:has(:where(.temple-page)) :is(
+    .footer-com,
+    .page-footer-home.no-rem,
+    .layout-page .home-about-action.no-rem,
+    .layout-page .fullscreen,
+    .temple-page .temple-backdrop,
+    .temple-page .temple-clock__tagline,
+    .footer-bottom-gradient,
+    .layout-border-toggle
+  ) {
+  transition: opacity 400ms ease, color 1.1s ease-in-out, visibility 0s;
+}
+
+.layout-page.is-home-immersive .el-menu-layout-all .logo-box {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: none;
+}
+
+body:has(.layout-page.is-home-immersive) :is(
+    .footer-com,
+    .page-footer-home,
+    .home-about-action,
+    .fullscreen,
+    .temple-backdrop,
+    .temple-clock__tagline,
+    .footer-bottom-gradient,
+    .layout-border-toggle
+  ) {
+  opacity: 0 !important;
+  visibility: hidden;
+  pointer-events: none !important;
+  transition: opacity 400ms ease, visibility 0s linear 400ms;
+
+  * {
+    pointer-events: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body:has(.temple-page) :is(
+      .footer-com,
+      .page-footer-home.no-rem,
+      .layout-page .home-about-action.no-rem,
+      .layout-page .fullscreen,
+      .temple-page .temple-backdrop,
+      .temple-page .temple-clock__tagline,
+      .footer-bottom-gradient,
+      .layout-border-toggle
+    ) {
+    transition: none;
+  }
+}

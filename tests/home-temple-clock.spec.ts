@@ -4,6 +4,9 @@ test('statue clock types after model entrance, ticks without retyping, and reset
   page,
 }, testInfo) => {
   test.setTimeout(90000)
+  await page.routeWebSocket('ws://localhost:3000/**', (socket) =>
+    socket.close()
+  )
   await page.emulateMedia({ reducedMotion: 'no-preference' })
   await page.clock.setFixedTime(new Date('2026-10-11T23:59:58'))
   await page.addInitScript(() => {
@@ -40,6 +43,19 @@ test('statue clock types after model entrance, ticks without retyping, and reset
       )
   await expect.poll(visibleCharacters).toBe(8)
   await expect(clock).toHaveAttribute('datetime', '23:59:58')
+  const characterGeometry = () =>
+    clock.locator('.temple-clock__character').evaluateAll((characters) =>
+      characters.map((character) => {
+        const bounds = character.getBoundingClientRect()
+        return { left: bounds.left, width: bounds.width }
+      })
+    )
+  const initialGeometry = await characterGeometry()
+  for (const time of ['11:11:11', '08:08:08']) {
+    await page.clock.setFixedTime(new Date(`2026-10-11T${time}`))
+    await expect(clock).toHaveAttribute('datetime', time)
+    expect(await characterGeometry()).toEqual(initialGeometry)
+  }
   expect(
     await clock.evaluate((element) => getComputedStyle(element).color)
   ).toBe('rgb(226, 52, 86)')

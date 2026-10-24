@@ -80,7 +80,7 @@ test('module return restores focus, expansion and panel scroll with simple entra
   const scrollTop = await root.evaluate((element) => element.scrollTop)
   await push(page, '/colorPalette')
   await expect(page.locator('.palette-tool')).toBeVisible()
-  await page.locator('.logo-box').click()
+  await page.goBack()
   await ready(page, 'archive')
   await expect(page.locator('.temple-stage')).toHaveAttribute(
     'data-entrance-mode',
@@ -96,15 +96,42 @@ test('module return restores focus, expansion and panel scroll with simple entra
     )
 })
 
-test('direct child route returns to its corresponding module', async ({
+test('direct child module link returns to its corresponding module', async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/island/study-notes', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.logo-box')).toBeVisible()
-  await page.locator('.logo-box').click()
-  await ready(page, 'island')
+  await page.locator('.current-module-name').click()
+  await ready(page, 'statue')
 })
+
+for (const path of ['/flanerie/xiangtan?from=home', '/island/study-notes']) {
+  test(`website title returns ${path} to the initial home scene`, async ({
+    page,
+  }) => {
+    await page.routeWebSocket('ws://localhost:3000/**', (socket) =>
+      socket.close()
+    )
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.goto(path, { waitUntil: 'domcontentloaded' })
+    await expect(page.locator('.entry-overlay-container')).toHaveCount(0, {
+      timeout: 30000,
+    })
+    await page.getByRole('button', { name: 'Anutrium', exact: true }).click()
+    await expect(page).toHaveURL(/\/$/)
+    await expect(page.locator('.temple-stage')).toHaveAttribute(
+      'aria-busy',
+      'false',
+      { timeout: 30000 }
+    )
+    await expect(page.locator('.temple-page')).toHaveAttribute(
+      'data-selected',
+      'none'
+    )
+    await expect(page.locator('.temple-menu')).toHaveCount(0)
+  })
+}
 
 test('about preserves module color, model tint and zodiac', async ({
   page,

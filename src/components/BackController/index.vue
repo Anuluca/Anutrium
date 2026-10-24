@@ -95,8 +95,12 @@ const particlesVisible = computed(
   () =>
     currentRouter.value !== '/test2' || visualStateStore.homeStarfieldVisible
 )
+// About 关闭动画结束后再恢复星空与星盘，避免背景提前透出。
+const celestialVisible = computed(
+  () => !navigation.aboutOpen && !navigation.aboutOverlayVisible
+)
 const motionActive = computed(
-  () => !isTempleRoute.value || (!navigation.aboutOpen && !navigation.expanded)
+  () => celestialVisible.value && (!isTempleRoute.value || !navigation.expanded)
 )
 </script>
 
@@ -113,8 +117,9 @@ const motionActive = computed(
       "
       :tinted="isTempleRoute"
       :particles-visible="particlesVisible"
+      :celestial-visible="celestialVisible"
       :motion-active="motionActive"
-      :particle-fps="isTempleRoute ? 12 : 60"
+      :particle-fps="40"
       :top-inset="visualStateStore.backgroundTopInset"
       :entry-active="props.entryActive"
     />

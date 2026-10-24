@@ -368,16 +368,32 @@ test('illustration uses its configured preview, full R2 collection and independe
   const viewer = page.locator('.el-image-viewer__wrapper')
   const info = viewer.locator('.safe-image-viewer__info')
   await expect(info.locator('.photo-info__device')).toHaveText('表里')
-  await expect(info.locator('.photo-info__time')).toHaveText('2024-01-22')
+  await expect(info.locator('.photo-info__time')).toHaveCount(0)
+  await expect(info.locator('.photo-info__device')).toHaveCSS(
+    'text-align',
+    'center'
+  )
+  expect(
+    await info.evaluate((element) => {
+      const title = element
+        .querySelector('.photo-info__device')!
+        .getBoundingClientRect()
+      const bounds = element.getBoundingClientRect()
+      return Math.abs(
+        (title.left + title.right - bounds.left - bounds.right) / 2
+      )
+    })
+  ).toBeLessThanOrEqual(1)
   await viewer.locator('.el-image-viewer__next').click()
   await expect(info.locator('.photo-info__device')).toHaveText('彗星拳')
-  await expect(info.locator('.photo-info__time')).toHaveText('2024-08-10')
+  await expect(info.locator('.photo-info__time')).toHaveCount(0)
   await page.locator('.el-image-viewer__close').click()
   await expect(page.locator('.el-image-viewer__wrapper')).toHaveCount(0)
   await drawing.locator('.creative-illustration__toggle').click()
   await expect(drawing.locator('.media-gallery__card')).toHaveCount(
     files.length
   )
+  await expect(drawing.locator('.photo-info__time')).toHaveCount(0)
   expect(
     await drawing
       .locator('.media-gallery__card img')

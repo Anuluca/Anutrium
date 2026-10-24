@@ -1,0 +1,81 @@
+{
+  "scope": "isolated Chromium cursor fixture; root font 30px; 800x600 viewport",
+  "baseline": {
+    "hoverLayouts": 155
+  },
+  "measurementWindowMs": 1100,
+  "current": {
+    "hoverLayouts": 1
+  },
+  "pixelDiff": {
+    "active": {
+      "changedPixels": 1727,
+      "totalPixels": 14400,
+      "maxChannelDifference": 40,
+      "meanChannelDifference": 0.2527083333333333
+    },
+    "normal": {
+      "changedPixels": 0,
+      "totalPixels": 14400,
+      "maxChannelDifference": 0,
+      "meanChannelDifference": 0
+    },
+    "moving": {
+      "changedPixels": 0,
+      "totalPixels": 14400,
+      "maxChannelDifference": 0,
+      "meanChannelDifference": 0
+    },
+    "scroll": {
+      "changedPixels": 349,
+      "totalPixels": 14400,
+      "maxChannelDifference": 28,
+      "meanChannelDifference": 0.09453703703703703
+    },
+    "pressed": {
+      "changedPixels": 1552,
+      "totalPixels": 14400,
+      "maxChannelDifference": 18,
+      "meanChannelDifference": 0.1610185185185185
+    },
+    "loading": {
+      "changedPixels": 528,
+      "totalPixels": 14400,
+      "maxChannelDifference": 21,
+      "meanChannelDifference": 0.07317129629629629
+    }
+  },
+  "notes": [
+    "LayoutCount counts the entire isolated page, including state-change setup; no FPS or GPU-time inference.",
+    "Pixel comparisons use a 120x120 crop on #151515 with fixed animation phases.",
+    "Normal and moving screenshots match exactly; transformed layers introduce small antialiasing differences in other states."
+  ],
+  "validation": {
+    "playwright": {
+      "passed": 16,
+      "skipped": 14,
+      "failed": 0,
+      "specs": [
+        "cursor-performance.spec.ts",
+        "cursor-shape-layers.spec.ts",
+        "cursor-loading.spec.ts"
+      ]
+    },
+    "targetedEslint": "passed",
+    "viteBuild": "passed",
+    "typeCheck": "blocked by existing VueUse parameter errors: WorkCard/index.vue:102, Craft/CraftContent.vue:91"
+  },
+  "transitionFollowUp": {
+    "sizeTransitionMs": 360,
+    "crossfadeMs": 240,
+    "parentClipPath": "none",
+    "rotation": "triangle-only; paused outside hover; phase retained",
+    "hoverLayouts": 2,
+    "measurementWindowMs": 500,
+    "playwrightPassed": 16,
+    "playwrightSkipped": 14,
+    "playwrightFailed": 0,
+    "viteBuild": "passed",
+    "note": "Earlier baseline/current pixel and Layout values describe the initial B3 implementation."
+  }
+}

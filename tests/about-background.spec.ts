@@ -40,8 +40,13 @@ test('About fades and suspends the retained background until completely closed',
     return el.scrollTop
   })
   const bounds = await background.boundingBox()
+  const celestial = page.locator('.celestial-viewport')
+  await expect(celestial).toBeVisible()
   await page.emulateMedia({ reducedMotion: 'no-preference' })
   await openHomeAboutOverlay(page)
+  await expect(celestial).toBeHidden()
+  await expect(page.locator('.zodiac-stage')).toBeHidden()
+  await expect(page.locator('.particle-viewport')).toBeHidden()
   await expect(background).toHaveAttribute('inert', '')
   // 中途仍保留在 DOM 中进行透明度过渡，结束后停止参与布局和合成。
   await expect(background).toHaveClass(/temple-about-background-leave-active/)
@@ -65,6 +70,7 @@ test('About fades and suspends the retained background until completely closed',
   )
   await expect(background).toHaveCSS('display', 'none')
   await expect(page.locator('.about-overlay')).toHaveCount(0)
+  await expect(celestial).toBeVisible()
   await expect(background).toBeVisible()
   await expect(background).toHaveCSS('opacity', '1')
   expect(await canvas!.evaluate((el) => el.isConnected)).toBe(true)

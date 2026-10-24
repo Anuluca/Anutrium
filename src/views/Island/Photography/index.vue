@@ -43,7 +43,7 @@
           preserve-image-colors
         >
           <template #info="{ item: photo }">
-            <MediaPhotoInfo :item="photo" />
+            <MediaPhotoInfo :item="{ title: photo.title || photo.location }" />
           </template>
         </MediaGallery>
 

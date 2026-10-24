@@ -62,7 +62,6 @@ const galleryItems = computed(() => {
         locale.value === 'en'
           ? info.titleEn || info.title
           : info.title || info.titleEn,
-      time: info.date || undefined,
     }
   })
 })

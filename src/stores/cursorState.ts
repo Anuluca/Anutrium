@@ -3,9 +3,14 @@ import { defineStore } from 'pinia'
 export const ROUTE_CURSOR_LOADING_SOURCE = 'route-transition'
 
 export default defineStore('cursorState', {
-  state: (): { loadingSources: string[]; interactiveSources: string[] } => ({
+  state: (): {
+    loadingSources: string[]
+    interactiveSources: string[]
+    isIdle: boolean
+  } => ({
     loadingSources: [],
     interactiveSources: [],
+    isIdle: false,
   }),
 
   getters: {

@@ -105,11 +105,15 @@ export function installEnvironmentFade(
   const expandScreen = (source: string) =>
     'uniform float templeExpansion;\n' +
     source.replace(/}\s*$/, 'gl_Position.xy *= templeExpansion;\n}')
+  const opaque = new Set<THREE.Material>()
   for (const value of materials) {
     if (excluded.has(value)) continue
+    if (!value.transparent) opaque.add(value)
     const expands = !unexpanded.has(value)
-    // 在加载阶段预编译透明材质；切换时仅更新 uniform，避免重新编译着色器。
-    if (!value.transparent) value.forceSinglePass = true
+    // 加载阶段同时预热稳定不透明与渐隐透明变体。
+    // 双面角色在半透明渐隐时保留原前后遍；只为单面环境固定单遍。
+    if (!value.transparent && value.side !== THREE.DoubleSide)
+      value.forceSinglePass = true
     value.transparent = true
     if (value instanceof THREE.ShaderMaterial) {
       value.uniforms.templeReveal = templeReveal
@@ -142,6 +146,14 @@ export function installEnvironmentFade(
       }
       value.customProgramCacheKey = () =>
         originalKey + (expands ? ':temple-expand-fade' : ':temple-fade')
+    }
+  }
+  return () => {
+    for (const value of opaque) {
+      const transparent = templeReveal.value < 1 || value.opacity < 1
+      if (value.transparent === transparent) continue
+      value.transparent = transparent
+      value.needsUpdate = true
     }
   }
 }

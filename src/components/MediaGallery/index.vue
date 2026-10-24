@@ -123,7 +123,7 @@
       @switch="previewIndex = $event"
       @open="openViewer"
     >
-      <template v-if="showInfo && $slots.info" #info="{ index }">
+      <template v-if="$slots.info" #info="{ index }">
         <div
           v-if="items[index] && shouldShowMediaInfo(items[index])"
           class="media-gallery__info"

@@ -22,10 +22,12 @@ import {
   getCardThumbnailUrl,
 } from '@/utils/imageVariant'
 
-import type { IslandModelAnchors } from '../templeScene'
+import {
+  createIslandLinkOverlay,
+  islandAnchorByItem,
+} from '../scene/islandLinkOverlay'
 
 const props = defineProps<{
-  anchors: IslandModelAnchors | null
   mobile?: boolean
 }>()
 const { locale } = useI18n()
@@ -43,20 +45,15 @@ const hovered = computed(() => hoveredItem.value?.group ?? null)
 const coverFilterId = `island-cover-tint-${getCurrentInstance()?.uid}`
 const busy = ref(false)
 const failedCovers = ref(new Set<string>())
-const anchorByItem: Record<string, keyof IslandModelAnchors> = {
-  LABORATORY: 'rightBraid',
-  MISCELLANY: 'chest',
-  'STUDY NOTES': 'rightHand',
-  'GAME LIBRARY': 'leftBraid',
-  COLLECTIBLES: 'leftHand',
-}
-const origins = ref<Record<string, { x: number; y: number }>>({})
+const linkOverlay = createIslandLinkOverlay()
+let disposed = false
+defineExpose({ updateAnchors: linkOverlay.updateAnchors })
 const label = (item: { title: string; subtitle: string }) =>
   locale.value === 'en' ? item.subtitle : item.title
 const measure = () => {
-  if (!root.value) return
+  if (disposed || !root.value) return
   const bounds = root.value.getBoundingClientRect()
-  const next: typeof origins.value = {}
+  const next: Record<string, { x: number; y: number }> = {}
   root.value
     .querySelectorAll<HTMLElement>('.island-panels [data-flash-item]')
     .forEach((panel) => {
@@ -68,7 +65,6 @@ const measure = () => {
         y: rect.top + rect.height / 2 - bounds.top,
       }
     })
-  origins.value = next
   root.value
     .querySelectorAll<HTMLElement>('.island-panels h2')
     .forEach((title) => {
@@ -84,10 +80,11 @@ const measure = () => {
         )
       )
     })
+  linkOverlay.updateOrigins(next)
 }
 useResizeObserver(root, measure)
 useResizeObserver(
-  Object.keys(anchorByItem).map(
+  Object.keys(islandAnchorByItem).map(
     (item) => () =>
       root.value?.querySelector<HTMLElement>(
         `.island-panels [data-flash-item="${item}"]`
@@ -99,6 +96,7 @@ useResizeObserver(
 watch(root, () => nextTick(measure))
 watch(locale, () => nextTick(measure))
 onMounted(() => {
+  measure()
   void document.fonts.ready.then(measure)
 })
 watch(
@@ -111,8 +109,6 @@ const links = computed(() =>
       group.items.map((item) => ({
         id: item.subtitle,
         group: group.id,
-        origin: origins.value[item.subtitle],
-        anchor: props.anchors?.[anchorByItem[item.subtitle]],
       }))
     )
     .sort(
@@ -123,7 +119,6 @@ const links = computed(() =>
 )
 
 const animations = new Set<Animation>()
-let disposed = false
 const openItem = async (item: HarborItem, group: string) => {
   if (busy.value) return
   busy.value = true
@@ -149,6 +144,7 @@ const openItem = async (item: HarborItem, group: string) => {
 }
 onBeforeUnmount(() => {
   disposed = true
+  linkOverlay.dispose()
   animations.forEach((animation) => animation.cancel())
 })
 </script>
@@ -237,19 +233,14 @@ onBeforeUnmount(() => {
     <svg class="island-links" aria-hidden="true">
       <template v-for="link in links" :key="link.id">
         <g
-          v-if="link.origin && link.anchor"
+          :ref="(element) => linkOverlay.bind(link.id, element)"
           :data-link-group="link.group"
           :data-link-item="link.id"
           :data-flash-group="link.id"
           :class="{ 'is-active': hoveredItem?.item === link.id }"
         >
-          <line
-            :x1="link.origin.x"
-            :y1="link.origin.y"
-            :x2="link.anchor.x"
-            :y2="link.anchor.y"
-          />
-          <g :transform="`translate(${link.anchor.x} ${link.anchor.y})`">
+          <line />
+          <g>
             <rect
               x="-12"
               y="-12"

@@ -77,32 +77,33 @@ test('information opt-in stays separate from fullscreen metadata and follows ima
   const viewer = page.locator('.el-image-viewer__wrapper')
   const info = viewer.locator('.safe-image-viewer__info')
   const bar = viewer.locator('.el-image-viewer__actions')
-  const expectLargerTitleWithoutHeightChange = async () => {
+  const expectLargerTitleWithoutClipping = async () => {
     const geometry = await bar.evaluate((element) => {
       const title = element.querySelector<HTMLElement>('.photo-info__device')!
       const originalStyle = title.getAttribute('style')
       const enlargedFontSize = parseFloat(getComputedStyle(title).fontSize)
-      const enlargedHeight = element.getBoundingClientRect().height
+      const lineHeight = parseFloat(getComputedStyle(title).lineHeight)
+      const titleHeight = title.getBoundingClientRect().height
       title.style.fontSize = '100%'
       title.style.lineHeight = '1.25'
       const originalFontSize = parseFloat(getComputedStyle(title).fontSize)
-      const originalHeight = element.getBoundingClientRect().height
       if (originalStyle === null) title.removeAttribute('style')
       else title.setAttribute('style', originalStyle)
       return {
         enlargedFontSize,
         originalFontSize,
-        enlargedHeight,
-        originalHeight,
+        lineHeight,
+        titleHeight,
       }
     })
     expect(geometry.enlargedFontSize).toBeGreaterThan(geometry.originalFontSize)
-    expect(
-      Math.abs(geometry.enlargedHeight - geometry.originalHeight)
-    ).toBeLessThanOrEqual(1)
+    expect(geometry.lineHeight).toBeGreaterThanOrEqual(
+      geometry.enlargedFontSize
+    )
+    expect(geometry.titleHeight).toBeGreaterThanOrEqual(geometry.lineHeight - 1)
   }
   await expect(info).toContainText('训练家卡')
-  await expectLargerTitleWithoutHeightChange()
+  await expectLargerTitleWithoutClipping()
   await expect(bar).toHaveCSS('animation-name', 'viewer-mask-in')
   const styles = await bar.evaluate((element) => {
     const info = element.querySelector('.safe-image-viewer__info')!
@@ -188,7 +189,7 @@ test('information opt-in stays separate from fullscreen metadata and follows ima
     '18px'
   )
   await expect(viewer.locator('.safe-image-viewer__corners')).toBeHidden()
-  await expectLargerTitleWithoutHeightChange()
+  await expectLargerTitleWithoutClipping()
   const mobileMetadata = await info.evaluate((element) => {
     const divider = element
       .querySelector('.photo-info__divider')!

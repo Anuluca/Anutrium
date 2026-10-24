@@ -8,7 +8,6 @@ import {
   onUnmounted,
   provide,
   ref,
-  shallowRef,
   watch,
 } from 'vue'
 
@@ -25,7 +24,7 @@ import {
 import type { TemplePresentation } from '@/config/templePresentation'
 import { pets } from '@/locales/dynamic/pets'
 import { ensureMessageDomain } from '@/locales/routeMessages'
-import { visualState } from '@/stores'
+import { cursorState, visualState } from '@/stores'
 import { useFloraPets } from '@/stores/floraPets'
 import { useSiteLoading } from '@/stores/siteLoading'
 import { useTempleNavigation } from '@/stores/templeNavigation'
@@ -54,12 +53,21 @@ const IslandFocusLayout = defineAsyncComponent(() =>
     import('./components/IslandFocusLayout.vue'),
   ]).then(([, component]) => component.default)
 )
-const islandAnchors = shallowRef<IslandModelAnchors | null>(null)
+let latestIslandAnchors: IslandModelAnchors | null = null
+let islandFocusLayout: {
+  updateAnchors: (anchors: IslandModelAnchors) => void
+} | null = null
+const setIslandFocusLayout = (value: unknown) => {
+  islandFocusLayout = value as typeof islandFocusLayout
+  if (islandFocusLayout && latestIslandAnchors)
+    islandFocusLayout.updateAnchors(latestIslandAnchors)
+}
 
 const props = defineProps<{ presentation: TemplePresentation }>()
 const navigation = useTempleNavigation()
 const floraPets = useFloraPets()
 const visual = visualState()
+const cursor = cursorState()
 watch(
   () => visual.theme,
   (theme) => scene?.setColorMode(theme)
@@ -285,6 +293,20 @@ const scrollMenuFromBackground = (event: WheelEvent) => {
 }
 const buttons = new Map<string, HTMLElement>()
 let scene: ReturnType<typeof createHomeTemple> | undefined
+watch(
+  [() => navigation.immersive, () => cursor.isIdle],
+  ([immersive, idle]) => {
+    if (immersive && idle) scene?.resetPointer()
+  },
+  { flush: 'sync' }
+)
+watch(
+  () => navigation.immersive,
+  (immersive) => scene?.setImmersive(immersive),
+  {
+    flush: 'sync',
+  }
+)
 const sceneActive = computed(
   // 带参进入全屏时仍需完成方尖碑聚焦，settled 后再暂停被遮挡的场景。
   () =>
@@ -401,33 +423,32 @@ onMounted(async () => {
       readHomeFeatures(featureRequest.signal),
     ])
     if (disposed || !stage.value) return
+    const entrySelection = () => {
+      const id = navigation.revision
+        ? navigation.requested
+        : navigation.entryModule ??
+          (hasJourneyReturnState() ? 'flanerie' : undefined)
+      return id === 'statue' ||
+        id === 'sprigatito' ||
+        templeCategories.some((item) => item.id === id && item.enabled)
+        ? (id as TempleSelection)
+        : null
+    }
     scene = createHomeTemple(
       stage.value,
       buttons,
       {
         waitForRouteEnter,
+        entrySelection,
         dismissBackground: closeInlineDetail,
         prepared: () => loadingTask?.finish(),
         progress: (value) => loadingTask?.update(value),
         ready: () => {
           status.value = 'ready'
           navigation.ready = true
-          const initialModule =
-            (navigation.revision
-              ? navigation.requested
-              : navigation.entryModule) ??
-            (hasJourneyReturnState() ? 'flanerie' : undefined)
-          if (
-            initialModule === 'statue' ||
-            initialModule === 'sprigatito' ||
-            templeCategories.some(
-              (item) => item.id === initialModule && item.enabled
-            )
-          )
-            scene?.select(
-              initialModule as TempleSelection,
-              navigation.simpleEntrance
-            )
+          const initialModule = entrySelection()
+          if (selected.value !== initialModule)
+            scene?.select(initialModule, navigation.simpleEntrance)
           navigation.expanded = navigation.revision
             ? navigation.requestedExpanded
             : navigation.entryExpanded ??
@@ -466,19 +487,8 @@ onMounted(async () => {
           if (id === 'statue' || id === 'sprigatito') menuCategory.value = null
         },
         islandAnchors: (anchors) => {
-          const previous = islandAnchors.value
-          if (
-            previous &&
-            Object.keys(anchors).every((key) => {
-              const id = key as keyof IslandModelAnchors
-              return (
-                Math.abs(previous[id].x - anchors[id].x) < 0.25 &&
-                Math.abs(previous[id].y - anchors[id].y) < 0.25
-              )
-            })
-          )
-            return
-          islandAnchors.value = anchors
+          latestIslandAnchors = anchors
+          islandFocusLayout?.updateAnchors(anchors)
         },
         settled: () => {
           if (resolveMenuExit) return
@@ -509,6 +519,7 @@ onMounted(async () => {
     scene.setColorMode(visual.theme)
     scene.setOccluded(aboutBackgroundHidden.value)
     scene.setActive(sceneActive.value)
+    scene.setImmersive(navigation.immersive)
   } catch (error) {
     if (!disposed) {
       loadingTask?.finish('error')
@@ -580,13 +591,16 @@ onUnmounted(() => {
           </Transition>
           <IslandFocusLayout
             v-if="selected === 'statue' && settled"
-            :anchors="islandAnchors"
+            :ref="setIslandFocusLayout"
             :mobile="config.id === 'mobile'"
           />
           <MobileScreenFrame v-if="config.id === 'mobile'" />
           <TempleBackdrop />
           <Transition name="temple-clock-reveal" appear>
-            <TempleClock v-if="clockVisible" />
+            <TempleClock
+              v-if="clockVisible"
+              :immersive="navigation.immersive"
+            />
           </Transition>
         </div>
         <div class="temple-obelisks">
@@ -599,7 +613,9 @@ onUnmounted(() => {
             :data-obelisk="item.id"
             :aria-label="`${item.roman} / ${item.label}`"
             :aria-pressed="selected === item.id"
-            :disabled="status !== 'ready' || !item.enabled"
+            :disabled="
+              status !== 'ready' || !item.enabled || navigation.immersive
+            "
             @click="
               config.raycastObelisks && $event.detail > 0
                 ? scene?.pick($event)

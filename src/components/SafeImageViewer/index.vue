@@ -82,11 +82,11 @@ import OverlayBackgroundTitle from '@/components/OverlayBackgroundTitle/index.vu
 import { useOverlayScrollLock } from '@/composables/useOverlayScrollLock'
 import { flashActionButton } from '@/utils/flashActionButton'
 import { createImageViewerGeometry } from '@/utils/imageViewerGeometry'
+import { bindImageViewerGestures } from '@/utils/imageViewerGestures'
 import {
   bindImageViewerNavigation,
   flashImageViewerNavigation,
 } from '@/utils/imageViewerNavigation'
-import { bindImageViewerGestures } from '@/utils/imageViewerGestures'
 import { isVideoUrl } from '@/utils/mediaPreview'
 
 import InlineImagePreview from './InlineImagePreview.vue'
@@ -469,19 +469,22 @@ useOverlayScrollLock('safe-image-viewer', () => !props.inline)
   text-align: left;
   background: rgb(16 14 17 / 86%);
 
+  > * {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+}
+
+.el-image-viewer__wrapper .safe-image-viewer__info,
+.inline-image-preview .inline-image-preview__info {
   .photo-info__device {
     padding-left: 4px;
     font-size: 1.45em;
     font-family: 'alibaba-puhuiti', sans-serif;
     font-weight: 900;
-    // 字号增大时保留原行框高度，避免撑高信息栏。
-    line-height: calc(1.25em / 1.45);
-  }
-
-  > * {
-    width: 100%;
-    min-width: 0;
-    box-sizing: border-box;
+    // 行框随放大后的字号增长，避免 overflow: hidden 裁切字形底部。
+    line-height: 1.25;
   }
 
   @media (max-width: 768px) {
@@ -494,6 +497,15 @@ useOverlayScrollLock('safe-image-viewer', () => !props.inline)
 
     .photo-info__inner > .photo-info__meta {
       justify-content: flex-start;
+    }
+  }
+
+  .photo-info__inner--title-only {
+    padding-inline: 12px;
+
+    .photo-info__device {
+      padding-left: 0;
+      text-align: center;
     }
   }
 }

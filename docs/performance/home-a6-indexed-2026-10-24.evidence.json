@@ -1,0 +1,233 @@
+{
+  "date": "2026-10-24",
+  "baseline": "Existing merged scan surface with fully expanded barycentric geometry; not the original four-surface implementation",
+  "pixelComparisons": [
+    {
+      "project": "chromium",
+      "expandedVertices": 4581,
+      "indexedVertices": 1218,
+      "expandedBytes": 105363,
+      "indexedBytes": 37176,
+      "indexBytes": 9162,
+      "comparisons": [
+        {
+          "progress": 0,
+          "turn": 0,
+          "maxDelta": 0,
+          "changedPixels": 0
+        },
+        {
+          "progress": 0.25,
+          "turn": 0,
+          "maxDelta": 0,
+          "changedPixels": 0
+        },
+        {
+          "progress": 0.5,
+          "turn": 0,
+          "maxDelta": 0,
+          "changedPixels": 0
+        },
+        {
+          "progress": 0.75,
+          "turn": 0,
+          "maxDelta": 0,
+          "changedPixels": 0
+        },
+        {
+          "progress": 1,
+          "turn": 0,
+          "maxDelta": 0,
+          "changedPixels": 0
+        },
+        {
+          "progress": 0,
+          "turn": 0.35,
+          "maxDelta": 0,
+          "changedPixels": 0
+        },
+        {
+          "progress": 0.25,
+          "turn": 0.35,
+          "maxDelta": 0,
+          "changedPixels": 0
+        },
+        {
+          "progress": 0.5,
+          "turn": 0.35,
+          "maxDelta": 0,
+          "changedPixels": 0
+        },
+        {
+          "progress": 0.75,
+          "turn": 0.35,
+          "maxDelta": 0,
+          "changedPixels": 0
+        },
+        {
+          "progress": 1,
+          "turn": 0.35,
+          "maxDelta": 0,
+          "changedPixels": 0
+        }
+      ],
+      "lines": 0,
+      "timerAvailable": false
+    },
+    {
+      "project": "mobile-chrome",
+      "expandedVertices": 4581,
+      "indexedVertices": 1218,
+      "expandedBytes": 105363,
+      "indexedBytes": 37176,
+      "indexBytes": 9162,
+      "comparisons": [
+        {
+          "progress": 0,
+          "turn": 0,
+          "maxDelta": 0,
+          "changedPixels": 0
+        },
+        {
+          "progress": 0.25,
+          "turn": 0,
+          "maxDelta": 0,
+          "changedPixels": 0
+        },
+        {
+          "progress": 0.5,
+          "turn": 0,
+          "maxDelta": 0,
+          "changedPixels": 0
+        },
+        {
+          "progress": 0.75,
+          "turn": 0,
+          "maxDelta": 0,
+          "changedPixels": 0
+        },
+        {
+          "progress": 1,
+          "turn": 0,
+          "maxDelta": 0,
+          "changedPixels": 0
+        },
+        {
+          "progress": 0,
+          "turn": 0.35,
+          "maxDelta": 0,
+          "changedPixels": 0
+        },
+        {
+          "progress": 0.25,
+          "turn": 0.35,
+          "maxDelta": 0,
+          "changedPixels": 0
+        },
+        {
+          "progress": 0.5,
+          "turn": 0.35,
+          "maxDelta": 0,
+          "changedPixels": 0
+        },
+        {
+          "progress": 0.75,
+          "turn": 0.35,
+          "maxDelta": 0,
+          "changedPixels": 0
+        },
+        {
+          "progress": 1,
+          "turn": 0.35,
+          "maxDelta": 0,
+          "changedPixels": 0
+        }
+      ],
+      "lines": 0,
+      "timerAvailable": false
+    }
+  ],
+  "sourceSha256": {
+    "src/views/Home/scene/barycentricGeometry.ts": "af1e3d2333858a148c4aee4b3e9a9c969fc64d40957cfe97a501477a73aa635f",
+    "src/views/Home/scene/modelScan.ts": "b4d0481b8ee9579291929455e0354d79b567371973905acf14cb9ab56b25952c",
+    "src/views/Home/templeScene.ts": "b8bb2bb3addb0eac4dbb0bcddc8faf931151920de7a74be2f2a8413d7529bdff",
+    "tests/model-scan-composite.spec.ts": "799e5a72f8401e139815854a12b1d7998e703cfaeb29cbebc2ce1d01186fd2a4",
+    "public/models/lucario-island.bin": "a4c1082b2f94c1e9a8d651e87195b1e00571821995d1048aa02db5465884e196"
+  },
+  "limitations": [
+    "Buffer payload is not driver allocation size",
+    "No EXT_disjoint_timer_query_webgl2; no hardware GPU timing or FPS claim",
+    "Unique vertices do not equal vertex shader invocations"
+  ],
+  "validation": {
+    "pixelTests": "4 passed across desktop and mobile emulation",
+    "integration": "Initial batch: 5 passed, 2 skipped, 1 scan-intermediate-sampling failure; isolated rerun of failed desktop scan test passed",
+    "typecheck": "Only pre-existing errors: WorkCard/index.vue:102 and Craft/CraftContent.vue:91",
+    "build": "vite build passed, 7.89s",
+    "lint": "ESLint passed for the three modified code/test files; git diff --check passed"
+  },
+  "sceneSamples": [
+    {
+      "progress": 1,
+      "calls": 3,
+      "triangles": 5038,
+      "lines": 0,
+      "programs": 95,
+      "vertices": 1218,
+      "attributes": {
+        "position": {
+          "vertices": 1218,
+          "bytes": 14616
+        },
+        "headInfluence": {
+          "vertices": 1218,
+          "bytes": 4872
+        },
+        "headNodInfluence": {
+          "vertices": 1218,
+          "bytes": 4872
+        },
+        "barycentric": {
+          "vertices": 1218,
+          "bytes": 3654
+        }
+      },
+      "indexBytes": 9162,
+      "morphBytes": 0,
+      "totalBytes": 37176,
+      "diagnosticBytes": 37176,
+      "timerAvailable": false
+    },
+    {
+      "progress": 0.5,
+      "calls": 4,
+      "triangles": 6565,
+      "lines": 0,
+      "programs": 95,
+      "vertices": 1218,
+      "attributes": {
+        "position": {
+          "vertices": 1218,
+          "bytes": 14616
+        },
+        "headInfluence": {
+          "vertices": 1218,
+          "bytes": 4872
+        },
+        "headNodInfluence": {
+          "vertices": 1218,
+          "bytes": 4872
+        },
+        "barycentric": {
+          "vertices": 1218,
+          "bytes": 3654
+        }
+      },
+      "indexBytes": 9162,
+      "morphBytes": 0,
+      "totalBytes": 37176,
+      "diagnosticBytes": 37176,
+      "timerAvailable": false
+    }
+  ]
+}

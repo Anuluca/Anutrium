@@ -1,0 +1,273 @@
+{
+  "date": "2026-10-25",
+  "baseline": "Before B2, after A1-A7/B1; same original layout component mounted with reactive parent fixture",
+  "fixtureSamples": [
+    {
+      "device": "desktop",
+      "mode": "before",
+      "frames": 40,
+      "parentUpdates": 40,
+      "layoutUpdates": 40,
+      "coordinates": [
+        [
+          633.59375,
+          428,
+          410,
+          230
+        ],
+        [
+          320.796875,
+          730,
+          430,
+          280
+        ],
+        [
+          633.59375,
+          730,
+          370,
+          350
+        ],
+        [
+          806.390625,
+          446.5,
+          470,
+          190
+        ],
+        [
+          806.390625,
+          711.5,
+          500,
+          310
+        ]
+      ]
+    },
+    {
+      "device": "desktop",
+      "mode": "after",
+      "frames": 40,
+      "parentUpdates": 0,
+      "layoutUpdates": 0,
+      "coordinates": [
+        [
+          633.59375,
+          428,
+          410,
+          230
+        ],
+        [
+          320.796875,
+          730,
+          430,
+          280
+        ],
+        [
+          633.59375,
+          730,
+          370,
+          350
+        ],
+        [
+          806.390625,
+          446.5,
+          470,
+          190
+        ],
+        [
+          806.390625,
+          711.5,
+          500,
+          310
+        ]
+      ]
+    },
+    {
+      "device": "mobile",
+      "mode": "before",
+      "frames": 40,
+      "parentUpdates": 40,
+      "layoutUpdates": 40,
+      "coordinates": [
+        [
+          181.28125,
+          392.5,
+          410,
+          230
+        ],
+        [
+          96.640625,
+          672.6640625,
+          430,
+          280
+        ],
+        [
+          181.28125,
+          672.6640625,
+          370,
+          350
+        ],
+        [
+          230.71875,
+          408.375,
+          470,
+          190
+        ],
+        [
+          230.71875,
+          656.7890625,
+          500,
+          310
+        ]
+      ]
+    },
+    {
+      "device": "mobile",
+      "mode": "after",
+      "frames": 40,
+      "parentUpdates": 0,
+      "layoutUpdates": 0,
+      "coordinates": [
+        [
+          181.28125,
+          392.5,
+          410,
+          230
+        ],
+        [
+          96.640625,
+          672.6640625,
+          430,
+          280
+        ],
+        [
+          181.28125,
+          672.6640625,
+          370,
+          350
+        ],
+        [
+          230.71875,
+          408.375,
+          470,
+          190
+        ],
+        [
+          230.71875,
+          656.7890625,
+          500,
+          310
+        ]
+      ]
+    }
+  ],
+  "pixelComparisons": [
+    {
+      "device": "desktop",
+      "state": "normal",
+      "size": [
+        1440,
+        900
+      ],
+      "maxChannelDelta": 0,
+      "changedPixels": 0
+    },
+    {
+      "device": "desktop",
+      "state": "-focus",
+      "size": [
+        1440,
+        900
+      ],
+      "maxChannelDelta": 0,
+      "changedPixels": 0
+    },
+    {
+      "device": "mobile",
+      "state": "normal",
+      "size": [
+        1082,
+        2202
+      ],
+      "maxChannelDelta": 0,
+      "changedPixels": 0
+    },
+    {
+      "device": "mobile",
+      "state": "-focus",
+      "size": [
+        1082,
+        2202
+      ],
+      "maxChannelDelta": 0,
+      "changedPixels": 0
+    }
+  ],
+  "realModelSamples": [
+    {
+      "project": "chromium",
+      "layout": 0,
+      "parent": 0,
+      "writes": 375,
+      "maxError": 0.24476551630345966,
+      "stableNodes": true,
+      "stableSource": true
+    },
+    {
+      "project": "mobile-chrome",
+      "layout": 0,
+      "parent": 0,
+      "writes": 420,
+      "maxError": 0.23761878441263207,
+      "stableNodes": true,
+      "stableSource": true
+    }
+  ],
+  "sourceSha256": {
+    "src/views/Home/TemplePage.vue": "e15ae7bc1c4ecca7d1145bdfdb1b60c533344a66d001bf2e2998d8ecba95b334",
+    "src/views/Home/components/IslandFocusLayout.vue": "893d746362bbbfef6fbbe61ca9581f56726c45e3062182249fc84037d9994e4a",
+    "src/views/Home/templeScene.ts": "676efc3e9dede300e315850195a6da03c3f0813b96845307c93c951e50c1830c",
+    "src/views/Home/scene/islandLinkOverlay.ts": "24ec5f99834d7a203b0caaaac7fb9edf472d49af31b68b8941219fa8a4ce780f",
+    "tests/island-anchor-updates.spec.ts": "77d0f3cc29aafcc5b136e68f120d49af4e6b09d31d680d3525bf97733ab497da",
+    "tests/fixtures/island-link-layout.ts": "aec8d73a6389226df6738c1f71d7cf4f482f3d37ceb9abc12317fdddbe292ce0"
+  },
+  "baselineSourceSha256": {
+    "TemplePage.before.vue": "e68f95a1d266b07fcf0373a5c8846e82690eda529e3be0b8a51568b02c6e31d5",
+    "IslandFocusLayout.before.vue": "a4a922661d4c12f98ce7abda8cd9fa76f7ed42e4479a8c75619f14f04b7aa701",
+    "templeScene.before.ts": "d9fc8402e4e1299d0cfc4540304ba17015df718ca5c8f5587eb8bb9ace232ef7"
+  },
+  "validation": {
+    "initialRun": {
+      "startTime": "2026-10-24T22:30:08.446Z",
+      "duration": 98029.08,
+      "expected": 6,
+      "skipped": 0,
+      "unexpected": 2,
+      "flaky": 0
+    },
+    "correctedAnchorRun": {
+      "startTime": "2026-10-24T22:32:00.024Z",
+      "duration": 32611.882,
+      "expected": 4,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "uniqueTargetTestsPassed": 8,
+    "initialTestFailure": "Remount harness requested bare / route instead of the navigation store; corrected to use the existing focus selection API",
+    "typecheck": "Only existing VueUse reference errors at WorkCard/index.vue:102 and Craft/CraftContent.vue:91",
+    "finalUnitRun": {
+      "startTime": "2026-10-24T22:36:42.462Z",
+      "duration": 2064.043,
+      "expected": 2,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "build": "vite build passed, 7.96s",
+    "lint": "ESLint passed for changed code/test files; git diff --check passed"
+  },
+  "limitations": [
+    "Controlled layout fixture uses static placeholder data; full-page behavior checked separately",
+    "SVG painting and 3D draw work remain",
+    "No hardware GPU timing or FPS claim"
+  ]
+}

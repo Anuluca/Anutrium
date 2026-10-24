@@ -12,6 +12,7 @@
         !templeHeaderDefault &&
         !isInitialAboutOpen,
       'initial-about-open': isInitialAboutOpen,
+      'is-home-immersive': isTempleRoute && navigation.immersive,
       'no-menu': noMenuShellActive,
     }"
   >
@@ -35,7 +36,24 @@
         <button
           class="header-home-link"
           type="button"
-          :aria-label="locale === 'en' ? 'Return home' : '返回首页'"
+          :aria-label="
+            isTempleRoute && navigation.isInitialScene
+              ? navigation.immersive
+                ? locale === 'en'
+                  ? 'Exit immersive mode'
+                  : '退出沉浸模式'
+                : locale === 'en'
+                ? 'Enter immersive mode'
+                : '进入沉浸模式'
+              : locale === 'en'
+              ? 'Return home'
+              : '返回首页'
+          "
+          :aria-pressed="
+            isTempleRoute && navigation.isInitialScene
+              ? navigation.immersive
+              : undefined
+          "
         >
           <Logo
             id="0"
@@ -669,6 +687,8 @@ const returnToInitialHome = async () => {
   navigation.returnExpanded = false
   navigation.request(null)
   await router.push('/')
+  // 旅程详情的离场守卫会重新写入返回标记，导航完成后再清理一次。
+  consumeJourneyReturnState()
   navigation.entryModule = null
 }
 
@@ -758,6 +778,65 @@ const toggleFullscreen = async () => {
     console.error(`Error attempting to toggle fullscreen: ${error}`)
   }
 }
+
+let immersionFullscreenOwned = false
+let immersionRevision = 0
+const restoreHomeImmersion = () => {
+  immersionRevision++
+  const shouldExit = immersionFullscreenOwned && document.fullscreenElement
+  immersionFullscreenOwned = false
+  navigation.immersive = false
+  if (shouldExit) void document.exitFullscreen().catch(console.error)
+}
+const enterHomeImmersion = () => {
+  navigation.immersive = true
+  const revision = ++immersionRevision
+  if (document.fullscreenElement || !document.documentElement.requestFullscreen)
+    return
+  immersionFullscreenOwned = true
+  // 全屏请求直接来自 Logo 点击，保留浏览器要求的用户激活状态。
+  void document.documentElement.requestFullscreen().then(
+    () => {
+      if (revision !== immersionRevision && document.fullscreenElement)
+        void document.exitFullscreen().catch(console.error)
+    },
+    (error) => {
+      immersionFullscreenOwned = false
+      console.error('Unable to enter fullscreen:', error)
+    }
+  )
+}
+const restoreHomeImmersionFromClick = (event: MouseEvent) => {
+  if (!navigation.immersive) return
+  // 捕获恢复点击，避免同一次点击继续触发模型拾取、导航或页脚操作。
+  event.preventDefault()
+  event.stopImmediatePropagation()
+  restoreHomeImmersion()
+}
+const restoreHomeImmersionFromKey = (event: KeyboardEvent) => {
+  if (!navigation.immersive || event.key !== 'Escape') return
+  event.preventDefault()
+  event.stopImmediatePropagation()
+  restoreHomeImmersion()
+}
+const syncImmersionFullscreen = () => {
+  if (immersionFullscreenOwned && !document.fullscreenElement)
+    restoreHomeImmersion()
+}
+watch(
+  [isTempleRoute, () => navigation.isInitialScene],
+  ([home, initial]) => {
+    if ((!home || !initial) && navigation.immersive) restoreHomeImmersion()
+  },
+  { flush: 'sync' }
+)
+watch(
+  () => navigation.immersive,
+  (active) => {
+    if (!active && immersionFullscreenOwned) restoreHomeImmersion()
+  },
+  { flush: 'sync' }
+)
 
 const clearHeaderScrolledTimer = () => {
   if (headerScrolledTimer === null) return
@@ -898,6 +977,10 @@ const { schedule: schedulePageMetricsRefresh } =
 
 const returnHome = () => {
   if (isTempleRoute.value) {
+    if (navigation.ready && navigation.homeCornersVisible) {
+      enterHomeImmersion()
+      return
+    }
     navigation.request(null)
     return
   }
@@ -906,7 +989,7 @@ const returnHome = () => {
     return
   }
 
-  router.push('/')
+  void returnToInitialHome()
 }
 
 const toggleLanguage = () => {
@@ -949,6 +1032,9 @@ const completeRouteTransition = () => {
 }
 
 onMounted(() => {
+  document.addEventListener('click', restoreHomeImmersionFromClick, true)
+  document.addEventListener('keydown', restoreHomeImmersionFromKey, true)
+  document.addEventListener('fullscreenchange', syncImmersionFullscreen)
   if (props.entryActive) startEntryAnimation()
   refreshPageMetrics()
   removePageScrollListener = addPageScrollListener(syncScrollState)
@@ -967,6 +1053,10 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  document.removeEventListener('click', restoreHomeImmersionFromClick, true)
+  document.removeEventListener('keydown', restoreHomeImmersionFromKey, true)
+  document.removeEventListener('fullscreenchange', syncImmersionFullscreen)
+  restoreHomeImmersion()
   clearBackgroundTopInsetTimer()
   clearHeaderScrolledTimer()
   visualStateStore.setBackgroundTopInset(0)

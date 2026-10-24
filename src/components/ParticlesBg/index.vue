@@ -62,7 +62,7 @@ let lastFrameTime = 0
 let lastBudgetTime = 0
 let particleTextures: ParticleTexture[] = []
 let particleTexturePixelRatio = 0
-const PARTICLE_RADII = [0.65, 1, 1.45, 2.1] as const
+const PARTICLE_RADII = [2.6, 4, 5.8, 8.4] as const
 const PARTICLE_DRIFT_SPEED = 0.09
 
 const rebuildParticleTextures = (pixelRatio: number) => {
@@ -82,6 +82,22 @@ const rebuildParticleTextures = (pixelRatio: number) => {
       textureContext.beginPath()
       textureContext.arc(size / 2, size / 2, radius, 0, Math.PI * 2)
       textureContext.fill()
+
+      // 在缓存纹理中柔化边缘，避免每帧执行模糊滤镜。
+      const edgeMask = textureContext.createRadialGradient(
+        size / 2,
+        size / 2,
+        0,
+        size / 2,
+        size / 2,
+        radius
+      )
+      edgeMask.addColorStop(0, 'rgba(0, 0, 0, 1)')
+      edgeMask.addColorStop(0.55, 'rgba(0, 0, 0, 1)')
+      edgeMask.addColorStop(1, 'rgba(0, 0, 0, 0)')
+      textureContext.globalCompositeOperation = 'destination-in'
+      textureContext.fillStyle = edgeMask
+      textureContext.fillRect(0, 0, size, size)
     }
 
     return { canvas: textureCanvas, size }
@@ -152,10 +168,10 @@ const drawParticles = (frameTime: number, shouldMove: boolean) => {
     if (shouldMove) {
       particle.x += particle.velocityX * elapsed
       particle.y += particle.velocityY * elapsed
-      if (particle.x < -4) particle.x = width + 4
-      if (particle.x > width + 4) particle.x = -4
-      if (particle.y < -4) particle.y = height + 4
-      if (particle.y > height + 4) particle.y = -4
+      if (particle.x < -10) particle.x = width + 10
+      if (particle.x > width + 10) particle.x = -10
+      if (particle.y < -10) particle.y = height + 10
+      if (particle.y > height + 10) particle.y = -10
     }
 
     const flicker = 0.72 + Math.sin(frameTime * 0.0008 + particle.phase) * 0.28

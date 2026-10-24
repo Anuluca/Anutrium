@@ -1,0 +1,241 @@
+{
+  "date": "2026-10-25",
+  "baseline": "After A1-A7, 95 prepared programs; scene source snapshotted from Git index before B1",
+  "baselineSourceSha256": "b8bb2bb3addb0eac4dbb0bcddc8faf931151920de7a74be2f2a8413d7529bdff",
+  "sourceSha256": {
+    "src/views/Home/scene/shaderWarmup.ts": "a90c2cc47f4a6fdf2cca0d92bd36ef663199aabddce1a11124f5f7456ab49c6e",
+    "src/views/Home/templeScene.ts": "d9fc8402e4e1299d0cfc4540304ba17015df718ca5c8f5587eb8bb9ace232ef7",
+    "src/views/Home/TemplePage.vue": "e68f95a1d266b07fcf0373a5c8846e82690eda529e3be0b8a51568b02c6e31d5",
+    "tests/home-shader-preparation.spec.ts": "11ad41cdd562d2183d2358db7ef368d24b18f322c0ec40dd5a6cf6ddd98f516f"
+  },
+  "environment": {
+    "url": "http://localhost:3000",
+    "browser": "Playwright Chromium",
+    "viewport": [
+      1440,
+      900
+    ],
+    "dpr": 1
+  },
+  "samples": [
+    {
+      "mode": "before",
+      "path": "/",
+      "times": {
+        "firstVisible": 14392.700000047684,
+        "ready": 14550.700000047684,
+        "programsAtFirstVisible": 95
+      },
+      "initialPrograms": null,
+      "totalPrograms": 95,
+      "selection": "none"
+    },
+    {
+      "mode": "before",
+      "path": "/island",
+      "times": {
+        "firstVisible": 12380.399999976158,
+        "ready": 12509.599999964237,
+        "programsAtFirstVisible": 95
+      },
+      "initialPrograms": null,
+      "totalPrograms": 95,
+      "selection": "statue"
+    },
+    {
+      "mode": "before",
+      "path": "/floratrium",
+      "times": {
+        "firstVisible": 13425.199999988079,
+        "ready": 13714.800000011921,
+        "programsAtFirstVisible": 95
+      },
+      "initialPrograms": null,
+      "totalPrograms": 95,
+      "selection": "sprigatito"
+    },
+    {
+      "mode": "after",
+      "path": "/",
+      "times": {
+        "firstVisible": 9424.400000035763,
+        "ready": 13415.699999988079,
+        "programsAtFirstVisible": 42
+      },
+      "initialPrograms": 42,
+      "totalPrograms": 80,
+      "entry": "home",
+      "prepared": "80",
+      "selection": "none"
+    },
+    {
+      "mode": "after",
+      "path": "/island",
+      "times": {
+        "firstVisible": 7784.399999976158,
+        "ready": 8673.799999952316,
+        "programsAtFirstVisible": 42
+      },
+      "initialPrograms": 42,
+      "totalPrograms": 80,
+      "entry": "statue",
+      "prepared": "80",
+      "selection": "statue"
+    },
+    {
+      "mode": "after",
+      "path": "/floratrium",
+      "times": {
+        "firstVisible": 9702.599999964237,
+        "ready": 10451.5,
+        "programsAtFirstVisible": 69
+      },
+      "initialPrograms": 61,
+      "totalPrograms": 80,
+      "entry": "sprigatito",
+      "prepared": "80",
+      "selection": "sprigatito"
+    }
+  ],
+  "measurement": "RAF observes canvas.style.visibility=visible and computed scene opacity>0; ready requires entranceFinished and aria-busy=false",
+  "limitations": [
+    "Single sample per entry per version, not a repeated benchmark",
+    "No hardware GPU frame-time or FPS conclusion",
+    "Shared source and services may have unrelated work; only the scene module was switched for before/after",
+    "Before and after timing samples run sequentially; cache state and system load may affect times"
+  ],
+  "preFixTimingSamples": [
+    {
+      "mode": "before",
+      "path": "/",
+      "times": {
+        "firstVisible": 14392.700000047684,
+        "ready": 14550.700000047684,
+        "programsAtFirstVisible": 95
+      },
+      "initialPrograms": null,
+      "totalPrograms": 95,
+      "selection": "none"
+    },
+    {
+      "mode": "before",
+      "path": "/island",
+      "times": {
+        "firstVisible": 12380.399999976158,
+        "ready": 12509.599999964237,
+        "programsAtFirstVisible": 95
+      },
+      "initialPrograms": null,
+      "totalPrograms": 95,
+      "selection": "statue"
+    },
+    {
+      "mode": "before",
+      "path": "/floratrium",
+      "times": {
+        "firstVisible": 13425.199999988079,
+        "ready": 13714.800000011921,
+        "programsAtFirstVisible": 95
+      },
+      "initialPrograms": null,
+      "totalPrograms": 95,
+      "selection": "sprigatito"
+    },
+    {
+      "mode": "after",
+      "path": "/",
+      "times": {
+        "firstVisible": 7344.699999988079,
+        "ready": 11228.900000035763,
+        "programsAtFirstVisible": 50
+      },
+      "initialPrograms": 42,
+      "totalPrograms": 80,
+      "entry": "home",
+      "prepared": "80",
+      "selection": "none"
+    },
+    {
+      "mode": "after",
+      "path": "/island",
+      "times": {
+        "firstVisible": 7047.900000035763,
+        "ready": 7524.400000035763,
+        "programsAtFirstVisible": 50
+      },
+      "initialPrograms": 42,
+      "totalPrograms": 80,
+      "entry": "statue",
+      "prepared": "80",
+      "selection": "statue"
+    },
+    {
+      "mode": "after",
+      "path": "/floratrium",
+      "times": {
+        "firstVisible": 8560.099999964237,
+        "ready": 9171,
+        "programsAtFirstVisible": 69
+      },
+      "initialPrograms": 61,
+      "totalPrograms": 80,
+      "entry": "sprigatito",
+      "prepared": "80",
+      "selection": "sprigatito"
+    }
+  ],
+  "legacyPitchBaselineProof": [
+    {
+      "mode": "before",
+      "selection": "flanerie",
+      "headNodAngle": 0,
+      "pitchRadians": 0
+    },
+    {
+      "mode": "after",
+      "selection": "flanerie",
+      "headNodAngle": 0,
+      "pitchRadians": 0
+    }
+  ],
+  "validation": {
+    "runs": {
+      "anutrium-b1-regression.json": {
+        "startTime": "2026-10-24T22:07:57.546Z",
+        "duration": 409582.593,
+        "expected": 19,
+        "skipped": 2,
+        "unexpected": 5,
+        "flaky": 0
+      },
+      "anutrium-b1-final-regression.json": {
+        "startTime": "2026-10-24T22:15:12.317Z",
+        "duration": 205710.91,
+        "expected": 14,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "anutrium-b1-request-regression.json": {
+        "startTime": "2026-10-24T22:18:56.646Z",
+        "duration": 24155.29,
+        "expected": 2,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      }
+    },
+    "targetedUniqueTests": {
+      "passed": 24,
+      "skipped": 2,
+      "note": "Across runs; excludes the unrelated legacy page tests and obsolete pitch assertion. Final entry/geometry/scan run: 14 passed; latest navigation request: 2 passed."
+    },
+    "legacyFailures": [
+      "home.spec.ts geometry test waits for .archives-page on both platforms; current homepage route-leave test passed on both platforms",
+      "home-module-navigation.spec.ts old pitch expectation is 10 degrees; baseline and final mobile flanerie pitch both measured 0 degrees; nod both 0 degrees"
+    ],
+    "typecheck": "Only existing WorkCard/index.vue:102 and Craft/CraftContent.vue:91 VueUse errors",
+    "lint": "ESLint passed for modified code/test files; git diff --check passed",
+    "build": "vite build passed in 8.08s"
+  }
+}

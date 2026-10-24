@@ -135,3 +135,30 @@ test('Island zoom eases in gently and settles without overshoot or a hard stop',
   expect(peak).toBeLessThanOrEqual(42)
   expect(speed(0.9)).toBeLessThan(speed(0.1))
 })
+
+test('Island can defer the full FOV change while preserving its projected camera path', () => {
+  const camera = new THREE.PerspectiveCamera(homeFov, 16 / 9)
+  camera.position.copy(home.position)
+  const lookAt = home.target.clone()
+  const startDistance = projectedDistance(camera, lookAt)
+  const targetFov = 48
+  const endDistance =
+    island.position.distanceTo(island.target) *
+    Math.tan(THREE.MathUtils.degToRad(targetFov / 2))
+  const update = createDollyCameraMotion(camera, lookAt, island, targetFov)
+  for (let i = 0; i <= 100; i++) {
+    const progress = i / 100
+    update(progress, 0)
+    expect(camera.fov).toBe(homeFov)
+    expect(projectedDistance(camera, lookAt)).toBeCloseTo(
+      THREE.MathUtils.lerp(startDistance, endDistance, progress),
+      10
+    )
+  }
+  for (let i = 0; i <= 100; i++) {
+    update(1, easeIslandFocusZoom(i / 100))
+    expect(projectedDistance(camera, lookAt)).toBeCloseTo(endDistance, 10)
+  }
+  expect(camera.fov).toBe(targetFov)
+  expect(camera.position.distanceTo(island.position)).toBeLessThan(1e-10)
+})

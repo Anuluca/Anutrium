@@ -1,0 +1,192 @@
+{
+  "date": "2026-10-24",
+  "environment": {
+    "url": "http://localhost:3000",
+    "viewport": [
+      1440,
+      900
+    ],
+    "dpr": 1,
+    "renderer": "Chromium / SwiftShader",
+    "method": "Full scene render, visible SpotLight traversal and current main Physical program spotLights uniform sequence; one before/after browser-context sample."
+  },
+  "baseline": "After A4/A6/A7, reflection brightness adjustment and focus transparency correction; Vite-transformed module captured before A5.",
+  "measurements": [
+    {
+      "mode": "before",
+      "state": "home",
+      "visibleSpots": 5,
+      "zeroSpots": 5,
+      "intensities": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "mainSurfaceSpotSlots": 5,
+      "programs": 55,
+      "fullCalls": 36,
+      "cachedCalls": 10,
+      "warmupMs": 748.0999999642372
+    },
+    {
+      "mode": "before",
+      "state": "focus",
+      "visibleSpots": 5,
+      "zeroSpots": 4,
+      "intensities": [
+        0,
+        27.5,
+        0,
+        0,
+        0
+      ],
+      "mainSurfaceSpotSlots": 5,
+      "programs": 56,
+      "fullCalls": 25,
+      "cachedCalls": 25,
+      "warmupMs": 748.0999999642372
+    },
+    {
+      "mode": "after",
+      "state": "home",
+      "visibleSpots": 0,
+      "zeroSpots": 0,
+      "intensities": [],
+      "mainSurfaceSpotSlots": 0,
+      "programs": 95,
+      "fullCalls": 36,
+      "cachedCalls": 10,
+      "warmupMs": 1120.800000011921
+    },
+    {
+      "mode": "after",
+      "state": "focus",
+      "visibleSpots": 1,
+      "zeroSpots": 0,
+      "intensities": [
+        27.5
+      ],
+      "mainSurfaceSpotSlots": 1,
+      "programs": 95,
+      "fullCalls": 25,
+      "cachedCalls": 25,
+      "warmupMs": 1120.800000011921
+    }
+  ],
+  "baselineCompiledModuleSha256": "c7429f10fadf2036808ab52cee1a074c0e691bcf120629ff52b074be5c15d3dc",
+  "sourceSha256": {
+    "src/views/Home/templeScene.ts": "53276c58480d14f546c678d21e00ad7a493eb9766bf26e81dfc22229af6a0d07",
+    "src/views/Home/scene/spotLightPool.ts": "0aa84a49d3c1bb3237405917d45e1addf33e7ba8af8b9f7a87ca2c9d817f973a",
+    "tests/home-spotlight-pool.spec.ts": "bda7ad0dac16b19f8df0be0523880372552004b9ce8c76204b7741f4c7091cb8"
+  },
+  "limitations": [
+    "Startup times are single software-rendering samples and do not predict hardware startup or GPU frame time.",
+    "More than two positive controller contributions during rapid repeated navigation retain only the two strongest; normal two-source transitions remain intact.",
+    "Program-count increase is the finite 0/1/2-light and opacity/clipping prewarm cost; draw counts are unchanged by A5.",
+    "Software shader warmup varied strongly across runs: approximately 1.1 to 5.9 seconds after the change; no startup-speed improvement is claimed."
+  ],
+  "additionalMeasurementRun": [
+    {
+      "mode": "before",
+      "state": "home",
+      "visibleSpots": 5,
+      "zeroSpots": 5,
+      "intensities": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "mainSurfaceSpotSlots": 5,
+      "programs": 55,
+      "fullCalls": 36,
+      "cachedCalls": 10,
+      "warmupMs": 851.9000000357628
+    },
+    {
+      "mode": "before",
+      "state": "focus",
+      "visibleSpots": 5,
+      "zeroSpots": 4,
+      "intensities": [
+        0,
+        27.5,
+        0,
+        0,
+        0
+      ],
+      "mainSurfaceSpotSlots": 5,
+      "programs": 56,
+      "fullCalls": 25,
+      "cachedCalls": 25,
+      "warmupMs": 851.9000000357628
+    },
+    {
+      "mode": "after",
+      "state": "home",
+      "visibleSpots": 0,
+      "zeroSpots": 0,
+      "intensities": [],
+      "mainSurfaceSpotSlots": 0,
+      "programs": 95,
+      "fullCalls": 36,
+      "cachedCalls": 10,
+      "warmupMs": 5866.799999952316
+    },
+    {
+      "mode": "after",
+      "state": "focus",
+      "visibleSpots": 1,
+      "zeroSpots": 0,
+      "intensities": [
+        27.5
+      ],
+      "mainSurfaceSpotSlots": 1,
+      "programs": 95,
+      "fullCalls": 25,
+      "cachedCalls": 25,
+      "warmupMs": 5866.799999952316
+    }
+  ],
+  "warmupSamplesMs": [
+    {
+      "before": 748.0999999642372,
+      "after": 1120.800000011921
+    },
+    {
+      "before": 851.9000000357628,
+      "after": 5866.799999952316
+    }
+  ],
+  "controlledCompositeProbe": {
+    "method": "Same scene and pose in one JS task: pool with zero active lights, add five zero-intensity legacy sources, remove again.",
+    "desktopMaxChannelDelta": 0,
+    "desktopChangedPixelRatio": 0,
+    "desktopAndMobileRegressionMaxAllowedChannelDelta": 2
+  },
+  "validation": {
+    "coreRun": {
+      "passed": 11,
+      "failed": 1,
+      "skipped": 2,
+      "duration": "4.5m",
+      "failure": "Shader-preparation leave test timed out while concurrent GPU diagnostics were running."
+    },
+    "isolatedPreparationLeaveRerun": {
+      "passed": 1,
+      "duration": "3.3s"
+    },
+    "fullHomeCompositeRegression": {
+      "passed": 2,
+      "duration": "42.6s"
+    },
+    "distinctPassed": 14,
+    "desktopOnlySkipped": 2,
+    "eslint": "passed",
+    "viteBuild": "passed (10.13s)",
+    "typecheck": "Only the existing WorkCard/index.vue:102 and Craft/CraftContent.vue:91 errors remain."
+  }
+}

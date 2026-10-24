@@ -79,8 +79,10 @@ test('design cards open independent image lists inline and in fullscreen without
       await detail.locator('.media-gallery__open').first().click()
       const viewer = page.locator('.el-image-viewer__wrapper')
       await expect(viewer.locator('.safe-image-viewer__info')).toBeVisible()
-      await expect(viewer.locator('.photo-info__time')).toHaveText(
-        /^\d{4}-\d{2}-\d{2}$/
+      await expect(viewer.locator('.photo-info__time')).toHaveCount(0)
+      await expect(viewer.locator('.photo-info__device')).toHaveCSS(
+        'text-align',
+        'center'
       )
       await page.keyboard.press('Escape')
       await expect(viewer).toHaveCount(0)

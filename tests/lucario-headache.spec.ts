@@ -132,7 +132,7 @@ for (const module of ['pokeyard', 'island'] as const) {
           .map(Number)
         return Math.asin(Math.max(-1, Math.min(1, 2 * (w * x - y * z))))
       }
-      await expect.poll(pitch).toBeCloseTo((10 * Math.PI) / 180, 3)
+      await expect.poll(pitch).toBeCloseTo(0, 3)
       await expect(stage).toHaveAttribute('data-head-nod-angle', '0.000')
       await page.mouse.move(viewport.width * 0.85, viewport.height * 0.5)
       await expect.poll(yaw).toBeGreaterThan(0.05)
@@ -148,6 +148,7 @@ for (const module of ['pokeyard', 'island'] as const) {
         'true'
       )
       await expect(stage).toHaveAttribute('data-head-aim', 'pointer')
+      await expect(stage).toHaveAttribute('data-head-nod-angle', '10.000')
       await page.mouse.move(viewport.width * 0.85, viewport.height * 0.5)
       await expect.poll(yaw).toBeGreaterThan(0.05)
     })

@@ -46,7 +46,7 @@
         staggered-entrance
       >
         <template #info="{ item: photo }">
-          <MediaPhotoInfo :item="photo" :time-divider-padding="18" />
+          <MediaPhotoInfo :item="{ title: photo.title || photo.location }" />
         </template>
       </MediaGallery>
 

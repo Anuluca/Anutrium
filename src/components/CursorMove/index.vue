@@ -6,6 +6,7 @@
     :class="{
       'is-hidden':
         shouldHideCursor ||
+        isCursorIdle ||
         !hasPointerPosition ||
         !isPointerInside ||
         !isPageVisible,
@@ -21,7 +22,12 @@
           'is-scrolling': isScrolling && !isLoading && !isInteractiveCursor,
         }"
       >
-        <div class="cursor-body" />
+        <div class="cursor-size">
+          <div class="cursor-body" />
+          <div class="cursor-triangle">
+            <div class="cursor-triangle-rotation" />
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -30,6 +36,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { cursorState } from '@/stores'
+import { useTempleNavigation } from '@/stores/templeNavigation'
 import { subscribePointerSamples } from '@/utils/pointerSamples'
 
 const props = defineProps({
@@ -40,6 +47,7 @@ const props = defineProps({
 })
 
 const cursorStateStore = cursorState()
+const navigation = useTempleNavigation()
 
 const HIDDEN_CURSOR_SELECTOR =
   '.no-cursor, .hide-cursor, .cursor-none, .native-cursor'
@@ -60,6 +68,40 @@ const isPageVisible = ref(true)
 const hasPointerPosition = ref(false)
 const hasFinePointer = ref(false)
 const isPointerInside = ref(false)
+const isCursorIdle = computed({
+  get: () => cursorStateStore.isIdle,
+  set: (idle) => {
+    cursorStateStore.isIdle = idle
+  },
+})
+const cursorIdleDelay = computed(() => (navigation.immersive ? 1000 : 10000))
+let cursorIdleTimer = null
+let lastCursorMove = 0
+const clearCursorIdle = () => {
+  if (cursorIdleTimer !== null) window.clearTimeout(cursorIdleTimer)
+  cursorIdleTimer = null
+  isCursorIdle.value = false
+}
+const checkCursorIdle = () => {
+  const remaining = cursorIdleDelay.value - (performance.now() - lastCursorMove)
+  if (remaining > 0) {
+    cursorIdleTimer = window.setTimeout(checkCursorIdle, remaining)
+    return
+  }
+  cursorIdleTimer = null
+  isCursorIdle.value = true
+}
+const refreshCursorIdle = () => {
+  if (!shouldAnimateCursor.value) {
+    clearCursorIdle()
+    return
+  }
+  isCursorIdle.value = false
+  lastCursorMove = performance.now()
+  // 高频移动只更新时间戳，共用一个空闲计时器。
+  if (cursorIdleTimer === null)
+    cursorIdleTimer = window.setTimeout(checkCursorIdle, cursorIdleDelay.value)
+}
 
 // 以 60Hz 下每帧追赶 30% 为基准，按时间衰减统一不同刷新率的惯性感受。
 const referenceEase = 0.3
@@ -189,6 +231,7 @@ const onPointerMove = (event) => {
     return
 
   // 高频输入只更新最新目标；移动状态和 DOM 写入统一在下一帧处理。
+  refreshCursorIdle()
   targetPosition.x = event.clientX
   targetPosition.y = event.clientY
   hasPendingPointerMove = true
@@ -209,6 +252,7 @@ const onPointerOut = (event) => {
 }
 
 const onPointerLeaveViewport = () => {
+  clearCursorIdle()
   stopScrollAnimation()
   hasPendingPointerMove = false
   shouldSnapToPointer = true
@@ -348,6 +392,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  clearCursorIdle()
   finePointerQuery?.removeEventListener('change', syncFinePointer)
   document.removeEventListener('visibilitychange', handleVisibilityChange)
   removePointerListeners()
@@ -357,6 +402,10 @@ onUnmounted(() => {
 watch(isCustomCursorReady, syncNativeCursor, { flush: 'sync' })
 
 watch(shouldAnimateCursor, syncPointerListeners)
+watch([cursorIdleDelay, shouldAnimateCursor], () => {
+  clearCursorIdle()
+  refreshCursorIdle()
+})
 watch([isLoading, isInteractiveCursor], cancelScrollReturn)
 </script>
 
@@ -427,45 +476,63 @@ watch([isLoading, isInteractiveCursor], cancelScrollReturn)
 
 .cursor-shape {
   position: relative;
-  width: @follower-size;
-  height: @follower-size;
-  margin-top: -(@follower-size / 2);
-  margin-left: -(@follower-size / 2);
-  background-color: transparent;
+  width: @triangle-size;
+  height: @triangle-size;
+  margin-top: -(@triangle-size / 2);
+  margin-left: -(@triangle-size / 2);
   border-radius: 50%;
-  clip-path: none;
-
-  transition: width 1s cubic-bezier(0.25, 1, 0.5, 1),
-    height 1s cubic-bezier(0.25, 1, 0.5, 1),
-    margin 1s cubic-bezier(0.25, 1, 0.5, 1),
-    background-color 1s cubic-bezier(0.25, 1, 0.5, 1),
-    border-radius 1s cubic-bezier(0.25, 1, 0.5, 1);
 
   &.is-active {
-    width: @triangle-size;
-    height: @triangle-size;
-    margin-top: -(@triangle-size / 2);
-    margin-left: -(@triangle-size / 2);
-    border-radius: 0;
-    background-color: var(--cursor-inversion-color);
+    .cursor-size {
+      transform: scale(1);
+    }
 
     .cursor-body {
       opacity: 0;
     }
 
-    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+    .cursor-triangle {
+      opacity: 1;
+    }
 
-    animation: spin 2s linear infinite;
+    .cursor-triangle-rotation {
+      animation-play-state: running;
+    }
   }
 }
 
-.cursor-body {
+// 所有形状共用固定 36px 布局框；尺寸过渡独立于旋转和滚动变形。
+.cursor-size {
   position: absolute;
   inset: 0;
+  transform: scale(unit((@follower-size / @triangle-size)));
+  transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cursor-body,
+.cursor-triangle,
+.cursor-triangle-rotation {
+  position: absolute;
+  inset: 0;
+  transform-origin: center;
+}
+
+.cursor-body {
   border-radius: 50%;
   background-color: var(--cursor-inversion-color);
-  transform-origin: center;
-  transition: opacity 0.2s ease, transform 0.18s ease;
+  transition: opacity 0.24s ease, transform 0.18s ease;
+}
+
+.cursor-triangle {
+  opacity: 0;
+  transition: opacity 0.24s ease;
+}
+
+// 旋转只作用于三角形，离开时暂停并保留角度，避免淡出与再次进入时跳转。
+.cursor-triangle-rotation {
+  background-color: var(--cursor-inversion-color);
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+  animation: spin 2s linear infinite paused;
 }
 
 // 圆形缩放与三角形旋转分层，避免两种 transform 相互覆盖。
@@ -502,16 +569,26 @@ watch([isLoading, isInteractiveCursor], cancelScrollReturn)
 
   .cursor-shape,
   .cursor-shape.is-active {
-    width: @follower-size;
-    height: @follower-size;
-    margin-top: -(@follower-size / 2);
-    margin-left: -(@follower-size / 2);
     border-radius: 50%;
     clip-path: none;
-    background-color: transparent;
+
+    .cursor-size {
+      transform: scale(unit((@follower-size / @triangle-size)));
+      clip-path: none;
+      transition: none;
+    }
+
+    .cursor-triangle {
+      opacity: 0;
+      transition: none;
+    }
 
     .cursor-body {
       opacity: 1;
+    }
+
+    .cursor-triangle-rotation {
+      animation-play-state: paused;
     }
 
     opacity: 0.5;
@@ -523,7 +600,8 @@ watch([isLoading, isInteractiveCursor], cancelScrollReturn)
 .cursor-position.is-hidden {
   .cursor-shape,
   .cursor-scale,
-  .cursor-body {
+  .cursor-body,
+  .cursor-triangle-rotation {
     animation-play-state: paused;
   }
 }

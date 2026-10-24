@@ -123,7 +123,6 @@
                   <MediaPhotoInfo
                     :item="{
                       device: item.title,
-                      time: item.time,
                     }"
                   />
                 </template>
@@ -170,7 +169,6 @@
                     <MediaPhotoInfo
                       :item="{
                         device: item.title,
-                        time: item.time,
                       }"
                     />
                   </template>

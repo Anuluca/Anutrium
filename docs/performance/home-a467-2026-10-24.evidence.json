@@ -1,0 +1,163 @@
+{
+  "date": "2026-10-24",
+  "scope": [
+    "A4",
+    "A6",
+    "A7"
+  ],
+  "environment": {
+    "url": "http://localhost:3000",
+    "viewport": [
+      1440,
+      900
+    ],
+    "dpr": 1,
+    "renderer": "Chromium WebGL / SwiftShader",
+    "measurement": "renderer.info after a full renderer.render(scene,camera); cachedCalls from normal scene diagnostics",
+    "baseline": "A1/A2/A3 plus reflection color fix, captured before this A4/A6/A7 work"
+  },
+  "measurements": [
+    {
+      "mode": "before",
+      "state": "home",
+      "calls": 50,
+      "triangles": 7098,
+      "lines": 32,
+      "programs": 54,
+      "cachedCalls": 11,
+      "sceneMaterialObjects": 84,
+      "visibleMaterialObjects": 53,
+      "batchCount": 2,
+      "barycentric": null
+    },
+    {
+      "mode": "before",
+      "state": "island",
+      "calls": 3,
+      "triangles": 3511,
+      "lines": 4581,
+      "programs": 54,
+      "cachedCalls": 3,
+      "sceneMaterialObjects": 84,
+      "visibleMaterialObjects": 3,
+      "batchCount": 2,
+      "barycentric": null
+    },
+    {
+      "mode": "before",
+      "state": "scan-half",
+      "calls": 5,
+      "triangles": 6565,
+      "lines": 4581,
+      "programs": 54,
+      "cachedCalls": 5,
+      "sceneMaterialObjects": 84,
+      "visibleMaterialObjects": 5,
+      "batchCount": 2,
+      "barycentric": null
+    },
+    {
+      "mode": "after",
+      "state": "home",
+      "linkedPrograms": 56,
+      "calls": 36,
+      "triangles": 5988,
+      "lines": 32,
+      "programs": 56,
+      "cachedCalls": 10,
+      "sceneMaterialObjects": 95,
+      "visibleMaterialObjects": 40,
+      "batchCount": 14,
+      "barycentric": {
+        "vertices": 4581,
+        "bytes": 105363
+      }
+    },
+    {
+      "mode": "after",
+      "state": "island",
+      "linkedPrograms": 56,
+      "calls": 3,
+      "triangles": 5038,
+      "lines": 0,
+      "programs": 56,
+      "cachedCalls": 3,
+      "sceneMaterialObjects": 95,
+      "visibleMaterialObjects": 3,
+      "batchCount": 14,
+      "barycentric": {
+        "vertices": 4581,
+        "bytes": 105363
+      }
+    },
+    {
+      "mode": "after",
+      "state": "scan-half",
+      "linkedPrograms": 56,
+      "calls": 4,
+      "triangles": 6565,
+      "lines": 0,
+      "programs": 56,
+      "cachedCalls": 4,
+      "sceneMaterialObjects": 95,
+      "visibleMaterialObjects": 4,
+      "batchCount": 14,
+      "barycentric": {
+        "vertices": 4581,
+        "bytes": 105363
+      }
+    }
+  ],
+  "sourceSha256": {
+    "src/views/Home/templeScene.ts": "f9dabf3760d42be25bebdff50a364c80f9dd75864641d5dd9b465258466b713f",
+    "src/views/Home/scene/materials.ts": "85e8f9ca0dac6107586caf1763264d417225c95eace6b4cefc536461c0b4af75",
+    "src/views/Home/scene/pillarBatches.ts": "cc435950c25711d88c9b8224f72e7ce0636a3a642189f5e28677e867ce303585",
+    "src/views/Home/scene/modelScan.ts": "b4d0481b8ee9579291929455e0354d79b567371973905acf14cb9ab56b25952c",
+    "src/views/Home/scene/barycentricGeometry.ts": "9f3d2a28c483a6ae61f3d60c8e59f17deffc2ee6bcb2099f4ef805572df45dfd",
+    "src/views/Home/scene/staticSceneCache.ts": "99e8ce12630b2782ab46626118ba3fa9892de1c01589765bbe2b3c865542868a"
+  },
+  "baselineSha256": {
+    "templeScene.before.ts": "b19eaf62dc78437f5356dc3fe20c3c5b718c9611f1970ae0fa13264cec2dc3ac",
+    "reflectionBatches.before.ts": "81bc614ac494b9ecb12d2aaa8c7195d08f3f750789466326e883c164fb613e0a",
+    "materials.before.ts": "92c25e2bdf226cea74f61a46218a880c848f4af56b0e7ba6a11b25e75698847b",
+    "modelScan.before.ts": "928e5fd61aba74883a6bb93d0f22c8002cdde5acde7546f2b8b6a5d75b53978d"
+  },
+  "firstIslandLinkAudit": {
+    "linkedProgramsAfterHomeReady": 56,
+    "linkedProgramsAfterIsland": 56,
+    "method": "WebGL2RenderingContext.linkProgram hook on temple canvas; same final measurement run after entrance and 2500ms settling"
+  },
+  "notes": [
+    "No hardware GPU time or FPS claim.",
+    "Material objects retained as animation controllers are included in sceneMaterialObjects; only renderer-facing materials are batched.",
+    "Permanently transparent layers are split into front/back rows to preserve ordering with crystal cores and character reflections."
+  ],
+  "validation": {
+    "finalTargetedPlaywright": {
+      "passed": 10,
+      "skipped": 2,
+      "failed": 0,
+      "projects": [
+        "Desktop Chrome",
+        "Pixel 7"
+      ],
+      "files": [
+        "home-render-cache.spec.ts",
+        "island-model-scan.spec.ts",
+        "island-performance.spec.ts",
+        "model-scan-composite.spec.ts"
+      ],
+      "duration": "3.8m"
+    },
+    "mobileLightAfterReturnPixelProbe": {
+      "batchVsDirectChangedRatio": 0.002922396982933819,
+      "cacheVsBatchChangedRatio": 0.007127201444734283,
+      "cacheVsDirectChangedRatio": 0.009704879065244571,
+      "channelDeltaThreshold": 12,
+      "changedPixelThreshold": 0.01
+    },
+    "eslint": "passed",
+    "viteBuild": "passed",
+    "typecheck": "two pre-existing errors in WorkCard/index.vue:102 and Craft/CraftContent.vue:91"
+  }
+}

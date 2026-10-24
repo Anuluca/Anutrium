@@ -17,6 +17,20 @@ test.describe('desktop cursor', () => {
     await expect(page.locator('.cursor-position')).not.toHaveClass(/is-hidden/)
   })
 
+  test('ordinary pages hide the cursor after ten idle seconds and show it on movement', async ({
+    page,
+  }) => {
+    test.setTimeout(45000)
+    const cursor = page.locator('.cursor-position')
+    await page.mouse.move(160, 120)
+    await page.waitForTimeout(9200)
+    await expect(cursor).not.toHaveClass(/is-hidden/)
+    await expect(cursor).toHaveClass(/is-hidden/, { timeout: 2000 })
+    await expect(page.locator('html')).toHaveClass(/custom-cursor-enabled/)
+    await page.mouse.move(180, 140)
+    await expect(cursor).not.toHaveClass(/is-hidden/)
+  })
+
   test('coalesces input bursts into one position write per frame and stops while idle', async ({
     page,
   }) => {
@@ -120,7 +134,10 @@ test.describe('desktop cursor', () => {
     const shape = cursor.locator('.cursor-shape')
     await expect(shape).toHaveClass(/is-active/)
     await expect(shape).not.toHaveClass(/is-moving/)
-    await expect(shape).toHaveCSS('animation-name', /spin/)
+    await expect(cursor.locator('.cursor-triangle-rotation')).toHaveCSS(
+      'animation-name',
+      /spin/
+    )
     await expect(body).toHaveCSS('transform', 'none')
 
     await page.evaluate(async () => {

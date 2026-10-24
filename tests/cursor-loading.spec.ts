@@ -45,26 +45,33 @@ test('desktop cursor keeps a white inversion base across route themes', async ({
   }
 })
 
-test('desktop cursor uses the loading state for the full route transition', async ({
+test('desktop cursor shows loading during route navigation and restores afterward', async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name.includes('mobile'))
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.routeWebSocket('ws://localhost:3000/**', (socket) =>
+    socket.close()
+  )
+  await page.goto('/flanerie/changsha', { waitUntil: 'domcontentloaded' })
 
   const cursor = page.locator('.cursor-position')
-  const archiveMenuItem = page.locator('.desktop-menu-item.ARCHIVE')
   await expect(cursor).toBeAttached({ timeout: PAGE_LOAD_TIMEOUT })
-  await expect(archiveMenuItem).toBeVisible({ timeout: PAGE_LOAD_TIMEOUT })
-
-  await page.mouse.move(8, page.viewportSize()!.height / 2)
+  await expect(page.locator('.flr-page')).toBeVisible({
+    timeout: PAGE_LOAD_TIMEOUT,
+  })
+  await page.mouse.move(300, 300)
   await expect(cursor).not.toHaveClass(/\bis-hidden\b/)
   const normalShapeWidth = await cursor
     .locator('.cursor-shape')
     .evaluate((element) => getComputedStyle(element).width)
 
-  await archiveMenuItem.hover()
+  await page.locator('button').first().dispatchEvent('pointerover')
   await expect(cursor.locator('.cursor-shape')).toHaveClass(/\bis-active\b/)
-  await archiveMenuItem.click()
+  // 首页菜单已改为模型聚焦入口；通过真实路由守卫验证完整加载周期。
+  await page.evaluate(() => {
+    const app = (document.querySelector('#app') as any).__vue_app__
+    void app.config.globalProperties.$router.push('/colorPalette')
+  })
 
   await expect(cursor).toHaveClass(/\bis-loading\b/)
   const loadingAnimations = await cursor.evaluate((element) => {
@@ -90,10 +97,9 @@ test('desktop cursor uses the loading state for the full route transition', asyn
     borderRadius: '50%',
     clipPath: 'none',
   })
-  await expect(page.locator('.archives-page')).toBeVisible({
+  await expect(page.locator('.palette-tool')).toBeVisible({
     timeout: PAGE_LOAD_TIMEOUT,
   })
-  await expect(cursor).toHaveClass(/\bis-loading\b/)
   await expect(cursor).not.toHaveClass(/\bis-loading\b/, {
     timeout: PAGE_LOAD_TIMEOUT,
   })

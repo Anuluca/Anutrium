@@ -37,6 +37,7 @@ import { preloadTempleAssets } from '@/utils/preloadTempleAssets'
 import { createSceneMatrixUpdater } from '@/utils/sceneMatrixUpdater'
 import { getTempleLabelCanvas } from '@/utils/templeLabelTextures'
 
+import { createBarycentricGeometry } from './scene/barycentricGeometry'
 import {
   createDollyCameraMotion,
   easeIslandFocusZoom,
@@ -61,6 +62,10 @@ import {
   createPetFocusCamera,
   createPetScreenBounds,
 } from './scene/petFocusCamera'
+import { createPillarBatches } from './scene/pillarBatches'
+import { createShaderWarmup } from './scene/shaderWarmup'
+import { createSpotLightPool } from './scene/spotLightPool'
+import { createStaticSceneCache } from './scene/staticSceneCache'
 import { createThemeTint, type ThemeTintEntry } from './scene/themeTint'
 
 export type TempleSelection = TempleCategoryId | 'statue' | 'sprigatito'
@@ -74,6 +79,7 @@ export interface IslandModelAnchors {
 }
 
 interface TempleCallbacks {
+  entrySelection?: () => TempleSelection | null
   waitForRouteEnter: () => Promise<void>
   prepared: () => void
   progress: (value: number) => void
@@ -278,6 +284,8 @@ export function createHomeTemple(
   let motionStart = 0
   let pausedAt = 0
   let statueHovered = false
+  let immersive = false
+  let immersionTween: gsap.core.Tween | undefined
   const statueHover = { value: 0 }
   const templeReveal = { value: 1 }
   const templeExpansion = { value: 1 }
@@ -286,6 +294,11 @@ export function createHomeTemple(
   const lastPointer = new THREE.Vector2()
   let hasPointer = false
   let preparation: Promise<void> | undefined
+  let shaderWarmup: ReturnType<typeof createShaderWarmup> | undefined
+  let prepareInteractions: (() => Promise<void>) | undefined
+  let interactionsPrepared = false
+  let preparationEntry: TempleSelection | null = null
+  let applyingEntrySelection = false
   let projectionDirty = true
   let lastDiagnosticAt = -Infinity
   let diagnosticsDirty = true
@@ -432,6 +445,7 @@ export function createHomeTemple(
       label.subscribe(() => {
         if (!disposed) {
           map.needsUpdate = true
+          staticSceneCache.invalidate()
           invalidate()
         }
       })
@@ -457,13 +471,11 @@ export function createHomeTemple(
     shaft.name = 'obelisk-shaft'
     group.add(shaft)
     const surface = material(
-      new THREE.MeshPhysicalMaterial({
+      new THREE.MeshStandardMaterial({
         color: 0x5a192d,
         vertexColors: true,
         metalness: 0.3,
         roughness: 0.4,
-        clearcoat: 0.22,
-        clearcoatRoughness: 0.22,
         envMapIntensity: 0.55,
         emissive: 0x22040b,
         emissiveIntensity: 0.025,
@@ -474,7 +486,7 @@ export function createHomeTemple(
     body.userData.category = category.id
     shaft.add(body)
     const crystal = material(
-      new THREE.MeshPhysicalMaterial({
+      new THREE.MeshStandardMaterial({
         color: 0x660d25,
         emissive: 0x9d0c2f,
         emissiveIntensity: 0.2,
@@ -485,7 +497,7 @@ export function createHomeTemple(
         side: THREE.DoubleSide,
         depthWrite: false,
         flatShading: true,
-        clearcoat: 1,
+        forceSinglePass: true,
         envMapIntensity: 0.65,
       })
     )
@@ -518,6 +530,8 @@ export function createHomeTemple(
     )
     const capLines = new THREE.LineSegments(capEdges, edge)
     capLines.position.copy(cap.position)
+    // 边线在晶体及内芯之后叠加，避免实例批次的对象 ID 改变同深度透明排序。
+    capLines.renderOrder = 0.01
     shaft.add(capLines)
     // 共用现有径向光晕，以单张朝向镜头的纹理表现晶体扩散，无需 Bloom 或离屏通道。
     const capHaloMaterial = material(
@@ -601,6 +615,7 @@ export function createHomeTemple(
         transparent: true,
         depthWrite: false,
         side: THREE.DoubleSide,
+        forceSinglePass: true,
         toneMapped: false,
         blending: THREE.AdditiveBlending,
         vertexShader:
@@ -645,7 +660,6 @@ export function createHomeTemple(
     )
     spot.position.set(category.x, 12, category.z + 0.6)
     spot.target.position.set(category.x, 1, category.z)
-    scene.add(spot, spot.target)
     // 仅碑身升降，底座常驻；裁切面与底座顶面一致，避免石柱穿出底座侧面。
     shaft.traverse((object) => {
       if (
@@ -703,6 +717,14 @@ export function createHomeTemple(
   // 地面与远处光幕共用清晰的边界；沿镜头水平朝向排列，保证地平线无倾斜。
   const ground = new THREE.Group()
   scene.add(ground)
+  let skyHorizon = '100%'
+  const syncSkyClip = () => {
+    const bottom =
+      ground.visible && sceneActive && !sceneOccluded ? skyHorizon : '100%'
+    const rootStyle = document.documentElement.style
+    if (rootStyle.getPropertyValue('--temple-sky-bottom') !== bottom)
+      rootStyle.setProperty('--temple-sky-bottom', bottom)
+  }
   const horizonZ = templeCamera.horizonZ
   const floor = new THREE.Mesh(
     geometry(new THREE.PlaneGeometry(240, 160)),
@@ -726,7 +748,7 @@ export function createHomeTemple(
         float sheen=0.5+0.5*sin(world.z*4.+sin(world.x*1.5)*0.25);
         float distanceFade=smoothstep(3.,18.,floorDepth);
         vec3 floorColor=mix(nearColor,farColor+sheen*sheenColor,distanceFade);
-        gl_FragColor=vec4(floorColor,mix(0.97,0.58,distanceFade));
+        gl_FragColor=vec4(floorColor,mix(0.92,0.46,distanceFade));
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
       }`,
@@ -775,7 +797,7 @@ export function createHomeTemple(
   const statueZ = -1.8
   const sleepingSprigatito = new THREE.Group()
   let reflectedSprigatito: THREE.Object3D | undefined
-  const petReflectionOpacity = config.id === 'mobile' ? 0.125 : 0.25
+  const petReflectionOpacity = config.id === 'mobile' ? 0.18 : 0.34
   // 手机端前排石柱更靠近镜头，将新叶喵适当收小、前移，保留完整睡姿。
   const sprigatitoForwardOffset = config.id === 'mobile' ? 6 : 3.2
   sleepingSprigatito.position.set(
@@ -851,7 +873,10 @@ export function createHomeTemple(
     sleepingSprigatito.position.z + 0.5
   )
   sprigatitoSpot.target.position.copy(sleepingSprigatito.position)
-  scene.add(sprigatitoSpot, sprigatitoSpot.target)
+  const spotLightPool = createSpotLightPool(scene, [
+    ...obelisks.map((item) => item.spot),
+    sprigatitoSpot,
+  ])
   const sprigatitoLightColors: THREE.Color[] = [
     sprigatitoBeamMaterial.uniforms.glowColor.value,
     sprigatitoPoolMaterial.color,
@@ -919,13 +944,21 @@ export function createHomeTemple(
   )
   scene.add(statueHolyLight)
 
-  // 倒影共用几何体，仅增加镜像绘制；聚焦直接绘制场景，不增加离屏或模糊通道。
+  // 建筑倒影使用 Basic；角色和底座保留 Standard 的切面明暗，均不使用 Physical 清漆或透明双遍。
   const reflectionMaterials: {
     source: THREE.MeshStandardMaterial
-    copy: THREE.MeshStandardMaterial
+    copy: THREE.MeshBasicMaterial | THREE.MeshStandardMaterial
+    character: boolean
   }[] = []
   const reflectionColors: { source: THREE.Color; copy: THREE.Color }[] = []
-  const mirror = (source: THREE.Object3D, opacity: number) => {
+  const immersionLabels = new Set<THREE.Material>(
+    obelisks.map((item) => item.labelMaterial)
+  )
+  const mirror = (
+    source: THREE.Object3D,
+    opacity: number,
+    character = false
+  ) => {
     const copy = source.clone(true)
     const mirroredMaterials = new Map<THREE.Material, THREE.Material>()
     copy.traverse((object) => {
@@ -939,6 +972,7 @@ export function createHomeTemple(
         return
       const original = object.material as THREE.Material
       if (
+        immersionLabels.has(original) ||
         original instanceof THREE.ShaderMaterial ||
         original.blending === THREE.AdditiveBlending
       ) {
@@ -950,10 +984,45 @@ export function createHomeTemple(
         object.material = existing
         return
       }
-      const faded = material(original.clone())
+      const baseSurface =
+        original instanceof THREE.MeshStandardMaterial &&
+        (object.geometry === baseGeometry || original === plinthMaterial)
+      let faded: THREE.Material
+      if (original instanceof THREE.MeshStandardMaterial) {
+        const surface = {
+          color: original.color.clone(),
+          map: original.map,
+          vertexColors: original.vertexColors,
+          side: original.side,
+          clippingPlanes: original.clippingPlanes,
+        }
+        const shaded = character || baseSurface
+        faded = material(
+          shaded
+            ? new THREE.MeshStandardMaterial({
+                ...surface,
+                metalness: original.metalness,
+                roughness: character
+                  ? Math.max(0.22, original.roughness)
+                  : original.roughness,
+                flatShading: original.flatShading,
+                envMapIntensity:
+                  original.envMapIntensity * (character ? 0.45 : 1),
+                emissive: original.emissive.clone(),
+                emissiveIntensity:
+                  original.emissiveIntensity * (character ? 0.5 : 1),
+              })
+            : new THREE.MeshBasicMaterial(surface)
+        )
+      } else faded = material(original.clone())
+      faded.forceSinglePass = true
+      faded.onBeforeCompile = original.onBeforeCompile
+      faded.customProgramCacheKey =
+        original.customProgramCacheKey.bind(original)
       mirroredMaterials.set(original, faded)
       faded.transparent = true
-      faded.opacity = opacity
+      // 底座颜色本身很暗，单独提高镜像覆盖度，避免与地面混合后完全消失。
+      faded.opacity = baseSurface ? Math.min(0.68, opacity * 1.8) : opacity
       faded.depthWrite = !original.colorWrite
       if (original.clippingPlanes?.length) {
         // 镜像裁切面随地面翻转，保留同一段半身；头部形变仍共享原模型的 uniform。
@@ -972,9 +1041,10 @@ export function createHomeTemple(
       }
       if (
         original instanceof THREE.MeshStandardMaterial &&
-        faded instanceof THREE.MeshStandardMaterial
+        (faded instanceof THREE.MeshBasicMaterial ||
+          faded instanceof THREE.MeshStandardMaterial)
       )
-        reflectionMaterials.push({ source: original, copy: faded })
+        reflectionMaterials.push({ source: original, copy: faded, character })
       if (
         'color' in original &&
         'color' in faded &&
@@ -989,7 +1059,11 @@ export function createHomeTemple(
     reflection.add(copy)
     return copy
   }
-  const reflectedObelisks = obelisks.map((item) => mirror(item.group, 0.46))
+  const reflectedObelisks = obelisks.map((item) => mirror(item.group, 0.52))
+  const immersionLabelOpacity = [...immersionLabels].map((value) => ({
+    material: value,
+    opacity: value.opacity,
+  }))
   const reflectedShafts = reflectedObelisks.map(
     (group) => group.getObjectByName('obelisk-shaft')!
   )
@@ -1194,13 +1268,27 @@ export function createHomeTemple(
         }
       )
   }
+  const staticSceneCache = createStaticSceneCache(
+    renderer,
+    scene,
+    camera,
+    invalidate
+  )
+  let pillarBatches: ReturnType<typeof createPillarBatches> | undefined
+  let reflectionBatches: ReturnType<typeof createPillarBatches> | undefined
+  let updateEnvironmentQueues: (() => void) | undefined
   let updateSceneMatrices: (() => boolean) | undefined
   const drawScene = () => {
+    if (spotLightPool.update(templeReveal.value > 0))
+      staticSceneCache.invalidate()
     updateSceneMatrices?.()
+    updateEnvironmentQueues?.()
+    pillarBatches?.update()
+    reflectionBatches?.update()
     // 相机在构图变化时已更新；渲染器不再重复计算同一帧的相机矩阵。
     camera.matrixWorldAutoUpdate = false
     try {
-      renderer.render(scene, camera)
+      staticSceneCache.render()
     } finally {
       camera.matrixWorldAutoUpdate = true
     }
@@ -1257,7 +1345,6 @@ export function createHomeTemple(
   let stickerReveal = 0
   const statueClipPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.52)
   const statueView = { mix: 0 }
-  let statueScanGlow: THREE.Mesh | undefined
   const statueSize = new THREE.Vector3()
   let statueHalfY = statue.position.y
   let statueFullY = statue.position.y
@@ -1277,7 +1364,7 @@ export function createHomeTemple(
       clearcoat: 0.45,
       clearcoatRoughness: 0.08,
       envMapIntensity: 1.8,
-      transparent: true,
+      transparent: false,
       clippingPlanes: [statueClipPlane],
     })
   )
@@ -1290,8 +1377,9 @@ export function createHomeTemple(
   const wireMaterial = material(
     new THREE.MeshBasicMaterial({
       color: HOLY_LIGHT_COLOR,
-      wireframe: true,
+      wireframe: false,
       transparent: true,
+      premultipliedAlpha: true,
       opacity: 0,
       depthWrite: false,
       toneMapped: false,
@@ -1300,11 +1388,11 @@ export function createHomeTemple(
   )
   // 网格复用模型的静态顶点及头部变形，裁切平面数量固定，切换只更新 uniform 和透明度。
   wireMaterial.onBeforeCompile = chromeMaterial.onBeforeCompile
-  // 半透明黑色表面同时写入深度，压暗背后的卡片并遮住背面线框。
+  // 深度预通道遮住背面线框；黑色 0.55 填充由后续合成表面统一输出。
   const wireDepthMaterial = material(
     new THREE.MeshBasicMaterial({
       color: 0x000000,
-      colorWrite: true,
+      colorWrite: false,
       opacity: 0,
       transparent: true,
       toneMapped: false,
@@ -1321,25 +1409,7 @@ export function createHomeTemple(
   installHeadacheTint(chromeMaterial, headacheRedness, headacheHeightRange)
   const statueScan = createModelScan(wireMaterial.color)
   statueScan.install(chromeMaterial, 'chrome')
-  statueScan.install(wireMaterial, 'converted')
-  statueScan.install(wireDepthMaterial, 'converted')
-  const scanGlowMaterial = material(
-    new THREE.MeshBasicMaterial({
-      transparent: true,
-      depthWrite: false,
-      depthTest: false,
-      blending: THREE.AdditiveBlending,
-      toneMapped: false,
-      clippingPlanes: [statueClipPlane],
-    })
-  )
-  installHeadRig(scanGlowMaterial, {
-    headRotation,
-    headPivot,
-    headNodPivot,
-    headNodAngle,
-  })
-  statueScan.install(scanGlowMaterial, 'glow')
+  statueScan.install(wireMaterial, 'composite')
   for (const value of materials) {
     if ('color' in value && value !== dizzySticker.material)
       trackTint((value as THREE.MeshBasicMaterial).color)
@@ -1354,6 +1424,7 @@ export function createHomeTemple(
   scene.traverse((object) => {
     if (object instanceof THREE.Light) trackTint(object.color)
   })
+  for (const spot of spotLightPool.sources) trackTint(spot.color)
   for (const item of obelisks) trackTint(item.labelAccent.value)
   // 每根柱子仅缓存颜色目标。悬停只更新既有 uniform，不创建材质或后处理。
   const obeliskTints = obelisks.map((item) => {
@@ -1397,7 +1468,6 @@ export function createHomeTemple(
       chromeMaterial,
       wireMaterial,
       wireDepthMaterial,
-      scanGlowMaterial,
       statueLabelMaterial,
       dizzySticker.material,
     ])
@@ -1422,7 +1492,7 @@ export function createHomeTemple(
           for (const value of values) unexpanded.add(value)
         }
       })
-    installEnvironmentFade(
+    updateEnvironmentQueues = installEnvironmentFade(
       materials,
       excluded,
       unexpanded,
@@ -1433,6 +1503,35 @@ export function createHomeTemple(
 
   const screenPoint = new THREE.Vector3()
   const islandNodAxis = new THREE.Vector3(1, 0, 0)
+  // 复用投影缓冲；消费者同步读取坐标，不将这个可变对象作为响应式快照。
+  const islandModelAnchors: IslandModelAnchors = {
+    chest: { x: 0, y: 0 },
+    rightHand: { x: 0, y: 0 },
+    leftHand: { x: 0, y: 0 },
+    rightBraid: { x: 0, y: 0 },
+    leftBraid: { x: 0, y: 0 },
+  }
+  const projectIslandAnchor = (
+    point: { x: number; y: number },
+    x: number,
+    y: number,
+    z: number,
+    followsHead = false
+  ) => {
+    screenPoint.set(x, y, z)
+    // 辫子沿用着色器的低头与转头变换，保持端点贴合模型。
+    if (followsHead)
+      screenPoint
+        .sub(headNodPivot.value)
+        .applyAxisAngle(islandNodAxis, headNodAngle.value)
+        .add(headNodPivot.value)
+        .sub(headPivot.value)
+        .applyQuaternion(headQuaternion)
+        .add(headPivot.value)
+    screenPoint.applyMatrix4(statueMesh!.matrixWorld).project(camera)
+    point.x = (screenPoint.x * 0.5 + 0.5) * viewWidth
+    point.y = (0.5 - screenPoint.y * 0.5) * viewHeight
+  }
   const hitPoints = [
     [-0.65, 0.1, 0.65],
     [-0.65, 0.1, -0.65],
@@ -1630,7 +1729,8 @@ export function createHomeTemple(
     monuments.visible = environmentVisible
     ground.visible = environmentVisible
     reflection.visible = environmentVisible
-    pedestal.visible = environmentVisible
+    pedestal.visible = environmentVisible && sprigatitoFocus.value < 1
+    reflectedPedestal.visible = pedestal.visible
     sleepingSprigatito.visible = environmentVisible
     statueGlow.visible = environmentVisible
     // 构图与材质使用独立进度：运镜末段开始扫描，返回首页先完成材质恢复。
@@ -1647,7 +1747,7 @@ export function createHomeTemple(
     }
     if (statueWire) statueWire.visible = scanProgress > 0
     if (statueWireDepth) statueWireDepth.visible = scanProgress > 0
-    if (statueScanGlow) statueScanGlow.visible = scanning
+    // 扫描亮边由合成表面输出，无独立扩张表面。
     const statueMouseFollow =
       statueOnly && !cameraMoving && scanProgress === 1 && !statueRestorePending
     const followHead =
@@ -1664,9 +1764,9 @@ export function createHomeTemple(
         -THREE.MathUtils.degToRad(rig.focusYawLimit),
         THREE.MathUtils.degToRad(rig.focusYawLimit)
       )
-      // 抵消头疼姿态的后仰，再用现有低头角度作为聚焦目标，与转头共用插值。
+      // 聚焦时比原低头姿态抬高 10°，与转头共用插值，并抵消头疼姿态的后仰。
       const focusPitch =
-        headNodDegrees + (headacheActive ? headache?.headLeanBack ?? 0 : 0)
+        headNodDegrees - 10 + (headacheActive ? headache?.headLeanBack ?? 0 : 0)
       headTarget.set(
         yaw / Math.max((rig.pointerYaw * Math.PI) / 180, 0.001),
         (focusPitch - rig.restPitch) / Math.max(rig.pointerPitch, 0.001)
@@ -2064,13 +2164,23 @@ export function createHomeTemple(
       item.spot.intensity = illumination * 55
     }
     if (reflectionAppearanceChanged) {
-      for (const { source, copy } of reflectionMaterials) {
+      for (const { source, copy, character } of reflectionMaterials) {
         copy.color.copy(source.color)
-        copy.emissive.copy(source.emissive)
-        copy.emissiveIntensity = source.emissiveIntensity
-        copy.envMapIntensity = source.envMapIntensity
-        copy.metalness = source.metalness
-        copy.roughness = source.roughness
+        if (copy instanceof THREE.MeshStandardMaterial) {
+          // 角色倒影压低环境高光并放宽高光瓣，底座沿用石材明暗，避免白色剪影与无层次暗块。
+          copy.metalness = source.metalness
+          copy.roughness = character
+            ? Math.max(0.22, source.roughness)
+            : source.roughness
+          copy.envMapIntensity = source.envMapIntensity * (character ? 0.45 : 1)
+          copy.emissive.copy(source.emissive)
+          copy.emissiveIntensity =
+            source.emissiveIntensity * (character ? 0.5 : 1)
+        } else {
+          copy.color.r += source.emissive.r * source.emissiveIntensity
+          copy.color.g += source.emissive.g * source.emissiveIntensity
+          copy.color.b += source.emissive.b * source.emissiveIntensity
+        }
       }
       for (const entry of reflectionColors) entry.copy.copy(entry.source)
     }
@@ -2139,7 +2249,11 @@ export function createHomeTemple(
         scanProgress === 1 ? 'wireframe' : scanning ? 'scanning' : 'chrome'
       )
       setStageData('statueWireOpacity', wireMaterial.opacity.toFixed(3))
-      setStageData('statueScanProgress', scanProgress.toFixed(4))
+      // 活动进度保留真实精度，避免刚开始扫描时被四舍五入成 0、与运镜状态矛盾。
+      setStageData(
+        'statueScanProgress',
+        scanning ? String(scanProgress) : scanProgress.toFixed(4)
+      )
       setStageData(
         'statueRestoring',
         String(statueRestorePending || returningStatue)
@@ -2321,48 +2435,48 @@ export function createHomeTemple(
           .join(',')
       )
     }
+    const cacheAllowed =
+      // 聚焦时光幕/倒影与角色交错，单张环境缓存无法保留透明层顺序。
+      !selected &&
+      !entranceActive &&
+      !transitionActive &&
+      !cameraMoving &&
+      !themeTransition?.isActive() &&
+      !hoverMoving &&
+      !sceneChanged &&
+      templeReveal.value === 1 &&
+      !petEntrance?.isActive() &&
+      !petFadingOut
+    staticSceneCache.setEnabled(cacheAllowed)
+    if (sceneChanged || reflectionAppearanceChanged || transitionActive)
+      staticSceneCache.invalidate()
     drawScene()
+    if (publishDiagnostics) {
+      setStageData('activeSpotLights', String(spotLightPool.activeCount))
+      setStageData('staticCacheBuilds', String(staticSceneCache.builds))
+      setStageData('staticCacheHits', String(staticSceneCache.hits))
+      setStageData('sceneDrawCalls', String(renderer.info.render.calls))
+    }
     if (selected === 'statue' && statueMesh && callbacks.islandAnchors) {
       // 锚点取自当前路卡网格的胸刺、双手与双辫，随模型世界矩阵与镜头一起投影。
-      const projectAnchor = (
-        x: number,
-        y: number,
-        z: number,
-        followsHead = false
-      ) => {
-        screenPoint.set(x, y, z)
-        // 辫子属于头部，复用着色器的两次旋转，确保转头时端点仍贴合辫子。
-        if (followsHead)
-          screenPoint
-            .sub(headNodPivot.value)
-            .applyAxisAngle(islandNodAxis, headNodAngle.value)
-            .add(headNodPivot.value)
-            .sub(headPivot.value)
-            .applyQuaternion(headQuaternion)
-            .add(headPivot.value)
-        screenPoint.applyMatrix4(statueMesh!.matrixWorld).project(camera)
-        return {
-          x: (screenPoint.x * 0.5 + 0.5) * viewWidth,
-          y: (0.5 - screenPoint.y * 0.5) * viewHeight,
-        }
-      }
-      callbacks.islandAnchors({
-        chest: projectAnchor(0, 2.04385, 0.34162),
-        rightHand: projectAnchor(-0.568, 1.059, 0.185),
-        leftHand: projectAnchor(0.568, 1.059, 0.185),
-        rightBraid: projectAnchor(
-          -0.37229,
-          2.27173 + neckExtension,
-          -0.19638,
-          true
-        ),
-        leftBraid: projectAnchor(
-          0.37229,
-          2.27173 + neckExtension,
-          -0.19638,
-          true
-        ),
-      })
+      projectIslandAnchor(islandModelAnchors.chest, 0, 2.04385, 0.34162)
+      projectIslandAnchor(islandModelAnchors.rightHand, -0.568, 1.059, 0.185)
+      projectIslandAnchor(islandModelAnchors.leftHand, 0.568, 1.059, 0.185)
+      projectIslandAnchor(
+        islandModelAnchors.rightBraid,
+        -0.37229,
+        2.27173 + neckExtension,
+        -0.19638,
+        true
+      )
+      projectIslandAnchor(
+        islandModelAnchors.leftBraid,
+        0.37229,
+        2.27173 + neckExtension,
+        -0.19638,
+        true
+      )
+      callbacks.islandAnchors(islandModelAnchors)
     }
     if (publishDiagnostics) {
       setStageData('renderFrames', String(renderer.info.render.frame))
@@ -2397,8 +2511,11 @@ export function createHomeTemple(
         stage.style.getPropertyValue('--temple-horizon-y') !== `${horizonY}px`
       )
         stage.style.setProperty('--temple-horizon-y', `${horizonY}px`)
+      // 背景裁剪独立于 stage 的入场透明度，避免渐显期间星盘透过地面。
+      skyHorizon = `${horizonY}px`
       projectionDirty = false
     }
+    syncSkyClip()
     // 几何诊断和其他诊断共用限频；实际投影、画布和点击区域仍逐帧更新。
     if (publishDiagnostics) {
       setStageData(
@@ -2559,14 +2676,34 @@ export function createHomeTemple(
     lookAt.copy(homeTarget)
     projectionDirty = true
   }
+  let readyNotified = false
+  let entranceCompletionPending = false
+  const notifyReady = () => {
+    if (!interactionsPrepared || readyNotified) return
+    readyNotified = true
+    callbacks.ready()
+  }
+  const finishEntrance = () => {
+    entranceCompletionPending = true
+    if (!interactionsPrepared) return
+    entranceCompletionPending = false
+    setStageData('entranceFinished', 'true')
+    setStageData('entrancePhase', 'complete')
+    notifyReady()
+    callbacks.entranceComplete()
+  }
   const startEntrance = () => {
     if (simpleEntrance) {
       if (heroEntranceText)
         gsap.set(heroEntranceText, { yPercent: 0, opacity: 1 })
       statueHolyIntensity.value = 1
       entranceHeadDip.value = headNodDegrees
-      // 在渐显前设置目标机位；快速入口不播放默认机位到柱子的二次运镜。
-      callbacks.ready()
+      // 先建立入场低头基准，再定位目标；目标的 0°/5°低头不能被基准覆盖。
+      if (preparationEntry) {
+        applyingEntrySelection = true
+        select(preparationEntry, true)
+        applyingEntrySelection = false
+      }
       entranceActive = true
       transitionActive = true
       setStageData('entrancePhase', 'fade')
@@ -2579,9 +2716,7 @@ export function createHomeTemple(
             entranceActive = false
             transitionActive = false
             projectionDirty = true
-            setStageData('entranceFinished', 'true')
-            setStageData('entrancePhase', 'complete')
-            callbacks.entranceComplete()
+            finishEntrance()
             syncActivity()
             invalidate()
           },
@@ -2599,10 +2734,7 @@ export function createHomeTemple(
         gsap.set(heroEntranceText, { yPercent: 0, opacity: 1 })
       statueHolyIntensity.value = 1
       entranceHeadDip.value = headNodDegrees
-      setStageData('entranceFinished', 'true')
-      setStageData('entrancePhase', 'complete')
-      callbacks.ready()
-      callbacks.entranceComplete()
+      finishEntrance()
       return
     }
     entranceActive = true
@@ -2624,10 +2756,7 @@ export function createHomeTemple(
         lookAt.copy(homeTarget)
         headTarget.copy(pointerTarget)
         projectionDirty = true
-        setStageData('entranceFinished', 'true')
-        setStageData('entrancePhase', 'complete')
-        callbacks.ready()
-        callbacks.entranceComplete()
+        finishEntrance()
         syncActivity()
         invalidate()
       },
@@ -2730,7 +2859,14 @@ export function createHomeTemple(
     menuExited = false,
     statueAligned = false
   ) => {
-    if (!ready || disposed || entranceActive) return
+    if (
+      immersive ||
+      !ready ||
+      disposed ||
+      entranceActive ||
+      (!interactionsPrepared && !applyingEntrySelection)
+    )
+      return
     if (
       id &&
       id !== 'statue' &&
@@ -2964,11 +3100,20 @@ export function createHomeTemple(
     tweenIfChanged(
       entranceHeadDip,
       {
-        value: item ? 0 : headNodDegrees,
-        duration: item || wasPillar ? duration * 2 : duration,
-        ease: 'power2.inOut',
+        value: item
+          ? 0
+          : selected === 'statue'
+          ? headNodDegrees - 5
+          : headNodDegrees,
+        duration:
+          selected === 'statue'
+            ? scanDuration
+            : item || wasPillar
+            ? duration * 2
+            : duration,
+        ease: selected === 'statue' ? easeIslandFocusZoom : 'power2.inOut',
       },
-      0
+      selected === 'statue' ? scanStart : 0
     )
     if (returningStatue || selected === 'statue') {
       tweenIfChanged(
@@ -2976,15 +3121,6 @@ export function createHomeTemple(
         {
           x: 0,
           y: 0,
-          duration,
-          ease: 'power2.inOut',
-        },
-        0
-      )
-      tweenIfChanged(
-        entranceHeadDip,
-        {
-          value: headNodDegrees,
           duration,
           ease: 'power2.inOut',
         },
@@ -3110,7 +3246,26 @@ export function createHomeTemple(
         targetFov,
         returningStatue ? 1 : undefined
       )
-      const dolly = { progress: 0 }
+      const dolly = { progress: 0, fovProgress: 0 }
+      const updateDolly = () => {
+        updateCamera(
+          dolly.progress,
+          selected === 'statue' ? dolly.fovProgress : dolly.progress
+        )
+        applyViewOffset()
+      }
+      // 入场广角全部并入第二段放大；距离补偿继续沿用同一投影尺度，避免交界处跳变。
+      if (selected === 'statue')
+        tweenIfChanged(
+          dolly,
+          {
+            fovProgress: 1,
+            duration: scanDuration,
+            ease: easeIslandFocusZoom,
+            onUpdate: updateDolly,
+          },
+          scanStart
+        )
       // 视点、俯仰、投影尺度与模型升起共用进度；方向归一化，避免混合角度压缩距离。
       tweenIfChanged(
         dolly,
@@ -3118,10 +3273,7 @@ export function createHomeTemple(
           progress: 1,
           duration,
           ease: 'power3.inOut',
-          onUpdate: () => {
-            updateCamera(dolly.progress)
-            applyViewOffset()
-          },
+          onUpdate: updateDolly,
         },
         0
       )
@@ -3324,6 +3476,7 @@ export function createHomeTemple(
       : (hit.object.userData.category as TempleCategoryId)
   }
   const click = (event: MouseEvent) => {
+    if (immersive) return
     if (selected === 'sprigatito' && callbacks.dismissBackground?.()) return
     if (selected === 'statue') return select(null)
     const id = raycast(event, true)
@@ -3334,6 +3487,7 @@ export function createHomeTemple(
   renderer.domElement.addEventListener('click', click)
   renderer.domElement.tabIndex = 0
   const modelKeydown = (event: KeyboardEvent) => {
+    if (immersive) return
     if (event.key !== 'Escape' && event.key !== 'Enter' && event.key !== ' ')
       return
     if (document.querySelector('.about-overlay')) return
@@ -3405,7 +3559,7 @@ export function createHomeTemple(
       return
     }
     const hit =
-      !cameraMoving && isSceneTarget(event.target)
+      !immersive && !cameraMoving && isSceneTarget(event.target)
         ? raycast(event, true, true)
         : undefined
     syncStatueCursor(hit, event.target)
@@ -3468,6 +3622,26 @@ export function createHomeTemple(
   window.addEventListener('blur', resetPointer)
 
   const prepareRendering = async () => {
+    pillarBatches = createPillarBatches(
+      monuments,
+      obelisks.map((item) => item.group),
+      scene,
+      new Set([glowMap])
+    )
+    reflectionBatches = createPillarBatches(
+      reflection,
+      reflectedObelisks,
+      scene
+    )
+    staticSceneCache.setObjects([
+      monuments,
+      pedestal,
+      ...reflectedObelisks,
+      reflectedPedestal,
+      ...reflectionBatches.objects,
+    ])
+    pillarBatches.setEnabled(true)
+    reflectionBatches.setEnabled(true)
     // 固定子网格只烘焙一次局部矩阵；父组运镜仍照常更新世界矩阵和倒影。
     const movingTransforms = new Set<THREE.Object3D>([
       ground,
@@ -3480,42 +3654,87 @@ export function createHomeTemple(
       reflectedSprigatito!,
       sprigatitoBeam,
       sprigatitoPool,
-      sprigatitoSpot,
-      sprigatitoSpot.target,
+      ...spotLightPool.objects,
       statueGlow,
       statueLight,
       statueHolyLight,
       statueLabel,
       ...reflectedObelisks,
       ...reflectedShafts,
-      ...obelisks.flatMap((item) => [
-        item.group,
-        item.shaft,
-        item.capHalo,
-        item.spot,
-        item.spot.target,
-      ]),
+      ...obelisks.flatMap((item) => [item.group, item.shaft, item.capHalo]),
     ])
     updateSceneMatrices = createSceneMatrixUpdater(scene, movingTransforms)
     updateSceneMatrices()
     camera.lookAt(lookAt)
     camera.updateMatrixWorld()
-    // 扫描表面也预热实际裁切变体；此时进度为 0，片元全部丢弃，不影响首页画面。
-    if (statueScanGlow) statueScanGlow.visible = true
-    // 模型与倒影在开放交互前完成预编译和纹理上传，聚焦只改变镜头与可见性。
-    await renderer.compileAsync(scene, camera)
+    updateEnvironmentQueues?.()
+    pillarBatches.update()
+    reflectionBatches.update()
+    // 零强度光池也初始化实例缓冲，首次聚焦只改 uniform。
+    for (const object of [
+      ...pillarBatches.objects,
+      ...reflectionBatches.objects,
+    ])
+      object.visible = true
+    preparationEntry = callbacks.entrySelection?.() ?? null
+    const entrySpotCount =
+      preparationEntry && preparationEntry !== 'statue' ? 1 : 0
+    setStageData('preparationEntry', preparationEntry || 'home')
+    shaderWarmup = createShaderWarmup(
+      renderer,
+      scene,
+      camera,
+      // 光池只在聚焦时首次出现；Basic 虽不执行灯光，首次初始化的缓存键仍包含灯数。
+      (value) =>
+        value instanceof THREE.MeshBasicMaterial && value.map === glowMap
+    )
+    const initialJobs: (() => Promise<void>)[] = []
+    const interactionJobs: (() => Promise<void>)[] = []
+    // 先快照两种队列；之后后台编译不再修改真实场景的透明度、灯光或材质。
+    for (const reveal of [1, 0.5]) {
+      templeReveal.value = reveal
+      updateEnvironmentQueues?.()
+      pillarBatches.update()
+      reflectionBatches.update()
+      for (const count of [0, 1, 2]) {
+        for (const clips of [0, 1]) {
+          const job = shaderWarmup.capture(count, clips)
+          ;(count === 0 || count === entrySpotCount
+            ? initialJobs
+            : interactionJobs
+          ).push(job)
+        }
+      }
+    }
+    templeReveal.value = 1
+    updateEnvironmentQueues?.()
+    await shaderWarmup.run(initialJobs)
     if (disposed) return
-    // 实际绘制会初始化局部裁切状态，先预热双遍的完整裁切变体。
+    spotLightPool.update()
+    updateSceneMatrices()
+    pillarBatches.update()
+    reflectionBatches.update()
+    staticSceneCache.prepare()
+    // 上传共享几何和纹理；后续状态只编译程序，不重复实际绘制整个环境。
     renderer.render(scene, camera)
-    // 同时预热不透明单遍和透明双遍，避免第一次运镜/网格切换才编译新程序。
-    chromeMaterial.forceSinglePass = true
-    chromeMaterial.needsUpdate = true
-    await renderer.compileAsync(scene, camera)
-    if (disposed) return
-    renderer.render(scene, camera)
-    if (statueScanGlow) statueScanGlow.visible = false
-    setStageData('shaderWarmup', 'complete')
+    setStageData(
+      'initialShaderPrograms',
+      String(renderer.info.programs?.length || 0)
+    )
+    setStageData('shaderWarmup', 'entry-ready')
+    prepareInteractions = async () => {
+      await shaderWarmup!.run(interactionJobs, true)
+      if (disposed) return
+      interactionsPrepared = true
+      setStageData('shaderWarmup', 'complete')
+      setStageData(
+        'preparedShaderPrograms',
+        String(renderer.info.programs?.length || 0)
+      )
+      if (entranceCompletionPending) finishEntrance()
+    }
   }
+
   const createPetGeometry = (sleepingModel: FloraPetModelAsset) => {
     const sleepingSurface = geometry(new THREE.BufferGeometry())
     for (const [target, source] of [
@@ -3781,10 +4000,15 @@ export function createHomeTemple(
   }
 
   const releaseResources = () => {
+    shaderWarmup?.dispose()
     labelSubscriptions.forEach((unsubscribe) => unsubscribe())
     geometries.forEach((value) => value.dispose())
     materials.forEach((value) => value.dispose())
     textures.forEach((value) => value.dispose())
+    pillarBatches?.dispose()
+    reflectionBatches?.dispose()
+    spotLightPool.dispose()
+    staticSceneCache.dispose()
     renderer.dispose()
     renderer.forceContextLoss()
   }
@@ -3861,7 +4085,11 @@ export function createHomeTemple(
         )
         sprigatitoWire.name = 'sprigatito-wire'
         updatePetSize(sleepingModel)
-        reflectedSprigatito = mirror(sleepingSprigatito, petReflectionOpacity)
+        reflectedSprigatito = mirror(
+          sleepingSprigatito,
+          petReflectionOpacity,
+          true
+        )
         reflectedSprigatitoSurface = reflectedSprigatito.getObjectByName(
           'sprigatito-surface'
         ) as THREE.Mesh
@@ -3966,7 +4194,7 @@ export function createHomeTemple(
         statue.position.y = 0.52 - (cropY - metadata.center[1]) * modelScale
         statue.add(mesh)
         statueMesh = mesh
-        reflectedStatue = mirror(statue, 0.42)
+        reflectedStatue = mirror(statue, 0.52, true)
         // 模型倒影在异步加载后创建，同样加入主题更新，保持镜像色一致。
         reflectedStatue.traverse((object) => {
           if (object instanceof THREE.Mesh) {
@@ -3981,7 +4209,22 @@ export function createHomeTemple(
         statueScan.bounds.value.set(bounds.min.y, bounds.max.y - bounds.min.y)
         statueHalfY = statue.position.y
         statueFullY = (metadata.center[1] - bounds.min.y) * modelScale
-        statueWire = new THREE.Mesh(surface, wireMaterial)
+        const wireGeometry = geometry(createBarycentricGeometry(surface))
+        statueWire = new THREE.Mesh(wireGeometry, wireMaterial)
+        setStageData(
+          'scanGeometryBytes',
+          String(
+            (
+              [
+                ...Object.values(wireGeometry.attributes),
+                ...Object.values(wireGeometry.morphAttributes).flat(),
+              ] as THREE.BufferAttribute[]
+            ).reduce(
+              (bytes, attribute) => bytes + attribute.array.byteLength,
+              wireGeometry.index?.array.byteLength ?? 0
+            )
+          )
+        )
         statueWire.morphTargetInfluences = mesh.morphTargetInfluences
         statueWire.position.copy(mesh.position)
         statueWire.renderOrder = 6
@@ -3995,12 +4238,6 @@ export function createHomeTemple(
           if (selected === 'statue') renderer.clearDepth()
         }
         statue.add(statueWireDepth)
-        statueScanGlow = new THREE.Mesh(surface, scanGlowMaterial)
-        statueScanGlow.position.copy(mesh.position)
-        statueScanGlow.morphTargetInfluences = mesh.morphTargetInfluences
-        statueScanGlow.renderOrder = 7
-        statueScanGlow.visible = false
-        statue.add(statueScanGlow)
         installTempleFade()
         for (const [name, value] of Object.entries(metadata.stats))
           stage.dataset[name] = String(value)
@@ -4018,6 +4255,9 @@ export function createHomeTemple(
         render(performance.now())
         renderer.domElement.style.visibility = 'visible'
         syncActivity()
+        preparation = prepareInteractions!()
+        await preparation
+        syncActivity()
       }
     )
     .catch((error) => {
@@ -4027,6 +4267,28 @@ export function createHomeTemple(
   return {
     select,
     pick: click,
+    resetPointer,
+    setImmersive: (active: boolean) => {
+      if (immersive === active) return
+      immersive = active
+      setStageData('immersive', String(active))
+      resetPointer()
+      immersionTween?.kill()
+      // 正面碑文淡化时同步更新静态场景缓存。
+      immersionTween = gsap.to(
+        immersionLabelOpacity.map((entry) => entry.material),
+        {
+          opacity: (index: number) =>
+            active ? 0 : immersionLabelOpacity[index].opacity,
+          duration: reducedMotion ? 0 : 0.4,
+          ease: 'power1.inOut',
+          onUpdate: () => {
+            staticSceneCache.invalidate()
+            invalidate()
+          },
+        }
+      )
+    },
     setThemeColor,
     setColorMode: (mode: 'light' | 'dark') => {
       if (stage.dataset.colorMode === mode) return
@@ -4045,16 +4307,21 @@ export function createHomeTemple(
     setActive: (active: boolean) => {
       if (sceneActive === active) return
       sceneActive = active
+      syncSkyClip()
       syncActivity()
     },
     // 遮挡暂停优先于入场动画，避免 About 打开时入场逻辑继续占用 GPU。
     setOccluded: (occluded: boolean) => {
       if (sceneOccluded === occluded) return
       sceneOccluded = occluded
+      syncSkyClip()
       syncActivity()
     },
     dispose: () => {
+      document.documentElement.style.removeProperty('--temple-sky-bottom')
+      immersionTween?.kill()
       disposed = true
+      shaderWarmup?.cancel()
       petChangeRevision++
       petEntrance?.kill()
       cursorStateStore.setInteractive(statueCursorSource, false)

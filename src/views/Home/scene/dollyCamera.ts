@@ -32,10 +32,10 @@ export function createDollyCameraMotion(
   startDirection.normalize()
   endDirection.normalize()
 
-  return (progress: number) => {
+  return (progress: number, fovProgress = progress) => {
     if (targetZoom !== undefined)
       camera.zoom = THREE.MathUtils.lerp(startZoom, targetZoom, progress)
-    camera.fov = THREE.MathUtils.lerp(startFov, targetFov, progress)
+    camera.fov = THREE.MathUtils.lerp(startFov, targetFov, fovProgress)
     lookAt.copy(startTarget).lerp(endTarget, progress)
     const projectedDistance = THREE.MathUtils.lerp(
       startProjectedDistance,

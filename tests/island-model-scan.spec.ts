@@ -43,6 +43,7 @@ test('Island zooms in sync with scanning and shrinks directly along its return c
       body: string
       zoom: number
       fov: number
+      nod: number
       drop: number
     }[] = []
     ;(window as any).islandScanSamples = samples
@@ -64,6 +65,7 @@ test('Island zooms in sync with scanning and shrinks directly along its return c
         body: stage.dataset.statueBodyRotation || '',
         zoom: Number(stage.dataset.cameraZoom),
         fov: Number(stage.dataset.cameraFov),
+        nod: Number(stage.dataset.headNodAngle),
         drop: Number(stage.dataset.statueZoomDrop),
       })
       if (samples.length < 1500) requestAnimationFrame(sample)
@@ -76,6 +78,7 @@ test('Island zooms in sync with scanning and shrinks directly along its return c
   })
   await expect(stage).toHaveAttribute('data-camera-zoom', '1.3000')
   await expect(stage).toHaveAttribute('data-camera-fov', '48')
+  await expect(stage).toHaveAttribute('data-head-nod-angle', '5.000')
   await expect(stage).toHaveAttribute('data-statue-zoom-drop', '0.0600')
   const samples = await page.evaluate(
     () =>
@@ -94,6 +97,7 @@ test('Island zooms in sync with scanning and shrinks directly along its return c
         body: string
         zoom: number
         fov: number
+        nod: number
         drop: number
       }[]
   )
@@ -102,7 +106,16 @@ test('Island zooms in sync with scanning and shrinks directly along its return c
   expect(moving.length).toBeGreaterThan(0)
   expect(moving.every((sample) => sample.chrome === 1)).toBe(true)
   expect(moving.some((sample) => sample.progress === 0)).toBe(true)
-  expect(moving.some((sample) => sample.fov > 38 && sample.fov < 48)).toBe(true)
+  expect(
+    moving
+      .filter((sample) => sample.progress === 0)
+      .every((sample) => sample.fov === 38)
+  ).toBe(true)
+  expect(
+    moving
+      .filter((sample) => sample.progress === 0)
+      .every((sample) => sample.nod === 10)
+  ).toBe(true)
   expect(moving.every((sample) => sample.fov >= 38 && sample.fov <= 48)).toBe(
     true
   )
@@ -117,6 +130,17 @@ test('Island zooms in sync with scanning and shrinks directly along its return c
     )
   ).toBe(true)
   expect(scanning.some((sample) => sample.zoom > 1)).toBe(true)
+  expect(scanning.some((sample) => sample.fov > 38 && sample.fov < 48)).toBe(
+    true
+  )
+  for (const sample of scanning)
+    expect(
+      Math.abs((sample.fov - 38) / 10 - (sample.zoom - 1) / 0.3)
+    ).toBeLessThan(0.001)
+  for (const sample of scanning)
+    expect(
+      Math.abs((10 - sample.nod) / 5 - (sample.zoom - 1) / 0.3)
+    ).toBeLessThan(0.001)
   expect(scanning.some((sample) => sample.drop > 0 && sample.drop < 0.06)).toBe(
     true
   )
@@ -187,6 +211,7 @@ test('Island zooms in sync with scanning and shrinks directly along its return c
     await expect(stage).toHaveAttribute('data-camera-zoom', '1.0000')
     await expect(stage).toHaveAttribute('data-statue-zoom-drop', '0.0000')
     await expect(stage).toHaveAttribute('data-camera-fov', '38')
+    await expect(stage).toHaveAttribute('data-head-nod-angle', '10.000')
     const restoreSamples = (await page.evaluate(
       (start) => (window as any).islandScanSamples.slice(start),
       sampleStart

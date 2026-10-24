@@ -131,12 +131,19 @@
   }
 
   &:not(.is-entry-ready) .zodiac-stage {
-    transform: translate3d(-50%, var(--stage-offset-y), 0) scale(0.01)
-      rotate(-125deg);
+    transform: translate3d(-50%, var(--stage-offset-y), 0) scale(0.01);
   }
 
   &.is-entry-ready .zodiac-stage {
-    animation: zodiac-stage-enter 1s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: zodiac-stage-enter 1.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  &.is-entry-ready .zodiac-static-art {
+    animation: zodiac-disc-enter 1.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  &.is-entry-ready .zodiac-html-wheel {
+    animation: zodiac-wheel-enter 1.6s cubic-bezier(0.16, 1, 0.3, 1);
   }
 }
 
@@ -150,6 +157,16 @@
 
 .backdrop-color-transition {
   opacity: 0;
+}
+
+// 只裁剪星盘与星空，底色、渐变和扫描线仍参与原有半透明地面的混合。
+.celestial-viewport {
+  position: absolute;
+  inset: 0;
+  z-index: var(--layer-zodiac);
+  clip-path: inset(
+    0 0 clamp(0px, calc(100% - var(--temple-sky-bottom, 100%)), 100%) 0
+  );
 }
 
 .particle-viewport {
@@ -167,7 +184,7 @@
   will-change: opacity;
 
   &.is-visible {
-    opacity: 0.65;
+    opacity: 0.225;
   }
 }
 
@@ -195,6 +212,7 @@
 .zodiac-stage {
   z-index: var(--layer-zodiac);
   color: var(--chart-primary);
+  filter: blur(0px);
   transition: transform var(--chart-transition-duration, 1.16s)
     var(--chart-transition-easing, cubic-bezier(0.22, 1, 0.36, 1));
 }
@@ -245,21 +263,17 @@
   }
 }
 
-.zodiac-sector-line {
+.zodiac-sector-marker {
   position: absolute;
-  top: 4%;
-  left: 50%;
-  width: 1px;
-  height: 46%;
-  background: linear-gradient(
-    to bottom,
-    var(--chart-faint) 0,
-    var(--chart-faint) 27.8%,
-    transparent 27.8%,
-    transparent 100%
-  );
-  opacity: var(--stage-opacity);
-  transform-origin: 50% 100%;
+  display: grid;
+  place-items: center;
+  color: var(--chart-faint);
+  font-family: 'Times New Roman', serif;
+  font-size: 3.2vw;
+  line-height: 1;
+  white-space: nowrap;
+  opacity: calc(var(--stage-opacity) * 0.45);
+  transform-origin: center;
 }
 
 .zodiac-sign-position {
@@ -289,13 +303,27 @@
   align-items: center;
   justify-content: center;
   color: var(--chart-strong);
-  font-family: 'Noto Sans Symbols 2', 'Segoe UI Symbol', 'Apple Symbols',
-    'Arial Unicode MS', serif;
   font-size: 6.4vw;
   font-variant-emoji: text;
   line-height: 1;
   opacity: 0.38;
-  transform: translateY(0.14em);
+
+  svg {
+    display: block;
+    width: 1em;
+    height: 1em;
+    transform: scale(1.1, 1.4);
+    transform-origin: center;
+  }
+}
+
+.zodiac-glyph-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .star-container.is-entry-ready.is-content-layout:not(.is-route-transitioning) {
@@ -332,14 +360,31 @@
 @keyframes zodiac-stage-enter {
   from {
     opacity: 0;
-    transform: translate3d(-50%, var(--stage-offset-y), 0) scale(0.01)
-      rotate(-125deg);
+    transform: translate3d(-50%, var(--stage-offset-y), 0) scale(0.01);
   }
 
   to {
     opacity: 1;
     transform: translate3d(-50%, var(--stage-offset-y), 0)
-      scale(var(--stage-scale, var(--hero-scale, 0.6))) rotate(0deg);
+      scale(var(--stage-scale, var(--hero-scale, 0.6)));
+  }
+}
+
+@keyframes zodiac-disc-enter {
+  from {
+    transform: rotate(-125deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes zodiac-wheel-enter {
+  from {
+    transform: rotate(calc(var(--route-rotation) - 125deg));
+  }
+  to {
+    transform: rotate(var(--route-rotation));
   }
 }
 
@@ -380,11 +425,16 @@
   --stage-opacity: 0.6;
 
   .particle-viewport.is-visible {
-    opacity: 1;
+    opacity: 0.35;
   }
 
   .zodiac-stage {
     --stage-scale: var(--hero-scale);
+    filter: blur(5px);
+    // 返回动画完成后平滑恢复模糊；离开首页时仍立即清晰。
+    transition: transform var(--chart-transition-duration, 1.16s)
+        var(--chart-transition-easing, cubic-bezier(0.22, 1, 0.36, 1)),
+      filter 400ms ease var(--chart-transition-duration, 1.16s);
   }
 
   // 旋转后的菱形宽度为星盘的 √2 倍，遮罩必须覆盖其溢出部分。
@@ -418,6 +468,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .star-container,
+  .star-container.is-red-layout .zodiac-stage,
   .zodiac-stage,
   .zodiac-html-wheel,
   .zodiac-sign-face,
@@ -425,7 +476,9 @@
     transition: none;
   }
 
-  .zodiac-stage {
+  .star-container.is-entry-ready .zodiac-stage,
+  .star-container.is-entry-ready .zodiac-static-art,
+  .star-container.is-entry-ready .zodiac-html-wheel {
     animation: none;
   }
 }
@@ -464,6 +517,6 @@
   }
 
   .particle-viewport.is-visible {
-    opacity: 0.48;
+    opacity: 0.17;
   }
 }

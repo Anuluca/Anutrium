@@ -19,6 +19,7 @@ export const useTempleNavigation = defineStore('temple-navigation', () => {
   const entranceFinished = ref(false)
   const clockAwaitingSettle = ref(false)
   const expanded = ref(false)
+  const immersive = ref(false)
   const requested = ref<Exclude<TempleNavigationId, 'about'> | null>(null)
   const revision = ref(0)
   let inlineDetailCloser: (() => boolean) | undefined
@@ -94,6 +95,7 @@ export const useTempleNavigation = defineStore('temple-navigation', () => {
     rememberTempleSession({ selection: id, aboutOpen: false })
   }
   function reset() {
+    immersive.value = false
     inlineDetailCloser = undefined
     selected.value = null
     companionFocused.value = false
@@ -110,6 +112,7 @@ export const useTempleNavigation = defineStore('temple-navigation', () => {
     revision.value = 0
   }
   return {
+    immersive,
     setInlineDetailCloser,
     closeInlineDetail,
     entryModule,

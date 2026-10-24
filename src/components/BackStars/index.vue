@@ -13,6 +13,8 @@ import ParticlesBg from '@/components/ParticlesBg/index.vue'
 import type { ZodiacSignId } from '@/config/zodiacThemes'
 import { addPageResizeListener } from '@/utils/pageScroll'
 
+import { zodiacGlyphPaths, zodiacGlyphViewBoxes } from './zodiacGlyphs'
+
 type ZodiacLayout = 'hero' | 'content' | 'red'
 
 interface Props {
@@ -23,6 +25,7 @@ interface Props {
   layout?: ZodiacLayout
   tinted?: boolean
   particlesVisible?: boolean
+  celestialVisible?: boolean
   motionActive?: boolean
   particleFps?: number
   topInset?: number
@@ -45,6 +48,7 @@ const props = withDefaults(defineProps<Props>(), {
   layout: 'hero',
   tinted: false,
   particlesVisible: true,
+  celestialVisible: true,
   motionActive: true,
   particleFps: 60,
   topInset: 0,
@@ -89,13 +93,15 @@ const zodiacSigns: ZodiacSign[] = zodiacSource.map(([id, glyph], index) => {
   return {
     id,
     glyph,
-    positionStyle: polarPercent(40, centerAngle),
+    // 内外圆半径为 33.2% / 44.8%，图标中心落在二者的中线。
+    positionStyle: polarPercent(39, centerAngle),
     faceStyle: { transform: `rotate(${centerAngle + 90}deg)` },
   }
 })
 
 const sectorStyles = Array.from({ length: 12 }, (_, index) => ({
-  transform: `translateX(-50%) rotate(${index * 30}deg)`,
+  ...polarPercent(39, -90 + index * 30),
+  transform: `translate(-50%, -50%) rotate(${index * 30}deg) scaleY(2)`,
 }))
 const zodiacRotationById = new Map<ZodiacSignId, number>(
   zodiacSigns.map((sign, index) => [sign.id, 15 + index * 30])
@@ -172,7 +178,7 @@ const particleColor = computed(() =>
   chartTinted.value ? themeParticleColor.value : '#ffffff'
 )
 const particleQuantity = computed(() =>
-  Math.round((isMobileViewport.value ? 25 : 100) * 1.3)
+  Math.round((isMobileViewport.value ? 25 : 100) * 0.65)
 )
 
 const getBackdropTargetColor = (
@@ -466,77 +472,94 @@ onUnmounted(() => {
       :style="{ backgroundColor: backdropOverlayColor }"
     />
 
-    <div
-      v-if="isParticleFieldMounted"
-      class="particle-viewport"
-      :class="{ 'is-visible': isParticleFieldVisible }"
-      @transitionend="handleParticleVisibilityTransitionEnd"
-    >
-      <ParticlesBg
-        class="particle-field"
-        :active="
-          props.entryActive && isParticleFieldVisible && props.motionActive
-        "
-        :quantity="particleQuantity"
-        :max-fps="props.particleFps"
-        :color="particleColor"
-        :opaque="props.layout === 'red'"
-        :refresh="props.entryActive"
-      />
-    </div>
+    <div v-show="props.celestialVisible" class="celestial-viewport">
+      <div
+        v-if="isParticleFieldMounted"
+        class="particle-viewport"
+        :class="{ 'is-visible': isParticleFieldVisible }"
+        @transitionend="handleParticleVisibilityTransitionEnd"
+      >
+        <ParticlesBg
+          class="particle-field"
+          :active="
+            props.entryActive && isParticleFieldVisible && props.motionActive
+          "
+          :quantity="particleQuantity"
+          :max-fps="props.particleFps"
+          :color="particleColor"
+          :opaque="props.layout === 'red'"
+          :refresh="props.entryActive"
+        />
+      </div>
 
-    <div
-      class="zodiac-stage"
-      :style="stageStyle"
-      @transitionrun="handleChartTransitionStart"
-      @transitionend="handleChartTransitionEnd"
-      @transitioncancel="handleChartTransitionEnd"
-    >
-      <div class="zodiac-gradient-layer">
-        <div class="zodiac-artwork">
-          <span
-            v-if="chartTinted"
-            class="zodiac-static-art zodiac-static-art--tinted"
-            :style="{ '--static-chart-mask': `url('${STATIC_CHART_SRC}')` }"
-          />
-          <img
-            v-else
-            class="zodiac-static-art"
-            :src="STATIC_CHART_SRC"
-            alt=""
-            draggable="false"
-            decoding="async"
-            fetchpriority="high"
-            width="1000"
-            height="1000"
-            loading="eager"
-          />
-
-          <div class="zodiac-html-wheel">
+      <div
+        class="zodiac-stage"
+        :style="stageStyle"
+        @transitionrun="handleChartTransitionStart"
+        @transitionend="handleChartTransitionEnd"
+        @transitioncancel="handleChartTransitionEnd"
+      >
+        <div class="zodiac-gradient-layer">
+          <div class="zodiac-artwork">
             <span
-              v-for="(style, index) in sectorStyles"
-              :key="`sector-${index}`"
-              class="zodiac-sector-line"
-              :style="style"
+              v-if="chartTinted"
+              class="zodiac-static-art zodiac-static-art--tinted"
+              :style="{ '--static-chart-mask': `url('${STATIC_CHART_SRC}')` }"
+            />
+            <img
+              v-else
+              class="zodiac-static-art"
+              :src="STATIC_CHART_SRC"
+              alt=""
+              draggable="false"
+              decoding="async"
+              fetchpriority="high"
+              width="1000"
+              height="1000"
+              loading="eager"
             />
 
-            <div
-              v-for="sign in zodiacSigns"
-              :key="sign.id"
-              class="zodiac-sign-position"
-              :style="sign.positionStyle"
-            >
-              <div
-                class="zodiac-sign-face"
-                :class="{ 'is-active': sign.id === props.activeSign }"
-                :style="sign.faceStyle"
+            <div class="zodiac-html-wheel">
+              <span
+                v-for="(style, index) in sectorStyles"
+                :key="`sector-${index}`"
+                class="zodiac-sector-marker"
+                :style="style"
+                >][</span
               >
-                <span class="zodiac-glyph">{{ sign.glyph }}</span>
+
+              <div
+                v-for="sign in zodiacSigns"
+                :key="sign.id"
+                class="zodiac-sign-position"
+                :style="sign.positionStyle"
+              >
+                <div
+                  class="zodiac-sign-face"
+                  :class="{ 'is-active': sign.id === props.activeSign }"
+                  :style="sign.faceStyle"
+                >
+                  <span class="zodiac-glyph">
+                    <span class="zodiac-glyph-text">{{ sign.glyph }}</span>
+                    <svg
+                      :viewBox="zodiacGlyphViewBoxes[sign.id]"
+                      aria-hidden="true"
+                    >
+                      <path
+                        v-for="(path, index) in zodiacGlyphPaths[sign.id]"
+                        :key="index"
+                        :d="path"
+                        fill="currentColor"
+                        fill-rule="evenodd"
+                      />
+                    </svg>
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <span class="zodiac-diamond-frame" />
+            <span class="zodiac-diamond-frame" />
+          </div>
         </div>
       </div>
     </div>

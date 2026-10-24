@@ -1,12 +1,15 @@
 <template>
   <div
     class="photo-info__inner"
+    :class="{ 'photo-info__inner--title-only': !item.time && !item.location }"
     :style="{
       '--photo-info-meta-gap': `${Math.max(0, timeDividerPadding / 2)}px`,
     }"
   >
-    <span class="photo-info__device">{{ item.device || '' }}</span>
-    <span class="photo-info__meta">
+    <span class="photo-info__device">
+      {{ item.title || item.device || '' }}
+    </span>
+    <span v-if="item.time || item.location" class="photo-info__meta">
       <span v-if="item.time" class="photo-info__time">{{ item.time }}</span>
       <span
         v-if="item.time && item.location"
@@ -25,6 +28,7 @@
 import { Location } from '@element-plus/icons-vue'
 
 interface PhotoInfo {
+  title?: string
   device?: string
   location?: string
   time?: string
@@ -76,6 +80,10 @@ withDefaults(
     font-family: @mono;
     font-weight: 800;
     text-align: left;
+  }
+
+  &__inner--title-only {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   &__time {
