@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './helpers/sceneDiagnostics'
 
 for (const entry of [
   { path: '/', selection: 'none', hint: 'home', nod: '10.000' },

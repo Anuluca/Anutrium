@@ -1,5 +1,11 @@
 // 沉浸模式只淡化绘制内容，保留首页原有布局。
-body:has(:where(.temple-page)) :is(
+body:where(
+    .island-pc-shell,
+    .island-pc-shell-leaving,
+    .island-mobile-shell,
+    .island-mobile-shell-leaving
+  )
+  :is(
     .footer-com,
     .page-footer-home.no-rem,
     .layout-page .home-about-action.no-rem,
@@ -9,7 +15,7 @@ body:has(:where(.temple-page)) :is(
     .footer-bottom-gradient,
     .layout-border-toggle
   ) {
-  transition: opacity 400ms ease, color 1.1s ease-in-out, visibility 0s;
+  transition: opacity 400ms ease, visibility 0s;
 }
 
 .layout-page.is-home-immersive .el-menu-layout-all .logo-box {
@@ -18,12 +24,12 @@ body:has(:where(.temple-page)) :is(
   transition: none;
 }
 
-body:has(.layout-page.is-home-immersive) :is(
+body:has(.layout-page.is-home-immersive)
+  :is(
     .footer-com,
     .page-footer-home,
     .home-about-action,
     .fullscreen,
-    .temple-backdrop,
     .temple-clock__tagline,
     .footer-bottom-gradient,
     .layout-border-toggle
@@ -38,8 +44,22 @@ body:has(.layout-page.is-home-immersive) :is(
   }
 }
 
+body:has(.layout-page.is-home-immersive)
+  .temple-page.no-rem
+  .temple-backdrop.is-immersive {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 2s ease 2200ms, visibility 0s linear 4200ms;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  body:has(.temple-page) :is(
+  body:is(
+      .island-pc-shell,
+      .island-pc-shell-leaving,
+      .island-mobile-shell,
+      .island-mobile-shell-leaving
+    )
+    :is(
       .footer-com,
       .page-footer-home.no-rem,
       .layout-page .home-about-action.no-rem,
@@ -50,5 +70,11 @@ body:has(.layout-page.is-home-immersive) :is(
       .layout-border-toggle
     ) {
     transition: none;
+  }
+
+  body:has(.layout-page.is-home-immersive)
+    .temple-page.no-rem
+    .temple-backdrop.is-immersive {
+    transition: opacity 0s linear 1s, visibility 0s linear 1s;
   }
 }

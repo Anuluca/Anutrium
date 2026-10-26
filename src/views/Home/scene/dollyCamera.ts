@@ -17,7 +17,8 @@ export function createDollyCameraMotion(
   lookAt: THREE.Vector3,
   pose: CameraPose,
   targetFov: number,
-  targetZoom?: number
+  targetZoom?: number,
+  updateProjection = () => camera.updateProjectionMatrix()
 ) {
   const startZoom = camera.zoom
   const startFov = camera.fov
@@ -51,6 +52,6 @@ export function createDollyCameraMotion(
         projectedDistance / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))
       )
       .add(lookAt)
-    camera.updateProjectionMatrix()
+    updateProjection()
   }
 }

@@ -1,6 +1,7 @@
-import { expect, test } from '@playwright/test'
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
+
+import { expect, test } from './helpers/sceneDiagnostics'
 
 type Counters = {
   draws: number
@@ -217,7 +218,7 @@ test('sampled pointer preserves the final position and cancels pending work', as
   expect(result[1].time - result[0].time).toBeGreaterThanOrEqual(495)
 })
 
-test('temple focus reuses prepared shaders and textures, then stops drawing while idle', async ({
+test('temple focus reuses prepared shaders and textures while wire flow animates', async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name.includes('mobile'), '桌面神殿渲染路径')
@@ -267,7 +268,7 @@ test('temple focus reuses prepared shaders and textures, then stops drawing whil
   await page.waitForTimeout(1800)
   const idle = await read()
   await page.waitForTimeout(500)
-  expect((await read()).draws).toBe(idle.draws)
+  expect((await read()).draws).toBeGreaterThan(idle.draws)
   await page.mouse.move(300, 200)
   await page.waitForTimeout(1500)
   const followed = await read()
@@ -275,7 +276,11 @@ test('temple focus reuses prepared shaders and textures, then stops drawing whil
   expect(followed.programs).toBe(prepared.programs)
   expect(followed.uploads).toBe(prepared.uploads)
   await page.waitForTimeout(500)
-  expect((await read()).draws).toBe(followed.draws)
+  const flowing = await read()
+  expect(flowing.draws).toBeGreaterThan(followed.draws)
+  expect(flowing.programs).toBe(prepared.programs)
+  expect(flowing.uploads).toBe(prepared.uploads)
+  expect(flowing.allocations).toBe(prepared.allocations)
 })
 
 test('large desktop temple keeps its canvas within the render pixel budget', async ({

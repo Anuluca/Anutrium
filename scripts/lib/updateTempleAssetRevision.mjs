@@ -11,6 +11,10 @@ export async function updateTempleAssetRevision() {
     'lucario-studio.json',
     'temple-label.bin.gz',
     'temple-label.json',
+    'temple-label-low.bin.gz',
+    'temple-label-low.json',
+    'temple-label-flat.bin.gz',
+    'temple-label-flat.json',
   ]) {
     hash.update(await readFile(new URL(name, directory)))
   }

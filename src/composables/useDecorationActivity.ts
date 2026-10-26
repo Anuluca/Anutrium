@@ -1,7 +1,7 @@
 import { computed, inject, type InjectionKey, type Ref, ref } from 'vue'
-import { useDocumentVisibility } from '@vueuse/core'
 
 import { useIntersectionActivation } from './useIntersectionActivation'
+import { useMotionActivity } from './useMotionActivity'
 
 export const decorationActivityKey: InjectionKey<Ref<boolean>> = Symbol(
   'decoration-activity'
@@ -10,7 +10,7 @@ export const decorationActivityKey: InjectionKey<Ref<boolean>> = Symbol(
 export function useDecorationActivity(element: Ref<HTMLElement | null>) {
   const permitted = inject(decorationActivityKey, ref(true))
   const visible = ref(false)
-  const documentVisibility = useDocumentVisibility()
+  const { visibility } = useMotionActivity()
   useIntersectionActivation(
     element,
     ([entry]) => {
@@ -19,7 +19,6 @@ export function useDecorationActivity(element: Ref<HTMLElement | null>) {
     { onUnsupported: () => (visible.value = true) }
   )
   return computed(
-    () =>
-      permitted.value && visible.value && documentVisibility.value !== 'hidden'
+    () => permitted.value && visible.value && visibility.value !== 'hidden'
   )
 }

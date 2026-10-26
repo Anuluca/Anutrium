@@ -40,8 +40,16 @@ const aboutDynamic = {
       },
       details: [
         {
-          zhCn: '优化__首页三维场景（3D Scene）性能__，减少场景渲染与交互更新开销，提升浏览流畅度。',
-          en: 'Optimized __home page 3D scene performance__, reducing rendering and interaction update overhead for a smoother browsing experience.',
+          zhCn: '优化__首页三维场景（3D Scene）渲染__：保留主视觉材质，简化建筑与倒影，调整倒影亮度与底座表现；合并重复材质、四柱及扫描表面的绘制，精简灯光与透明绘制，并分离静态环境与动态模型的更新。',
+          en: 'Optimized __home page 3D scene rendering__: preserved hero materials, simplified buildings and reflections, and refined reflection brightness and pedestal visibility. Consolidated repeated materials, pillar and scan-surface drawing, reduced lighting and transparency overhead, and separated static environment updates from dynamic models.',
+        },
+        {
+          zhCn: '优化__场景资源加载与复用__：按入口和状态加载资源、控制着色器预热范围，跨路由复用场景并在离场后暂停、按需释放；立体标签新增__细节等级（LOD）与平面替代__，按显示大小和视角切换。',
+          en: 'Optimized __scene resource loading and reuse__: load resources and warm shaders by entry point and state, reuse scenes across routes, and pause and release them as needed. Added __level of detail (LOD) and flat alternatives__ for 3D labels, selected by displayed size and viewing angle.',
+        },
+        {
+          zhCn: '降低__交互与页面合成开销__：优化高频锚点更新、光标形状过渡、连线覆盖范围及样式依赖，复用数学计算数据；统一动画状态，暂停不可见内容的动画，诊断数据改为开发与测试时显式启用，保持首页初始星空运动帧率不变。',
+          en: 'Reduced __interaction and page compositing overhead__: optimized frequent anchor updates, cursor shape transitions, connector bounds, and style dependencies, and reused calculation data. Coordinated animation state, paused animations for hidden content, and made diagnostics explicitly opt-in for development and testing, while preserving the initial home starfield animation frame rate.',
         },
         {
           zhCn: '首页新增__禅模式（Zen Mode）__：点击顶部 Logo 进入，淡出导航与辅助界面，保留三维场景并放大显示时分时钟；支持全屏显示，点击页面或按 __Esc__ 即可退出。',

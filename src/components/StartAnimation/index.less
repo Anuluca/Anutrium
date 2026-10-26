@@ -119,7 +119,8 @@
   }
 }
 
-.entry-mode--centered .logo-wrapper2:not(.is-docking) {
+.entry-mode--centered .logo-wrapper2:not(.is-docking),
+.entry-mode--cached-logo .logo-wrapper2:not(.is-docking) {
   translate: calc(50vw - 50%) calc(50vh - 50%);
 }
 
@@ -195,4 +196,9 @@
     width: calc(var(--entry-logo-height, min(215px, 57.5vw)) * 0.8);
     height: var(--entry-logo-height, min(215px, 57.5vw));
   }
+}
+
+.entry-loading-progress.site-loading-progress.no-rem {
+  position: fixed;
+  z-index: 1001;
 }

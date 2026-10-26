@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './helpers/sceneDiagnostics'
 
 test.beforeEach(async ({ page }) => {
   await page.routeWebSocket('ws://localhost:3000/**', (socket) =>
@@ -7,6 +7,95 @@ test.beforeEach(async ({ page }) => {
   await page.route('https://use.typekit.net/**', (route) => route.abort())
   await page.emulateMedia({ reducedMotion: 'no-preference' })
   await page.mouse.move(0, 0)
+})
+
+test('initial simple entrance replays the clock and only the second half of the zodiac', async ({
+  page,
+}) => {
+  test.setTimeout(90000)
+  const detail = '/flanerie/xiangtan?from=home'
+  await page.goto(detail, { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.entry-overlay-container')).toHaveCount(0, {
+    timeout: 30000,
+  })
+  await page.evaluate(() => {
+    ;(window as any).initialEntranceEvents = []
+    ;(window as any).initialEntrancePillars = []
+    new MutationObserver(() => {
+      const stage = document.querySelector<HTMLElement>('.temple-stage')
+      if (stage?.dataset.entrancePhase === 'pillars' && stage.dataset.monumentY)
+        (window as any).initialEntrancePillars.push(stage.dataset.monumentY)
+    }).observe(document, {
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['data-monument-y'],
+    })
+    document.addEventListener('animationstart', (event) => {
+      ;(window as any).initialEntranceEvents.push({
+        name: event.animationName,
+        elapsed: event.elapsedTime,
+        entranceFinished: document
+          .querySelector('.temple-stage')
+          ?.getAttribute('data-entrance-finished'),
+      })
+    })
+  })
+  // 同时覆盖首次创建场景，以及已缓存场景的站内返回。
+  for (const cached of [false, true]) {
+    if (cached) {
+      await page.evaluate(async (path) => {
+        await (
+          document.querySelector('#app') as any
+        ).__vue_app__.config.globalProperties.$router.push(path)
+      }, detail)
+    }
+    await page.evaluate(() => {
+      ;(window as any).initialEntranceEvents = []
+      ;(window as any).initialEntrancePillars = []
+    })
+    await page.getByRole('button', { name: 'Anutrium', exact: true }).click()
+    const stage = page.locator('.temple-stage')
+    await expect(stage).toHaveAttribute('data-entrance-finished', 'true', {
+      timeout: 30000,
+    })
+    await expect(stage).toHaveAttribute('data-entrance-mode', 'simple')
+    expect(
+      await page.evaluate(() =>
+        ((window as any).initialEntrancePillars as string[]).some((positions) =>
+          positions.split(',').some((y) => Number(y) < -0.1)
+        )
+      )
+    ).toBe(true)
+    await expect(page.locator('.temple-page')).toHaveAttribute(
+      'data-selected',
+      'none'
+    )
+    await expect
+      .poll(() =>
+        page.evaluate(() => {
+          const events = (window as any).initialEntranceEvents as Array<{
+            name: string
+            elapsed: number
+            entranceFinished: string | null
+          }>
+          return {
+            clock: events.some((e) =>
+              e.name.startsWith('temple-clock-reveal-in')
+            ),
+            tagline: events.some((e) => e.name.startsWith('temple-tagline-in')),
+            typing: events.some((e) => e.name.startsWith('temple-clock-type')),
+            zodiac: events.some(
+              (e) =>
+                e.name.startsWith('zodiac-stage-enter') &&
+                e.elapsed === 1.6 &&
+                e.entranceFinished !== 'true'
+            ),
+          }
+        })
+      )
+      .toEqual({ clock: true, tagline: true, typing: true, zodiac: true })
+    await expect(page.locator('.temple-clock-group')).toHaveCSS('opacity', '1')
+  }
 })
 
 test('a delayed scene import keeps ANUTRIUM hidden with the scene', async ({

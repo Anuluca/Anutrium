@@ -1,8 +1,7 @@
-import { expect, type Page, test } from '@playwright/test'
-
 import { petAlbums } from '../src/locales/dynamic/petAlbums'
 import { getFloraCaptureDate } from '../src/utils/floratriumMedia'
 import { loadFloraMediaPage } from '../worker/src/floratrium'
+import { expect, type Page, test } from './helpers/sceneDiagnostics'
 
 test.describe.configure({ timeout: 60000 })
 

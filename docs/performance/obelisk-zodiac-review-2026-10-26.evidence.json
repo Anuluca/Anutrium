@@ -1,0 +1,118 @@
+{
+  "date": "2026-10-26",
+  "scope": "Obelisk zodiac icons, hover projection, HOME control template",
+  "optimization": {
+    "rayMarchSteps": 96,
+    "textureFetchesPerStep": {
+      "before": 9,
+      "after": 1
+    },
+    "maxTextureFetchesPerFragment": {
+      "before": 864,
+      "after": 96
+    },
+    "maskFormat": "R8",
+    "maskSize": [
+      56,
+      56
+    ],
+    "maskBytesPerSign": 3136,
+    "stableProjectionUniformWrites": 0
+  },
+  "benchmark": {
+    "samples": [
+      [
+        24.30000001192093,
+        24.299999952316284,
+        15.400000035762787,
+        17.69999998807907,
+        28.30000001192093,
+        24.30000001192093,
+        36,
+        21.80000001192093,
+        28,
+        17.299999952316284,
+        18.100000023841858,
+        27.399999976158142,
+        30.5,
+        28.599999964237213,
+        46.09999996423721,
+        33.10000002384186,
+        37.60000002384186,
+        28.19999998807907,
+        33.39999997615814,
+        26.600000023841858,
+        45.299999952316284,
+        51.19999998807907,
+        27.80000001192093,
+        23.69999998807907
+      ],
+      [
+        2.899999976158142,
+        4.100000023841858,
+        2.199999988079071,
+        1.5,
+        2.099999964237213,
+        2.5,
+        7.199999988079071,
+        3.600000023841858,
+        2.599999964237213,
+        1.9000000357627869,
+        3.899999976158142,
+        2.100000023841858,
+        9.800000011920929,
+        9.900000035762787,
+        3.700000047683716,
+        2.399999976158142,
+        5.800000011920929,
+        3.100000023841858,
+        3.199999988079071,
+        2.800000011920929,
+        13.300000011920929,
+        21.30000001192093,
+        3.399999976158142,
+        6.100000023841858
+      ]
+    ],
+    "median": [
+      28,
+      3.399999976158142
+    ],
+    "p90": [
+      45.299999952316284,
+      9.900000035762787
+    ],
+    "image": {
+      "rmse": 0.17967334636286253,
+      "litChannelRMSE": 1.1200320467511544,
+      "relativeAbsoluteDifference": 0.019591302701120732
+    },
+    "mode": "SwiftShader,512x256,8 warmup pairs,24 alternating measurements",
+    "limitation": "Isolated 512×256 projection on SwiftShader with synchronous 1px readback; not whole-page FPS or hardware GPU measurements."
+  },
+  "validation": {
+    "playwright": {
+      "passed": 10,
+      "projects": [
+        "desktop",
+        "mobile"
+      ],
+      "coverage": [
+        "mask alpha and cache identity",
+        "asymmetric animation timing and zero stable uniform writes",
+        "four hover controls and keyboard focus",
+        "font completion bitmap reuse",
+        "page/router leave geometry <=1px"
+      ]
+    },
+    "eslint": "passed (changed files)",
+    "diffCheck": "passed",
+    "typeCheck": {
+      "result": "blocked by existing errors",
+      "files": [
+        "src/components/WorkCard/index.vue:102",
+        "src/views/Craft/CraftContent.vue:91"
+      ]
+    }
+  }
+}

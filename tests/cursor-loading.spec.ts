@@ -2,6 +2,49 @@ import { expect, test } from '@playwright/test'
 
 const PAGE_LOAD_TIMEOUT = 20_000
 
+test('cursor initialization keeps the native cursor until custom positioning is ready', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name.includes('mobile'))
+  let releaseCursor!: () => void
+  const cursorModuleReady = new Promise<void>((resolve) => {
+    releaseCursor = resolve
+  })
+  // 延迟真实组件加载，覆盖此前显示粉色 SVG 指针的初始化窗口。
+  await page.route('**/src/components/CursorMove/index.vue*', async (route) => {
+    await cursorModuleReady
+    await route.continue()
+  })
+  await page.routeWebSocket('ws://localhost:3000/**', (socket) =>
+    socket.close()
+  )
+  try {
+    await page.goto('/archive', { waitUntil: 'domcontentloaded' })
+    const layout = page.locator('.layout-page')
+    await expect(layout).toBeAttached({ timeout: PAGE_LOAD_TIMEOUT })
+    await expect(layout).toHaveCSS('cursor', 'default')
+    await expect(page.locator('html')).not.toHaveClass(/custom-cursor-enabled/)
+    await expect(page.locator('.cursor-position')).toHaveCount(0)
+
+    releaseCursor()
+    const cursor = page.locator('.cursor-position')
+    await expect(cursor).toBeAttached({ timeout: PAGE_LOAD_TIMEOUT })
+    await page.mouse.move(300, 300)
+    await expect(cursor).not.toHaveClass(/\bis-hidden\b/)
+    await expect(layout).toHaveCSS('cursor', 'none')
+    await expect(cursor.locator('.cursor-body')).toHaveCSS(
+      'background-color',
+      'rgb(255, 255, 255)'
+    )
+
+    await page.evaluate(() => window.dispatchEvent(new Event('blur')))
+    await expect(cursor).toHaveClass(/\bis-hidden\b/)
+    await expect(layout).toHaveCSS('cursor', 'default')
+  } finally {
+    releaseCursor()
+  }
+})
+
 test('desktop cursor grows slightly while the pointer is pressed', async ({
   page,
 }, testInfo) => {

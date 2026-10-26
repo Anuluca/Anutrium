@@ -136,7 +136,10 @@ test('real model frames bypass both Vue components and rebind after layout and f
     let parent = instance.parent
     while (parent && parent.type.__name !== 'TemplePage') parent = parent.parent
     if (!parent) throw new Error('TemplePage instance not found')
-    const state = { layout: 0, parent: 0, writes: 0 }
+    const state = { layout: 0, parent: 0, writes: 0, triggers: [] as string[] }
+    ;(instance.rtg ||= []).push((event: { key: unknown; type: string }) =>
+      state.triggers.push(`${event.type}:${String(event.key)}`)
+    )
     ;(instance.bu ||= []).push(() => state.layout++)
     ;(parent.bu ||= []).push(() => state.parent++)
     const nodes = [...element.querySelectorAll('.island-links > g')]

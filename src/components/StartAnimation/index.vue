@@ -1,18 +1,34 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import {
+  computed,
+  defineAsyncComponent,
+  nextTick,
+  onMounted,
+  onUnmounted,
+  ref,
+  watch,
+} from 'vue'
 import { useRoute } from 'vue-router'
 import { useMediaQuery, useWindowSize } from '@vueuse/core'
 
 import LoadingLine from '@/components/LoadingLine/index.vue'
 import LoadingPercentage from '@/components/LoadingPercentage/index.vue'
 import Logo from '@/components/Logo/index.vue'
-import LogoRotating3D from '@/components/Logo_rotating3D/index.vue'
 import { useTemplePresentation } from '@/composables/useTemplePresentation'
 import { getTempleEntranceHorizon } from '@/config/templeCamera'
 import { useSiteLoading } from '@/stores/siteLoading'
 import { useTempleNavigation } from '@/stores/templeNavigation'
 import { loadCriticalFont } from '@/utils/fontLoader'
 import { hasJourneyReturnState } from '@/utils/journeyReturnState'
+import {
+  finishStartupCacheCheck,
+  startupCacheState,
+  startupScriptsCached,
+} from '@/utils/startupCache'
+
+const LogoRotating3D = defineAsyncComponent(
+  () => import('@/components/Logo_rotating3D/index.vue')
+)
 
 const emit = defineEmits([
   'finished',
@@ -30,6 +46,8 @@ const isBackgroundExiting = ref(false)
 const isBackgroundFading = ref(false)
 const siteLoading = useSiteLoading()
 const route = useRoute()
+const entryMode = ref<'checking' | 'full' | 'logo'>('checking')
+let mounted = false
 // 固定首次访问的动画类型；模块入口与其详情页不能按路径前缀混用。
 const isHorizonIntro = route.name === 'HOME' || route.name === 'ABOUT'
 const navigation = useTempleNavigation()
@@ -69,12 +87,25 @@ const compactVisible = ref(false)
 const compactFading = ref(false)
 let introReady = false
 let skipLogoReveal = false
-const logoRotating3DRef = ref()
+const logoRotating3DRef = ref<{ stop: () => void } | null>(null)
+let rotationStopRequested = false
+watch(logoRotating3DRef, (logo) => {
+  // 异步组件晚于最短展示时长就绪时，补发停止信号，避免等待兜底。
+  if (rotationStopRequested) logo?.stop()
+})
 const logo2DRef = ref<HTMLElement | null>(null)
 const entryStyle = ref<Record<string, string>>({})
-const timers: number[] = []
+const overlayStyle = computed(() => ({
+  ...loadingLineStyle.value,
+  ...logoSizeStyle.value,
+  ...entryStyle.value,
+}))
+const timers = new Set<number>()
 let isUnmounted = false
 let hasStartedIntroExit = false
+let exitScheduled = false
+let cachedExitFinished = false
+let cachedSceneReady = false
 let hasEmittedReady = false
 let progressAnimationFrame: number | null = null
 let progressStartedAt: number | null = null
@@ -86,6 +117,7 @@ const INTRO_FAILSAFE_DURATION = 4200
 const EXIT_BACKGROUND_SHRINK_DURATION = 1260
 const EXIT_BACKGROUND_FADE_DURATION = 760
 const EXIT_DOCK_START_DELAY = 980
+const CACHED_SCENE_REVEAL_DELAY = 200
 const EXIT_BACKGROUND_FADE_DELAY =
   EXIT_DOCK_START_DELAY + EXIT_BACKGROUND_SHRINK_DURATION
 const EXIT_LOGO_HIDE_DELAY = 2460
@@ -94,17 +126,11 @@ const EXIT_HIDE_DELAY =
 
 const schedule = (handler: () => void, timeout: number) => {
   const timer = window.setTimeout(() => {
-    const index = timers.indexOf(timer)
-    if (index >= 0) timers.splice(index, 1)
+    timers.delete(timer)
     handler()
   }, timeout)
-  timers.push(timer)
+  timers.add(timer)
 }
-
-const waitWithSchedule = (timeout: number) =>
-  new Promise<void>((resolve) => {
-    schedule(resolve, timeout)
-  })
 
 const updateLoadingProgress = (timestamp: number) => {
   progressAnimationFrame = null
@@ -181,15 +207,13 @@ const getVisibleElementRect = (selector: string) => {
   return null
 }
 
-const getLogoFallbackRect = () => {
-  const { width } = getViewportSize()
+const getLogoFallbackRect = (width: number) => {
+  const mobile = isMobileLayout()
   const rootFontSize =
     parseFloat(window.getComputedStyle(document.documentElement).fontSize) || 16
   const size = Math.max(24, rootFontSize * 1.83333)
-  const top = isMobileLayout()
-    ? Math.max(10, rootFontSize * 0.7)
-    : rootFontSize * 2
-  const left = isMobileLayout()
+  const top = mobile ? Math.max(10, rootFontSize * 0.7) : rootFontSize * 2
+  const left = mobile
     ? (width - size) / 2
     : Math.max(24, rootFontSize * 2.33333)
 
@@ -201,8 +225,7 @@ const getLogoFallbackRect = () => {
   }
 }
 
-const getFooterFallbackRect = () => {
-  const { width, height } = getViewportSize()
+const getFooterFallbackRect = (width: number, height: number) => {
   const footerHeight = 26
 
   return {
@@ -214,9 +237,9 @@ const getFooterFallbackRect = () => {
   }
 }
 
-const getBackgroundTargetRect = () => {
+const getBackgroundTargetRect = (width: number, height: number) => {
   const footerTarget = getVisibleElementRect('[data-entry-footer-target]')
-  if (!footerTarget) return getFooterFallbackRect()
+  if (!footerTarget) return getFooterFallbackRect(width, height)
   const { rect, style } = footerTarget
 
   return {
@@ -235,7 +258,7 @@ const measureExitTargets = () => {
     .querySelector('svg')
     ?.getBoundingClientRect()
   const logoRect =
-    logoTargetSvgRect || logoTarget?.rect || getLogoFallbackRect()
+    logoTargetSvgRect || logoTarget?.rect || getLogoFallbackRect(width)
   const logoSourceRect = logo2DRef.value?.getBoundingClientRect()
   const logoSourceWidth = Math.max(1, logoSourceRect?.width || logoRect.width)
   const logoSourceHeight = Math.max(
@@ -246,7 +269,7 @@ const measureExitTargets = () => {
     logoRect.width / logoSourceWidth,
     logoRect.height / logoSourceHeight
   )
-  const backgroundRect = getBackgroundTargetRect()
+  const backgroundRect = getBackgroundTargetRect(width, height)
 
   entryStyle.value = {
     '--entry-logo-target-x': `${logoRect.left}px`,
@@ -267,6 +290,13 @@ const startExitMotion = async () => {
   measureExitTargets()
   isLogoDocking.value = true
   isBackgroundExiting.value = true
+  if (entryMode.value === 'logo') {
+    schedule(() => {
+      cachedSceneReady = true
+      tryFinishIntro()
+    }, CACHED_SCENE_REVEAL_DELAY)
+    return
+  }
   emitReady()
   if (!isHorizonIntro)
     schedule(
@@ -284,7 +314,8 @@ const finishIntro = () => {
 }
 
 const startIntroExit = () => {
-  if (isUnmounted) return
+  if (isUnmounted || exitScheduled) return
+  exitScheduled = true
   emit('progress-complete')
   const exitDuration = skipLogoReveal
     ? Math.max(
@@ -325,11 +356,23 @@ const startIntroExit = () => {
   }, EXIT_LOGO_HIDE_DELAY)
 
   schedule(() => {
-    hideIntro()
+    if (entryMode.value === 'logo') {
+      cachedExitFinished = true
+      tryFinishIntro()
+    } else hideIntro()
   }, EXIT_HIDE_DELAY)
 }
 
 const tryFinishIntro = () => {
+  if (entryMode.value === 'logo' && hasStartedIntroExit) {
+    if (siteLoading.pending || !cachedSceneReady) return
+    if (!hasEmittedReady) {
+      emitReady()
+      revealScene()
+    }
+    if (cachedExitFinished) hideIntro()
+    return
+  }
   if (introReady && !siteLoading.pending) finishIntro()
 }
 
@@ -360,7 +403,8 @@ watch(
   { flush: 'sync' }
 )
 
-onMounted(() => {
+const startFullIntro = () => {
+  entryMode.value = 'full'
   progressAnimationFrame = window.requestAnimationFrame(updateLoadingProgress)
   schedule(() => {
     introReady = true
@@ -369,11 +413,38 @@ onMounted(() => {
     tryFinishIntro()
   }, INTRO_FAILSAFE_DURATION)
 
-  void loadCriticalFont()
-  waitWithSchedule(INTRO_MIN_DURATION).then(() => {
-    if (isUnmounted) return
+  schedule(() => {
+    rotationStopRequested = true
     logoRotating3DRef.value?.stop()
-  })
+  }, INTRO_MIN_DURATION)
+}
+
+const resolveEntryMode = () => {
+  if (!mounted || entryMode.value !== 'checking' || isUnmounted) return
+  const state =
+    route.name === 'HOME'
+      ? startupCacheState.value
+      : startupScriptsCached()
+      ? 'hit'
+      : 'miss'
+  if (state === 'checking') return
+  stopCacheWatch()
+  finishStartupCacheCheck()
+  if (state === 'miss') return startFullIntro()
+  entryMode.value = 'logo'
+  logo2DShow.value = true
+  introProgress.value = 100
+  hasStartedIntroExit = true
+  startIntroExit()
+}
+
+const stopCacheWatch = watch(startupCacheState, resolveEntryMode, {
+  flush: 'post',
+})
+onMounted(() => {
+  mounted = true
+  void loadCriticalFont()
+  resolveEntryMode()
 })
 
 onUnmounted(() => {
@@ -383,7 +454,7 @@ onUnmounted(() => {
     progressAnimationFrame = null
   }
   timers.forEach((timer) => window.clearTimeout(timer))
-  timers.length = 0
+  timers.clear()
 })
 </script>
 
@@ -397,12 +468,17 @@ onUnmounted(() => {
         'is-background-fading': isBackgroundFading,
         'entry-mode--horizon': isHorizonIntro,
         'entry-mode--centered': !isHorizonIntro,
+        'entry-mode--cached-logo': entryMode === 'logo',
       }"
-      :style="[loadingLineStyle, logoSizeStyle, entryStyle]"
+      :style="overlayStyle"
     >
       <div class="entry-background" />
 
-      <div class="logo-wrapper" :class="{ 'is-wiping-out': isLogoWipingOut }">
+      <div
+        v-if="entryMode === 'full'"
+        class="logo-wrapper"
+        :class="{ 'is-wiping-out': isLogoWipingOut }"
+      >
         <div class="blinds-container">
           <LogoRotating3D
             ref="logoRotating3DRef"
@@ -417,7 +493,7 @@ onUnmounted(() => {
         </div>
       </div>
       <LoadingLine
-        v-if="isHorizonIntro"
+        v-if="isHorizonIntro && entryMode === 'full'"
         :progress="loadingProgress"
         :fading="isProgressFading"
         :style="loadingLineStyle"
@@ -426,21 +502,21 @@ onUnmounted(() => {
         @reveal="revealScene"
       />
       <LoadingPercentage
-        v-else
+        v-else-if="!isHorizonIntro && entryMode === 'full'"
         :progress="loadingProgress"
         :fading="isProgressFading"
         aria-hidden="true"
       />
       <div
         ref="logo2DRef"
+        class="logo-wrapper2"
         :class="{
-          'logo-wrapper2': true,
           show: logo2DShow,
           'is-docking': isLogoDocking,
           'is-hidden': logo2DHide,
         }"
       >
-        <Logo v-if="logo2DShow" ref="logoRef" class="logo" />
+        <Logo v-if="logo2DShow" class="logo" />
       </div>
     </div>
     <LoadingLine
@@ -458,10 +534,3 @@ onUnmounted(() => {
 </template>
 
 <style lang="less" scoped src="./index.less" />
-
-<style lang="less" scoped>
-.entry-loading-progress.site-loading-progress.no-rem {
-  position: fixed;
-  z-index: 1001;
-}
-</style>

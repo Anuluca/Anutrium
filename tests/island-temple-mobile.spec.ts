@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './helpers/sceneDiagnostics'
 
 const categories = [
   { id: 'archive', title: '作品集' },

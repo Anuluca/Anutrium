@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './helpers/sceneDiagnostics'
 
 for (const failure of ['unavailable', 'invalid', 'network', 'timeout']) {
   test(`home features ${failure} falls back to the normal statue`, async ({

@@ -48,6 +48,8 @@ test('a failed model batch aborts pending peers and allows a fresh retry', async
     let aborted = false
     let requests = 0
     window.fetch = async (path, init) => {
+      if (init?.cache === 'only-if-cached')
+        return new Response(null, { status: 504 })
       requests++
       if (!healthy && String(path).includes('model.bin'))
         return new Promise<Response>((_, reject) => {
@@ -143,4 +145,29 @@ test('model timeout covers response body reads and releases the cache for retry'
     return { aborted: probe.aborted, failed: probe.failed, retry: await load() }
   })
   expect(result).toEqual({ aborted: true, failed: true, retry: 'ok' })
+})
+
+test('startup cache probes stop after the entrance mode is decided', async ({
+  page,
+}) => {
+  const result = await page.evaluate(async () => {
+    const { fetchStartupAsset, finishStartupCacheCheck, startupCacheState } =
+      await import('/src/utils/startupCache.ts')
+    const modes: (RequestCache | undefined)[] = []
+    window.fetch = async (_, init) => {
+      modes.push(init?.cache)
+      return new Response('cached')
+    }
+    const signal = new AbortController().signal
+    await fetchStartupAsset('/models/initial.bin', signal)
+    const state = startupCacheState.value
+    finishStartupCacheCheck()
+    await fetchStartupAsset('/models/later.bin', signal)
+    return { modes, state, finalState: startupCacheState.value }
+  })
+  expect(result).toEqual({
+    modes: ['only-if-cached', undefined],
+    state: 'hit',
+    finalState: 'hit',
+  })
 })

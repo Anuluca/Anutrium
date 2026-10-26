@@ -5,7 +5,6 @@ export const templeCategories = [
   {
     id: 'archive',
     enabled: true,
-    roman: 'I',
     title: 'ARCHIVE',
     label: '作品集',
     themeColor: pageThemeColors.ARCHIVE,
@@ -16,7 +15,6 @@ export const templeCategories = [
   {
     id: 'flanerie',
     enabled: true,
-    roman: 'II',
     title: 'FLÂNERIE',
     label: '旅程',
     themeColor: pageThemeColors.FLANERIE,
@@ -27,7 +25,6 @@ export const templeCategories = [
   {
     id: 'pokeyard',
     enabled: true,
-    roman: 'III',
     title: 'POKÉYARD',
     label: '宝可后院',
     themeColor: pageThemeColors.POKEYARD,
@@ -38,7 +35,6 @@ export const templeCategories = [
   {
     id: 'island',
     enabled: true,
-    roman: 'IV',
     title: 'CREATIVE',
     label: '创作',
     themeColor: pageThemeColors.CREATIVE,
@@ -59,6 +55,7 @@ export const templeNavigation = [
   {
     id: 'sprigatito',
     title: 'FLORATRIUM',
+    zodiacSign: 'gemini',
     label: '花花小窝',
     enabled: true,
     themeColor: pageThemeColors.SPRIGATITO,

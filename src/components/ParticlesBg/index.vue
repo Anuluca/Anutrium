@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
+import { useMotionActivity } from '@/composables/useMotionActivity'
+
 interface Props {
   active?: boolean
   quantity?: number
@@ -36,14 +38,10 @@ const props = withDefaults(defineProps<Props>(), {
 
 const canvasElement = ref<HTMLCanvasElement | null>(null)
 const isIntersecting = ref(true)
-const isPageVisible = ref(true)
-const isReducedMotion = ref(false)
+const { motionAllowed } = useMotionActivity()
 const renderedParticleCount = ref(0)
 const motionState = computed(() =>
-  props.active &&
-  isIntersecting.value &&
-  isPageVisible.value &&
-  !isReducedMotion.value
+  props.active && isIntersecting.value && motionAllowed.value
     ? 'running'
     : 'paused'
 )
@@ -57,13 +55,12 @@ let animationFrameId: number | null = null
 let frameTimer: ReturnType<typeof setTimeout> | null = null
 let resizeObserver: ResizeObserver | null = null
 let intersectionObserver: IntersectionObserver | null = null
-let reducedMotionQuery: MediaQueryList | null = null
 let lastFrameTime = 0
 let lastBudgetTime = 0
 let particleTextures: ParticleTexture[] = []
 let particleTexturePixelRatio = 0
 const PARTICLE_RADII = [2.6, 4, 5.8, 8.4] as const
-const PARTICLE_DRIFT_SPEED = 0.09
+const PARTICLE_DRIFT_SPEED = 0.06
 
 const rebuildParticleTextures = (pixelRatio: number) => {
   if (typeof document === 'undefined') return
@@ -237,14 +234,6 @@ const syncAnimation = () => {
   }
 }
 
-const handleVisibilityChange = () => {
-  isPageVisible.value = !document.hidden
-}
-
-const handleReducedMotionChange = (event: MediaQueryListEvent) => {
-  isReducedMotion.value = event.matches
-}
-
 watch([motionState, () => props.maxFps], syncAnimation)
 watch(
   () => [props.quantity, props.refresh],
@@ -265,11 +254,6 @@ onMounted(() => {
   const canvas = canvasElement.value
   if (!canvas) return
 
-  reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-  isReducedMotion.value = reducedMotionQuery.matches
-  reducedMotionQuery.addEventListener('change', handleReducedMotionChange)
-  document.addEventListener('visibilitychange', handleVisibilityChange)
-
   resizeObserver = new ResizeObserver(() => {
     resizeCanvas()
     syncAnimation()
@@ -289,8 +273,6 @@ onUnmounted(() => {
   stopAnimation()
   resizeObserver?.disconnect()
   intersectionObserver?.disconnect()
-  reducedMotionQuery?.removeEventListener('change', handleReducedMotionChange)
-  document.removeEventListener('visibilitychange', handleVisibilityChange)
 })
 </script>
 

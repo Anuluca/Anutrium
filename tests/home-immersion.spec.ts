@@ -1,4 +1,98 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './helpers/sceneDiagnostics'
+
+test('immersive clock hover offers HIDE and previews hidden time at half its normal opacity', async ({
+  page,
+}, testInfo) => {
+  test.setTimeout(90000)
+  await page.routeWebSocket('ws://localhost:3000/**', (socket) =>
+    socket.close()
+  )
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  const clock = page.locator('.temple-clock')
+  await expect(clock).toBeVisible({ timeout: 45000 })
+  await expect(page.locator('.entry-overlay-container')).toHaveCount(0, {
+    timeout: 30000,
+  })
+  const alert = page.locator('.mobile-experience-alert .el-alert__close-btn')
+  if (await alert.isVisible()) await alert.click()
+  await page.locator('.logo-box .header-home-link').first().click()
+  await expect(clock).toHaveClass(/is-immersive/)
+  await expect(clock).toHaveCSS('opacity', '0.5')
+  // 等缩放完成，保证测试实际命中最终的时间区域。
+  await expect
+    .poll(async () => {
+      const bounds = (await clock.boundingBox())!
+      const height = await page.evaluate(() => innerHeight)
+      return Math.abs(
+        bounds.y +
+          bounds.height -
+          (height - Math.min(48, Math.max(24, height * 0.04)))
+      )
+    })
+    .toBeLessThanOrEqual(1)
+  const fullscreen = await page.evaluate(() => !!document.fullscreenElement)
+  const hasHover = !testInfo.project.name.includes('mobile')
+  if (hasHover) {
+    await clock.hover()
+    expect(
+      await clock.evaluate(
+        (element) => getComputedStyle(element, '::before').content
+      )
+    ).toBe('"HIDE"')
+    await expect(clock.locator('.temple-clock__character').first()).toHaveCSS(
+      'opacity',
+      '0'
+    )
+  }
+  await clock.click()
+  await expect(clock).toHaveCSS('opacity', '0')
+  if (hasHover) {
+    await page.mouse.move(10, 100)
+    await clock.hover()
+    await expect(clock).toHaveCSS('opacity', '0.25')
+    await expect(clock.locator('.temple-clock__character').first()).toHaveCSS(
+      'opacity',
+      '1'
+    )
+    expect(
+      await clock.evaluate(
+        (element) => getComputedStyle(element, '::before').content
+      )
+    ).toBe('none')
+    await page.mouse.move(10, 100)
+    await expect(clock).toHaveCSS('opacity', '0')
+  }
+  await clock.click()
+  await expect(clock).toHaveCSS('opacity', '0.5')
+  await expect(clock).toHaveAttribute('aria-pressed', 'true')
+  if (hasHover) {
+    await expect(clock.locator('.temple-clock__character').first()).toHaveCSS(
+      'opacity',
+      '1'
+    )
+    expect(
+      await clock.evaluate(
+        (element) => getComputedStyle(element, '::before').content
+      )
+    ).toBe('none')
+    await page.mouse.move(10, 100)
+    await clock.hover()
+    expect(
+      await clock.evaluate(
+        (element) => getComputedStyle(element, '::before').content
+      )
+    ).toBe('"HIDE"')
+    await expect(clock.locator('.temple-clock__character').first()).toHaveCSS(
+      'opacity',
+      '0'
+    )
+  }
+  await expect(page.locator('.layout-page')).toHaveClass(/is-home-immersive/)
+  expect(await page.evaluate(() => !!document.fullscreenElement)).toBe(
+    fullscreen
+  )
+  await page.keyboard.press('Escape')
+})
 
 test('home immersion fades controls, keeps time, blocks picking and restores on one click', async ({
   page,
@@ -81,6 +175,30 @@ test('home immersion fades controls, keeps time, blocks picking and restores on 
   await expect(clock).toHaveText('12:35')
   expect(immersiveClock.height).toBeGreaterThan(initialClock.height)
   expect(immersiveClock.width).toBeGreaterThan(initialClock.width)
+  const fullscreenBeforeToggle = await page.evaluate(
+    () => !!document.fullscreenElement
+  )
+  await clock.click()
+  await expect(clock).toHaveCSS('opacity', '0')
+  await expect(clock).toHaveAttribute('aria-pressed', 'false')
+  await expect(shell).toHaveClass(/is-home-immersive/)
+  expect(await page.evaluate(() => !!document.fullscreenElement)).toBe(
+    fullscreenBeforeToggle
+  )
+  if (!testInfo.project.name.includes('mobile')) {
+    await page.mouse.move(10, 100)
+    await clock.hover()
+    await expect(clock).toHaveCSS('opacity', '0.25')
+    await page.mouse.move(10, 100)
+    await expect(clock).toHaveCSS('opacity', '0')
+  }
+  await clock.click()
+  await expect(clock).toHaveCSS('opacity', '0.5')
+  await expect(clock).toHaveAttribute('aria-pressed', 'true')
+  await expect(shell).toHaveClass(/is-home-immersive/)
+  expect(await page.evaluate(() => !!document.fullscreenElement)).toBe(
+    fullscreenBeforeToggle
+  )
   if (!testInfo.project.name.includes('mobile')) {
     await expect(page.locator('.home-about-action')).toBeHidden()
     await expect(page.locator('.fullscreen')).toBeHidden()
@@ -113,12 +231,30 @@ test('home immersion fades controls, keeps time, blocks picking and restores on 
       '0.00000,0.00000'
     )
   }
+  // 静止且光标隐藏时也持续呼吸，不能因场景按需渲染而停在某个亮度。
+  await expect
+    .poll(
+      async () => Number(await stage.getAttribute('data-statue-holy-light')),
+      {
+        timeout: 9000,
+      }
+    )
+    .toBeLessThan(1.6 * 0.25)
+  await expect
+    .poll(
+      async () => Number(await stage.getAttribute('data-statue-holy-light')),
+      {
+        timeout: 9000,
+      }
+    )
+    .toBeGreaterThan(1.6 * 0.95)
   await page.screenshot({ path: testInfo.outputPath('immersive.png') })
 
   // 恢复点击落在模型画布上也不能顺便聚焦模型。
-  await page.mouse.click(viewport.width / 2, viewport.height / 2)
+  await page.mouse.click(10, 100)
   await expect(shell).not.toHaveClass(/is-home-immersive/)
   await expect(stage).toHaveAttribute('data-immersive', 'false')
+  await expect(stage).toHaveAttribute('data-statue-holy-light', '1.000')
   await expect(page.locator('.temple-page')).toHaveAttribute(
     'data-selected',
     'none'

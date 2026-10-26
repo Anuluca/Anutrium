@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './helpers/sceneDiagnostics'
 
 test.beforeEach(async ({ page }) => {
   await page.routeWebSocket('ws://localhost:3000/**', (socket) =>

@@ -28,12 +28,14 @@ export function useTempleEntry() {
       }
     })
 
-  const waitForRouteEnter = async () => {
-    // 路由结束、加载线渐隐、页面准备依次开放；离场时解除等待和监听。
-    await waitUntil(() => !routeEntryActive.value)
-    await waitUntil(() => siteEntryActive.value)
-    await waitUntil(() => siteLoading.presentationReady)
-  }
+  // 三项条件须同时满足，避免等待加载期间路由重新进入过渡时提前播放场景。
+  const waitForRouteEnter = () =>
+    waitUntil(
+      () =>
+        !routeEntryActive.value &&
+        siteEntryActive.value &&
+        siteLoading.presentationReady
+    )
 
   onBeforeUnmount(() => {
     disposed = true

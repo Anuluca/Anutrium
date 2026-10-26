@@ -32,6 +32,7 @@ const decorationTarget = ref<HTMLElement | null>(null)
 provide('flora-decoration-target', decorationTarget)
 const albumExpanded = ref(false)
 defineExpose({
+  albumExpanded,
   closeExpandedAlbum: () => mediaLayout.value?.closeExpanded() ?? false,
 })
 

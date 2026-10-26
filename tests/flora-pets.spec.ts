@@ -1,6 +1,5 @@
-import { expect, type Page, test } from '@playwright/test'
-
 import { pets } from '../src/locales/dynamic/pets'
+import { expect, type Page, test } from './helpers/sceneDiagnostics'
 
 const openFlora = async (page: Page, animate = false) => {
   await page.emulateMedia({

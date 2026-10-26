@@ -50,7 +50,15 @@
         >
           <span class="sections-fixed-nav__marker" aria-hidden="true" />
           <span class="sections-fixed-nav__copy">
-            <span class="sections-fixed-nav__num">{{ item.number }}</span>
+            <span class="sections-fixed-nav__num">
+              <span
+                v-if="item.number.startsWith('#')"
+                class="sections-fixed-nav__num-prefix"
+                >#</span
+              >{{
+                item.number.startsWith('#') ? item.number.slice(1) : item.number
+              }}
+            </span>
             <span class="sections-fixed-nav__label">{{ item.title }}</span>
           </span>
         </button>

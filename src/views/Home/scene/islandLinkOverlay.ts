@@ -24,6 +24,64 @@ export function createIslandLinkOverlay() {
     hasPosition: false,
     visible: false,
   }))
+  let viewport: SVGSVGElement | null = null
+  let envelope: {
+    left: number
+    top: number
+    right: number
+    bottom: number
+  } | null = null
+  // 保留 32px 运动余量；仅超出包络或布局变化时改变表面尺寸，避免逐帧布局。
+  const updateViewport = (reset = false) => {
+    if (!viewport) return
+    let left = Infinity,
+      top = Infinity,
+      right = -Infinity,
+      bottom = -Infinity
+    for (const link of links) {
+      if (!link.origin || !link.hasPosition) continue
+      left = Math.min(left, link.origin.x, link.position.x - 18)
+      top = Math.min(top, link.origin.y, link.position.y - 18)
+      right = Math.max(right, link.origin.x, link.position.x + 18)
+      bottom = Math.max(bottom, link.origin.y, link.position.y + 18)
+    }
+    if (!Number.isFinite(left)) return
+    if (
+      !reset &&
+      envelope &&
+      left >= envelope.left &&
+      top >= envelope.top &&
+      right <= envelope.right &&
+      bottom <= envelope.bottom
+    )
+      return
+    const next = {
+      left: Math.floor(
+        Math.min(left - 32, reset ? Infinity : envelope?.left ?? Infinity)
+      ),
+      top: Math.floor(
+        Math.min(top - 32, reset ? Infinity : envelope?.top ?? Infinity)
+      ),
+      right: Math.ceil(
+        Math.max(right + 32, reset ? -Infinity : envelope?.right ?? -Infinity)
+      ),
+      bottom: Math.ceil(
+        Math.max(bottom + 32, reset ? -Infinity : envelope?.bottom ?? -Infinity)
+      ),
+    }
+    envelope = next
+    const width = next.right - next.left
+    const height = next.bottom - next.top
+    // viewBox 与 CSS 原点同步，线条仍使用场景原坐标，像素与命中层不变。
+    viewport.setAttribute(
+      'viewBox',
+      `${next.left} ${next.top} ${width} ${height}`
+    )
+    viewport.style.left = `${next.left}px`
+    viewport.style.top = `${next.top}px`
+    viewport.style.width = `${width}px`
+    viewport.style.height = `${height}px`
+  }
   let disposed = false
   const draw = (
     link: (typeof links)[number],
@@ -53,6 +111,11 @@ export function createIslandLinkOverlay() {
     link.visible = visible
   }
   return {
+    bindViewport(element: unknown) {
+      if (disposed || viewport === element) return
+      viewport = element as SVGSVGElement | null
+      updateViewport(true)
+    },
     bind(id: string, element: unknown) {
       if (disposed) return
       const link = links.find((link) => link.id === id)
@@ -70,6 +133,7 @@ export function createIslandLinkOverlay() {
         link.origin = next
         draw(link, changed, false)
       }
+      updateViewport(true)
     },
     updateAnchors(anchors: IslandModelAnchors) {
       if (disposed) return
@@ -98,9 +162,12 @@ export function createIslandLinkOverlay() {
         link.hasPosition = true
         draw(link, false, changed)
       }
+      updateViewport()
     },
     dispose() {
       disposed = true
+      viewport = null
+      envelope = null
       for (const link of links) {
         link.group = link.line = link.marker = null
         link.origin = null

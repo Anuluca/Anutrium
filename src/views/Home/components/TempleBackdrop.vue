@@ -2,22 +2,36 @@
 import { ref } from 'vue'
 import { useResizeObserver } from '@vueuse/core'
 
+import { useTempleNavigation } from '@/stores/templeNavigation'
+
+const navigation = useTempleNavigation()
 const root = ref<HTMLElement | null>(null)
 const text = ref<HTMLElement | null>(null)
+const zenText = ref<HTMLElement | null>(null)
 const fit = () => {
-  if (root.value && text.value?.scrollWidth)
-    root.value.style.setProperty(
-      '--backdrop-scale',
-      String(root.value.clientWidth / text.value.scrollWidth)
-    )
+  if (!root.value) return
+  for (const element of [text.value, zenText.value]) {
+    if (!element?.scrollWidth) continue
+    const scale = String(root.value.clientWidth / element.scrollWidth)
+    if (element.style.getPropertyValue('--backdrop-scale') === scale) continue
+    element.style.setProperty('--backdrop-scale', scale)
+  }
 }
-useResizeObserver([root, text], fit)
+useResizeObserver([root, text, zenText], fit)
 </script>
 
 <template>
-  <div ref="root" class="temple-backdrop no-rem" aria-hidden="true">
+  <div
+    ref="root"
+    class="temple-backdrop no-rem"
+    :class="{ 'is-immersive': navigation.immersive }"
+    aria-hidden="true"
+  >
     <div class="temple-backdrop__clip">
-      <h1><span ref="text">ANUTRIUM</span></h1>
+      <h1>
+        <span ref="text" class="temple-backdrop__brand">ANUTRIUM</span>
+        <span ref="zenText" class="temple-backdrop__zen">ZEN MODE</span>
+      </h1>
     </div>
   </div>
 </template>
@@ -29,13 +43,13 @@ useResizeObserver([root, text], fit)
   z-index: 0;
   width: 100%;
   color: var(--page-theme-color, #e23456);
-  transition: color 1.1s ease-in-out;
   pointer-events: none;
 }
 .temple-backdrop__clip {
   overflow: hidden;
 }
 h1 {
+  position: relative;
   display: block;
   width: 100%;
   margin: 0;
@@ -57,5 +71,39 @@ h1 > span {
     #000 0 4px,
     transparent 4px 6px
   );
+}
+.temple-backdrop__brand {
+  transition: opacity 400ms ease;
+}
+.temple-backdrop__zen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+}
+.is-immersive {
+  .temple-backdrop__brand {
+    opacity: 0;
+  }
+  .temple-backdrop__zen {
+    animation: temple-zen-reveal 800ms ease 400ms both;
+  }
+}
+@keyframes temple-zen-reveal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .temple-backdrop__brand {
+    transition: none;
+  }
+  .is-immersive .temple-backdrop__zen {
+    animation-duration: 0s;
+    animation-delay: 0s;
+  }
 }
 </style>

@@ -851,6 +851,14 @@ onBeforeUnmount(() => {
 }
 
 @media (min-width: 901px) {
+  .media-gallery:not(.media-gallery--four-columns)
+    .media-gallery__card:nth-of-type(3n + 1):nth-last-of-type(-n + 3) {
+    &,
+    & ~ .media-gallery__card {
+      border-bottom-color: transparent;
+    }
+  }
+
   .media-gallery__card:nth-of-type(3n + 1) {
     padding-left: 0;
   }
@@ -859,6 +867,13 @@ onBeforeUnmount(() => {
   }
   .media-gallery--four-columns {
     --media-gallery-columns: 4;
+
+    .media-gallery__card:nth-of-type(4n + 1):nth-last-of-type(-n + 4) {
+      &,
+      & ~ .media-gallery__card {
+        border-bottom-color: transparent;
+      }
+    }
 
     .media-gallery__card {
       padding-right: 10px;
@@ -883,6 +898,13 @@ onBeforeUnmount(() => {
 @media (max-width: 900px) {
   .media-gallery {
     --media-gallery-columns: 2;
+  }
+
+  .media-gallery__card:nth-of-type(2n + 1):nth-last-of-type(-n + 2) {
+    &,
+    & ~ .media-gallery__card {
+      border-bottom-color: transparent;
+    }
   }
 
   .media-gallery__card {

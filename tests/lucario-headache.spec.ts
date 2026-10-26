@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './helpers/sceneDiagnostics'
 
 for (const reducedMotion of ['reduce', 'no-preference'] as const) {
   test(`headache pose restores normal ISLAND and resumes on return (${reducedMotion})`, async ({

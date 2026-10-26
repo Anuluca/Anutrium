@@ -1,7 +1,7 @@
-import { expect, test } from '@playwright/test'
 import path from 'node:path'
 
 import { openHomeAboutOverlay } from './helpers/homeAboutOverlay'
+import { expect, test } from './helpers/sceneDiagnostics'
 
 test.beforeEach(async ({ page }) => {
   // 几何采样不能被其他开发窗口的 HMR 重挂载打断；字体也固定为同一份本地资源。

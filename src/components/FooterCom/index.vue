@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 
 import ThemeToggle from '@/components/ThemeToggle/index.vue'
+import { useMotionActivity } from '@/composables/useMotionActivity'
 import { visualState } from '@/stores'
 import { getCardMobileThumbnailUrl } from '@/utils/imageVariant'
 import { persistLocale, type SiteLocale } from '@/utils/locale'
@@ -31,8 +32,14 @@ const props = withDefaults(
     entryActive?: boolean
     entryOverlayActive?: boolean
     widthMode?: 'default' | 'wide'
+    motionActive?: boolean
   }>(),
-  { entryActive: false, entryOverlayActive: false, widthMode: 'default' }
+  {
+    entryActive: false,
+    entryOverlayActive: false,
+    widthMode: 'default',
+    motionActive: true,
+  }
 )
 
 const { locale, tm } = useI18n()
@@ -52,7 +59,10 @@ const selectRandomRant = () => {
 const isInternalHref = (href: string) =>
   href.startsWith('/') && !href.startsWith('//')
 
-const isMotionPaused = ref(false)
+const { reducedMotion, motionAllowed } = useMotionActivity()
+const isMotionPaused = computed(
+  () => !motionAllowed.value || !props.motionActive || footerResizing.value
+)
 const footerReady = ref(false)
 const footerExpanded = ref(false)
 const footerElement = ref<HTMLElement | null>(null)
@@ -78,7 +88,12 @@ const updateFooterGeometry = (previousGeometry?: DOMRect) => {
   cancelFooterGeometryAnimation()
   const after = element.getBoundingClientRect()
   footerGeometry = after
-  if (!before || !before.width || !before.height || reducedMotionQuery?.matches)
+  if (
+    !before ||
+    !before.width ||
+    !before.height ||
+    reducedMotion.value === 'reduce'
+  )
     return
   const scaleX = before.width / after.width
   const scaleY = before.height / after.height
@@ -151,7 +166,6 @@ const marqueeDuration = ref('24s')
 const marqueeDistance = ref('0px')
 let marqueeFrame: number | null = null
 let marqueeResizeObserver: ResizeObserver | null = null
-let reducedMotionQuery: MediaQueryList | null = null
 let hasPlayedEntryAnimation = false
 const FOOTER_ENTRY_DELAY = 800
 let footerEntryTimer: number | null = null
@@ -241,10 +255,6 @@ onMounted(() => {
   if (props.entryActive) {
     initFooterAnimation()
   }
-  reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-  updateMotionState()
-  document.addEventListener('visibilitychange', updateMotionState)
-  reducedMotionQuery.addEventListener('change', updateMotionState)
 })
 
 onUnmounted(() => {
@@ -257,14 +267,7 @@ onUnmounted(() => {
   if (footerEntryTimer !== null) window.clearTimeout(footerEntryTimer)
   marqueeResizeObserver?.disconnect()
   marqueeResizeObserver = null
-  document.removeEventListener('visibilitychange', updateMotionState)
-  reducedMotionQuery?.removeEventListener('change', updateMotionState)
 })
-
-const updateMotionState = () => {
-  isMotionPaused.value =
-    document.visibilityState === 'hidden' || !!reducedMotionQuery?.matches
-}
 
 const updateMarqueeDuration = () => {
   const contentWidth =

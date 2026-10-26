@@ -1,0 +1,355 @@
+{
+  "date": "2026-10-26",
+  "counts": {
+    "expected": 27,
+    "skipped": 1
+  },
+  "tiers": {
+    "high": {
+      "faces": 1984,
+      "vertices": 3688,
+      "geometryBytes": 115168,
+      "downloadBytes": 33743
+    },
+    "low": {
+      "faces": 392,
+      "vertices": 612,
+      "geometryBytes": 19488,
+      "downloadBytes": 4475
+    },
+    "flat": {
+      "faces": 242,
+      "vertices": 250,
+      "geometryBytes": 8452,
+      "downloadBytes": 2903
+    }
+  },
+  "unchangedOriginalAssets": true,
+  "gpuAssertions": {
+    "additionalPrograms": 0,
+    "additionalGeometries": 2,
+    "sameMaterial": true,
+    "sameCanvasAfterRouteReturn": true,
+    "parkedDraws": 0,
+    "parkedSamplingMs": 250,
+    "drawCountersTrackDetachedCanvasByIdentity": true
+  },
+  "build": {
+    "success": true,
+    "seconds": 8.31
+  },
+  "typecheck": {
+    "newErrors": 0,
+    "existingErrors": [
+      "src/components/WorkCard/index.vue:102",
+      "src/views/Craft/CraftContent.vue:91"
+    ]
+  },
+  "reports": {
+    "final-tests": {
+      "stats": {
+        "startTime": "2026-10-26T01:59:16.618Z",
+        "duration": 165884.693,
+        "expected": 16,
+        "skipped": 0,
+        "unexpected": 2,
+        "flaky": 0
+      },
+      "cases": [
+        {
+          "title": "label LOD uses hysteresis and preserves depth when viewed obliquely",
+          "project": "chromium",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "flat asset exactly reuses high-tier front triangles and six glyph identities",
+          "project": "chromium",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "LOD loads on demand, ignores stale requests and bounds geometry/material lifetime",
+          "project": "chromium",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "flat label keeps focus/reveal, shared shaders and focus return",
+          "project": "chromium",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "lod label keeps focus/reveal, shared shaders and focus return",
+          "project": "chromium",
+          "status": "unexpected",
+          "errors": [
+            "Error: expect(locator).toHaveCount(expected) failed\n\nLocator:  locator('.island-focus')\nExpected: 0\nReceived: 1\nTimeout:  5000ms\n\nCall log:\n  - Expect \"toHaveCount\" with timeout 5000ms\n  - waiting for locator('.island-focus')\n    2 × locator resolved to 1 element\n      - unexpected value \"1\"\n\n\n  313 |       )\n  314 |     await request(null)\n> 315 |     await expect(page.locator('.island-focus')).toHaveCount(0)\n      |                                                 ^\n  316 |     await expect(page.locator('.temple-page')).toHaveAttribute(\n  317 |       'data-settled',\n  318 |       'true',\n    at /Users/anuluca/Work/Space_Coding/Anutrium/tests/home-label-lod.spec.ts:315:49"
+          ]
+        },
+        {
+          "title": "label LOD uses hysteresis and preserves depth when viewed obliquely",
+          "project": "mobile-chrome",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "flat asset exactly reuses high-tier front triangles and six glyph identities",
+          "project": "mobile-chrome",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "LOD loads on demand, ignores stale requests and bounds geometry/material lifetime",
+          "project": "mobile-chrome",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "flat label keeps focus/reveal, shared shaders and focus return",
+          "project": "mobile-chrome",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "lod label keeps focus/reveal, shared shaders and focus return",
+          "project": "mobile-chrome",
+          "status": "unexpected",
+          "errors": [
+            "Error: expect(locator).toHaveCount(expected) failed\n\nLocator:  locator('.island-focus')\nExpected: 0\nReceived: 1\nTimeout:  5000ms\n\nCall log:\n  - Expect \"toHaveCount\" with timeout 5000ms\n  - waiting for locator('.island-focus')\n    3 × locator resolved to 1 element\n      - unexpected value \"1\"\n\n\n  313 |       )\n  314 |     await request(null)\n> 315 |     await expect(page.locator('.island-focus')).toHaveCount(0)\n      |                                                 ^\n  316 |     await expect(page.locator('.temple-page')).toHaveAttribute(\n  317 |       'data-settled',\n  318 |       'true',\n    at /Users/anuluca/Work/Space_Coding/Anutrium/tests/home-label-lod.spec.ts:315:49"
+          ]
+        },
+        {
+          "title": "combined projection preserves camera/object transforms and reuses point buffers",
+          "project": "chromium",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "label loaders cache each tier separately and retain layout bounds and glyph identities",
+          "project": "chromium",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "scene uses only high label tier and preserves reveal and focus",
+          "project": "chromium",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "scene uses only low label tier and preserves reveal and focus",
+          "project": "chromium",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "combined projection preserves camera/object transforms and reuses point buffers",
+          "project": "mobile-chrome",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "label loaders cache each tier separately and retain layout bounds and glyph identities",
+          "project": "mobile-chrome",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "scene uses only high label tier and preserves reveal and focus",
+          "project": "mobile-chrome",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "scene uses only low label tier and preserves reveal and focus",
+          "project": "mobile-chrome",
+          "status": "expected",
+          "errors": []
+        }
+      ]
+    },
+    "focus-final": {
+      "stats": {
+        "startTime": "2026-10-26T02:03:53.907Z",
+        "duration": 76197.197,
+        "expected": 4,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "cases": [
+        {
+          "title": "flat label keeps focus/reveal, shared shaders and focus return",
+          "project": "chromium",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "lod label keeps focus/reveal, shared shaders and focus return",
+          "project": "chromium",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "flat label keeps focus/reveal, shared shaders and focus return",
+          "project": "mobile-chrome",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "lod label keeps focus/reveal, shared shaders and focus return",
+          "project": "mobile-chrome",
+          "status": "expected",
+          "errors": []
+        }
+      ]
+    },
+    "policy-final": {
+      "stats": {
+        "startTime": "2026-10-26T02:07:24.086Z",
+        "duration": 1582.1239999999998,
+        "expected": 4,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "cases": [
+        {
+          "title": "label LOD uses hysteresis and preserves depth when viewed obliquely",
+          "project": "chromium",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "LOD loads on demand, ignores stale requests and bounds geometry/material lifetime",
+          "project": "chromium",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "label LOD uses hysteresis and preserves depth when viewed obliquely",
+          "project": "mobile-chrome",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "LOD loads on demand, ignores stale requests and bounds geometry/material lifetime",
+          "project": "mobile-chrome",
+          "status": "expected",
+          "errors": []
+        }
+      ]
+    },
+    "gpu-final": {
+      "stats": {
+        "startTime": "2026-10-26T02:09:00.128Z",
+        "duration": 42911.979,
+        "expected": 2,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "cases": [
+        {
+          "title": "real LOD swaps only geometry, adds no programs and survives a parked renderer",
+          "project": "chromium",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "real LOD swaps only geometry, adds no programs and survives a parked renderer",
+          "project": "mobile-chrome",
+          "status": "expected",
+          "errors": []
+        }
+      ]
+    },
+    "regression-tests": {
+      "stats": {
+        "startTime": "2026-10-26T02:05:30.780Z",
+        "duration": 195470.296,
+        "expected": 6,
+        "skipped": 1,
+        "unexpected": 1,
+        "flaky": 0
+      },
+      "cases": [
+        {
+          "title": "cached home matches direct rendering in dark and light themes",
+          "project": "chromium",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "cached home matches direct rendering in dark and light themes",
+          "project": "mobile-chrome",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "Huahua focus keeps the full page and route container stable during route leave",
+          "project": "chromium",
+          "status": "unexpected",
+          "errors": [
+            "Error: expect(locator).toBeVisible() failed\n\nLocator: locator('.flora-focus-layout')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"toBeVisible\" with timeout 5000ms\n  - waiting for locator('.flora-focus-layout')\n\n\n  319 |     .map(Number)\n  320 |   await page.mouse.click(point[0], point[1])\n> 321 |   await expect(page.locator('.flora-focus-layout')).toBeVisible()\n      |                                                     ^\n  322 |   await expect(page.locator('.entry-overlay-container')).toHaveCount(0)\n  323 |   const borderToggle = page.locator('.layout-border-toggle')\n  324 |   const globalButton = await borderToggle.elementHandle()\n    at /Users/anuluca/Work/Space_Coding/Anutrium/tests/home-sprigatito.spec.ts:321:53"
+          ]
+        },
+        {
+          "title": "Huahua focus keeps the full page and route container stable during route leave",
+          "project": "mobile-chrome",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "Island zooms in sync with scanning and shrinks directly along its return camera path",
+          "project": "chromium",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "Island zooms in sync with scanning and shrinks directly along its return camera path",
+          "project": "mobile-chrome",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "clicking the statue exits pillar focus and inspection leaves without shifting or leaking the cursor state",
+          "project": "chromium",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "clicking the statue exits pillar focus and inspection leaves without shifting or leaking the cursor state",
+          "project": "mobile-chrome",
+          "status": "skipped",
+          "errors": []
+        }
+      ]
+    },
+    "flora-final": {
+      "stats": {
+        "startTime": "2026-10-26T02:11:45.449Z",
+        "duration": 11113.355,
+        "expected": 1,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "cases": [
+        {
+          "title": "Huahua focus keeps the full page and route container stable during route leave",
+          "project": "chromium",
+          "status": "expected",
+          "errors": []
+        }
+      ]
+    }
+  },
+  "notes": [
+    "Results were collected in focused batches; renamed focus-return case names normalized.",
+    "An initial Huahua focus click timed out; unchanged standalone test passed.",
+    "Surface size/triangle counts do not establish real-device GPU frame-time gains."
+  ]
+}

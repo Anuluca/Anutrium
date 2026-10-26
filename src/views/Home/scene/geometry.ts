@@ -45,13 +45,10 @@ export function createObeliskBodyGeometry() {
     addFacet(lower, bottomRight, right, 0.96)
     addFacet(left, upper, topLeft, 0.96)
     addFacet(right, topRight, upper, 0.96)
-    for (const y of [-2.275, 2.275]) {
-      const center = new THREE.Vector3(0, y, 0)
-      const left = point(-halfWidth(y), y)
-      const right = point(halfWidth(y), y)
-      if (y > 0) addFacet(center, left, right)
-      else addFacet(center, right, left)
-    }
+    // 碑身底部由底座顶面承接；额外封口会与底座共面，并在倒影中露出朝上的内面。
+    // 保留底座完整顶面，以便碑身收起时仍能封住底座。
+    const topCenter = new THREE.Vector3(0, top, 0)
+    addFacet(topCenter, topLeft, topRight)
   }
   const bodyGeometry = new THREE.BufferGeometry()
   bodyGeometry.setAttribute(
@@ -67,12 +64,38 @@ export function createObeliskBodyGeometry() {
 }
 
 export function createObeliskBaseGeometry() {
-  const footGeometry = new THREE.BoxGeometry(1.8, 0.21, 1.8)
-  const stepGeometry = new THREE.BoxGeometry(2.35, 0.13, 2.35)
-  // 同材质的两级台阶烘焙进一个共享几何体，实体、网格及倒影均减少绘制调用。
-  const baseParts = [stepGeometry, footGeometry]
-  baseParts[0].translate(0, 0.065, 0)
-  baseParts[1].translate(0, 0.235, 0)
+  const footWidth = 1.8
+  const stepWidth = 2.35
+  const stepHeight = 0.13
+  const footHeight = 0.21
+  const footGeometry = new THREE.BoxGeometry(footWidth, footHeight, footWidth)
+  const stepGeometry = new THREE.BoxGeometry(stepWidth, stepHeight, stepWidth)
+  // 透明倒影不会写入深度，接触面即使藏在实体内部也会叠色；仅保留连续外壳。
+  const removeFace = (box: THREE.BoxGeometry, face: number) => {
+    const indices = Array.from(box.index!.array)
+    const group = box.groups[face]
+    indices.splice(group.start, group.count)
+    box.setIndex(indices)
+    box.clearGroups()
+    return box
+  }
+  removeFace(stepGeometry, 2).translate(0, stepHeight / 2, 0)
+  removeFace(footGeometry, 3).translate(0, stepHeight + footHeight / 2, 0)
+  // 下层顶面只保留上层轮廓以外的四条台阶，不生成被上层覆盖的中心区域。
+  const rim = (stepWidth - footWidth) / 2
+  const offset = (stepWidth + footWidth) / 4
+  const ledge = (width: number, depth: number, x: number, z: number) =>
+    new THREE.PlaneGeometry(width, depth)
+      .rotateX(-Math.PI / 2)
+      .translate(x, stepHeight, z)
+  const baseParts = [
+    stepGeometry,
+    footGeometry,
+    ledge(stepWidth, rim, 0, -offset),
+    ledge(stepWidth, rim, 0, offset),
+    ledge(rim, footWidth, -offset, 0),
+    ledge(rim, footWidth, offset, 0),
+  ]
   const baseGeometry = mergeGeometries(baseParts)!
   baseParts.forEach((value) => value.dispose())
   return baseGeometry

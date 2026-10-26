@@ -1,13 +1,22 @@
 import { readFile, writeFile } from 'node:fs/promises'
-import { gzipSync } from 'node:zlib'
-import { ExtrudeGeometry, Float32BufferAttribute } from 'three'
+import { gunzipSync, gzipSync } from 'node:zlib'
+import {
+  Box3,
+  BufferAttribute,
+  ExtrudeGeometry,
+  Float32BufferAttribute,
+  Vector3,
+} from 'three'
 import { Font } from 'three/examples/jsm/loaders/FontLoader.js'
 import {
   mergeGeometries,
   mergeVertices,
 } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 
-export async function bakeTempleLabelAsset() {
+export async function bakeTempleLabelAsset(quality = 'high') {
+  if (!['high', 'low'].includes(quality))
+    throw new Error('Invalid label quality')
+  const directory = new URL('../../public/models/', import.meta.url)
   const data = JSON.parse(
     await readFile(
       new URL(
@@ -23,8 +32,8 @@ export async function bakeTempleLabelAsset() {
     const shape = new ExtrudeGeometry(font.generateShapes(letter, 0.5625), {
       depth: 0.52,
       steps: 1,
-      curveSegments: 3,
-      bevelEnabled: true,
+      curveSegments: quality === 'low' ? 1 : 3,
+      bevelEnabled: quality !== 'low',
       bevelThickness: 0.024,
       bevelSize: 0.008,
       bevelSegments: 1,
@@ -47,6 +56,31 @@ export async function bakeTempleLabelAsset() {
   letters.forEach((letter) => letter.dispose())
   geometry.scale(6.2 / 1024 / (0.9 / 160), 1, 1)
   geometry.computeBoundingBox()
+  if (quality === 'low') {
+    // 低档只简化字形曲线和倒角，保持高档包围盒，避免位置、缩放及扫描范围跳变。
+    const reference = JSON.parse(
+      await readFile(new URL('temple-label.json', directory), 'utf8')
+    )
+    const packed = gunzipSync(
+      await readFile(new URL('temple-label.bin.gz', directory))
+    )
+    const attribute = reference.attributes.position
+    const positions = new Float32Array(
+      packed.buffer,
+      packed.byteOffset + attribute.offset,
+      attribute.count
+    )
+    const referenceSize = new Box3()
+      .setFromBufferAttribute(new BufferAttribute(positions, 3))
+      .getSize(new Vector3())
+    const size = geometry.boundingBox.getSize(new Vector3())
+    geometry.scale(
+      referenceSize.x / size.x,
+      referenceSize.y / size.y,
+      referenceSize.z / size.z
+    )
+    geometry.computeBoundingBox()
+  }
   const { min, max } = geometry.boundingBox
   const metadata = {
     version: 1,
@@ -75,14 +109,14 @@ export async function bakeTempleLabelAsset() {
     byteOffset += bytes.length
   }
   const packed = gzipSync(Buffer.concat(chunks), { level: 9 })
-  const directory = new URL('../../public/models/', import.meta.url)
-  await writeFile(new URL('temple-label.bin.gz', directory), packed)
+  const filename = quality === 'low' ? 'temple-label-low' : 'temple-label'
+  await writeFile(new URL(`${filename}.bin.gz`, directory), packed)
   await writeFile(
-    new URL('temple-label.json', directory),
+    new URL(`${filename}.json`, directory),
     JSON.stringify(metadata)
   )
   geometry.dispose()
   console.log(
-    `Temple label: ${byteOffset} GPU bytes, ${packed.length} download bytes`
+    `Temple label (${quality}): ${byteOffset} GPU bytes, ${packed.length} download bytes`
   )
 }

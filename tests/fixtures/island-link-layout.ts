@@ -75,6 +75,7 @@ export async function mountIslandLayout(
     root,
     updates,
     router,
+    flush: nextTick,
     async update(value: IslandModelAnchors) {
       if (reactiveAnchors) anchors.value = value
       else updateAnchors!(value)

@@ -14,7 +14,6 @@
   --header-logo-visual-inline-inset: 0.43667rem;
   --header-menu-item-padding: 0.66667rem;
 
-  cursor: url('@/assets/img/dot.svg') 15 15, auto;
   width: 100%;
   box-sizing: border-box;
   transition: opacity 0.4s,
@@ -1188,7 +1187,14 @@
   }
 }
 
-.layout-page:has(.temple-page) .el-menu-layout-all,
+:is(
+    body.island-pc-shell,
+    body.island-pc-shell-leaving,
+    body.island-mobile-shell,
+    body.island-mobile-shell-leaving
+  )
+  .layout-page
+  .el-menu-layout-all,
 .layout-page:has(> .about-overlay--viewport) .el-menu-layout-all {
   z-index: 200;
 }
@@ -1207,7 +1213,13 @@
   opacity: 0;
   pointer-events: none;
 }
-.layout-page:has(.temple-page)
+:is(
+    body.island-pc-shell,
+    body.island-pc-shell-leaving,
+    body.island-mobile-shell,
+    body.island-mobile-shell-leaving
+  )
+  .layout-page
   .el-menu-layout-all
   .logo-box
   .current-module-name {
@@ -1219,7 +1231,13 @@
   );
 }
 @media screen and (max-aspect-ratio: @ratio-threshold) {
-  .layout-page:has(.temple-page):not(.temple-header-default)
+  :is(
+      body.island-pc-shell,
+      body.island-pc-shell-leaving,
+      body.island-mobile-shell,
+      body.island-mobile-shell-leaving
+    )
+    .layout-page:not(.temple-header-default)
     .el-menu-layout-all
     .logo-box {
     width: auto;

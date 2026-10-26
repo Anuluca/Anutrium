@@ -4,7 +4,7 @@ import { useRoute } from 'vue-router'
 
 import BackStars from '@/components/BackStars/index.vue'
 import { TEMPLE_FOCUS_DURATION } from '@/config/templeCamera'
-import { templeCategoryById } from '@/config/templeNavigation'
+import { templeNavigationById } from '@/config/templeNavigation'
 import type { ZodiacSignId } from '@/config/zodiacThemes'
 import { visualState } from '@/stores'
 import { useTempleNavigation } from '@/stores/templeNavigation'
@@ -36,9 +36,10 @@ const craftRouteNames = new Set([
 
 const requestedActiveSign = computed<ZodiacSignId>(() => {
   if (isTempleRoute.value) {
-    return (
-      templeCategoryById.get(navigation.activeModule)?.zodiacSign || 'pisces'
-    )
+    const entry = navigation.activeSelection
+      ? templeNavigationById.get(navigation.activeSelection)
+      : undefined
+    return entry && 'zodiacSign' in entry ? entry.zodiacSign : 'pisces'
   }
   const routeName = String(route.name || '')
   const redirectedPath = route.redirectedFrom?.path || ''
@@ -46,7 +47,6 @@ const requestedActiveSign = computed<ZodiacSignId>(() => {
   if (routeName === 'ARCHIVE') return 'aquarius'
   if (routeName.startsWith('FLANERIE')) return 'sagittarius'
   if (
-    routeName === 'HOME' ||
     routeName.startsWith('ISLAND') ||
     routeName === 'TEST' ||
     redirectedPath.startsWith('/island')
@@ -100,7 +100,15 @@ const celestialVisible = computed(
   () => !navigation.aboutOpen && !navigation.aboutOverlayVisible
 )
 const motionActive = computed(
-  () => celestialVisible.value && (!isTempleRoute.value || !navigation.expanded)
+  () =>
+    celestialVisible.value &&
+    (!isTempleRoute.value || navigation.backgroundMotionActive)
+)
+const simpleInitialEntrance = computed(
+  () =>
+    isTempleRoute.value &&
+    navigation.simpleEntrance &&
+    navigation.isInitialScene
 )
 </script>
 
@@ -121,7 +129,10 @@ const motionActive = computed(
       :motion-active="motionActive"
       :particle-fps="40"
       :top-inset="visualStateStore.backgroundTopInset"
-      :entry-active="props.entryActive"
+      :entry-active="
+        simpleInitialEntrance ? navigation.entranceStarted : props.entryActive
+      "
+      :simple-entrance="simpleInitialEntrance"
     />
   </div>
 </template>

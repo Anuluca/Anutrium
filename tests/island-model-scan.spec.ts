@@ -1,4 +1,4 @@
-import { expect, type Page, test } from '@playwright/test'
+import { expect, type Page, test } from './helpers/sceneDiagnostics'
 
 const navigate = (page: Page, path: string) =>
   page.evaluate(async (path) => {

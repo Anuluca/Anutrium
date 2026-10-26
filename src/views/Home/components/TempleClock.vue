@@ -8,6 +8,20 @@ const group = ref<HTMLElement | null>(null)
 const clock = ref<HTMLElement | null>(null)
 const clockScaleX = ref(1)
 const clockScaleY = ref(1)
+const timeHidden = ref(false)
+const timePreview = ref(false)
+const hideHintSuppressed = ref(false)
+const toggleTime = () => {
+  if (!props.immersive) return
+  timeHidden.value = !timeHidden.value
+  timePreview.value = false
+  // 恢复时间后，保留本次悬停的时间显示，移出后再启用隐藏提示。
+  hideHintSuppressed.value = !timeHidden.value
+}
+const leaveTime = () => {
+  timePreview.value = false
+  hideHintSuppressed.value = false
+}
 let resizeObserver: ResizeObserver | undefined
 let anchorObserver: MutationObserver | undefined
 let measureFrame: number | undefined
@@ -42,12 +56,38 @@ const fitImmersiveClock = () => {
   )
 }
 const scheduleClockFit = () => {
-  if (disposed || measureFrame !== undefined) return
+  if (disposed || !props.immersive || measureFrame !== undefined) return
   measureFrame = requestAnimationFrame(fitImmersiveClock)
+}
+const stopClockFit = () => {
+  resizeObserver?.disconnect()
+  anchorObserver?.disconnect()
+  if (measureFrame !== undefined) cancelAnimationFrame(measureFrame)
+  measureFrame = undefined
+}
+const syncClockFit = () => {
+  stopClockFit()
+  if (disposed || !props.immersive || !group.value || !clock.value) return
+  // 普通布局由 CSS 和场景锚点定位；仅沉浸模式监听尺寸与锚点，避免逐帧空回调。
+  resizeObserver?.observe(clock.value)
+  const stage = group.value.parentElement
+  if (stage) {
+    resizeObserver?.observe(stage)
+    anchorObserver?.observe(stage, {
+      attributes: true,
+      attributeFilter: ['style'],
+    })
+  }
+  scheduleClockFit()
 }
 watch(
   () => props.immersive,
-  () => void nextTick(scheduleClockFit)
+  () => {
+    timeHidden.value = false
+    timePreview.value = false
+    hideHintSuppressed.value = false
+    void nextTick(syncClockFit)
+  }
 )
 
 const formatTime = () => {
@@ -71,26 +111,14 @@ const updateTime = () => {
 onMounted(() => {
   updateTime()
   resizeObserver = new ResizeObserver(scheduleClockFit)
-  if (clock.value) resizeObserver.observe(clock.value)
-  const stage = group.value?.parentElement
-  if (stage) {
-    resizeObserver.observe(stage)
-    // 全屏切换后模型投影锚点可能晚于 ResizeObserver 更新。
-    anchorObserver = new MutationObserver(scheduleClockFit)
-    anchorObserver.observe(stage, {
-      attributes: true,
-      attributeFilter: ['style'],
-    })
-  }
+  anchorObserver = new MutationObserver(scheduleClockFit)
+  syncClockFit()
   void document.fonts.ready.then(scheduleClockFit)
-  scheduleClockFit()
 })
 onBeforeUnmount(() => {
   disposed = true
   window.clearTimeout(timer)
-  resizeObserver?.disconnect()
-  anchorObserver?.disconnect()
-  if (measureFrame !== undefined) cancelAnimationFrame(measureFrame)
+  stopClockFit()
 })
 </script>
 
@@ -100,13 +128,28 @@ onBeforeUnmount(() => {
     <time
       ref="clock"
       class="temple-clock no-rem"
-      :class="{ 'is-immersive': props.immersive }"
+      :class="{
+        'is-immersive': props.immersive,
+        'is-time-hidden': timeHidden,
+        'is-time-preview': timePreview,
+        'is-hide-hint-suppressed': hideHintSuppressed,
+      }"
       :style="{
         '--immersive-clock-scale-x': clockScaleX,
         '--immersive-clock-scale-y': clockScaleY,
       }"
       :datetime="currentTime"
       :aria-label="displayTime"
+      :role="props.immersive ? 'button' : undefined"
+      :tabindex="props.immersive ? 0 : undefined"
+      :aria-pressed="props.immersive ? !timeHidden : undefined"
+      @click.stop="toggleTime"
+      @keydown.enter.prevent="toggleTime"
+      @keydown.space.prevent="toggleTime"
+      @pointerenter="timePreview = timeHidden"
+      @pointerleave="leaveTime"
+      @focus="timePreview = timeHidden"
+      @blur="timePreview = false"
     >
       <span
         v-for="(character, index) in displayTime"
@@ -158,6 +201,8 @@ onBeforeUnmount(() => {
   transform-origin: center top;
 }
 
+// 简易入场和缓存场景返回也在挂载时播放，避免依赖父级过渡是否触发 enter。
+.temple-clock-group,
 .temple-clock-reveal-enter-active {
   animation: temple-clock-reveal-in 960ms ease both;
 
@@ -224,6 +269,15 @@ onBeforeUnmount(() => {
   transition: transform 2000ms ease, opacity 250ms ease, visibility 0s;
 
   &.is-immersive {
+    pointer-events: auto;
+    cursor: pointer;
+    &.is-time-hidden {
+      opacity: 0;
+      &.is-time-preview {
+        // 常态为 0.5，隐藏时的悬停预览取常态的一半。
+        opacity: 0.25;
+      }
+    }
     gap: 0;
     .temple-clock__character {
       flex-basis: 0.58em;
@@ -240,6 +294,29 @@ onBeforeUnmount(() => {
       var(--immersive-clock-scale-x),
       var(--immersive-clock-scale-y)
     );
+  }
+}
+
+@media (hover: hover) {
+  .temple-clock-group.no-rem
+    .temple-clock.is-immersive:not(.is-time-hidden):not(
+      .is-hide-hint-suppressed
+    ):hover {
+    .temple-clock__character {
+      opacity: 0;
+    }
+    // 保留数字占位，切换提示时不改变缩放和点击区域。
+    &::before {
+      content: 'HIDE';
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      letter-spacing: 0.1em;
+      text-indent: 0.1em;
+      pointer-events: none;
+    }
   }
 }
 
@@ -309,6 +386,7 @@ onBeforeUnmount(() => {
       animation: none;
     }
   }
+  .temple-clock-group,
   .temple-clock-reveal-enter-active,
   .temple-clock-reveal-leave-active {
     animation-duration: 1ms;

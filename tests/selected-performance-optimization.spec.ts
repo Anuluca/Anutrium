@@ -1,7 +1,7 @@
-import { expect, type Page, test } from '@playwright/test'
 import path from 'node:path'
 
 import { openHomeAboutOverlay } from './helpers/homeAboutOverlay'
+import { expect, type Page, test } from './helpers/sceneDiagnostics'
 
 test.beforeEach(async ({ page }) => {
   await page.routeWebSocket('ws://localhost:3000/**', (socket) =>
@@ -282,11 +282,11 @@ test('ready label bitmaps are reused without painting again when the same font c
       return original.apply(this, args)
     }
     try {
-      const first = getTempleLabelCanvas('XII', 'CACHE')
+      const first = getTempleLabelCanvas('CACHE', 'aquarius')
       const initialPaints = paints
-      const second = getTempleLabelCanvas('XII', 'CACHE')
+      const second = getTempleLabelCanvas('CACHE', 'aquarius')
       await document.fonts.load('800 100px "UnboundedSans"', 'CACHE')
-      const third = getTempleLabelCanvas('XII', 'CACHE')
+      const third = getTempleLabelCanvas('CACHE', 'aquarius')
       return {
         initialPaints,
         paints,

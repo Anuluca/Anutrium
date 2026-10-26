@@ -2,10 +2,10 @@
 import {
   computed,
   getCurrentInstance,
-  nextTick,
   onBeforeUnmount,
   onMounted,
   ref,
+  shallowReactive,
   watch,
 } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -33,12 +33,26 @@ const props = defineProps<{
 const { locale } = useI18n()
 const router = useRouter()
 const { harborSections } = useIslandHarborData()
-const groups = computed(() =>
-  harborSections.map((group) => ({
+const groups = computed(() => {
+  const english = locale.value === 'en'
+  return harborSections.map((group) => ({
     ...group,
-    items: group.id === 'notes' ? [...group.items].reverse() : group.items,
+    label: english ? group.subtitle : group.title,
+    items: (group.id === 'notes'
+      ? [...group.items].reverse()
+      : group.items
+    ).map((item) => {
+      const placeholder = item.img.includes('placehold.co')
+      return {
+        ...item,
+        label: english ? item.subtitle : item.title,
+        placeholder,
+        desktopSrc: placeholder ? '' : getCardThumbnailUrl(item.img),
+        mobileSrc: placeholder ? '' : getCardMobileThumbnailUrl(item.img),
+      }
+    }),
   }))
-)
+})
 const root = ref<HTMLElement | null>(null)
 const hoveredItem = ref<{ group: string; item: string } | null>(null)
 const hovered = computed(() => hoveredItem.value?.group ?? null)
@@ -47,76 +61,105 @@ const busy = ref(false)
 const failedCovers = ref(new Set<string>())
 const linkOverlay = createIslandLinkOverlay()
 let disposed = false
+let measureFrame: number | undefined
 defineExpose({ updateAnchors: linkOverlay.updateAnchors })
-const label = (item: { title: string; subtitle: string }) =>
-  locale.value === 'en' ? item.subtitle : item.title
+const panels = shallowReactive(new Map<string, HTMLElement>())
+const titles = new Map<string, HTMLElement>()
+const titleScales = new WeakMap<HTMLElement, string>()
+const bindElement =
+  (elements: Map<string, HTMLElement>, id: string) => (element: unknown) => {
+    if (element instanceof HTMLElement) elements.set(id, element)
+    else elements.delete(id)
+  }
+// 稳定 ref 回调避免 hover 更新时重复解绑节点和重建 ResizeObserver 订阅。
+const panelBindings = new Map(
+  Object.keys(islandAnchorByItem).map((id) => [id, bindElement(panels, id)])
+)
+const titleBindings = new Map(
+  harborSections.map(({ id }) => [id, bindElement(titles, id)])
+)
+const linkBindings = new Map(
+  Object.keys(islandAnchorByItem).map((id) => [
+    id,
+    (element: unknown) => linkOverlay.bind(id, element),
+  ])
+)
+const itemGroups = new Map(
+  harborSections.flatMap((group) =>
+    group.items.map((item) => [item.subtitle, group.id] as const)
+  )
+)
 const measure = () => {
   if (disposed || !root.value) return
   const bounds = root.value.getBoundingClientRect()
   const next: Record<string, { x: number; y: number }> = {}
-  root.value
-    .querySelectorAll<HTMLElement>('.island-panels [data-flash-item]')
-    .forEach((panel) => {
-      const rect = panel.getBoundingClientRect()
-      const group = panel.closest<HTMLElement>('[data-island-group]')!.dataset
-        .islandGroup
-      next[panel.dataset.flashItem!] = {
-        x: (group === 'interests' ? rect.left : rect.right) - bounds.left,
-        y: rect.top + rect.height / 2 - bounds.top,
-      }
-    })
-  root.value
-    .querySelectorAll<HTMLElement>('.island-panels h2')
-    .forEach((title) => {
-      const header = title.parentElement!
-      const available =
-        header.getBoundingClientRect().right -
-        title.getBoundingClientRect().left -
-        8
-      title.style.setProperty(
-        '--island-title-scale',
-        String(
-          Math.min(1, Math.max(0, available) / Math.max(1, title.scrollWidth))
-        )
-      )
-    })
+  for (const [id, panel] of panels) {
+    const rect = panel.getBoundingClientRect()
+    next[id] = {
+      x:
+        (itemGroups.get(id) === 'interests' ? rect.left : rect.right) -
+        bounds.left,
+      y: rect.top + rect.height / 2 - bounds.top,
+    }
+  }
+  const scales: [HTMLElement, string][] = []
+  for (const title of titles.values()) {
+    const header = title.parentElement!
+    const available =
+      header.getBoundingClientRect().right -
+      title.getBoundingClientRect().left -
+      8
+    scales.push([
+      title,
+      String(
+        Math.min(1, Math.max(0, available) / Math.max(1, title.scrollWidth))
+      ),
+    ])
+  }
+  // 先完成所有尺寸读取，再批量写样式，避免标题间交错触发布局计算。
+  for (const [title, scale] of scales) {
+    if (titleScales.get(title) === scale) continue
+    title.style.setProperty('--island-title-scale', scale)
+    titleScales.set(title, scale)
+  }
   linkOverlay.updateOrigins(next)
 }
-useResizeObserver(root, measure)
+const scheduleMeasure = () => {
+  if (disposed || measureFrame !== undefined) return
+  measureFrame = requestAnimationFrame(() => {
+    measureFrame = undefined
+    measure()
+  })
+}
+useResizeObserver(root, scheduleMeasure)
 useResizeObserver(
-  Object.keys(islandAnchorByItem).map(
-    (item) => () =>
-      root.value?.querySelector<HTMLElement>(
-        `.island-panels [data-flash-item="${item}"]`
-      )
-  ),
-  measure
+  Object.keys(islandAnchorByItem).map((id) => computed(() => panels.get(id))),
+  scheduleMeasure
 )
 
-watch(root, () => nextTick(measure))
-watch(locale, () => nextTick(measure))
+watch([root, locale, () => props.mobile], scheduleMeasure, { flush: 'post' })
 onMounted(() => {
-  measure()
-  void document.fonts.ready.then(measure)
+  scheduleMeasure()
+  void document.fonts.ready.then(scheduleMeasure)
 })
-watch(
-  () => props.mobile,
-  () => nextTick(measure)
+const baseLinks = computed(() =>
+  groups.value.flatMap((group) =>
+    group.items.map((item) => ({
+      id: item.subtitle,
+      group: group.id,
+    }))
+  )
 )
-const links = computed(() =>
-  groups.value
-    .flatMap((group) =>
-      group.items.map((item) => ({
-        id: item.subtitle,
-        group: group.id,
-      }))
-    )
-    .sort(
-      (a, b) =>
-        Number(a.id === hoveredItem.value?.item) -
-        Number(b.id === hoveredItem.value?.item)
-    )
+const linksById = computed(
+  () => new Map(baseLinks.value.map((link) => [link.id, link]))
 )
+const links = computed(() => {
+  const active =
+    hoveredItem.value && linksById.value.get(hoveredItem.value.item)
+  return active
+    ? [...baseLinks.value.filter((link) => link !== active), active]
+    : baseLinks.value
+})
 
 const animations = new Set<Animation>()
 const openItem = async (item: HarborItem, group: string) => {
@@ -144,6 +187,7 @@ const openItem = async (item: HarborItem, group: string) => {
 }
 onBeforeUnmount(() => {
   disposed = true
+  if (measureFrame !== undefined) cancelAnimationFrame(measureFrame)
   linkOverlay.dispose()
   animations.forEach((animation) => animation.cancel())
 })
@@ -190,32 +234,28 @@ onBeforeUnmount(() => {
           :data-flash-header="group.id"
         >
           <span class="island-window__glyph">+</span>
-          <h2 :data-title="label(group)">{{ label(group) }}</h2>
+          <h2 :ref="titleBindings.get(group.id)" :data-title="group.label">
+            {{ group.label }}
+          </h2>
         </header>
         <div class="island-window__body">
           <figure
             v-for="item in group.items"
             :key="item.subtitle"
+            :ref="panelBindings.get(item.subtitle)"
             class="island-item"
             :class="{ 'is-active': hoveredItem?.item === item.subtitle }"
             :data-flash-item="item.subtitle"
           >
             <span
-              v-if="
-                item.img.includes('placehold.co') || failedCovers.has(item.img)
-              "
+              v-if="item.placeholder || failedCovers.has(item.img)"
               class="island-placeholder"
-              >{{
-                item.img.includes('placehold.co') ? 'WIP' : item.subtitle
-              }}</span
+              >{{ item.placeholder ? 'WIP' : item.subtitle }}</span
             >
             <picture v-else>
-              <source
-                media="(max-width: 768px)"
-                :srcset="getCardMobileThumbnailUrl(item.img)"
-              />
+              <source media="(max-width: 768px)" :srcset="item.mobileSrc" />
               <img
-                :src="getCardThumbnailUrl(item.img)"
+                :src="item.desktopSrc"
                 alt=""
                 loading="lazy"
                 decoding="async"
@@ -223,38 +263,42 @@ onBeforeUnmount(() => {
               />
             </picture>
             <figcaption>
-              <strong>{{ label(item) }}</strong
+              <strong>{{ item.label }}</strong
               ><span>{{ item.count }}</span>
             </figcaption>
           </figure>
         </div>
       </section>
     </div>
-    <svg class="island-links" aria-hidden="true">
-      <template v-for="link in links" :key="link.id">
-        <g
-          :ref="(element) => linkOverlay.bind(link.id, element)"
-          :data-link-group="link.group"
-          :data-link-item="link.id"
-          :data-flash-group="link.id"
-          :class="{ 'is-active': hoveredItem?.item === link.id }"
-        >
-          <line />
-          <g>
-            <rect
-              x="-12"
-              y="-12"
-              width="24"
-              height="24"
-              class="island-anchor__square"
-            />
-            <path
-              d="M-16 -8 V-16 H-8 M8 -16 H16 V-8 M16 8 V16 H8 M-8 16 H-16 V8"
-              class="island-anchor__corners"
-            />
-          </g>
+    <svg
+      :ref="linkOverlay.bindViewport"
+      class="island-links"
+      aria-hidden="true"
+    >
+      <g
+        v-for="link in links"
+        :key="link.id"
+        :ref="linkBindings.get(link.id)"
+        :data-link-group="link.group"
+        :data-link-item="link.id"
+        :data-flash-group="link.id"
+        :class="{ 'is-active': hoveredItem?.item === link.id }"
+      >
+        <line />
+        <g>
+          <rect
+            x="-12"
+            y="-12"
+            width="24"
+            height="24"
+            class="island-anchor__square"
+          />
+          <path
+            d="M-16 -8 V-16 H-8 M8 -16 H16 V-8 M16 8 V16 H8 M-8 16 H-16 V8"
+            class="island-anchor__corners"
+          />
         </g>
-      </template>
+      </g>
     </svg>
     <!-- 视觉层在画布之后；独立透明按钮保留键盘和点击操作，不改变模型的绘制顺序。 -->
     <nav
@@ -266,10 +310,10 @@ onBeforeUnmount(() => {
         :key="group.id"
         class="island-window"
         :class="`island-window--${group.id}`"
-        :aria-label="label(group)"
+        :aria-label="group.label"
       >
         <header class="island-window__bar" aria-hidden="true">
-          <span>+</span><span>{{ label(group) }}</span>
+          <span>+</span><span>{{ group.label }}</span>
         </header>
         <div class="island-window__body">
           <button
@@ -277,7 +321,7 @@ onBeforeUnmount(() => {
             :key="item.subtitle"
             class="island-item island-target"
             type="button"
-            :aria-label="label(item)"
+            :aria-label="item.label"
             :disabled="busy"
             :data-island-item="item.subtitle"
             @pointerenter="
@@ -288,7 +332,7 @@ onBeforeUnmount(() => {
             @blur="hoveredItem = null"
             @click.stop="openItem(item, group.id)"
           >
-            <span>{{ label(item) }}</span>
+            <span>{{ item.label }}</span>
           </button>
         </div>
       </section>
@@ -515,7 +559,9 @@ onBeforeUnmount(() => {
     z-index: 2;
     width: 100%;
     height: 100%;
-    overflow: visible;
+    // 包络包含端点与描边；限制动态 SVG 的绘制范围，静态卡片保留独立层级。
+    contain: strict;
+    overflow: hidden;
     pointer-events: none;
     g[data-link-group] {
       color: var(--island-base);

@@ -1,5 +1,3 @@
-import { expect, test } from '@playwright/test'
-
 import {
   FLORA_LAYOUT_BOTTOM_GAP,
   FLORA_MOBILE_CHARACTER_HEIGHT_RATIO,
@@ -9,6 +7,7 @@ import {
 import { pageThemeColors } from '../src/config/pageThemes'
 import { pets } from '../src/locales/dynamic/pets'
 import modelRevision from '../src/utils/sprigatitoModelRevision.generated.json'
+import { expect, test } from './helpers/sceneDiagnostics'
 
 test.beforeEach(async ({ page }) => {
   await page.routeWebSocket('ws://localhost:3000/**', (socket) =>

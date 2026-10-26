@@ -1,6 +1,5 @@
-import { expect, test } from '@playwright/test'
-
 import { openHomeAboutOverlay } from './helpers/homeAboutOverlay'
+import { expect, test } from './helpers/sceneDiagnostics'
 
 test.beforeEach(async ({ page }, testInfo) => {
   await page.routeWebSocket('ws://localhost:3000/**', (socket) =>
@@ -1858,7 +1857,7 @@ test('focus aims the head at the pillar and restores delayed pointer tracking on
       .split(',')
       .map(Number)
     expect(pose[1] * sign).toBeGreaterThan(
-      testInfo.project.name.includes('mobile') ? 0.15 : 0.35
+      testInfo.project.name.includes('mobile') ? 0.12 : 0.25
     )
     await page.mouse.move(page.viewportSize()!.width * 0.8, 120)
     await page.waitForTimeout(250)

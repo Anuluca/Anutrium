@@ -4,6 +4,7 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { gzipSync } from 'node:zlib'
 import * as THREE from 'three'
 
+import { bakeTempleFlatLabelAsset } from './lib/bakeTempleFlatLabelAsset.mjs'
 import { bakeTempleLabelAsset } from './lib/bakeTempleLabelAsset.mjs'
 import { facetModelGeometry } from './lib/facetModelGeometry.mjs'
 import { updateTempleAssetRevision } from './lib/updateTempleAssetRevision.mjs'
@@ -121,6 +122,8 @@ try {
   )
   console.log(`Environment baked: ${environmentData.byteLength} bytes`)
   await bakeTempleLabelAsset()
+  await bakeTempleLabelAsset('low')
+  await bakeTempleFlatLabelAsset()
   await updateTempleAssetRevision()
   console.log(
     `Lucario baked: ${offset} bytes, ${faceted.indices.length / 3} triangles`

@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './helpers/sceneDiagnostics'
 
 // 拦截全部绘制入口：实例批次和全屏三角形分别走 Instanced / drawArrays。
 test.beforeEach(async ({ page }) => {
@@ -69,7 +69,21 @@ test('home follows with cached environment, invalidates on theme and resize, and
     await page.mouse.move(i % 2 ? viewport.width - 15 : 15, 100)
     await page.waitForTimeout(130)
   }
-  await page.waitForTimeout(1800)
+  // 延迟跟随需要完成两级收敛后再检查空闲绘制，不能沿用快速跟随的固定等待。
+  await expect
+    .poll(
+      async () => {
+        const [x, y] = (await stage.getAttribute('data-statue-head-pointer'))!
+          .split(',')
+          .map(Number)
+        return Math.hypot(
+          x - ((viewport.width - 15) / viewport.width - 0.5) * 2,
+          y - (100 / viewport.height - 0.5) * 2
+        )
+      },
+      { timeout: 10000 }
+    )
+    .toBeLessThan(0.001)
   const followed = await read()
   expect(followed.draws).toBeGreaterThan(warm.draws)
   expect(followed.uploads).toBe(warm.uploads)

@@ -1,6 +1,5 @@
-import { expect, type Page, test } from '@playwright/test'
-
 import { openHomeAboutOverlay } from './helpers/homeAboutOverlay'
+import { expect, type Page, test } from './helpers/sceneDiagnostics'
 
 test.setTimeout(90000)
 
@@ -130,8 +129,53 @@ for (const path of ['/flanerie/xiangtan?from=home', '/island/study-notes']) {
       'none'
     )
     await expect(page.locator('.temple-menu')).toHaveCount(0)
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          getComputedStyle(document.documentElement)
+            .getPropertyValue('--page-theme-color')
+            .trim()
+        )
+      )
+      .toBe('#e23456')
+    await expect(page.locator('.temple-stage')).toHaveAttribute(
+      'data-theme-color',
+      '#e23456'
+    )
   })
 }
+
+test('website title resets the resident travel scene and page theme', async ({
+  page,
+}) => {
+  await page.routeWebSocket('ws://localhost:3000/**', (socket) =>
+    socket.close()
+  )
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/flanerie', { waitUntil: 'domcontentloaded' })
+  await ready(page, 'flanerie')
+  await expect(page.locator('.temple-stage')).toHaveAttribute(
+    'data-theme-color',
+    '#c44129'
+  )
+  await push(page, '/flanerie/xiangtan?from=home')
+  await expect(page).toHaveURL(/\/flanerie\/xiangtan/)
+  await page.getByRole('button', { name: 'Anutrium', exact: true }).click()
+  await ready(page, 'none')
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        getComputedStyle(document.documentElement)
+          .getPropertyValue('--page-theme-color')
+          .trim()
+      )
+    )
+    .toBe('#e23456')
+  await expect(page.locator('.temple-stage')).toHaveAttribute(
+    'data-theme-color',
+    '#e23456'
+  )
+})
 
 test('about preserves module color, model tint and zodiac', async ({
   page,

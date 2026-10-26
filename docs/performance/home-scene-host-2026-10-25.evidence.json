@@ -1,0 +1,107 @@
+{
+  "scope": "B6 retained home scene; localhost:3000; existing dev server reused",
+  "policy": {
+    "idleSceneLimit": 1,
+    "ttlMs": 90000,
+    "estimatedRetainedBudgetBytes": 268435456
+  },
+  "samples": [
+    {
+      "name": "renderer-reuse",
+      "project": "chromium",
+      "data": {
+        "initial": {
+          "contexts": 1,
+          "programs": 80,
+          "buffers": 86,
+          "draws": 170
+        },
+        "paused": {
+          "contexts": 1,
+          "programs": 80,
+          "buffers": 86,
+          "draws": 170
+        },
+        "resumed": {
+          "contexts": 1,
+          "programs": 80,
+          "buffers": 86,
+          "draws": 182
+        }
+      }
+    },
+    {
+      "name": "state-based-model-downloads",
+      "project": "chromium",
+      "data": [
+        "http://localhost:3000/models/mightyena-sleep.json?v=4149bb88e6b374a5",
+        "http://localhost:3000/models/mightyena-sleep.bin.gz?v=4149bb88e6b374a5",
+        "http://localhost:3000/models/sprigatito-sleep.json?v=3a451be04d5ae9ba",
+        "http://localhost:3000/models/sprigatito-sleep.bin.gz?v=3a451be04d5ae9ba"
+      ]
+    },
+    {
+      "name": "resident-scene-pixels",
+      "project": "chromium",
+      "data": {
+        "maxDelta": 0,
+        "changedPixels": 0,
+        "totalPixels": 921600,
+        "reused": true
+      }
+    },
+    {
+      "name": "renderer-reuse",
+      "project": "mobile-chrome",
+      "data": {
+        "initial": {
+          "contexts": 1,
+          "programs": 80,
+          "buffers": 86,
+          "draws": 178
+        },
+        "paused": {
+          "contexts": 1,
+          "programs": 80,
+          "buffers": 86,
+          "draws": 178
+        },
+        "resumed": {
+          "contexts": 1,
+          "programs": 80,
+          "buffers": 86,
+          "draws": 190
+        }
+      }
+    }
+  ],
+  "validation": {
+    "typeCheck": "two existing VueUse errors in WorkCard/index.vue:102 and Craft/CraftContent.vue:91",
+    "mainRegression": {
+      "startTime": "2026-10-25T10:25:46.305Z",
+      "duration": 224630.655,
+      "expected": 20,
+      "skipped": 4,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "resourceRecheck": {
+      "startTime": "2026-10-25T10:30:18.882Z",
+      "duration": 63212.477,
+      "expected": 3,
+      "skipped": 1,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "factoryCompatibilityRecheck": {
+      "startTime": "2026-10-25T10:34:02.808Z",
+      "duration": 25614.786999999997,
+      "expected": 3,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "targetedEslint": "passed",
+    "viteBuild": "passed"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "date": "2026-10-26",
+  "metric": "camera projection rebuilds per scene RAF callback",
+  "before": {
+    "desktop": {"entering": {"total":699,"max":6,"updatedFrames":187},"leaving":{"total":396,"max":3,"updatedFrames":132}},
+    "mobileEmulated": {"entering":{"total":690,"max":6,"updatedFrames":185},"leaving":{"total":399,"max":3,"updatedFrames":133}}
+  },
+  "after": {
+    "desktop": {"entering":{"total":186,"max":1,"updatedFrames":186},"leaving":{"total":132,"max":1,"updatedFrames":132}},
+    "mobileEmulated": {"entering":{"total":185,"max":1,"updatedFrames":185},"leaving":{"total":132,"max":1,"updatedFrames":132}}
+  },
+  "verification": {"finalBrowserTestsPassed":8,"existingAnchorTestsPassed":4,"cameraTestsPassed":10,"hoverObserverResubscriptions":0,"layoutReadsAfterStyleWrites":0,"maxAllowedLeaveOffsetPx":1},
+  "typeCheckExistingErrors":["src/components/WorkCard/index.vue:102","src/views/Craft/CraftContent.vue:91"],
+  "limits":["No FPS or GPU timing claim", "Mobile is a Chrome viewport emulation", "Frame counts vary between runs"]
+}

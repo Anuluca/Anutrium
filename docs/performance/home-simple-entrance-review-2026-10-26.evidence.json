@@ -1,0 +1,195 @@
+{
+  "date": "2026-10-26",
+  "scope": "简易版首页初始形态入场与布局",
+  "environment": {
+    "url": "http://localhost:3000/",
+    "browser": "Playwright Chromium headless",
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "service": "复用现有服务"
+  },
+  "method": "同标签页初次完整入场后刷新进入简易入场；等待时钟稳定后，连续120帧更新场景样式，记录时钟MutationObserver回调及fitImmersiveClock帧调度；比较六个元素的x/y/width/height。",
+  "before": {
+    "clockFrames": 60,
+    "clockObserverCalls": 120,
+    "longTasks": [],
+    "mode": "simple",
+    "geometry": {
+      ".temple-page": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720,
+        "top": 0,
+        "right": 1280,
+        "bottom": 720,
+        "left": 0
+      },
+      ".temple-stage": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720,
+        "top": 0,
+        "right": 1280,
+        "bottom": 720,
+        "left": 0
+      },
+      ".temple-backdrop": {
+        "x": 0,
+        "y": 417.96875,
+        "width": 1280,
+        "height": 115.453125,
+        "top": 417.96875,
+        "right": 1280,
+        "bottom": 533.421875,
+        "left": 0
+      },
+      ".temple-clock-group": {
+        "x": 538.59375,
+        "y": 604.359375,
+        "width": 210.8125,
+        "height": 49.4202880859375,
+        "top": 604.359375,
+        "right": 749.40625,
+        "bottom": 653.7796630859375,
+        "left": 538.59375
+      },
+      ".footer-com": {
+        "x": 24,
+        "y": 699.953125,
+        "width": 1232,
+        "height": 14.484375,
+        "top": 699.953125,
+        "right": 1256,
+        "bottom": 714.4375,
+        "left": 24
+      },
+      ".logo-box .logo": {
+        "x": 624.671875,
+        "y": 25.078125,
+        "width": 30.65625,
+        "height": 27.875,
+        "top": 25.078125,
+        "right": 655.328125,
+        "bottom": 52.953125,
+        "left": 624.671875
+      }
+    },
+    "resources": 250,
+    "metrics": {
+      "LayoutCount": 0,
+      "RecalcStyleCount": 121,
+      "LayoutDuration": 0,
+      "RecalcStyleDuration": 0.031445999999999974,
+      "TaskDuration": 0.061891000000002805
+    }
+  },
+  "after": {
+    "clockFrames": 0,
+    "clockObserverCalls": 0,
+    "longTasks": [],
+    "mode": "simple",
+    "geometry": {
+      ".temple-page": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720,
+        "top": 0,
+        "right": 1280,
+        "bottom": 720,
+        "left": 0
+      },
+      ".temple-stage": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720,
+        "top": 0,
+        "right": 1280,
+        "bottom": 720,
+        "left": 0
+      },
+      ".temple-backdrop": {
+        "x": 0,
+        "y": 417.96875,
+        "width": 1280,
+        "height": 115.453125,
+        "top": 417.96875,
+        "right": 1280,
+        "bottom": 533.421875,
+        "left": 0
+      },
+      ".temple-clock-group": {
+        "x": 538.59375,
+        "y": 604.359375,
+        "width": 210.8125,
+        "height": 49.4202880859375,
+        "top": 604.359375,
+        "right": 749.40625,
+        "bottom": 653.7796630859375,
+        "left": 538.59375
+      },
+      ".footer-com": {
+        "x": 24,
+        "y": 699.953125,
+        "width": 1232,
+        "height": 14.484375,
+        "top": 699.953125,
+        "right": 1256,
+        "bottom": 714.4375,
+        "left": 24
+      },
+      ".logo-box .logo": {
+        "x": 624.671875,
+        "y": 25.078125,
+        "width": 30.65625,
+        "height": 27.875,
+        "top": 25.078125,
+        "right": 655.328125,
+        "bottom": 52.953125,
+        "left": 624.671875
+      }
+    },
+    "resources": 250,
+    "metrics": {
+      "LayoutCount": 0,
+      "RecalcStyleCount": 121,
+      "LayoutDuration": 0,
+      "RecalcStyleDuration": 0.05444200000000002,
+      "TaskDuration": 0.09635199999999955
+    }
+  },
+  "geometryMaxDeltaPx": {
+    ".temple-page": 0,
+    ".temple-stage": 0,
+    ".temple-backdrop": 0,
+    ".temple-clock-group": 0.0,
+    ".footer-com": 0,
+    ".logo-box .logo": 0.0
+  },
+  "interpretation": "普通模式的无效监听和帧调度已清除；合成场景验证的是回调开销，不代表真实用户FPS或整体加载速度。原始CPU时长采样受并发浏览器和开发服务影响，不用于速度提升结论。",
+  "checks": {
+    "targetedRegression": {
+      "passed": 15,
+      "skipped": 1,
+      "failed": 0,
+      "coverage": [
+        "桌面/移动半升入场与首次/缓存返回",
+        "桌面/移动时钟逐字、秒钟更新、柱子聚焦返回",
+        "桌面/移动沉浸缩放与恢复",
+        "6项桌面/移动离场几何"
+      ],
+      "skipReason": "缓存场景经About路由返回的独立用例按原有设置跳过移动端；首次/缓存返回由home-simple-entrance双端用例覆盖。"
+    },
+    "eslint": "passed",
+    "types": "受WorkCard/index.vue:102和Craft/CraftContent.vue:91的既有TS2345错误阻塞"
+  },
+  "measurementLimits": [
+    "未采集完整DevTools性能追踪或线上LCP/INP等用户指标；不据此声称整体加载速度或FPS提升。",
+    "测量使用开发环境及受控样式更新；资源请求数相同，几何比较为稳定状态的单次采样，离场另由桌面/移动回归覆盖。"
+  ]
+}

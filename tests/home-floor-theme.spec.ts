@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './helpers/sceneDiagnostics'
 
 for (const initialMode of ['dark', 'light'] as const) {
   test(`${initialMode} floor follows module colors and survives theme switching`, async ({

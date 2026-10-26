@@ -145,6 +145,27 @@
   &.is-entry-ready .zodiac-html-wheel {
     animation: zodiac-wheel-enter 1.6s cubic-bezier(0.16, 1, 0.3, 1);
   }
+
+  &.is-entry-ready.is-simple-entrance {
+    .zodiac-stage {
+      animation-name: zodiac-stage-enter-simple;
+    }
+
+    .zodiac-static-art {
+      animation-name: zodiac-disc-enter-simple;
+    }
+
+    .zodiac-html-wheel {
+      animation-name: zodiac-wheel-enter-simple;
+    }
+
+    .zodiac-stage,
+    .zodiac-static-art,
+    .zodiac-html-wheel {
+      animation-duration: 3.2s;
+      animation-delay: -1.6s;
+    }
+  }
 }
 
 .backdrop-color-base,
@@ -326,18 +347,6 @@
   white-space: nowrap;
 }
 
-.star-container.is-entry-ready.is-content-layout:not(.is-route-transitioning) {
-  .zodiac-sign-face.is-active .zodiac-glyph {
-    color: rgba(255, 255, 255, 0.22);
-  }
-
-  .zodiac-sign-face.is-active {
-    opacity: 0.21;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.24);
-    transition: opacity 0.18s ease;
-  }
-}
-
 .zodiac-diamond-frame {
   position: absolute;
   inset: 0;
@@ -357,36 +366,43 @@
   }
 }
 
-@keyframes zodiac-stage-enter {
-  from {
-    opacity: 0;
-    transform: translate3d(-50%, var(--stage-offset-y), 0) scale(0.01);
-  }
+// 共用关键帧内容，独立名称确保站内返回简易首页时立即重播。
+each(zodiac-stage-enter zodiac-stage-enter-simple, {
+  @keyframes @value {
+    from {
+      opacity: 0;
+      transform: translate3d(-50%, var(--stage-offset-y), 0) scale(0.01);
+    }
 
-  to {
-    opacity: 1;
-    transform: translate3d(-50%, var(--stage-offset-y), 0)
-      scale(var(--stage-scale, var(--hero-scale, 0.6)));
+    to {
+      opacity: 1;
+      transform: translate3d(-50%, var(--stage-offset-y), 0)
+        scale(var(--stage-scale, var(--hero-scale, 0.6)));
+    }
   }
-}
+});
 
-@keyframes zodiac-disc-enter {
-  from {
-    transform: rotate(-125deg);
+each(zodiac-disc-enter zodiac-disc-enter-simple, {
+  @keyframes @value {
+    from {
+      transform: rotate(-125deg);
+    }
+    to {
+      transform: rotate(0deg);
+    }
   }
-  to {
-    transform: rotate(0deg);
-  }
-}
+});
 
-@keyframes zodiac-wheel-enter {
-  from {
-    transform: rotate(calc(var(--route-rotation) - 125deg));
+each(zodiac-wheel-enter zodiac-wheel-enter-simple, {
+  @keyframes @value {
+    from {
+      transform: rotate(calc(var(--route-rotation) - 125deg));
+    }
+    to {
+      transform: rotate(var(--route-rotation));
+    }
   }
-  to {
-    transform: rotate(var(--route-rotation));
-  }
-}
+});
 
 @media screen and (max-width: 768px) {
   .star-container {
@@ -486,17 +502,6 @@
 .star-container.is-theme-tinted.is-content-layout {
   --stage-opacity: 0.15;
 }
-.star-container.is-theme-tinted.is-entry-ready.is-content-layout:not(
-    .is-route-transitioning
-  ) {
-  .zodiac-sign-face.is-active .zodiac-glyph {
-    color: var(--chart-strong);
-  }
-  .zodiac-sign-face.is-active {
-    opacity: 0.45;
-  }
-}
-
 .star-container.light.is-theme-tinted {
   background-color: #faf9f6;
 

@@ -13,6 +13,7 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:install": "playwright install",
     "test:performance": "yarn build-only && playwright test --config=playwright.performance.config.ts",
+    "build:temple-labels": "node scripts/build-temple-labels.mjs",
     "build:lucario-model": "node scripts/build-lucario-model.mjs",
     "build:sprigatito-model": "node scripts/build-sprigatito-model.mjs",
     "optimize:model-assets": "node scripts/optimize-model-assets.mjs",

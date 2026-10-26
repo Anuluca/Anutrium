@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './helpers/sceneDiagnostics'
 
 test.beforeEach(async ({ page }) => {
   await page.routeWebSocket('ws://localhost:3000/**', (socket) =>
@@ -308,7 +308,7 @@ test('entrance frames the statue before raising full-size pillars and enabling i
   await expect(hero).toHaveCSS('opacity', '1')
 })
 
-test('route entry completes before the simplified scene fades in on return', async ({
+test('cached initial scene resumes from half-raised pillars after returning', async ({
   page,
 }, testInfo) => {
   test.skip(
@@ -316,83 +316,38 @@ test('route entry completes before the simplified scene fades in on return', asy
     '手机路由几何由 island-lucario 回归覆盖'
   )
   test.setTimeout(60000)
-  // 在 GSAP 初始化前接管时钟，保证首次加载与缓存返回使用同一个时间源。
-  await page.clock.install()
-  await page.clock.pauseAt(await page.evaluate(() => Date.now() + 50))
   await page.goto('/', { waitUntil: 'domcontentloaded' })
-  for (let attempt = 0; attempt < 100; attempt++) {
-    await page.clock.runFor(50)
-    const phase = await page.evaluate(
-      () =>
-        document.querySelector<HTMLElement>('.temple-stage')?.dataset
-          .entrancePhase
-    )
-    if (phase === 'statue') break
-    await page.waitForTimeout(100)
-  }
-  // 本测试只检查路由/入场顺序，首段无需逐帧绘制所有中间姿态。
-  await page.clock.fastForward(2400)
-  await page.clock.fastForward(5700)
   await expect(page.locator('.temple-stage')).toHaveAttribute(
     'data-entrance-finished',
     'true',
-    { timeout: 25000 }
+    { timeout: 30000 }
   )
   await page.evaluate(() =>
     (
       document.querySelector('.layout-page') as any
     ).__vueParentComponent.proxy.$router.push('/about')
   )
-  await page.clock.runFor(1000)
-  await expect(page.locator('.about-page')).toBeVisible()
-  await expect(page.locator('.about-page')).not.toHaveClass(
-    /route-enter-active/
-  )
-  // 延长真实路由过渡，确保缓存资源提前准备好，覆盖“资源先就绪”的时序。
-  await page.addStyleTag({
-    content: '.route-enter-active { transition-duration: 8s !important; }',
-  })
+  await expect(page.locator('.about-page')).toBeVisible({ timeout: 15000 })
+  await expect(page.locator('.route-curtain')).toHaveCount(0)
   await page.evaluate(() =>
     (
       document.querySelector('.layout-page') as any
     ).__vueParentComponent.proxy.$router.push('/')
   )
-  const root = page.locator('.temple-page')
   const stage = page.locator('.temple-stage')
-  for (let attempt = 0; attempt < 100; attempt++) {
-    await page.clock.runFor(50)
-    const phase = await page.evaluate(
-      () =>
-        document.querySelector<HTMLElement>('.temple-stage')?.dataset
-          .entrancePhase
-    )
-    if (phase === 'waiting-route') break
-    await page.waitForTimeout(100)
-  }
-  await expect(stage).toHaveAttribute('data-entrance-phase', 'waiting-route', {
-    timeout: 7000,
-  })
-  await expect(root).toHaveClass(/route-enter-active/)
-  await expect(stage).toHaveCSS('opacity', '0')
-  await expect(stage.locator('canvas')).toHaveCSS('visibility', 'hidden')
-  await expect(stage).toHaveAttribute('data-entrance-finished', 'false')
-  await expect(page.locator('.temple-obelisk:disabled')).toHaveCount(4)
-  await page.clock.fastForward(9000)
-  // 站内返回没有全局加载线；路由完成后直接开始场景渐显。
-  await expect(root).not.toHaveClass(/route-enter-active/, { timeout: 12000 })
   await expect(stage).toHaveAttribute('data-entrance-mode', 'simple')
-  await expect(stage).toHaveAttribute('data-entrance-phase', 'fade')
+  await expect(stage).toHaveAttribute('data-entrance-phase', 'pillars')
   const camera = await stage.getAttribute('data-camera-position')
-  await page.clock.runFor(200)
   const opacity = Number(
     await stage.evaluate((element) => getComputedStyle(element).opacity)
   )
   expect(opacity).toBeGreaterThan(0)
-  expect(opacity).toBeLessThan(1)
-  await page.clock.runFor(600)
-  await expect(stage).toHaveAttribute('data-entrance-finished', 'true')
+  expect(opacity).toBe(1)
+  await expect(stage).toHaveAttribute('data-entrance-finished', 'true', {
+    timeout: 15000,
+  })
   await expect(stage).toHaveAttribute('data-entrance-phase', 'complete')
-  await expect(stage).toHaveAttribute('data-camera-position', camera!)
+  expect(await stage.getAttribute('data-camera-position')).not.toBe(camera)
 })
 
 test('resizing during the entrance settles at the resized home framing', async ({

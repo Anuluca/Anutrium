@@ -1,0 +1,349 @@
+{
+  "date": "2026-10-25",
+  "highUnchanged": true,
+  "tiers": {
+    "high": {
+      "faces": 1984,
+      "vertices": 3688,
+      "geometryBytes": 115168,
+      "downloadBytes": 33743,
+      "halfHeight": 0.22062964411452413,
+      "depth": 0.5680000297725201
+    },
+    "low": {
+      "faces": 392,
+      "vertices": 612,
+      "geometryBytes": 19488,
+      "downloadBytes": 4475,
+      "halfHeight": 0.22062965156510472,
+      "depth": 0.5680000185966492
+    }
+  },
+  "projectionBenchmark": {
+    "environment": "Node.js v24.12.0, V8 13.6.233.17-node.37",
+    "framesPerRun": 20000,
+    "pointsPerFrame": 36,
+    "runs": [
+      {
+        "before": 9.4405,
+        "after": 6.511665999999991
+      },
+      {
+        "before": 9.548333,
+        "after": 6.733833000000004
+      },
+      {
+        "before": 9.722542000000004,
+        "after": 6.80487500000001
+      },
+      {
+        "before": 9.608167000000009,
+        "after": 7.18529199999999
+      },
+      {
+        "before": 9.72354199999998,
+        "after": 6.760209000000003
+      },
+      {
+        "before": 9.690750000000008,
+        "after": 6.738624999999985
+      },
+      {
+        "before": 9.692916999999994,
+        "after": 6.508207999999996
+      }
+    ],
+    "medianMs": {
+      "original": 9.690750000000008,
+      "optimized": 6.738624999999985
+    },
+    "sink": 167686.669293098
+  },
+  "reports": {
+    "quality-tests": {
+      "stats": {
+        "startTime": "2026-10-25T10:53:41.666Z",
+        "duration": 52476.26,
+        "expected": 8,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "tests": [
+        {
+          "title": "combined projection preserves camera/object transforms and reuses point buffers",
+          "project": "chromium",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "label loaders cache each tier separately and retain layout bounds and glyph identities",
+          "project": "chromium",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "scene uses only high label tier and preserves reveal and focus",
+          "project": "chromium",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "scene uses only low label tier and preserves reveal and focus",
+          "project": "chromium",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "combined projection preserves camera/object transforms and reuses point buffers",
+          "project": "mobile-chrome",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "label loaders cache each tier separately and retain layout bounds and glyph identities",
+          "project": "mobile-chrome",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "scene uses only high label tier and preserves reveal and focus",
+          "project": "mobile-chrome",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "scene uses only low label tier and preserves reveal and focus",
+          "project": "mobile-chrome",
+          "status": "expected",
+          "errors": []
+        }
+      ]
+    },
+    "regression-tests": {
+      "stats": {
+        "startTime": "2026-10-25T10:54:45.793Z",
+        "duration": 222922.31600000002,
+        "expected": 14,
+        "skipped": 2,
+        "unexpected": 2,
+        "flaky": 0
+      },
+      "tests": [
+        {
+          "title": "cached home matches direct rendering in dark and light themes",
+          "project": "chromium",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "cached home matches direct rendering in dark and light themes",
+          "project": "mobile-chrome",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "ready home retains one paused renderer and returns without reallocating programs or geometry",
+          "project": "chromium",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "retained overview matches its original complete scene after history return",
+          "project": "chromium",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "ready home retains one paused renderer and returns without reallocating programs or geometry",
+          "project": "mobile-chrome",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "retained overview matches its original complete scene after history return",
+          "project": "mobile-chrome",
+          "status": "skipped",
+          "errors": []
+        },
+        {
+          "title": "archive simple entrance starts in the target colour without a red fade",
+          "project": "chromium",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "sprigatito simple entrance starts in the target colour without a red fade",
+          "project": "chromium",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "module changes after simple entrance retain their colour animation",
+          "project": "chromium",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "archive simple entrance starts in the target colour without a red fade",
+          "project": "mobile-chrome",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "sprigatito simple entrance starts in the target colour without a red fade",
+          "project": "mobile-chrome",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "module changes after simple entrance retain their colour animation",
+          "project": "mobile-chrome",
+          "status": "unexpected",
+          "errors": [
+            "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: true\nReceived: false\n\n  170 |       (color) => color !== result.original && color !== '#c44129'\n  171 |     )\n> 172 |   ).toBe(true)\n      |     ^\n  173 | })\n  174 |\n    at /Users/anuluca/Work/Space_Coding/Anutrium/tests/home-simple-entrance.spec.ts:172:5"
+          ]
+        },
+        {
+          "title": "anchor coordinates update without Vue renders, layout reads or repeated DOM queries",
+          "project": "chromium",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "real model frames bypass both Vue components and rebind after layout and focus changes",
+          "project": "chromium",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "anchor coordinates update without Vue renders, layout reads or repeated DOM queries",
+          "project": "mobile-chrome",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "real model frames bypass both Vue components and rebind after layout and focus changes",
+          "project": "mobile-chrome",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "clicking the statue smoothly reveals its full wireframe and restores the temple",
+          "project": "chromium",
+          "status": "unexpected",
+          "errors": [
+            "Error: expect(received).toBeGreaterThan(expected)\n\nExpected: > 0\nReceived:   0\n\n  74 |   await advance(400)\n  75 |   const halfway = Number(await stage.getAttribute('data-statue-wire-opacity'))\n> 76 |   expect(halfway).toBeGreaterThan(0)\n     |                   ^\n  77 |   expect(halfway).toBeLessThan(1)\n  78 |   await expect(stage).not.toHaveAttribute('data-camera-position', home!)\n  79 |   await advance(1100)\n    at /Users/anuluca/Work/Space_Coding/Anutrium/tests/island-statue-inspection.spec.ts:76:19"
+          ]
+        },
+        {
+          "title": "clicking the statue smoothly reveals its full wireframe and restores the temple",
+          "project": "mobile-chrome",
+          "status": "skipped",
+          "errors": []
+        }
+      ]
+    },
+    "timing-rerun": {
+      "stats": {
+        "startTime": "2026-10-25T10:59:36.866Z",
+        "duration": 40210.758,
+        "expected": 1,
+        "skipped": 1,
+        "unexpected": 2,
+        "flaky": 0
+      },
+      "tests": [
+        {
+          "title": "module changes after simple entrance retain their colour animation",
+          "project": "chromium",
+          "status": "unexpected",
+          "errors": [
+            "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: true\nReceived: false\n\n  170 |       (color) => color !== result.original && color !== '#c44129'\n  171 |     )\n> 172 |   ).toBe(true)\n      |     ^\n  173 | })\n  174 |\n    at /Users/anuluca/Work/Space_Coding/Anutrium/tests/home-simple-entrance.spec.ts:172:5"
+          ]
+        },
+        {
+          "title": "module changes after simple entrance retain their colour animation",
+          "project": "mobile-chrome",
+          "status": "expected",
+          "errors": []
+        },
+        {
+          "title": "clicking the statue smoothly reveals its full wireframe and restores the temple",
+          "project": "chromium",
+          "status": "unexpected",
+          "errors": [
+            "Error: expect(received).toBeGreaterThan(expected)\n\nExpected: > 0\nReceived:   0\n\n  74 |   await advance(400)\n  75 |   const halfway = Number(await stage.getAttribute('data-statue-wire-opacity'))\n> 76 |   expect(halfway).toBeGreaterThan(0)\n     |                   ^\n  77 |   expect(halfway).toBeLessThan(1)\n  78 |   await expect(stage).not.toHaveAttribute('data-camera-position', home!)\n  79 |   await advance(1100)\n    at /Users/anuluca/Work/Space_Coding/Anutrium/tests/island-statue-inspection.spec.ts:76:19"
+          ]
+        },
+        {
+          "title": "clicking the statue smoothly reveals its full wireframe and restores the temple",
+          "project": "mobile-chrome",
+          "status": "skipped",
+          "errors": []
+        }
+      ]
+    },
+    "baseline-timing": {
+      "stats": {
+        "startTime": "2026-10-25T11:00:42.111Z",
+        "duration": 27104.909,
+        "expected": 0,
+        "skipped": 0,
+        "unexpected": 2,
+        "flaky": 0
+      },
+      "tests": [
+        {
+          "title": "clicking the statue smoothly reveals its full wireframe and restores the temple",
+          "project": "chromium",
+          "status": "unexpected",
+          "errors": [
+            "Error: expect(received).toBeGreaterThan(expected)\n\nExpected: > 0\nReceived:   0\n\n  78 |   await advance(400)\n  79 |   const halfway = Number(await stage.getAttribute('data-statue-wire-opacity'))\n> 80 |   expect(halfway).toBeGreaterThan(0)\n     |                   ^\n  81 |   expect(halfway).toBeLessThan(1)\n  82 |   await expect(stage).not.toHaveAttribute('data-camera-position', home!)\n  83 |   await advance(1100)\n    at /Users/anuluca/Work/Space_Coding/Anutrium/tests/c67-baseline-inspection.tmp.spec.ts:80:19"
+          ]
+        },
+        {
+          "title": "module changes after simple entrance retain their colour animation",
+          "project": "chromium",
+          "status": "unexpected",
+          "errors": [
+            "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: true\nReceived: false\n\n  174 |       (color) => color !== result.original && color !== '#c44129'\n  175 |     )\n> 176 |   ).toBe(true)\n      |     ^\n  177 | })\n  178 |\n    at /Users/anuluca/Work/Space_Coding/Anutrium/tests/c67-baseline-simple.tmp.spec.ts:176:5"
+          ]
+        }
+      ]
+    },
+    "geometry": {
+      "stats": {
+        "startTime": "2026-10-25T11:01:22.820Z",
+        "duration": 45826.07,
+        "expected": 3,
+        "skipped": 1,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "tests": [
+        {
+          "title": "Huahua focus keeps the full page and route container stable during route leave",
+          "project": "chromium",
+          "status": "expected"
+        },
+        {
+          "title": "Huahua focus keeps the full page and route container stable during route leave",
+          "project": "mobile-chrome",
+          "status": "expected"
+        },
+        {
+          "title": "clicking the statue exits pillar focus and inspection leaves without shifting or leaking the cursor state",
+          "project": "chromium",
+          "status": "expected"
+        },
+        {
+          "title": "clicking the statue exits pillar focus and inspection leaves without shifting or leaking the cursor state",
+          "project": "mobile-chrome",
+          "status": "skipped"
+        }
+      ]
+    }
+  },
+  "baselineNote": "Temporary Vite-served staged templeScene.ts in the same current application reproduced the two transition-sampling assertions; temporary source/specs deleted."
+}

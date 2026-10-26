@@ -22,7 +22,10 @@
     />
 
     <aside class="home-section-rail scroll-reveal-title" aria-hidden="true">
-      <span class="home-section-rail__num">{{ formattedSectionNumber }}</span>
+      <span class="home-section-rail__num">
+        <span class="home-section-rail__prefix">#</span
+        >{{ formattedSectionNumber.slice(1) }}
+      </span>
     </aside>
 
     <div class="home-section-title-row scroll-reveal-title">
@@ -71,8 +74,8 @@ const { locale } = useI18n()
 const sectionRef = ref<HTMLElement | null>(null)
 const contentRef = ref<HTMLElement | null>(null)
 const contentInnerRef = ref<HTMLElement | null>(null)
-const formattedSectionNumber = computed(() =>
-  String(props.sectionNumber).padStart(2, '0')
+const formattedSectionNumber = computed(
+  () => `#${String(props.sectionNumber).replace(/^0+(?=\d)/, '')}`
 )
 const sectionLabel = computed(() => props.titleEn || props.title)
 const shouldShowTitleEn = computed(
@@ -197,6 +200,11 @@ watch(
       var(--section-accent-color, var(--page-theme-color, #e23456)) 27%,
       transparent
     );
+}
+
+.home-section-rail__prefix {
+  font-size: 1.1em;
+  line-height: 0;
 }
 
 .home-section-title {

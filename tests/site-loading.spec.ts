@@ -78,7 +78,7 @@ test('home enters when the loading line fades and the footer follows above the o
   expect(probe.footerAboveOverlay).toBe(true)
   expect(probe.fadeStarted).toBeGreaterThan(0)
   expect(Math.abs(probe.modelStarted - probe.fadeStarted)).toBeLessThan(100)
-  await expect(footer).toHaveCSS('transition-delay', '0s, 0s, 0s, 0s')
+  await expect(footer).toHaveCSS('transition-delay', /^0s(?:, 0s)*$/)
   await expect(footer.locator('.expand')).toHaveCSS('transition-delay', '0s')
   await expect(footer).toHaveClass(/footer-expanded/)
   await expect(page.locator('.entry-overlay-container')).toHaveCount(0, {
@@ -138,9 +138,9 @@ test('returning to home skips the global loader and reuses model downloads', asy
 }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   const assets: string[] = []
-  page.on('request', (request) => {
-    if (request.url().includes('/models/'))
-      assets.push(new URL(request.url()).pathname)
+  page.on('response', (response) => {
+    if (response.ok() && response.url().includes('/models/'))
+      assets.push(new URL(response.url()).pathname)
   })
   await page.goto('/archive', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.temple-stage')).toHaveAttribute(

@@ -5,6 +5,7 @@ import type {
   Router,
 } from 'vue-router'
 import NProgress from 'nprogress'
+import { gsap } from 'gsap'
 import { pageThemeColors } from '@/config/pageThemes'
 import {
   parseTempleExpanded,
@@ -15,6 +16,9 @@ import {
 } from '@/config/templeNavigation'
 import { useTempleNavigation } from '@/stores/templeNavigation'
 import { preloadTempleAssets } from '@/utils/preloadTempleAssets'
+import { loadFloraPetModel } from '@/utils/floraPetModel'
+import { useFloraPets } from '@/stores/floraPets'
+import { templeSceneHost } from '@/views/Home/templeSceneHost'
 import { consumeJourneyReturnState } from '@/utils/journeyReturnState'
 import { readTempleSession } from '@/utils/templeSession'
 import {
@@ -650,6 +654,9 @@ const getPageThemeGroup = (route: RouteLocationNormalizedLoaded) => {
   return activeMenuGroup || DESCRIPTION_ROUTE_GROUPS[routeName] || routeName
 }
 
+let pageThemeTransition: gsap.core.Tween | undefined
+let pageThemeTarget: string | undefined
+
 export const syncPageTheme = (
   route: RouteLocationNormalizedLoaded,
   moduleGroup?: string,
@@ -668,10 +675,31 @@ export const syncPageTheme = (
     return
   }
 
-  rootStyle.setProperty(
-    '--page-theme-color',
-    colorOverride || pageThemeColors[pageGroup] || '#e23456'
-  )
+  const nextColor = colorOverride || pageThemeColors[pageGroup] || '#e23456'
+  const currentColor = rootStyle.getPropertyValue('--page-theme-color').trim()
+  const animate =
+    route.name === 'HOME' &&
+    Boolean(currentColor) &&
+    !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  // 路由守卫与模块 watcher 可能重复同步；同一目标不重启动画。
+  if (!animate || pageThemeTarget !== nextColor) {
+    pageThemeTransition?.kill()
+    pageThemeTarget = nextColor
+    if (animate && currentColor !== nextColor) {
+      // 直接插值根变量，让文字、描边、阴影和 color-mix 共用场景的过渡节奏。
+      // 连续切换从当前显示色继续，首次加载与减少动态效果模式直接设置终值。
+      const tint = { color: currentColor }
+      pageThemeTransition = gsap.to(tint, {
+        color: nextColor,
+        duration: 1.1,
+        ease: 'power2.inOut',
+        onUpdate: () => rootStyle.setProperty('--page-theme-color', tint.color),
+        onComplete: () =>
+          rootStyle.setProperty('--page-theme-color', nextColor),
+      })
+    } else rootStyle.setProperty('--page-theme-color', nextColor)
+  }
 
   if (LEGACY_RED_BACKGROUND_GROUPS.has(pageGroup)) {
     rootStyle.setProperty('--page-theme-background-dark', '#380e1c')
@@ -715,10 +743,12 @@ export const installRouterGuards = (router: Router) => {
       navigation.returnExpanded = navigation.expanded
     }
     if (to.name === 'HOME') {
-      // 重新加载不属于站内返回，旧会话标记不能恢复聚焦或简易入场。
+      // 刷新先清理详情返回标记；是否简易入场由当前标签页的首页状态单独判断。
       if (from.matched.length === 0) consumeJourneyReturnState()
-      if (typeof window !== 'undefined')
-        void preloadTempleAssets().catch(() => undefined)
+      if (typeof window !== 'undefined' && !templeSceneHost.hasResident())
+        void preloadTempleAssets(undefined, () =>
+          loadFloraPetModel(useFloraPets().activePet.model)
+        ).catch(() => undefined)
       const explicitModule =
         templeModuleAtPath(to.path) ||
         templeModuleAtPath(`/${String(to.query.module || '')}`)
@@ -759,8 +789,17 @@ export const installRouterGuards = (router: Router) => {
       navigation.entryExpanded =
         navigation.entryModule === explicitModule ? expanded : null
       if (savedSession) navigation.aboutOpen = savedSession.aboutOpen
+      // 仅同标签页、同地址的初始场景刷新走既有简易入场；首次打开不受缓存影响。
+      const reloadInitialScene =
+        from.matched.length === 0 &&
+        isReload &&
+        session?.path === to.fullPath &&
+        session.selection === null &&
+        !session.aboutOpen
       navigation.simpleEntrance =
-        !!navigation.entryModule || (!!from.name && from.name !== 'HOME')
+        reloadInitialScene ||
+        !!navigation.entryModule ||
+        (!!from.name && from.name !== 'HOME')
       if (
         from.name === 'HOME' &&
         explicitModule !== navigation.selected &&

@@ -268,6 +268,7 @@ watch(
   <Teleport to="body" :disabled="!footerTeleportReady">
     <FooterCom
       :width-mode="footerWidthMode"
+      :motion-active="!isTempleRoute || !templeNavigation.immersive"
       :entry-active="isTempleRoute ? sceneEntryReady : entryAnimationReady"
       :entry-overlay-active="!entryOverlayHidden"
     />

@@ -1,4 +1,3 @@
-:global(body:has(.temple-page)),
 :global(body.island-pc-shell),
 :global(body.island-pc-shell-leaving),
 :global(body.island-mobile-shell),
@@ -9,7 +8,6 @@
   padding: 0;
 }
 
-:global(body:has(.temple-page) .router-container.router-container),
 :global(body.island-pc-shell .router-container.page-layout--main),
 :global(body.island-pc-shell-leaving .router-container.page-layout--main),
 :global(body.island-mobile-shell .router-container.page-layout--main),
@@ -51,16 +49,12 @@
     transition: opacity 350ms ease;
   }
 
-  &:not([data-statue-focused='true']):has(
-      .temple-menu.is-visible:not(.temple-menu-reveal-enter-from):not(
-          .temple-menu-reveal-leave-to
-        )
-    )
+  &.temple-page--menu-visible:not([data-statue-focused='true'])
     .temple-underlay::after {
     opacity: 1;
   }
 
-  &:has(.temple-menu--left) {
+  &.temple-page--menu-left {
     --temple-menu-shade-direction: to right;
   }
 
@@ -74,7 +68,8 @@
   }
 
   .temple-stage,
-  .temple-obelisks {
+  .temple-obelisks,
+  .temple-fullscreen-shade {
     position: absolute;
     inset: 0;
   }
@@ -191,8 +186,6 @@
     }
   }
   .temple-fullscreen-shade {
-    position: absolute;
-    inset: 0;
     z-index: 100;
     pointer-events: none;
     background: repeating-linear-gradient(
@@ -358,7 +351,7 @@
       transition: opacity 250ms ease, visibility 0s;
     }
 
-    &:has(.flora-focus-layout.is-album-expanded) {
+    &.temple-page--album-expanded {
       :deep(canvas),
       :deep(.temple-backdrop),
       :deep(.temple-clock) {
@@ -370,7 +363,7 @@
 
     @media (prefers-reduced-motion: reduce) {
       &,
-      &:has(.flora-focus-layout.is-album-expanded) {
+      &.temple-page--album-expanded {
         :deep(canvas),
         :deep(.temple-backdrop),
         :deep(.temple-clock) {

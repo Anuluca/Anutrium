@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './helpers/sceneDiagnostics'
 
 test.beforeEach(async ({ page }, testInfo) => {
   test.skip(testInfo.project.name.includes('mobile'), '全身展示用于桌面神殿')
@@ -89,7 +89,8 @@ test('clicking the statue smoothly reveals its full wireframe and restores the t
   )
   await expect(page.locator('.temple-obelisk:visible')).toHaveCount(0)
   await expect(stage.locator('.temple-backdrop')).toHaveCSS('opacity', '0')
-  await expect(page.locator('.el-menu-layout-all')).toBeVisible()
+  // 配色工具使用 noMenu Shell；离场后沿用该路由既有的隐藏页头行为。
+  await expect(page.locator('.el-menu-layout-all')).toBeHidden()
   await expect(page.locator('.logo-box')).toBeVisible()
   await expect(page.locator('.footer-com')).toBeVisible()
   await expect(page.locator('.fullscreen')).toBeVisible()
@@ -160,7 +161,8 @@ test('clicking the statue smoothly reveals its full wireframe and restores the t
   await expect(stage).toHaveAttribute('data-material-phase', 'chrome')
   await expect(stage).toHaveAttribute('data-statue-clip-height', '0.52')
   await expect(page.locator('.temple-obelisk:visible')).toHaveCount(4)
-  await expect(page.locator('.el-menu-layout-all')).toBeVisible()
+  // 配色工具使用 noMenu Shell；离场后沿用该路由既有的隐藏页头行为。
+  await expect(page.locator('.el-menu-layout-all')).toBeHidden()
   await expect(page.locator('.footer-com')).toBeVisible()
   await expect(stage.locator('.temple-backdrop')).toBeVisible()
   await canvas.focus()
@@ -228,11 +230,14 @@ test('clicking the statue exits pillar focus and inspection leaves without shift
         }
       }
     >('#app')
-    await app!.__vue_app__!.config.globalProperties.$router.push('/colorPalette')
+    await app!.__vue_app__!.config.globalProperties.$router.push(
+      '/colorPalette'
+    )
   })
   await expect(page.locator('.palette-tool')).toBeVisible()
   await expect(root).toHaveCount(0)
-  await expect(page.locator('.el-menu-layout-all')).toBeVisible()
+  // 配色工具使用 noMenu Shell；离场后沿用该路由既有的隐藏页头行为。
+  await expect(page.locator('.el-menu-layout-all')).toBeHidden()
   await expect(page.locator('.footer-com')).toBeVisible()
   await page.mouse.move(20, 150)
   await expect(page.locator('.cursor-shape')).not.toHaveClass(/\bis-active\b/)

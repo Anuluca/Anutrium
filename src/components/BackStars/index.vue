@@ -30,6 +30,7 @@ interface Props {
   particleFps?: number
   topInset?: number
   entryActive?: boolean
+  simpleEntrance?: boolean
   layoutTransitionDuration?: number
 }
 
@@ -53,6 +54,7 @@ const props = withDefaults(defineProps<Props>(), {
   particleFps: 60,
   topInset: 0,
   entryActive: true,
+  simpleEntrance: false,
   layoutTransitionDuration: undefined,
 })
 const STATIC_CHART_SRC = '/images/zodiac-chart-static.svg?v=20260927-1'
@@ -242,7 +244,13 @@ const updateBackdropColor = async (immediate = false) => {
   )
   if (targetColor === backdropTargetColor) return
 
-  if (!backdropBaseColor.value || immediate || isReducedMotion.value) {
+  // 首页根主题色已逐帧缓动，直接跟随，避免每帧重启背景交叉淡入。
+  if (
+    props.tinted ||
+    !backdropBaseColor.value ||
+    immediate ||
+    isReducedMotion.value
+  ) {
     setBackdropColorImmediately(targetColor)
     return
   }
@@ -424,6 +432,7 @@ const containerClass = computed(() => [
     'is-chart-transitioning': isChartTransitioning.value,
     'is-route-transitioning': isRouteTransitioning.value,
     'is-entry-ready': props.entryActive,
+    'is-simple-entrance': props.simpleEntrance,
     'has-background-top-inset': props.topInset > 0,
   },
 ])
@@ -534,11 +543,7 @@ onUnmounted(() => {
                 class="zodiac-sign-position"
                 :style="sign.positionStyle"
               >
-                <div
-                  class="zodiac-sign-face"
-                  :class="{ 'is-active': sign.id === props.activeSign }"
-                  :style="sign.faceStyle"
-                >
+                <div class="zodiac-sign-face" :style="sign.faceStyle">
                   <span class="zodiac-glyph">
                     <span class="zodiac-glyph-text">{{ sign.glyph }}</span>
                     <svg

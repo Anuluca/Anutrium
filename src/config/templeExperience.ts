@@ -21,6 +21,7 @@ export interface TempleModelDefinition {
     pointerYaw: number
     pointerDamping: number
     focusYawLimit: number
+    focusYawScale: number
     bodyYaw: number
   }
 }
@@ -63,8 +64,10 @@ export const templeExperience: TempleExperience = {
       entranceNod: 10,
       pointerPitch: 14,
       pointerYaw: 28,
-      pointerDamping: 12,
+      // 原站模型姿态层：1 - (1 - 0.06) ** (elapsed * 120)。
+      pointerDamping: -120 * Math.log1p(-0.06),
       focusYawLimit: 65,
+      focusYawScale: 0.65,
       bodyYaw: 5,
     },
   },

@@ -1,0 +1,223 @@
+{
+  "date": "2026-10-25",
+  "viewportSources": "Desktop Chrome / Pixel 7 Playwright projects; localhost:3000",
+  "counts": {
+    "expected": 26,
+    "skipped": 2
+  },
+  "tests": [
+    {
+      "title": "home immersion fades controls, keeps time, blocks picking and restores on one click",
+      "project": "chromium",
+      "status": "expected",
+      "report": "final-state"
+    },
+    {
+      "title": "home immersion fades controls, keeps time, blocks picking and restores on one click",
+      "project": "mobile-chrome",
+      "status": "expected",
+      "report": "final-state"
+    },
+    {
+      "title": "anchor coordinates update without Vue renders, layout reads or repeated DOM queries",
+      "project": "chromium",
+      "status": "expected",
+      "report": "first"
+    },
+    {
+      "title": "real model frames bypass both Vue components and rebind after layout and focus changes",
+      "project": "chromium",
+      "status": "expected",
+      "report": "final-state"
+    },
+    {
+      "title": "anchor coordinates update without Vue renders, layout reads or repeated DOM queries",
+      "project": "mobile-chrome",
+      "status": "expected",
+      "report": "first"
+    },
+    {
+      "title": "real model frames bypass both Vue components and rebind after layout and focus changes",
+      "project": "mobile-chrome",
+      "status": "expected",
+      "report": "final-state"
+    },
+    {
+      "title": "Island fills the inset container, projects body anchors and shares hover colors",
+      "project": "chromium",
+      "status": "expected",
+      "report": "first"
+    },
+    {
+      "title": "Island flashes twice before navigating and preserves leave geometry",
+      "project": "chromium",
+      "status": "expected",
+      "report": "first"
+    },
+    {
+      "title": "Island fills the inset container, projects body anchors and shares hover colors",
+      "project": "mobile-chrome",
+      "status": "expected",
+      "report": "first"
+    },
+    {
+      "title": "Island flashes twice before navigating and preserves leave geometry",
+      "project": "mobile-chrome",
+      "status": "expected",
+      "report": "first"
+    },
+    {
+      "title": "bounded link surface preserves pixels, expands safely and avoids per-frame size changes",
+      "project": "chromium",
+      "status": "expected",
+      "report": "fixture"
+    },
+    {
+      "title": "particles retain 40 FPS budget and stop drawing when inactive, hidden or reduced motion",
+      "project": "chromium",
+      "status": "expected",
+      "report": "fixture"
+    },
+    {
+      "title": "bounded link surface preserves pixels, expands safely and avoids per-frame size changes",
+      "project": "mobile-chrome",
+      "status": "expected",
+      "report": "fixture"
+    },
+    {
+      "title": "particles retain 40 FPS budget and stop drawing when inactive, hidden or reduced motion",
+      "project": "mobile-chrome",
+      "status": "expected",
+      "report": "fixture"
+    },
+    {
+      "title": "album fills its container and fades profile content while category titles share the mode toolbar",
+      "project": "chromium",
+      "status": "expected",
+      "report": "integration"
+    },
+    {
+      "title": "album fills its container and fades profile content while category titles share the mode toolbar",
+      "project": "mobile-chrome",
+      "status": "expected",
+      "report": "integration"
+    },
+    {
+      "title": "marquee fills the viewport throughout a cycle and joins without a position jump",
+      "project": "chromium",
+      "status": "expected",
+      "report": "integration"
+    },
+    {
+      "title": "marquee fills the viewport throughout a cycle and joins without a position jump",
+      "project": "mobile-chrome",
+      "status": "expected",
+      "report": "integration"
+    },
+    {
+      "title": "footer width changes animate before paint and remain continuous when reversed",
+      "project": "chromium",
+      "status": "expected",
+      "report": "integration"
+    },
+    {
+      "title": "footer width changes animate before paint and remain continuous when reversed",
+      "project": "mobile-chrome",
+      "status": "expected",
+      "report": "integration"
+    },
+    {
+      "title": "home keeps its existing star budget and pauses only the appropriate decoration",
+      "project": "chromium",
+      "status": "expected",
+      "report": "integration"
+    },
+    {
+      "title": "home keeps its existing star budget and pauses only the appropriate decoration",
+      "project": "mobile-chrome",
+      "status": "expected",
+      "report": "integration"
+    },
+    {
+      "title": "Huahua focus keeps the full page and route container stable during route leave",
+      "project": "chromium",
+      "status": "expected",
+      "report": "integration"
+    },
+    {
+      "title": "Huahua focus keeps the full page and route container stable during route leave",
+      "project": "mobile-chrome",
+      "status": "expected",
+      "report": "integration"
+    },
+    {
+      "title": "clicking the statue exits pillar focus and inspection leaves without shifting or leaking the cursor state",
+      "project": "chromium",
+      "status": "expected",
+      "report": "integration"
+    },
+    {
+      "title": "clicking the statue exits pillar focus and inspection leaves without shifting or leaking the cursor state",
+      "project": "mobile-chrome",
+      "status": "skipped",
+      "report": "integration"
+    },
+    {
+      "title": "mobile full-screen album stops hidden model draws and resumes on close",
+      "project": "chromium",
+      "status": "skipped",
+      "report": "final-state"
+    },
+    {
+      "title": "mobile full-screen album stops hidden model draws and resumes on close",
+      "project": "mobile-chrome",
+      "status": "expected",
+      "report": "final-state"
+    }
+  ],
+  "surfaces": {
+    "chromium": {
+      "ratio": 0.247890625,
+      "viewBox": "253 166 501 456",
+      "style": "left: 253px; top: 166px; width: 501px; height: 456px;"
+    },
+    "mobile-chrome": {
+      "ratio": 0.3147008111829848,
+      "viewBox": "64 206 218 499",
+      "style": "left: 64px; top: 206px; width: 218px; height: 499px;"
+    }
+  },
+  "anchors": {
+    "chromium": {
+      "layout": 0,
+      "parent": 0,
+      "writes": 360,
+      "triggers": [],
+      "maxError": 0.19285371613545976,
+      "stableNodes": true,
+      "stableSource": true
+    },
+    "mobile-chrome": {
+      "layout": 0,
+      "parent": 0,
+      "writes": 390,
+      "triggers": [],
+      "maxError": 0.18932378319163945,
+      "stableNodes": true,
+      "stableSource": true
+    }
+  },
+  "particles": {
+    "maxFps": 40,
+    "schedulerUnchanged": true,
+    "schedulerSha256": "cde4f0bfe838401a7b2c58247db3f944b47fe4a2ae7835d77d4222ac5c912468"
+  },
+  "initialRun": {
+    "unexpected": 1,
+    "note": "Initial desktop real-model sample observed one layout-component update; zero-update assertions were retained; final desktop/mobile samples both observed zero. Initial trigger was not captured."
+  },
+  "limits": [
+    "Controlled SVG surface area is not GPU time or page FPS gain.",
+    "Real-device hardware compositor traces were not collected."
+  ]
+}

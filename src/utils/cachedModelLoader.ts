@@ -1,3 +1,5 @@
+import { fetchStartupAsset } from './startupCache'
+
 type FetchModelAsset = (path: string) => Promise<Response>
 
 // 缓存下载数据；失败时终止同批请求并清空缓存，后续进入页面可以重试。
@@ -13,9 +15,10 @@ export function createCachedModelLoader<T>(
       // 超时覆盖响应体读取和解压，不只约束响应头。
       const timeout = setTimeout(() => controller.abort(), 30000)
       const fetchAsset: FetchModelAsset = async (path) => {
-        const response = await fetch(`/models/${path}?v=${revision}`, {
-          signal: controller.signal,
-        })
+        const response = await fetchStartupAsset(
+          `/models/${path}?v=${revision}`,
+          controller.signal
+        )
         if (!response.ok)
           throw new Error(`${label} ${path}: ${response.status}`)
         return response

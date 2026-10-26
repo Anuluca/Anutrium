@@ -1,0 +1,65 @@
+{
+  "date": "2026-10-25",
+  "metric": "active WebGL scene RAF callback CPU duration in milliseconds",
+  "diagnostics": false,
+  "sampleWindowMs": 2400,
+  "baseline": {
+    "desktop": {
+      "frames": 144,
+      "mean": 0.46597222114602727,
+      "p95": 0.800000011920929
+    },
+    "mobileEmulated": {
+      "frames": 145,
+      "mean": 0.4882758625622453,
+      "p95": 0.800000011920929
+    }
+  },
+  "optimized": [
+    {
+      "desktop": {
+        "frames": 145,
+        "mean": 0.2855172424480833,
+        "p95": 0.5
+      },
+      "mobileEmulated": {
+        "frames": 144,
+        "mean": 0.24097222172551686,
+        "p95": 0.40000003576278687
+      }
+    },
+    {
+      "desktop": {
+        "frames": 144,
+        "mean": 0.15416666865348816,
+        "p95": 0.2999999523162842
+      },
+      "mobileEmulated": {
+        "frames": 143,
+        "mean": 0.27832167507051586,
+        "p95": 0.5
+      }
+    }
+  ],
+  "pixels": {
+    "outsideWire": 0,
+    "periodicMaxDelta": 0
+  },
+  "limitations": [
+    "Local non-exclusive CPU sampling",
+    "Mobile viewport emulation is not a physical device",
+    "Not a GPU timer or Core Web Vitals measurement"
+  ],
+  "knownExistingFailure": {
+    "test": "indexed scan matches expanded model through morphs, head turns and scan progress",
+    "sample": {
+      "progress": 0.25,
+      "turn": 0,
+      "maxDelta": 254,
+      "changedPixels": 305
+    },
+    "reproducedWithPreOptimizationShader": true,
+    "reproducerOutput": "/tmp/anutrium-flow-legacy-check",
+    "isolatedOptimizedOutput": "/tmp/anutrium-flow-index-check"
+  }
+}

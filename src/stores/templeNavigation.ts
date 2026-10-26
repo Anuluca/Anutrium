@@ -17,6 +17,7 @@ export const useTempleNavigation = defineStore('temple-navigation', () => {
   const aboutOverlayVisible = ref(false)
   const ready = ref(false)
   const entranceFinished = ref(false)
+  const entranceStarted = ref(false)
   const clockAwaitingSettle = ref(false)
   const expanded = ref(false)
   const immersive = ref(false)
@@ -51,6 +52,9 @@ export const useTempleNavigation = defineStore('temple-navigation', () => {
   )
   const isInitialScene = computed(
     () => !activeSelection.value && !aboutOpen.value && !expanded.value
+  )
+  const backgroundMotionActive = computed(
+    () => !aboutOpen.value && !aboutOverlayVisible.value && !expanded.value
   )
   const homeCornersVisible = computed(
     () =>
@@ -105,6 +109,7 @@ export const useTempleNavigation = defineStore('temple-navigation', () => {
     expanded.value = false
     ready.value = false
     entranceFinished.value = false
+    entranceStarted.value = false
     clockAwaitingSettle.value = false
     requested.value = null
     requestedExpanded.value = false
@@ -122,7 +127,9 @@ export const useTempleNavigation = defineStore('temple-navigation', () => {
     activeSelection,
     isInitialScene,
     homeCornersVisible,
+    backgroundMotionActive,
     entranceFinished,
+    entranceStarted,
     clockAwaitingSettle,
     simpleEntrance,
     returnModule,

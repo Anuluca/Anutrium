@@ -808,6 +808,12 @@ const enterHomeImmersion = () => {
 }
 const restoreHomeImmersionFromClick = (event: MouseEvent) => {
   if (!navigation.immersive) return
+  // 时间自行切换显隐，捕获阶段放行，保留禅模式与原生全屏。
+  if (
+    event.target instanceof Element &&
+    event.target.closest('.temple-clock.is-immersive')
+  )
+    return
   // 捕获恢复点击，避免同一次点击继续触发模型拾取、导航或页脚操作。
   event.preventDefault()
   event.stopImmediatePropagation()

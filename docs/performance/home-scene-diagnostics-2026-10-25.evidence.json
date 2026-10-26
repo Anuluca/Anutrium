@@ -1,0 +1,100 @@
+{
+  "scope": "B4 home scene diagnostics; localhost:3000; Chromium; reduced motion; 1280x720 WebGL canvas",
+  "method": "test-only synchronous render sampling: off/on/off at the same settled pose and timestamp",
+  "samples": {
+    "home": {
+      "samples": [
+        {
+          "enabled": false,
+          "formats": 0,
+          "projections": 0
+        },
+        {
+          "enabled": true,
+          "formats": 81,
+          "projections": 2
+        },
+        {
+          "enabled": false,
+          "formats": 0,
+          "projections": 0
+        }
+      ],
+      "maxDelta": 0,
+      "changedPixels": 0,
+      "totalPixels": 921600
+    },
+    "statue": {
+      "samples": [
+        {
+          "enabled": false,
+          "formats": 0,
+          "projections": 6
+        },
+        {
+          "enabled": true,
+          "formats": 81,
+          "projections": 8
+        },
+        {
+          "enabled": false,
+          "formats": 0,
+          "projections": 6
+        }
+      ],
+      "maxDelta": 0,
+      "changedPixels": 0,
+      "totalPixels": 921600
+    },
+    "sprigatito": {
+      "samples": [
+        {
+          "enabled": false,
+          "formats": 0,
+          "projections": 0
+        },
+        {
+          "enabled": true,
+          "formats": 85,
+          "projections": 2
+        },
+        {
+          "enabled": false,
+          "formats": 0,
+          "projections": 0
+        }
+      ],
+      "maxDelta": 0,
+      "changedPixels": 0,
+      "totalPixels": 921600
+    }
+  },
+  "validation": {
+    "defaultOffDesktopAndMobile": "passed",
+    "explicitEnableAndSameFramePixelComparison": "passed",
+    "existingRegression": {
+      "passed": 12,
+      "failed": 0,
+      "specs": [
+        "home-render-cache.spec.ts (cached composite)",
+        "island-model-scan.spec.ts",
+        "lucario-headache.spec.ts (reduce/no-preference)",
+        "home-spotlight-pool.spec.ts (warmup and shader pool)"
+      ]
+    },
+    "typeCheck": "two existing VueUse errors: WorkCard/index.vue:102, Craft/CraftContent.vue:91",
+    "diagnosticSpecific": {
+      "passed": 3,
+      "skipped": 1,
+      "failed": 0,
+      "note": "Default-off desktop/mobile passed; explicit snapshot test passed after correcting overview settled-state expectation."
+    },
+    "fixtureCollection": {
+      "files": 23,
+      "tests": 256,
+      "result": "passed; collection only"
+    },
+    "targetedEslint": "passed",
+    "viteBuild": "passed"
+  }
+}

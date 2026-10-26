@@ -40,12 +40,15 @@ import TempleBackdrop from './components/TempleBackdrop.vue'
 import TempleClock from './components/TempleClock.vue'
 import TempleModuleCaption from './components/TempleModuleCaption.vue'
 import { useTempleEntry } from './composables/useTempleEntry'
+import { isHomeSceneDiagnosticsEnabled } from './scene/diagnostics'
 import { loadTempleFocusContent } from './focusContentLoader'
 import type {
   createHomeTemple,
   IslandModelAnchors,
+  TempleCallbacks,
   TempleSelection,
 } from './templeScene'
+import { templeSceneHost } from './templeSceneHost'
 
 const IslandFocusLayout = defineAsyncComponent(() =>
   Promise.all([
@@ -97,6 +100,10 @@ const siteLoading = useSiteLoading()
 let loadingTask: ReturnType<typeof siteLoading.beginTask> | undefined
 const config = props.presentation
 const shell = config.routeShell
+const pageStyles = {
+  ...config.menu.styles,
+  '--temple-scene-rise': `${TEMPLE_SCENE_RISE * 100}svh`,
+}
 const stage = ref<HTMLElement | null>(null)
 const status = ref<'loading' | 'ready' | 'error'>('loading')
 const entranceFinished = computed(() => navigation.entranceFinished)
@@ -115,9 +122,12 @@ const clockVisible = computed(
     !navigation.aboutOpen
 )
 const menuCategory = ref<TempleCategoryId | null>(null)
+// 离场期间保留原遮罩方向，避免侧栏消失时渐变突然反向。
+const menuShadeLeft = ref(false)
 const settled = ref(false)
 const menuContentReady = ref(false)
 const menuRevealed = ref(false)
+const menuVisible = computed(() => settled.value && menuRevealed.value)
 let menuRevealFrame: number | undefined
 const cancelMenuReveal = () => {
   if (menuRevealFrame !== undefined) cancelAnimationFrame(menuRevealFrame)
@@ -126,7 +136,8 @@ const cancelMenuReveal = () => {
 }
 watch(
   menuCategory,
-  () => {
+  (id) => {
+    if (id) menuShadeLeft.value = (templeCategoryById.get(id)?.x ?? 0) > 0
     cancelMenuReveal()
     menuContentReady.value = false
   },
@@ -293,6 +304,8 @@ const scrollMenuFromBackground = (event: WheelEvent) => {
 }
 const buttons = new Map<string, HTMLElement>()
 let scene: ReturnType<typeof createHomeTemple> | undefined
+let sceneHostKey: string | undefined
+let sceneFactory: typeof createHomeTemple | undefined
 watch(
   [() => navigation.immersive, () => cursor.isIdle],
   ([immersive, idle]) => {
@@ -311,6 +324,7 @@ const sceneActive = computed(
   // 带参进入全屏时仍需完成方尖碑聚焦，settled 后再暂停被遮挡的场景。
   () =>
     !aboutBackgroundHidden.value &&
+    !(config.id === 'mobile' && floraFocusLayout.value?.albumExpanded) &&
     (!navigation.expanded || resizing.value || !settled.value)
 )
 watch(sceneActive, (active) => scene?.setActive(active), { flush: 'post' })
@@ -347,10 +361,20 @@ const dismissMenuBackground = (event: MouseEvent) => {
   }
 }
 
-const setButton = (id: string, element: unknown) => {
-  if (element instanceof HTMLElement) buttons.set(id, element)
-  else buttons.delete(id)
-}
+const obelisksDisabled = computed(
+  () => status.value !== 'ready' || navigation.immersive
+)
+const obeliskControls = templeCategories.map((category) => ({
+  category,
+  setRef(element: unknown) {
+    if (element instanceof HTMLElement) buttons.set(category.id, element)
+    else buttons.delete(category.id)
+  },
+  onClick(event: MouseEvent) {
+    if (config.raycastObelisks && event.detail > 0) scene?.pick(event)
+    else scene?.select(category.id)
+  },
+}))
 
 watch(
   () => navigation.revision,
@@ -361,21 +385,20 @@ watch(
     }
   }
 )
+const syncSceneTheme = (selection: TempleSelection | null, animate = true) => {
+  const themeCategory =
+    selection === 'statue' || selection === 'sprigatito' ? null : selection
+  scene?.setThemeColor(
+    selection === 'sprigatito'
+      ? floraPets.activePet.themeColor
+      : (themeCategory && templeCategoryById.get(themeCategory)?.themeColor) ||
+          templeExperience.themeColor,
+    animate
+  )
+}
 watch(
   [selected, () => floraPets.activePet.themeColor],
-  () => {
-    const themeCategory =
-      selected.value === 'statue' || selected.value === 'sprigatito'
-        ? null
-        : selected.value
-    scene?.setThemeColor(
-      selected.value === 'sprigatito'
-        ? floraPets.activePet.themeColor
-        : (themeCategory &&
-            templeCategoryById.get(themeCategory)?.themeColor) ||
-            templeExperience.themeColor
-    )
-  },
+  () => syncSceneTheme(selected.value),
   // 首帧绘制前完成主题初始化；不能等待默认 watcher 队列再由红色补间。
   { flush: 'sync' }
 )
@@ -423,6 +446,7 @@ onMounted(async () => {
       readHomeFeatures(featureRequest.signal),
     ])
     if (disposed || !stage.value) return
+    sceneFactory = createHomeTemple
     const entrySelection = () => {
       const id = navigation.revision
         ? navigation.requested
@@ -434,92 +458,110 @@ onMounted(async () => {
         ? (id as TempleSelection)
         : null
     }
-    scene = createHomeTemple(
-      stage.value,
-      buttons,
-      {
-        waitForRouteEnter,
-        entrySelection,
-        dismissBackground: closeInlineDetail,
-        prepared: () => loadingTask?.finish(),
-        progress: (value) => loadingTask?.update(value),
-        ready: () => {
-          status.value = 'ready'
-          navigation.ready = true
-          const initialModule = entrySelection()
-          if (selected.value !== initialModule)
-            scene?.select(initialModule, navigation.simpleEntrance)
-          navigation.expanded = navigation.revision
-            ? navigation.requestedExpanded
-            : navigation.entryExpanded ??
-              (initialModule === navigation.returnModule &&
-                navigation.returnExpanded)
-        },
-        entranceComplete: () => {
-          navigation.entranceFinished = true
-        },
-        beforeReturn: () => {
-          if (!menuCategory.value || !menu.value) return
-          const element = menu.value
-          cancelResize()
-          menuExitElement = element
-          settled.value = false
-          void nextTick(() => {
-            if (menuExitElement === element) menuCategory.value = null
-          })
-          return new Promise<void>((resolve) => {
-            resolveMenuExit = resolve
-          })
-        },
-        select: (id) => {
-          clockAwaitingSettle.value = true
-          finishMenuExit()
-          cancelResize()
-          selected.value = id
-          navigation.selected =
-            id === 'statue' || id === 'sprigatito' ? null : id
-          navigation.companionFocused = id === 'sprigatito'
-          navigation.statueFocused = id === 'statue'
-          navigation.expanded = false
-          settled.value = false
-          if (id && id !== 'statue' && id !== 'sprigatito')
-            void loadTempleFocusContent(id).catch(() => {})
-          if (id === 'statue' || id === 'sprigatito') menuCategory.value = null
-        },
-        islandAnchors: (anchors) => {
-          latestIslandAnchors = anchors
-          islandFocusLayout?.updateAnchors(anchors)
-        },
-        settled: () => {
-          if (resolveMenuExit) return
-          menuCategory.value =
-            selected.value === 'statue' || selected.value === 'sprigatito'
-              ? null
-              : selected.value
-          settled.value = true
-          clockAwaitingSettle.value = false
-        },
-        error: (error) => {
-          loadingTask?.finish('error')
-          status.value = 'error'
-          console.error('神殿场景加载失败', error)
-        },
+    const experience = {
+      ...templeExperience,
+      headache: templeExperience.headache && {
+        ...templeExperience.headache,
+        mode: homeFeatures?.lucarioHeadache
+          ? ('headache' as const)
+          : ('normal' as const),
       },
-      config,
-      {
-        ...templeExperience,
-        headache: templeExperience.headache && {
-          ...templeExperience.headache,
-          mode: homeFeatures?.lucarioHeadache ? 'headache' : 'normal',
-        },
+    }
+    sceneHostKey = `${config.id}:${experience.model.id}:${
+      experience.headache?.mode
+    }:${isHomeSceneDiagnosticsEnabled()}`
+    const sceneCallbacks: TempleCallbacks = {
+      entranceStarted: () => {
+        navigation.entranceStarted = true
       },
-      navigation.simpleEntrance || hasJourneyReturnState(),
-      floraPets.activePet
+      waitForRouteEnter,
+      entrySelection,
+      dismissBackground: closeInlineDetail,
+      prepared: () => loadingTask?.finish(),
+      progress: (value) => loadingTask?.update(value),
+      ready: () => {
+        status.value = 'ready'
+        navigation.ready = true
+        const initialModule = entrySelection()
+        if (selected.value !== initialModule)
+          scene?.select(initialModule, navigation.simpleEntrance)
+        navigation.expanded = navigation.revision
+          ? navigation.requestedExpanded
+          : navigation.entryExpanded ??
+            (initialModule === navigation.returnModule &&
+              navigation.returnExpanded)
+      },
+      entranceComplete: () => {
+        navigation.entranceFinished = true
+      },
+      beforeReturn: () => {
+        if (!menuCategory.value || !menu.value) return
+        const element = menu.value
+        cancelResize()
+        menuExitElement = element
+        settled.value = false
+        void nextTick(() => {
+          if (menuExitElement === element) menuCategory.value = null
+        })
+        return new Promise<void>((resolve) => {
+          resolveMenuExit = resolve
+        })
+      },
+      select: (id) => {
+        clockAwaitingSettle.value = true
+        finishMenuExit()
+        cancelResize()
+        selected.value = id
+        navigation.selected = id === 'statue' || id === 'sprigatito' ? null : id
+        navigation.companionFocused = id === 'sprigatito'
+        navigation.statueFocused = id === 'statue'
+        navigation.expanded = false
+        settled.value = false
+        if (id && id !== 'statue' && id !== 'sprigatito')
+          void loadTempleFocusContent(id).catch(() => {})
+        if (id === 'statue' || id === 'sprigatito') menuCategory.value = null
+      },
+      islandAnchors: (anchors) => {
+        latestIslandAnchors = anchors
+        islandFocusLayout?.updateAnchors(anchors)
+      },
+      settled: () => {
+        if (resolveMenuExit) return
+        menuCategory.value =
+          selected.value === 'statue' || selected.value === 'sprigatito'
+            ? null
+            : selected.value
+        settled.value = true
+        clockAwaitingSettle.value = false
+      },
+      error: (error) => {
+        loadingTask?.finish('error')
+        status.value = 'error'
+        console.error('神殿场景加载失败', error)
+      },
+    }
+    const resident = templeSceneHost.take(
+      `${sceneHostKey}:${floraPets.activePet.id}`,
+      createHomeTemple
     )
+    scene =
+      resident ??
+      createHomeTemple(
+        stage.value,
+        buttons,
+        sceneCallbacks,
+        config,
+        experience,
+        navigation.simpleEntrance || hasJourneyReturnState(),
+        floraPets.activePet
+      )
+    if (resident) resident.attachFromHost(stage.value, buttons, sceneCallbacks)
     scene.setColorMode(visual.theme)
+    syncSceneTheme(entrySelection(), false)
     scene.setOccluded(aboutBackgroundHidden.value)
     scene.setActive(sceneActive.value)
     scene.setImmersive(navigation.immersive)
+    if (resident) await resident.resumeFromHost()
   } catch (error) {
     if (!disposed) {
       loadingTask?.finish('error')
@@ -537,9 +579,15 @@ onBeforeUnmount(() => {
   floraPets.loadingPetId = null
   cancelMenuReveal()
   cancelResize()
-  navigation.reset()
   loadingTask?.finish('cancelled')
-  scene?.dispose()
+  if (scene && sceneHostKey && status.value === 'ready')
+    templeSceneHost.retain(
+      `${sceneHostKey}:${scene.petId}`,
+      scene,
+      sceneFactory
+    )
+  else scene?.dispose()
+  navigation.reset()
   finishMenuExit()
 })
 onUnmounted(() => {
@@ -554,13 +602,13 @@ onUnmounted(() => {
     :class="{
       'temple-page--mobile': config.id === 'mobile',
       'temple-page--expanded': navigation.expanded,
+      'temple-page--menu-visible': !!category && menuVisible,
+      'temple-page--menu-left': menuShadeLeft,
+      'temple-page--album-expanded': !!floraFocusLayout?.albumExpanded,
       'temple-page--resizing': resizing,
       'temple-page--fullscreen-menu': config.menu.layout === 'fullscreen',
     }"
-    :style="[
-      config.menu.styles,
-      { '--temple-scene-rise': `${TEMPLE_SCENE_RISE * 100}svh` },
-    ]"
+    :style="pageStyles"
     :data-presentation="config.id"
     :data-route-shell="shell"
     aria-label="主页"
@@ -605,22 +653,16 @@ onUnmounted(() => {
         </div>
         <div class="temple-obelisks">
           <button
-            v-for="item in templeCategories"
+            v-for="{ category: item, setRef, onClick } in obeliskControls"
             :key="item.id"
-            :ref="(element) => setButton(item.id, element)"
+            :ref="setRef"
             type="button"
             class="temple-obelisk"
             :data-obelisk="item.id"
-            :aria-label="`${item.roman} / ${item.label}`"
+            :aria-label="item.label"
             :aria-pressed="selected === item.id"
-            :disabled="
-              status !== 'ready' || !item.enabled || navigation.immersive
-            "
-            @click="
-              config.raycastObelisks && $event.detail > 0
-                ? scene?.pick($event)
-                : scene?.select(item.id)
-            "
+            :disabled="obelisksDisabled || !item.enabled"
+            @click="onClick"
           />
         </div>
         <div class="temple-fullscreen-shade" aria-hidden="true" />
@@ -642,12 +684,10 @@ onUnmounted(() => {
             class="temple-menu"
             :class="{
               'temple-menu--left': category.x > 0,
-              'is-visible': settled && menuRevealed,
+              'is-visible': menuVisible,
             }"
             :aria-label="category.label"
-            :inert="
-              !settled || !menuRevealed || navigation.aboutOpen || undefined
-            "
+            :inert="!menuVisible || navigation.aboutOpen || undefined"
             :aria-busy="resizing || !menuContentReady"
             :data-content-ready="menuContentReady"
             @transitionend.self="finishMenuReveal"
@@ -686,8 +726,7 @@ onUnmounted(() => {
             v-if="
               category &&
               config.menu.layout === 'sidebar' &&
-              settled &&
-              menuRevealed &&
+              menuVisible &&
               !navigation.expanded &&
               !resizing &&
               !navigation.aboutOpen

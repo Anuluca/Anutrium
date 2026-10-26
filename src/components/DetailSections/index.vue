@@ -18,7 +18,10 @@
     />
 
     <DetailSectionHeader>
-      <template #number>{{ formattedSectionNumber }}</template>
+      <template #number>
+        <span class="detail-section__number-prefix">#</span
+        >{{ formattedSectionNumber.slice(1) }}
+      </template>
       <template #title>{{ title }}</template>
       <template v-if="itemCount !== undefined" #meta>
         <span>{{ itemCount }}</span>
@@ -59,8 +62,8 @@ const props = withDefaults(
 const { locale } = useI18n()
 const sectionRef = ref<HTMLElement | null>(null)
 
-const formattedSectionNumber = computed(() =>
-  String(props.sectionNumber).padStart(2, '0')
+const formattedSectionNumber = computed(
+  () => `#${String(props.sectionNumber).replace(/^0+(?=\d)/, '')}`
 )
 
 const sectionAnchorId = computed(
@@ -100,5 +103,10 @@ watch(
 <style lang="less" scoped>
 .detail-section {
   scroll-margin-top: 7rem;
+}
+
+.detail-section__number-prefix {
+  font-size: 1.1em;
+  line-height: 0;
 }
 </style>
