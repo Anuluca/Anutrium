@@ -2,7 +2,7 @@ import { expect, test } from './helpers/sceneDiagnostics'
 
 for (const entry of [
   { path: '/', selection: 'none', hint: 'home', nod: '10.000' },
-  { path: '/island', selection: 'statue', hint: 'statue', nod: '5.000' },
+  { path: '/atrium', selection: 'statue', hint: 'statue', nod: '5.000' },
   { path: '/flanerie', selection: 'flanerie', hint: 'flanerie', nod: '0.000' },
   {
     path: '/floratrium',

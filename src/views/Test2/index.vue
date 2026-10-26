@@ -261,7 +261,7 @@
                   class="home-about-more"
                   color="#e23456"
                   label="MORE ABOUT ME"
-                  to="/island"
+                  to="/atrium"
                 />
               </div>
             </div>

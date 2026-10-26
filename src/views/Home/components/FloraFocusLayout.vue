@@ -357,7 +357,7 @@ const layoutBorders = useLayoutBorders()
             :style="{
               color:
                 pageThemeColors[
-                  activePet.gender === 'male' ? 'ARCHIVE' : 'ISLAND'
+                  activePet.gender === 'male' ? 'ARCHIVE' : 'ATRIUM'
                 ],
             }"
             role="img"

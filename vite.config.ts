@@ -7,6 +7,7 @@ import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 import { floratriumDevPlugin } from './scripts/lib/floratriumDevPlugin'
+import { islandModules } from './src/config/islandModules'
 import imageLog from './src/locales/dynamic/island/Photography/imageLog'
 import merch from './src/locales/dynamic/island/Photography/merch'
 
@@ -25,10 +26,10 @@ const lastUpdate = new Intl.DateTimeFormat('zh-CN', {
 }).format(new Date(lastCommitTime))
 
 const merchDetailRoutes = Object.values(merch).flatMap((collections) =>
-  collections.map((collection) => `/island/merch/${collection.id}`)
+  collections.map((collection) => `/atrium/merch/${collection.id}`)
 )
 const imageLogDetailRoutes = imageLog.map(
-  (album) => `/island/image-log/${album.id}`
+  (album) => `/atrium/image-log/${album.id}`
 )
 
 export default defineConfig({
@@ -206,17 +207,16 @@ export default defineConfig({
       '/base64Codec',
       '/imageBase64',
       '/about',
-      '/island',
+      '/atrium',
+      ...Object.values(islandModules).map((module) => module.path),
       '/floratrium',
       '/creative',
-      '/island/photography',
-      '/island/merch',
+      '/atrium/photography',
       ...merchDetailRoutes,
-      '/island/image-log',
+      '/atrium/image-log',
       ...imageLogDetailRoutes,
-      '/island/illustration',
-      '/island/trainer-card',
-      '/island/study-notes',
+      '/atrium/illustration',
+      '/atrium/trainer-card',
       '/games/sleepingdogs/bullsAndCows',
       '/games/sleepingdogs/saftybox',
       '/ai-playground/arknightxpersona3reload',

@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 for (const sample of [
   { detail: '/flanerie/changsha', module: '/flanerie', selection: 'flanerie' },
-  { detail: '/island/photography', module: '/creative', selection: 'island' },
+  { detail: '/atrium/photography', module: '/creative', selection: 'island' },
 ]) {
   test(`header module title returns ${sample.detail} to ${sample.module}`, async ({
     page,

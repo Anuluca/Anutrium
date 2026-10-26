@@ -10,16 +10,19 @@ import {
   ref,
   watch,
 } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 import MobileScreenFrame from '@/components/MobileScreenFrame/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
 import { decorationActivityKey } from '@/composables/useDecorationActivity'
+import { islandModuleAtPath, type IslandModuleId } from '@/config/islandModules'
 import { TEMPLE_SCENE_RISE } from '@/config/templeCamera'
 import { templeExperience } from '@/config/templeExperience'
 import {
   templeCategories,
   templeCategoryById,
   type TempleCategoryId,
+  templeModulePaths,
 } from '@/config/templeNavigation'
 import type { TemplePresentation } from '@/config/templePresentation'
 import { pets } from '@/locales/dynamic/pets'
@@ -44,6 +47,7 @@ import { isHomeSceneDiagnosticsEnabled } from './scene/diagnostics'
 import { loadTempleFocusContent } from './focusContentLoader'
 import type {
   createHomeTemple,
+  IslandDetailSide,
   IslandModelAnchors,
   TempleCallbacks,
   TempleSelection,
@@ -57,8 +61,12 @@ const IslandFocusLayout = defineAsyncComponent(() =>
   ]).then(([, component]) => component.default)
 )
 let latestIslandAnchors: IslandModelAnchors | null = null
+const islandInteractive = ref(false)
+const islandOverviewLeaving = ref(false)
 let islandFocusLayout: {
   updateAnchors: (anchors: IslandModelAnchors) => void
+  closeDetail: () => boolean
+  leaveOverview: () => Promise<void>
 } | null = null
 const setIslandFocusLayout = (value: unknown) => {
   islandFocusLayout = value as typeof islandFocusLayout
@@ -67,6 +75,8 @@ const setIslandFocusLayout = (value: unknown) => {
 }
 
 const props = defineProps<{ presentation: TemplePresentation }>()
+const route = useRoute()
+const router = useRouter()
 const navigation = useTempleNavigation()
 const floraPets = useFloraPets()
 const visual = visualState()
@@ -304,6 +314,11 @@ const scrollMenuFromBackground = (event: WheelEvent) => {
 }
 const buttons = new Map<string, HTMLElement>()
 let scene: ReturnType<typeof createHomeTemple> | undefined
+const focusIslandDetail = (
+  side: IslandDetailSide,
+  moduleId?: IslandModuleId,
+  immediate = false
+) => scene?.setIslandDetail(side, immediate, moduleId)
 let sceneHostKey: string | undefined
 let sceneFactory: typeof createHomeTemple | undefined
 watch(
@@ -336,6 +351,8 @@ const { siteEntryActive, waitForRouteEnter } = useTempleEntry()
 
 // 空白点击优先收起侧栏详情，第二次点击才退出作品集聚焦。
 const closeInlineDetail = () =>
+  (selected.value === 'statue' &&
+    (islandFocusLayout?.closeDetail() ?? false)) ||
   (selected.value === 'sprigatito' &&
     (floraFocusLayout.value?.closeExpandedAlbum() ?? false)) ||
   (config.id === 'desktop' &&
@@ -495,6 +512,8 @@ onMounted(async () => {
         navigation.entranceFinished = true
       },
       beforeReturn: () => {
+        if (selected.value === 'statue')
+          return islandFocusLayout?.leaveOverview()
         if (!menuCategory.value || !menu.value) return
         const element = menu.value
         cancelResize()
@@ -508,6 +527,7 @@ onMounted(async () => {
         })
       },
       select: (id) => {
+        const previousSelection = selected.value
         clockAwaitingSettle.value = true
         finishMenuExit()
         cancelResize()
@@ -515,6 +535,24 @@ onMounted(async () => {
         navigation.selected = id === 'statue' || id === 'sprigatito' ? null : id
         navigation.companionFocused = id === 'sprigatito'
         navigation.statueFocused = id === 'statue'
+        if (
+          id === 'statue' &&
+          route.path !== '/atrium' &&
+          !islandModuleAtPath(route.path)
+        )
+          void router.push('/atrium')
+        else if (
+          previousSelection === 'statue' &&
+          id !== 'statue' &&
+          (route.path === '/atrium' || islandModuleAtPath(route.path))
+        )
+          void router.replace(
+            id === 'sprigatito'
+              ? '/floratrium'
+              : id
+              ? templeModulePaths[id]
+              : '/'
+          )
         navigation.expanded = false
         settled.value = false
         if (id && id !== 'statue' && id !== 'sprigatito')
@@ -524,6 +562,9 @@ onMounted(async () => {
       islandAnchors: (anchors) => {
         latestIslandAnchors = anchors
         islandFocusLayout?.updateAnchors(anchors)
+      },
+      islandInteractive: (ready) => {
+        islandInteractive.value = ready
       },
       settled: () => {
         if (resolveMenuExit) return
@@ -638,9 +679,12 @@ onUnmounted(() => {
             />
           </Transition>
           <IslandFocusLayout
-            v-if="selected === 'statue' && settled"
+            v-if="(selected === 'statue' && settled) || islandOverviewLeaving"
             :ref="setIslandFocusLayout"
+            :interactive="islandInteractive"
             :mobile="config.id === 'mobile'"
+            @detail-side="focusIslandDetail"
+            @overview-leaving="islandOverviewLeaving = $event"
           />
           <MobileScreenFrame v-if="config.id === 'mobile'" />
           <TempleBackdrop />

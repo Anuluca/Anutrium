@@ -17,18 +17,14 @@ test('Island fills the inset container, projects body anchors and shares hover c
       body: '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><rect width="16" height="32" fill="red"/><rect x="16" width="16" height="32" fill="blue"/></svg>',
     })
   )
-  await page.goto('/island', { waitUntil: 'domcontentloaded' })
+  await page.goto('/atrium', { waitUntil: 'domcontentloaded' })
   const root = page.locator('.island-focus')
   await expect(root).toBeVisible({ timeout: 45000 })
   const targets = root.locator('.island-targets')
-  await expect(targets.getByRole('button')).toHaveCount(5)
+  await expect(targets.getByRole('button')).toHaveCount(4)
   await expect(root.locator('[data-island-reserved]')).toHaveCount(2)
-  await expect(root.locator('.island-panels h2')).toHaveText([
-    '想法',
-    '笔记',
-    '宅',
-  ])
-  await expect(root.locator('.island-links line')).toHaveCount(5)
+  await expect(root.locator('.island-panels h2')).toHaveText(['想法', '宅'])
+  await expect(root.locator('.island-links line')).toHaveCount(4)
   const geometry = await root.evaluate((element) => {
     const panel = element.querySelector('.island-panels')!
     const canvas = element.parentElement!.querySelector('canvas')!
@@ -57,12 +53,11 @@ test('Island fills the inset container, projects body anchors and shares hover c
       fill: [
         sections[0].left - bounds.left,
         reserved[0].top - bounds.top,
+        sections[0].bottom - bounds.bottom,
+        sections[1].right - bounds.right,
         sections[1].bottom - bounds.bottom,
-        sections[2].right - bounds.right,
-        sections[2].bottom - bounds.bottom,
       ],
-      gap: sections[2].left - sections[0].right,
-      noteGap: sections[1].top - sections[0].bottom,
+      gap: sections[1].left - sections[0].right,
       reservedHeight: reserved[0].height,
       reservedGap: sections[0].top - reserved[0].bottom,
       z: {
@@ -114,11 +109,12 @@ test('Island fills the inset container, projects body anchors and shares hover c
         }
       ),
       notes: Array.from(
-        panel.querySelectorAll('.island-window--notes .island-item')
+        panel.querySelectorAll('.island-window--ideas .island-item')
       ).map((item) => ({
         left: item.getBoundingClientRect().left,
         top: item.getBoundingClientRect().top,
         right: item.getBoundingClientRect().right,
+        bottom: item.getBoundingClientRect().bottom,
       })),
     }
   })
@@ -127,7 +123,6 @@ test('Island fills the inset container, projects body anchors and shares hover c
   expect(geometry.gap).toBeGreaterThanOrEqual(
     info.project.name.includes('mobile') ? 40 : 64
   )
-  expect(geometry.noteGap).toBeGreaterThan(0)
   expect(geometry.reservedHeight).toBeGreaterThanOrEqual(64)
   expect(geometry.reservedGap).toBeGreaterThan(0)
   expect(geometry.inset[2]).toBeGreaterThanOrEqual(
@@ -140,12 +135,20 @@ test('Island fills the inset container, projects body anchors and shares hover c
     expect(module.border).toBe('0px')
     expect(module.gap).toBeGreaterThanOrEqual(12)
   })
+  expect(geometry.notes).toHaveLength(2)
   expect(
-    Math.abs(geometry.notes[0].top - geometry.notes[1].top)
-  ).toBeLessThanOrEqual(1)
-  expect(
-    geometry.notes[1].left - geometry.notes[0].right
+    geometry.notes[1].top - geometry.notes[0].bottom
   ).toBeGreaterThanOrEqual(12)
+  expect(
+    Math.abs(geometry.notes[0].left - geometry.notes[1].left)
+  ).toBeLessThanOrEqual(1)
+  await expect(
+    root.locator('.island-panels .island-window--notes')
+  ).toHaveCount(0)
+  await expect(
+    root.locator('.island-panels .island-window--ideas .island-item__title')
+  ).toHaveText(['LABORATORY', 'NOTES&CHATS'])
+  await expect(root.locator('[data-island-item="STUDY NOTES"]')).toHaveCount(0)
   await expect(page.locator('.temple-stage')).toHaveAttribute(
     'data-statue-fill-color',
     '#000000'
@@ -157,30 +160,23 @@ test('Island fills the inset container, projects body anchors and shares hover c
 
   expect(geometry.z.panels).toBeLessThanOrEqual(geometry.z.canvas)
   expect(geometry.z.lines).toBeGreaterThan(geometry.z.canvas)
-  expect(geometry.anchors['STUDY NOTES'].x).toBeLessThan(
-    geometry.anchors.MISCELLANY.x
-  )
   expect(geometry.anchors.COLLECTIBLES.x).toBeGreaterThan(
-    geometry.anchors.MISCELLANY.x
+    geometry.anchors.NOTES.x
   )
-  expect(geometry.anchors.LABORATORY.x).toBeLessThan(
-    geometry.anchors.MISCELLANY.x
-  )
+  expect(geometry.anchors.LABORATORY.x).toBeLessThan(geometry.anchors.NOTES.x)
   expect(geometry.anchors['GAME LIBRARY'].x).toBeGreaterThan(
-    geometry.anchors.MISCELLANY.x
+    geometry.anchors.NOTES.x
   )
-  expect(geometry.anchors.LABORATORY.y).toBeLessThan(
-    geometry.anchors.MISCELLANY.y
-  )
+  expect(geometry.anchors.LABORATORY.y).toBeLessThan(geometry.anchors.NOTES.y)
   expect(geometry.anchors['GAME LIBRARY'].y).toBeLessThan(
-    geometry.anchors.MISCELLANY.y
+    geometry.anchors.NOTES.y
   )
   for (const heading of geometry.headings) {
     expect(heading.fill).toBe('rgb(0, 0, 0)')
     expect(heading.font).toContain('UnboundedSans')
     expect(heading.weight).toBe('400')
     expect(heading.size).toBe(
-      info.project.name.includes('mobile') ? '51px' : '60px'
+      info.project.name.includes('mobile') ? '60px' : '72px'
     )
     expect(heading.mask).toBe('none')
     expect(heading.overlayMask).toContain('linear-gradient')
@@ -188,31 +184,27 @@ test('Island fills the inset container, projects body anchors and shares hover c
     expect(heading.overflowTop).toBeGreaterThan(0)
     expect(heading.background).toBe('rgba(0, 0, 0, 0)')
   }
-  await targets.getByRole('button', { name: '学习笔记', exact: true }).hover()
+  await targets.getByRole('button', { name: '笔记', exact: true }).hover()
   await expect(
-    root.locator('.island-panels .island-window--notes .island-window__bar')
+    root.locator('.island-panels .island-window--ideas .island-window__bar')
   ).toHaveCSS('color', 'rgb(29, 203, 169)')
-  await expect(root.locator('.island-window--notes h2')).toHaveCSS(
+  await expect(root.locator('.island-window--ideas h2')).toHaveCSS(
     '-webkit-text-fill-color',
     'rgb(0, 0, 0)'
   )
   expect(
     await root
-      .locator('.island-window--notes h2')
+      .locator('.island-window--ideas h2')
       .evaluate(
         (title) => getComputedStyle(title, '::after').webkitTextFillColor
       )
   ).toBe('rgb(29, 203, 169)')
   await expect(root.locator('.island-window__code')).toHaveCount(0)
-  await expect(root.locator('[data-flash-item="STUDY NOTES"]')).toHaveCSS(
+  await expect(root.locator('[data-flash-item="NOTES"]')).toHaveCSS(
     'color',
     'rgb(29, 203, 169)'
   )
-  await expect(root.locator('[data-flash-item="MISCELLANY"]')).toHaveCSS(
-    'color',
-    'rgb(226, 52, 86)'
-  )
-  await expect(root.locator('[data-flash-item="STUDY NOTES"] img')).toHaveCSS(
+  await expect(root.locator('[data-flash-item="NOTES"] img')).toHaveCSS(
     'filter',
     'none'
   )
@@ -224,14 +216,10 @@ test('Island fills the inset container, projects body anchors and shares hover c
     'color',
     'rgb(226, 52, 86)'
   )
-  await targets.getByRole('button', { name: '学习笔记', exact: true }).hover()
-  await expect(root.locator('[data-link-item="STUDY NOTES"]')).toHaveCSS(
+  await targets.getByRole('button', { name: '笔记', exact: true }).hover()
+  await expect(root.locator('[data-link-item="NOTES"]')).toHaveCSS(
     'color',
     'rgb(29, 203, 169)'
-  )
-  await expect(root.locator('[data-link-item="MISCELLANY"]')).toHaveCSS(
-    'color',
-    'rgb(226, 52, 86)'
   )
   await expect(root.locator('[data-link-item="LABORATORY"]')).toHaveCSS(
     'color',
@@ -241,22 +229,18 @@ test('Island fills the inset container, projects body anchors and shares hover c
     const app = document.querySelector('#app') as any
     app.__vue_app__.config.globalProperties.$i18n.locale = 'en'
   })
-  await expect(root.locator('.island-panels h2')).toHaveText([
-    'IDEAS',
-    'NOTES',
-    'OTAKU',
-  ])
+  await expect(root.locator('.island-panels h2')).toHaveText(['IDEAS', 'OTAKU'])
   await page.screenshot({
     path: `/tmp/anutrium-island-final-${info.project.name}.png`,
   })
 })
 
-test('Island flashes twice before navigating and preserves leave geometry', async ({
+test('Island opens mirrored inline content and preserves leave geometry', async ({
   page,
 }) => {
   test.setTimeout(90000)
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto('/island', { waitUntil: 'domcontentloaded' })
+  await page.goto('/atrium', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.island-focus')).toBeVisible({ timeout: 45000 })
   await page.emulateMedia({ reducedMotion: 'no-preference' })
   const probe = await page.evaluate(async () => {
@@ -279,10 +263,101 @@ test('Island flashes twice before navigating and preserves leave geometry', asyn
     'rgb(226, 52, 86)',
   ])
   expect(probe.duration).toBeGreaterThanOrEqual(220)
-  await expect(page).toHaveURL(/\/404$/)
+  const root = page.locator('.island-focus')
+  await expect(root).toHaveAttribute('data-detail-item', 'LABORATORY')
+  await expect(page.locator('.island-detail .signal-code')).toHaveText('404')
+  await expect(page).toHaveURL(/\/atrium\/laboratory$/)
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await expect(page.locator('.island-detail__back')).toHaveCount(0)
+  await page.keyboard.press('Escape')
+  await expect(root).not.toHaveClass(/has-detail/)
+  for (const [id, side, content] of [
+    ['NOTES', 'left', '.island-notes-content'],
+    ['COLLECTIBLES', 'right', '.island-collections-content'],
+    ['GAME LIBRARY', 'right', '.signal-code'],
+  ]) {
+    await page.locator(`[data-island-item="${id}"]`).click()
+    await expect(root).toHaveAttribute('data-detail-side', side)
+    await expect(page.locator('.temple-stage')).toHaveAttribute(
+      'data-island-detail-side',
+      side
+    )
+    await expect
+      .poll(async () => {
+        const rotation = await page
+          .locator('.temple-stage')
+          .getAttribute('data-statue-body-rotation')
+        return Math.abs(
+          Number(rotation?.split(',')[1]) -
+            (id === 'COLLECTIBLES'
+              ? Math.PI
+              : side === 'left'
+              ? -Math.PI / 2
+              : Math.PI / 2)
+        )
+      })
+      .toBeLessThan(0.02)
+    await expect(page.locator(`.island-detail ${content}`)).toBeVisible()
+    await expect(root.locator('.island-targets')).toBeHidden()
+    await expect(page.locator('.temple-stage')).toHaveAttribute(
+      'data-statue-label-scale',
+      '0.000'
+    )
+    await expect(page.locator('.temple-stage')).toHaveAttribute(
+      'data-head-nod-angle',
+      '0.000'
+    )
+    const detailZoom = Number(
+      await page.locator('.temple-stage').getAttribute('data-camera-zoom')
+    )
+    expect(detailZoom).toBeGreaterThan(1.3)
+    const header = await root
+      .locator('.island-panels .island-window:visible')
+      .evaluate((element) => {
+        const group = element
+          .querySelector('.island-window__bar')!
+          .getBoundingClientRect()
+        const item = Array.from(element.querySelectorAll('.island-item')).find(
+          (e) => e.getClientRects().length
+        )!
+        const title = item
+          .querySelector('.island-item__title')!
+          .getBoundingClientRect()
+        const count = item
+          .querySelector('.section-count')!
+          .getBoundingClientRect()
+        return {
+          groupRight: group.right,
+          titleLeft: title.left,
+          titleRight: title.right,
+          countLeft: count.left,
+        }
+      })
+    expect(header.titleLeft).toBeGreaterThan(header.groupRight)
+    expect(header.countLeft).toBeGreaterThanOrEqual(header.titleRight)
+    await expect(
+      root.locator('.island-detail .detail-page-header')
+    ).toHaveCount(0)
+    if (id === 'NOTES') {
+      const columns = await root
+        .locator('.study-note-stack')
+        .evaluate(
+          (e) => getComputedStyle(e).gridTemplateColumns.split(' ').length
+        )
+      expect(columns).toBe((page.viewportSize()?.width ?? 0) < 600 ? 1 : 2)
+    }
+    await page.keyboard.press('Escape')
+    await expect(root).not.toHaveClass(/has-detail/)
+    await expect(page.locator('.temple-page')).toHaveAttribute(
+      'data-selected',
+      'statue'
+    )
+  }
+  await page.locator('[data-island-item="NOTES"]').click()
+  await expect(
+    page.locator('.island-detail .island-notes-content')
+  ).toBeVisible()
   // Capture the old page and route container until unmount, including the leave transition.
-  await page.goto('/island', { waitUntil: 'domcontentloaded' })
-  await expect(page.locator('.island-focus')).toBeVisible({ timeout: 45000 })
   await page.evaluate(() => {
     const elements = [
       document.querySelector('.temple-page')!,
@@ -305,11 +380,8 @@ test('Island flashes twice before navigating and preserves leave geometry', asyn
     }
     requestAnimationFrame(tick)
   })
-  await page.locator('[data-island-item="STUDY NOTES"]').click()
-  await expect(page).toHaveURL(/\/island\/study-notes$/)
-  await expect(page.locator('.study-notes-page')).toBeVisible({
-    timeout: 15000,
-  })
+  await page.locator('.island-detail .study-note-card').first().click()
+  await expect(page).toHaveURL(/\/404$/)
   await expect
     .poll(() => page.evaluate(() => (window as any).islandLeaveProbe.done))
     .toBe(true)
@@ -325,10 +397,4 @@ test('Island flashes twice before navigating and preserves leave geometry', asyn
     sample.forEach((value, index) =>
       expect(Math.abs(value - geometry.initial[index])).toBeLessThanOrEqual(1)
     )
-  await page.locator('.detail-page-header__back').click()
-  await expect(page).toHaveURL(/\/island$/)
-  await expect(page.locator('.island-focus')).toBeVisible({ timeout: 45000 })
-  await page.locator('[data-island-item="COLLECTIBLES"]').click()
-  await expect(page).toHaveURL(/\/island\/merch$/)
-  await expect(page.locator('.merch-page')).toBeVisible({ timeout: 20000 })
 })

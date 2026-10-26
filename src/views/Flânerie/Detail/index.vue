@@ -99,6 +99,7 @@ import MediaPhotoInfo from '@/components/MediaPhotoInfo/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
 import SectionCount from '@/components/SectionCount/index.vue'
 import Sections from '@/components/Sections/index.vue'
+import { isTempleRouteName } from '@/config/templeNavigation'
 import { getBilibiliEmbedUrl } from '@/utils/bilibiliVideo'
 import { markJourneyReturn } from '@/utils/journeyReturnState'
 
@@ -157,7 +158,8 @@ const setPage = (page: number) => {
 onBeforeRouteLeave((to) => {
   if (
     to.name === 'FLANERIE' ||
-    (to.name === 'HOME' && ['home', 'home2'].includes(String(route.query.from)))
+    (isTempleRouteName(to.name) &&
+      ['home', 'home2'].includes(String(route.query.from)))
   )
     markJourneyReturn(vlogId.value)
 })

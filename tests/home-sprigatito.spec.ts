@@ -257,7 +257,7 @@ test('Sprigatito dims the scene on hover and focuses without a secondary menu', 
     menu.locator('[data-temple-nav="sprigatito"]')
   ).toHaveAccessibleName(mobile ? /花花小窝/ : 'FLORATRIUM')
   await expect(menu.locator('[data-temple-nav="statue"]')).toHaveAccessibleName(
-    mobile ? /个人海湾/ : 'ISLAND'
+    mobile ? /个人海湾/ : 'ATRIUM'
   )
   if (!mobile) {
     await expect
@@ -274,7 +274,7 @@ test('Sprigatito dims the scene on hover and focuses without a secondary menu', 
   await expect(root).toHaveAttribute('data-selected', 'statue')
   await expect(layout).toHaveCount(0)
   await expect(root).toHaveAttribute('data-settled', 'true')
-  await expect(page.locator('.current-module-name')).toHaveText('ISLAND')
+  await expect(page.locator('.current-module-name')).toHaveText('ATRIUM')
   menu = await openNavigation()
   if (!mobile) {
     await expect

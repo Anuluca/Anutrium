@@ -2,6 +2,7 @@ import { computed, onScopeDispose, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 import {
+  isTempleRouteName,
   type TempleCategoryId,
   templeModuleAtPath,
 } from '@/config/templeNavigation'
@@ -26,7 +27,7 @@ export const useTempleSectionScroll = (options: {
       templeModuleAtPath(route.path) ||
       templeModuleAtPath(`/${String(route.query.module || '')}`)
     if (craftReturn?.path === route.fullPath) return 'craft'
-    return route.name === 'HOME' &&
+    return isTempleRouteName(route.name) &&
       module === options.category() &&
       typeof route.query.current === 'string'
       ? normalize(route.query.current)

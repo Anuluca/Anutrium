@@ -15,6 +15,8 @@ export async function updateTempleAssetRevision() {
     'temple-label-low.json',
     'temple-label-flat.bin.gz',
     'temple-label-flat.json',
+    'temple-welcome.bin.gz',
+    'temple-welcome.json',
   ]) {
     hash.update(await readFile(new URL(name, directory)))
   }

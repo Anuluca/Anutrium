@@ -1,7 +1,7 @@
 import { expect, test } from './helpers/sceneDiagnostics'
 
 for (const reducedMotion of ['reduce', 'no-preference'] as const) {
-  test(`headache pose restores normal ISLAND and resumes on return (${reducedMotion})`, async ({
+  test(`headache pose restores normal ATRIUM and resumes on return (${reducedMotion})`, async ({
     page,
   }, testInfo) => {
     const errors: string[] = []

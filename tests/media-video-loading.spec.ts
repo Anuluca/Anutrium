@@ -11,7 +11,7 @@ test('gallery videos load near the viewport and pause after leaving it', async (
     await route.abort()
   })
 
-  await page.goto('/island/image-log/covid', {
+  await page.goto('/atrium/image-log/covid', {
     waitUntil: 'domcontentloaded',
   })
 

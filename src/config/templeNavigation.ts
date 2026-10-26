@@ -1,4 +1,13 @@
+import { islandModuleAtPath, islandModules } from './islandModules'
 import { pageThemeColors } from './pageThemes'
+
+const templeRouteNames = new Set<string>([
+  'HOME',
+  'ATRIUM',
+  ...Object.values(islandModules).map((module) => module.routeName),
+])
+export const isTempleRouteName = (name: unknown) =>
+  typeof name === 'string' && templeRouteNames.has(name)
 
 // 页面内容按需加载；悬停、聚焦与导航共享模块主题。
 export const templeCategories = [
@@ -62,7 +71,7 @@ export const templeNavigation = [
   },
   {
     id: 'statue',
-    title: 'ISLAND',
+    title: 'ATRIUM',
     label: '个人海湾',
     enabled: true,
     themeColor: pageThemeColors.HOME,
@@ -107,7 +116,7 @@ export const templeRouteDesktopMenuGroups = [
 ]
 
 // 模块入口与子页面归属共用映射，直接访问和返回首页使用同一规则。
-// 内部 island 标识属于 CREATIVE；公开 /island 入口对应中央 ISLAND 模型。
+// 内部 island 标识属于 CREATIVE；公开 /atrium 入口对应中央 ATRIUM 模型。
 export const templeModulePaths: Record<TempleCategoryId, string> = {
   archive: '/archive',
   flanerie: '/flanerie',
@@ -120,11 +129,13 @@ const moduleByPath = new Map<string, TempleEntryId>([
     templeModulePaths[item.id],
     item.id,
   ]),
-  ['/island', 'statue'],
+  ['/atrium', 'statue'],
   ['/floratrium', 'sprigatito'],
 ])
 export const templeModuleAtPath = (path: string): TempleEntryId | null =>
-  moduleByPath.get(path.replace(/\/+$/, '')) ?? null
+  islandModuleAtPath(path)
+    ? 'statue'
+    : moduleByPath.get(path.replace(/\/+$/, '')) ?? null
 
 // 无效或重复参数不覆盖现有的站内返回状态。
 export const parseTempleExpanded = (value: unknown): boolean | null => {
@@ -137,7 +148,7 @@ export const templeParentModule = (path: string): TempleCategoryId | null => {
   if (path.startsWith('/flanerie/')) return 'flanerie'
   if (path.startsWith('/pokeyard/')) return 'pokeyard'
   if (
-    path.startsWith('/island/') ||
+    path.startsWith('/atrium/') ||
     path.startsWith('/games/') ||
     path === '/test'
   )

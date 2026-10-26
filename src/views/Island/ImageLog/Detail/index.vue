@@ -2,7 +2,7 @@
   <div v-if="album" class="image-log-detail-page main-container">
     <DetailPageHeader
       back-label="IMAGE LOG"
-      back-path="/island/image-log"
+      back-path="/atrium/image-log"
       :title="album.title"
     />
 

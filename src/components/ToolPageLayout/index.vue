@@ -37,6 +37,7 @@ import PageFooter from '@/components/PageFooter/index.vue'
 import ToolRecommendationRow, {
   type RecommendedTool,
 } from '@/components/ToolRecommendationRow/index.vue'
+import { isTempleRouteName } from '@/config/templeNavigation'
 import { useCraftNavigation } from '@/stores/craftNavigation'
 
 withDefaults(
@@ -63,7 +64,7 @@ const craftBackPath = computed(
 )
 onBeforeRouteLeave((to) => {
   craftNavigation.restoring =
-    to.name === 'HOME' && to.fullPath === craftNavigation.origin?.path
+    isTempleRouteName(to.name) && to.fullPath === craftNavigation.origin?.path
 })
 </script>
 

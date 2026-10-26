@@ -72,7 +72,7 @@ test('Island zooms in sync with scanning and shrinks directly along its return c
     }
     requestAnimationFrame(sample)
   })
-  await navigate(page, '/island')
+  await navigate(page, '/atrium')
   await expect(stage).toHaveAttribute('data-material-phase', 'wireframe', {
     timeout: 20000,
   })
@@ -120,6 +120,22 @@ test('Island zooms in sync with scanning and shrinks directly along its return c
     true
   )
   expect(scanning.length).toBeGreaterThan(0)
+  // 旋转与放大共用平滑进度，避免中段补速，仍与扫描同时结束。
+  expect(
+    moving
+      .filter((sample) => sample.progress === 0)
+      .every((sample) => Math.abs(Number(sample.body.split(',')[1])) < 0.0001)
+  ).toBe(true)
+  expect(
+    scanning.some((sample) => Number(sample.body.split(',')[1]) > Math.PI * 1.8)
+  ).toBe(true)
+  for (const sample of scanning)
+    expect(
+      Math.abs(
+        Number(sample.body.split(',')[1]) / (Math.PI * 2) -
+          (sample.zoom - 1) / 0.3
+      )
+    ).toBeLessThan(0.0002)
   expect(
     scanning.every(
       (sample) =>
@@ -282,6 +298,13 @@ test('Island zooms in sync with scanning and shrinks directly along its return c
       timeout: 10000,
     })
     await expect(stage).toHaveAttribute('data-statue-scan-progress', '0.0000')
+    await expect
+      .poll(async () =>
+        Number(
+          (await stage.getAttribute('data-statue-body-rotation'))!.split(',')[1]
+        )
+      )
+      .toBe(0)
   }
   await returnHome()
   await expect(stage).toHaveAttribute('data-material-phase', 'chrome')

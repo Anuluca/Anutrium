@@ -2,7 +2,7 @@
   <div v-if="collection" class="merch-detail-page main-container">
     <DetailPageHeader
       back-label="MERCH"
-      back-path="/island/merch"
+      back-path="/atrium/collections"
       :title="collection.title"
     />
 
@@ -31,7 +31,7 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 import DetailPageHeader from '@/components/DetailPageHeader/index.vue'
 import MediaGallery, {
@@ -56,8 +56,6 @@ type MerchGroups = Record<string, MerchCollection[]>
 const route = useRoute()
 const router = useRouter()
 const { t, tm } = useI18n()
-const MERCH_RETURN_FLAG_KEY = 'anutrium:merch:returning-from-detail'
-const MERCH_RETURN_COLLECTION_KEY = 'anutrium:merch:selected-collection'
 const collectionId = computed(() => route.params.collectionId as string)
 const collection = computed(() => {
   const collections = Object.values(
@@ -70,14 +68,6 @@ const collection = computed(() => {
 const getMediaLabel = (media: GalleryMedia) =>
   media.title || t('island.modules.photography.merch.title')
 const showMediaInfo = (media: GalleryMedia) => Boolean(media.title)
-
-onBeforeRouteLeave((to) => {
-  if (typeof window === 'undefined') return
-  if (to.name !== 'ISLAND_MERCH') return
-
-  window.sessionStorage.setItem(MERCH_RETURN_FLAG_KEY, 'true')
-  window.sessionStorage.setItem(MERCH_RETURN_COLLECTION_KEY, collectionId.value)
-})
 
 watch(
   collection,

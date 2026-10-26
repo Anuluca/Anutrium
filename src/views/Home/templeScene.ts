@@ -11,6 +11,11 @@ import {
   FLORA_MODEL_CENTER_X,
 } from '@/config/floraLayout'
 import {
+  ISLAND_MODEL_DURATION,
+  type IslandModuleId,
+  islandModules,
+} from '@/config/islandModules'
+import {
   getTempleSceneVerticalOffset,
   TEMPLE_FOCUS_DURATION,
   templeCamera,
@@ -43,7 +48,6 @@ import {
   getTempleZodiacMask,
 } from '@/utils/templeLabelTextures'
 
-import { createBarycentricGeometry } from './scene/barycentricGeometry'
 import { isHomeSceneDiagnosticsEnabled } from './scene/diagnostics'
 import {
   createDollyCameraMotion,
@@ -53,13 +57,16 @@ import {
   createObeliskBaseGeometry,
   createObeliskBodyGeometry,
 } from './scene/geometry'
+import { easeIslandModelMotion } from './scene/islandDetailMotion'
 import {
   createDizzySticker,
   DIZZY_STICKER_FRAME_MS,
   LUCARIO_HEADACHE_STICKER_RED,
   prepareHeadachePose,
 } from './scene/lucarioHeadache'
+import { createLucarioWireGeometry } from './scene/lucarioWireGeometry'
 import {
+  installAtriumLegFade,
   installEnvironmentFade,
   installHeadacheTint,
   installHeadRig,
@@ -82,6 +89,7 @@ import { createThemeTint, type ThemeTintEntry } from './scene/themeTint'
 import { createZodiacProjection } from './scene/zodiacProjection'
 
 export type TempleSelection = TempleCategoryId | 'statue' | 'sprigatito'
+export type IslandDetailSide = 'left' | 'right' | null
 
 export interface IslandModelAnchors {
   chest: { x: number; y: number }
@@ -103,6 +111,7 @@ export interface TempleCallbacks {
   dismissBackground?: () => boolean
   select: (id: TempleSelection | null) => void
   islandAnchors?: (anchors: IslandModelAnchors) => void
+  islandInteractive?: (ready: boolean) => void
   settled: () => void
   error: (error: unknown) => void
 }
@@ -129,14 +138,16 @@ const OBELISK_BASE_TOP = 0.34
 const HOLY_LIGHT_COLOR = '#E23455'
 const IMMERSIVE_HOLY_LIGHT_PERIOD_MS = 8000
 const STATUE_ENVIRONMENT_DURATION = 1.6
-const STATUE_SCAN_DURATION = 2.2
-const STATUE_SCAN_ADVANCE = 0.75
-const STATUE_REALIGN_DURATION = 0.25
+// 第二段提前 250ms 启动并等量延长，完整入场仍在 4.1s 结束。
+const STATUE_SCAN_DURATION = 3.45
+const STATUE_RESTORE_DURATION = 2.2
+const STATUE_SCAN_ADVANCE = 1
+const STATUE_REALIGN_DURATION = 0.12
 const STATUE_FOCUS_ZOOM = 1.3
 const STATUE_ZOOM_VERTICAL_OFFSET = 0.06
 const STATUE_ZOOM_DURATION = 1
 const STATUE_ENVIRONMENT_EXPANSION = 0.18
-const STATUE_LABEL_TEXT = 'ISLAND'
+const STATUE_LABEL_TEXT = 'ATRIUM'
 const STATUE_LABEL_CHARACTER_DURATION = 0.18
 const STATUE_LABEL_STAGGER = STATUE_LABEL_CHARACTER_DURATION * 0.5
 const STATUE_LABEL_PUSH_DEPTH = 0.75
@@ -338,6 +349,11 @@ export function createHomeTemple(
   let viewWidth = 0
   let viewHeight = 0
   const focusFraming = { x: 0, y: 0 }
+  let islandDetailSide: IslandDetailSide = null
+  let islandDetailMotion: gsap.core.Timeline | undefined
+  const islandDetailView = { mix: 0 }
+  const islandDetailHead = { yaw: 0, pitch: 0, pointerDirection: 1 }
+  let islandInteractive = false
   const floraFraming = () => {
     const offsetX = currentPet.focusOffsetX ?? 0
     if (config.id !== 'mobile')
@@ -636,6 +652,9 @@ export function createHomeTemple(
     label.rotation.x = -Math.atan(0.182 / 4.55)
     // 只缩窄碑身，补偿父级横向缩放，让碑文保持与 PC 相同的字形比例。
     label.scale.x = 1 / config.scene.obeliskWidthScale
+    // 渐隐时碑身合批进入透明队列；碑文必须后画，避免后排文字被自己的碑身覆盖。
+    // 仍保留深度测试，由前排建筑与中央模型正常遮挡。
+    label.renderOrder = 0.02
     shaft.add(label)
     const glowMaterial = material(
       new THREE.MeshBasicMaterial({
@@ -1214,7 +1233,7 @@ export function createHomeTemple(
       color: experience.themeColor,
       transparent: true,
       opacity: statueLabelReveal.value,
-      depthWrite: false,
+      depthWrite: true,
       toneMapped: false,
     })
   )
@@ -1269,6 +1288,23 @@ export function createHomeTemple(
   // 保持可见以参与加载阶段的着色器预编译；桌面端由 opacity=0 隐藏文字。
   // 独立于底座和环境消隐，雕像聚焦时字样仍持续显示。
   scene.add(statueLabel)
+  const welcomeMaterial = material(statueLabelMaterial.clone())
+  welcomeMaterial.onBeforeCompile = statueLabelMaterial.onBeforeCompile
+  welcomeMaterial.customProgramCacheKey =
+    statueLabelMaterial.customProgramCacheKey
+  const welcomeGeometry = geometry(new THREE.BufferGeometry())
+  const welcomeLabel = new THREE.Mesh(welcomeGeometry, welcomeMaterial)
+  welcomeLabel.renderOrder = 7
+  scene.add(welcomeLabel)
+  const atriumLabels = [statueLabel, welcomeLabel]
+  const welcomeReveal = { value: 0 }
+  const statueLabelSpin = { value: 0 }
+  const labelPointer = new THREE.Vector2()
+  const labelPointerTarget = new THREE.Vector2()
+  const labelOrbitAngles = new THREE.Euler(0, 0, 0, 'YXZ')
+  const labelOrbitRotation = new THREE.Quaternion()
+  let welcomeHalfHeight = 0
+  let welcomeBaseScale = 0.4
   let reflectedStatue: THREE.Object3D | undefined
   const themeTint = createThemeTint('#e23456')
   const {
@@ -1306,7 +1342,11 @@ export function createHomeTemple(
   const white = new THREE.Color('#ffffff')
   const stoneHsl = { h: 0, s: 0, l: 0 }
   const refineTintTarget = (item: ThemeTintEntry) => {
-    if (item.color === statueLabelMaterial.color) item.target.copy(themeColor)
+    if (
+      item.color === statueLabelMaterial.color ||
+      item.color === welcomeMaterial.color
+    )
+      item.target.copy(themeColor)
     if (!lightMode) return
     if (lightStoneColors.has(item.color)) {
       item.target.getHSL(stoneHsl)
@@ -1505,6 +1545,16 @@ export function createHomeTemple(
   )
   statueScan.install(chromeMaterial, 'chrome')
   statueScan.install(wireMaterial, 'composite')
+  for (const surface of [chromeMaterial, wireMaterial, wireDepthMaterial])
+    installAtriumLegFade(
+      surface,
+      {
+        get value() {
+          return statueView.mix
+        },
+      },
+      statueScan.bounds
+    )
   for (const value of materials) {
     if ('color' in value && value !== dizzySticker.material)
       trackTint((value as THREE.MeshBasicMaterial).color)
@@ -1564,6 +1614,7 @@ export function createHomeTemple(
       wireMaterial,
       wireDepthMaterial,
       statueLabelMaterial,
+      welcomeMaterial,
       dizzySticker.material,
       ...zodiacProjections.map((item) => item.material),
     ])
@@ -1883,10 +1934,28 @@ export function createHomeTemple(
     if (statueWire) statueWire.visible = scanProgress > 0
     if (statueWireDepth) statueWireDepth.visible = scanProgress > 0
     // 扫描亮边由合成表面输出，无独立扩张表面。
+    const nextIslandInteractive =
+      statueOnly &&
+      scanProgress === 1 &&
+      !transitionActive &&
+      !cameraMoving &&
+      !statueRestorePending &&
+      !islandDetailMotion?.isActive()
+    if (islandInteractive !== nextIslandInteractive) {
+      islandInteractive = nextIslandInteractive
+      callbacks.islandInteractive?.(islandInteractive)
+    }
     const statueMouseFollow =
-      statueOnly && !cameraMoving && scanProgress === 1 && !statueRestorePending
+      statueOnly &&
+      !islandDetailSide &&
+      !islandDetailMotion?.isActive() &&
+      !cameraMoving &&
+      scanProgress === 1 &&
+      !statueRestorePending
     const followHead =
-      !entranceActive && !returningStatue && (!statueOnly || statueMouseFollow)
+      !entranceActive &&
+      !returningStatue &&
+      (!statueOnly || statueMouseFollow || !!islandDetailSide)
     const headacheActive = headacheEnabled && selected !== 'statue'
     const aimAtObelisk = !!focusedObelisk
     if (focusedObelisk && aimAtObelisk && rig.enabled) {
@@ -1990,13 +2059,17 @@ export function createHomeTemple(
     }
     const pitch = THREE.MathUtils.degToRad(
       rig.enabled
-        ? rig.restPitch -
+        ? rig.restPitch * (1 - islandDetailView.mix) -
             (headache?.headLeanBack ?? 0) * headacheMix +
-            headCurrent.y * rig.pointerPitch
+            headCurrent.y * rig.pointerPitch +
+            islandDetailHead.pitch
         : 0
     )
     const yaw = THREE.MathUtils.degToRad(
-      rig.enabled ? headCurrent.x * rig.pointerYaw : 0
+      rig.enabled
+        ? headCurrent.x * rig.pointerYaw * islandDetailHead.pointerDirection +
+            islandDetailHead.yaw
+        : 0
     )
     const roll = THREE.MathUtils.degToRad(
       (headache?.headTilt ?? 0) * headacheMix
@@ -2063,6 +2136,7 @@ export function createHomeTemple(
         statue.position.z - Math.cos(yaw) * 1.65
       )
       reflectedStatue?.position.copy(statue.position)
+      reflectedStatue?.rotation.copy(statue.rotation)
       for (const [index, item] of obelisks.entries()) {
         reflectedObelisks[index].position.copy(item.group.position)
         reflectedShafts[index].position.copy(item.shaft.position)
@@ -2120,7 +2194,10 @@ export function createHomeTemple(
     if (statueLabelReveal.value !== statueLabelTarget) hoverMoving = true
     statueLabelMaterial.opacity = 1
     statueLabelFocus.value = statueView.mix
-    statueLabel.scale.setScalar(1 + statueView.mix * 0.5)
+    statueLabel.scale.setScalar(
+      (1 + statueView.mix * 0.5) * (1 - islandDetailView.mix)
+    )
+    statueLabel.rotation.set(statueLabelSpin.value, 0, 0)
     // 屏幕下沿从点击时的位置直接插值到目标，再反投影；镜头移动不会令文字越过终点。
     statueLabelBase.set(
       0,
@@ -2145,8 +2222,41 @@ export function createHomeTemple(
       statueLabelDock.y += statueLabelHalfHeight * statueLabel.scale.y
       statueLabel.position.copy(statueLabelDock)
     } else statueLabel.position.copy(statueLabelBase)
-    statueLabelMaterial.depthTest = !(statueOnly || returningStatue)
-    statueLabel.visible = statueLabelReveal.value > 0
+    statueLabelMaterial.depthTest = true
+    statueLabel.visible =
+      statueLabelReveal.value > 0 && islandDetailView.mix < 1
+    welcomeMaterial.opacity = welcomeReveal.value
+    welcomeMaterial.depthTest = statueLabelMaterial.depthTest
+    welcomeLabel.scale.setScalar(statueLabel.scale.x * welcomeBaseScale)
+    welcomeLabel.position.copy(statueLabel.position)
+    welcomeLabel.position.y +=
+      statueLabelHalfHeight * statueLabel.scale.y +
+      welcomeHalfHeight * welcomeLabel.scale.y +
+      0.1 * statueLabel.scale.y
+    welcomeLabel.visible = statueLabel.visible && welcomeReveal.value > 0
+    labelPointerTarget.set(0, 0)
+    if (statueMouseFollow && hasPointer && !returningStatue)
+      labelPointerTarget.copy(pointerTarget)
+    const labelDistance = labelPointer.distanceToSquared(labelPointerTarget)
+    if (reducedMotion || labelDistance < 0.000001)
+      labelPointer.copy(labelPointerTarget)
+    else labelPointer.lerp(labelPointerTarget, 1 - Math.exp(-elapsed * 6))
+    moving ||= labelPointer.distanceToSquared(labelPointerTarget) >= 0.000001
+    labelOrbitAngles.set(
+      THREE.MathUtils.degToRad(labelPointer.y * 10),
+      THREE.MathUtils.degToRad(labelPointer.x * 18),
+      0
+    )
+    labelOrbitRotation.setFromEuler(labelOrbitAngles)
+    // 两行共用路卡的模型中心做公转，保留 ATRIUM 自身原有的进退场翻转。
+    for (const label of atriumLabels) {
+      label.position
+        .sub(statue.position)
+        .applyQuaternion(labelOrbitRotation)
+        .add(statue.position)
+    }
+    statueLabel.quaternion.premultiply(labelOrbitRotation)
+    welcomeLabel.quaternion.copy(labelOrbitRotation)
     labelLod?.measure(
       camera,
       statueLabelHalfHeight,
@@ -2205,6 +2315,7 @@ export function createHomeTemple(
         // 常态字样保持当前主题色，不参与聚焦时的背景压暗。
         if (
           entry.color !== statueLabelMaterial.color &&
+          entry.color !== welcomeMaterial.color &&
           !(lightMode && floorLightPalette.has(entry.color))
         )
           entry.color.multiplyScalar(environmentBrightness)
@@ -2446,6 +2557,9 @@ export function createHomeTemple(
           .join(',')
       )
       setStageData('statueLabelVisible', String(statueLabel.visible))
+      setStageData('statueLabelOpacity', statueLabelMaterial.opacity.toFixed(3))
+      setStageData('statueLabelRotationX', statueLabelSpin.value.toFixed(4))
+      setStageData('statueWelcomeOpacity', welcomeReveal.value.toFixed(3))
       setStageData('statueLabelScale', statueLabel.scale.x.toFixed(3))
       setStageData(
         'statueLabelColor',
@@ -2453,6 +2567,10 @@ export function createHomeTemple(
       )
       setStageData('statueLabelScanlines', statueLabelFocus.value.toFixed(3))
       setStageData('statueLabelDepth', statueLabelDepth.toFixed(3))
+      setStageData(
+        'statueLabelOrbit',
+        `${labelOrbitAngles.x.toFixed(4)},${labelOrbitAngles.y.toFixed(4)}`
+      )
       screenPoint.copy(statueLabel.position)
       screenPoint.y -= statueLabelHalfHeight * statueLabel.scale.y
       screenPoint.project(camera)
@@ -2548,6 +2666,11 @@ export function createHomeTemple(
         sprigatitoWireMix === 1 ? 'wireframe' : 'chrome'
       )
       setStageData('companionWireOpacity', sprigatitoWireMix.toFixed(3))
+      if (sprigatitoSurface)
+        setStageData(
+          'companionColor',
+          `#${sprigatitoSurface.color.getHexString()}`
+        )
       setStageData('companionHeadPose', sprigatitoPose.value.toFixed(3))
       setStageData(
         'companionHeadFollow',
@@ -2699,8 +2822,19 @@ export function createHomeTemple(
       islandNodQuaternion.setFromAxisAngle(islandNodAxis, headNodAngle.value)
       // 锚点取自当前路卡网格的胸刺、双手与双辫，随模型世界矩阵与镜头一起投影。
       projectIslandAnchor(islandModelAnchors.chest, 0, 2.04385, 0.34162)
-      projectIslandAnchor(islandModelAnchors.rightHand, -0.568, 1.059, 0.185)
-      projectIslandAnchor(islandModelAnchors.leftHand, 0.568, 1.059, 0.185)
+      // 双手定位到手背刺根部连接环中心，随模型转动保持贴合。
+      projectIslandAnchor(
+        islandModelAnchors.rightHand,
+        -0.51724,
+        1.33685,
+        0.06227
+      )
+      projectIslandAnchor(
+        islandModelAnchors.leftHand,
+        0.51724,
+        1.33685,
+        0.06227
+      )
       projectIslandAnchor(
         islandModelAnchors.rightBraid,
         -0.37229,
@@ -3113,6 +3247,81 @@ export function createHomeTemple(
       callbacks.entranceStarted?.()
     }
   }
+  // 页内详情只改变构图和朝向，保留 ATRIUM 的扫描材质与同一渲染实例。
+  const setIslandDetail = (
+    side: IslandDetailSide,
+    immediate = false,
+    moduleId?: IslandModuleId
+  ) => {
+    islandDetailSide = side
+    islandDetailMotion?.kill()
+    const direction = side === 'left' ? -1 : side === 'right' ? 1 : 0
+    setStageData('islandDetailSide', side ?? 'none')
+    setStageData('islandDetailModule', moduleId ?? 'none')
+    const profile = moduleId
+      ? islandModules[moduleId]
+      : islandModules.LABORATORY
+    const duration = immediate || reducedMotion ? 0 : ISLAND_MODEL_DURATION
+    islandDetailMotion = gsap.timeline({
+      defaults: { duration, ease: easeIslandModelMotion },
+      onUpdate: () => {
+        markViewOffsetDirty()
+        diagnosticsDirty = true
+        invalidate()
+      },
+    })
+    islandDetailMotion.to(
+      focusFraming,
+      {
+        x: side
+          ? config.id === 'mobile'
+            ? profile.mobileX
+            : profile.desktopX
+          : 0,
+        y: side
+          ? config.id === 'mobile'
+            ? profile.mobileY
+            : profile.desktopY
+          : STATUE_PREVIEW_VERTICAL_OFFSET,
+      },
+      0
+    )
+    islandDetailMotion.to(
+      statue.rotation,
+      {
+        y: moduleId === 'COLLECTIBLES' ? Math.PI : (direction * Math.PI) / 2,
+      },
+      0
+    )
+    islandDetailMotion.to(
+      camera,
+      {
+        zoom: side ? (config.id === 'mobile' ? 1.45 : 2.15) : STATUE_FOCUS_ZOOM,
+      },
+      0
+    )
+    islandDetailMotion.to(islandDetailView, { mix: side ? 1 : 0 }, 0)
+    islandDetailMotion.to(
+      islandDetailHead,
+      {
+        yaw: moduleId === 'COLLECTIBLES' ? 58 : 0,
+        pitch: moduleId === 'COLLECTIBLES' ? 12 : 0,
+        pointerDirection: moduleId === 'COLLECTIBLES' ? -1 : 1,
+      },
+      0
+    )
+    islandDetailMotion.to(
+      entranceHeadDip,
+      { value: side ? 0 : headNodDegrees - 5 },
+      0
+    )
+    if (side) {
+      headCurrent.set(0, 0)
+      pointerHeadEase.set(0, 0)
+      headTarget.set(0, 0)
+    }
+    invalidate()
+  }
   const resize = () => {
     viewWidth = stage.clientWidth
     viewHeight = stage.clientHeight
@@ -3202,6 +3411,20 @@ export function createHomeTemple(
     if (menuExitPending && !next && !menuExited) return
     const revision = ++selectionRevision
     const wasStatue = selected === 'statue'
+    if (wasStatue && !menuExited && !immediate) {
+      const cardsExit = callbacks.beforeReturn()
+      if (cardsExit) {
+        menuExitPending = true
+        void cardsExit.then(() => {
+          if (disposed || revision !== selectionRevision) return
+          menuExitPending = false
+          select(id, immediate, true, statueAligned)
+        })
+        return
+      }
+    }
+    if (islandDetailSide || islandDetailMotion?.isActive())
+      setIslandDetail(null, true)
     const wasSprigatito = selected === 'sprigatito'
     if (wasStatue && !next && !immediate && !reducedMotion && !statueAligned) {
       // 先回正，再让扫描、缩小与退镜交叠推进；全过程关闭鼠标跟随。
@@ -3318,14 +3541,16 @@ export function createHomeTemple(
       reducedMotion || immediate
         ? 0.01
         : returningStatue
-        ? STATUE_SCAN_DURATION
+        ? STATUE_RESTORE_DURATION
         : TEMPLE_FOCUS_DURATION
     const statueTransition = selected === 'statue' || wasStatue
     const quick = reducedMotion || immediate
     const scanDuration = quick
       ? 0.01
       : selected === 'statue' || returningStatue
-      ? STATUE_SCAN_DURATION *
+      ? (selected === 'statue'
+          ? STATUE_SCAN_DURATION
+          : STATUE_RESTORE_DURATION) *
         Math.abs((selected === 'statue' ? 1 : 0) - statueScan.progress.value)
       : 0.65
     const scanStart =
@@ -3368,6 +3593,35 @@ export function createHomeTemple(
         )
       )
         transition!.to(target, vars, position)
+    }
+    if (selected === 'statue' || wasStatue) {
+      const titleDuration =
+        selected === 'statue'
+          ? Math.max(duration, scanStart + scanDuration)
+          : duration
+      const spinDelay = quick ? 0 : 0.2
+      tweenIfChanged(
+        statueLabelSpin,
+        {
+          value: quick ? 0 : statueLabelSpin.value + Math.PI * 2,
+          duration: quick ? 0.01 : Math.max(0.01, titleDuration - spinDelay),
+          ease: 'power2.inOut',
+          onComplete: () => {
+            statueLabelSpin.value = 0
+            invalidate()
+          },
+        },
+        spinDelay
+      )
+      tweenIfChanged(
+        welcomeReveal,
+        {
+          value: selected === 'statue' ? 1 : 0,
+          duration: quick ? 0.01 : Math.min(0.65, titleDuration / 2),
+          ease: 'power2.inOut',
+        },
+        selected === 'statue' && !quick ? titleDuration / 2 : 0
+      )
     }
     tweenIfChanged(
       sleepingSprigatito.rotation,
@@ -3437,7 +3691,7 @@ export function createHomeTemple(
       },
       selected === 'statue' ? scanStart : 0
     )
-    if (returningStatue || selected === 'statue') {
+    if (wasStatue || selected === 'statue') {
       tweenIfChanged(
         headCurrent,
         {
@@ -3450,10 +3704,30 @@ export function createHomeTemple(
       )
       tweenIfChanged(
         statue.rotation,
-        { y: 0, z: 0, duration, ease: 'power2.inOut' },
+        {
+          y: 0,
+          z: 0,
+          duration: selected === 'statue' && !quick ? scanStart : duration,
+          ease: 'power2.inOut',
+        },
         0
       )
     }
+    if (selected === 'statue' && !quick)
+      transition.to(
+        statue.rotation,
+        {
+          y: Math.PI * 2,
+          duration: scanDuration,
+          // 前段平滑提速，后段持续减速，两端速度与加速度归零。
+          ease: easeIslandFocusZoom,
+          // 一圈后归零，避免鼠标跟随从 2π 反向回转。
+          onComplete: () => {
+            statue.rotation.y = 0
+          },
+        },
+        scanStart
+      )
     tweenIfChanged(
       templeReveal,
       {
@@ -3796,10 +4070,17 @@ export function createHomeTemple(
       ? 'statue'
       : (hit.object.userData.category as TempleCategoryId)
   }
+  const statueClickLocked = () =>
+    statueRestorePending ||
+    returningStatue ||
+    (selected === 'statue' && transitionActive)
   const click = (event: MouseEvent) => {
-    if (hosted || immersive) return
+    if (hosted || immersive || statueClickLocked()) return
     if (selected === 'sprigatito' && callbacks.dismissBackground?.()) return
-    if (selected === 'statue') return select(null)
+    if (selected === 'statue') {
+      if (callbacks.dismissBackground?.()) return
+      return select(null)
+    }
     const id = raycast(event, true)
     if (id === 'statue') select(selected ? null : 'statue')
     else if (id) select(id)
@@ -3826,12 +4107,14 @@ export function createHomeTemple(
       ).some((element) => element.getClientRects().length > 0)
     )
       return
-    if (event.key === 'Escape' && selected) select(null)
-    else if (
+    if (event.key === 'Escape' && selected) {
+      if (!callbacks.dismissBackground?.()) select(null)
+    } else if (
       event.target === renderer.domElement &&
       (event.key === 'Enter' || event.key === ' ')
     ) {
       event.preventDefault()
+      if (statueClickLocked()) return
       select(selected ? null : 'statue')
     }
   }
@@ -3915,8 +4198,13 @@ export function createHomeTemple(
       !entranceActive &&
       !returningStatue &&
       !returningPillar
-    )
+    ) {
       headTarget.copy(pointerTarget)
+      if (islandDetailSide) {
+        headTarget.multiplyScalar(0.65)
+        diagnosticsDirty = true
+      }
+    }
     if (!selected || selected === 'statue' || hoverChanged) invalidate()
   }
   let unsubscribe: (() => void) | undefined
@@ -3927,6 +4215,7 @@ export function createHomeTemple(
       cursorStateStore.setInteractive(statueCursorSource, false)
       themeTransition?.pause()
       petEntrance?.pause()
+      islandDetailMotion?.pause()
       unsubscribe?.()
       unsubscribe = undefined
       if (frame !== undefined) cancelAnimationFrame(frame)
@@ -3936,6 +4225,7 @@ export function createHomeTemple(
     } else {
       themeTransition?.resume()
       petEntrance?.resume()
+      islandDetailMotion?.resume()
       if (ready && !unsubscribe)
         unsubscribe = subscribePointerSamples(follow, 1000 / 30)
       if (pausedAt && transitionActive)
@@ -4003,6 +4293,7 @@ export function createHomeTemple(
       statueLight,
       statueHolyLight,
       statueLabel,
+      welcomeLabel,
       ...reflectedObelisks,
       ...reflectedShafts,
       ...obelisks.flatMap((item) => [item.group, item.shaft, item.capHalo]),
@@ -4374,6 +4665,7 @@ export function createHomeTemple(
         { metadata, buffer, environment, radiance },
         sleepingModel,
         labelModel,
+        welcomeModel,
       ]) => {
         floraReferenceModel =
           currentPet.model === 'sprigatito' ? sleepingModel : undefined
@@ -4382,6 +4674,17 @@ export function createHomeTemple(
         if (disposed) return
         callbacks.progress(60)
         fillTempleLabelGeometry(statueLabelGeometry, labelModel)
+        fillTempleLabelGeometry(welcomeGeometry, welcomeModel)
+        statueLabelGeometry.computeBoundingBox()
+        welcomeGeometry.computeBoundingBox()
+        const islandWidth =
+          statueLabelGeometry.boundingBox!.max.x -
+          statueLabelGeometry.boundingBox!.min.x
+        const welcomeWidth =
+          welcomeGeometry.boundingBox!.max.x -
+          welcomeGeometry.boundingBox!.min.x
+        welcomeBaseScale = islandWidth / welcomeWidth
+        welcomeHalfHeight = welcomeModel.metadata.halfHeight
         statueLabelHalfHeight = labelModel.metadata.halfHeight
         statueLabelDepth = labelModel.metadata.depth
         statueLabel.position.y = 0.52 + statueLabelHalfHeight
@@ -4399,7 +4702,7 @@ export function createHomeTemple(
         const sleepingMaterial = material(chromeMaterial.clone())
         sleepingMaterial.clippingPlanes = null
         sprigatitoSurface = sleepingMaterial
-        trackTint(sleepingMaterial.color)
+        trackTint(sleepingMaterial.color, chromeMaterial.color)
         const baseTint = tintByColor.get(sleepingMaterial.color)!
         const accent = sprigatitoTheme.getHSL({ h: 0, s: 0, l: 0 })
         sprigatitoHoverColor.setHSL(
@@ -4439,7 +4742,12 @@ export function createHomeTemple(
           if (object instanceof THREE.Mesh) {
             reflectedSprigatitoMeshes.push(object)
             if (object.material.colorWrite)
-              trackTint((object.material as THREE.MeshBasicMaterial).color)
+              trackTint(
+                (object.material as THREE.MeshBasicMaterial).color,
+                object === reflectedSprigatitoSurface
+                  ? sleepingMaterial.color
+                  : undefined
+              )
           }
         })
         petMeshes = [
@@ -4537,7 +4845,10 @@ export function createHomeTemple(
         reflectedStatue.traverse((object) => {
           if (object instanceof THREE.Mesh) {
             object.morphTargetInfluences = mesh.morphTargetInfluences
-            trackTint((object.material as THREE.MeshPhysicalMaterial).color)
+            trackTint(
+              (object.material as THREE.MeshPhysicalMaterial).color,
+              chromeMaterial.color
+            )
           }
         })
         setThemeColor(stage.dataset.themeColor || experience.themeColor, false)
@@ -4547,7 +4858,7 @@ export function createHomeTemple(
         statueScan.bounds.value.set(bounds.min.y, bounds.max.y - bounds.min.y)
         statueHalfY = statue.position.y
         statueFullY = (metadata.center[1] - bounds.min.y) * modelScale
-        const wireGeometry = geometry(createBarycentricGeometry(surface))
+        const wireGeometry = geometry(createLucarioWireGeometry(surface))
         statueWire = new THREE.Mesh(wireGeometry, wireMaterial)
         if (diagnosticsEnabled) {
           setStageData(
@@ -4569,7 +4880,8 @@ export function createHomeTemple(
         statueWire.position.copy(mesh.position)
         statueWire.renderOrder = 6
         statue.add(statueWire)
-        statueWireDepth = new THREE.Mesh(surface, wireDepthMaterial)
+        // 深度与线框使用同一修饰网格，防止胸口后画的填充再次压暗刺根边线。
+        statueWireDepth = new THREE.Mesh(wireGeometry, wireDepthMaterial)
         statueWireDepth.morphTargetInfluences = mesh.morphTargetInfluences
         statueWireDepth.position.copy(mesh.position)
         statueWireDepth.renderOrder = 5
@@ -4657,6 +4969,8 @@ export function createHomeTemple(
     petEntrance?.totalProgress(1)
     petEntrance?.kill()
     petEntrance = undefined
+    if (islandDetailSide || islandDetailMotion?.isActive())
+      setIslandDetail(null, true)
     immersionTween?.kill()
     immersionTween = undefined
     immersive = false
@@ -4769,6 +5083,7 @@ export function createHomeTemple(
     connectHostEvents()
     resize()
     staticSceneCache.invalidate()
+    callbacks.islandInteractive?.(islandInteractive)
     render(performance.now())
     renderer.domElement.style.visibility = 'visible'
     syncActivity()
@@ -4784,6 +5099,7 @@ export function createHomeTemple(
       return currentPet.id
     },
     select,
+    setIslandDetail,
     pick: click,
     resetPointer,
     setImmersive: (active: boolean) => {
@@ -4848,6 +5164,7 @@ export function createHomeTemple(
       shaderWarmup?.cancel()
       petChangeRevision++
       petEntrance?.kill()
+      islandDetailMotion?.kill()
       cursorStateStore.setInteractive(statueCursorSource, false)
       transition?.kill()
       themeTransition?.kill()

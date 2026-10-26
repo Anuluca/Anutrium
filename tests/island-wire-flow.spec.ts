@@ -39,7 +39,7 @@ test('wire flow animates static GPU buffers, pauses hidden and stops on return',
     )
       errors.push(message.text())
   })
-  await page.goto('/island', { waitUntil: 'domcontentloaded' })
+  await page.goto('/atrium', { waitUntil: 'domcontentloaded' })
   const stage = page.locator('.temple-stage')
   await expect(stage).toHaveAttribute('data-material-phase', 'wireframe', {
     timeout: 60000,
@@ -137,7 +137,7 @@ test('wire flow animates static GPU buffers, pauses hidden and stops on return',
 test('reduced motion leaves wire flow still', async ({ page }) => {
   test.setTimeout(60000)
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto('/island', { waitUntil: 'domcontentloaded' })
+  await page.goto('/atrium', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.temple-stage')).toHaveAttribute(
     'data-material-phase',
     'wireframe',
@@ -207,7 +207,7 @@ test.describe('wire animation production scheduling', () => {
         })
       }
     })
-    await page.goto('/island', { waitUntil: 'domcontentloaded' })
+    await page.goto('/atrium', { waitUntil: 'domcontentloaded' })
     const root = page.locator('.temple-page')
     await expect(page.locator('.temple-stage')).toHaveAttribute(
       'aria-busy',

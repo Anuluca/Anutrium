@@ -12,7 +12,7 @@ export interface LucarioHeadacheConfig {
   headTilt: number
 }
 
-/** 在场景副本上生成姿态，缓存资源及 ISLAND 的正常姿态不受影响。 */
+/** 在场景副本上生成姿态，缓存资源及 ATRIUM 的正常姿态不受影响。 */
 export function prepareHeadachePose(
   surface: THREE.BufferGeometry,
   config: LucarioHeadacheConfig

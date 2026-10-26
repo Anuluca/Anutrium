@@ -69,7 +69,7 @@ test('ready home retains one paused renderer and returns without reallocating pr
       .get('visualState')
       .setTheme('light')
   })
-  await navigate(page, '/island')
+  await navigate(page, '/atrium')
   await expect(stage).toHaveAttribute('aria-busy', 'false', { timeout: 20000 })
   await expect(page.locator('.temple-page')).toHaveAttribute(
     'data-selected',
@@ -216,7 +216,7 @@ test('inactive host releases real GPU resources and presentation changes rebuild
   await navigate(page, '/colorPalette')
   await expect(page.locator('.temple-stage')).toHaveCount(0)
   await page.setViewportSize({ width: 390, height: 844 })
-  await navigate(page, '/island')
+  await navigate(page, '/atrium')
   await expect(page.locator('.temple-page')).toHaveAttribute(
     'data-presentation',
     'mobile'

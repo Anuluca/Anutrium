@@ -21,13 +21,17 @@ export function createThemeTint(baseColor: string) {
   const targets: ThemeTintEntry[] = []
   const byColor = new Map<THREE.Color, ThemeTintEntry>()
 
-  const track = (value: THREE.Color) => {
+  const track = (value: THREE.Color, source?: THREE.Color) => {
     if (byColor.has(value)) return
-    const base = value.getHSL({ h: 0, s: 0, l: 0 })
+    // 异步克隆的材质可能已染色，沿用来源记录的原始 HSL，避免把模块色当作基色。
+    const base =
+      byColor.get(source ?? value) ?? value.getHSL({ h: 0, s: 0, l: 0 })
     if (base.s <= 0.08) return
     const entry = {
       color: value,
-      ...base,
+      h: base.h,
+      s: base.s,
+      l: base.l,
       current: value.clone(),
       start: value.clone(),
       target: value.clone(),

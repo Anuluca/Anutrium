@@ -96,7 +96,7 @@ export function createModelScan(
             `
             vec3 pixelDistance = islandBarycentric / max(fwidth(islandBarycentric), vec3(0.00001));
             float wireDistance = min(min(pixelDistance.x, pixelDistance.y), pixelDistance.z);
-            float wireCoverage = 1.0 - smoothstep(0.25, 0.85, wireDistance);
+            float wireCoverage = 1.0 - smoothstep(0.55, 1.25, wireDistance);
             float converted = (islandScanProgress >= 0.99999 || scanDistance < 0.0) ? 1.0 : 0.0;
             diffuseColor.a = converted * (0.55 + 0.45 * wireCoverage);
             outgoingLight = vec3(0.0);
@@ -128,14 +128,14 @@ export function createModelScan(
             '#include <premultiplied_alpha_fragment>',
             `#include <premultiplied_alpha_fragment>
             // 显示色彩空间中按覆盖率合成，保持黑色 0.55 填充与原线框的叠加语义。
-            gl_FragColor.rgb += linearToOutputTexel(vec4(islandScanColor, 1.0)).rgb * 0.85 * wireCoverage * converted;
+            gl_FragColor.rgb += linearToOutputTexel(vec4(islandScanColor, 1.0)).rgb * 0.55 * wireCoverage * converted;
             gl_FragColor.rgb += flowRadiance * converted;
             if (scanActive > 0.5) gl_FragColor.rgb += linearToOutputTexel(vec4(scanRadiance, 1.0)).rgb * scanAlpha;`
           )
       }
     }
     material.customProgramCacheKey = () =>
-      `${previousKey}:island-scan-flow-v14-${layer}`
+      `${previousKey}:island-scan-flow-v17-${layer}`
   }
   return {
     progress,

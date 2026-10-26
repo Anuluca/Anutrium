@@ -1,4 +1,4 @@
-"""Extract ISLAND outlines from the site's existing font for Three.js extrusion."""
+"""Extract island title outlines from the site's existing font for Three.js extrusion."""
 
 import json
 from pathlib import Path
@@ -40,7 +40,7 @@ font = TTFont(ROOT / "scripts/fonts/UnboundedSans-Regular.ttf")
 glyph_set = font.getGlyphSet()
 cmap = font.getBestCmap()
 glyphs = {}
-for letter in sorted(set("ISLAND")):
+for letter in sorted(set("ATRIUM WELCOME TO MY")):
     name = cmap[ord(letter)]
     pen = OutlinePen(glyph_set)
     glyph_set[name].draw(pen)

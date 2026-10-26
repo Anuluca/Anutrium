@@ -1,5 +1,6 @@
 import { expect, type Page, test } from '@playwright/test'
 
+import { templeModuleAtPath } from '../src/config/templeNavigation'
 import {
   expectPagePositionToMatch,
   readPagePosition,
@@ -29,10 +30,10 @@ type VueAppElement = HTMLElement & {
 }
 
 const dynamicRouteSamples: Record<string, string> = {
-  '/:module(archive|flanerie|island|pokeyard|creative|floratrium)?': '/',
+  '/:module(archive|flanerie|pokeyard|creative|floratrium)?': '/',
   '/flanerie/:vlogId': '/flanerie/nanchang',
-  '/island/image-log/:albumId': '/island/image-log/covid',
-  '/island/merch/:collectionId': '/island/merch/lucarioNoArm',
+  '/atrium/image-log/:albumId': '/atrium/image-log/covid',
+  '/atrium/merch/:collectionId': '/atrium/merch/lucarioNoArm',
 }
 
 const navigateWithRouter = async (page: Page, path: string) => {
@@ -155,7 +156,7 @@ test('every PageFooter route keeps its copyright row clear of FooterCom', async 
   for (const path of pageFooterRoutes) {
     await test.step(path, async () => {
       await navigateWithRouter(page, path)
-      if (path === '/' || path === '/home2') {
+      if (path === '/' || path === '/home2' || templeModuleAtPath(path)) {
         await expect(page.locator('.page-footer-home')).toHaveCount(1)
         return
       }

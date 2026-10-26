@@ -47,7 +47,8 @@ body:has(.layout-page.is-home-immersive)
 body:has(.layout-page.is-home-immersive)
   .temple-page.no-rem
   .temple-backdrop.is-immersive {
-  opacity: 0;
+  // 模块回程由 GSAP 写入内联透明度；禅模式须接管淡出目标。
+  opacity: 0 !important;
   visibility: hidden;
   transition: opacity 2s ease 2200ms, visibility 0s linear 4200ms;
 }

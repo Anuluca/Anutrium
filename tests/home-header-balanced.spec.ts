@@ -11,7 +11,7 @@ const order = [
 const titles = [
   'ARCHIVE',
   'FLÂNERIE',
-  'ISLAND',
+  'ATRIUM',
   'FLORATRIUM',
   'POKÉYARD',
   'CREATIVE',
@@ -26,7 +26,7 @@ test('focused desktop header keeps its full title centered with equal route gaps
     socket.close()
   )
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto('/island', { waitUntil: 'domcontentloaded' })
+  await page.goto('/atrium', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.temple-stage')).toHaveAttribute(
     'aria-busy',
     'false',

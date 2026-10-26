@@ -146,7 +146,7 @@ for (const quality of ['high', 'low'] as const) {
       if (response.ok() && response.url().includes('/models/temple-label'))
         labels.push(new URL(response.url()).pathname)
     })
-    await page.goto('/island', { waitUntil: 'domcontentloaded' })
+    await page.goto('/atrium', { waitUntil: 'domcontentloaded' })
     const stage = page.locator('.temple-stage')
     await expect(stage).toHaveAttribute('data-entrance-finished', 'true', {
       timeout: 45000,

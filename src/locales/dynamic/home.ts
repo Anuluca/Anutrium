@@ -31,7 +31,7 @@ const homeDynamic = {
         zhCn: '想法',
         en: 'IDEAS',
       },
-      link: '/island',
+      link: '/atrium',
     },
     {
       text: {

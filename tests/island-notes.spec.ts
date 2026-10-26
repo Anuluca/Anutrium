@@ -1,10 +1,16 @@
 import { expect, test } from '@playwright/test'
 
-const NOTE_ROUTE = '/island/study-notes'
+const NOTE_ROUTE = '/atrium/notes'
 
 test.beforeEach(async ({ page }) => {
+  test.setTimeout(90000)
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto(NOTE_ROUTE, { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.island-focus')).toHaveAttribute(
+    'data-detail-item',
+    'NOTES',
+    { timeout: 45000 }
+  )
   await expect(page.locator('.study-note-card')).toHaveCount(6)
 })
 
@@ -27,7 +33,7 @@ test('renders a responsive square-cornered masonry with image-free cards', async
   const gridColumnCount = await stack.evaluate(
     (element) => getComputedStyle(element).gridTemplateColumns.split(' ').length
   )
-  expect(gridColumnCount).toBe(isMobile ? 1 : 4)
+  expect(gridColumnCount).toBe(isMobile ? 1 : 2)
 
   const occupiedColumns = await cards.evaluateAll(
     (elements) =>
@@ -37,7 +43,7 @@ test('renders a responsive square-cornered masonry with image-free cards', async
         )
       ).size
   )
-  expect(occupiedColumns).toBe(isMobile ? 1 : 4)
+  expect(occupiedColumns).toBe(isMobile ? 1 : 2)
 
   if (!isMobile) {
     const gaps = await cards.evaluateAll((elements) => {
@@ -94,6 +100,11 @@ test('preserves the masonry gap after returning from another route', async ({
 }) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' })
   await page.reload({ waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.island-focus')).toHaveAttribute(
+    'data-detail-item',
+    'NOTES',
+    { timeout: 45000 }
+  )
 
   const cards = page.locator('.study-note-card')
   await expect(cards).toHaveCount(6)
@@ -103,7 +114,7 @@ test('preserves the masonry gap after returning from another route', async ({
   await expect(page).toHaveURL(/\/404$/)
   await page.goBack({ waitUntil: 'domcontentloaded' })
 
-  await expect(page).toHaveURL(/\/island\/study-notes$/)
+  await expect(page).toHaveURL(/\/atrium\/notes$/)
   await expect(page.locator('.study-note-stack')).toHaveClass(/\bis-ready\b/)
 
   await expect

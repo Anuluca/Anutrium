@@ -1,1 +1,1 @@
-{"version":1,"halfHeight":0.22062964411452413,"depth":0.5680000297725201,"planar":true,"attributes":{"position":{"offset":0,"count":750},"normal":{"offset":3000,"count":750},"statueLabelCharacter":{"offset":6000,"count":250},"indices":{"offset":7000,"count":726}},"faces":242}
+{"version":1,"halfHeight":0.21528436243534088,"depth":0.5680000297725201,"planar":true,"attributes":{"position":{"offset":0,"count":585},"normal":{"offset":2340,"count":585},"statueLabelCharacter":{"offset":4680,"count":195},"indices":{"offset":5460,"count":561}},"faces":187}

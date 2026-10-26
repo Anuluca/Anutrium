@@ -3,16 +3,12 @@ import PokeAmice from '@/assets/img/about/pokeAmice.png'
 const aboutDynamic = {
   roadmap: [
     {
-      zhCn: '__「个人海湾」__大模块',
-      en: '__"ISLAND"__ page',
-    },
-    {
       zhCn: '__「宝可后院」__大模块',
       en: '__"POKEYARD"__ page',
     },
     {
-      zhCn: '__「创作」__大模块',
-      en: '__"CREATIVE"__ page',
+      zhCn: '二级模块 UI 简化',
+      en: 'UI simplification for secondary modules',
     },
   ],
   neighbours: [
@@ -33,39 +29,27 @@ const aboutDynamic = {
     {
       version: 'v2.1',
       published: false,
-      date: '',
+      date: '2026-10-26',
       title: {
         zhCn: 'Floratrium 相册更新',
         en: 'FLORATRIUM ALBUM UPDATE',
       },
       details: [
         {
-          zhCn: '优化__首页三维场景（3D Scene）渲染__：保留主视觉材质，简化建筑与倒影，调整倒影亮度与底座表现；合并重复材质、四柱及扫描表面的绘制，精简灯光与透明绘制，并分离静态环境与动态模型的更新。',
-          en: 'Optimized __home page 3D scene rendering__: preserved hero materials, simplified buildings and reflections, and refined reflection brightness and pedestal visibility. Consolidated repeated materials, pillar and scan-surface drawing, reduced lighting and transparency overhead, and separated static environment updates from dynamic models.',
+          zhCn: '新增__ATRIUM 模块__，新增__想法、笔记与宅__三个模块',
+          en: 'Added the __ATRIUM__ module with three new sub-modules: __Ideas, Notes, and Otaku__.',
         },
         {
-          zhCn: '优化__场景资源加载与复用__：按入口和状态加载资源、控制着色器预热范围，跨路由复用场景并在离场后暂停、按需释放；立体标签新增__细节等级（LOD）与平面替代__，按显示大小和视角切换。',
-          en: 'Optimized __scene resource loading and reuse__: load resources and warm shaders by entry point and state, reuse scenes across routes, and pause and release them as needed. Added __level of detail (LOD) and flat alternatives__ for 3D labels, selected by displayed size and viewing angle.',
+          zhCn: 'Floratrium 新增__【花花的邻居们】相册__，花花相册新增__按文件名日期划分的四个成长阶段__。',
+          en: 'Added the __"Neighbors of Floratrium"__ album to Floratrium, and the Floratrium album now includes __four growth stages divided by file name dates__.',
         },
         {
-          zhCn: '降低__交互与页面合成开销__：优化高频锚点更新、光标形状过渡、连线覆盖范围及样式依赖，复用数学计算数据；统一动画状态，暂停不可见内容的动画，诊断数据改为开发与测试时显式启用，保持首页初始星空运动帧率不变。',
-          en: 'Reduced __interaction and page compositing overhead__: optimized frequent anchor updates, cursor shape transitions, connector bounds, and style dependencies, and reused calculation data. Coordinated animation state, paused animations for hidden content, and made diagnostics explicitly opt-in for development and testing, while preserving the initial home starfield animation frame rate.',
+          zhCn: '首页新增__禅模式（Zen Mode）__：点击顶部 Logo 进入，点击页面或按 __Esc__ 即可退出。',
+          en: 'Added a __Zen Mode__ to the home page: click the top logo to enter, and click anywhere on the page or press __Esc__ to exit.',
         },
         {
-          zhCn: '首页新增__禅模式（Zen Mode）__：点击顶部 Logo 进入，淡出导航与辅助界面，保留三维场景并放大显示时分时钟；支持全屏显示，点击页面或按 __Esc__ 即可退出。',
-          en: 'Added __Zen Mode__ to the home page: click the top logo to fade out navigation and supporting UI, keep the 3D scene, and enlarge the clock to show hours and minutes. Supports fullscreen display; click the page or press __Esc__ to exit.',
-        },
-        {
-          zhCn: '__ISLAND 模块__新增__想法、笔记与宅__入口卡片，支持路卡利欧模型部位连线、悬停反色与点击闪烁跳转；首页进入时保留原模型材质，运镜末段以__扫描光带__缓慢切换为黑色线框，扫描与独立柔和缓动的放大、下移同步起止，运镜逐渐变为广角透视，扫描完成后启用鼠标跟随，返回首页时先回正身体与头部，再同步扫描恢复与退镜，直接平滑缩回首页初始位置；模型双腿略微收拢并保持脚掌平稳；收藏品路由及相关命名统一简化为 __merch__。',
-          en: 'Added __Ideas, Notes, and Otaku__ cards to __Island__, with links to Lucario’s body parts, inverted hover colors, and flashing navigation. A slower __scan band__ starts near the end of the camera move and converts the home model to black wireframe. The scan and an independently paced, softly eased zoom and downward shift start and finish together as the camera widens its perspective; mouse tracking starts after scanning finishes. Returning home centers the body and head, then restores the material while smoothly retreating directly to the original home position and scale. Brought the legs slightly closer together while keeping the feet level. Simplified collectible routes and related names to __merch__.',
-        },
-        {
-          zhCn: '花花相册新增__按文件名日期划分的四个成长阶段__，并复用创作页工具标签栏，支持__全部、特写、睡觉、MEME、球、与咪咪一起、战斗、绝育期间__的中英文分类；全部按阶段展示，标签按文件名关键词筛选并平铺展示。',
-          en: 'Added __four date-based life stages__ to Flora’s album and reused the Creative tool tag bar for bilingual __All, Closeup, Sleep, Meme, Ball, With Mimi, Battle, and Sterilization__ filters. All groups media by stage; other tags match filename keywords and display a flat gallery.',
-        },
-        {
-          zhCn: 'Floratrium 新增__【花花的朋友们】相册__。',
-          en: 'Added the __【花花的朋友们】 album__ to Floratrium.',
+          zhCn: '优化__首页三维场景（3D Scene）渲染__、优化__场景资源加载与复用__、降低__交互与页面合成开销__。',
+          en: 'Optimized __3D scene rendering__ on the home page, improved __scene resource loading and reuse__, and reduced __interaction and page compositing overhead__.',
         },
         {
           zhCn: '新增旅程：__"青阳"__、__"赣州"__、__"汕头"__、__"潮州"__、__"广州"__；',

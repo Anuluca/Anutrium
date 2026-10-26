@@ -19,13 +19,17 @@ interface LabelMetadata {
 }
 
 // 字形挤出、三角剖分和顶点去重均在构建阶段完成，重新进入首页只创建 GPU 资源。
-const createLabelLoader = (quality: TempleLabelTier) =>
+const createLabelLoader = (
+  quality: TempleLabelTier,
+  filenameOverride?: string
+) =>
   createCachedModelLoader(
     modelRevision.revision,
     'Temple label',
     async (fetchAsset) => {
       const filename =
-        quality === 'high' ? 'temple-label' : `temple-label-${quality}`
+        filenameOverride ??
+        (quality === 'high' ? 'temple-label' : `temple-label-${quality}`)
       const [metadata, buffer] = await Promise.all([
         fetchAsset(`${filename}.json`).then(
           (response) => response.json() as Promise<LabelMetadata>
@@ -42,6 +46,10 @@ const loaders = {
   low: createLabelLoader('low'),
   flat: createLabelLoader('flat'),
 }
+export const loadTempleWelcomeModel = createLabelLoader(
+  'high',
+  'temple-welcome'
+)
 export function loadTempleLabelModel(
   quality: TempleLabelQuality = templeLabelQuality
 ) {

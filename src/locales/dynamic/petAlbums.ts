@@ -11,28 +11,28 @@ export const petAlbums: Record<string, PetAlbum> = {
     folder: 'flora',
     defaults: [
       {
-        key: 'Floratrium/flora/20250603_180916_compressed_91e37bf1de65.webp',
-        url: 'https://assets.anuluca.com/Floratrium/flora/20250603_180916_compressed_91e37bf1de65.webp',
+        key: 'Floratrium/flora/20250603_180916_compressed_91e37bf1de65-MEME.webp',
+        url: 'https://assets.anuluca.com/Floratrium/flora/20250603_180916_compressed_91e37bf1de65-MEME.webp',
         type: 'image',
       },
       {
-        key: 'Floratrium/flora/20250606_135616_compressed_c31a9b826310.webp',
-        url: 'https://assets.anuluca.com/Floratrium/flora/20250606_135616_compressed_c31a9b826310.webp',
+        key: 'Floratrium/flora/20250606_135616_compressed_c31a9b826310-CLOSEUP.webp',
+        url: 'https://assets.anuluca.com/Floratrium/flora/20250606_135616_compressed_c31a9b826310-CLOSEUP.webp',
         type: 'image',
       },
       {
-        key: 'Floratrium/flora/20250606_135618_compressed_3d3f7fd128f8.webp',
-        url: 'https://assets.anuluca.com/Floratrium/flora/20250606_135618_compressed_3d3f7fd128f8.webp',
+        key: 'Floratrium/flora/20250606_135618_compressed_3d3f7fd128f8-CLOSEUP.webp',
+        url: 'https://assets.anuluca.com/Floratrium/flora/20250606_135618_compressed_3d3f7fd128f8-CLOSEUP.webp',
         type: 'image',
       },
       {
-        key: 'Floratrium/flora/20250606_142022_modified_time_compressed_36f3dc45c7e1.webp',
-        url: 'https://assets.anuluca.com/Floratrium/flora/20250606_142022_modified_time_compressed_36f3dc45c7e1.webp',
+        key: 'Floratrium/flora/20250606_142022_modified_time_compressed_36f3dc45c7e1-CLOSEUP.webp',
+        url: 'https://assets.anuluca.com/Floratrium/flora/20250606_142022_modified_time_compressed_36f3dc45c7e1-CLOSEUP.webp',
         type: 'image',
       },
       {
-        key: 'Floratrium/flora/20250606_173834_modified_time_compressed_7eb94f515f45.webp',
-        url: 'https://assets.anuluca.com/Floratrium/flora/20250606_173834_modified_time_compressed_7eb94f515f45.webp',
+        key: 'Floratrium/flora/20250606_173834_modified_time_compressed_7eb94f515f45-CLOSEUP.webp',
+        url: 'https://assets.anuluca.com/Floratrium/flora/20250606_173834_modified_time_compressed_7eb94f515f45-CLOSEUP.webp',
         type: 'image',
       },
       {
@@ -51,13 +51,13 @@ export const petAlbums: Record<string, PetAlbum> = {
         type: 'image',
       },
       {
-        key: 'Floratrium/flora/20250607_202649_compressed_0bd9c4ecc672.webp',
-        url: 'https://assets.anuluca.com/Floratrium/flora/20250607_202649_compressed_0bd9c4ecc672.webp',
+        key: 'Floratrium/flora/20250607_202649_compressed_0bd9c4ecc672-SLEEP.webp',
+        url: 'https://assets.anuluca.com/Floratrium/flora/20250607_202649_compressed_0bd9c4ecc672-SLEEP.webp',
         type: 'image',
       },
       {
-        key: 'Floratrium/flora/20250607_204307_modified_time_compressed_eb54596e6b35.webp',
-        url: 'https://assets.anuluca.com/Floratrium/flora/20250607_204307_modified_time_compressed_eb54596e6b35.webp',
+        key: 'Floratrium/flora/20250607_204307_modified_time_compressed_eb54596e6b35-SLEEP.webp',
+        url: 'https://assets.anuluca.com/Floratrium/flora/20250607_204307_modified_time_compressed_eb54596e6b35-SLEEP.webp',
         type: 'image',
       },
     ],

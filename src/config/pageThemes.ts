@@ -7,7 +7,7 @@ export const pageThemeColors: Readonly<Record<string, string>> = {
   FLANERIE: '#c44129',
   HOME: '#e23456',
   TEST2: '#e23456',
-  ISLAND: '#ce4c87',
+  ATRIUM: '#ce4c87',
   SPRIGATITO: '#8a2c1b',
   POKEYARD: '#f1c640',
 }

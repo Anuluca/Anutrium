@@ -5,7 +5,7 @@ const cardThumbnailPattern = /[?&]image=card-thumb/
 test('photography grids use thumbnails but the viewer keeps original URLs', async ({
   page,
 }) => {
-  await page.goto('/island/photography', { waitUntil: 'domcontentloaded' })
+  await page.goto('/atrium/photography', { waitUntil: 'domcontentloaded' })
 
   await expect(page.locator('.collection-tab').first()).toHaveAttribute(
     'style',
@@ -28,15 +28,19 @@ test('photography grids use thumbnails but the viewer keeps original URLs', asyn
 test('merchandise cards and galleries use card thumbnails', async ({
   page,
 }) => {
-  await page.goto('/island/merch', {
+  test.setTimeout(90000)
+  await page.goto('/atrium/collections', {
     waitUntil: 'domcontentloaded',
+  })
+  await expect(page.locator('.island-collections-content')).toBeVisible({
+    timeout: 45000,
   })
   await expect(page.locator('.collection-card__cover').first()).toHaveAttribute(
     'src',
     cardThumbnailPattern
   )
 
-  await page.goto('/island/merch/lucarioNoArm', {
+  await page.goto('/atrium/merch/lucarioNoArm', {
     waitUntil: 'domcontentloaded',
   })
   await expect(
@@ -45,7 +49,7 @@ test('merchandise cards and galleries use card thumbnails', async ({
 })
 
 test('image-log cards use card thumbnails', async ({ page }) => {
-  await page.goto('/island/image-log', { waitUntil: 'domcontentloaded' })
+  await page.goto('/atrium/image-log', { waitUntil: 'domcontentloaded' })
   await expect(
     page.locator('.image-log-album-card img').first()
   ).toHaveAttribute('src', cardThumbnailPattern)

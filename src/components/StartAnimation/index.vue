@@ -16,6 +16,7 @@ import LoadingPercentage from '@/components/LoadingPercentage/index.vue'
 import Logo from '@/components/Logo/index.vue'
 import { useTemplePresentation } from '@/composables/useTemplePresentation'
 import { getTempleEntranceHorizon } from '@/config/templeCamera'
+import { isTempleRouteName } from '@/config/templeNavigation'
 import { useSiteLoading } from '@/stores/siteLoading'
 import { useTempleNavigation } from '@/stores/templeNavigation'
 import { loadCriticalFont } from '@/utils/fontLoader'
@@ -49,7 +50,7 @@ const route = useRoute()
 const entryMode = ref<'checking' | 'full' | 'logo'>('checking')
 let mounted = false
 // 固定首次访问的动画类型；模块入口与其详情页不能按路径前缀混用。
-const isHorizonIntro = route.name === 'HOME' || route.name === 'ABOUT'
+const isHorizonIntro = isTempleRouteName(route.name) || route.name === 'ABOUT'
 const navigation = useTempleNavigation()
 const presentation = useTemplePresentation()
 const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)')
@@ -421,12 +422,11 @@ const startFullIntro = () => {
 
 const resolveEntryMode = () => {
   if (!mounted || entryMode.value !== 'checking' || isUnmounted) return
-  const state =
-    route.name === 'HOME'
-      ? startupCacheState.value
-      : startupScriptsCached()
-      ? 'hit'
-      : 'miss'
+  const state = isTempleRouteName(route.name)
+    ? startupCacheState.value
+    : startupScriptsCached()
+    ? 'hit'
+    : 'miss'
   if (state === 'checking') return
   stopCacheWatch()
   finishStartupCacheCheck()

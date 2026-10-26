@@ -1,9 +1,31 @@
 import { createApp, h, nextTick, onBeforeUpdate, ref, shallowRef } from 'vue'
 import { createI18n } from 'vue-i18n'
 import { createMemoryHistory, createRouter } from 'vue-router'
+import { Flip } from 'gsap/Flip'
 
 import IslandFocusLayout from '../../src/views/Home/components/IslandFocusLayout.vue'
 import type { IslandModelAnchors } from '../../src/views/Home/templeScene'
+
+export function sampleIslandLayoutTransition(
+  itemId: string,
+  progress: number[]
+) {
+  const item = document.querySelector<HTMLElement>(
+    `[data-flash-item="${itemId}"]`
+  )!
+  const motion = Flip.getByTarget(item)!
+  motion.pause()
+  return progress.map((value) => {
+    motion.progress(value)
+    const rect = item.getBoundingClientRect()
+    return {
+      left: rect.left,
+      top: rect.top,
+      width: rect.width,
+      height: rect.height,
+    }
+  })
+}
 
 export async function mountIslandLayout(
   mobile = false,
@@ -14,6 +36,7 @@ export async function mountIslandLayout(
   }>()
   const anchors = shallowRef<IslandModelAnchors | null>(null)
   const isMobile = ref(mobile)
+  const interactive = ref(true)
   const updates = { parent: 0, layout: 0 }
   const i18n = createI18n({
     legacy: false,
@@ -55,6 +78,7 @@ export async function mountIslandLayout(
         h(IslandFocusLayout, {
           ref: layout,
           mobile: isMobile.value,
+          interactive: interactive.value,
           ...(reactiveAnchors ? { anchors: anchors.value } : {}),
         })
     },
@@ -68,6 +92,19 @@ export async function mountIslandLayout(
   const root = document.querySelector('.island-focus') as HTMLElement & {
     __vueParentComponent: any
   }
+  if (root.dataset.opening === 'true')
+    await new Promise<void>((resolve) => {
+      const observer = new MutationObserver(() => {
+        if (root.dataset.opening !== 'true') {
+          observer.disconnect()
+          resolve()
+        }
+      })
+      observer.observe(root, {
+        attributes: true,
+        attributeFilter: ['data-opening'],
+      })
+    })
   const instance = root.__vueParentComponent
   ;(instance.bu ||= []).push(() => updates.layout++)
   const updateAnchors = layout.value?.updateAnchors
@@ -83,6 +120,10 @@ export async function mountIslandLayout(
     },
     async setMobile(value: boolean) {
       isMobile.value = value
+      await nextTick()
+    },
+    async setInteractive(value: boolean) {
+      interactive.value = value
       await nextTick()
     },
     async setLocale(value: 'zh' | 'en') {

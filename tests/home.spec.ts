@@ -52,32 +52,32 @@ const pageRoutes = [
   {
     path: '/test',
     selector: '.island-page, .island-mobile-page',
-    title: /ISLAND|个人海湾/,
+    title: /ATRIUM|个人海湾/,
   },
   {
-    path: '/island/photography',
+    path: '/atrium/photography',
     selector: '.photography-page',
     title: /PHOTOGRAPHY|摄影作品/,
   },
   {
-    path: '/island/merch',
-    selector: '.merch-page',
+    path: '/atrium/collections',
+    selector: '.island-collections-content',
     title: /COLLECTIBLES|收藏品/,
   },
   {
-    path: '/island/illustration',
+    path: '/atrium/illustration',
     selector: '.works-gallery-page',
     title: /ILLUSTRATION|绘画/,
   },
   {
-    path: '/island/trainer-card',
+    path: '/atrium/trainer-card',
     selector: '.works-gallery-page',
     title: /TRAINER CARD|训练家卡/,
   },
   {
-    path: '/island/study-notes',
-    selector: '.study-notes-page',
-    title: /STUDY NOTES|学习笔记/,
+    path: '/atrium/notes',
+    selector: '.island-notes-content',
+    title: /NOTES|笔记/,
   },
 ]
 
@@ -112,7 +112,7 @@ test('page theme color follows the active route', async ({ page }) => {
       backgroundLight: '#3e101f',
     },
     {
-      path: '/island/photography',
+      path: '/atrium/photography',
       color: '#e23456',
       backgroundDark: '#380e1c',
       backgroundLight: '#3e101f',
@@ -2348,12 +2348,12 @@ test('personal bay menu entry opens the Lucario page', async ({
 
   if (testInfo.project.name.includes('mobile')) {
     await page.locator('.mobile-menu-icon').click()
-    await page.locator('.mobile-menu-items a[href="/island"]').click()
+    await page.locator('.mobile-menu-items a[href="/atrium"]').click()
   } else {
-    await page.locator('.menu-box a[href="/island"]').click()
+    await page.locator('.menu-box a[href="/atrium"]').click()
   }
 
-  await expect(page).toHaveURL(/\/island$/)
+  await expect(page).toHaveURL(/\/atrium$/)
   await expect(page.locator('.lucario-page')).toBeVisible()
 })
 
@@ -2846,7 +2846,7 @@ test('mobile collection tabs double all shared text sizes', async ({
       indexSize: 1.24,
       minHeight: 180,
       paddingTop: 32,
-      path: '/island/photography',
+      path: '/atrium/photography',
       subtitleSize: 0.76,
       titleSize: 1.6,
     },
@@ -3538,7 +3538,7 @@ test('detail back navigation restores the previous scroll position', async ({
 })
 
 test('merch detail page renders', async ({ page }) => {
-  await page.goto('/island/merch/pokemondoll', {
+  await page.goto('/atrium/merch/pokemondoll', {
     waitUntil: 'domcontentloaded',
   })
 
@@ -3551,7 +3551,7 @@ test('merch detail page renders', async ({ page }) => {
 test('personal bay work cards match their gallery item counts', async ({
   page,
 }) => {
-  const workModules = [{ title: '绘画', path: '/island/illustration' }]
+  const workModules = [{ title: '绘画', path: '/atrium/illustration' }]
 
   await page.goto('/test', { waitUntil: 'domcontentloaded' })
 
@@ -3600,7 +3600,7 @@ test('personal bay work cards match their gallery item counts', async ({
 test('image log groups fall back when English labels are missing', async ({
   page,
 }) => {
-  await page.goto('/island/image-log/million', {
+  await page.goto('/atrium/image-log/million', {
     waitUntil: 'domcontentloaded',
   })
 
@@ -3617,8 +3617,8 @@ test('image log groups fall back when English labels are missing', async ({
 })
 
 for (const galleryRoute of [
-  '/island/photography',
-  '/island/merch/pokemondoll',
+  '/atrium/photography',
+  '/atrium/merch/pokemondoll',
 ]) {
   test(`${galleryRoute} uses the journey detail shutter entrance`, async ({
     page,

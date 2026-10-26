@@ -3,8 +3,7 @@ import type { IslandModelAnchors } from '../templeScene'
 type Point = { x: number; y: number }
 export const islandAnchorByItem: Record<string, keyof IslandModelAnchors> = {
   LABORATORY: 'rightBraid',
-  MISCELLANY: 'chest',
-  'STUDY NOTES': 'rightHand',
+  NOTES: 'chest',
   'GAME LIBRARY': 'leftBraid',
   COLLECTIBLES: 'leftHand',
 }
@@ -31,6 +30,7 @@ export function createIslandLinkOverlay() {
     right: number
     bottom: number
   } | null = null
+  let focusedItem: string | null = null
   // 保留 32px 运动余量；仅超出包络或布局变化时改变表面尺寸，避免逐帧布局。
   const updateViewport = (reset = false) => {
     if (!viewport) return
@@ -40,10 +40,11 @@ export function createIslandLinkOverlay() {
       bottom = -Infinity
     for (const link of links) {
       if (!link.origin || !link.hasPosition) continue
-      left = Math.min(left, link.origin.x, link.position.x - 18)
-      top = Math.min(top, link.origin.y, link.position.y - 18)
-      right = Math.max(right, link.origin.x, link.position.x + 18)
-      bottom = Math.max(bottom, link.origin.y, link.position.y + 18)
+      const radius = focusedItem === link.id ? 44 : 24
+      left = Math.min(left, link.origin.x, link.position.x - radius)
+      top = Math.min(top, link.origin.y, link.position.y - radius)
+      right = Math.max(right, link.origin.x, link.position.x + radius)
+      bottom = Math.max(bottom, link.origin.y, link.position.y + radius)
     }
     if (!Number.isFinite(left)) return
     if (
@@ -111,6 +112,10 @@ export function createIslandLinkOverlay() {
     link.visible = visible
   }
   return {
+    setFocused(id: string | null) {
+      focusedItem = id
+      updateViewport(true)
+    },
     bindViewport(element: unknown) {
       if (disposed || viewport === element) return
       viewport = element as SVGSVGElement | null

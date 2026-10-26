@@ -67,7 +67,7 @@ test('anchor coordinates update without Vue renders, layout reads or repeated DO
         (record) => record.type === 'childList'
       ).length
       const coordinate = layout.root.querySelector<SVGLineElement>(
-        '[data-link-item="MISCELLANY"] line'
+        '[data-link-item="NOTES"] line'
       )!.x2.baseVal.value
       const stableNodes = lines.every(
         (node) =>
@@ -123,13 +123,14 @@ test('real model frames bypass both Vue components and rebind after layout and f
       ),
     })
   })
-  await page.goto('/island', { waitUntil: 'domcontentloaded' })
+  await page.goto('/atrium', { waitUntil: 'domcontentloaded' })
   const root = page.locator('.island-focus')
   const stage = page.locator('.temple-stage')
   await expect(root).toBeVisible({ timeout: 60000 })
   await expect(stage).toHaveAttribute('data-entrance-finished', 'true')
   const viewport = page.viewportSize()!
-  await page.mouse.move(viewport.width * 0.5, viewport.height * 0.45)
+  // 避开新增的聚焦框命中区，单独验证模型投影更新，而非 hover 状态更新。
+  await page.mouse.move(viewport.width * 0.5, viewport.height * 0.1)
   await page.waitForTimeout(1200)
   await root.evaluate((element: any) => {
     const instance = element.__vueParentComponent
@@ -161,8 +162,8 @@ test('real model frames bypass both Vue components and rebind after layout and f
       points: Object.values(source),
     }
   })
-  for (const x of [0.46, 0.54, 0.47, 0.53]) {
-    await page.mouse.move(viewport.width * x, viewport.height * 0.45)
+  for (const x of [0.2, 0.8, 0.25, 0.75]) {
+    await page.mouse.move(viewport.width * x, viewport.height * 0.1)
     await page.waitForTimeout(140)
   }
   await page.waitForTimeout(400)
@@ -172,8 +173,7 @@ test('real model frames bypass both Vue components and rebind after layout and f
     const source = (window as any).__anchorSource()
     const mapping = {
       LABORATORY: 'rightBraid',
-      MISCELLANY: 'chest',
-      'STUDY NOTES': 'rightHand',
+      NOTES: 'chest',
       'GAME LIBRARY': 'leftBraid',
       COLLECTIBLES: 'leftHand',
     }
@@ -251,18 +251,14 @@ test('real model frames bypass both Vue components and rebind after layout and f
       document.querySelector('#app') as any
     ).__vue_app__.config.globalProperties.$i18n.locale = 'en'
   })
-  await expect(root.locator('.island-panels h2')).toHaveText([
-    'IDEAS',
-    'NOTES',
-    'OTAKU',
-  ])
+  await expect(root.locator('.island-panels h2')).toHaveText(['IDEAS', 'OTAKU'])
   await expect.poll(originError).toBeLessThan(1)
-  await root.locator('[data-island-item="STUDY NOTES"]').focus()
+  await root.locator('[data-island-item="NOTES"]').focus()
   await expect
     .poll(() =>
       root.locator('.island-links > g').last().getAttribute('data-link-item')
     )
-    .toBe('STUDY NOTES')
+    .toBe('NOTES')
   const select = (id: string | null) =>
     page.evaluate(
       (id) =>
@@ -284,7 +280,7 @@ test('real model frames bypass both Vue components and rebind after layout and f
   await expect(root).toBeVisible({ timeout: 15000 })
   await expect(
     root.locator('.island-links > g[visibility="visible"]')
-  ).toHaveCount(5)
+  ).toHaveCount(4)
   await expect.poll(originError).toBeLessThan(1)
   expect(
     await page.evaluate(() =>

@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 for (const entry of [
-  { path: '/island', selection: 'statue' },
+  { path: '/atrium', selection: 'statue' },
   { path: '/floratrium', selection: 'sprigatito' },
   { path: '/creative', selection: 'island' },
 ]) {

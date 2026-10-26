@@ -1,7 +1,7 @@
 <template>
   <div class="works-gallery-page main-container">
     <DetailPageHeader
-      back-label="ISLAND"
+      back-label="ATRIUM"
       back-path="/test"
       :title="work.title"
     />
@@ -57,10 +57,10 @@ interface WorkPageConfig {
 }
 
 const WORK_PAGE_CONFIG: Record<string, WorkPageConfig> = {
-  ISLAND_ILLUSTRATION: {
+  ATRIUM_ILLUSTRATION: {
     moduleKey: 'illustration',
   },
-  ISLAND_TRAINER_CARD: {
+  ATRIUM_TRAINER_CARD: {
     moduleKey: 'trainerCard',
   },
 }
@@ -69,7 +69,7 @@ const route = useRoute()
 const { t, tm } = useI18n()
 const pageConfig = computed(
   () =>
-    WORK_PAGE_CONFIG[String(route.name)] || WORK_PAGE_CONFIG.ISLAND_ILLUSTRATION
+    WORK_PAGE_CONFIG[String(route.name)] || WORK_PAGE_CONFIG.ATRIUM_ILLUSTRATION
 )
 const moduleKey = computed(() => pageConfig.value.moduleKey)
 const work = computed(

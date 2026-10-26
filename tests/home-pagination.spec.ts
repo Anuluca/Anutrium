@@ -681,7 +681,7 @@ test('home unmounts each previous secondary section when the next one enters', a
   expect(cornerDecoration.height).toBeLessThanOrEqual(14)
   await expect(
     page.getByRole('link', { name: 'MORE ABOUT ME' })
-  ).toHaveAttribute('href', '/island')
+  ).toHaveAttribute('href', '/atrium')
 
   const moreLinks = {
     archive: {

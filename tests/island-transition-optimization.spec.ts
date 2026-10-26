@@ -146,7 +146,7 @@ test('island keeps page and router leave geometry within one pixel', async ({
   page,
 }, info) => {
   test.setTimeout(60000)
-  await page.goto('/island', { waitUntil: 'domcontentloaded' })
+  await page.goto('/atrium', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.temple-stage')).toHaveAttribute(
     'data-material-phase',
     'wireframe',

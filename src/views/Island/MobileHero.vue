@@ -4,7 +4,7 @@
     <div class="hero-copy">
       <span class="hero-label">[Crying-Yet-Joyless]</span>
       <h1>
-        <TypedText text="ISLAND" :delay="220" :speed="42" />
+        <TypedText text="ATRIUM" :delay="220" :speed="42" />
       </h1>
       <div class="hero-cn">
         <span>个人海湾</span>
@@ -17,7 +17,7 @@
         />
       </p>
     </div>
-    <div class="hero-watermark" aria-hidden="true">ANULUCA'S ISLAND</div>
+    <div class="hero-watermark" aria-hidden="true">ANULUCA'S ATRIUM</div>
     <div class="hero-route-icon" aria-hidden="true">
       <Ship />
     </div>

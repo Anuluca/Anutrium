@@ -23,6 +23,7 @@ const routeMessageDomains: Record<string, MessageDomain[]> = {
   TEST2: ['home', 'archive', 'craft', 'flanerie'],
   // 首页场景不消费这些文案；嵌入面板在挂载前按需加载，避免阻塞首屏。
   HOME: [],
+  ATRIUM: [],
   ARCHIVE: ['archive'],
   FLANERIE: ['flanerie'],
   FLANERIE_DETAIL: ['flanerie'],
@@ -34,14 +35,12 @@ const routeMessageDomains: Record<string, MessageDomain[]> = {
   BASE64CODEC: ['craft'],
   IMAGEBASE64: ['craft'],
   ABOUT: ['about'],
-  ISLAND_PHOTOGRAPHY: ['island'],
-  ISLAND_MERCH: ['island'],
-  ISLAND_MERCH_DETAIL: ['island'],
-  ISLAND_IMAGE_LOG: ['island'],
-  ISLAND_IMAGE_LOG_DETAIL: ['island'],
-  ISLAND_ILLUSTRATION: ['island'],
-  ISLAND_TRAINER_CARD: ['island'],
-  ISLAND_STUDY_NOTES: ['island'],
+  ATRIUM_PHOTOGRAPHY: ['island'],
+  ATRIUM_MERCH_DETAIL: ['island'],
+  ATRIUM_IMAGE_LOG: ['island'],
+  ATRIUM_IMAGE_LOG_DETAIL: ['island'],
+  ATRIUM_ILLUSTRATION: ['island'],
+  ATRIUM_TRAINER_CARD: ['island'],
   TEST: ['island'],
 }
 

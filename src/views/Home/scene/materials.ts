@@ -47,6 +47,46 @@ export function installHeadRig(
   }
 }
 
+/** 用同一覆盖率裁切表面、线框和深度通道，渐隐后不残留黑色遮挡。 */
+export function installAtriumLegFade(
+  surface: THREE.Material,
+  strength: { value: number },
+  bounds: { value: THREE.Vector2 }
+) {
+  const compile = surface.onBeforeCompile
+  const key = surface.customProgramCacheKey()
+  surface.onBeforeCompile = (shader, renderer) => {
+    compile.call(surface, shader, renderer)
+    shader.uniforms.atriumLegFade = strength
+    shader.uniforms.atriumBodyBounds = bounds
+    shader.vertexShader = shader.vertexShader
+      .replace(
+        '#include <common>',
+        '#include <common>\nvarying float atriumBodyHeight;'
+      )
+      .replace(
+        '#include <begin_vertex>',
+        '#include <begin_vertex>\natriumBodyHeight = position.y;'
+      )
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        '#include <common>',
+        '#include <common>\nvarying float atriumBodyHeight; uniform float atriumLegFade; uniform vec2 atriumBodyBounds;'
+      )
+      .replace(
+        '#include <clipping_planes_fragment>',
+        `#include <clipping_planes_fragment>
+        if (atriumLegFade > 0.00001) {
+          float height = (atriumBodyHeight - atriumBodyBounds.x) / max(atriumBodyBounds.y, 0.00001);
+          float coverage = mix(1.0, smoothstep(0.08, 0.4, height), atriumLegFade);
+          float threshold = fract(sin(dot(floor(gl_FragCoord.xy), vec2(12.9898, 78.233))) * 43758.5453);
+          if (coverage <= threshold) discard;
+        }`
+      )
+  }
+  surface.customProgramCacheKey = () => `${key}:atrium-leg-fade-v1`
+}
+
 /** 按模型原始高度染红，避免歪头或倒影翻转改变渐变方向。 */
 export function installHeadacheTint(
   surface: THREE.MeshPhysicalMaterial,

@@ -4,7 +4,10 @@ import { useRoute } from 'vue-router'
 
 import BackStars from '@/components/BackStars/index.vue'
 import { TEMPLE_FOCUS_DURATION } from '@/config/templeCamera'
-import { templeNavigationById } from '@/config/templeNavigation'
+import {
+  isTempleRouteName,
+  templeNavigationById,
+} from '@/config/templeNavigation'
 import type { ZodiacSignId } from '@/config/zodiacThemes'
 import { visualState } from '@/stores'
 import { useTempleNavigation } from '@/stores/templeNavigation'
@@ -17,7 +20,7 @@ const props = withDefaults(defineProps<{ entryActive?: boolean }>(), {
 })
 
 const currentRouter = computed(() => route.path)
-const isTempleRoute = computed(() => route.name === 'HOME')
+const isTempleRoute = computed(() => isTempleRouteName(route.name))
 
 const isTextMenu = computed(() => currentRouter.value !== '/test2')
 const useDeepBlackBackground = computed(
@@ -47,9 +50,9 @@ const requestedActiveSign = computed<ZodiacSignId>(() => {
   if (routeName === 'ARCHIVE') return 'aquarius'
   if (routeName.startsWith('FLANERIE')) return 'sagittarius'
   if (
-    routeName.startsWith('ISLAND') ||
+    routeName.startsWith('ATRIUM') ||
     routeName === 'TEST' ||
-    redirectedPath.startsWith('/island')
+    redirectedPath.startsWith('/atrium')
   ) {
     return 'pisces'
   }
@@ -118,6 +121,7 @@ const simpleInitialEntrance = computed(
       :theme="visualStateStore.theme"
       :is-text-menu="isTextMenu"
       :deep-black="useDeepBlackBackground"
+      :black-backdrop="isTempleRoute && navigation.activeSelection === 'statue'"
       :active-sign="activeSign"
       :layout="zodiacLayout"
       :layout-transition-duration="

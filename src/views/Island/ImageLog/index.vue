@@ -1,7 +1,7 @@
 <template>
   <div class="image-log-page main-container">
     <DetailPageHeader
-      back-label="ISLAND"
+      back-label="ATRIUM"
       back-path="/test"
       :title="t('island.modules.photography.imageLog.title')"
     />
@@ -56,7 +56,7 @@ const albums = computed<ImageLogAlbumCardData[]>(() =>
 )
 
 const openAlbum = (albumId: string) => {
-  router.push(`/island/image-log/${albumId}`)
+  router.push(`/atrium/image-log/${albumId}`)
 }
 </script>
 

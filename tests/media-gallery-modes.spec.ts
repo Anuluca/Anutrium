@@ -26,7 +26,7 @@ test('gallery defaults to list and previews one original with navigation and all
     )
       originals.push(request.url())
   })
-  await page.goto('/island/merch/lucarioNoArm', {
+  await page.goto('/atrium/merch/lucarioNoArm', {
     waitUntil: 'domcontentloaded',
   })
   await expect(page.locator('.layout-page')).toHaveClass(/\blayout-show\b/, {
@@ -211,7 +211,7 @@ test('preview supports mixed video galleries and returns to list', async ({
   page,
 }) => {
   await page.route(/\.(?:mp4|mov)(?:\?|$)/i, (route) => route.abort())
-  await page.goto('/island/image-log/covid', { waitUntil: 'domcontentloaded' })
+  await page.goto('/atrium/image-log/covid', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.layout-page')).toHaveClass(/\blayout-show\b/, {
     timeout: 15000,
   })

@@ -8,6 +8,7 @@ import {
   ref,
   watch,
 } from 'vue'
+import { gsap } from 'gsap'
 
 import ParticlesBg from '@/components/ParticlesBg/index.vue'
 import type { ZodiacSignId } from '@/config/zodiacThemes'
@@ -21,6 +22,7 @@ interface Props {
   theme?: 'light' | 'dark'
   isTextMenu?: boolean
   deepBlack?: boolean
+  blackBackdrop?: boolean
   activeSign?: ZodiacSignId
   layout?: ZodiacLayout
   tinted?: boolean
@@ -45,6 +47,7 @@ const props = withDefaults(defineProps<Props>(), {
   theme: 'dark',
   isTextMenu: false,
   deepBlack: false,
+  blackBackdrop: false,
   activeSign: 'leo',
   layout: 'hero',
   tinted: false,
@@ -183,7 +186,10 @@ const particleQuantity = computed(() =>
   Math.round((isMobileViewport.value ? 25 : 100) * 0.65)
 )
 
-const getBackdropTargetColor = (
+const backdropBlackMix = { amount: props.blackBackdrop ? 1 : 0 }
+let backdropTintTransition: gsap.core.Tween | undefined
+
+const getThemedBackdropColor = (
   rootStyle: CSSStyleDeclaration,
   themeColor: string
 ) => {
@@ -203,6 +209,19 @@ const getBackdropTargetColor = (
   if (explicitBackground) return explicitBackground
 
   return `color-mix(in srgb, color-mix(in srgb, ${themeColor} 45%, #000) 50%, #0a0411)`
+}
+
+const getBackdropTargetColor = (
+  rootStyle: CSSStyleDeclaration,
+  themeColor: string
+) => {
+  const color = getThemedBackdropColor(rootStyle, themeColor)
+  if (!props.tinted || props.deepBlack || backdropBlackMix.amount === 0)
+    return color
+  // 仅插值底层色，保留原有渐变遮罩、星盘和文字的主题色。
+  return `color-mix(in srgb, #030202 ${
+    backdropBlackMix.amount * 100
+  }%, ${color})`
 }
 
 const cancelBackdropAnimation = () => {
@@ -288,6 +307,25 @@ const scheduleBackdropColorUpdate = () => {
     void updateBackdropColor()
   })
 }
+
+watch(
+  () => props.blackBackdrop,
+  (black) => {
+    backdropTintTransition?.kill()
+    const amount = black ? 1 : 0
+    if (isReducedMotion.value) {
+      backdropBlackMix.amount = amount
+      scheduleBackdropColorUpdate()
+      return
+    }
+    backdropTintTransition = gsap.to(backdropBlackMix, {
+      amount,
+      duration: props.layoutTransitionDuration ?? 1.1,
+      ease: 'power2.inOut',
+      onUpdate: scheduleBackdropColorUpdate,
+    })
+  }
+)
 
 const readBackdropStyleSignature = () => {
   const style = document.documentElement.style
@@ -420,6 +458,17 @@ const handleChartTransitionEnd = (event: TransitionEvent) => {
   if (key === 'wheel') isRouteTransitioning.value = false
 }
 
+// 入场版本只在首次开屏时确定，聚焦退出不能切换 animation-name 重播星盘。
+const entranceSimple = ref(props.simpleEntrance)
+let entranceStarted = props.entryActive
+watch(
+  () => props.entryActive,
+  (active) => {
+    if (!active || entranceStarted) return
+    entranceSimple.value = props.simpleEntrance
+    entranceStarted = true
+  }
+)
 const containerClass = computed(() => [
   'star-container',
   props.theme,
@@ -432,7 +481,7 @@ const containerClass = computed(() => [
     'is-chart-transitioning': isChartTransitioning.value,
     'is-route-transitioning': isRouteTransitioning.value,
     'is-entry-ready': props.entryActive,
-    'is-simple-entrance': props.simpleEntrance,
+    'is-simple-entrance': entranceSimple.value,
     'has-background-top-inset': props.topInset > 0,
   },
 ])
@@ -465,6 +514,7 @@ onUnmounted(() => {
   if (backdropUpdateRafId !== null) {
     window.cancelAnimationFrame(backdropUpdateRafId)
   }
+  backdropTintTransition?.kill()
   cancelBackdropAnimation()
 })
 </script>

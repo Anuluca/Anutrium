@@ -285,7 +285,7 @@ for (const mode of ['flat', 'lod'] as const) {
     )
     const errors: string[] = []
     page.on('pageerror', (error) => errors.push(error.message))
-    await page.goto('/island', { waitUntil: 'domcontentloaded' })
+    await page.goto('/atrium', { waitUntil: 'domcontentloaded' })
     const stage = page.locator('.temple-stage')
     await expect(stage).toHaveAttribute('data-entrance-finished', 'true', {
       timeout: 45000,

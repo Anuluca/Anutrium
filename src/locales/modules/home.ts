@@ -3,7 +3,7 @@ import dynamic from '../dynamic/home'
 const home = {
   aboutMore: {
     zhCn: '个人海湾',
-    en: 'ISLAND',
+    en: 'ATRIUM',
   },
   title01: {
     zhCn: '关于我',

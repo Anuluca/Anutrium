@@ -1,6 +1,8 @@
 import { onMounted, onUnmounted, type Ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import { isTempleRouteName } from '@/config/templeNavigation'
+
 const ISLAND_ROUTE_NAME = 'TEST'
 const ISLAND_GEOMETRY_UNLOCK_DELAY = 260
 const islandShellClasses = ['island-pc-shell', 'island-mobile-shell'] as const
@@ -123,7 +125,7 @@ export function useRouteShellGeometry(
     restoreIslandRouteGeometry()
     document.body.classList.remove(...islandLeavingClasses)
 
-    if (route.name !== ISLAND_ROUTE_NAME && route.name !== 'HOME') {
+    if (route.name !== ISLAND_ROUTE_NAME && !isTempleRouteName(route.name)) {
       document.body.classList.remove(...islandShellClasses)
     }
 
@@ -133,7 +135,7 @@ export function useRouteShellGeometry(
   const scheduleIslandGeometryUnlock = () => {
     if (
       route.name === ISLAND_ROUTE_NAME ||
-      route.name === 'HOME' ||
+      isTempleRouteName(route.name) ||
       !hasIslandShellClass() ||
       islandGeometryUnlockTimer !== null
     ) {
@@ -165,6 +167,9 @@ export function useRouteShellGeometry(
   onMounted(() => {
     removeGuard = router.beforeEach((to, from) => {
       if (to.fullPath === from.fullPath || to.name === from.name) return true
+      // 首页模块共用同一组件，不会触发路由离场钩子，不能冻结其视口几何。
+      if (isTempleRouteName(to.name) && isTempleRouteName(from.name))
+        return true
       const leavingElement = routerContainer.value?.firstElementChild
       if (leavingElement) lockIslandRouteGeometry(leavingElement)
       return true

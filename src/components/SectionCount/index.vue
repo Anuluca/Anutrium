@@ -1,11 +1,12 @@
 <template>
-  <span class="section-count">
+  <span class="section-count" :class="align && `section-count--${align}`">
     <strong>
       <span class="section-count__value">
         <CountUp :to="normalizedCount" :min-digits="2" />
       </span>
     </strong>
-    <small>
+    <small v-if="align">{{ label }}</small>
+    <small v-else>
       <span v-for="(character, index) in labelCharacters" :key="index">{{
         character
       }}</span>
@@ -22,9 +23,11 @@ const props = withDefaults(
   defineProps<{
     count: number
     label?: string
+    align?: 'left' | 'right'
   }>(),
   {
     label: 'ENTRIES',
+    align: undefined,
   }
 )
 
@@ -73,6 +76,23 @@ const labelCharacters = computed(() => Array.from(props.label))
     > span:only-child {
       margin-inline: auto;
     }
+  }
+
+  &--left,
+  &--right {
+    small {
+      display: block;
+    }
+  }
+
+  &--left {
+    justify-items: start;
+    text-align: left;
+  }
+
+  &--right {
+    justify-items: end;
+    text-align: right;
   }
 }
 

@@ -75,30 +75,16 @@ export const useIslandHarborData = () => {
           count: '0 ITEMS',
           img: developingPlaceholder,
         },
-      ],
-    },
-    {
-      id: 'notes',
-      title: '笔记',
-      subtitle: 'NOTES',
-      progress: '46%',
-      items: [
         {
-          title: '学习笔记',
-          subtitle: 'STUDY NOTES',
+          title: '笔记',
+          subtitle: 'NOTES',
           get count() {
             return `${studyNoteList.value.length} NOTES`
           },
           get img() {
             return studyNoteCover.value
           },
-          path: '/island/study-notes',
-        },
-        {
-          title: '杂记',
-          subtitle: 'MISCELLANY',
-          count: '0 ARTICLES',
-          img: developingPlaceholder,
+          path: '/atrium/notes',
         },
       ],
     },
@@ -123,7 +109,7 @@ export const useIslandHarborData = () => {
           get img() {
             return t('island.modules.photography.merch.img')
           },
-          path: '/island/merch',
+          path: '/atrium/collections',
         },
       ],
     },

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 /* eslint-disable simple-import-sort/imports */
+import { isTempleRouteName } from '@/config/templeNavigation'
 import layout from './layout/index.vue'
 import FooterCom from '@/components/FooterCom/index.vue'
 import MobileScreenFrame from '@/components/MobileScreenFrame/index.vue'
@@ -58,7 +59,7 @@ const sceneEntryReady = ref(false)
 const entryOverlayHidden = ref(false)
 const footerTeleportReady = ref(false)
 const pageContentActive = ref(true)
-const isTempleRoute = computed(() => route.name === 'HOME')
+const isTempleRoute = computed(() => isTempleRouteName(route.name))
 const templeNavigation = useTempleNavigation()
 const footerWidthMode = computed(() =>
   isTempleRoute.value && templeNavigation.isInitialScene ? 'wide' : 'default'
@@ -197,8 +198,8 @@ const startAnimationHidden = () => {
 }
 
 const unmountPageContent = () => {
-  // 收藏品页保留首次挂载，避免开场结束后重建全部卡片并重播入场。
-  if (isTempleRoute.value || route.name === 'ISLAND_MERCH') return
+  // 三维场景保留首次挂载，避免开场结束后重播入场。
+  if (isTempleRoute.value) return
   pageContentActive.value = false
 }
 

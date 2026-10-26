@@ -7,7 +7,9 @@ import type {
 import NProgress from 'nprogress'
 import { gsap } from 'gsap'
 import { pageThemeColors } from '@/config/pageThemes'
+import { islandModuleAtPath, islandModules } from '@/config/islandModules'
 import {
+  isTempleRouteName,
   parseTempleExpanded,
   templeCategoryById,
   type TempleCategoryId,
@@ -148,7 +150,7 @@ const PAGE_DESCRIPTIONS: Record<string, { zhCn: string; en: string }> = {
     zhCn: '了解前端工程师 Anuluca 的经历、技能与设计理念。',
     en: 'About Anuluca, a frontend engineer: experience, skills, and design approach.',
   },
-  ISLAND: {
+  ATRIUM: {
     zhCn: 'Anuluca 的个人内容与兴趣空间。',
     en: 'A personal space for Anuluca’s interests and collected fragments.',
   },
@@ -164,21 +166,20 @@ const DESCRIPTION_ROUTE_GROUPS: Record<string, keyof typeof PAGE_DESCRIPTIONS> =
     HTMLENTITIES: 'CRAFT',
     BASE64CODEC: 'CRAFT',
     IMAGEBASE64: 'CRAFT',
-    SLEEPING_DOGS_BULLS_AND_COWS: 'ISLAND',
-    SLEEPING_DOGS_SAFETY_BOX: 'ISLAND',
-    TEST: 'ISLAND',
-    ISLAND_IMAGE_LOG: 'ISLAND',
-    ISLAND_IMAGE_LOG_DETAIL: 'ISLAND',
-    ISLAND_ILLUSTRATION: 'ISLAND',
-    ISLAND_STUDY_NOTES: 'ISLAND',
-    ISLAND_TRAINER_CARD: 'ISLAND',
+    SLEEPING_DOGS_BULLS_AND_COWS: 'ATRIUM',
+    SLEEPING_DOGS_SAFETY_BOX: 'ATRIUM',
+    TEST: 'ATRIUM',
+    ATRIUM_IMAGE_LOG: 'ATRIUM',
+    ATRIUM_IMAGE_LOG_DETAIL: 'ATRIUM',
+    ATRIUM_ILLUSTRATION: 'ATRIUM',
+    ATRIUM_TRAINER_CARD: 'ATRIUM',
   }
 
 const LEGACY_RED_BACKGROUND_GROUPS = new Set([
   'ABOUT',
   'HOME',
   'TEST2',
-  'ISLAND',
+  'ATRIUM',
 ])
 
 export type PageLayout = 'main' | 'sub'
@@ -233,7 +234,7 @@ export const routes: RouteConfig[] = [
   },
 
   {
-    path: '/:module(archive|flanerie|island|pokeyard|creative|floratrium)?',
+    path: '/:module(archive|flanerie|pokeyard|creative|floratrium)?',
     alias: ['/home2'],
     name: 'HOME',
     component: () => import('@/views/Home/index.vue'),
@@ -249,11 +250,41 @@ export const routes: RouteConfig[] = [
     },
   },
   {
-    path: '/island/photography',
-    name: 'ISLAND_PHOTOGRAPHY',
+    path: '/atrium',
+    name: 'ATRIUM',
+    component: () => import('@/views/Home/index.vue'),
+    meta: {
+      updatedAt: '2026-10-08',
+      starBackground: 'default',
+      titleEn: 'ATRIUM',
+      titleCn: '个人海湾',
+      fullFooter: false,
+      pageFooter: true,
+      pageLayout: 'main',
+      ifShow: true,
+    },
+  },
+  ...Object.values(islandModules).map<RouteConfig>((module) => ({
+    path: module.path,
+    name: module.routeName,
+    component: () => import('@/views/Home/index.vue'),
+    meta: {
+      updatedAt: '2026-10-08',
+      starBackground: 'default',
+      titleEn: module.englishTitle,
+      titleCn: '个人海湾',
+      fullFooter: false,
+      pageFooter: true,
+      pageLayout: 'main' as const,
+      ifShow: false,
+    },
+  })),
+  {
+    path: '/atrium/photography',
+    name: 'ATRIUM_PHOTOGRAPHY',
     component: () => import('@/views/Island/Photography/index.vue'),
     meta: {
-      activeMenu: '/island',
+      activeMenu: '/atrium',
       titleEn: 'PHOTOGRAPHY',
       titleCn: '摄影作品',
       fullFooter: true,
@@ -264,28 +295,13 @@ export const routes: RouteConfig[] = [
       starBackground: 'deep-black',
     },
   },
+
   {
-    path: '/island/merch',
-    name: 'ISLAND_MERCH',
-    component: () => import('@/views/Island/Merch/index.vue'),
-    meta: {
-      activeMenu: '/island',
-      titleEn: 'COLLECTIBLES',
-      titleCn: '收藏品',
-      fullFooter: true,
-      pageFooter: true,
-      pageLayout: 'sub',
-      ifShow: false,
-      noMenu: false,
-      starBackground: 'deep-black',
-    },
-  },
-  {
-    path: '/island/merch/:collectionId',
-    name: 'ISLAND_MERCH_DETAIL',
+    path: '/atrium/merch/:collectionId',
+    name: 'ATRIUM_MERCH_DETAIL',
     component: () => import('@/views/Island/Merch/Detail/index.vue'),
     meta: {
-      activeMenu: '/island',
+      activeMenu: '/atrium',
       titleEn: 'COLLECTIBLES',
       titleCn: '收藏品',
       fullFooter: true,
@@ -297,11 +313,11 @@ export const routes: RouteConfig[] = [
     },
   },
   {
-    path: '/island/image-log',
-    name: 'ISLAND_IMAGE_LOG',
+    path: '/atrium/image-log',
+    name: 'ATRIUM_IMAGE_LOG',
     component: () => import('@/views/Island/ImageLog/index.vue'),
     meta: {
-      activeMenu: '/island',
+      activeMenu: '/atrium',
       titleEn: 'IMAGE LOG',
       titleCn: '图像记录',
       fullFooter: true,
@@ -313,11 +329,11 @@ export const routes: RouteConfig[] = [
     },
   },
   {
-    path: '/island/image-log/:albumId',
-    name: 'ISLAND_IMAGE_LOG_DETAIL',
+    path: '/atrium/image-log/:albumId',
+    name: 'ATRIUM_IMAGE_LOG_DETAIL',
     component: () => import('@/views/Island/ImageLog/Detail/index.vue'),
     meta: {
-      activeMenu: '/island',
+      activeMenu: '/atrium',
       titleEn: 'IMAGE LOG',
       titleCn: '图像记录',
       fullFooter: true,
@@ -329,11 +345,11 @@ export const routes: RouteConfig[] = [
     },
   },
   {
-    path: '/island/illustration',
-    name: 'ISLAND_ILLUSTRATION',
+    path: '/atrium/illustration',
+    name: 'ATRIUM_ILLUSTRATION',
     component: () => import('@/views/Island/WorksGallery/index.vue'),
     meta: {
-      activeMenu: '/island',
+      activeMenu: '/atrium',
       titleEn: 'ILLUSTRATION',
       titleCn: '绘画',
       fullFooter: true,
@@ -345,11 +361,11 @@ export const routes: RouteConfig[] = [
     },
   },
   {
-    path: '/island/trainer-card',
-    name: 'ISLAND_TRAINER_CARD',
+    path: '/atrium/trainer-card',
+    name: 'ATRIUM_TRAINER_CARD',
     component: () => import('@/views/Island/WorksGallery/index.vue'),
     meta: {
-      activeMenu: '/island',
+      activeMenu: '/atrium',
       titleEn: 'TRAINER CARD',
       titleCn: '训练家卡',
       fullFooter: true,
@@ -360,22 +376,7 @@ export const routes: RouteConfig[] = [
       starBackground: 'deep-black',
     },
   },
-  {
-    path: '/island/study-notes',
-    name: 'ISLAND_STUDY_NOTES',
-    component: () => import('@/views/Island/StudyNotes/index.vue'),
-    meta: {
-      activeMenu: '/island',
-      titleEn: 'STUDY NOTES',
-      titleCn: '学习笔记',
-      fullFooter: true,
-      pageFooter: true,
-      pageLayout: 'sub',
-      ifShow: false,
-      noMenu: false,
-      starBackground: 'deep-black',
-    },
-  },
+
   {
     path: '/about',
     name: 'ABOUT',
@@ -522,7 +523,7 @@ export const routes: RouteConfig[] = [
     component: () =>
       import('@/views/Games/SleepingDogs/BullsAndCows/index.vue'),
     meta: {
-      activeMenu: '/island',
+      activeMenu: '/atrium',
       titleEn: '猜数字',
       titleCn: '猜数字',
       fullFooter: true,
@@ -538,7 +539,7 @@ export const routes: RouteConfig[] = [
     name: 'SLEEPING_DOGS_SAFETY_BOX',
     component: () => import('@/views/Games/SleepingDogs/SafetyBox/index.vue'),
     meta: {
-      activeMenu: '/island',
+      activeMenu: '/atrium',
       titleEn: '保险箱小游戏',
       titleCn: '保险箱小游戏',
       fullFooter: true,
@@ -554,9 +555,9 @@ export const routes: RouteConfig[] = [
     name: 'TEST',
     component: () => import('@/views/Island/index.vue'),
     meta: {
-      activeMenu: '/island',
+      activeMenu: '/atrium',
       updatedAt: '2026-07-18',
-      titleEn: 'ISLAND',
+      titleEn: 'ATRIUM',
       titleCn: '个人海湾',
       fullFooter: true,
       pageFooter: false,
@@ -603,7 +604,11 @@ export const getSeoMeta = (
   const vlogTitle = vlogId
     ? vlogs.find((vlog) => vlog.id === vlogId)?.title
     : undefined
-  const pageTitle = vlogTitle || String(to.meta.titleEn || 'HOME')
+  const moduleId = islandModuleAtPath(to.path)
+  const pageTitle =
+    (moduleId ? islandModules[moduleId].englishTitle : undefined) ||
+    vlogTitle ||
+    String(to.meta.titleEn || 'HOME')
   const siteTitle = locale === 'en' ? 'Anutrium by Anuluca' : 'Anutrium'
   const descriptionRouteName = DESCRIPTION_ROUTE_GROUPS[routeName] || routeName
   const description =
@@ -664,9 +669,9 @@ export const syncPageTheme = (
 ) => {
   if (typeof document === 'undefined') return
   const rootStyle = document.documentElement.style
-  // 首页内部 island 标识对应 CREATIVE，独立 ISLAND 页面仍使用原主题。
+  // 首页内部 island 标识对应 CREATIVE，独立 ATRIUM 页面仍使用原主题。
   const pageGroup =
-    route.name === 'HOME' && moduleGroup === 'ISLAND'
+    isTempleRouteName(route.name) && moduleGroup === 'ISLAND'
       ? 'CREATIVE'
       : moduleGroup || getPageThemeGroup(route)
   if (pageGroup === 'ABOUT') {
@@ -678,7 +683,7 @@ export const syncPageTheme = (
   const nextColor = colorOverride || pageThemeColors[pageGroup] || '#e23456'
   const currentColor = rootStyle.getPropertyValue('--page-theme-color').trim()
   const animate =
-    route.name === 'HOME' &&
+    isTempleRouteName(route.name) &&
     Boolean(currentColor) &&
     !window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
@@ -726,7 +731,7 @@ export const installRouterGuards = (router: Router) => {
       if (
         from.matched.length > 0 &&
         to.path !== from.path &&
-        !(to.name === 'HOME' && from.name === 'HOME')
+        !(isTempleRouteName(to.name) && isTempleRouteName(from.name))
       )
         void coverRouteCurtain(to.fullPath)
       if (from.matched.length > 0 && to.fullPath !== from.fullPath) {
@@ -738,11 +743,11 @@ export const installRouterGuards = (router: Router) => {
     }
 
     const navigation = useTempleNavigation()
-    if (from.name === 'HOME' && to.name !== 'HOME') {
+    if (isTempleRouteName(from.name) && !isTempleRouteName(to.name)) {
       navigation.returnModule = navigation.selected
       navigation.returnExpanded = navigation.expanded
     }
-    if (to.name === 'HOME') {
+    if (isTempleRouteName(to.name)) {
       // 刷新先清理详情返回标记；是否简易入场由当前标签页的首页状态单独判断。
       if (from.matched.length === 0) consumeJourneyReturnState()
       if (typeof window !== 'undefined' && !templeSceneHost.hasResident())
@@ -761,7 +766,7 @@ export const installRouterGuards = (router: Router) => {
       // 从详情历史返回时恢复离开前的菜单，避免旧入口 URL 覆盖实际选择。
       const isHistoryReturn =
         !!from.name &&
-        from.name !== 'HOME' &&
+        !isTempleRouteName(from.name) &&
         router.options.history.state.current === to.fullPath
       const session =
         from.matched.length === 0 || isHistoryReturn
@@ -782,7 +787,7 @@ export const installRouterGuards = (router: Router) => {
       navigation.entryModule = savedSession
         ? savedSession.selection
         : explicitModule ||
-          (from.name && from.name !== 'HOME'
+          (from.name && !isTempleRouteName(from.name)
             ? navigation.returnModule || templeParentModule(from.path)
             : null)
       // 参数只属于对应入口，不能把已恢复的初始场景或其他模块展开。
@@ -799,10 +804,10 @@ export const installRouterGuards = (router: Router) => {
       navigation.simpleEntrance =
         reloadInitialScene ||
         !!navigation.entryModule ||
-        (!!from.name && from.name !== 'HOME')
+        (!!from.name && !isTempleRouteName(from.name))
       if (
-        from.name === 'HOME' &&
-        explicitModule !== navigation.selected &&
+        isTempleRouteName(from.name) &&
+        explicitModule !== navigation.activeSelection &&
         (to.path !== from.path || to.query.module !== from.query.module)
       )
         navigation.request(explicitModule, expanded ?? false)
@@ -816,7 +821,7 @@ export const installRouterGuards = (router: Router) => {
       typeof window === 'undefined' ||
       !from.matched.length ||
       to.path === from.path ||
-      (to.name === 'HOME' && from.name === 'HOME')
+      (isTempleRouteName(to.name) && isTempleRouteName(from.name))
     )
       return
     await coverRouteCurtain(to.fullPath)
@@ -838,8 +843,8 @@ export const installRouterGuards = (router: Router) => {
     const navigation = useTempleNavigation()
     // 同一模块只改查询参数时不重选方尖碑，否则场景会把重复选择当作退出。
     if (
-      to.name === 'HOME' &&
-      from.name === 'HOME' &&
+      isTempleRouteName(to.name) &&
+      isTempleRouteName(from.name) &&
       to.query.isExpand !== from.query.isExpand &&
       navigation.selected &&
       navigation.selected === navigation.entryModule
@@ -847,7 +852,7 @@ export const installRouterGuards = (router: Router) => {
       navigation.expanded = navigation.entryExpanded ?? false
     syncPageTheme(
       to,
-      to.name === 'HOME'
+      isTempleRouteName(to.name)
         ? (navigation.selected || navigation.entryModule)?.toUpperCase()
         : undefined
     )

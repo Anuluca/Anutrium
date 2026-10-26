@@ -36,12 +36,22 @@ const ready = async (page: Page, module: string) => {
   )
 }
 
-test('all four module URLs open home and select their module', async ({
-  page,
-}) => {
+test('module URLs open home and select their module', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  for (const module of ['archive', 'flanerie', 'island', 'pokeyard']) {
-    await page.goto(`/${module}`, { waitUntil: 'domcontentloaded' })
+  for (const module of [
+    'archive',
+    'flanerie',
+    'island',
+    'pokeyard',
+    'statue',
+  ]) {
+    const path =
+      module === 'island'
+        ? '/creative'
+        : module === 'statue'
+        ? '/atrium'
+        : `/${module}`
+    await page.goto(path, { waitUntil: 'domcontentloaded' })
     await ready(page, module)
     await expect(page.locator('.temple-menu__header')).toHaveCount(0)
     await expect(page.locator('.temple-stage')).toHaveAttribute(
@@ -99,13 +109,18 @@ test('direct child module link returns to its corresponding module', async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto('/island/study-notes', { waitUntil: 'domcontentloaded' })
+  await page.goto('/atrium/notes', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.logo-box')).toBeVisible()
-  await page.locator('.current-module-name').click()
+  await expect(page.locator('.island-focus')).toHaveAttribute(
+    'data-detail-item',
+    'NOTES',
+    { timeout: 45000 }
+  )
+  await page.keyboard.press('Escape')
   await ready(page, 'statue')
 })
 
-for (const path of ['/flanerie/xiangtan?from=home', '/island/study-notes']) {
+for (const path of ['/flanerie/xiangtan?from=home', '/atrium/notes']) {
   test(`website title returns ${path} to the initial home scene`, async ({
     page,
   }) => {
@@ -216,7 +231,9 @@ test('collapsed and expanded cards and progress edge remain consistent', async (
   )
   await page.emulateMedia({ reducedMotion: 'reduce' })
   for (const module of ['archive', 'flanerie', 'island']) {
-    await page.goto(`/${module}`, { waitUntil: 'domcontentloaded' })
+    await page.goto(module === 'island' ? '/creative' : `/${module}`, {
+      waitUntil: 'domcontentloaded',
+    })
     await ready(page, module)
     const grid = page
       .locator(module === 'archive' ? '.works-grid' : '.vlog-grid')

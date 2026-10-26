@@ -1,11 +1,5 @@
 <template>
-  <div class="study-notes-page main-container">
-    <DetailPageHeader
-      back-label="ISLAND"
-      back-path="/island"
-      :title="t('island.modules.notes.studyNotes.title')"
-    />
-
+  <div class="island-notes-content is-embedded">
     <main ref="noteListRef" class="study-note-list">
       <section
         v-if="paginatedCards.length"
@@ -96,23 +90,17 @@
         </button>
       </nav>
     </main>
-
-    <PageFooter />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute, useRouter } from 'vue-router'
 
-import DetailPageHeader from '@/components/DetailPageHeader/index.vue'
-import PageFooter from '@/components/PageFooter/index.vue'
 import {
   getCardMobileThumbnailUrl,
   getCardThumbnailUrl,
 } from '@/utils/imageVariant'
-import { getPageScrollTop, scrollPageTo } from '@/utils/pageScroll'
 
 type StudyNoteType = 'frontend' | 'other'
 
@@ -136,6 +124,7 @@ interface StudyNoteCard {
 }
 
 const PAGE_SIZE = 20
+const currentPage = ref(1)
 const ENGLISH_DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
   year: 'numeric',
   month: 'short',
@@ -143,8 +132,6 @@ const ENGLISH_DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
 })
 
 const { locale, t, tm } = useI18n()
-const route = useRoute()
-const router = useRouter()
 const noteListRef = ref<HTMLElement | null>(null)
 const noteStackRef = ref<HTMLElement | null>(null)
 const masonryReady = ref(false)
@@ -163,18 +150,6 @@ const typeMap = computed(
 )
 const totalPages = computed(() =>
   Math.max(1, Math.ceil(notes.value.length / PAGE_SIZE))
-)
-
-const normalizePage = (value: unknown, maxPage: number) => {
-  const normalizedValue = Array.isArray(value) ? value[0] : value
-  const page = Number(normalizedValue)
-
-  if (!Number.isInteger(page)) return 1
-  return Math.min(Math.max(1, page), maxPage)
-}
-
-const currentPage = computed(() =>
-  normalizePage(route.query.page, totalPages.value)
 )
 
 const formatNoteDate = (date: string) => {
@@ -266,28 +241,9 @@ onBeforeUnmount(() => {
   if (masonryFrame !== undefined) cancelAnimationFrame(masonryFrame)
 })
 
-const setPage = async (page: number) => {
-  const nextPage = Math.min(Math.max(1, page), totalPages.value)
-  if (nextPage === currentPage.value) return
-
-  await router.replace({
-    query: {
-      ...route.query,
-      page: nextPage === 1 ? undefined : String(nextPage),
-    },
-  })
-  await nextTick()
-
-  if (noteListRef.value) {
-    const menu = document.querySelector<HTMLElement>('.el-menu-layout-all')
-    const menuBottom = menu?.getBoundingClientRect().bottom || 0
-    const listTop =
-      noteListRef.value.getBoundingClientRect().top +
-      getPageScrollTop() -
-      menuBottom -
-      20
-    scrollPageTo({ top: Math.max(0, listTop), behavior: 'smooth' })
-  }
+const setPage = (page: number) => {
+  currentPage.value = Math.min(Math.max(1, page), totalPages.value)
+  noteListRef.value?.closest('.scroll-viewport__scroll')?.scrollTo({ top: 0 })
 }
 </script>
 
@@ -295,9 +251,24 @@ const setPage = async (page: number) => {
 @red: #e23456;
 @mono: 'UnboundedSans', 'Courier New', monospace;
 
-.study-notes-page {
+.island-notes-content {
   color: var(--text-color);
   overflow: hidden;
+  &.is-embedded {
+    padding: 0;
+    .study-note-list {
+      padding: 0 0 24px;
+    }
+    .study-note-stack {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+}
+
+@container (max-width: 360px) {
+  .island-notes-content.is-embedded .study-note-stack {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .study-note-list {
@@ -527,7 +498,7 @@ const setPage = async (page: number) => {
 }
 
 @media (max-width: 900px) {
-  .study-notes-page {
+  .island-notes-content {
     padding-top: 88px;
   }
 

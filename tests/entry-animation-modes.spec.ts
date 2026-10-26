@@ -15,7 +15,7 @@ test('home, module entries and about use the horizon intro', async ({
     '/archive',
     '/flanerie',
     '/pokeyard',
-    '/island',
+    '/atrium',
     '/about',
   ]) {
     await page.goto(path, { waitUntil: 'domcontentloaded' })

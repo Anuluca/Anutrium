@@ -419,6 +419,7 @@ import { useFrameTask } from '@/composables/useFrameTask'
 import { HOME_RETURN_TO_PASSION_EVENT } from '@/config/homeNavigation'
 import { isTempleMutedMenuItem } from '@/config/templeModelDisplay'
 import {
+  isTempleRouteName,
   templeDesktopMenuGroups,
   templeMobileMenuItems as mobileMenuItems,
   templeModulePaths,
@@ -515,7 +516,7 @@ const route = useRoute()
 const router = useRouter()
 const visualStateStore = visualState()
 const isHomeRoute = computed(() => route.name === 'TEST2')
-const isTempleRoute = computed(() => route.name === 'HOME')
+const isTempleRoute = computed(() => isTempleRouteName(route.name))
 const navigation = useTempleNavigation()
 const floraPets = useFloraPets()
 const isInitialAboutOpen = computed(
@@ -584,7 +585,7 @@ const currentRouter = computed(() => {
   const activePath =
     typeof route.meta.activeMenu === 'string'
       ? route.meta.activeMenu
-      : route.name === 'HOME'
+      : isTempleRouteName(route.name)
       ? '/'
       : route.path
 
@@ -596,13 +597,19 @@ type ModuleHeaderTheme = 'about' | 'archive' | 'craft' | 'flanerie' | 'island'
 const moduleThemeByPath: Readonly<Record<string, ModuleHeaderTheme>> = {
   '/archive': 'archive',
   '/flanerie': 'flanerie',
-  '/island': 'island',
+  '/atrium': 'island',
   '/about': 'about',
 }
 const moduleRouteByPath = new Map(
   routes.map((item) => [normalizeMenuPath(item.path), item])
 )
-const hiddenModuleTitleRoutes = new Set(['HOME', 'TEST2', '404', 'TEST'])
+const hiddenModuleTitleRoutes = new Set([
+  'HOME',
+  'ATRIUM',
+  'TEST2',
+  '404',
+  'TEST',
+])
 const headerPresentation = computed(() => {
   const routeName = String(route.name || '')
   const modulePath = currentRouter.value
@@ -643,7 +650,7 @@ const isInnerMenuRoute = computed(
 )
 const moduleReturnPath = computed(() => {
   if (isTempleRoute.value) return null
-  if (/^\/island\/(study-notes|merch)(\/|$)/.test(route.path)) return '/island'
+  if (route.path.startsWith('/atrium/merch/')) return '/atrium/collections'
   const parent = templeParentModule(route.path)
   return parent
     ? templeModulePaths[parent]

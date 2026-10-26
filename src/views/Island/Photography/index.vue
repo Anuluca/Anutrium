@@ -1,7 +1,7 @@
 <template>
   <div class="photography-page main-container">
     <DetailPageHeader
-      back-label="ISLAND"
+      back-label="ATRIUM"
       back-path="/test"
       :title="t('island.modules.photography.photoWorks.title')"
     />
