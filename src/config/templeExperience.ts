@@ -68,7 +68,7 @@ export const templeExperience: TempleExperience = {
       pointerDamping: -120 * Math.log1p(-0.06),
       focusYawLimit: 65,
       focusYawScale: 0.65,
-      bodyYaw: 5,
+      bodyYaw: 22,
     },
   },
 }

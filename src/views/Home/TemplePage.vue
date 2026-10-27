@@ -38,6 +38,7 @@ import { hasJourneyReturnState } from '@/utils/journeyReturnState'
 import { setSmoothScrollLocked } from '@/utils/smoothScroll'
 import AboutOverlay from '@/views/About/AboutOverlay.vue'
 
+import AtriumPhotoControls from './components/AtriumPhotoControls.vue'
 import FloraFocusLayout from './components/FloraFocusLayout.vue'
 import FocusContent from './components/FocusContent.vue'
 import TempleBackdrop from './components/TempleBackdrop.vue'
@@ -54,6 +55,8 @@ import type {
   TempleSelection,
 } from './templeScene'
 import { templeSceneHost } from './templeSceneHost'
+
+import './styles/atriumPhoto.less'
 
 const IslandFocusLayout = defineAsyncComponent(() =>
   Promise.all([
@@ -86,6 +89,39 @@ const navigation = useTempleNavigation()
 const floraPets = useFloraPets()
 const visual = visualState()
 const cursor = cursorState()
+const photoError = ref('')
+let photoTransitionTimer: ReturnType<typeof setTimeout> | undefined
+const setPhotoMode = (active: boolean) => {
+  if (!scene || (active && selected.value !== 'statue')) return
+  navigation.photoMode = active
+  photoError.value = ''
+  if (photoTransitionTimer) clearTimeout(photoTransitionTimer)
+  document.documentElement.classList.add('atrium-photo-transition')
+  scene.setPhotoMode(active)
+  document.documentElement.classList.toggle('atrium-photo-mode', active)
+  if (!active)
+    photoTransitionTimer = setTimeout(() => {
+      document.documentElement.classList.remove('atrium-photo-transition')
+    }, 400)
+}
+const capturePhoto = async () => {
+  try {
+    await scene?.capturePhoto()
+  } catch (error) {
+    photoError.value = '截图失败，请重试'
+    console.error(error)
+  }
+}
+const photoKeydown = (event: KeyboardEvent) => {
+  if (event.key === 'Escape' && navigation.photoMode) setPhotoMode(false)
+}
+onMounted(() => window.addEventListener('keydown', photoKeydown))
+watch(
+  () => route.path,
+  () => {
+    if (navigation.photoMode) setPhotoMode(false)
+  }
+)
 watch(
   () => visual.theme,
   (theme) => scene?.setColorMode(theme)
@@ -501,6 +537,7 @@ onMounted(async () => {
       },
       waitForRouteEnter,
       entrySelection,
+      entryIslandModule: () => islandModuleAtPath(route.path),
       dismissBackground: closeInlineDetail,
       prepared: () => loadingTask?.finish(),
       progress: (value) => loadingTask?.update(value),
@@ -625,6 +662,11 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
+  setPhotoMode(false)
+  if (photoTransitionTimer) clearTimeout(photoTransitionTimer)
+  window.removeEventListener('keydown', photoKeydown)
+  document.documentElement.classList.remove('atrium-photo-mode')
+  document.documentElement.classList.remove('atrium-photo-transition')
   featureRequest.abort()
   expandClickFlash?.cancel()
   disposed = true
@@ -697,6 +739,7 @@ onUnmounted(() => {
             :mobile="config.id === 'mobile'"
             @detail-side="focusIslandDetail"
             @overview-leaving="islandOverviewLeaving = $event"
+            @photo="setPhotoMode(true)"
           />
           <MobileScreenFrame v-if="config.id === 'mobile'" />
           <TempleBackdrop />
@@ -803,6 +846,15 @@ onUnmounted(() => {
       </div>
     </Transition>
     <AboutOverlay @closed="restoreAboutBackground" />
+    <Transition name="atrium-photo-tools">
+      <AtriumPhotoControls
+        v-if="navigation.photoMode"
+        @exit="setPhotoMode(false)"
+        @capture="capturePhoto"
+        @pose="scene?.setPhotoPose($event)"
+      />
+    </Transition>
+    <p v-if="photoError" class="photo-error" role="alert">{{ photoError }}</p>
   </main>
 </template>
 

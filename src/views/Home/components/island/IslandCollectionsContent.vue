@@ -36,12 +36,38 @@
               <MerchCollectionCard
                 :id="getCollectionElementId(collection.id)"
                 :collection="collection"
+                :expanded="openedCollection?.id === collection.id"
+                :expanded-target="collectionHost"
+                :closing="collectionClosing"
+                :returning="
+                  openedCollection?.id === collection.id && collectionReturning
+                "
                 :count-label="
                   t('island.modules.photography.merch.collectionLabel')
                 "
                 :style="getCollectionEntryStyle(collectionIndex)"
                 @select="openCollection"
-              />
+              >
+                <template #gallery>
+                  <MediaGallery
+                    v-if="collection.photos.length"
+                    :items="collection.photos"
+                    :show-media-info="(photo) => Boolean(photo.title)"
+                    :get-media-label="
+                      (photo) => photo.title || collection.title
+                    "
+                  >
+                    <template #info="{ item: photo }">
+                      <p class="collection-detail__caption">
+                        {{ photo.title }}
+                      </p>
+                    </template>
+                  </MediaGallery>
+                  <p v-else class="collection-detail__empty">
+                    {{ t('island.modules.photography.merch.empty') }}
+                  </p>
+                </template>
+              </MerchCollectionCard>
               <div
                 v-if="
                   shouldRenderRowShelf(
@@ -72,17 +98,30 @@
         </template>
       </section>
     </main>
+    <ModalWrapper
+      v-model="collectionVisible"
+      dialog-class="collection-detail-modal"
+      width="min(1280px, calc(100vw - 48px))"
+      :origin-element="collectionOrigin"
+      close-title="关闭收藏品 (ESC)"
+      @close="collectionClosing = true"
+      @origin-return="returnCollectionToShelf"
+      @closed="finishCollectionClose"
+    >
+      <div ref="collectionHost" class="collection-detail__host" />
+    </ModalWrapper>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
 
+import MediaGallery from '@/components/MediaGallery/index.vue'
 import MerchCollectionCard, {
   type MerchCollectionCardData,
 } from '@/components/MerchCollectionCard/index.vue'
+import ModalWrapper from '@/components/ModalWrapper/index.vue'
 
 type MerchCategoryId = 'pokemon' | 'tokusatsu' | 'other'
 
@@ -123,9 +162,64 @@ const merchCategoryMeta: MerchCategoryMeta[] = [
 const props = defineProps<{ expanded?: boolean; mobile?: boolean }>()
 const columns = computed(() => (props.mobile ? 1 : props.expanded ? 5 : 4))
 const { locale, t, tm } = useI18n()
-const router = useRouter()
+const openedCollection = shallowRef<MerchCollectionCardData | null>(null)
+const collectionOrigin = shallowRef<HTMLElement | null>(null)
+const collectionVisible = ref(false)
+const collectionClosing = ref(false)
+const collectionHost = shallowRef<HTMLElement | null>(null)
+const collectionReturning = ref(false)
+let returnGhost: HTMLElement | null = null
+let returnAnimations: Animation[] = []
+const clearCollectionReturn = () => {
+  returnAnimations.forEach((animation) => animation.cancel())
+  returnAnimations = []
+  returnGhost?.remove()
+  returnGhost = null
+}
+const returnCollectionToShelf = async (remainingMs: number) => {
+  const shell = collectionHost.value?.querySelector<HTMLElement>(
+    '.collection-card-shell'
+  )
+  if (!shell || !collectionClosing.value || collectionReturning.value) return
+  clearCollectionReturn()
+  // 高层仅留下无交互的封面快照，真实盒子提前回到原有层叠上下文。
+  const ghost = shell.cloneNode(true) as HTMLElement
+  ghost.classList.remove('is-expanded', 'is-closing')
+  ghost.classList.add('collection-return-ghost')
+  ghost.querySelector('.collection-card__gallery')?.remove()
+  ghost.setAttribute('aria-hidden', 'true')
+  ghost.setAttribute('inert', '')
+  Object.assign(ghost.style, {
+    position: 'absolute',
+    inset: '0',
+    pointerEvents: 'none',
+    transform: 'none',
+  })
+  collectionHost.value!.appendChild(ghost)
+  returnGhost = ghost
+  collectionReturning.value = true
+  await nextTick()
+  if (returnGhost !== ghost || !shell.isConnected) return
+  const options: KeyframeAnimationOptions = {
+    duration: remainingMs,
+    easing: 'linear',
+    fill: 'forwards',
+  }
+  returnAnimations = [
+    ghost.animate([{ opacity: 1 }, { opacity: 0 }], options),
+    shell.animate([{ opacity: 0 }, { opacity: 1 }], options),
+  ]
+}
+const finishCollectionClose = () => {
+  clearCollectionReturn()
+  openedCollection.value = null
+  collectionReturning.value = false
+}
+onBeforeUnmount(clearCollectionReturn)
 const savedCategory =
-  typeof window === 'undefined' ? null : sessionStorage.getItem('merch-category')
+  typeof window === 'undefined'
+    ? null
+    : sessionStorage.getItem('merch-category')
 const selectedCategory = ref<MerchCategoryId>(
   merchCategoryMeta.find((category) => category.id === savedCategory)?.id ||
     'pokemon'
@@ -183,8 +277,17 @@ const getCollectionEntryStyle = (collectionIndex: number) => ({
   }ms)`,
 })
 
-const openCollection = (collectionId: string) => {
-  router.push(`/atrium/merch/${collectionId}`)
+const openCollection = (collectionId: string, element: HTMLElement) => {
+  if (openedCollection.value) return
+  const collection = activeGroup.value.collections.find(
+    (item) => item.id === collectionId
+  )
+  if (!collection) return
+  collectionOrigin.value = element
+  collectionReturning.value = false
+  collectionClosing.value = false
+  openedCollection.value = collection
+  collectionVisible.value = true
 }
 </script>
 
@@ -626,5 +729,45 @@ const openCollection = (collectionId: string) => {
       padding: 8px 20px 9px;
     }
   }
+}
+</style>
+
+<style lang="less">
+.collection-detail-modal.modal-wrapper-dialog {
+  height: 76dvh;
+  max-height: calc(100dvh - 140px) !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  .modal-scroll-region {
+    overflow: visible;
+  }
+  .corner,
+  .modal-scanlines,
+  .modal-scroll-progress {
+    display: none;
+  }
+  .collection-detail__host {
+    position: relative;
+    height: 100%;
+    min-height: 0;
+    flex: 1;
+  }
+  .media-gallery {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+</style>
+<style scoped lang="less">
+.collection-detail__caption {
+  padding: 8px;
+  font-size: 13px;
+  text-align: center;
+}
+.collection-detail__empty {
+  padding: 64px 16px;
+  text-align: center;
+  color: var(--text-faint);
 }
 </style>

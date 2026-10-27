@@ -280,6 +280,12 @@ test('home visual backgrounds span the viewport', async ({ page }) => {
 
 for (const transition of [
   {
+    from: '/atrium/collections',
+    to: '/colorPalette',
+    selector: '.temple-page',
+    layoutClass: 'page-layout--main',
+  },
+  {
     from: '/floratrium',
     to: '/flanerie/changsha?from=home',
     selector: '.temple-page',

@@ -26,8 +26,6 @@ import {
 } from '@/composables/useIslandHarborData'
 import {
   ISLAND_OPENING_DURATION,
-  ISLAND_RETURN_WINDOW_DURATION,
-  ISLAND_WINDOW_DURATION,
   islandCardOpeningDelay,
   islandModuleAtPath,
   type IslandModuleId,
@@ -41,10 +39,7 @@ import {
 import { subscribePointerSamples } from '@/utils/pointerSamples'
 import { createScanlineCharacters } from '@/utils/scanlineMask'
 
-import {
-  easeIslandDetailMotion,
-  easeIslandReturnMotion,
-} from '../scene/islandDetailMotion'
+import { easeIslandDetailMotion } from '../scene/islandDetailMotion'
 import {
   createIslandLinkOverlay,
   islandAnchorByItem,
@@ -68,6 +63,7 @@ const props = withDefaults(
 )
 const { locale } = useI18n()
 const emit = defineEmits<{
+  (event: 'photo'): void
   (event: 'overview-leaving', active: boolean): void
   (
     event: 'detail-side',
@@ -81,12 +77,11 @@ const router = useRouter()
 type Selection = { group: string; item: IslandModuleId }
 const selectedItem = ref<Selection | null>(null)
 const detailContentReady = ref(false)
+const detailOpening = ref(false)
 const collectionsExpanded = ref(false)
 const detailResizing = ref(false)
 const transitionItem = ref<Selection | null>(null)
-const phase = ref<
-  'overview' | 'leaving' | 'detail' | 'restoring' | 'revealing'
->('overview')
+const phase = ref<'overview' | 'leaving' | 'detail' | 'revealing'>('overview')
 let transitionRevision = 0
 const reducedMotion = () =>
   matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -112,15 +107,15 @@ const waitMotion = (duration: number) =>
 const itemTransitionClass = (item: string) => {
   if (overviewLeaving.value) return 'crt-effect-leave-active'
   if (opening.value) return 'crt-effect-enter-active'
+  if (phase.value === 'revealing') return 'crt-effect-enter-active'
   if (!transitionItem.value || transitionItem.value.item === item) return ''
   if (phase.value === 'leaving') return 'crt-effect-leave-active'
-  if (phase.value === 'revealing') return 'crt-effect-enter-active'
-  if (phase.value === 'restoring') return 'is-transition-hidden'
   return ''
 }
 const groupTransitionClass = (group: string) => {
   if (overviewLeaving.value) return 'crt-effect-leave-active'
   if (opening.value) return 'crt-effect-enter-active'
+  if (phase.value === 'revealing') return 'crt-effect-enter-active'
   if (!transitionItem.value || transitionItem.value.group === group) return ''
   return itemTransitionClass('')
 }
@@ -222,70 +217,73 @@ const linkOverlay = createIslandLinkOverlay()
 let disposed = false
 let measureFrame: number | undefined
 let layoutMotion: gsap.core.Timeline | undefined
-// 先移除正文的布局占位，再测量完整总览终点。
-const animateLayout = async (
-  selection: Selection | null,
-  immediate = false
-) => {
+const closingSnapshots = new Set<HTMLElement>()
+const clearClosingSnapshots = () => {
+  closingSnapshots.forEach((snapshot) => snapshot.remove())
+  closingSnapshots.clear()
+}
+// 保留旧布局的无交互快照，关屏与新布局开屏同时进行，避免旧卡片跟随详情布局跳位。
+const closeViewSnapshot = (selection: Selection | null) => {
+  if (!root.value || reducedMotion()) return
+  const snapshot = root.value.cloneNode(true) as HTMLElement
+  snapshot.classList.add('island-closing-snapshot')
+  snapshot.setAttribute('aria-hidden', 'true')
+  snapshot.setAttribute('inert', '')
+  snapshot
+    .querySelectorAll('.island-filter-defs, .island-links, .island-targets')
+    .forEach((e) => e.remove())
+  if (selection) {
+    snapshot
+      .querySelectorAll<HTMLElement>('.island-item, .island-window__bar')
+      .forEach((element) => {
+        const active =
+          element.dataset.flashItem === selection.item ||
+          element.dataset.flashHeader === selection.group
+        element.classList.remove(
+          'crt-effect-enter-active',
+          'crt-effect-leave-active'
+        )
+        if (active) element.classList.add('crt-effect-leave-active')
+        else element.style.visibility = 'hidden'
+      })
+  } else {
+    snapshot.querySelectorAll('.island-window').forEach((element) => {
+      element.classList.remove('crt-effect-enter-active')
+      element.classList.add('crt-effect-leave-active')
+    })
+  }
+  root.value.parentElement?.appendChild(snapshot)
+  closingSnapshots.add(snapshot)
+  void waitMotion(0.24).then(() => {
+    snapshot.remove()
+    closingSnapshots.delete(snapshot)
+  })
+}
+const applyLayout = async (selection: Selection | null) => {
   if (disposed || !root.value) return
   layoutMotion?.progress(1).kill()
-  const target = selection ?? selectedItem.value
-  if (!target) return
-  const window = root.value.querySelector<HTMLElement>(
-    `[data-island-group="${target.group}"]`
-  )!
-  // 隐藏的兄弟卡片只播放 CRT，避免 FLIP 缓存 display/visibility 后覆盖 Vue 的恢复状态。
-  const layoutTargets = [
-    window,
-    window.querySelector('.island-window__bar')!,
-    window.querySelector(`[data-flash-item="${target.item}"]`)!,
-  ] as HTMLElement[]
-  const state = Flip.getState(layoutTargets)
-  // 起点保留当前视差；归零后的终点交给 FLIP 平滑衔接，避免点击时卡片跳动。
   cardParallaxMotion?.kill()
   cardParallax.x = cardParallax.y = 0
   writeCardParallax()
-  // CSS 独立位移已归零，清除 FLIP 读取时缓存的旧坐标。
-  gsap.set(layoutTargets, { clearProps: 'transform' })
   selectedItem.value = selection
   linkOverlay.setFocused(selection?.item ?? null)
   hoveredItem.value = null
   await nextTick()
-  if (disposed) return
-  measure(true)
-  await new Promise<void>((resolve) => {
-    layoutMotion = Flip.from(state, {
-      duration:
-        immediate || reducedMotion()
-          ? 0
-          : selection
-          ? ISLAND_WINDOW_DURATION
-          : ISLAND_RETURN_WINDOW_DURATION,
-      ease: selection ? easeIslandDetailMotion : easeIslandReturnMotion,
-      scale: true,
-      nested: true,
-      onUpdate: scheduleMeasure,
-      onComplete: () => {
-        gsap.set(layoutTargets, { clearProps: 'transform' })
-        scheduleMeasure()
-        resolve()
-      },
-      onInterrupt: resolve,
-    })
-  })
+  if (!disposed) measure(true)
 }
 const transitionDetail = async (
   moduleId: IslandModuleId | null,
   initial = false
 ) => {
   const revision = ++transitionRevision
+  clearClosingSnapshots()
+  opening.value = false
+  detailOpening.value = false
   const selection = moduleId
     ? { group: islandModules[moduleId].group, item: moduleId }
     : null
   const previous = selectedItem.value ?? transitionItem.value
   busy.value = true
-  collectionsExpanded.value = false
-  detailContentReady.value = false
   if (selection) {
     const alreadyHidden =
       phase.value === 'leaving' && transitionItem.value?.item === moduleId
@@ -295,6 +293,10 @@ const transitionDetail = async (
       await waitMotion(0.24)
       if (disposed || revision !== transitionRevision) return
     }
+    if (!initial) closeViewSnapshot(selectedItem.value ? null : selection)
+    collectionsExpanded.value = false
+    detailContentReady.value = true
+    detailOpening.value = !reducedMotion()
     phase.value = 'detail'
     emit(
       'detail-side',
@@ -302,31 +304,29 @@ const transitionDetail = async (
       selection.item,
       initial
     )
-    await animateLayout(selection, initial)
+    await applyLayout(selection)
     if (disposed || revision !== transitionRevision) return
-    // 窗口形变结束后再延迟显示正文，避免延迟被窗口入场动画吞掉。
-    await waitMotion(0.45)
+    await waitMotion(0.46)
     if (disposed || revision !== transitionRevision) return
-    detailContentReady.value = true
+    detailOpening.value = false
     await nextTick()
+    if (disposed || revision !== transitionRevision) return
+    scheduleMeasure()
     root.value
       ?.querySelector<HTMLElement>(
         '.island-detail__viewport .scroll-viewport__scroll'
       )
       ?.focus({ preventScroll: true })
   } else if (previous) {
+    if (selectedItem.value) closeViewSnapshot(null)
+    collectionsExpanded.value = false
+    detailContentReady.value = false
     transitionItem.value = previous
-    let restoring: Promise<void> | undefined
-    if (selectedItem.value) {
-      emit('detail-side', null)
-      phase.value = 'restoring'
-      restoring = animateLayout(null)
-      // 卡片回位过半时开始开屏，让两段动画自然重叠。
-      await waitMotion(ISLAND_RETURN_WINDOW_DURATION * 0.5)
-      if (disposed || revision !== transitionRevision) return
-    }
+    emit('detail-side', null)
     phase.value = 'revealing'
-    await Promise.all([restoring, waitMotion(ISLAND_OPENING_DURATION + 0.05)])
+    await applyLayout(null)
+    if (disposed || revision !== transitionRevision) return
+    await waitMotion(ISLAND_OPENING_DURATION + 0.05)
     if (disposed || revision !== transitionRevision) return
     phase.value = 'overview'
     transitionItem.value = null
@@ -338,6 +338,7 @@ const transitionDetail = async (
   }
   if (revision === transitionRevision) busy.value = false
 }
+
 watch(
   [root, () => route.path],
   ([element, path], [previousRoot]) => {
@@ -384,7 +385,7 @@ const toggleCollectionsExpanded = async (event: MouseEvent) => {
   })
 }
 const closeDetail = () => {
-  if (['restoring', 'revealing'].includes(phase.value)) return true
+  if (phase.value === 'revealing') return true
   if (!selectedItem.value && !transitionItem.value) return false
   if (!selectedItem.value && !islandModuleAtPath(route.path)) {
     void transitionDetail(null)
@@ -457,7 +458,8 @@ const measure = (measureTitles = false) => {
     }
   }
   const scales: [HTMLElement, string][] = []
-  if (measureTitles) {
+  // 总览卡片保留原有文字适配；详情页头完全交给三列 CSS 布局。
+  if (measureTitles && !selectedItem.value) {
     for (const title of titles.values()) {
       const header = title.parentElement!
       const style = getComputedStyle(header)
@@ -475,16 +477,14 @@ const measure = (measureTitles = false) => {
         ),
       ])
     }
-    if (!selectedItem.value)
-      for (const title of itemTitles.values())
-        scales.push([
-          title,
-          String(
-            title.parentElement!.clientWidth / Math.max(1, title.scrollWidth)
-          ),
-        ])
+    for (const title of itemTitles.values())
+      scales.push([
+        title,
+        String(
+          title.parentElement!.clientWidth / Math.max(1, title.scrollWidth)
+        ),
+      ])
   }
-  // 先完成所有尺寸读取，再批量写样式，避免标题间交错触发布局计算。
   for (const [title, scale] of scales) {
     if (titleScales.get(title) === scale) continue
     title.style.setProperty('--island-title-scale', scale)
@@ -496,8 +496,9 @@ const scheduleMeasure = () => {
   if (disposed || measureFrame !== undefined) return
   measureFrame = requestAnimationFrame(() => {
     measureFrame = undefined
-    measure(titlesNeedMeasure)
+    const shouldMeasureTitles = titlesNeedMeasure
     titlesNeedMeasure = false
+    measure(shouldMeasureTitles)
   })
 }
 let titlesNeedMeasure = false
@@ -628,6 +629,7 @@ const openItem = async (item: HarborItem, group: string) => {
 }
 onBeforeUnmount(() => {
   disposed = true
+  clearClosingSnapshots()
   unsubscribeCardPointer?.()
   cardParallaxMotion?.kill()
   transitionRevision++
@@ -650,6 +652,7 @@ onBeforeUnmount(() => {
     class="island-focus no-rem"
     :class="{
       'is-mobile': mobile,
+      'is-english': locale === 'en',
       'has-detail': selectedItem,
       'has-detail--right': selectedItem && detailSide === 'right',
       'has-collections-expanded': collectionsExpanded,
@@ -676,7 +679,7 @@ onBeforeUnmount(() => {
       </defs>
     </svg>
     <div class="island-detail-shade" aria-hidden="true" />
-    <div class="island-panels" :aria-hidden="!selectedItem || undefined">
+    <div class="island-panels">
       <div
         class="island-reserved island-reserved--left"
         data-island-reserved="left"
@@ -684,13 +687,32 @@ onBeforeUnmount(() => {
       <div
         class="island-reserved island-reserved--right"
         data-island-reserved="right"
-      />
+      >
+        <button
+          class="island-photo-entry no-rem"
+          type="button"
+          aria-label="进入拍照模式"
+          @click.stop="emit('photo')"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M8 5 9.5 3h5L16 5h4a1 1 0 0 1 1 1v13H3V6a1 1 0 0 1 1-1Z" />
+            <circle cx="12" cy="12" r="4" />
+          </svg>
+        </button>
+      </div>
       <section
         v-for="group in groups"
         v-show="!selectedItem || selectedItem.group === group.id"
         :key="group.id"
         class="island-window"
-        :class="`island-window--${group.id}`"
+        :class="[
+          `island-window--${group.id}`,
+          {
+            'crt-effect-enter-active':
+              detailOpening && selectedItem?.group === group.id,
+          },
+        ]"
+        :aria-hidden="!selectedItem || undefined"
         :data-island-group="group.id"
       >
         <header
@@ -765,7 +787,9 @@ onBeforeUnmount(() => {
                 ><span
                   :ref="itemTitleBindings.get(item.subtitle)"
                   class="island-item__title-text"
-                  ><template v-if="selectedItem">{{ item.label }}</template
+                  ><template v-if="selectedItem">{{
+                    item.englishTitle
+                  }}</template
                   ><template v-else
                     ><span
                       v-for="(letter, index) in item.titleCharacters"
@@ -808,35 +832,33 @@ onBeforeUnmount(() => {
         >
           <span />
         </button>
-        <Transition name="island-detail-reveal" appear>
-          <div
-            v-if="
-              selectedItem?.group === group.id &&
-              phase === 'detail' &&
-              detailContentReady
-            "
-            class="island-detail"
-            :inert="detailResizing || undefined"
+        <div
+          v-if="
+            selectedItem?.group === group.id &&
+            phase === 'detail' &&
+            detailContentReady
+          "
+          class="island-detail"
+          :inert="detailResizing || undefined"
+        >
+          <ScrollViewport
+            class="island-detail__viewport"
+            :edge-fade="selectedItem.item === 'COLLECTIBLES'"
           >
-            <ScrollViewport
-              class="island-detail__viewport"
-              :edge-fade="selectedItem.item === 'COLLECTIBLES'"
-            >
-              <IslandNotesContent v-if="selectedItem.item === 'NOTES'" />
-              <IslandCollectionsContent
-                v-else-if="selectedItem.item === 'COLLECTIBLES'"
-                :expanded="collectionsExpanded"
-                :mobile="mobile"
-              />
-              <NotFoundContent
-                v-else
-                embedded
-                :action-label="locale === 'en' ? 'BACK' : '返回模块总览'"
-                @return-home="closeDetail"
-              />
-            </ScrollViewport>
-          </div>
-        </Transition>
+            <IslandNotesContent v-if="selectedItem.item === 'NOTES'" />
+            <IslandCollectionsContent
+              v-else-if="selectedItem.item === 'COLLECTIBLES'"
+              :expanded="collectionsExpanded"
+              :mobile="mobile"
+            />
+            <NotFoundContent
+              v-else
+              embedded
+              :action-label="locale === 'en' ? 'BACK' : '返回模块总览'"
+              @return-home="closeDetail"
+            />
+          </ScrollViewport>
+        </div>
       </section>
     </div>
     <svg
@@ -959,6 +981,13 @@ onBeforeUnmount(() => {
   --island-bar-height: 28px;
   --island-reserved-height: clamp(64px, 12svh, 120px);
   --island-title-overflow: calc(var(--island-title-size) / 2);
+  &.island-closing-snapshot {
+    z-index: 4;
+    pointer-events: none;
+    * {
+      pointer-events: none !important;
+    }
+  }
   .island-filter-defs {
     position: absolute;
   }
@@ -989,13 +1018,15 @@ onBeforeUnmount(() => {
     z-index: auto;
     .island-window__bar,
     .island-item {
+      --anutrium-crt-opacity: 0.75;
       container-type: inline-size;
-      opacity: 0.75;
+      opacity: var(--anutrium-crt-opacity);
       transition: filter 180ms ease;
       &.is-blurred {
         filter: brightness(0.6) saturate(0);
       }
       &.is-active {
+        --anutrium-crt-opacity: 1;
         opacity: 1;
       }
     }
@@ -1008,6 +1039,8 @@ onBeforeUnmount(() => {
     z-index: 3;
   }
   .island-reserved {
+    position: relative;
+    z-index: 5;
     min-width: 0;
     min-height: 0;
     &--left {
@@ -1015,6 +1048,34 @@ onBeforeUnmount(() => {
     }
     &--right {
       grid-area: 1 / 2;
+    }
+  }
+  .island-photo-entry.no-rem {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    padding: 8px;
+    border: 0;
+    background: transparent;
+    color: #e23456;
+    pointer-events: auto;
+    cursor: pointer;
+    opacity: 0.65;
+    transition: opacity 0.25s ease, color 0.25s ease;
+    &:hover,
+    &:focus-visible {
+      opacity: 1;
+      color: #18c6a6;
+    }
+    svg {
+      width: 24px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.5;
     }
   }
   .island-window {
@@ -1218,13 +1279,10 @@ onBeforeUnmount(() => {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .island-window--ideas .island-window__body {
-    grid-template-rows: minmax(0, 0.6fr) minmax(0, 1.4fr);
-  }
-  &:not(.has-detail) {
-    .island-item[data-flash-item='NOTES'],
-    .island-item[data-island-item='NOTES'] {
-      margin-bottom: clamp(24px, 6svh, 64px);
-    }
+    --ideas-lab-share: 30%;
+    grid-template-rows:
+      minmax(0, calc(var(--ideas-lab-share) + clamp(24px, 6svh, 64px)))
+      minmax(0, 1fr);
   }
   @container (max-height: 125px) {
     &:not(.has-detail) .island-item__title {
@@ -1462,7 +1520,7 @@ onBeforeUnmount(() => {
     --island-title-size: 60px;
     --island-bar-height: 26px;
     .island-window--ideas .island-window__body {
-      grid-template-rows: minmax(0, 0.4fr) minmax(0, 1.6fr);
+      --ideas-lab-share: 20%;
     }
     .island-panels,
     .island-targets {
@@ -1480,14 +1538,14 @@ onBeforeUnmount(() => {
     &:not(.has-detail):not(.is-mobile)
       .island-window--ideas
       .island-window__body {
-      grid-template-rows: minmax(0, 0.5fr) minmax(0, 1.5fr);
+      --ideas-lab-share: 25%;
     }
   }
   @media (max-height: 760px) {
     &:not(.has-detail):not(.is-mobile)
       .island-window--ideas
       .island-window__body {
-      grid-template-rows: minmax(0, 0.3fr) minmax(0, 1.7fr);
+      --ideas-lab-share: 15%;
     }
     &.is-mobile:not(.has-detail) {
       .island-window {
@@ -1495,12 +1553,11 @@ onBeforeUnmount(() => {
         height: calc(100% + 24px);
       }
       .island-window--ideas .island-window__body {
-        grid-template-rows: minmax(0, 0.34fr) minmax(0, 1.66fr);
+        --ideas-lab-share: 17%;
       }
     }
   }
   &[data-detail-phase='leaving'],
-  &[data-detail-phase='restoring'],
   &[data-detail-phase='revealing'] {
     .island-targets,
     .island-links {
@@ -1510,9 +1567,6 @@ onBeforeUnmount(() => {
     .island-anchor {
       pointer-events: none;
     }
-  }
-  .is-transition-hidden {
-    visibility: hidden;
   }
   .crt-effect-leave-active {
     animation: anutriumCrtOff 0.24s cubic-bezier(0.2, 1, 0.22, 1) both;
@@ -1547,29 +1601,56 @@ onBeforeUnmount(() => {
     .island-window {
       position: absolute;
       inset: 0 0 0 auto;
-      width: 62%;
+      width: 68%;
       display: grid;
-      grid-template-columns: minmax(0, 0.325fr) minmax(0, 1.325fr);
+      grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr);
       grid-template-rows: 76px minmax(0, 1fr);
-      gap: 18px 16px;
+      gap: 18px 0;
     }
     .island-window__bar {
       grid-area: 1 / 1;
+      container-type: size;
+      z-index: 2;
+      flex-direction: row;
+      border: 0;
+      gap: 0;
+      &::after {
+        visibility: hidden;
+      }
       margin: 0;
+      padding: 0 8px;
+      width: 50%;
       height: 100%;
       min-width: 0;
       align-items: center;
       opacity: 1;
+      background: #e23456;
       h2 {
         align-self: center;
-        font-size: clamp(24px, 2.9vw, 48px);
-        transform: translateY(-3px) scaleX(var(--island-title-scale, 1));
+        font-family: 'UnboundedSans', 'alibaba-puhuiti', sans-serif;
+        font-size: min(100cqh, 36cqw);
+        transform: scaleY(calc(100cqh / 1em));
+        transform-origin: left center;
         clip-path: none;
-        -webkit-text-fill-color: currentColor;
+        color: #000;
+        -webkit-text-fill-color: #000;
+        -webkit-text-stroke: 0;
+        mask-image: linear-gradient(to bottom, #000, rgba(0, 0, 0, 0.4));
         &::after {
-          mask-image: none;
-          -webkit-mask-image: none;
+          visibility: hidden;
         }
+      }
+      .island-window__glyph {
+        display: block;
+        order: 1;
+        flex: none;
+        width: 0;
+        height: 0;
+        margin-left: auto;
+        border-top: 6px solid transparent;
+        border-bottom: 6px solid transparent;
+        border-right: 9px solid #000;
+        font-size: 0;
       }
     }
     .is-detail-return {
@@ -1584,51 +1665,70 @@ onBeforeUnmount(() => {
       display: contents;
     }
     .island-item {
-      grid-area: 1 / 2;
+      grid-area: 1 / 1 / 2 / -1;
+      border: 0;
+      overflow: visible;
       opacity: 1;
       picture,
       .island-placeholder {
-        opacity: 0;
-        transition: opacity 0.4s ease;
+        display: none;
       }
       figcaption {
-        display: flex;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr);
+        grid-template-rows: minmax(0, 1fr);
         align-items: center;
-        justify-content: space-between;
-        gap: 12px;
+        gap: 0;
         inset: 0;
-        padding: 0 20px;
+        padding: 0;
       }
       .island-item__title {
+        grid-area: 1 / 2;
+        justify-self: stretch;
+        display: flex;
+        justify-content: center;
+        align-items: center;
         align-self: center;
-        text-align: left;
-        width: auto;
-        font-family: 'alibaba-puhuiti', sans-serif;
-        font-weight: 900;
+        flex: 1 1 0;
+        min-width: 0;
+        text-align: center;
+        width: 100%;
+        font-family: 'Anton', sans-serif;
+        font-weight: 400;
         letter-spacing: normal;
         .island-item__title-text {
           transform: none;
+          transform-origin: center;
           mask-image: none;
           -webkit-mask-image: none;
-          width: auto;
-          white-space: normal;
+          width: max-content;
+          white-space: nowrap;
         }
-        font-size: clamp(24px, 2.2vw, 36px);
+        font-size: min(9cqw, 100cqh);
       }
       .island-item__count {
+        grid-area: 1 / 3;
+        justify-self: end;
+        margin-left: 0;
         color: inherit;
         container-type: normal;
         align-self: center;
         flex: none;
         display: inline-grid;
         width: auto;
-        gap: 3.3px;
+        max-width: none;
+        gap: 0;
         transform: none;
         :deep(small),
         :deep(strong) {
-          font-size: clamp(12px, 1.6vw, 24px);
+          font-size: 50cqh;
+          line-height: 1;
           letter-spacing: normal;
-          color: inherit;
+          color: #e23456;
+        }
+        :deep(small) {
+          -webkit-text-fill-color: transparent;
+          -webkit-text-stroke: 1px #e23456;
         }
       }
     }
@@ -1641,6 +1741,9 @@ onBeforeUnmount(() => {
       pointer-events: auto;
       color: var(--text-color);
       container-type: inline-size;
+    }
+    &.is-english .island-window__bar h2 {
+      font-size: min(100cqh, 15cqw);
     }
     .island-detail__viewport {
       :deep(.scroll-viewport__scroll) {
@@ -1704,10 +1807,9 @@ onBeforeUnmount(() => {
     }
     &.is-mobile {
       .island-window {
-        width: 70%;
-        grid-template-columns: minmax(0, 0.325fr) minmax(0, 1.325fr);
+        width: 76%;
         grid-template-rows: 62px minmax(0, 1fr);
-        gap: 12px 6px;
+        gap: 12px 0;
       }
       &.has-collections-expanded .island-window {
         width: 100%;
@@ -1720,48 +1822,31 @@ onBeforeUnmount(() => {
       }
       .island-window__glyph {
         display: block;
-        font-size: 7px;
+        font-size: 0;
+        border-right-width: 6px;
       }
       .island-window__bar {
-        padding: 0 4px;
+        padding: 0 3px;
       }
       .island-item figcaption {
-        gap: 8px;
-        padding: 0 16px;
+        gap: 0;
+        padding: 0;
+      }
+      .island-item .island-item__title .island-item__title-text {
+        transform: scaleY(2.5);
       }
       .island-item__title {
-        font-size: 18px;
-      }
-      .island-item__count {
-        :deep(strong),
-        :deep(small) {
-          font-size: 12px;
-        }
+        font-size: 7cqw;
       }
     }
   }
-}
-.island-detail-reveal-enter-active {
-  transition: opacity 0.4s ease;
-}
-.island-detail-reveal-leave-active {
-  // 退场正文退出布局后再测量卡片终点，避免把正文占用的高度算进动画。
-  position: absolute;
-  pointer-events: none;
-  transition: opacity 0.15s ease;
-}
-.island-detail-reveal-enter-from,
-.island-detail-reveal-leave-to {
-  opacity: 0;
 }
 @media (prefers-reduced-motion: reduce) {
   .island-focus .crt-effect-leave-active,
   .island-focus .crt-effect-enter-active {
     animation: none;
   }
-  .island-focus .island-detail-shade,
-  .island-detail-reveal-enter-active,
-  .island-detail-reveal-leave-active {
+  .island-focus .island-detail-shade {
     transition: none;
   }
 }

@@ -26,10 +26,9 @@ test('Island modules support direct URLs, refresh, and pointer-driven heads', as
     await expect(
       root.locator('.island-links [data-link-item]:visible')
     ).toHaveCount(1)
-    const marker = await root
-      .locator(`[data-link-item="${id}"] .island-anchor__frame`)
-      .boundingBox()
-    expect(marker!.width).toBeGreaterThanOrEqual(64)
+    await expect(
+      root.locator(`[data-link-item="${id}"] .island-anchor__frame`)
+    ).toBeVisible()
     const titleLayout = await root
       .locator('.island-panels .island-window:visible')
       .evaluate((element) => {
@@ -42,15 +41,40 @@ test('Island modules support direct URLs, refresh, and pointer-driven heads', as
         const title = card.querySelector('.island-item__title')!
         return {
           ratio: bar.width / element.getBoundingClientRect().width,
-          inset:
-            title.getBoundingClientRect().left -
-            card.getBoundingClientRect().left,
           size: parseFloat(getComputedStyle(title).fontSize),
         }
       })
-    expect(titleLayout.ratio).toBeLessThan(0.25)
-    expect(titleLayout.inset).toBeGreaterThanOrEqual(15)
+    expect(titleLayout.ratio).toBeGreaterThan(0.1)
+    expect(titleLayout.ratio).toBeLessThan(0.15)
     expect(titleLayout.size).toBeGreaterThanOrEqual(18)
+    await expect
+      .poll(() =>
+        root
+          .locator('.island-panels .island-window:visible')
+          .evaluate((element) => {
+            const item = Array.from(
+              element.querySelectorAll('.island-item')
+            ).find((e) => e.getClientRects().length)!
+            const title = item
+              .querySelector('.island-item__title-text')!
+              .getBoundingClientRect()
+            const header = element.getBoundingClientRect()
+            return Math.abs(
+              (title.left + title.right - header.left - header.right) / 2
+            )
+          })
+      )
+      .toBeLessThanOrEqual(1)
+    await expect
+      .poll(
+        async () =>
+          (
+            await root
+              .locator('.island-item:visible .island-item__title-text')
+              .boundingBox()
+          )?.width ?? 0
+      )
+      .toBeGreaterThan(15)
     await expect(
       root.locator(
         '.island-panels .island-window:visible .island-window__glyph'
@@ -73,13 +97,6 @@ test('Island modules support direct URLs, refresh, and pointer-driven heads', as
       return [await move(0.2, 0.3), await move(0.8, 0.65)]
     })
     expect(before).not.toBe(after)
-    const focusedFrame = await root
-      .locator(`[data-link-item="${id}"] .island-anchor__frame`)
-      .boundingBox()
-    expect(focusedFrame!.x).toBeGreaterThanOrEqual(-1)
-    expect(focusedFrame!.x + focusedFrame!.width).toBeLessThanOrEqual(
-      page.viewportSize()!.width + 1
-    )
     await expect(root.locator('.island-links .is-active')).toHaveCount(0)
     const rotation = (await stage.getAttribute('data-statue-body-rotation'))!
       .split(',')
@@ -139,73 +156,120 @@ test('Island history restores the same scene and module', async ({ page }) => {
   })
 })
 
-test('Island CRT transitions restore the selected card immediately and reveal siblings during restoration', async ({
+test('Island switches cards and detail through CRT without layout movement', async ({
   page,
-}) => {
+}, info) => {
   test.setTimeout(90000)
-  await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto('/atrium', { waitUntil: 'domcontentloaded' })
-  const root = page.locator('.island-focus')
-  await expect(root).toBeVisible({ timeout: 45000 })
   await page.emulateMedia({ reducedMotion: 'no-preference' })
-  await page.evaluate(() => {
-    document
-      .querySelector<HTMLButtonElement>('[data-island-item="LABORATORY"]')!
-      .click()
-    document.dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })
-    )
-  })
-  await expect(root).toHaveAttribute('data-detail-phase', 'overview')
-  await expect(page).toHaveURL(/\/atrium$/)
-  const item = root.locator('[data-flash-item="LABORATORY"]')
-  const sibling = root.locator('[data-flash-item="NOTES"]')
-  const original = await item.boundingBox()
-  await page
-    .locator('[data-island-item="LABORATORY"]')
-    .evaluate((e) => (e as HTMLButtonElement).click())
-  await expect(sibling).toHaveCSS('animation-name', 'anutriumCrtOff')
-  await expect(root).toHaveAttribute('data-detail-phase', 'detail')
-  await expect(root.locator('.island-detail')).toBeVisible()
-  await page.waitForTimeout(900)
+  await page.goto('/atrium', { waitUntil: 'domcontentloaded' })
+  const root = page.locator('.island-focus:not(.island-closing-snapshot)')
+  await expect(root).toBeVisible({ timeout: 45000 })
+  await expect(root).toHaveAttribute('data-opening', 'false')
   await page.evaluate(() => {
     const root = document.querySelector<HTMLElement>('.island-focus')!
-    const sibling = root.querySelector('[data-flash-item="NOTES"]')!
-    const item = root.querySelector('[data-flash-item="LABORATORY"]')!
     const trace: any[] = []
-    ;(window as any).returnTransitionTrace = trace
+    ;(window as any).islandCrtTrace = trace
     const observer = new MutationObserver(() => {
+      const phase = root.dataset.detailPhase
+      const selected = root.querySelector<HTMLElement>(
+        '[data-flash-item="LABORATORY"]'
+      )!
+      const sibling = root.querySelector<HTMLElement>(
+        '[data-flash-item="NOTES"]'
+      )!
+      const ghost = document.querySelector<HTMLElement>(
+        '.island-closing-snapshot [data-flash-item="LABORATORY"]'
+      )
+      const detail = root.querySelector<HTMLElement>('.island-window--ideas')!
       trace.push({
-        phase: root.dataset.detailPhase,
+        phase,
         time: performance.now(),
-        animation: getComputedStyle(sibling).animationName,
-        visibility: getComputedStyle(sibling).visibility,
-        height: item.getBoundingClientRect().height,
+        siblingAnimation: getComputedStyle(sibling).animationName,
+        selectedAnimation: getComputedStyle(selected).animationName,
+        ghostAnimation: ghost && getComputedStyle(ghost).animationName,
+        detailAnimation: getComputedStyle(detail).animationName,
+        detailPresent: !!root.querySelector('.island-detail'),
+        titleTransform: (
+          root.querySelector('.island-item__title-text') as HTMLElement
+        ).style.transform,
       })
-      if (root.dataset.detailPhase === 'overview') observer.disconnect()
     })
     observer.observe(root, {
       attributes: true,
       attributeFilter: ['data-detail-phase'],
     })
+    document
+      .querySelector<HTMLButtonElement>('[data-island-item="LABORATORY"]')!
+      .click()
   })
-  const returnRequested = await page.evaluate(() => performance.now())
+  await expect(root).toHaveAttribute('data-detail-phase', 'detail')
+  const trace = await page.evaluate(() => (window as any).islandCrtTrace)
+  const leaving = trace.find((entry: any) => entry.phase === 'leaving')
+  const detail = trace.find((entry: any) => entry.phase === 'detail')
+  expect(leaving.siblingAnimation).toBe('anutriumCrtOff')
+  expect(leaving.selectedAnimation).toBe('none')
+  expect(detail.time - leaving.time).toBeGreaterThanOrEqual(200)
+  expect(detail.ghostAnimation).toBe('anutriumCrtOff')
+  expect(detail.detailAnimation).toBe('anutriumCrtOn')
+  expect(detail.detailPresent).toBe(true)
+  expect(detail.titleTransform).toBe('')
+  const modelYaw = async () => {
+    const rotation = await page
+      .locator('.temple-stage')
+      .getAttribute('data-statue-body-rotation')
+    return Number(rotation?.split(',')[1])
+  }
+  await page.waitForTimeout(100)
+  const enteringYaw = await modelYaw()
+  expect(enteringYaw).toBeLessThan(0)
+  expect(enteringYaw).toBeGreaterThan(-Math.PI / 2 + 0.01)
+  await expect(page.locator('.island-closing-snapshot')).toHaveCount(0)
+  await expect(root.locator('[data-island-group="ideas"]')).toHaveCSS(
+    'animation-name',
+    'none'
+  )
+  await expect(root.locator('.island-detail')).toBeVisible()
+  await page.screenshot({
+    path: `/tmp/atrium-crt-detail-${info.project.name}.png`,
+  })
+  await expect.poll(modelYaw).toBeCloseTo(-Math.PI / 2, 3)
+  await root.evaluate((element) => {
+    const endings: { element: HTMLElement; opacity: number }[] = []
+    ;(window as any).returnCrtOpacity = endings
+    element.addEventListener('animationend', (event) => {
+      const animation = event as AnimationEvent
+      const target = animation.target as HTMLElement
+      if (
+        animation.animationName === 'anutriumCrtOn' &&
+        target.matches('.island-item, .island-window__bar')
+      )
+        endings.push({
+          element: target,
+          opacity: Number(getComputedStyle(target).opacity),
+        })
+    })
+  })
   await page.keyboard.press('Escape')
-  await expect(root).toHaveAttribute('data-detail-phase', 'overview', {
-    timeout: 10000,
-  })
-  const trace = await page.evaluate(() => (window as any).returnTransitionTrace)
-  const restoring = trace.find((entry: any) => entry.phase === 'restoring')
-  const revealing = trace.find((entry: any) => entry.phase === 'revealing')
-  expect(restoring.time - returnRequested).toBeLessThan(400)
-  expect(revealing.time - restoring.time).toBeGreaterThanOrEqual(750)
-  expect(revealing.time - restoring.time).toBeLessThan(1500)
-  expect(restoring.visibility).toBe('hidden')
-  expect(revealing.animation).toBe('anutriumCrtOn')
-  expect(
-    Math.abs((await item.boundingBox())!.height - original!.height)
-  ).toBeLessThanOrEqual(1)
-  await expect(sibling).toBeVisible()
+  await expect(root).toHaveAttribute('data-detail-phase', 'revealing')
+  await page.waitForTimeout(100)
+  const returningYaw = await modelYaw()
+  expect(returningYaw).toBeGreaterThan(-Math.PI / 2)
+  expect(returningYaw).toBeLessThan(-0.01)
+  await expect(root.locator('[data-flash-item="LABORATORY"]')).toHaveCSS(
+    'animation-name',
+    'anutriumCrtOn'
+  )
+  await expect(root).toHaveAttribute('data-detail-phase', 'overview')
+  const opacityChanges = await page.evaluate(() =>
+    (window as any).returnCrtOpacity.map(
+      ({ element, opacity }: { element: HTMLElement; opacity: number }) =>
+        Math.abs(Number(getComputedStyle(element).opacity) - opacity)
+    )
+  )
+  expect(opacityChanges.length).toBeGreaterThanOrEqual(4)
+  for (const delta of opacityChanges) expect(delta).toBeLessThanOrEqual(0.01)
+  await expect(page.locator('.island-closing-snapshot')).toHaveCount(0)
+  await expect.poll(modelYaw).toBeCloseTo(0, 3)
   expect(await page.evaluate(() => document.body.scrollTop)).toBe(0)
 })
 

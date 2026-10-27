@@ -9,18 +9,26 @@
     :lock-scroll="false"
     transition="crt-effect"
     class="modal-wrapper-dialog no-rem"
-    :class="{
-      'modal-wrapper-dialog--flush-desktop': flushDesktop,
-      'modal-wrapper-dialog--work-detail': closePlacement === 'work-detail',
-    }"
+    :class="[
+      dialogClass,
+      {
+        'modal-wrapper-dialog--flush-desktop': flushDesktop,
+        'modal-wrapper-dialog--work-detail': closePlacement === 'work-detail',
+        'modal-wrapper-dialog--origin-motion': !!originElement,
+      },
+    ]"
     :style="{
       '--modal-width': typeof width === 'number' ? `${width}px` : width,
       '--modal-theme-color': themeColor || 'var(--page-theme-color, #e23456)',
     }"
     @close="handleDialogClose"
+    @open="handleDialogOpen"
     @closed="handleClosed"
   >
-    <div class="modal-close-row">
+    <div
+      class="modal-close-row"
+      :class="{ 'is-closing': !!originElement && !dialogVisible }"
+    >
       <DiamondCloseBtn :title="closeTitle" @click="requestClose" />
     </div>
 
@@ -58,7 +66,7 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, ref, shallowRef, watch } from 'vue'
+import { nextTick, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { ElDialog } from 'element-plus'
 
 import DiamondCloseBtn from '@/components/DiamondCloseBtn/index.vue'
@@ -80,6 +88,8 @@ const props = withDefaults(
     appendToBody?: boolean
     flushDesktop?: boolean
     closePlacement?: 'external-bottom' | 'work-detail'
+    originElement?: HTMLElement | null
+    dialogClass?: string
   }>(),
   {
     appendToBody: true,
@@ -89,6 +99,8 @@ const props = withDefaults(
     themeColor: undefined,
     title: undefined,
     width: '1280px',
+    originElement: null,
+    dialogClass: undefined,
   }
 )
 
@@ -96,11 +108,79 @@ const emit = defineEmits<{
   'update:modelValue': [value: boolean]
   close: []
   closed: []
+  'origin-return': [remainingMs: number]
 }>()
 
 const dialogVisible = ref(false)
 const scrollRegion = ref<HTMLElement | null>(null)
 const backgroundTitleTarget = shallowRef<HTMLElement | null>(null)
+let originAnimation: Animation | undefined
+let originReturnFrame = 0
+const animateFromOrigin = (closing = false) => {
+  cancelAnimationFrame(originReturnFrame)
+  originAnimation?.cancel()
+  const origin = props.originElement
+  const dialog = scrollRegion.value?.closest<HTMLElement>('.el-dialog')
+  if (
+    !origin?.isConnected ||
+    !dialog ||
+    matchMedia('(prefers-reduced-motion: reduce)').matches
+  )
+    return
+  const source = origin.getBoundingClientRect()
+  const target = dialog.getBoundingClientRect()
+  // 动画实际宽高，避免缩放连带压小文字，回到原容器时再突然恢复字号。
+  const collapsed = {
+    translate: `${
+      source.left + source.width / 2 - target.left - target.width / 2
+    }px ${source.top + source.height / 2 - target.top - target.height / 2}px`,
+    width: `${source.width}px`,
+    height: `${source.height}px`,
+  }
+  const expanded = {
+    translate: '0px 0px',
+    width: `${dialog.offsetWidth}px`,
+    height: `${dialog.offsetHeight}px`,
+  }
+  originAnimation = dialog.animate(
+    closing ? [expanded, collapsed] : [collapsed, expanded],
+    {
+      duration: closing ? 840 : 920,
+      easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+      fill: closing ? 'forwards' : 'none',
+    }
+  )
+  if (closing) {
+    const animation = originAnimation
+    const handoff = () => {
+      const elapsed = Number(animation.currentTime ?? 0)
+      const bounds = dialog.getBoundingClientRect()
+      const delta = Math.max(
+        Math.abs(bounds.left - source.left),
+        Math.abs(bounds.top - source.top),
+        Math.abs(bounds.width - source.width),
+        Math.abs(bounds.height - source.height)
+      )
+      // 几何接近原位后提前归还页面层，留出余下时间平滑交接遮挡关系。
+      if (elapsed >= 640 && delta <= 8) {
+        emit('origin-return', Math.max(0, 840 - elapsed))
+        return
+      }
+      if (animation.playState === 'running')
+        originReturnFrame = requestAnimationFrame(handoff)
+    }
+    originReturnFrame = requestAnimationFrame(handoff)
+  }
+}
+
+const handleDialogOpen = async () => {
+  await nextTick()
+  if (dialogVisible.value) animateFromOrigin()
+}
+onBeforeUnmount(() => {
+  cancelAnimationFrame(originReturnFrame)
+  originAnimation?.cancel()
+})
 
 const getDialogElement = () =>
   [...document.querySelectorAll<HTMLElement>('.modal-wrapper-dialog')].find(
@@ -146,10 +226,15 @@ const requestClose = () => {
 }
 
 const handleDialogClose = () => {
+  // 遮罩和 ESC 先触发内部 close，需同步关闭态，按钮才能立即开始渐隐。
+  if (props.originElement) dialogVisible.value = false
+  animateFromOrigin(true)
   emit('close')
 }
 
 const handleClosed = () => {
+  cancelAnimationFrame(originReturnFrame)
+  originAnimation?.cancel()
   backgroundTitleTarget.value = null
   emit('closed')
 }
@@ -199,6 +284,39 @@ const handleClosed = () => {
 </style>
 
 <style lang="less">
+// 盒子外壳只做几何展开，电视机动画由盒内的封面和图片列表承担。
+.crt-effect-enter-active .el-dialog.modal-wrapper-dialog--origin-motion,
+.crt-effect-leave-active .el-dialog.modal-wrapper-dialog--origin-motion {
+  animation: none !important;
+  &::after {
+    animation: none;
+  }
+}
+.crt-effect-enter-from:has(.modal-wrapper-dialog--origin-motion),
+.crt-effect-leave-to:has(.modal-wrapper-dialog--origin-motion) {
+  opacity: 1;
+  background-color: transparent !important;
+}
+.crt-effect-enter-active:has(.modal-wrapper-dialog--origin-motion),
+.crt-effect-leave-active:has(.modal-wrapper-dialog--origin-motion) {
+  transition-property: background-color;
+}
+.crt-effect-enter-active:has(.modal-wrapper-dialog--origin-motion) {
+  transition-duration: 920ms;
+}
+.crt-effect-leave-active:has(.modal-wrapper-dialog--origin-motion) {
+  transition-duration: 840ms;
+}
+.modal-wrapper-dialog--origin-motion
+  .modal-close-row.is-closing
+  .diamond-close-btn {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 220ms ease;
+}
+</style>
+
+<style lang="less">
 .modal-wrapper-dialog {
   --modal-accent: var(--modal-theme-color, var(--page-theme-color, #e23456));
 
@@ -209,7 +327,7 @@ const handleClosed = () => {
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.85) !important;
 
   margin: 0 0 60px !important;
-  width: var(--modal-width, 1280px) !important;
+  width: var(--modal-width, 1280px);
   max-height: 90vh !important;
   display: flex;
   flex-direction: column;
@@ -230,6 +348,10 @@ const handleClosed = () => {
     flex: 1 1 auto;
     overflow: visible;
   }
+}
+
+.modal-wrapper-dialog:not(.modal-wrapper-dialog--origin-motion) {
+  width: var(--modal-width, 1280px) !important;
 }
 
 .modal-fixed-header {
@@ -300,7 +422,7 @@ const handleClosed = () => {
 
 @media (max-width: 768px) {
   .modal-wrapper-dialog.no-rem {
-    width: calc(100vw - 20px) !important;
+    width: calc(100vw - 20px);
     height: calc(100dvh - 192px);
     max-height: calc(100dvh - 192px) !important;
 
@@ -309,6 +431,9 @@ const handleClosed = () => {
       flex-direction: column;
       min-height: 0;
     }
+  }
+  .modal-wrapper-dialog.no-rem:not(.modal-wrapper-dialog--origin-motion) {
+    width: calc(100vw - 20px) !important;
   }
 }
 

@@ -1,56 +1,79 @@
 <template>
-  <span
+  <div
     ref="cardElement"
     class="collection-card-entry"
-    :class="{ 'is-opening': isOpening }"
+    :class="{ 'is-opening': expanded && !returning }"
   >
-    <span class="collection-card-shell">
-      <button
-        class="collection-card"
-        :aria-busy="isOpening"
-        type="button"
-        @click="handleSelect"
+    <Teleport
+      :to="expandedTarget || 'body'"
+      :disabled="!expanded || !expandedTarget || returning"
+    >
+      <div
+        class="collection-card-shell"
+        :class="{
+          'is-expanded': expanded,
+          'is-closing': closing,
+          'is-returning': returning,
+        }"
       >
-        <span class="collection-card__media">
-          <picture>
-            <img
-              class="collection-card__cover collection-card__cover--primary"
-              :style="coverStyle"
-              :src="primaryCover"
-              :alt="collection.title"
-              loading="lazy"
-              decoding="async"
-              width="768"
-              height="576"
-            />
-          </picture>
-          <span class="collection-card__shade" />
-          <span class="collection-card__scan" />
-        </span>
-        <span class="collection-card__copy">
-          <strong>{{ collection.title }}</strong>
-          <small>
-            <template
-              v-for="subtitlePart in subtitleDisplayParts"
-              :key="subtitlePart.id"
+        <component
+          :is="expanded ? 'div' : 'button'"
+          class="collection-card"
+          :aria-expanded="expanded"
+          aria-haspopup="dialog"
+          type="button"
+          @click="handleSelect"
+        >
+          <span class="collection-card__media">
+            <picture class="collection-card__screen-cover" :style="coverStyle">
+              <img
+                class="collection-card__cover collection-card__cover--primary"
+                :style="coverStyle"
+                :src="primaryCover"
+                :alt="collection.title"
+                loading="lazy"
+                decoding="async"
+                width="768"
+                height="576"
+              />
+            </picture>
+            <span class="collection-card__shade" />
+            <span class="collection-card__scan" />
+            <div
+              v-if="expanded"
+              class="collection-card__gallery"
+              data-lenis-nested-scroll
             >
-              <span
-                v-if="subtitlePart.isSeparator"
-                class="collection-card__copy-separator"
-              >
-                ｜
-              </span>
-              <span v-else>{{ subtitlePart.text }}</span>
-            </template>
-          </small>
-          <span class="collection-card__count">
-            <span>{{ String(collection.photos.length).padStart(2, '0') }}</span>
-            <small class="collection-card__unit">{{ countLabel }}</small>
+              <slot name="gallery" />
+            </div>
           </span>
-        </span>
-      </button>
-    </span>
-  </span>
+          <span class="collection-card__copy">
+            <strong>{{ collection.title }}</strong>
+            <small>
+              <template
+                v-for="subtitlePart in subtitleDisplayParts"
+                :key="subtitlePart.id"
+              >
+                <span
+                  v-if="subtitlePart.isSeparator"
+                  class="collection-card__copy-separator"
+                >
+                  ｜
+                </span>
+                <span v-else>{{ subtitlePart.text }}</span>
+              </template>
+            </small>
+            <span class="collection-card__count">
+              <span>{{
+                String(collection.photos.length).padStart(2, '0')
+              }}</span>
+              <small class="collection-card__unit">{{ countLabel }}</small>
+            </span>
+          </span>
+        </component>
+      </div>
+    </Teleport>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -74,17 +97,17 @@ export interface MerchCollectionCardData {
 const props = defineProps<{
   collection: MerchCollectionCardData
   countLabel: string
+  expanded?: boolean
+  expandedTarget?: HTMLElement | null
+  closing?: boolean
+  returning?: boolean
 }>()
 
 const emit = defineEmits<{
-  (event: 'select', collectionId: string): void
+  (event: 'select', collectionId: string, element: HTMLElement): void
 }>()
 
-const isOpening = ref(false)
 const cardElement = ref<HTMLElement>()
-const EXPAND_OVERSCAN = 1.08
-const EXPAND_ANIMATION_DURATION = 1440
-
 const primaryCover = computed(() =>
   getCardThumbnailUrl(props.collection.photos[0]?.url || props.collection.cover)
 )
@@ -117,59 +140,8 @@ const coverStyle = computed(() => ({
 }))
 
 const handleSelect = () => {
-  if (isOpening.value) return
-
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    emit('select', props.collection.id)
-    return
-  }
-
-  isOpening.value = true
-  const sourceImage = cardElement.value?.querySelector('img')
-
-  if (sourceImage) {
-    // 只复制已加载的封面；在插入前读取几何，避免复制整卡及插入后强制布局。
-    const bounds = sourceImage.getBoundingClientRect()
-    const objectPosition = window.getComputedStyle(sourceImage).objectPosition
-    const transitionImage = sourceImage.cloneNode(false) as HTMLImageElement
-    const isMobileViewport = window.matchMedia('(max-width: 900px)').matches
-    const scale = isMobileViewport
-      ? (window.innerHeight * EXPAND_OVERSCAN) / bounds.height
-      : (window.innerWidth * EXPAND_OVERSCAN) / bounds.width
-    const translateX = window.innerWidth / 2 - (bounds.left + bounds.width / 2)
-    const translateY = window.innerHeight / 2 - (bounds.top + bounds.height / 2)
-
-    transitionImage.className =
-      'collection-card-transition collection-card--expanding'
-    transitionImage.alt = ''
-    transitionImage.setAttribute('aria-hidden', 'true')
-    transitionImage.loading = 'eager'
-    Object.assign(transitionImage.style, {
-      top: `${bounds.top}px`,
-      left: `${bounds.left}px`,
-      width: `${bounds.width}px`,
-      height: `${bounds.height}px`,
-      objectPosition,
-    })
-    document.body.appendChild(transitionImage)
-    const animation = transitionImage.animate(
-      [
-        { transform: 'translate(0, 0) scale(1)', opacity: 1 },
-        {
-          transform: `translate(${translateX}px, ${translateY}px) scale(${scale})`,
-          opacity: 0,
-        },
-      ],
-      {
-        duration: EXPAND_ANIMATION_DURATION,
-        easing: 'cubic-bezier(0.2, 0.82, 0.2, 1)',
-      }
-    )
-    const removeTransitionImage = () => transitionImage.remove()
-    animation.finished.then(removeTransitionImage, removeTransitionImage)
-  }
-
-  emit('select', props.collection.id)
+  if (!props.expanded && cardElement.value)
+    emit('select', props.collection.id, cardElement.value)
 }
 </script>
 
@@ -257,6 +229,7 @@ const handleSelect = () => {
         rgba(0, 0, 0, 0.65) 100%
       );
       box-shadow: inset 0 0 22px rgba(0, 0, 0, 0.96);
+      opacity: 1;
       transition: opacity 0.3s ease;
     }
   }
@@ -279,6 +252,8 @@ const handleSelect = () => {
     position: absolute;
     inset: 0;
     z-index: 3;
+    opacity: 1;
+    transition: opacity 0.3s ease;
     background: linear-gradient(
       to bottom,
       rgba(0, 0, 0, 0.02) 58%,
@@ -292,6 +267,7 @@ const handleSelect = () => {
     inset: 0;
     z-index: 4;
     opacity: 0.08;
+    transition: opacity 0.3s ease;
     background: repeating-linear-gradient(
       0deg,
       transparent 0 4px,
@@ -394,7 +370,7 @@ const handleSelect = () => {
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .collection-card-shell:hover {
+  .collection-card-shell:not(.is-expanded):hover {
     z-index: 4;
     transform: translateY(-10px);
 
@@ -406,19 +382,84 @@ const handleSelect = () => {
 
 .collection-card-entry.is-opening {
   z-index: 5;
-  opacity: 0;
+  visibility: hidden;
   pointer-events: none;
 }
 
-.collection-card-transition {
-  position: fixed;
-  z-index: 9999;
-  display: block;
-  max-width: none;
-  margin: 0;
-  pointer-events: none;
-  object-fit: cover;
-  transform-origin: center;
+.collection-card-shell.is-expanded {
+  .collection-card {
+    cursor: default;
+  }
+  .collection-card__screen-cover {
+    position: absolute;
+    inset: 0;
+    display: block;
+    z-index: 2;
+    pointer-events: none;
+    animation: anutriumCrtOff 180ms cubic-bezier(0.2, 1, 0.22, 1) both;
+  }
+  .collection-card__gallery {
+    position: absolute;
+    inset: 0;
+    z-index: 6;
+    overflow: auto;
+    overscroll-behavior: contain;
+    background: #08080a;
+    padding: clamp(24px, 4vw, 64px);
+    box-sizing: border-box;
+    animation: anutriumCrtOn 220ms cubic-bezier(0.19, 1, 0.22, 1) 80ms backwards;
+  }
+  .collection-card__media::after,
+  .collection-card__shade,
+  .collection-card__scan {
+    opacity: 0;
+  }
+  &.is-closing {
+    .collection-card__media::after,
+    .collection-card__shade {
+      opacity: 1;
+      transition: opacity 360ms ease 280ms;
+    }
+    .collection-card__scan {
+      opacity: 0.08;
+      transition: opacity 360ms ease 280ms;
+    }
+    .collection-card__gallery {
+      animation: anutriumCrtOff 420ms cubic-bezier(0.2, 1, 0.22, 1) both;
+    }
+    .collection-card__screen-cover {
+      animation: anutriumCrtOn 420ms cubic-bezier(0.19, 1, 0.22, 1) both;
+    }
+  }
+  // 跨层移动 DOM 前固定关屏/开屏的终态，避免重新挂入页面时重播 CSS 动画。
+  &.is-returning {
+    .collection-card__screen-cover {
+      animation: none;
+      opacity: 1;
+      transform: none;
+      filter: none;
+    }
+    .collection-card__gallery {
+      animation: none;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .collection-card__media::after,
+    .collection-card__shade,
+    .collection-card__scan {
+      transition: none;
+    }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .collection-card-shell.is-expanded {
+    .collection-card__screen-cover {
+      display: none;
+    }
+    .collection-card__gallery {
+      animation: none;
+    }
+  }
 }
 
 @media (max-width: 900px) {

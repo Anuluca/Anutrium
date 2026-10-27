@@ -115,6 +115,9 @@ test('Island fills the inset container, projects body anchors and shares hover c
         right: item.getBoundingClientRect().right,
         bottom: item.getBoundingClientRect().bottom,
       })),
+      ideasBodyBottom: panel
+        .querySelector('.island-window--ideas .island-window__body')!
+        .getBoundingClientRect().bottom,
     }
   })
   expect(geometry.inset.every((value) => value >= 16)).toBe(true)
@@ -136,6 +139,9 @@ test('Island fills the inset container, projects body anchors and shares hover c
     expect(module.gap).toBeGreaterThanOrEqual(12)
   })
   expect(geometry.notes).toHaveLength(2)
+  expect(
+    Math.abs(geometry.notes[1].bottom - geometry.ideasBodyBottom)
+  ).toBeLessThanOrEqual(1)
   expect(
     geometry.notes[1].top - geometry.notes[0].bottom
   ).toBeGreaterThanOrEqual(12)

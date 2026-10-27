@@ -102,6 +102,7 @@ export interface IslandModelAnchors {
 export interface TempleCallbacks {
   entranceStarted?: () => void
   entrySelection?: () => TempleSelection | null
+  entryIslandModule?: () => IslandModuleId | null
   waitForRouteEnter: () => Promise<void>
   prepared: () => void
   progress: (value: number) => void
@@ -327,6 +328,13 @@ export function createHomeTemple(
   let pausedAt = 0
   let statueHovered = false
   let immersive = false
+  let photoMode = false
+  const photoUIOpacity = { value: 1 }
+  let photoFadeTween: gsap.core.Tween | undefined
+  const photoRotation = new THREE.Euler()
+  const photoSavedRotation = new THREE.Euler()
+  let photoSavedZoom = 1
+  let photoPointer: { id: number; x: number; y: number } | null = null
   let immersionStartedAt = 0
   let immersionTween: gsap.core.Tween | undefined
   const statueHover = { value: 0 }
@@ -387,8 +395,12 @@ export function createHomeTemple(
   }
   // 位移直接跟随缩放进度，入场同步下移，回程随退镜连续归位。
   const statueZoomDrop = () =>
-    THREE.MathUtils.clamp((camera.zoom - 1) / (STATUE_FOCUS_ZOOM - 1), 0, 1) *
-    STATUE_ZOOM_VERTICAL_OFFSET
+    THREE.MathUtils.clamp(
+      ((photoMode ? photoSavedZoom : camera.zoom) - 1) /
+        (STATUE_FOCUS_ZOOM - 1),
+      0,
+      1
+    ) * STATUE_ZOOM_VERTICAL_OFFSET
   let viewOffsetDirty = false
   const applyViewOffset = () => {
     if (!viewWidth || !viewHeight) return
@@ -1545,7 +1557,7 @@ export function createHomeTemple(
   )
   statueScan.install(chromeMaterial, 'chrome')
   statueScan.install(wireMaterial, 'composite')
-  for (const surface of [chromeMaterial, wireMaterial, wireDepthMaterial])
+  for (const surface of [wireMaterial, wireDepthMaterial])
     installAtriumLegFade(
       surface,
       {
@@ -1553,7 +1565,8 @@ export function createHomeTemple(
           return statueView.mix
         },
       },
-      statueScan.bounds
+      statueScan.bounds,
+      surface === wireDepthMaterial
     )
   for (const value of materials) {
     if ('color' in value && value !== dizzySticker.material)
@@ -1946,6 +1959,7 @@ export function createHomeTemple(
       callbacks.islandInteractive?.(islandInteractive)
     }
     const statueMouseFollow =
+      !photoMode &&
       statueOnly &&
       !islandDetailSide &&
       !islandDetailMotion?.isActive() &&
@@ -1953,6 +1967,7 @@ export function createHomeTemple(
       scanProgress === 1 &&
       !statueRestorePending
     const followHead =
+      !photoMode &&
       !entranceActive &&
       !returningStatue &&
       (!statueOnly || statueMouseFollow || !!islandDetailSide)
@@ -2030,6 +2045,7 @@ export function createHomeTemple(
       statue.rotation.z = 0
       moving ||= Math.abs(statue.rotation.y - yaw) > 0.00001
     }
+    if (photoMode) statue.rotation.copy(photoRotation)
     // 仅中央模型的全身预览恢复正常；二级模块保留头疼姿态。
     const headacheTarget = headacheActive ? 1 : 0
     headacheMix = reducedMotion
@@ -2057,17 +2073,23 @@ export function createHomeTemple(
         : Math.floor(now / DIZZY_STICKER_FRAME_MS)
       dizzyEffect?.update(stickerFrame)
     }
+    // 仅增强 Atrium 概览的扭头幅度，随详情构图进度恢复原有幅度。
+    const overviewHeadGain =
+      1 + statueView.mix * (1 - islandDetailView.mix) * 0.7
     const pitch = THREE.MathUtils.degToRad(
       rig.enabled
         ? rig.restPitch * (1 - islandDetailView.mix) -
             (headache?.headLeanBack ?? 0) * headacheMix +
-            headCurrent.y * rig.pointerPitch +
+            headCurrent.y * rig.pointerPitch * overviewHeadGain +
             islandDetailHead.pitch
         : 0
     )
     const yaw = THREE.MathUtils.degToRad(
       rig.enabled
-        ? headCurrent.x * rig.pointerYaw * islandDetailHead.pointerDirection +
+        ? headCurrent.x *
+            rig.pointerYaw *
+            overviewHeadGain *
+            islandDetailHead.pointerDirection +
             islandDetailHead.yaw
         : 0
     )
@@ -2192,7 +2214,7 @@ export function createHomeTemple(
         Math.sign(distance) * Math.min(Math.abs(distance), travel)
     }
     if (statueLabelReveal.value !== statueLabelTarget) hoverMoving = true
-    statueLabelMaterial.opacity = 1
+    statueLabelMaterial.opacity = photoUIOpacity.value
     statueLabelFocus.value = statueView.mix
     statueLabel.scale.setScalar(
       (1 + statueView.mix * 0.5) * (1 - islandDetailView.mix)
@@ -2224,8 +2246,10 @@ export function createHomeTemple(
     } else statueLabel.position.copy(statueLabelBase)
     statueLabelMaterial.depthTest = true
     statueLabel.visible =
-      statueLabelReveal.value > 0 && islandDetailView.mix < 1
-    welcomeMaterial.opacity = welcomeReveal.value
+      statueLabelReveal.value > 0 &&
+      islandDetailView.mix < 1 &&
+      photoUIOpacity.value > 0
+    welcomeMaterial.opacity = welcomeReveal.value * photoUIOpacity.value
     welcomeMaterial.depthTest = statueLabelMaterial.depthTest
     welcomeLabel.scale.setScalar(statueLabel.scale.x * welcomeBaseScale)
     welcomeLabel.position.copy(statueLabel.position)
@@ -2243,8 +2267,8 @@ export function createHomeTemple(
     else labelPointer.lerp(labelPointerTarget, 1 - Math.exp(-elapsed * 6))
     moving ||= labelPointer.distanceToSquared(labelPointerTarget) >= 0.000001
     labelOrbitAngles.set(
-      THREE.MathUtils.degToRad(labelPointer.y * 10),
-      THREE.MathUtils.degToRad(labelPointer.x * 18),
+      THREE.MathUtils.degToRad(labelPointer.y * 16),
+      THREE.MathUtils.degToRad(labelPointer.x * 30),
       0
     )
     labelOrbitRotation.setFromEuler(labelOrbitAngles)
@@ -2795,6 +2819,7 @@ export function createHomeTemple(
     }
     const cacheAllowed =
       // 聚焦时光幕/倒影与角色交错，单张环境缓存无法保留透明层顺序。
+      !photoMode &&
       !selected &&
       !entranceActive &&
       !transitionActive &&
@@ -2808,6 +2833,21 @@ export function createHomeTemple(
     staticSceneCache.setEnabled(cacheAllowed)
     if (sceneChanged || reflectionAppearanceChanged || transitionActive)
       staticSceneCache.invalidate()
+    if (photoMode) {
+      // 拍照只保留角色；欢迎字样也属于三维场景，需要在绘制前隐藏。
+      for (const object of [
+        monuments,
+        ground,
+        reflection,
+        pedestal,
+        sleepingSprigatito,
+        statueGlow,
+        statueHolyLight,
+        sprigatitoBeam,
+        sprigatitoPool,
+      ])
+        object.visible = false
+    }
     drawScene()
     if (publishDiagnostics) {
       setStageData('activeSpotLights', String(spotLightPool.activeCount))
@@ -2820,8 +2860,8 @@ export function createHomeTemple(
     if (selected === 'statue' && statueMesh && callbacks.islandAnchors) {
       screenProjection.object(statueMesh.matrixWorld)
       islandNodQuaternion.setFromAxisAngle(islandNodAxis, headNodAngle.value)
-      // 锚点取自当前路卡网格的胸刺、双手与双辫，随模型世界矩阵与镜头一起投影。
-      projectIslandAnchor(islandModelAnchors.chest, 0, 2.04385, 0.34162)
+      // 锚点取自路卡的下胸、双手与双辫，随模型世界矩阵与镜头一起投影。
+      projectIslandAnchor(islandModelAnchors.chest, 0, 1.7, 0.34162)
       // 双手定位到手背刺根部连接环中心，随模型转动保持贴合。
       projectIslandAnchor(
         islandModelAnchors.rightHand,
@@ -3293,6 +3333,17 @@ export function createHomeTemple(
       },
       0
     )
+    const baseScale = statue.userData.baseScale ?? statue.scale.x
+    statue.userData.baseScale = baseScale
+    islandDetailMotion.to(
+      statue.scale,
+      {
+        x: baseScale * (moduleId === 'COLLECTIBLES' ? 0.85 : 1),
+        y: baseScale * (moduleId === 'COLLECTIBLES' ? 0.85 : 1),
+        z: baseScale * (moduleId === 'COLLECTIBLES' ? 0.85 : 1),
+      },
+      0
+    )
     islandDetailMotion.to(
       camera,
       {
@@ -3320,7 +3371,14 @@ export function createHomeTemple(
       pointerHeadEase.set(0, 0)
       headTarget.set(0, 0)
     }
+    if (immediate) islandDetailMotion.progress(1)
     invalidate()
+  }
+  // 详情组件异步挂载前就恢复路由构图，避免首帧先显示居中的总览姿态。
+  const restoreEntryIslandDetail = () => {
+    const moduleId = callbacks.entryIslandModule?.()
+    if (selected === 'statue' && moduleId)
+      setIslandDetail(islandModules[moduleId].side, true, moduleId)
   }
   const resize = () => {
     viewWidth = stage.clientWidth
@@ -4075,7 +4133,7 @@ export function createHomeTemple(
     returningStatue ||
     (selected === 'statue' && transitionActive)
   const click = (event: MouseEvent) => {
-    if (hosted || immersive || statueClickLocked()) return
+    if (hosted || photoMode || immersive || statueClickLocked()) return
     if (selected === 'sprigatito' && callbacks.dismissBackground?.()) return
     if (selected === 'statue') {
       if (callbacks.dismissBackground?.()) return
@@ -4087,9 +4145,50 @@ export function createHomeTemple(
     else if (selected && !callbacks.dismissBackground?.()) select(null)
   }
   renderer.domElement.addEventListener('click', click)
+  const photoPointerDown = (event: PointerEvent) => {
+    if (!photoMode || event.button !== 0) return
+    event.preventDefault()
+    photoPointer = { id: event.pointerId, x: event.clientX, y: event.clientY }
+    renderer.domElement.setPointerCapture(event.pointerId)
+  }
+  const photoPointerMove = (event: PointerEvent) => {
+    if (!photoMode || photoPointer?.id !== event.pointerId) return
+    photoRotation.y += (event.clientX - photoPointer.x) * 0.008
+    photoRotation.x = THREE.MathUtils.clamp(
+      photoRotation.x + (event.clientY - photoPointer.y) * 0.005,
+      -0.65,
+      0.65
+    )
+    photoPointer.x = event.clientX
+    photoPointer.y = event.clientY
+    projectionDirty = diagnosticsDirty = true
+    invalidate()
+  }
+  const photoPointerUp = (event: PointerEvent) => {
+    if (photoPointer?.id !== event.pointerId) return
+    photoPointer = null
+    if (renderer.domElement.hasPointerCapture(event.pointerId))
+      renderer.domElement.releasePointerCapture(event.pointerId)
+  }
+  const photoWheel = (event: WheelEvent) => {
+    if (!photoMode) return
+    event.preventDefault()
+    camera.zoom = THREE.MathUtils.clamp(
+      camera.zoom * Math.exp(-event.deltaY * 0.001),
+      photoSavedZoom * 0.45,
+      photoSavedZoom * 3
+    )
+    markViewOffsetDirty()
+    invalidate()
+  }
+  renderer.domElement.addEventListener('pointerdown', photoPointerDown)
+  renderer.domElement.addEventListener('pointermove', photoPointerMove)
+  renderer.domElement.addEventListener('pointerup', photoPointerUp)
+  renderer.domElement.addEventListener('pointercancel', photoPointerUp)
+  renderer.domElement.addEventListener('wheel', photoWheel, { passive: false })
   renderer.domElement.tabIndex = 0
   const modelKeydown = (event: KeyboardEvent) => {
-    if (hosted || disposed || immersive) return
+    if (hosted || disposed || photoMode || immersive) return
     if (event.key === 'Escape' && referenceLoadingSource) {
       referenceIntent++
       clearReferenceCursor()
@@ -4120,7 +4219,7 @@ export function createHomeTemple(
   }
   document.addEventListener('keydown', modelKeydown)
   const follow = (event: PointerEvent) => {
-    if (!canRender()) return
+    if (photoMode || !canRender()) return
     // 相同坐标、相同命中元素在稳定构图中无需重复拾取或唤醒 GPU。
     // 运镜、入场、返回与宠物聚焦仍走完整逻辑，保留静止指针的状态同步。
     if (
@@ -4907,6 +5006,7 @@ export function createHomeTemple(
         if (disposed) return
         ready = true
         startEntrance()
+        restoreEntryIslandDetail()
         render(performance.now())
         renderer.domElement.style.visibility = 'visible'
         syncActivity()
@@ -5082,6 +5182,7 @@ export function createHomeTemple(
     else startEntrance(true)
     connectHostEvents()
     resize()
+    restoreEntryIslandDetail()
     staticSceneCache.invalidate()
     callbacks.islandInteractive?.(islandInteractive)
     render(performance.now())
@@ -5100,6 +5201,99 @@ export function createHomeTemple(
     },
     select,
     setIslandDetail,
+    setPhotoMode: (active: boolean) => {
+      if (photoMode === active) return
+      photoMode = active
+      photoFadeTween?.kill()
+      photoFadeTween = gsap.to(photoUIOpacity, {
+        value: active ? 0 : 1,
+        duration: reducedMotion ? 0.01 : 0.35,
+        ease: 'power1.inOut',
+        onUpdate: invalidate,
+      })
+      photoPointer = null
+      renderer.domElement.style.touchAction = active ? 'none' : ''
+      renderer.domElement.style.cursor = active ? 'grab' : ''
+      if (active) {
+        photoSavedRotation.copy(statue.rotation)
+        photoRotation.copy(statue.rotation)
+        photoSavedZoom = camera.zoom
+        resetPointer()
+        headCurrent.set(0, 0)
+        pointerHeadEase.set(0, 0)
+      } else {
+        statue.rotation.copy(photoSavedRotation)
+        camera.zoom = photoSavedZoom
+      }
+      setStageData('photoMode', String(active))
+      markViewOffsetDirty()
+      staticSceneCache.invalidate()
+      invalidate()
+    },
+    setPhotoPose: (_pose: 'standing') => {
+      photoRotation.set(0, 0, 0)
+      headCurrent.set(0, 0)
+      headTarget.set(0, 0)
+      projectionDirty = true
+      invalidate()
+    },
+    capturePhoto: async () => {
+      if (!photoMode) return
+      // 只在截图时加载 DOM 合成器；保留当前背景与星空，不把拍照工具写进图片。
+      const { toCanvas } = await import('html-to-image')
+      const background = document.querySelector<HTMLElement>('.star-container')
+      const ratio = renderer.getPixelRatio()
+      const backgroundCanvas = background
+        ? await toCanvas(background, { pixelRatio: ratio, skipFonts: true })
+        : null
+      if (!photoMode) return
+      const output = document.createElement('canvas')
+      output.width = Math.round(innerWidth * ratio)
+      output.height = Math.round(innerHeight * ratio)
+      const context = output.getContext('2d')!
+      const backdrop = document.querySelector('.backdrop-color-base')
+      context.fillStyle = backdrop
+        ? getComputedStyle(backdrop).backgroundColor
+        : lightMode
+        ? '#f4f4f4'
+        : '#08080a'
+      context.fillRect(0, 0, output.width, output.height)
+      if (backgroundCanvas && background) {
+        const bounds = background.getBoundingClientRect()
+        context.drawImage(
+          backgroundCanvas,
+          bounds.left * ratio,
+          bounds.top * ratio,
+          bounds.width * ratio,
+          bounds.height * ratio
+        )
+      }
+      // WebGL 画布需在读取前同步重绘，避免关闭 preserveDrawingBuffer 后得到空白。
+      const labelVisibility = [statueLabel.visible, welcomeLabel.visible]
+      statueLabel.visible = welcomeLabel.visible = false
+      drawScene()
+      const bounds = renderer.domElement.getBoundingClientRect()
+      context.drawImage(
+        renderer.domElement,
+        bounds.left * ratio,
+        bounds.top * ratio,
+        bounds.width * ratio,
+        bounds.height * ratio
+      )
+      ;[statueLabel.visible, welcomeLabel.visible] = labelVisibility
+      const blob = await new Promise<Blob | null>((resolve) =>
+        output.toBlob(resolve, 'image/png')
+      )
+      if (!blob) throw new Error('截图生成失败')
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `atrium-${new Date()
+        .toISOString()
+        .replace(/[:.]/g, '-')}.png`
+      link.click()
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+    },
     pick: click,
     resetPointer,
     setImmersive: (active: boolean) => {
@@ -5159,6 +5353,7 @@ export function createHomeTemple(
       clearReferenceCursor()
       document.documentElement.style.removeProperty('--temple-sky-bottom')
       immersionTween?.kill()
+      photoFadeTween?.kill()
       disposed = true
       labelLod?.dispose()
       shaderWarmup?.cancel()
@@ -5175,6 +5370,11 @@ export function createHomeTemple(
       document.documentElement.removeEventListener('pointerleave', resetPointer)
       window.removeEventListener('blur', resetPointer)
       renderer.domElement.removeEventListener('click', click)
+      renderer.domElement.removeEventListener('pointerdown', photoPointerDown)
+      renderer.domElement.removeEventListener('pointermove', photoPointerMove)
+      renderer.domElement.removeEventListener('pointerup', photoPointerUp)
+      renderer.domElement.removeEventListener('pointercancel', photoPointerUp)
+      renderer.domElement.removeEventListener('wheel', photoWheel)
       renderer.domElement.removeEventListener(
         'webglcontextlost',
         invalidateHostContext

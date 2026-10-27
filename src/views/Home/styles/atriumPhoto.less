@@ -1,0 +1,54 @@
+@photo-ui: ~'.el-menu-layout-all, .footer-com, .footer-bottom-gradient, .home-about-action, .fullscreen, .mobile-menu-icon, .mobile-menu-panel, .mobile-menu-backdrop, .temple-obelisks, .temple-fullscreen-shade, .temple-stage::after, .cursor-position, .layout-border-toggle, .mobile-screen-frame, .mobile-experience-alert, .island-focus, .temple-backdrop, .temple-clock-group';
+
+html.atrium-photo-transition {
+  @{photo-ui} {
+    transition: opacity 0.35s ease, visibility 0s linear !important;
+  }
+}
+
+html.atrium-photo-mode {
+  @{photo-ui} {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    transition: opacity 0.35s ease, visibility 0s linear 0.35s !important;
+  }
+  &.custom-cursor-enabled {
+    &,
+    * {
+      cursor: default !important;
+    }
+    button {
+      cursor: pointer !important;
+    }
+    .temple-stage canvas {
+      cursor: grab !important;
+    }
+    .temple-stage canvas:active {
+      cursor: grabbing !important;
+    }
+  }
+}
+
+.atrium-photo-tools-enter-active,
+.atrium-photo-tools-leave-active {
+  transition: opacity 0.35s ease;
+}
+.atrium-photo-tools-enter-from,
+.atrium-photo-tools-leave-to {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.atrium-photo-transition,
+  html.atrium-photo-mode {
+    @{photo-ui} {
+      transition-duration: 0.01s !important;
+      transition-delay: 0s !important;
+    }
+  }
+  .atrium-photo-tools-enter-active,
+  .atrium-photo-tools-leave-active {
+    transition-duration: 0.01s;
+  }
+}

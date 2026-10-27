@@ -2,6 +2,7 @@ export const islandModules = {
   LABORATORY: {
     routeName: 'ATRIUM_LABORATORY',
     englishTitle: 'LABORATORY',
+    menuTitle: 'LABORATORY',
     path: '/atrium/laboratory',
     group: 'ideas',
     side: 'left',
@@ -13,6 +14,7 @@ export const islandModules = {
   NOTES: {
     routeName: 'ATRIUM_NOTES',
     englishTitle: 'NOTES&CHATS',
+    menuTitle: 'NOTES',
     path: '/atrium/notes',
     group: 'ideas',
     side: 'left',
@@ -24,6 +26,7 @@ export const islandModules = {
   'GAME LIBRARY': {
     routeName: 'ATRIUM_GAMES',
     englishTitle: 'GAME LIBRARY',
+    menuTitle: 'GAMES',
     path: '/atrium/games',
     group: 'interests',
     side: 'right',
@@ -35,11 +38,12 @@ export const islandModules = {
   COLLECTIBLES: {
     routeName: 'ATRIUM_COLLECTIONS',
     englishTitle: 'COLLECTIONS',
+    menuTitle: 'COLLECTIONS',
     path: '/atrium/collections',
     group: 'interests',
     side: 'right',
-    desktopX: 0.34,
-    mobileX: 0.56,
+    desktopX: 0.38,
+    mobileX: 0.6,
     desktopY: 0.2,
     mobileY: 0.04,
   },

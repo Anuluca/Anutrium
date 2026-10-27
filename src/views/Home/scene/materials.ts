@@ -47,11 +47,12 @@ export function installHeadRig(
   }
 }
 
-/** 用同一覆盖率裁切表面、线框和深度通道，渐隐后不残留黑色遮挡。 */
+/** 线框使用连续透明度，深度通道仅裁去完全透明的部分。 */
 export function installAtriumLegFade(
   surface: THREE.Material,
   strength: { value: number },
-  bounds: { value: THREE.Vector2 }
+  bounds: { value: THREE.Vector2 },
+  depthOnly = false
 ) {
   const compile = surface.onBeforeCompile
   const key = surface.customProgramCacheKey()
@@ -76,15 +77,18 @@ export function installAtriumLegFade(
       .replace(
         '#include <clipping_planes_fragment>',
         `#include <clipping_planes_fragment>
-        if (atriumLegFade > 0.00001) {
-          float height = (atriumBodyHeight - atriumBodyBounds.x) / max(atriumBodyBounds.y, 0.00001);
-          float coverage = mix(1.0, smoothstep(0.08, 0.55, height), atriumLegFade);
-          float threshold = fract(sin(dot(floor(gl_FragCoord.xy), vec2(12.9898, 78.233))) * 43758.5453);
-          if (coverage <= threshold) discard;
-        }`
+        float atriumHeight = (atriumBodyHeight - atriumBodyBounds.x) / max(atriumBodyBounds.y, 0.00001);
+        float atriumCoverage = mix(1.0, smoothstep(0.2, 0.62, atriumHeight), atriumLegFade);
+        if (atriumCoverage <= 0.00001) discard;`
+      )
+    if (!depthOnly)
+      shader.fragmentShader = shader.fragmentShader.replace(
+        '#include <dithering_fragment>',
+        '#include <dithering_fragment>\ngl_FragColor *= atriumCoverage;'
       )
   }
-  surface.customProgramCacheKey = () => `${key}:atrium-leg-fade-v2`
+  surface.customProgramCacheKey = () =>
+    `${key}:atrium-leg-alpha-v2-${depthOnly ? 'depth' : 'color'}`
 }
 
 /** 按模型原始高度染红，避免歪头或倒影翻转改变渐变方向。 */

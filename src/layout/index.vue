@@ -14,6 +14,7 @@
       'initial-about-open': isInitialAboutOpen,
       'is-home-immersive': isTempleRoute && navigation.immersive,
       'no-menu': noMenuShellActive,
+      'is-photo-mode': navigation.photoMode,
     }"
   >
     <header
@@ -144,6 +145,10 @@
                     isInnerMenuRoute && activeNavigation === item.id,
                 },
               ]"
+              :style="{
+                '--module-theme-color':
+                  'themeColor' in item ? item.themeColor : '#e23456',
+              }"
             >
               <button
                 v-if="!isTempleRoute || item.id !== 'about'"
@@ -177,8 +182,32 @@
                 />
                 <div v-else class="title-box">
                   <TextRoll class="main-title" :text="item.title" />
+                  <svg
+                    v-if="item.id === 'statue'"
+                    class="atrium-menu-chevron"
+                    viewBox="0 0 10 7"
+                    aria-hidden="true"
+                  >
+                    <path d="M1 1h8L5 6Z" />
+                  </svg>
                 </div>
               </button>
+              <div
+                v-if="item.id === 'statue'"
+                class="atrium-submenu no-rem"
+                @click.stop
+              >
+                <RouterLink
+                  v-for="module in islandModules"
+                  :key="module.path"
+                  :to="module.path"
+                  class="atrium-submenu-link"
+                  :class="{ 'is-current': route.path === module.path }"
+                  ><TextRoll
+                    class="atrium-submenu-title"
+                    :text="module.menuTitle"
+                /></RouterLink>
+              </div>
             </li>
           </ul>
         </nav>
@@ -417,7 +446,7 @@ import PageScrollProgress from '@/components/PageScrollProgress/index.vue'
 import TextRoll from '@/components/TextRoll/index.vue'
 import { useFrameTask } from '@/composables/useFrameTask'
 import { HOME_RETURN_TO_PASSION_EVENT } from '@/config/homeNavigation'
-import { islandModuleAtPath } from '@/config/islandModules'
+import { islandModuleAtPath, islandModules } from '@/config/islandModules'
 import { isTempleMutedMenuItem } from '@/config/templeModelDisplay'
 import {
   isTempleRouteName,
