@@ -78,13 +78,13 @@ export function installAtriumLegFade(
         `#include <clipping_planes_fragment>
         if (atriumLegFade > 0.00001) {
           float height = (atriumBodyHeight - atriumBodyBounds.x) / max(atriumBodyBounds.y, 0.00001);
-          float coverage = mix(1.0, smoothstep(0.08, 0.4, height), atriumLegFade);
+          float coverage = mix(1.0, smoothstep(0.08, 0.55, height), atriumLegFade);
           float threshold = fract(sin(dot(floor(gl_FragCoord.xy), vec2(12.9898, 78.233))) * 43758.5453);
           if (coverage <= threshold) discard;
         }`
       )
   }
-  surface.customProgramCacheKey = () => `${key}:atrium-leg-fade-v1`
+  surface.customProgramCacheKey = () => `${key}:atrium-leg-fade-v2`
 }
 
 /** 按模型原始高度染红，避免歪头或倒影翻转改变渐变方向。 */

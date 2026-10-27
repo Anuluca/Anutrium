@@ -137,6 +137,17 @@ export const templeModuleAtPath = (path: string): TempleEntryId | null =>
     ? 'statue'
     : moduleByPath.get(path.replace(/\/+$/, '')) ?? null
 
+export const needsFreshTempleScene = (
+  from: string,
+  to: string,
+  moduleQuery?: unknown
+) => {
+  const destination =
+    templeModuleAtPath(to) ||
+    templeModuleAtPath(`/${String(moduleQuery || '')}`)
+  return !!islandModuleAtPath(from) && !!destination && destination !== 'statue'
+}
+
 // 无效或重复参数不覆盖现有的站内返回状态。
 export const parseTempleExpanded = (value: unknown): boolean | null => {
   if (value === 'true' || value === '1') return true

@@ -105,6 +105,22 @@ watch(
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  :deep(.media-gallery:not(.media-gallery--four-columns) .media-gallery__card) {
+    border-bottom-color: rgba(255, 255, 255, 0.05) !important;
+  }
+
+  :deep(
+      .media-gallery:not(.media-gallery--four-columns)
+        .media-gallery__card:nth-of-type(2n + 1):nth-last-of-type(-n + 2)
+    ),
+  :deep(
+      .media-gallery:not(.media-gallery--four-columns)
+        .media-gallery__card:nth-of-type(2n + 1):nth-last-of-type(-n + 2)
+        ~ .media-gallery__card
+    ) {
+    border-bottom-color: transparent !important;
+  }
+
   :deep(.media-gallery__card::after) {
     display: none !important;
   }

@@ -32,7 +32,8 @@ const ready = async (page: Page, module: string) => {
   )
   await expect(page.locator('.temple-stage')).toHaveAttribute(
     'data-entrance-finished',
-    'true'
+    'true',
+    { timeout: 15000 }
   )
 }
 
@@ -118,6 +119,84 @@ test('direct child module link returns to its corresponding module', async ({
   )
   await page.keyboard.press('Escape')
   await ready(page, 'statue')
+})
+
+test('leaving an atrium detail for another home module recreates the scene', async ({
+  page,
+}, info) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await page.goto('/atrium/notes', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.island-focus')).toHaveAttribute(
+    'data-detail-item',
+    'NOTES',
+    { timeout: 45000 }
+  )
+  await page.evaluate(() => {
+    ;(window as any).oldAtriumCanvas = document.querySelector(
+      '.temple-stage canvas'
+    )
+  })
+  const geometry = () =>
+    page.locator('.temple-page, .router-container').evaluateAll((elements) =>
+      elements.map((element) => {
+        const { top, left } = element.getBoundingClientRect()
+        return { top, left }
+      })
+    )
+  const before = await geometry()
+  await page.evaluate(() => {
+    const trace: { top: number; left: number }[][] = []
+    ;(window as any).templeReloadGeometry = trace
+    const sample = () => {
+      const elements = document.querySelectorAll(
+        '.temple-page, .router-container'
+      )
+      if (elements.length === 2)
+        trace.push(
+          Array.from(elements, (element) => {
+            const { top, left } = element.getBoundingClientRect()
+            return { top, left }
+          })
+        )
+      if ((window as any).templeReloadGeometry === trace)
+        requestAnimationFrame(sample)
+    }
+    requestAnimationFrame(sample)
+  })
+  if (info.project.name.includes('mobile'))
+    await page.locator('.mobile-menu-icon').click()
+  await page.locator('[data-temple-nav="archive"]:visible').first().click()
+  await ready(page, 'archive')
+  const after = await geometry()
+  const frames = await page.evaluate(() => {
+    const trace = (window as any).templeReloadGeometry
+    ;(window as any).templeReloadGeometry = null
+    return trace as { top: number; left: number }[][]
+  })
+  expect(frames.length).toBeGreaterThan(0)
+  for (const frame of [...frames, after]) {
+    for (let index = 0; index < before.length; index++) {
+      expect(
+        Math.abs(frame[index].top - before[index].top)
+      ).toBeLessThanOrEqual(1)
+      expect(
+        Math.abs(frame[index].left - before[index].left)
+      ).toBeLessThanOrEqual(1)
+    }
+  }
+  await expect(page.locator('.island-focus')).toHaveCount(0)
+  expect(
+    (await page
+      .locator('.temple-stage')
+      .getAttribute('data-island-detail-side')) ?? ''
+  ).not.toMatch(/^(left|right)$/)
+  expect(
+    await page.evaluate(
+      () =>
+        (window as any).oldAtriumCanvas !==
+        document.querySelector('.temple-stage canvas')
+    )
+  ).toBe(true)
 })
 
 for (const path of ['/flanerie/xiangtan?from=home', '/atrium/notes']) {

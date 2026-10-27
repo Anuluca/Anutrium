@@ -137,6 +137,7 @@ const noteStackRef = ref<HTMLElement | null>(null)
 const masonryReady = ref(false)
 let masonryFrame: number | undefined
 let masonryObserver: ResizeObserver | undefined
+let disposed = false
 
 const notes = computed(
   () => tm('island.modules.notes.studyNotes.data') as StudyNote[]
@@ -187,6 +188,7 @@ const updateMasonryLayout = () => {
   const cards = stack.querySelectorAll<HTMLElement>('.study-note-card')
   let hasCompleteMeasurements = cards.length > 0
 
+  const updates: [HTMLElement, string][] = []
   cards.forEach((card) => {
     const cardHeight = card.offsetHeight
     if (cardHeight <= 0) {
@@ -197,16 +199,16 @@ const updateMasonryLayout = () => {
     const rowSpan = Math.ceil((cardHeight + masonryGap) / rowHeight)
     const gridRowEnd = `span ${rowSpan}`
 
-    if (card.style.gridRowEnd !== gridRowEnd) {
-      card.style.gridRowEnd = gridRowEnd
-    }
+    if (card.style.gridRowEnd !== gridRowEnd) updates.push([card, gridRowEnd])
   })
 
+  // 集中读取高度后再写入网格跨度，避免每张卡片触发一次重排。
+  updates.forEach(([card, gridRowEnd]) => (card.style.gridRowEnd = gridRowEnd))
   masonryReady.value = hasCompleteMeasurements
 }
 
 const scheduleMasonryLayout = () => {
-  if (masonryFrame !== undefined) cancelAnimationFrame(masonryFrame)
+  if (disposed || masonryFrame !== undefined) return
   masonryFrame = requestAnimationFrame(() => {
     masonryFrame = undefined
     updateMasonryLayout()
@@ -216,6 +218,7 @@ const scheduleMasonryLayout = () => {
 const observeMasonryLayout = async () => {
   masonryReady.value = false
   await nextTick()
+  if (disposed) return
 
   masonryObserver?.disconnect()
   const stack = noteStackRef.value
@@ -237,6 +240,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  disposed = true
   masonryObserver?.disconnect()
   if (masonryFrame !== undefined) cancelAnimationFrame(masonryFrame)
 })

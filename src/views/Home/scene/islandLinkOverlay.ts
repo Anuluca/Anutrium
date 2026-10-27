@@ -70,6 +70,14 @@ export function createIslandLinkOverlay() {
         Math.max(bottom + 32, reset ? -Infinity : envelope?.bottom ?? -Infinity)
       ),
     }
+    if (
+      envelope &&
+      next.left === envelope.left &&
+      next.top === envelope.top &&
+      next.right === envelope.right &&
+      next.bottom === envelope.bottom
+    )
+      return
     envelope = next
     const width = next.right - next.left
     const height = next.bottom - next.top
@@ -93,14 +101,17 @@ export function createIslandLinkOverlay() {
     if (!link.group || !link.line || !link.marker) return
     if (origin && link.origin) {
       link.line.setAttribute('x1', String(link.origin.x))
-      link.line.setAttribute('y1', String(link.origin.y))
+      if (!link.hasPosition) link.line.setAttribute('y1', String(link.origin.y))
     }
     if (anchor && link.hasPosition) {
       const { x, y } = link.position
       const changedX = force || x !== link.drawnX
       const changedY = force || y !== link.drawnY
       if (changedX) link.line.setAttribute('x2', String(x))
-      if (changedY) link.line.setAttribute('y2', String(y))
+      if (changedY) {
+        link.line.setAttribute('y1', String(y))
+        link.line.setAttribute('y2', String(y))
+      }
       if (changedX || changedY)
         link.marker.setAttribute('transform', `translate(${x} ${y})`)
       link.drawnX = x
@@ -119,6 +130,7 @@ export function createIslandLinkOverlay() {
     bindViewport(element: unknown) {
       if (disposed || viewport === element) return
       viewport = element as SVGSVGElement | null
+      envelope = null
       updateViewport(true)
     },
     bind(id: string, element: unknown) {
@@ -132,13 +144,15 @@ export function createIslandLinkOverlay() {
     },
     updateOrigins(origins: Record<string, Point>) {
       if (disposed) return
+      let hasChanged = false
       for (const link of links) {
         const next = origins[link.id] ?? null
         const changed = next?.x !== link.origin?.x || next?.y !== link.origin?.y
         link.origin = next
+        hasChanged ||= changed
         draw(link, changed, false)
       }
-      updateViewport(true)
+      if (hasChanged) updateViewport(true)
     },
     updateAnchors(anchors: IslandModelAnchors) {
       if (disposed) return

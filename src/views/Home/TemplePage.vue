@@ -19,6 +19,7 @@ import { islandModuleAtPath, type IslandModuleId } from '@/config/islandModules'
 import { TEMPLE_SCENE_RISE } from '@/config/templeCamera'
 import { templeExperience } from '@/config/templeExperience'
 import {
+  parseTempleExpanded,
   templeCategories,
   templeCategoryById,
   type TempleCategoryId,
@@ -74,7 +75,11 @@ const setIslandFocusLayout = (value: unknown) => {
     islandFocusLayout.updateAnchors(latestIslandAnchors)
 }
 
-const props = defineProps<{ presentation: TemplePresentation }>()
+const props = defineProps<{
+  presentation: TemplePresentation
+  freshScene?: boolean
+}>()
+const emit = defineEmits<{ (event: 'fresh-scene-consumed'): void }>()
 const route = useRoute()
 const router = useRouter()
 const navigation = useTempleNavigation()
@@ -451,6 +456,9 @@ const selectPet = async (id: string) => {
 
 const featureRequest = new AbortController()
 onMounted(async () => {
+  if (props.freshScene) {
+    navigation.entryExpanded = parseTempleExpanded(route.query.isExpand)
+  }
   navigation.setInlineDetailCloser(closeInlineDetail)
   document.body.classList.remove(`${shell}-shell-leaving`)
   document.body.classList.add(`${shell}-shell`)
@@ -580,6 +588,10 @@ onMounted(async () => {
         status.value = 'error'
         console.error('神殿场景加载失败', error)
       },
+    }
+    if (props.freshScene) {
+      templeSceneHost.clear()
+      emit('fresh-scene-consumed')
     }
     const resident = templeSceneHost.take(
       `${sceneHostKey}:${floraPets.activePet.id}`,

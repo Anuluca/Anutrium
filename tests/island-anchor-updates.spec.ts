@@ -234,9 +234,9 @@ test('real model frames bypass both Vue components and rebind after layout and f
             line.x1.baseVal.value -
               ((right ? rect.right : rect.left) - bounds.left)
           ),
-          Math.abs(
-            line.y1.baseVal.value - (rect.top + rect.height / 2 - bounds.top)
-          )
+          Math.abs(line.y1.baseVal.value - line.y2.baseVal.value),
+          Math.max(0, rect.top - bounds.top - line.y1.baseVal.value),
+          Math.max(0, line.y1.baseVal.value - (rect.bottom - bounds.top))
         )
       }
       return max

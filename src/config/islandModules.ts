@@ -46,16 +46,18 @@ export const islandModules = {
 } as const
 
 export type IslandModuleId = keyof typeof islandModules
+const islandModuleIdsByPath = new Map<string, IslandModuleId>(
+  (Object.keys(islandModules) as IslandModuleId[]).map((id) => [
+    islandModules[id].path,
+    id,
+  ])
+)
 export const islandModuleAtPath = (path: string): IslandModuleId | null =>
-  (Object.keys(islandModules) as IslandModuleId[]).find(
-    (id) => islandModules[id].path === path.replace(/\/+$/, '')
-  ) ?? null
+  islandModuleIdsByPath.get(path.replace(/\/+$/, '')) ?? null
 
 export const ISLAND_MODEL_DURATION = 2.2
 export const ISLAND_WINDOW_DURATION = 0.8
 export const ISLAND_RETURN_WINDOW_DURATION = 1.75
-export const ISLAND_RESTORE_DELAY =
-  ISLAND_MODEL_DURATION - ISLAND_RETURN_WINDOW_DURATION
 
 export const islandCardOpeningDelay: Record<IslandModuleId, number> = {
   LABORATORY: 0.24,

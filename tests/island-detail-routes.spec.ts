@@ -139,7 +139,7 @@ test('Island history restores the same scene and module', async ({ page }) => {
   })
 })
 
-test('Island CRT transitions hide siblings immediately and reveal them after delayed restoration', async ({
+test('Island CRT transitions restore the selected card immediately and reveal siblings during restoration', async ({
   page,
 }) => {
   test.setTimeout(90000)
@@ -168,7 +168,6 @@ test('Island CRT transitions hide siblings immediately and reveal them after del
   await expect(root).toHaveAttribute('data-detail-phase', 'detail')
   await expect(root.locator('.island-detail')).toBeVisible()
   await page.waitForTimeout(900)
-  const header = await item.boundingBox()
   await page.evaluate(() => {
     const root = document.querySelector<HTMLElement>('.island-focus')!
     const sibling = root.querySelector('[data-flash-item="NOTES"]')!
@@ -190,21 +189,22 @@ test('Island CRT transitions hide siblings immediately and reveal them after del
       attributeFilter: ['data-detail-phase'],
     })
   })
+  const returnRequested = await page.evaluate(() => performance.now())
   await page.keyboard.press('Escape')
   await expect(root).toHaveAttribute('data-detail-phase', 'overview', {
     timeout: 10000,
   })
   const trace = await page.evaluate(() => (window as any).returnTransitionTrace)
-  const returning = trace.find((entry: any) => entry.phase === 'returning')
   const restoring = trace.find((entry: any) => entry.phase === 'restoring')
   const revealing = trace.find((entry: any) => entry.phase === 'revealing')
-  expect(Math.abs(returning.height - header!.height)).toBeLessThanOrEqual(1)
-  expect(restoring.time - returning.time).toBeGreaterThanOrEqual(380)
-  expect(restoring.time - returning.time).toBeLessThan(750)
-  expect(revealing.time - restoring.time).toBeGreaterThanOrEqual(1500)
+  expect(restoring.time - returnRequested).toBeLessThan(400)
+  expect(revealing.time - restoring.time).toBeGreaterThanOrEqual(750)
+  expect(revealing.time - restoring.time).toBeLessThan(1500)
   expect(restoring.visibility).toBe('hidden')
   expect(revealing.animation).toBe('anutriumCrtOn')
-  expect(Math.abs(revealing.height - original!.height)).toBeLessThanOrEqual(1)
+  expect(
+    Math.abs((await item.boundingBox())!.height - original!.height)
+  ).toBeLessThanOrEqual(1)
   await expect(sibling).toBeVisible()
   expect(await page.evaluate(() => document.body.scrollTop)).toBe(0)
 })

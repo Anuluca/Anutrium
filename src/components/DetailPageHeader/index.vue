@@ -450,7 +450,11 @@ const navigateBack = () => {
     color: var(--page-theme-color, #e23456);
     cursor: pointer;
     transition: color 0.2s ease, background-color 0.2s ease;
-    background: color-mix(in srgb, var(--bg-color, #000) 90%, transparent);
+    background: color-mix(
+      in srgb,
+      color-mix(in srgb, var(--bg-color, #000) 85%, #808080) 90%,
+      transparent
+    );
   }
 
   .detail-page-header__back,
@@ -464,7 +468,7 @@ const navigateBack = () => {
     align-items: center;
     align-self: stretch;
     flex: none;
-    padding: 4px;
+    padding: 4px 4px 4px 12px;
     color: inherit;
     transition: background-color 0.2s ease;
     transform: none;

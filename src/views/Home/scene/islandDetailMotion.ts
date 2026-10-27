@@ -11,7 +11,7 @@ export const easeIslandDetailMotion = CustomEase.create(
 
 export const easeIslandReturnMotion = CustomEase.create(
   'island-return-motion',
-  '0.32,0,0.22,1'
+  '0.65,0,0.35,1'
 )
 
 export const easeIslandModelMotion = CustomEase.create(

@@ -10,6 +10,7 @@ import { pageThemeColors } from '@/config/pageThemes'
 import { islandModuleAtPath, islandModules } from '@/config/islandModules'
 import {
   isTempleRouteName,
+  needsFreshTempleScene,
   parseTempleExpanded,
   templeCategoryById,
   type TempleCategoryId,
@@ -807,6 +808,7 @@ export const installRouterGuards = (router: Router) => {
         (!!from.name && !isTempleRouteName(from.name))
       if (
         isTempleRouteName(from.name) &&
+        !needsFreshTempleScene(from.path, to.path, to.query.module) &&
         explicitModule !== navigation.activeSelection &&
         (to.path !== from.path || to.query.module !== from.query.module)
       )

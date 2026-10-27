@@ -61,7 +61,7 @@ test('Island fills the inset container, projects body anchors and shares hover c
       reservedHeight: reserved[0].height,
       reservedGap: sections[0].top - reserved[0].bottom,
       z: {
-        panels: +getComputedStyle(panel).zIndex,
+        panels: parseInt(getComputedStyle(panel).zIndex, 10) || 0,
         canvas: +getComputedStyle(canvas).zIndex,
         lines: +getComputedStyle(element.querySelector('.island-links')!)
           .zIndex,
@@ -82,17 +82,16 @@ test('Island fills the inset container, projects body anchors and shares hover c
       anchors: lines,
       originOffsets: Array.from(
         element.querySelectorAll<SVGLineElement>('.island-links line')
-      ).map((line) => {
-        const group = panel.querySelector<HTMLElement>(
-          `[data-flash-item="${line.parentElement!.getAttribute(
-            'data-link-item'
-          )}"]`
+      ).map((line) => line.y1.baseVal.value - line.y2.baseVal.value),
+      connectionsWithinCards: Array.from(
+        panel.querySelectorAll<HTMLElement>('[data-flash-item]')
+      ).map((card) => {
+        const rect = card.getBoundingClientRect()
+        const line = element.querySelector<SVGLineElement>(
+          `[data-link-item="${card.dataset.flashItem}"] line`
         )!
-        const rect = group.getBoundingClientRect()
-        return (
-          line.y1.baseVal.value -
-          (rect.top + rect.height / 2 - element.getBoundingClientRect().top)
-        )
+        const y = line.y1.baseVal.value + element.getBoundingClientRect().top
+        return y >= rect.top - 1 && y <= rect.bottom + 1
       }),
       modules: Array.from(panel.querySelectorAll('.island-window')).map(
         (group) => {
@@ -131,6 +130,7 @@ test('Island fills the inset container, projects body anchors and shares hover c
   geometry.originOffsets.forEach((offset) =>
     expect(Math.abs(offset)).toBeLessThanOrEqual(1)
   )
+  expect(geometry.connectionsWithinCards.every(Boolean)).toBe(true)
   geometry.modules.forEach((module) => {
     expect(module.border).toBe('0px')
     expect(module.gap).toBeGreaterThanOrEqual(12)

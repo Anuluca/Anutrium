@@ -6,6 +6,7 @@ import PageScrollProgress from '@/components/PageScrollProgress/index.vue'
 
 const props = defineProps<{
   edgeProgress?: boolean
+  edgeFade?: boolean
   progressZIndex?: number
 }>()
 const progressTop = ref(0)
@@ -24,9 +25,14 @@ const progressStyle = computed(() =>
 )
 const scrollRoot = ref<HTMLElement | null>(null)
 const content = ref<HTMLElement | null>(null)
+const canScrollUp = ref(false)
+const canScrollDown = ref(false)
 const measure = () => {
   const element = scrollRoot.value
   if (!element) return
+  canScrollUp.value = element.scrollTop > 1
+  canScrollDown.value =
+    element.scrollTop + element.clientHeight < element.scrollHeight - 1
   const bounds = element.getBoundingClientRect()
   progressTop.value = bounds.top
   progressBottom.value = Math.max(0, window.innerHeight - bounds.bottom)
@@ -47,6 +53,11 @@ defineExpose({ scrollRoot, measure })
     <div
       ref="scrollRoot"
       class="scroll-viewport__scroll no-rem"
+      :class="{
+        'fade-top': edgeFade && canScrollUp,
+        'fade-bottom': edgeFade && canScrollDown,
+      }"
+      @scroll.passive="measure"
       data-lenis-prevent
       data-lenis-nested-scroll
       tabindex="0"
@@ -80,6 +91,8 @@ defineExpose({ scrollRoot, measure })
   }
 }
 .scroll-viewport__scroll.no-rem {
+  --scroll-fade-top: 0px;
+  --scroll-fade-bottom: 0px;
   height: 100%;
   overflow: auto;
   overscroll-behavior: contain;
@@ -87,6 +100,22 @@ defineExpose({ scrollRoot, measure })
   scrollbar-width: none;
   padding-right: 12px;
   box-sizing: border-box;
+  &.fade-top,
+  &.fade-bottom {
+    mask-image: linear-gradient(
+      to bottom,
+      transparent,
+      #000 var(--scroll-fade-top),
+      #000 calc(100% - var(--scroll-fade-bottom)),
+      transparent
+    );
+  }
+  &.fade-top {
+    --scroll-fade-top: 32px;
+  }
+  &.fade-bottom {
+    --scroll-fade-bottom: 48px;
+  }
   &::-webkit-scrollbar {
     display: none;
   }

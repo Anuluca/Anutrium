@@ -677,66 +677,6 @@ const merch = {
   ],
   tokusatsu: [
     {
-      id: 'riderBlack',
-      title: {
-        zhCn: '假面骑士Black',
-        en: 'Masked Rider Black',
-      },
-      subtitle: {
-        zhCn: '万代SHF系列 2.0 | 《假面骑士Black》',
-        en: 'Bandai SHF Series 2.0 ｜ "Masked Rider Black"',
-      },
-      photos: [
-        {
-          url: 'https://assets.anuluca.com/Island/merch/black/dVDcjK.jpg',
-          title: {
-            zhCn: '',
-            en: '',
-          },
-        },
-      ],
-    },
-    {
-      id: 'blacksun',
-      title: {
-        zhCn: '假面骑士Black Sun',
-        en: 'Masked Rider Black Sun',
-      },
-      subtitle: {
-        zhCn: '万代SHF系列 | 《假面骑士Black Sun》',
-        en: 'Bandai SHF Series',
-      },
-      photos: [
-        {
-          url: 'https://assets.anuluca.com/Island/merch/blacksun/IMG_3293 (1).jpg',
-          title: {
-            zhCn: '',
-            en: '',
-          },
-        },
-      ],
-    },
-    {
-      id: 'golza',
-      title: {
-        zhCn: '哥尔赞',
-        en: 'Golza',
-      },
-      subtitle: {
-        zhCn: '万代SHF系列 |《迪迦奥特曼》',
-        en: 'Bandai SHF Series | "Ultraman Tiga"',
-      },
-      photos: [
-        {
-          url: 'https://assets.anuluca.com/Island/merch/golzan/IMG_3297.jpg',
-          title: {
-            zhCn: '',
-            en: '',
-          },
-        },
-      ],
-    },
-    {
       id: 'ohpheno',
       title: {
         zhCn: '马俄尔以诺',
@@ -1290,26 +1230,6 @@ const merch = {
       photos: [
         {
           url: 'https://assets.anuluca.com/Island/merch/mash/dVDlkj.jpg',
-          title: {
-            zhCn: '',
-            en: '',
-          },
-        },
-      ],
-    },
-    {
-      id: 'vGundam',
-      title: {
-        zhCn: 'v高达',
-        en: 'vGUNDAM',
-      },
-      subtitle: {
-        zhCn: '解体匠机 | 《机动战士高达：逆袭的夏亚》',
-        en: 'METAL STRUCTURE | "Mobile Suit Gundam Char’s Counter Attack"',
-      },
-      photos: [
-        {
-          url: 'https://assets.anuluca.com/Island/merch/NuGundam/IMG_3292.jpg',
           title: {
             zhCn: '',
             en: '',

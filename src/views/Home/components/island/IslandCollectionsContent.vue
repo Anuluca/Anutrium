@@ -1,72 +1,82 @@
 <template>
-  <div class="island-collections-content is-embedded">
+  <div
+    class="island-collections-content is-embedded"
+    :style="{ '--collection-columns': columns }"
+  >
     <main class="collection-index">
-      <section
-        v-for="(group, groupIndex) in collectionGroups"
-        :key="group.id"
-        class="collection-section"
-        :style="getSectionEntryStyle(groupIndex)"
-      >
-        <header class="collection-section__head">
+      <div class="collection-tabs" aria-label="收藏品分类">
+        <button
+          v-for="group in collectionGroups"
+          :key="group.id"
+          class="collection-section__head"
+          :class="{ 'is-active': group.id === selectedCategory }"
+          :aria-pressed="group.id === selectedCategory"
+          type="button"
+          @click="selectCategory(group.id)"
+        >
           <div class="collection-section__head-left">
-            <span class="collection-section__number">
-              {{ String(groupIndex + 1).padStart(2, '0') }}
-            </span>
             <span class="collection-section__title">{{ group.title }}</span>
           </div>
           <strong class="collection-section__count">
             <span>{{ group.totalCount }}</span>
-            <span>ITEMS</span>
           </strong>
-        </header>
-
-        <div class="collection-grid" :class="{ 'is-empty': !group.totalCount }">
-          <div class="collection-grid__pegboard" aria-hidden="true" />
-          <template
-            v-for="(collection, collectionIndex) in group.collections"
-            :key="collection.id"
+        </button>
+      </div>
+      <section :key="activeGroup.id" class="collection-section">
+        <template v-for="group in [activeGroup]" :key="group.id">
+          <div
+            class="collection-grid"
+            :class="{ 'is-empty': !group.totalCount }"
           >
-            <MerchCollectionCard
-              :id="getCollectionElementId(collection.id)"
-              :collection="collection"
-              :count-label="
-                t('island.modules.photography.merch.collectionLabel')
-              "
-              :index="getCollectionIndex(collection.id)"
-              :style="getCollectionEntryStyle(collectionIndex)"
-              @select="openCollection"
-            />
+            <div class="collection-grid__pegboard" aria-hidden="true" />
+            <template
+              v-for="(collection, collectionIndex) in group.collections"
+              :key="collection.id"
+            >
+              <MerchCollectionCard
+                :id="getCollectionElementId(collection.id)"
+                :collection="collection"
+                :count-label="
+                  t('island.modules.photography.merch.collectionLabel')
+                "
+                :style="getCollectionEntryStyle(collectionIndex)"
+                @select="openCollection"
+              />
+              <div
+                v-if="
+                  shouldRenderRowShelf(
+                    collectionIndex,
+                    group.collections.length
+                  )
+                "
+                class="collection-grid__row-shelf"
+                :style="getRowShelfStyle(collectionIndex)"
+                aria-hidden="true"
+              >
+                <span class="collection-grid__row-shelf-surface" />
+                <span class="collection-grid__row-shelf-base" />
+              </div>
+            </template>
+            <div v-if="!group.totalCount" class="collection-shelf-empty">
+              <span>EMPTY DISPLAY</span>
+            </div>
             <div
-              v-if="
-                shouldRenderRowShelf(collectionIndex, group.collections.length)
-              "
-              class="collection-grid__row-shelf is-desktop is-tablet is-mobile"
-              :style="getRowShelfStyle(collectionIndex)"
+              v-if="!group.totalCount"
+              class="collection-grid__shelf"
               aria-hidden="true"
             >
-              <span class="collection-grid__row-shelf-surface" />
-              <span class="collection-grid__row-shelf-base" />
+              <span class="collection-grid__shelf-surface" />
+              <span class="collection-grid__shelf-base" />
             </div>
-          </template>
-          <div v-if="!group.totalCount" class="collection-shelf-empty">
-            <span>EMPTY DISPLAY</span>
           </div>
-          <div
-            v-if="!group.totalCount"
-            class="collection-grid__shelf"
-            aria-hidden="true"
-          >
-            <span class="collection-grid__shelf-surface" />
-            <span class="collection-grid__shelf-base" />
-          </div>
-        </div>
+        </template>
       </section>
     </main>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
@@ -110,18 +120,22 @@ const merchCategoryMeta: MerchCategoryMeta[] = [
   },
 ]
 
+const props = defineProps<{ expanded?: boolean; mobile?: boolean }>()
+const columns = computed(() => (props.mobile ? 1 : props.expanded ? 5 : 4))
 const { locale, t, tm } = useI18n()
 const router = useRouter()
+const savedCategory =
+  typeof window === 'undefined' ? null : sessionStorage.getItem('merch-category')
+const selectedCategory = ref<MerchCategoryId>(
+  merchCategoryMeta.find((category) => category.id === savedCategory)?.id ||
+    'pokemon'
+)
 const TARGET_SHELF_DISTANCE_ROW_INDEX = 2
 const SHELF_DISTANCE_ROW_STEP = 2.82
 
 const merch = computed<MerchGroups>(() => {
   return tm('island.modules.photography.merch.data') as MerchGroups
 })
-
-const collections = computed<MerchCollectionCardData[]>(() =>
-  Object.values(merch.value).flat()
-)
 
 const collectionGroups = computed(() =>
   merchCategoryMeta.map((category) => {
@@ -135,13 +149,15 @@ const collectionGroups = computed(() =>
     }
   })
 )
+const activeGroup = computed(
+  () =>
+    collectionGroups.value.find((group) => group.id === selectedCategory.value)!
+)
 
-const getCollectionIndex = (collectionId: string) =>
-  String(
-    collections.value.findIndex(
-      (collection) => collection.id === collectionId
-    ) + 1
-  ).padStart(2, '0')
+const selectCategory = (category: MerchCategoryId) => {
+  selectedCategory.value = category
+  sessionStorage.setItem('merch-category', category)
+}
 
 const getCollectionElementId = (collectionId: string) =>
   `merch-collection-${collectionId}`
@@ -149,23 +165,17 @@ const getCollectionElementId = (collectionId: string) =>
 const shouldRenderRowShelf = (
   collectionIndex: number,
   collectionCount: number
-) => (collectionIndex + 1) % 2 === 0 || collectionIndex === collectionCount - 1
+) =>
+  (collectionIndex + 1) % columns.value === 0 ||
+  collectionIndex === collectionCount - 1
 
 const getRowShelfStyle = (collectionIndex: number) => {
-  const rowIndex = Math.floor(collectionIndex / 2)
+  const rowIndex = Math.floor(collectionIndex / columns.value)
   const offset = `${
     (rowIndex - TARGET_SHELF_DISTANCE_ROW_INDEX) * SHELF_DISTANCE_ROW_STEP
   }px`
-  return {
-    '--row-shelf-translate-desktop': offset,
-    '--row-shelf-translate-tablet': offset,
-    '--row-shelf-translate-mobile': offset,
-  }
+  return { '--row-shelf-translate': offset }
 }
-
-const getSectionEntryStyle = (groupIndex: number) => ({
-  '--section-entry-delay': `${groupIndex * 240}ms`,
-})
 
 const getCollectionEntryStyle = (collectionIndex: number) => ({
   '--card-entry-delay': `calc(var(--section-entry-delay) + ${
@@ -182,17 +192,18 @@ const openCollection = (collectionId: string) => {
 @red: #e23456;
 @mono: 'UnboundedSans', 'Courier New', monospace;
 @cjk: 'alibaba-puhuiti', sans-serif;
-
 .island-collections-content {
   color: var(--text-color);
-  overflow: hidden;
+  overflow: clip;
   &.is-embedded {
     padding: 0;
     .collection-index {
       padding: 0 0 24px;
     }
     .collection-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      --card-shelf-gutter: clamp(12px, 2cqw, 28px);
+      --grid-side-padding: clamp(24px, 4cqw, 64px);
+      grid-template-columns: repeat(var(--collection-columns), minmax(0, 1fr));
     }
     .collection-section + .collection-section {
       margin-top: 32px;
@@ -200,19 +211,20 @@ const openCollection = (collectionId: string) => {
   }
 }
 
-@container (max-width: 360px) {
-  .island-collections-content.is-embedded {
-    .collection-grid {
-      grid-template-columns: minmax(0, 1fr);
-    }
-    .collection-grid__row-shelf {
-      display: none;
-    }
-  }
-}
-
 .collection-index {
   padding: 54px 0 48px;
+}
+
+.collection-tabs {
+  --section-entry-delay: 0ms;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: -13px;
 }
 
 .collection-section {
@@ -228,24 +240,48 @@ const openCollection = (collectionId: string) => {
 
   &__head {
     position: relative;
+    top: 16px;
     z-index: 5;
     display: flex;
+    flex-direction: row;
     align-items: center;
-    justify-content: space-between;
-    gap: clamp(24px, 4vw, 58px);
+    gap: 32px;
     width: max-content;
-    min-width: clamp(230px, 27vw, 360px);
-    margin: 0 auto -13px;
-    padding: 10px 30px 11px;
+    height: calc(23px + 0.6rem);
+    margin: 0;
+    padding: 10px 26px 11px;
     box-sizing: border-box;
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-bottom-color: rgba(226, 52, 86, 0.38);
-    border-radius: 2px;
-    background: #18181e;
+    background: #191919;
+    cursor: pointer;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.46);
+    transition: gap 0.25s ease, filter 0.25s ease, border-color 0.25s ease;
     animation: merch-sign-entry 0.72s cubic-bezier(0.18, 0.78, 0.22, 1)
       backwards;
     animation-delay: calc(var(--section-entry-delay) + 360ms);
+
+    &:not(.is-active) {
+      border-bottom-color: rgba(255, 255, 255, 0.12);
+      filter: brightness(0.55);
+
+      .collection-section__count span:first-child {
+        color: #aaa;
+      }
+
+      &:hover {
+        filter: brightness(1);
+      }
+    }
+
+    &.is-active {
+      gap: 48px;
+    }
+
+    &:focus-visible {
+      outline: 2px solid @red;
+      outline-offset: 2px;
+    }
   }
 
   &__head-left {
@@ -254,39 +290,31 @@ const openCollection = (collectionId: string) => {
     gap: 8px;
   }
 
-  &__number {
-    color: rgba(226, 52, 86, 0.72);
-    font-family: 'Anton', @mono;
-    font-size: 0.72rem;
-    font-weight: 900;
-    line-height: 1;
-  }
-
   &__title {
     color: #fff;
     font-family: @cjk;
-    font-size: 0.76rem;
+    font-size: 0.75rem;
     font-weight: 900;
+    line-height: 1;
     letter-spacing: 1px;
     text-transform: uppercase;
   }
 
   &__count {
+    position: relative;
+    top: -1px;
     display: inline-flex;
     align-items: baseline;
     gap: 5px;
-    padding-left: 16px;
-    border-left: 1px solid rgba(226, 52, 86, 0.36);
     color: rgba(255, 255, 255, 0.48);
     font-family: @mono;
-    font-size: 0.5rem;
-    font-weight: 700;
+    font-size: 0.85rem;
+    font-weight: 400;
+    line-height: 1;
 
     span:first-child {
       color: @red;
-      font-family: 'Anton', @mono;
-      font-size: 0.76rem;
-      line-height: 1;
+      transition: color 0.25s ease;
     }
   }
 }
@@ -313,7 +341,7 @@ const openCollection = (collectionId: string) => {
 
   &__pegboard {
     position: absolute;
-    inset: 0 2.8%;
+    inset: 0;
     z-index: 0;
     overflow: hidden;
     background: radial-gradient(
@@ -323,7 +351,7 @@ const openCollection = (collectionId: string) => {
           transparent 3.5px
         )
         0 0 / 24px 24px,
-      linear-gradient(90deg, #111116, #1a1a20 50%, #111116);
+      linear-gradient(90deg, #24242b, #303038 50%, #24242b);
     box-shadow: inset 0 22px 38px rgba(0, 0, 0, 0.72);
     mask-image: linear-gradient(
       to bottom,
@@ -347,12 +375,10 @@ const openCollection = (collectionId: string) => {
       inset: 0;
       content: '';
       background: linear-gradient(
-          90deg,
-          rgba(226, 52, 86, 0.08),
-          transparent 14% 86%,
-          rgba(226, 52, 86, 0.08)
-        ),
-        linear-gradient(to bottom, rgba(255, 255, 255, 0.04), transparent 24%);
+        to bottom,
+        rgba(255, 255, 255, 0.04),
+        transparent 24%
+      );
       box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.045);
     }
   }
@@ -370,17 +396,15 @@ const openCollection = (collectionId: string) => {
   &__row-shelf {
     position: relative;
     z-index: 3;
-    display: none;
     grid-column: 1 / -1;
-    --row-shelf-translate: var(--row-shelf-translate-desktop, 0px);
     height: 90px;
     margin-right: calc(var(--grid-side-padding) * -1);
     margin-left: calc(var(--grid-side-padding) * -1);
     pointer-events: none;
     transform: translateY(var(--row-shelf-translate));
 
-    &.is-desktop {
-      display: block;
+    &:not(:last-child) {
+      margin-bottom: 24px;
     }
   }
 
@@ -408,7 +432,7 @@ const openCollection = (collectionId: string) => {
     z-index: 1;
     background: linear-gradient(to bottom, #34343b, #15151a 78%);
     box-shadow: inset 0 1px rgba(255, 255, 255, 0.2);
-    clip-path: polygon(2.8% 0, 97.2% 0, 100% 100%, 0 100%);
+    clip-path: polygon(4% 0, 96% 0, 98% 100%, 2% 100%);
   }
 
   &__shelf-surface {
@@ -422,31 +446,13 @@ const openCollection = (collectionId: string) => {
 
   &__shelf-base,
   &__row-shelf-base {
-    right: 0;
-    left: 0;
+    right: 2%;
+    left: 2%;
     height: 34px;
     z-index: 2;
     border-top: 1px solid rgba(255, 255, 255, 0.14);
-    background: linear-gradient(to bottom, #222228, #0d0d11 55%, #050507);
+    background: #0d0d11;
     box-shadow: 0 12px 26px rgba(0, 0, 0, 0.66);
-
-    &::after {
-      position: absolute;
-      top: 0;
-      right: 5%;
-      left: 5%;
-      height: 1px;
-      content: '';
-      background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(226, 52, 86, 0.68) 10%,
-        rgba(255, 255, 255, 0.2) 50%,
-        rgba(226, 52, 86, 0.68) 90%,
-        transparent
-      );
-      box-shadow: 0 0 11px rgba(226, 52, 86, 0.26);
-    }
   }
 
   &__shelf-base {
@@ -544,18 +550,6 @@ const openCollection = (collectionId: string) => {
 @media (max-width: 1200px) and (min-width: 901px) {
   .collection-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-
-    &__row-shelf {
-      --row-shelf-translate: var(--row-shelf-translate-tablet, 0px);
-
-      &.is-desktop {
-        display: none;
-      }
-
-      &.is-tablet {
-        display: block;
-      }
-    }
   }
 }
 
@@ -596,17 +590,7 @@ const openCollection = (collectionId: string) => {
 
     &__row-shelf {
       z-index: 1;
-      --row-shelf-translate: var(--row-shelf-translate-mobile, 0px);
       height: 72px;
-
-      &.is-desktop,
-      &.is-tablet {
-        display: none;
-      }
-
-      &.is-mobile {
-        display: block;
-      }
     }
 
     &__row-shelf-surface {
@@ -638,10 +622,8 @@ const openCollection = (collectionId: string) => {
     }
 
     &__head {
-      gap: 18px;
-      min-width: min(250px, calc(100% - 48px));
-      margin-bottom: -10px;
-      padding: 8px 25px 9px;
+      height: calc(19px + 0.6rem);
+      padding: 8px 20px 9px;
     }
   }
 }

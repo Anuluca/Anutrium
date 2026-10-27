@@ -26,7 +26,6 @@ import {
 } from '@/composables/useIslandHarborData'
 import {
   ISLAND_OPENING_DURATION,
-  ISLAND_RESTORE_DELAY,
   ISLAND_RETURN_WINDOW_DURATION,
   ISLAND_WINDOW_DURATION,
   islandCardOpeningDelay,
@@ -82,9 +81,11 @@ const router = useRouter()
 type Selection = { group: string; item: IslandModuleId }
 const selectedItem = ref<Selection | null>(null)
 const detailContentReady = ref(false)
+const collectionsExpanded = ref(false)
+const detailResizing = ref(false)
 const transitionItem = ref<Selection | null>(null)
 const phase = ref<
-  'overview' | 'leaving' | 'detail' | 'returning' | 'restoring' | 'revealing'
+  'overview' | 'leaving' | 'detail' | 'restoring' | 'revealing'
 >('overview')
 let transitionRevision = 0
 const reducedMotion = () =>
@@ -221,7 +222,7 @@ const linkOverlay = createIslandLinkOverlay()
 let disposed = false
 let measureFrame: number | undefined
 let layoutMotion: gsap.core.Timeline | undefined
-// 先移除正文的布局占位，再测量完整总览终点；模型和窗口分阶段回程。
+// 先移除正文的布局占位，再测量完整总览终点。
 const animateLayout = async (
   selection: Selection | null,
   immediate = false
@@ -234,21 +235,24 @@ const animateLayout = async (
     `[data-island-group="${target.group}"]`
   )!
   // 隐藏的兄弟卡片只播放 CRT，避免 FLIP 缓存 display/visibility 后覆盖 Vue 的恢复状态。
-  const state = Flip.getState([
+  const layoutTargets = [
     window,
     window.querySelector('.island-window__bar')!,
     window.querySelector(`[data-flash-item="${target.item}"]`)!,
-  ])
+  ] as HTMLElement[]
+  const state = Flip.getState(layoutTargets)
   // 起点保留当前视差；归零后的终点交给 FLIP 平滑衔接，避免点击时卡片跳动。
   cardParallaxMotion?.kill()
   cardParallax.x = cardParallax.y = 0
   writeCardParallax()
+  // CSS 独立位移已归零，清除 FLIP 读取时缓存的旧坐标。
+  gsap.set(layoutTargets, { clearProps: 'transform' })
   selectedItem.value = selection
   linkOverlay.setFocused(selection?.item ?? null)
   hoveredItem.value = null
   await nextTick()
   if (disposed) return
-  measure()
+  measure(true)
   await new Promise<void>((resolve) => {
     layoutMotion = Flip.from(state, {
       duration:
@@ -262,6 +266,7 @@ const animateLayout = async (
       nested: true,
       onUpdate: scheduleMeasure,
       onComplete: () => {
+        gsap.set(layoutTargets, { clearProps: 'transform' })
         scheduleMeasure()
         resolve()
       },
@@ -279,6 +284,7 @@ const transitionDetail = async (
     : null
   const previous = selectedItem.value ?? transitionItem.value
   busy.value = true
+  collectionsExpanded.value = false
   detailContentReady.value = false
   if (selection) {
     const alreadyHidden =
@@ -310,17 +316,17 @@ const transitionDetail = async (
       ?.focus({ preventScroll: true })
   } else if (previous) {
     transitionItem.value = previous
+    let restoring: Promise<void> | undefined
     if (selectedItem.value) {
-      phase.value = 'returning'
       emit('detail-side', null)
-      await waitMotion(ISLAND_RESTORE_DELAY)
-      if (disposed || revision !== transitionRevision) return
       phase.value = 'restoring'
-      await animateLayout(null)
+      restoring = animateLayout(null)
+      // 卡片回位过半时开始开屏，让两段动画自然重叠。
+      await waitMotion(ISLAND_RETURN_WINDOW_DURATION * 0.5)
       if (disposed || revision !== transitionRevision) return
     }
     phase.value = 'revealing'
-    await waitMotion(ISLAND_OPENING_DURATION + 0.05)
+    await Promise.all([restoring, waitMotion(ISLAND_OPENING_DURATION + 0.05)])
     if (disposed || revision !== transitionRevision) return
     phase.value = 'overview'
     transitionItem.value = null
@@ -342,8 +348,43 @@ watch(
   },
   { flush: 'post' }
 )
+const toggleCollectionsExpanded = async (event: MouseEvent) => {
+  if (busy.value || detailResizing.value || !root.value) return
+  const panel = root.value.querySelector<HTMLElement>(
+    '.island-window--interests'
+  )!
+  const scroll = panel.querySelector<HTMLElement>('.scroll-viewport__scroll')!
+  const scrollTop = scroll.scrollTop
+  const state = Flip.getState(panel)
+  const animation = flashActionButton(event.currentTarget as HTMLButtonElement)
+  if (animation) {
+    animations.add(animation)
+    void animation.finished
+      .catch(() => undefined)
+      .finally(() => animations.delete(animation))
+  }
+  detailResizing.value = true
+  collectionsExpanded.value = !collectionsExpanded.value
+  await nextTick()
+  if (disposed) return
+  scroll.scrollTop = scrollTop
+  layoutMotion = Flip.from(state, {
+    duration: reducedMotion() ? 0 : 1.2,
+    ease: easeIslandDetailMotion,
+    scale: true,
+    onUpdate: scheduleMeasure,
+    onComplete: () => {
+      gsap.set(panel, { clearProps: 'transform' })
+      detailResizing.value = false
+      scheduleMeasure()
+    },
+    onInterrupt: () => {
+      detailResizing.value = false
+    },
+  })
+}
 const closeDetail = () => {
-  if (['returning', 'restoring', 'revealing'].includes(phase.value)) return true
+  if (['restoring', 'revealing'].includes(phase.value)) return true
   if (!selectedItem.value && !transitionItem.value) return false
   if (!selectedItem.value && !islandModuleAtPath(route.path)) {
     void transitionDetail(null)
@@ -402,7 +443,7 @@ const itemGroups = new Map(
     group.items.map((item) => [item.subtitle, group.id] as const)
   )
 )
-const measure = () => {
+const measure = (measureTitles = false) => {
   if (disposed || !root.value) return
   const bounds = root.value.getBoundingClientRect()
   const next: Record<string, { x: number; y: number }> = {}
@@ -416,31 +457,33 @@ const measure = () => {
     }
   }
   const scales: [HTMLElement, string][] = []
-  for (const title of titles.values()) {
-    const header = title.parentElement!
-    const style = getComputedStyle(header)
-    const glyph = header.querySelector<HTMLElement>('.island-window__glyph')!
-    const available =
-      header.clientWidth -
-      parseFloat(style.paddingLeft) -
-      parseFloat(style.paddingRight) -
-      parseFloat(style.columnGap) -
-      glyph.offsetWidth
-    scales.push([
-      title,
-      String(
-        Math.min(1, Math.max(0, available) / Math.max(1, title.scrollWidth))
-      ),
-    ])
-  }
-  if (!selectedItem.value)
-    for (const title of itemTitles.values())
+  if (measureTitles) {
+    for (const title of titles.values()) {
+      const header = title.parentElement!
+      const style = getComputedStyle(header)
+      const glyph = header.querySelector<HTMLElement>('.island-window__glyph')!
+      const available =
+        header.clientWidth -
+        parseFloat(style.paddingLeft) -
+        parseFloat(style.paddingRight) -
+        parseFloat(style.columnGap) -
+        glyph.offsetWidth
       scales.push([
         title,
         String(
-          title.parentElement!.clientWidth / Math.max(1, title.scrollWidth)
+          Math.min(1, Math.max(0, available) / Math.max(1, title.scrollWidth))
         ),
       ])
+    }
+    if (!selectedItem.value)
+      for (const title of itemTitles.values())
+        scales.push([
+          title,
+          String(
+            title.parentElement!.clientWidth / Math.max(1, title.scrollWidth)
+          ),
+        ])
+  }
   // 先完成所有尺寸读取，再批量写样式，避免标题间交错触发布局计算。
   for (const [title, scale] of scales) {
     if (titleScales.get(title) === scale) continue
@@ -453,16 +496,24 @@ const scheduleMeasure = () => {
   if (disposed || measureFrame !== undefined) return
   measureFrame = requestAnimationFrame(() => {
     measureFrame = undefined
-    measure()
+    measure(titlesNeedMeasure)
+    titlesNeedMeasure = false
   })
 }
-useResizeObserver(root, scheduleMeasure)
+let titlesNeedMeasure = false
+const scheduleLayoutMeasure = () => {
+  titlesNeedMeasure = true
+  scheduleMeasure()
+}
+useResizeObserver(root, scheduleLayoutMeasure)
 useResizeObserver(
   Object.keys(islandAnchorByItem).map((id) => computed(() => panels.get(id))),
-  scheduleMeasure
+  scheduleLayoutMeasure
 )
 
-watch([root, locale, () => props.mobile], scheduleMeasure, { flush: 'post' })
+watch([root, locale, () => props.mobile], scheduleLayoutMeasure, {
+  flush: 'post',
+})
 onMounted(() => {
   unsubscribeCardPointer = subscribePointerSamples((event) => {
     if (event.pointerType === 'touch' || !canHover.value || reducedMotion())
@@ -476,8 +527,8 @@ onMounted(() => {
       onUpdate: writeCardParallax,
     })
   }, 1000 / 30)
-  scheduleMeasure()
-  void document.fonts.ready.then(scheduleMeasure)
+  scheduleLayoutMeasure()
+  void document.fonts.ready.then(scheduleLayoutMeasure)
   if (!islandModuleAtPath(route.path) && !reducedMotion()) {
     opening.value = true
     void waitMotion(ISLAND_OPENING_DURATION + 0.05).then(() => {
@@ -601,6 +652,7 @@ onBeforeUnmount(() => {
       'is-mobile': mobile,
       'has-detail': selectedItem,
       'has-detail--right': selectedItem && detailSide === 'right',
+      'has-collections-expanded': collectionsExpanded,
       'is-hover-disabled': !canHover,
     }"
     :data-detail-item="selectedItem?.item"
@@ -623,6 +675,7 @@ onBeforeUnmount(() => {
         </filter>
       </defs>
     </svg>
+    <div class="island-detail-shade" aria-hidden="true" />
     <div class="island-panels" :aria-hidden="!selectedItem || undefined">
       <div
         class="island-reserved island-reserved--left"
@@ -740,6 +793,21 @@ onBeforeUnmount(() => {
             </figcaption>
           </figure>
         </div>
+        <button
+          v-if="
+            selectedItem?.item === 'COLLECTIBLES' &&
+            selectedItem.group === group.id &&
+            detailContentReady
+          "
+          class="island-detail-expand"
+          type="button"
+          :aria-label="collectionsExpanded ? '恢复半屏内容' : '展开全屏内容'"
+          :aria-expanded="collectionsExpanded"
+          :disabled="busy || detailResizing"
+          @click.stop="toggleCollectionsExpanded"
+        >
+          <span />
+        </button>
         <Transition name="island-detail-reveal" appear>
           <div
             v-if="
@@ -748,11 +816,17 @@ onBeforeUnmount(() => {
               detailContentReady
             "
             class="island-detail"
+            :inert="detailResizing || undefined"
           >
-            <ScrollViewport class="island-detail__viewport">
+            <ScrollViewport
+              class="island-detail__viewport"
+              :edge-fade="selectedItem.item === 'COLLECTIBLES'"
+            >
               <IslandNotesContent v-if="selectedItem.item === 'NOTES'" />
               <IslandCollectionsContent
                 v-else-if="selectedItem.item === 'COLLECTIBLES'"
+                :expanded="collectionsExpanded"
+                :mobile="mobile"
               />
               <NotFoundContent
                 v-else
@@ -888,9 +962,20 @@ onBeforeUnmount(() => {
   .island-filter-defs {
     position: absolute;
   }
+  .island-detail-shade {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    background: rgba(8, 8, 10, 0.94);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  &.has-collections-expanded .island-detail-shade {
+    opacity: 1;
+  }
   .island-panels,
   .island-targets {
-    translate: var(--island-parallax-x, 0px) var(--island-parallax-y, 0px);
     position: absolute;
     inset: var(--island-content-top) var(--island-inline-inset)
       var(--temple-panel-bottom, 64px);
@@ -901,7 +986,7 @@ onBeforeUnmount(() => {
     pointer-events: none;
   }
   .island-panels {
-    z-index: 0;
+    z-index: auto;
     .island-window__bar,
     .island-item {
       container-type: inline-size;
@@ -914,8 +999,12 @@ onBeforeUnmount(() => {
         opacity: 1;
       }
     }
+    .island-item {
+      container-type: size;
+    }
   }
   .island-targets {
+    translate: var(--island-parallax-x, 0px) var(--island-parallax-y, 0px);
     z-index: 3;
   }
   .island-reserved {
@@ -1066,7 +1155,7 @@ onBeforeUnmount(() => {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      filter: var(--island-cover-filter);
+      filter: brightness(1.25) contrast(1.2) var(--island-cover-filter);
     }
     figcaption {
       position: absolute;
@@ -1128,6 +1217,26 @@ onBeforeUnmount(() => {
   .island-window--interests .island-window__body {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  .island-window--ideas .island-window__body {
+    grid-template-rows: minmax(0, 0.6fr) minmax(0, 1.4fr);
+  }
+  &:not(.has-detail) {
+    .island-item[data-flash-item='NOTES'],
+    .island-item[data-island-item='NOTES'] {
+      margin-bottom: clamp(24px, 6svh, 64px);
+    }
+  }
+  @container (max-height: 125px) {
+    &:not(.has-detail) .island-item__title {
+      font-size: clamp(12px, 30cqh, 68px);
+    }
+    &:not(.has-detail) .island-item__count {
+      :deep(strong),
+      :deep(small) {
+        font-size: clamp(4px, 25cqh, 68px);
+      }
+    }
+  }
   .island-window--interests .island-window__bar {
     flex-direction: row-reverse;
     h2 {
@@ -1135,7 +1244,14 @@ onBeforeUnmount(() => {
     }
   }
   &:not(.has-detail) .island-panels {
-    will-change: translate;
+    .island-window__bar,
+    .island-item {
+      translate: var(--island-parallax-x, 0px) var(--island-parallax-y, 0px);
+      will-change: translate;
+    }
+    .island-item.is-active {
+      z-index: 2;
+    }
     .island-window--ideas .island-window__bar,
     .island-window--ideas .island-item {
       --island-edge-mask: linear-gradient(
@@ -1345,6 +1461,9 @@ onBeforeUnmount(() => {
     --island-card-gap: 18px;
     --island-title-size: 60px;
     --island-bar-height: 26px;
+    .island-window--ideas .island-window__body {
+      grid-template-rows: minmax(0, 0.4fr) minmax(0, 1.6fr);
+    }
     .island-panels,
     .island-targets {
       gap: 12px clamp(56px, 16vw, 100px);
@@ -1357,8 +1476,30 @@ onBeforeUnmount(() => {
       inset-inline: 5px;
     }
   }
+  @media (max-height: 950px) {
+    &:not(.has-detail):not(.is-mobile)
+      .island-window--ideas
+      .island-window__body {
+      grid-template-rows: minmax(0, 0.5fr) minmax(0, 1.5fr);
+    }
+  }
+  @media (max-height: 760px) {
+    &:not(.has-detail):not(.is-mobile)
+      .island-window--ideas
+      .island-window__body {
+      grid-template-rows: minmax(0, 0.3fr) minmax(0, 1.7fr);
+    }
+    &.is-mobile:not(.has-detail) {
+      .island-window {
+        margin-top: -24px;
+        height: calc(100% + 24px);
+      }
+      .island-window--ideas .island-window__body {
+        grid-template-rows: minmax(0, 0.34fr) minmax(0, 1.66fr);
+      }
+    }
+  }
   &[data-detail-phase='leaving'],
-  &[data-detail-phase='returning'],
   &[data-detail-phase='restoring'],
   &[data-detail-phase='revealing'] {
     .island-targets,
@@ -1517,12 +1658,65 @@ onBeforeUnmount(() => {
     &.has-detail--right .island-window {
       inset: 0 auto 0 0;
     }
+    .island-detail-expand {
+      position: absolute;
+      right: -48px;
+      top: 50%;
+      width: 28px;
+      height: 44px;
+      padding: 0;
+      border: 0;
+      display: grid;
+      place-items: center;
+      background: transparent;
+      color: var(--island-inverse);
+      cursor: pointer;
+      pointer-events: auto;
+      transition: scale 0.25s ease;
+      &:hover {
+        scale: 1.5;
+      }
+      &:focus-visible {
+        outline: 1px solid currentColor;
+      }
+      span {
+        width: 0;
+        height: 0;
+        border-top: 11px solid transparent;
+        border-bottom: 11px solid transparent;
+        border-left: 12px solid currentColor;
+        transition: transform 0.3s ease;
+      }
+    }
+    &.has-collections-expanded {
+      .island-window {
+        width: 100%;
+      }
+      .island-detail-expand {
+        right: calc(-0.5 * var(--island-inline-inset) - 14px);
+        span {
+          transform: rotate(180deg);
+        }
+      }
+      .island-links {
+        visibility: hidden;
+      }
+    }
     &.is-mobile {
       .island-window {
         width: 70%;
         grid-template-columns: minmax(0, 0.325fr) minmax(0, 1.325fr);
         grid-template-rows: 62px minmax(0, 1fr);
         gap: 12px 6px;
+      }
+      &.has-collections-expanded .island-window {
+        width: 100%;
+      }
+      .island-detail-expand {
+        right: -32px;
+      }
+      &.has-collections-expanded .island-detail-expand {
+        right: calc(-0.5 * var(--island-inline-inset) - 14px);
       }
       .island-window__glyph {
         display: block;
@@ -1565,6 +1759,7 @@ onBeforeUnmount(() => {
   .island-focus .crt-effect-enter-active {
     animation: none;
   }
+  .island-focus .island-detail-shade,
   .island-detail-reveal-enter-active,
   .island-detail-reveal-leave-active {
     transition: none;

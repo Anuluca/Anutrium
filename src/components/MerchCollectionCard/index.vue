@@ -27,11 +27,6 @@
           <span class="collection-card__shade" />
           <span class="collection-card__scan" />
         </span>
-        <span class="collection-card__count">
-          {{ collection.photos.length }}
-          <small>{{ countLabel }}</small>
-        </span>
-        <span class="collection-card__index">#{{ index }}</span>
         <span class="collection-card__copy">
           <strong>{{ collection.title }}</strong>
           <small>
@@ -48,6 +43,10 @@
               <span v-else>{{ subtitlePart.text }}</span>
             </template>
           </small>
+          <span class="collection-card__count">
+            <span>{{ String(collection.photos.length).padStart(2, '0') }}</span>
+            <small class="collection-card__unit">{{ countLabel }}</small>
+          </span>
         </span>
       </button>
     </span>
@@ -75,7 +74,6 @@ export interface MerchCollectionCardData {
 const props = defineProps<{
   collection: MerchCollectionCardData
   countLabel: string
-  index: string
 }>()
 
 const emit = defineEmits<{
@@ -199,31 +197,10 @@ const handleSelect = () => {
   transition: opacity 0.52s cubic-bezier(0.22, 1, 0.36, 1),
     transform 0.52s cubic-bezier(0.22, 1, 0.36, 1);
 
-  &::before,
   &::after {
     position: absolute;
     content: '';
     pointer-events: none;
-  }
-
-  &::before {
-    inset: -24px;
-    z-index: -1;
-    opacity: 0;
-    background: radial-gradient(
-        ellipse at 50% 38%,
-        rgba(226, 52, 86, 0.46),
-        rgba(226, 52, 86, 0.2) 34%,
-        transparent 72%
-      ),
-      radial-gradient(
-        ellipse at 50% 100%,
-        rgba(118, 72, 255, 0.22),
-        transparent 64%
-      );
-    transform: scale(0.82);
-    transition: opacity 0.52s ease,
-      transform 0.52s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   &::after {
@@ -242,6 +219,7 @@ const handleSelect = () => {
 }
 
 .collection-card {
+  --copy-text-height: calc(0.72rem * 1.2 + 0.4rem * 1.3 + 5px);
   position: relative;
   display: block;
   width: 100%;
@@ -254,6 +232,7 @@ const handleSelect = () => {
   background: linear-gradient(145deg, #29272d, #101014 56%, #1d1015);
   text-align: left;
   cursor: pointer;
+
   border: 1px solid rgb(77, 77, 77);
 
   &__media {
@@ -272,7 +251,13 @@ const handleSelect = () => {
       z-index: 5;
       content: '';
       pointer-events: none;
+      background: radial-gradient(
+        ellipse at center,
+        transparent 45%,
+        rgba(0, 0, 0, 0.65) 100%
+      );
       box-shadow: inset 0 0 22px rgba(0, 0, 0, 0.96);
+      transition: opacity 0.3s ease;
     }
   }
 
@@ -316,37 +301,42 @@ const handleSelect = () => {
 
   &__count {
     position: absolute;
-    right: 8px;
-    bottom: 57px;
+    right: 0;
+    top: calc(50% - 2px);
+    transform: translateY(-50%);
     z-index: 6;
     display: inline-flex;
-    align-items: baseline;
-    gap: 4px;
-    padding: 5px 8px 6px;
-    border-radius: 1px;
-    color: #fff;
-    background: #e23456;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: flex-end;
+    height: var(--copy-text-height);
+    box-sizing: border-box;
+    gap: 1px;
+    padding: 0 8px;
+    color: #e23456;
     font-family: 'UnboundedSans', 'Courier New', monospace;
-    font-size: 0.6rem;
+    font-size: calc((var(--copy-text-height) - 1px) * 0.66);
     font-weight: 900;
-    box-shadow: 4px 6px 12px rgba(0, 0, 0, 0.44);
-    transform: rotate(-4deg);
-    transform-origin: right bottom;
+    line-height: 1;
 
-    small {
+    small.collection-card__unit {
+      display: block;
+      margin: 0;
+      color: rgba(255, 255, 255, 0.46);
       font-family: inherit;
-      font-size: 0.34rem;
+      font-size: calc((var(--copy-text-height) - 1px) * 0.33);
+      line-height: 1;
     }
   }
 
   &__index {
     position: absolute;
-    right: -1px;
-    bottom: -1px;
-    z-index: 6;
-    color: rgba(255, 255, 255, 0.089);
+    right: -3px;
+    bottom: -5px;
+    z-index: 4;
+    color: rgba(255, 255, 255, 0.2);
     font-family: 'Anton', sans-serif;
-    font-size: 1.5rem;
+    font-size: 3rem;
     font-weight: 400;
     letter-spacing: 0.02em;
     line-height: 1;
@@ -372,7 +362,8 @@ const handleSelect = () => {
       overflow: hidden;
       font-family: 'alibaba-puhuiti', sans-serif;
       color: #fff;
-      font-size: 0.9rem;
+      font-size: 0.72rem;
+      line-height: 1.2;
       font-weight: 900;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -384,7 +375,7 @@ const handleSelect = () => {
       overflow: hidden;
       color: rgba(255, 255, 255, 0.46);
       font-family: 'alibaba-puhuiti', sans-serif;
-      font-size: 0.46rem;
+      font-size: 0.4rem;
       line-height: 1.3;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -403,19 +394,12 @@ const handleSelect = () => {
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .collection-card-shell {
-    &:hover {
-      z-index: 4;
-      transform: translateY(-10px) scale(1.025);
+  .collection-card-shell:hover {
+    z-index: 4;
+    transform: translateY(-10px);
 
-      &::before {
-        opacity: 1;
-        transform: scale(1.18);
-      }
-
-      .collection-card__cover {
-        transform: translateY(3.5%) scale(1.08);
-      }
+    .collection-card__media::after {
+      opacity: 0.45;
     }
   }
 }
@@ -452,21 +436,13 @@ const handleSelect = () => {
   }
 
   .collection-card {
+    --copy-text-height: calc(0.54rem * 1.2 + 0.34rem * 1.3 + 3px);
     &__count {
-      right: 7px;
-      bottom: 53px;
-      padding: 3px 5px 4px;
-      font-size: 0.44rem;
-
-      small {
-        font-size: 0.3rem;
-      }
+      padding: 0 5px;
     }
 
     &__index {
-      right: 9px;
-      bottom: 8px;
-      font-size: 0.92rem;
+      font-size: 1.84rem;
     }
 
     &__copy {
@@ -474,12 +450,12 @@ const handleSelect = () => {
       padding: 10px 48px 10px 10px;
 
       strong {
-        font-size: 0.6rem;
+        font-size: 0.54rem;
       }
 
       small {
         margin-top: 3px;
-        font-size: 0.38rem;
+        font-size: 0.34rem;
       }
     }
 

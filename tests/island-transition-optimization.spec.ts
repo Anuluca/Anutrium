@@ -139,7 +139,53 @@ test('island batches layout reads before writes and keeps hover refs stable', as
     if (firstWrite >= 0) expect(batch.slice(firstWrite)).not.toContain('read')
   }
   expect(result.subscriptions).toBe(0)
-  expect(result.activeOrder).toHaveLength(5)
+  expect(result.activeOrder.sort()).toEqual(
+    ['LABORATORY', 'NOTES', 'GAME LIBRARY', 'COLLECTIBLES'].sort()
+  )
+})
+
+test('card parallax does not repeatedly measure title styles', async ({
+  page,
+}, info) => {
+  await page.route('http://localhost:3000/', (route) =>
+    route.fulfill({
+      contentType: 'text/html',
+      body: '<meta name="viewport" content="width=device-width,initial-scale=1"><div id="app" style="position:fixed;inset:0"></div>',
+    })
+  )
+  await page.goto('/')
+  const result = await page.evaluate(async (mobile) => {
+    const { mountIslandLayout } = await import(
+      '/tests/fixtures/island-link-layout.ts'
+    )
+    const layout = await mountIslandLayout(mobile)
+    await new Promise<void>((resolve) => setTimeout(resolve, 100))
+    const getStyle = window.getComputedStyle
+    let titleMeasurements = 0
+    window.getComputedStyle = function (element, pseudo) {
+      if (element.matches('.island-window__bar')) titleMeasurements++
+      return getStyle.call(window, element, pseudo)
+    }
+    try {
+      window.dispatchEvent(
+        new PointerEvent('pointermove', {
+          clientX: innerWidth - 5,
+          clientY: innerHeight - 5,
+          pointerType: 'mouse',
+        })
+      )
+      await new Promise<void>((resolve) => setTimeout(resolve, 500))
+      return {
+        titleMeasurements,
+        offset: layout.root.style.getPropertyValue('--island-parallax-x'),
+      }
+    } finally {
+      window.getComputedStyle = getStyle
+      layout.unmount()
+    }
+  }, info.project.name.includes('mobile'))
+  expect(parseFloat(result.offset)).not.toBe(0)
+  expect(result.titleMeasurements).toBe(0)
 })
 
 test('island keeps page and router leave geometry within one pixel', async ({

@@ -74,7 +74,7 @@ const isCursorIdle = computed({
     cursorStateStore.isIdle = idle
   },
 })
-const cursorIdleDelay = computed(() => (navigation.immersive ? 1000 : 10000))
+const cursorIdleDelay = computed(() => (navigation.immersive ? 1000 : 30000))
 let cursorIdleTimer = null
 let lastCursorMove = 0
 const clearCursorIdle = () => {
@@ -173,6 +173,7 @@ const onWheel = (event) => {
   )
     return
 
+  refreshCursorIdle()
   // 高频滚轮只更新时间；共用一个结束计时器，不启动位置渲染或重启动画。
   lastWheelTime = performance.now()
   if (scrollIdleTimer !== null) return

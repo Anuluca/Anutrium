@@ -104,7 +104,7 @@ export const useIslandHarborData = () => {
           title: '收藏品',
           subtitle: 'COLLECTIBLES',
           get count() {
-            return `${merchCollectionCount.value} COLLECTIONS`
+            return `${merchCollectionCount.value} ITEMS`
           },
           get img() {
             return t('island.modules.photography.merch.img')

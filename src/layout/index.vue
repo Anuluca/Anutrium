@@ -417,6 +417,7 @@ import PageScrollProgress from '@/components/PageScrollProgress/index.vue'
 import TextRoll from '@/components/TextRoll/index.vue'
 import { useFrameTask } from '@/composables/useFrameTask'
 import { HOME_RETURN_TO_PASSION_EVENT } from '@/config/homeNavigation'
+import { islandModuleAtPath } from '@/config/islandModules'
 import { isTempleMutedMenuItem } from '@/config/templeModelDisplay'
 import {
   isTempleRouteName,
@@ -677,6 +678,12 @@ const activateNavigation = async (id: TempleNavigationId) => {
   closeMobileMenu()
   if (id === 'about') {
     navigation.request(id)
+    return
+  }
+  if (islandModuleAtPath(route.path) && id !== 'statue') {
+    await router.push(
+      id === 'sprigatito' ? '/floratrium' : templeModulePaths[id]
+    )
     return
   }
   if (!isTempleRoute.value) {
