@@ -35,6 +35,19 @@ const push = (page: Page, path: string) =>
     await app.__vue_app__.config.globalProperties.$router.push(path)
   }, path)
 
+test('mounts route content only after the curtain closes', async ({ page }) => {
+  test.setTimeout(60000)
+  await openDetail(page)
+  await push(page, '/colorPalette')
+  await expect(page.locator('.route-curtain')).toHaveAttribute(
+    'data-phase',
+    'reveal'
+  )
+  await expect(page.locator('.palette-tool')).toHaveCount(0)
+  await expect(page.locator('.route-curtain')).toHaveCount(0)
+  await expect(page.locator('.palette-tool')).toBeVisible()
+})
+
 test('wipe covers before routing and reveals a ready home', async ({
   page,
 }) => {
@@ -88,6 +101,46 @@ test('wipe covers before routing and reveals a ready home', async ({
     'false'
   )
 })
+
+for (const reducedMotion of ['no-preference', 'reduce'] as const) {
+  test(`return to home waits for the first scene frame (${reducedMotion})`, async ({
+    page,
+  }) => {
+    test.setTimeout(90000)
+    await page.emulateMedia({ reducedMotion })
+    await openDetail(page)
+    let releaseAsset!: () => void
+    const assetGate = new Promise<void>((resolve) => (releaseAsset = resolve))
+    let assetRequested = false
+    await page.route('**/models/lucario-island.bin*', async (route) => {
+      assetRequested = true
+      await assetGate
+      await route.continue()
+    })
+    try {
+      await page.locator('.detail-page-header__back').click()
+      await expect.poll(() => assetRequested, { timeout: 30000 }).toBe(true)
+      const curtain = page.locator('.route-curtain')
+      await expect(curtain).toHaveAttribute('data-phase', 'covered', {
+        timeout: 15000,
+      })
+      await expect(page.locator('.temple-page')).toBeAttached()
+      await page.waitForTimeout(700)
+      await expect(curtain).toHaveAttribute('data-phase', 'covered')
+      await expect(page.locator('.site-loading-progress')).toHaveCount(0)
+      if (reducedMotion === 'no-preference') {
+        await push(page, '/atrium/notes')
+        await expect(page).toHaveURL(/\/atrium\/notes$/)
+        await expect(curtain).toHaveAttribute('data-phase', 'covered')
+      }
+      releaseAsset()
+      await expect(curtain).toHaveCount(0, { timeout: 45000 })
+      await expect(page.locator('.temple-stage canvas')).toBeVisible()
+    } finally {
+      releaseAsset()
+    }
+  })
+}
 
 test('detail parameter navigation and browser back both use the wipe', async ({
   page,

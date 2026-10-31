@@ -99,7 +99,7 @@ const activateEntrance = () => {
   stopMenuObserver()
 }
 const { stop: stopMenuObserver } = useMutationObserver(
-  () => cardRoot.value?.closest('.temple-menu'),
+  () => cardRoot.value?.closest<HTMLElement>('.temple-menu'),
   activateEntrance,
   { attributes: true, attributeFilter: ['class'] }
 )

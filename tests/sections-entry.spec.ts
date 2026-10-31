@@ -61,6 +61,72 @@ const mountSection = async (
   )
 }
 
+test('bilingual heading fades without moving its English subtitle', async ({
+  page,
+}) => {
+  await page.route('http://localhost:3000/section-heading-test', (route) =>
+    route.fulfill({
+      contentType: 'text/html',
+      body: '<div id="fixture"></div>',
+    })
+  )
+  await page.goto('/section-heading-test')
+  await page.evaluate(async () => {
+    const { createApp, h, ref } = await import(
+      '/node_modules/.vite/deps/vue.js'
+    )
+    const { default: Sections } = await import(
+      '/src/components/Sections/index.vue'
+    )
+    const { default: i18n } = await import('/src/locales/index.ts')
+    i18n.global.locale.value = 'zhCn'
+    const bilingual = ref(false)
+    createApp({
+      render: () =>
+        h(Sections, {
+          sectionNumber: 1,
+          title: '中文标题',
+          titleEn: 'ENGLISH',
+          showEnglishTitle: bilingual.value || undefined,
+          navigation: false,
+          reveal: false,
+        }),
+    })
+      .use(i18n)
+      .mount('#fixture')
+    ;(window as any).bilingual = bilingual
+  })
+  const title = page.locator('.home-section-title__text')
+  await expect(page.locator('.home-section-rail__num')).toHaveText('#1')
+  await expect(page.locator('.home-section-title__en')).toHaveCount(0)
+  await expect(title).toHaveCSS('mask-image', 'none')
+  const singleLineSize = await title.evaluate((element) => ({
+    title: element.getBoundingClientRect().height,
+    row: element.closest('.home-section-title-row')!.getBoundingClientRect()
+      .height,
+  }))
+  expect(singleLineSize.title).toBeGreaterThan(0)
+  await page.evaluate(() => ((window as any).bilingual.value = true))
+  await expect(page.locator('.home-section-title__en')).toBeVisible()
+  const result = await title.evaluate((element) => {
+    const heading = element.parentElement!
+    const subtitle = heading.querySelector('.home-section-title__en')!
+    const before = subtitle.getBoundingClientRect().top
+    const transform = getComputedStyle(element).transform
+    const mask = getComputedStyle(element).maskImage
+    heading.classList.remove('home-section-title--bilingual')
+    const after = subtitle.getBoundingClientRect().top
+    heading.classList.add('home-section-title--bilingual')
+    return { before, after, transform, mask }
+  })
+  expect(result.transform).toMatch(/^matrix\(0\.92/)
+  expect(result.mask).toContain('linear-gradient')
+  await page.evaluate(() => ((window as any).bilingual.value = false))
+  await expect(page.locator('.home-section-title__en')).toHaveCount(0)
+  await expect(title).toHaveCSS('transform', 'matrix(0.92, 0, 0, 1, 0, 0)')
+  await expect(title).toHaveCSS('mask-image', 'none')
+})
+
 test('section body expands, retargets async content and releases its height afterwards', async ({
   page,
 }) => {

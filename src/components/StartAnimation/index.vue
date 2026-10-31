@@ -391,7 +391,7 @@ const rotateFinished = () => {
 watch(() => siteLoading.pending, tryFinishIntro)
 // 首次入口保留完整 Logo 过渡；后续页面准备复用同一条加载线。
 watch(
-  [isAnimating, () => siteLoading.pending, () => siteLoading.batch],
+  [isAnimating, () => siteLoading.visiblePending, () => siteLoading.batch],
   ([animating, pending]) => {
     if (animating) return
     if (pending) {

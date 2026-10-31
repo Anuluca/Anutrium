@@ -81,3 +81,7 @@ yarn dev
 ## 花花小窝喜爱度
 
 新增公开 `/floratrium/likes` 与管理 `/admin/floratrium/likes`，通过 `FLORA_LIKES` SQLite Durable Object 存储，管理鉴权复用 `HOME_FEATURES_TOKEN`。发布会应用 `flora-likes-v1` migration。接口、限额与统计说明见 [喜爱功能](../docs/flora-likes.md)。
+
+## Markdown 笔记
+
+公开 `/notes`、`/notes/<uuid>` 与管理 `/admin/notes`、`/admin/notes/<uuid>` 使用既有 R2 绑定和 `HOME_FEATURES_TOKEN`。新增 PUT 与编辑 PATCH 仅接受 Markdown，原文件保存在 `notes/<uuid>.md`。正文 GET 响应头及列表每条记录返回 ETag；`X-Note-Version` 保留原始版本，客户端优先用它构造 `If-Match`，避免 CDN 压缩弱化 ETag；PATCH 和 DELETE 必须携带读取时的 `If-Match`，版本冲突返回 412，缺少版本返回 428。删除以 R2 条件写入清空正文并保留删除标记，读取返回 404，列表中不再出现，旧 ID 不可重新创建。协议、发布顺序和回归步骤见 [Notes 文档](../docs/notes.md)。

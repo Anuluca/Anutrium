@@ -1,101 +1,110 @@
 <template>
   <div
-    class="island-collections-content is-embedded"
+    ref="contentRoot"
+    class="island-collections-content"
+    :class="{ 'skip-shelf-entry': skipShelfEntry }"
     :style="{ '--collection-columns': columns }"
   >
     <main class="collection-index">
-      <div class="collection-tabs" aria-label="收藏品分类">
-        <button
-          v-for="group in collectionGroups"
-          :key="group.id"
-          class="collection-section__head"
-          :class="{ 'is-active': group.id === selectedCategory }"
-          :aria-pressed="group.id === selectedCategory"
-          type="button"
-          @click="selectCategory(group.id)"
-        >
-          <div class="collection-section__head-left">
-            <span class="collection-section__title">{{ group.title }}</span>
-          </div>
-          <strong class="collection-section__count">
-            <span>{{ group.totalCount }}</span>
-          </strong>
-        </button>
-      </div>
-      <section :key="activeGroup.id" class="collection-section">
-        <template v-for="group in [activeGroup]" :key="group.id">
-          <div
-            class="collection-grid"
-            :class="{ 'is-empty': !group.totalCount }"
+      <div
+        ref="tabsViewport"
+        class="collection-tabs no-rem"
+        aria-label="收藏品分类"
+      >
+        <div ref="tabsRow" class="collection-tabs__row">
+          <button
+            v-for="group in collectionGroups"
+            :key="group.id"
+            class="collection-section__head"
+            :class="{ 'is-active': group.id === selectedCategory }"
+            :aria-pressed="group.id === selectedCategory"
+            type="button"
+            @click="selectCategory(group.id)"
           >
-            <div class="collection-grid__pegboard" aria-hidden="true" />
-            <template
-              v-for="(collection, collectionIndex) in group.collections"
-              :key="collection.id"
+            <span class="collection-section__title">{{ group.title }}</span>
+          </button>
+        </div>
+      </div>
+      <section class="collection-section">
+        <div
+          ref="gridRoot"
+          class="collection-grid"
+          :class="{ 'is-empty': !activeCollections.length }"
+        >
+          <div class="collection-grid__pegboard" aria-hidden="true" />
+          <template
+            v-for="{
+              collection,
+              rowIndex,
+              entryStyle,
+              shelfStyle,
+              skipEntry,
+            } in collectionEntries"
+            :key="collection.id"
+          >
+            <MerchCollectionCard
+              :id="`merch-collection-${collection.id}`"
+              :data-collection-row="rowIndex"
+              :collection="collection"
+              :mobile="mobile"
+              :expanded="openedCollection?.id === collection.id"
+              :expanded-target="
+                openedCollection?.id === collection.id ? collectionHost : null
+              "
+              :closing="
+                openedCollection?.id === collection.id && collectionClosing
+              "
+              :returning="
+                openedCollection?.id === collection.id && collectionReturning
+              "
+              :count-label="
+                t('island.modules.photography.merch.collectionLabel')
+              "
+              :style="entryStyle"
+              :class="{ 'skip-card-entry': skipEntry }"
+              @select="openCollection"
             >
-              <MerchCollectionCard
-                :id="getCollectionElementId(collection.id)"
-                :collection="collection"
-                :expanded="openedCollection?.id === collection.id"
-                :expanded-target="collectionHost"
-                :closing="collectionClosing"
-                :returning="
-                  openedCollection?.id === collection.id && collectionReturning
-                "
-                :count-label="
-                  t('island.modules.photography.merch.collectionLabel')
-                "
-                :style="getCollectionEntryStyle(collectionIndex)"
-                @select="openCollection"
-              >
-                <template #gallery>
-                  <MediaGallery
-                    v-if="collection.photos.length"
-                    :items="collection.photos"
-                    :show-media-info="(photo) => Boolean(photo.title)"
-                    :get-media-label="
-                      (photo) => photo.title || collection.title
-                    "
-                  >
-                    <template #info="{ item: photo }">
-                      <p class="collection-detail__caption">
-                        {{ photo.title }}
-                      </p>
-                    </template>
-                  </MediaGallery>
-                  <p v-else class="collection-detail__empty">
-                    {{ t('island.modules.photography.merch.empty') }}
-                  </p>
-                </template>
-              </MerchCollectionCard>
-              <div
-                v-if="
-                  shouldRenderRowShelf(
-                    collectionIndex,
-                    group.collections.length
-                  )
-                "
-                class="collection-grid__row-shelf"
-                :style="getRowShelfStyle(collectionIndex)"
-                aria-hidden="true"
-              >
-                <span class="collection-grid__row-shelf-surface" />
-                <span class="collection-grid__row-shelf-base" />
-              </div>
-            </template>
-            <div v-if="!group.totalCount" class="collection-shelf-empty">
-              <span>EMPTY DISPLAY</span>
-            </div>
+              <template #gallery>
+                <MediaGallery
+                  v-if="collection.photos.length"
+                  :items="collection.photos"
+                  :show-media-info="(photo) => Boolean(photo.title)"
+                  :get-media-label="(photo) => photo.title || collection.title"
+                >
+                  <template #info="{ item: photo }">
+                    <p class="collection-detail__caption">
+                      {{ photo.title }}
+                    </p>
+                  </template>
+                </MediaGallery>
+                <p v-else class="collection-detail__empty">
+                  {{ t('island.modules.photography.merch.empty') }}
+                </p>
+              </template>
+            </MerchCollectionCard>
             <div
-              v-if="!group.totalCount"
-              class="collection-grid__shelf"
+              v-if="shelfStyle"
+              class="collection-grid__row-shelf"
+              :data-collection-row="rowIndex"
+              :style="shelfStyle"
               aria-hidden="true"
             >
-              <span class="collection-grid__shelf-surface" />
-              <span class="collection-grid__shelf-base" />
+              <span class="collection-grid__row-shelf-surface" />
+              <span class="collection-grid__row-shelf-base" />
             </div>
+          </template>
+          <div v-if="!activeCollections.length" class="collection-shelf-empty">
+            <span>EMPTY DISPLAY</span>
           </div>
-        </template>
+          <div
+            v-if="!activeCollections.length"
+            class="collection-grid__shelf"
+            aria-hidden="true"
+          >
+            <span class="collection-grid__shelf-surface" />
+            <span class="collection-grid__shelf-base" />
+          </div>
+        </div>
       </section>
     </main>
     <ModalWrapper
@@ -114,108 +123,52 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, ref, shallowRef } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { usePreferredReducedMotion, useResizeObserver } from '@vueuse/core'
 
 import MediaGallery from '@/components/MediaGallery/index.vue'
-import MerchCollectionCard, {
-  type MerchCollectionCardData,
-} from '@/components/MerchCollectionCard/index.vue'
+import MerchCollectionCard from '@/components/MerchCollectionCard/index.vue'
 import ModalWrapper from '@/components/ModalWrapper/index.vue'
 
-type MerchCategoryId = 'pokemon' | 'tokusatsu' | 'other'
+import { useCollectionDialog } from '../../composables/useCollectionDialog'
 
-type MerchGroups = Record<MerchCategoryId, MerchCollectionCardData[]>
+import type { MerchCategoryId, MerchGroups } from '@/types/merch'
 
 interface MerchCategoryMeta {
   id: MerchCategoryId
-  title: {
-    zhCn: string
-    en: string
-  }
+  title: string
 }
 
 const merchCategoryMeta: MerchCategoryMeta[] = [
   {
     id: 'pokemon',
-    title: {
-      zhCn: '宝可梦',
-      en: 'POKÉMON',
-    },
+    title: 'POKÉMON',
   },
   {
     id: 'tokusatsu',
-    title: {
-      zhCn: '特摄',
-      en: 'TOKUSATSU',
-    },
+    title: 'TOKUSATSU',
   },
   {
     id: 'other',
-    title: {
-      zhCn: '其他',
-      en: 'OTHER',
-    },
+    title: 'OTHER',
   },
 ]
 
 const props = defineProps<{ expanded?: boolean; mobile?: boolean }>()
-const columns = computed(() => (props.mobile ? 1 : props.expanded ? 5 : 4))
-const { locale, t, tm } = useI18n()
-const openedCollection = shallowRef<MerchCollectionCardData | null>(null)
-const collectionOrigin = shallowRef<HTMLElement | null>(null)
-const collectionVisible = ref(false)
-const collectionClosing = ref(false)
-const collectionHost = shallowRef<HTMLElement | null>(null)
-const collectionReturning = ref(false)
-let returnGhost: HTMLElement | null = null
-let returnAnimations: Animation[] = []
-const clearCollectionReturn = () => {
-  returnAnimations.forEach((animation) => animation.cancel())
-  returnAnimations = []
-  returnGhost?.remove()
-  returnGhost = null
-}
-const returnCollectionToShelf = async (remainingMs: number) => {
-  const shell = collectionHost.value?.querySelector<HTMLElement>(
-    '.collection-card-shell'
-  )
-  if (!shell || !collectionClosing.value || collectionReturning.value) return
-  clearCollectionReturn()
-  // 高层仅留下无交互的封面快照，真实盒子提前回到原有层叠上下文。
-  const ghost = shell.cloneNode(true) as HTMLElement
-  ghost.classList.remove('is-expanded', 'is-closing')
-  ghost.classList.add('collection-return-ghost')
-  ghost.querySelector('.collection-card__gallery')?.remove()
-  ghost.setAttribute('aria-hidden', 'true')
-  ghost.setAttribute('inert', '')
-  Object.assign(ghost.style, {
-    position: 'absolute',
-    inset: '0',
-    pointerEvents: 'none',
-    transform: 'none',
-  })
-  collectionHost.value!.appendChild(ghost)
-  returnGhost = ghost
-  collectionReturning.value = true
-  await nextTick()
-  if (returnGhost !== ghost || !shell.isConnected) return
-  const options: KeyframeAnimationOptions = {
-    duration: remainingMs,
-    easing: 'linear',
-    fill: 'forwards',
-  }
-  returnAnimations = [
-    ghost.animate([{ opacity: 1 }, { opacity: 0 }], options),
-    shell.animate([{ opacity: 0 }, { opacity: 1 }], options),
-  ]
-}
-const finishCollectionClose = () => {
-  clearCollectionReturn()
-  openedCollection.value = null
-  collectionReturning.value = false
-}
-onBeforeUnmount(clearCollectionReturn)
+const columns = computed(() => (props.mobile ? 2 : props.expanded ? 5 : 4))
+const { t, tm } = useI18n()
+const {
+  openedCollection,
+  collectionOrigin,
+  collectionVisible,
+  collectionClosing,
+  collectionHost,
+  collectionReturning,
+  returnCollectionToShelf,
+  finishCollectionClose,
+  openCollection,
+} = useCollectionDialog()
 const savedCategory =
   typeof window === 'undefined'
     ? null
@@ -231,64 +184,111 @@ const merch = computed<MerchGroups>(() => {
   return tm('island.modules.photography.merch.data') as MerchGroups
 })
 
-const collectionGroups = computed(() =>
-  merchCategoryMeta.map((category) => {
-    const groupCollections = merch.value[category.id] || []
-
-    return {
-      id: category.id,
-      title: locale.value === 'en' ? category.title.en : category.title.zhCn,
-      totalCount: groupCollections.length,
-      collections: groupCollections,
-    }
-  })
-)
-const activeGroup = computed(
-  () =>
-    collectionGroups.value.find((group) => group.id === selectedCategory.value)!
+const collectionGroups = merchCategoryMeta
+const activeCollections = computed(
+  () => merch.value[selectedCategory.value] || []
 )
 
+const skipShelfEntry = ref(false)
+// 列数变化会重建行尾底座；重排生成的节点无需再次播放首次入场动画。
+watch(columns, () => {
+  skipShelfEntry.value = true
+})
 const selectCategory = (category: MerchCategoryId) => {
+  if (category === selectedCategory.value) return
+  skipShelfEntry.value = true
   selectedCategory.value = category
   sessionStorage.setItem('merch-category', category)
 }
 
-const getCollectionElementId = (collectionId: string) =>
-  `merch-collection-${collectionId}`
+// 仅在分类、列数或入场状态变化时生成布局，弹窗开关不重复创建所有卡片样式。
+const collectionEntries = computed(() =>
+  activeCollections.value.map((collection, index, collections) => ({
+    collection,
+    rowIndex: Math.floor(index / columns.value),
+    skipEntry: index >= columns.value * 2,
+    entryStyle: {
+      '--card-entry-delay': `calc(var(--section-entry-delay) + ${
+        skipShelfEntry.value
+          ? '0ms'
+          : 'var(--island-detail-content-ready-delay, 0ms)'
+      } + ${180 + index * 180}ms)`,
+    },
+    shelfStyle:
+      (index + 1) % columns.value === 0 || index === collections.length - 1
+        ? {
+            '--row-shelf-translate': `${
+              (Math.floor(index / columns.value) -
+                TARGET_SHELF_DISTANCE_ROW_INDEX) *
+              SHELF_DISTANCE_ROW_STEP
+            }px`,
+          }
+        : null,
+  }))
+)
 
-const shouldRenderRowShelf = (
-  collectionIndex: number,
-  collectionCount: number
-) =>
-  (collectionIndex + 1) % columns.value === 0 ||
-  collectionIndex === collectionCount - 1
-
-const getRowShelfStyle = (collectionIndex: number) => {
-  const rowIndex = Math.floor(collectionIndex / columns.value)
-  const offset = `${
-    (rowIndex - TARGET_SHELF_DISTANCE_ROW_INDEX) * SHELF_DISTANCE_ROW_STEP
-  }px`
-  return { '--row-shelf-translate': offset }
-}
-
-const getCollectionEntryStyle = (collectionIndex: number) => ({
-  '--card-entry-delay': `calc(var(--section-entry-delay) + ${
-    180 + collectionIndex * 60
-  }ms)`,
+const contentRoot = ref<HTMLElement | null>(null)
+const gridRoot = ref<HTMLElement | null>(null)
+const tabsViewport = ref<HTMLElement | null>(null)
+const tabsRow = ref<HTMLElement | null>(null)
+// 大字号超出窄屏时保留居中初始位置，两端标签均可横向滑动到达。
+useResizeObserver([tabsViewport, tabsRow], () => {
+  const viewport = tabsViewport.value
+  if (viewport && getComputedStyle(viewport).overflowX === 'auto')
+    viewport.scrollLeft = (viewport.scrollWidth - viewport.clientWidth) / 2
 })
+const reducedMotion = usePreferredReducedMotion()
+let scrollViewport: HTMLElement | null = null
+let parallaxFrame = 0
 
-const openCollection = (collectionId: string, element: HTMLElement) => {
-  if (openedCollection.value) return
-  const collection = activeGroup.value.collections.find(
-    (item) => item.id === collectionId
+// 同行商品与底座使用相同位移，保持落架关系；独立 translate 不覆盖入场和悬停动画。
+const updateRowParallax = () => {
+  parallaxFrame = 0
+  const grid = gridRoot.value
+  if (!grid || !scrollViewport) return
+  const viewport = scrollViewport.getBoundingClientRect()
+  const gridTop = grid.getBoundingClientRect().top
+  const offsets = new Map<string, number>()
+  const elements = Array.from(
+    grid.querySelectorAll<HTMLElement>('[data-collection-row]')
   )
-  if (!collection) return
-  collectionOrigin.value = element
-  collectionReturning.value = false
-  collectionClosing.value = false
-  openedCollection.value = collection
-  collectionVisible.value = true
+  // 先读几何再写样式，避免逐卡触发同步布局。
+  for (const element of elements) {
+    const row = element.dataset.collectionRow!
+    if (offsets.has(row)) continue
+    const center = gridTop + element.offsetTop + element.offsetHeight / 2
+    const distance = center - (viewport.top + viewport.height / 2)
+    offsets.set(
+      row,
+      reducedMotion.value === 'reduce'
+        ? 0
+        : Math.max(-48, Math.min(48, distance * 0.12))
+    )
+  }
+  for (const element of elements) {
+    element.style.setProperty(
+      '--collection-row-parallax',
+      `${offsets.get(element.dataset.collectionRow!) || 0}px`
+    )
+  }
 }
+const scheduleRowParallax = () => {
+  if (!parallaxFrame) parallaxFrame = requestAnimationFrame(updateRowParallax)
+}
+useResizeObserver([gridRoot, contentRoot], scheduleRowParallax)
+watch([collectionEntries, reducedMotion], () => nextTick(scheduleRowParallax))
+onMounted(() => {
+  scrollViewport =
+    contentRoot.value?.closest('.scroll-viewport__scroll') || null
+  scrollViewport?.addEventListener('scroll', scheduleRowParallax, {
+    passive: true,
+  })
+  scheduleRowParallax()
+})
+onBeforeUnmount(() => {
+  scrollViewport?.removeEventListener('scroll', scheduleRowParallax)
+  cancelAnimationFrame(parallaxFrame)
+})
 </script>
 
 <style lang="less" scoped>
@@ -298,36 +298,25 @@ const openCollection = (collectionId: string, element: HTMLElement) => {
 .island-collections-content {
   color: var(--text-color);
   overflow: clip;
-  &.is-embedded {
-    padding: 0;
-    .collection-index {
-      padding: 0 0 24px;
-    }
-    .collection-grid {
-      --card-shelf-gutter: clamp(12px, 2cqw, 28px);
-      --grid-side-padding: clamp(24px, 4cqw, 64px);
-      grid-template-columns: repeat(var(--collection-columns), minmax(0, 1fr));
-    }
-    .collection-section + .collection-section {
-      margin-top: 32px;
-    }
-  }
 }
 
 .collection-index {
-  padding: 54px 0 48px;
+  padding: 0 0 24px;
 }
 
 .collection-tabs {
   --section-entry-delay: 0ms;
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 5;
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
   gap: 8px;
   margin-bottom: -13px;
+
+  &__row {
+    display: contents;
+  }
 }
 
 .collection-section {
@@ -337,10 +326,6 @@ const openCollection = (collectionId: string, element: HTMLElement) => {
   padding: 0;
   isolation: isolate;
 
-  & + & {
-    margin-top: 66px;
-  }
-
   &__head {
     position: relative;
     top: 16px;
@@ -348,37 +333,30 @@ const openCollection = (collectionId: string, element: HTMLElement) => {
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 32px;
     width: max-content;
-    height: calc(23px + 0.6rem);
+    min-height: calc(23px + 0.6rem);
     margin: 0;
     padding: 10px 26px 11px;
     box-sizing: border-box;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-bottom-color: rgba(226, 52, 86, 0.38);
-    background: #191919;
+    border: 0;
+    background: transparent;
     cursor: pointer;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.46);
-    transition: gap 0.25s ease, filter 0.25s ease, border-color 0.25s ease;
+    transition: filter 0.25s ease;
     animation: merch-sign-entry 0.72s cubic-bezier(0.18, 0.78, 0.22, 1)
       backwards;
     animation-delay: calc(var(--section-entry-delay) + 360ms);
 
     &:not(.is-active) {
-      border-bottom-color: rgba(255, 255, 255, 0.12);
       filter: brightness(0.55);
 
-      .collection-section__count span:first-child {
-        color: #aaa;
+      .collection-section__title {
+        color: transparent;
+        -webkit-text-stroke: 1.5px #fff;
       }
 
       &:hover {
         filter: brightness(1);
       }
-    }
-
-    &.is-active {
-      gap: 48px;
     }
 
     &:focus-visible {
@@ -387,59 +365,44 @@ const openCollection = (collectionId: string, element: HTMLElement) => {
     }
   }
 
-  &__head-left {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
   &__title {
     color: #fff;
-    font-family: @cjk;
-    font-size: 0.75rem;
+    font-family: 'UnboundedSans', sans-serif;
+    font-size: 1.5rem;
     font-weight: 900;
     line-height: 1;
     letter-spacing: 1px;
     text-transform: uppercase;
-  }
-
-  &__count {
-    position: relative;
-    top: -1px;
-    display: inline-flex;
-    align-items: baseline;
-    gap: 5px;
-    color: rgba(255, 255, 255, 0.48);
-    font-family: @mono;
-    font-size: 0.85rem;
-    font-weight: 400;
-    line-height: 1;
-
-    span:first-child {
-      color: @red;
-      transition: color 0.25s ease;
-    }
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
   }
 }
 
 .collection-grid {
-  --card-shelf-gutter: clamp(22px, 2.5vw, 42px);
-  --grid-side-padding: clamp(42px, 6vw, 96px);
+  --card-shelf-gutter: clamp(12px, 2cqw, 28px);
+  --grid-side-padding: clamp(24px, 4cqw, 64px);
 
   position: relative;
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--collection-columns), minmax(0, 1fr));
   align-items: end;
   column-gap: var(--card-shelf-gutter);
   row-gap: 0;
   min-height: 280px;
-  padding: clamp(64px, 6vw, 88px) var(--grid-side-padding) 0;
+  padding: clamp(64px, 6vw, 88px) var(--grid-side-padding) 48px;
+
+  :deep(.collection-card-entry),
+  &__row-shelf {
+    translate: 0 var(--collection-row-parallax, 0px);
+  }
 
   :deep(.collection-card-entry) {
     z-index: 4;
     animation: merch-card-entry 0.45s cubic-bezier(0.22, 0.61, 0.36, 1)
       backwards;
     animation-delay: var(--card-entry-delay);
+    &.skip-card-entry {
+      animation: none;
+    }
   }
 
   &__pegboard {
@@ -449,13 +412,13 @@ const openCollection = (collectionId: string, element: HTMLElement) => {
     overflow: hidden;
     background: radial-gradient(
           circle at center,
-          #030305 0 2px,
+          #030303 0 2px,
           rgba(255, 255, 255, 0.035) 2.5px 3px,
           transparent 3.5px
         )
         0 0 / 24px 24px,
-      linear-gradient(90deg, #24242b, #303038 50%, #24242b);
-    box-shadow: inset 0 22px 38px rgba(0, 0, 0, 0.72);
+      linear-gradient(90deg, #252525, #313131 50%, #252525);
+    box-shadow: inset 0 14px 28px rgba(0, 0, 0, 0.4);
     mask-image: linear-gradient(
       to bottom,
       #000 0,
@@ -500,14 +463,14 @@ const openCollection = (collectionId: string, element: HTMLElement) => {
     position: relative;
     z-index: 3;
     grid-column: 1 / -1;
-    height: 90px;
+    height: 45px;
     margin-right: calc(var(--grid-side-padding) * -1);
     margin-left: calc(var(--grid-side-padding) * -1);
     pointer-events: none;
     transform: translateY(var(--row-shelf-translate));
 
     &:not(:last-child) {
-      margin-bottom: 24px;
+      margin-bottom: 12px;
     }
   }
 
@@ -517,6 +480,11 @@ const openCollection = (collectionId: string, element: HTMLElement) => {
     animation: merch-shelf-entry 0.45s cubic-bezier(0.22, 0.61, 0.36, 1)
       backwards;
     animation-delay: calc(var(--section-entry-delay) + 180ms);
+  }
+
+  .skip-shelf-entry &__shelf,
+  .skip-shelf-entry &__row-shelf {
+    animation: none;
   }
 
   &__shelf-surface,
@@ -533,7 +501,7 @@ const openCollection = (collectionId: string, element: HTMLElement) => {
     left: 0;
     height: 22px;
     z-index: 1;
-    background: linear-gradient(to bottom, #34343b, #15151a 78%);
+    background: linear-gradient(to bottom, #353535, #161616 78%);
     box-shadow: inset 0 1px rgba(255, 255, 255, 0.2);
     clip-path: polygon(4% 0, 96% 0, 98% 100%, 2% 100%);
   }
@@ -554,8 +522,8 @@ const openCollection = (collectionId: string, element: HTMLElement) => {
     height: 34px;
     z-index: 2;
     border-top: 1px solid rgba(255, 255, 255, 0.14);
-    background: #0d0d11;
-    box-shadow: 0 12px 26px rgba(0, 0, 0, 0.66);
+    background: #0e0e0e;
+    box-shadow: 0 12px 26px rgba(0, 0, 0, 0.4);
   }
 
   &__shelf-base {
@@ -627,8 +595,7 @@ const openCollection = (collectionId: string, element: HTMLElement) => {
   .collection-grid__pegboard,
   .collection-grid__shelf,
   .collection-grid__row-shelf,
-  .collection-grid :deep(.collection-card-entry),
-  .island-collections-content.has-returned-from-detail {
+  .collection-grid :deep(.collection-card-entry) {
     animation: none;
   }
 }
@@ -650,29 +617,48 @@ const openCollection = (collectionId: string, element: HTMLElement) => {
   }
 }
 
-@media (max-width: 1200px) and (min-width: 901px) {
-  .collection-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
 @media (max-width: 900px) {
-  .island-collections-content {
-    padding-top: 88px;
-  }
+  .collection-tabs.no-rem {
+    top: 16px;
+    display: block;
+    margin-bottom: 0;
+    overflow-x: auto;
 
-  .collection-index {
-    padding-top: 38px;
+    .collection-tabs__row {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      width: max-content;
+      min-width: 100%;
+    }
+
+    .collection-section__head {
+      top: 0;
+      flex: none;
+      min-width: 44px;
+      min-height: 44px;
+      padding: 10px 2px;
+
+      &:not(.is-active) {
+        filter: brightness(0.8);
+
+        .collection-section__title {
+          -webkit-text-stroke-width: 0.5px;
+        }
+      }
+    }
+
+    .collection-section__title {
+      font-family: 'Anton', sans-serif;
+      font-size: clamp(18px, 5.5vw, 24px);
+      letter-spacing: -0.25px;
+      white-space: nowrap;
+    }
   }
 
   .collection-grid {
-    --card-shelf-gutter: 16px;
-    --grid-side-padding: clamp(48px, 14vw, 64px);
-
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: var(--card-shelf-gutter);
     min-height: 220px;
-    padding: 50px var(--grid-side-padding) 0;
+    padding: 80px var(--grid-side-padding) 48px;
 
     &__pegboard {
       background-size: 18px 18px, auto;
@@ -693,7 +679,7 @@ const openCollection = (collectionId: string, element: HTMLElement) => {
 
     &__row-shelf {
       z-index: 1;
-      height: 72px;
+      height: 36px;
     }
 
     &__row-shelf-surface {
@@ -720,15 +706,21 @@ const openCollection = (collectionId: string, element: HTMLElement) => {
   }
 
   .collection-section {
-    & + & {
-      margin-top: 44px;
-    }
-
     &__head {
       height: calc(19px + 0.6rem);
       padding: 8px 20px 9px;
     }
   }
+}
+.collection-detail__caption {
+  padding: 8px;
+  font-size: 13px;
+  text-align: center;
+}
+.collection-detail__empty {
+  padding: 64px 16px;
+  text-align: center;
+  color: var(--text-faint);
 }
 </style>
 
@@ -755,19 +747,79 @@ const openCollection = (collectionId: string, element: HTMLElement) => {
     flex: 1;
   }
   .media-gallery {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(
+      var(--media-gallery-columns, 3),
+      minmax(0, 1fr)
+    );
   }
 }
-</style>
-<style scoped lang="less">
-.collection-detail__caption {
-  padding: 8px;
-  font-size: 13px;
-  text-align: center;
-}
-.collection-detail__empty {
-  padding: 64px 16px;
-  text-align: center;
-  color: var(--text-faint);
+
+// 嵌入卡片的预览按容器分配空间，避免全屏导航和视口高度挤占缩略图。
+.collection-detail-modal.no-rem {
+  .media-gallery--preview {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    height: 100%;
+    min-height: 0;
+  }
+  .media-gallery--preview .media-gallery__toolbar {
+    flex: none;
+    padding-bottom: 12px;
+  }
+  .inline-image-preview {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: 16px;
+  }
+  .inline-image-preview__stage {
+    container-type: size;
+    min-height: 0;
+    height: 100%;
+    --inline-canvas-padding: 20px;
+    --inline-image-max-height: max(
+      1px,
+      calc(100cqh - 40px - var(--inline-info-height, 0px))
+    );
+  }
+  .inline-image-preview__canvas {
+    padding: 20px 112px;
+  }
+  .inline-image-preview__thumbnails {
+    padding: 8px 8px;
+  }
+  .inline-image-preview__thumbnail {
+    flex-basis: 80px;
+    height: 60px;
+  }
+  .inline-image-preview__stage .el-image-viewer__prev,
+  .inline-image-preview__stage .el-image-viewer__next {
+    width: 88px;
+    height: min(82%, 360px);
+  }
+  .inline-image-preview__stage .el-image-viewer__prev {
+    left: 0;
+  }
+  .inline-image-preview__stage .el-image-viewer__next {
+    right: 0;
+  }
+  .safe-image-viewer__nav-label {
+    font-size: 52px;
+  }
+  @media (max-width: 768px) {
+    .inline-image-preview__canvas {
+      padding-inline: 60px;
+    }
+    .inline-image-preview__stage .el-image-viewer__prev,
+    .inline-image-preview__stage .el-image-viewer__next {
+      width: 44px;
+      height: min(78%, 240px);
+    }
+    .safe-image-viewer__nav-label {
+      font-size: 32px;
+    }
+  }
 }
 </style>

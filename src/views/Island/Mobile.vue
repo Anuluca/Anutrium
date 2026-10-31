@@ -23,7 +23,7 @@
       <div
         ref="latestScrollRef"
         class="latest-strip"
-        @scroll="updateLatestScrollState"
+        @scroll.passive="scheduleLatestScrollState"
       >
         <RouterLink
           v-for="page in latestPages"
@@ -153,11 +153,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useResizeObserver } from '@vueuse/core'
 
 import IslandClock from '@/components/IslandClock/index.vue'
 import PageUpdatedStamp from '@/components/PageUpdatedStamp/index.vue'
+import { useFrameTask } from '@/composables/useFrameTask'
 import {
   createIslandPlaceholder,
   splitHarborItemCount,
@@ -202,6 +204,10 @@ const updateLatestScrollState = () => {
   isLatestScrollAtEnd.value =
     maxScrollLeft <= 2 || scrollEl.scrollLeft >= maxScrollLeft - 2
 }
+const { schedule: scheduleLatestScrollState } = useFrameTask(
+  updateLatestScrollState
+)
+useResizeObserver(latestScrollRef, scheduleLatestScrollState)
 
 const resetLatestScroll = () => {
   const scrollEl = latestScrollRef.value
@@ -215,11 +221,6 @@ onMounted(() => {
   nextTick(() => {
     resetLatestScroll()
   })
-  window.addEventListener('resize', updateLatestScrollState)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('resize', updateLatestScrollState)
 })
 
 watch(latestPages, () => {

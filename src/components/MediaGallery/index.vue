@@ -123,7 +123,7 @@
       @switch="previewIndex = $event"
       @open="openViewer"
     >
-      <template v-if="$slots.info" #info="{ index }">
+      <template v-if="showInfo && $slots.info" #info="{ index }">
         <div
           v-if="items[index] && shouldShowMediaInfo(items[index])"
           class="media-gallery__info"
@@ -165,6 +165,11 @@ import { useDocumentVisibility } from '@vueuse/core'
 import SafeImageViewer from '@/components/SafeImageViewer/index.vue'
 import { useImageCincoHover } from '@/composables/useImageCincoHover'
 import { useIntersectionActivation } from '@/composables/useIntersectionActivation'
+import { useNestedSmoothScroll } from '@/composables/useNestedSmoothScroll'
+import {
+  findScanlineScrollRoot,
+  useScrollScanlines,
+} from '@/composables/useScrollScanlines'
 import {
   getCardMobileThumbnailUrl,
   getCardThumbnailUrl,
@@ -218,6 +223,8 @@ const setDisplayMode = async (mode: 'list' | 'preview') => {
 }
 
 const galleryRef = ref<HTMLElement | null>(null)
+useScrollScanlines(() => findScanlineScrollRoot(galleryRef.value))
+useNestedSmoothScroll(() => findScanlineScrollRoot(galleryRef.value))
 const {
   start: startCincoHover,
   leave: leaveCincoHover,
@@ -508,6 +515,7 @@ onBeforeUnmount(() => {
 
 <style lang="less" scoped>
 @import '@/assets/style/mediaCincoHover.less';
+@import '@/assets/style/mediaLoadingPlaceholder.less';
 .media-gallery {
   --media-gallery-columns: 3;
   display: grid;
@@ -689,17 +697,8 @@ onBeforeUnmount(() => {
     overflow: hidden;
 
     &::before {
-      // 参照 Motion Skeleton Shimmer：固定占位区域，仅横向移动明暗渐变。
-      background: linear-gradient(
-        90deg,
-        rgb(255 255 255 / 6%) 25%,
-        rgb(255 255 255 / 12%) 50%,
-        rgb(255 255 255 / 6%) 75%
-      );
-      background-size: 200% 100%;
-      background-position: -200% 0;
+      .media-loading-placeholder();
       opacity: 1;
-      animation: media-placeholder-shimmer 1.5s ease-in-out infinite;
     }
 
     img,
@@ -771,16 +770,6 @@ onBeforeUnmount(() => {
   margin-top: 14px;
   background: rgb(35 35 35 / 40%);
   box-sizing: border-box;
-}
-
-@keyframes media-placeholder-shimmer {
-  from {
-    background-position: -200% 0;
-  }
-
-  to {
-    background-position: 200% 0;
-  }
 }
 
 @keyframes media-gallery-shutter-in {
@@ -910,7 +899,8 @@ onBeforeUnmount(() => {
   .media-gallery__card {
     padding: 10px 5px;
     border-bottom-color: rgba(255, 255, 255, 0.04);
-    --media-gallery-max-height: clamp(150px, 42vw, 220px);
+    /* prettier-ignore */
+    --media-gallery-max-height: clamp(180PX, 48vw, 240PX);
 
     &:nth-of-type(odd) {
       padding-left: 0;
@@ -927,6 +917,12 @@ onBeforeUnmount(() => {
       display: block;
       background: rgba(255, 255, 255, 0.04);
     }
+  }
+
+  .media-gallery__frame {
+    // 保持实际像素下限，避免移动端根字号将行高缩小。
+    /* prettier-ignore */
+    min-height: 180PX;
   }
 
   .media-gallery__info {

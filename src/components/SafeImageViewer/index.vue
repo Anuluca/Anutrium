@@ -67,6 +67,18 @@
         >
           <ElIcon><component :is="tool.icon" /></ElIcon>
         </button>
+        <button
+          v-if="!activeVideo"
+          type="button"
+          class="safe-image-viewer__tool"
+          :aria-label="locale === 'en' ? 'Download image' : '下载图片'"
+          :title="locale === 'en' ? 'Download image' : '下载图片'"
+          :aria-busy="downloading"
+          :disabled="downloading"
+          @click="onToolClick($event, downloadCurrentImage)"
+        >
+          <ElIcon><Download /></ElIcon>
+        </button>
       </div>
     </template>
   </ElImageViewer>
@@ -75,11 +87,12 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Minus, Plus } from '@element-plus/icons-vue'
+import { Download, Minus, Plus } from '@element-plus/icons-vue'
 import { ElIcon, ElImageViewer } from 'element-plus'
 
 import OverlayBackgroundTitle from '@/components/OverlayBackgroundTitle/index.vue'
 import { useOverlayScrollLock } from '@/composables/useOverlayScrollLock'
+import { showErrorMessage, showSuccessMessage } from '@/utils/elementMessage'
 import { flashActionButton } from '@/utils/flashActionButton'
 import { createImageViewerGeometry } from '@/utils/imageViewerGeometry'
 import { bindImageViewerGestures } from '@/utils/imageViewerGestures'
@@ -135,6 +148,56 @@ let unbindNavigation: (() => void) | undefined
 let unbindGestures: (() => void) | undefined
 const activeIndex = ref(props.initialIndex)
 const closing = ref(false)
+const downloading = ref(false)
+let downloadController: AbortController | undefined
+let downloadMessage: ReturnType<typeof showSuccessMessage> | undefined
+const downloadCurrentImage = async () => {
+  const url = props.urlList[activeIndex.value]
+  if (!url || activeVideo.value || downloading.value) return
+  downloading.value = true
+  downloadController = new AbortController()
+  try {
+    // 固定点击时的原图地址；Blob URL 使跨域图片也能保存，而不是跳转到图片页面。
+    const filename = decodeURIComponent(
+      new URL(url, window.location.href).pathname.split('/').pop() || 'image'
+    ).replace(/[\\/:*?"<>|]/g, '_')
+    // 避免复用 img 无跨域头的缓存响应，下载请求需重新进行 CORS 校验。
+    const response = await fetch(url, {
+      signal: downloadController.signal,
+      cache: 'no-store',
+    })
+    if (!response.ok)
+      throw new Error(`Image download failed: ${response.status}`)
+    const blobUrl = URL.createObjectURL(await response.blob())
+    const link = document.createElement('a')
+    link.href = blobUrl
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    downloadMessage?.close()
+    downloadMessage = showSuccessMessage(
+      locale.value === 'en' ? 'Download successful' : '下载成功',
+      { appendTo: wrapper || document.body }
+    )
+    // 延迟释放，给浏览器留出接管下载的时间。
+    window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000)
+  } catch (error) {
+    if (!(error instanceof DOMException && error.name === 'AbortError')) {
+      downloadMessage?.close()
+      downloadMessage = showErrorMessage(
+        locale.value === 'en'
+          ? 'Image download failed. Please try again.'
+          : '图片下载失败，请重试',
+        { appendTo: wrapper || document.body }
+      )
+    }
+  } finally {
+    downloading.value = false
+    downloadController = undefined
+  }
+}
+
 const backgroundTitle = computed(() => props.titles[activeIndex.value]?.trim())
 const videoPlayer = ref<HTMLVideoElement | null>(null)
 const isImageLoading = ref(true)
@@ -363,6 +426,8 @@ onMounted(async () => {
   document.addEventListener('keydown', recordSwitchDirection, true)
 })
 onBeforeUnmount(() => {
+  downloadController?.abort()
+  downloadMessage?.close()
   videoPlayer.value?.pause()
   for (const animation of navigationFlashes.values()) animation.cancel()
   navigationFlashes.clear()
@@ -397,6 +462,7 @@ useOverlayScrollLock('safe-image-viewer', () => !props.inline)
 </script>
 
 <style lang="less">
+@import '@/assets/style/mediaLoadingPlaceholder.less';
 .el-image-viewer__wrapper {
   .safe-image-viewer__background-title {
     z-index: 0;
@@ -409,6 +475,9 @@ useOverlayScrollLock('safe-image-viewer', () => !props.inline)
 
     .el-image-viewer__img {
       pointer-events: auto;
+      -webkit-touch-callout: default;
+      -webkit-user-select: auto;
+      user-select: auto;
     }
   }
 }
@@ -528,28 +597,12 @@ useOverlayScrollLock('safe-image-viewer', () => !props.inline)
   width: min(72vw, 960px);
   height: min(66vh, 640px);
   transform: translate(-50%, -50%);
-  background: linear-gradient(
-    90deg,
-    rgb(255 255 255 / 6%) 25%,
-    rgb(255 255 255 / 12%) 50%,
-    rgb(255 255 255 / 6%) 75%
-  );
-  background-size: 200% 100%;
-  animation: viewer-placeholder-shimmer 1.5s ease-in-out infinite;
-  pointer-events: none;
+  .media-loading-placeholder();
 }
 .el-image-viewer__wrapper:has(.safe-image-viewer__placeholder) {
   .el-image-viewer__img,
   .safe-image-viewer__corners {
     visibility: hidden;
-  }
-}
-@keyframes viewer-placeholder-shimmer {
-  from {
-    background-position: -200% 0;
-  }
-  to {
-    background-position: 200% 0;
   }
 }
 @media (prefers-reduced-motion: reduce) {

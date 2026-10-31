@@ -145,8 +145,10 @@ const animateFromOrigin = (closing = false) => {
   originAnimation = dialog.animate(
     closing ? [expanded, collapsed] : [collapsed, expanded],
     {
-      duration: closing ? 840 : 920,
-      easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+      duration: closing ? 840 : 420,
+      easing: closing
+        ? 'cubic-bezier(0.22, 1, 0.36, 1)'
+        : 'cubic-bezier(0.3, 0, 0.25, 1)',
       fill: closing ? 'forwards' : 'none',
     }
   )
@@ -302,7 +304,7 @@ const handleClosed = () => {
   transition-property: background-color;
 }
 .crt-effect-enter-active:has(.modal-wrapper-dialog--origin-motion) {
-  transition-duration: 920ms;
+  transition-duration: 420ms;
 }
 .crt-effect-leave-active:has(.modal-wrapper-dialog--origin-motion) {
   transition-duration: 840ms;
@@ -322,7 +324,8 @@ const handleClosed = () => {
 
   position: relative;
   z-index: 1;
-  background: #0f0d11 !important;
+  background: #050505 !important;
+  color: var(--text-color);
   border: 1px solid color-mix(in srgb, var(--modal-accent) 35%, transparent) !important;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.85) !important;
 
@@ -341,6 +344,7 @@ const handleClosed = () => {
     display: none;
   }
   .el-dialog__body {
+    color: inherit;
     display: flex;
     min-height: 0;
     flex-direction: column;
@@ -438,7 +442,7 @@ const handleClosed = () => {
 }
 
 .el-overlay {
-  background: rgba(4, 2, 6, 0.85) !important;
+  background: rgba(4, 4, 4, 0.85) !important;
   position: fixed !important;
   top: 0 !important;
   left: 0 !important;

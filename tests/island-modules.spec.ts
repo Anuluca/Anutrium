@@ -330,7 +330,7 @@ test('Island opens mirrored inline content and preserves leave geometry', async 
           .querySelector('.island-item__title')!
           .getBoundingClientRect()
         const count = item
-          .querySelector('.section-count')!
+          .querySelector('.number-count')!
           .getBoundingClientRect()
         return {
           groupRight: group.right,

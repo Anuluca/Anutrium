@@ -33,7 +33,11 @@
     </div>
 
     <div class="tl-card__body">
-      <div class="tl-card__tags">
+      <h3 class="tl-card__title" :class="locale === 'zhCn' && 'cn-font'">
+        {{ tool.title }}
+      </h3>
+      <p class="tl-card__sub">{{ tool.sub }}</p>
+      <div v-if="tool.tags.length" class="tl-card__tags">
         <button
           v-for="tag in tool.tags"
           :key="tag"
@@ -41,19 +45,9 @@
           type="button"
           @click.stop="emit('tag-select', tag)"
         >
-          {{ tag }}
+          [<span class="tl-card__tag-text">{{ tag }}</span
+          >]
         </button>
-      </div>
-      <h3 class="tl-card__title" :class="locale === 'zhCn' && 'cn-font'">
-        {{ tool.title }}
-      </h3>
-      <p class="tl-card__sub">{{ tool.sub }}</p>
-      <div class="tl-card__footer">
-        <span class="tl-card__status tl-card__status--live">
-          <span class="tl-card__status-dot" />
-          {{ tool.statusLabel }}
-        </span>
-        <span class="tl-card__cta">USE →</span>
       </div>
 
       <div class="tl-card__corner tl-card__corner--tl" />
@@ -100,7 +94,6 @@ const { locale } = useI18n()
 @blue-glow: rgba(60, 93, 232, 0.08);
 @bg: #0d0608;
 @surface: #140a0c;
-@border: rgba(255, 255, 255, 0.159);
 @border2: rgba(255, 255, 255, 0.069);
 @text: #ffffff;
 @muted: rgb(83, 83, 83);
@@ -140,13 +133,8 @@ const { locale } = useI18n()
       color: var(--card-accent);
     }
 
-    .tl-card__index-num,
-    .tl-card__cta {
+    .tl-card__index-num {
       color: var(--card-accent);
-    }
-
-    .tl-card__status-dot {
-      animation: pulse 2s ease-in-out infinite;
     }
 
     .tl-card__scan {
@@ -156,10 +144,6 @@ const { locale } = useI18n()
     .tl-card__img {
       transform: scale(1.04) translateY(-4px);
       filter: none;
-    }
-
-    .tl-card__cta {
-      letter-spacing: 0.2em;
     }
 
     .tl-card__corner {
@@ -288,22 +272,25 @@ const { locale } = useI18n()
 }
 
 .tl-card__tags {
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.159);
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 12px;
 }
 
 .tl-card__tag {
   display: inline-block;
   align-self: flex-start;
-  padding: 2px 8px;
-  border: 1px solid var(--card-accent);
+  padding: 0;
+  border: none;
   border-radius: 0;
   color: var(--card-accent);
   background: transparent;
   cursor: pointer;
   font-family: @mono;
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: 0.22em;
   transition: color 0.2s ease, background 0.2s ease;
 
@@ -313,61 +300,31 @@ const { locale } = useI18n()
   }
 }
 
+.tl-card__tag-text {
+  margin-inline: 0.22em;
+  letter-spacing: 0.1em;
+}
+
 .tl-card__title {
+  width: 108.6957%;
   margin: 2px 0 0;
   color: @text;
   font-family: 'UnboundedSans';
-  font-size: 17px;
-  letter-spacing: 0.04em;
+  font-size: 24px;
+  letter-spacing: -0.04em;
   line-height: 1.15;
   text-transform: uppercase;
+  transform: scaleX(0.92);
+  transform-origin: left center;
 }
 
 .tl-card__sub {
-  height: 40px;
+  min-height: 3.2em;
   margin: 0;
   color: @muted;
-  font-size: 12px;
+  font-size: 14px;
+  font-weight: 900;
   line-height: 1.6;
-}
-
-.tl-card__footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 8px;
-  padding-top: 12px;
-  border-top: 1px solid @border;
-}
-
-.tl-card__status {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: #4ade80;
-  font-family: @mono;
-  font-size: 9px;
-  letter-spacing: 0.18em;
-
-  &-dot {
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: #4ade80;
-    box-shadow: 0 0 6px #4ade80;
-  }
-}
-
-.shared-tool-card:focus-within .tl-card__status-dot {
-  animation: pulse 2s ease-in-out infinite;
-}
-
-.tl-card__cta {
-  color: @faint;
-  font-family: @mono;
-  font-size: 10px;
-  letter-spacing: 0.15em;
-  transition: color 0.2s ease, letter-spacing 0.3s ease;
 }
 
 .tl-card__corner {
@@ -429,16 +386,6 @@ const { locale } = useI18n()
   }
 }
 
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.4;
-  }
-}
-
 @media screen and (max-aspect-ratio: 1) {
   .tl-card__index {
     top: -26px;
@@ -467,33 +414,21 @@ const { locale } = useI18n()
   }
 
   .tl-card__tags {
-    gap: 8px;
+    margin-top: 10.6667px;
+    padding-top: 16px;
+    gap: 16px;
   }
 
   .tl-card__tag {
-    font-size: 13.2px;
-  }
-
-  .tl-card__title {
-    font-size: 24.9333px;
-  }
-
-  .tl-card__sub {
-    height: 58.6667px;
     font-size: 17.6px;
   }
 
-  .tl-card__footer {
-    margin-top: 10.6667px;
-    padding-top: 16px;
+  .tl-card__title {
+    font-size: 35.2px;
   }
 
-  .tl-card__status {
-    font-size: 13.2px;
-  }
-
-  .tl-card__cta {
-    font-size: 14.6667px;
+  .tl-card__sub {
+    font-size: 20.5333px;
   }
 }
 </style>

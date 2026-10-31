@@ -21,7 +21,7 @@
             :title-en="group.titleEn"
           >
             <template #actions>
-              <SectionCount :count="group.totalCount" />
+              <NumberCount :count="group.totalCount" />
             </template>
             <div class="vlog-grid">
               <div
@@ -73,7 +73,7 @@ import {
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
-import SectionCount from '@/components/SectionCount/index.vue'
+import NumberCount from '@/components/NumberCount/index.vue'
 import Sections from '@/components/Sections/index.vue'
 import TravelMap from '@/components/TravelMap/index.vue'
 import VlogCard from '@/components/VlogCard/index.vue'

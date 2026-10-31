@@ -1,5 +1,4 @@
 import game from './Game/Game'
-import essaysTalks from './Notes/essaysTalks'
 import studyNotes from './Notes/studyNotes'
 import imageLog from './Photography/imageLog'
 import merch from './Photography/merch'
@@ -167,7 +166,6 @@ const islandDynamic = {
   },
   notes: {
     studyNotes,
-    essaysTalks,
   },
   game,
   latestPages,

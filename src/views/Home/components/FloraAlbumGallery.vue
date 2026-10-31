@@ -870,7 +870,8 @@ defineExpose({ closeExpanded })
     }
 
     :deep(.media-gallery__card) {
-      --media-gallery-max-height: clamp(180px, 52vw, 270px);
+      /* prettier-ignore */
+      --media-gallery-max-height: clamp(180PX, 52vw, 270PX);
     }
 
     &.is-expanded {

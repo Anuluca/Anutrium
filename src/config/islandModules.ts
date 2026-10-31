@@ -13,7 +13,7 @@ export const islandModules = {
   },
   NOTES: {
     routeName: 'ATRIUM_NOTES',
-    englishTitle: 'NOTES&CHATS',
+    englishTitle: 'NOTES',
     menuTitle: 'NOTES',
     path: '/atrium/notes',
     group: 'ideas',
@@ -42,8 +42,8 @@ export const islandModules = {
     path: '/atrium/collections',
     group: 'interests',
     side: 'right',
-    desktopX: 0.38,
-    mobileX: 0.6,
+    desktopX: 0.36,
+    mobileX: 0.58,
     desktopY: 0.2,
     mobileY: 0.04,
   },
@@ -60,6 +60,7 @@ export const islandModuleAtPath = (path: string): IslandModuleId | null =>
   islandModuleIdsByPath.get(path.replace(/\/+$/, '')) ?? null
 
 export const ISLAND_MODEL_DURATION = 2.2
+export const ISLAND_MODEL_RETURN_DURATION = 1.8
 export const ISLAND_WINDOW_DURATION = 0.8
 export const ISLAND_RETURN_WINDOW_DURATION = 1.75
 

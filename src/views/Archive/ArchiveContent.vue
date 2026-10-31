@@ -13,6 +13,7 @@
       :data-company="group.company"
     >
       <Sections
+        show-english-title
         :navigation="!embedded"
         :reveal="!embedded"
         :section-number="index + 1"
@@ -20,7 +21,7 @@
         :title-en="group.companyEn"
       >
         <template #actions>
-          <SectionCount :count="group.works.length" label="PROJECTS" />
+          <NumberCount :count="group.works.length" />
         </template>
         <div class="works-grid">
           <WorkCard
@@ -37,6 +38,7 @@
 
     <section class="misc-section">
       <Sections
+        show-english-title
         :navigation="!embedded"
         :reveal="!embedded"
         :section-number="companyGroups.length + 1"
@@ -44,7 +46,7 @@
         title-en="OTHER"
       >
         <template #actions>
-          <SectionCount :count="miscWorks.length" label="PROJECTS" />
+          <NumberCount :count="miscWorks.length" />
         </template>
         <div class="misc-grid">
           <WorkCard
@@ -87,7 +89,7 @@
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ArchiveAvailabilityPanel from '@/components/ArchiveAvailabilityPanel/index.vue'
-import SectionCount from '@/components/SectionCount/index.vue'
+import NumberCount from '@/components/NumberCount/index.vue'
 import Sections from '@/components/Sections/index.vue'
 import WorkCard from '@/components/WorkCard/index.vue'
 import WorkDetailModal from '@/components/WorkDetailModal/index.vue'

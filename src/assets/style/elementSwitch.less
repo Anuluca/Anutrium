@@ -1,0 +1,36 @@
+// Element Plus 开关共用方形轨道与外凸滑块，不改动依赖包源码。
+body .el-switch {
+  height: ~'26PX';
+  .el-switch__input {
+    inset: 0;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+  }
+  .el-switch__core {
+    min-width: ~'46PX';
+    height: ~'14PX';
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    overflow: visible;
+  }
+  .el-switch__action {
+    top: calc(50% - ~'12PX');
+    left: 0;
+    width: ~'18PX';
+    height: ~'24PX';
+    border-radius: 0;
+    box-shadow: var(--switch-thumb-shadow, 0 2px 8px rgba(0, 0, 0, 0.7));
+  }
+  &.is-checked .el-switch__action {
+    left: calc(100% - ~'18PX');
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .el-switch__core,
+    .el-switch__action {
+      transition: none;
+    }
+  }
+}

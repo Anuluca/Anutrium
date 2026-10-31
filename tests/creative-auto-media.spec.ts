@@ -59,7 +59,7 @@ test('both creative galleries poll new and deleted images, preserve data on fail
       page
         .locator(selector)
         .locator('xpath=ancestor::section[1]')
-        .locator('.section-count__value')
+        .locator('.number-count')
     ).toHaveText('03')
   }
   expect(requests).toBe(2)

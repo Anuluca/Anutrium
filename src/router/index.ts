@@ -7,10 +7,12 @@ import type {
 import NProgress from 'nprogress'
 import { gsap } from 'gsap'
 import { pageThemeColors } from '@/config/pageThemes'
+import { PHOTO_ROUTE_PATH } from '@/config/atriumPhoto'
 import { islandModuleAtPath, islandModules } from '@/config/islandModules'
 import {
   isTempleRouteName,
   needsFreshTempleScene,
+  needsTempleRouteCurtain,
   parseTempleExpanded,
   templeCategoryById,
   type TempleCategoryId,
@@ -25,10 +27,13 @@ import { templeSceneHost } from '@/views/Home/templeSceneHost'
 import { consumeJourneyReturnState } from '@/utils/journeyReturnState'
 import { readTempleSession } from '@/utils/templeSession'
 import {
+  blockRouteContent,
   cancelRouteCurtain,
   coverRouteCurtain,
+  retargetRouteCurtain,
   revealRouteCurtain,
 } from '@/utils/routeCurtain'
+import { revealTempleRouteCurtain } from '@/utils/templeRouteTransition'
 
 import i18n from '../locales'
 import { ensureRouteMessages } from '../locales/routeMessages'
@@ -263,6 +268,22 @@ export const routes: RouteConfig[] = [
       pageFooter: true,
       pageLayout: 'main',
       ifShow: true,
+    },
+  },
+  {
+    path: PHOTO_ROUTE_PATH,
+    name: 'ATRIUM_PHOTO',
+    component: () => import('@/views/Home/index.vue'),
+    meta: {
+      updatedAt: '2026-10-31',
+      activeMenu: '/atrium',
+      starBackground: 'default',
+      titleEn: 'PHOTO',
+      titleCn: '拍照模式',
+      fullFooter: false,
+      pageFooter: true,
+      pageLayout: 'main',
+      ifShow: false,
     },
   },
   ...Object.values(islandModules).map<RouteConfig>((module) => ({
@@ -732,9 +753,16 @@ export const installRouterGuards = (router: Router) => {
       if (
         from.matched.length > 0 &&
         to.path !== from.path &&
-        !(isTempleRouteName(to.name) && isTempleRouteName(from.name))
+        (!(isTempleRouteName(to.name) && isTempleRouteName(from.name)) ||
+          needsTempleRouteCurtain(
+            from.path,
+            to.path,
+            from.query.module,
+            to.query.module,
+            useTempleNavigation().activeSelection
+          ))
       )
-        void coverRouteCurtain(to.fullPath)
+        void coverRouteCurtain(to.fullPath, isTempleRouteName(to.name))
       if (from.matched.length > 0 && to.fullPath !== from.fullPath) {
         finishRouteCursorLoading()
         cursorState().startLoading(ROUTE_CURSOR_LOADING_SOURCE)
@@ -806,13 +834,6 @@ export const installRouterGuards = (router: Router) => {
         reloadInitialScene ||
         !!navigation.entryModule ||
         (!!from.name && !isTempleRouteName(from.name))
-      if (
-        isTempleRouteName(from.name) &&
-        !needsFreshTempleScene(from.path, to.path, to.query.module) &&
-        explicitModule !== navigation.activeSelection &&
-        (to.path !== from.path || to.query.module !== from.query.module)
-      )
-        navigation.request(explicitModule, expanded ?? false)
     }
     await ensureRouteMessages(to.name)
     return true
@@ -823,10 +844,18 @@ export const installRouterGuards = (router: Router) => {
       typeof window === 'undefined' ||
       !from.matched.length ||
       to.path === from.path ||
-      (isTempleRouteName(to.name) && isTempleRouteName(from.name))
+      (isTempleRouteName(to.name) &&
+        isTempleRouteName(from.name) &&
+        !needsTempleRouteCurtain(
+          from.path,
+          to.path,
+          from.query.module,
+          to.query.module,
+          useTempleNavigation().activeSelection
+        ))
     )
       return
-    await coverRouteCurtain(to.fullPath)
+    await coverRouteCurtain(to.fullPath, isTempleRouteName(to.name))
   })
 
   router.afterEach((to, from, failure) => {
@@ -839,10 +868,31 @@ export const installRouterGuards = (router: Router) => {
       return
     }
 
-    routeCursorFallbackTimer = window.setTimeout(finishRouteCursorLoading, 1500)
+    // 弹窗等参数更新不会触发页面入场钩子，无需等待换页动画的兜底计时器。
+    if (to.path === from.path && to.query.module === from.query.module) {
+      finishRouteCursorLoading()
+    } else {
+      routeCursorFallbackTimer = window.setTimeout(
+        finishRouteCursorLoading,
+        1500
+      )
+    }
 
     syncSeoMeta(to)
     const navigation = useTempleNavigation()
+    // 地址提交后再选择场景，避免 select 回调把三级目标覆盖为 /atrium。
+    if (
+      isTempleRouteName(to.name) &&
+      isTempleRouteName(from.name) &&
+      !needsFreshTempleScene(from.path, to.path, to.query.module) &&
+      (to.path !== from.path || to.query.module !== from.query.module)
+    ) {
+      const explicitModule =
+        templeModuleAtPath(to.path) ||
+        templeModuleAtPath(`/${String(to.query.module || '')}`)
+      if (explicitModule !== navigation.activeSelection)
+        navigation.request(explicitModule, navigation.entryExpanded ?? false)
+    }
     // 同一模块只改查询参数时不重选方尖碑，否则场景会把重复选择当作退出。
     if (
       isTempleRouteName(to.name) &&
@@ -858,7 +908,14 @@ export const installRouterGuards = (router: Router) => {
         ? (navigation.selected || navigation.entryModule)?.toUpperCase()
         : undefined
     )
-    void revealRouteCurtain(to.fullPath)
+    if (isTempleRouteName(to.name) && isTempleRouteName(from.name)) {
+      retargetRouteCurtain(from.fullPath, to.fullPath)
+      // 首页内部切换保留页面与 canvas，让场景在遮罩内完成构图，避免先卸载再露出空帧。
+      void revealTempleRouteCurtain(to.fullPath)
+    } else {
+      blockRouteContent(to.fullPath)
+      void revealRouteCurtain(to.fullPath)
+    }
   })
 
   router.onError(() => {

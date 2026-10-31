@@ -763,6 +763,17 @@ onUnmounted(() => {
   }
 }
 @media (max-width: 768px) {
+  .bottom-text.no-rem {
+    .footer-license,
+    .footer-copyright {
+      font-size: 9px;
+      line-height: 10px;
+    }
+    .footer-logo-container {
+      transform: translateY(-7px) scale(1.12);
+      transform-origin: center;
+    }
+  }
   .page-footer-home.no-rem .page-footer-home__social {
     :deep(.footer-social-links) {
       flex-wrap: wrap;
@@ -776,7 +787,8 @@ onUnmounted(() => {
     font-family: 'Anton', sans-serif;
     font-size: 10px;
     .footer-license {
-      font-size: 9px;
+      font-size: 7px;
+      line-height: 10px;
     }
     p {
       width: 100%;
@@ -784,7 +796,8 @@ onUnmounted(() => {
       overflow-wrap: anywhere;
     }
     .footer-copyright {
-      font-size: clamp(8.5px, 2.65vw, 10px);
+      font-size: clamp(7px, 2.1vw, 8px);
+      line-height: 10px;
     }
   }
 }

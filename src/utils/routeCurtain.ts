@@ -1,7 +1,6 @@
-import { h, nextTick, render } from 'vue'
+import { h, ref, render } from 'vue'
 
 import Logo from '@/components/Logo/index.vue'
-import { useSiteLoading } from '@/stores/siteLoading'
 
 import { setSmoothScrollLocked } from './smoothScroll'
 
@@ -20,8 +19,14 @@ interface RouteCurtain {
 }
 
 let active: RouteCurtain | undefined
-const frame = () =>
-  new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+export const routeContentBlocked = ref(false)
+
+export const isRouteCurtainCovered = (target: string) =>
+  active?.target === target && active.element.dataset.phase === 'covered'
+
+export const blockRouteContent = (target: string) => {
+  if (active?.target === target) routeContentBlocked.value = true
+}
 
 const coveredTransform = 'translateX(0%) skewX(12deg)'
 // 描边使用真实线长，避免固定 600 单位的虚线提前画完后继续空转。
@@ -53,6 +58,14 @@ export const cancelRouteCurtain = (target?: string) => {
   render(null, curtain.logo)
   curtain.element.remove()
   setSmoothScrollLocked('route-curtain', false)
+  routeContentBlocked.value = false
+}
+
+// 首页资源等待期间，首页内继续导航应沿用同一个遮罩并取消旧的揭幕请求。
+export const retargetRouteCurtain = (previous: string, target: string) => {
+  if (!active || active.target !== previous) return
+  active.target = target
+  active.revision++
 }
 
 const animate = async (
@@ -63,6 +76,7 @@ const animate = async (
 ) => {
   const surface = property === 'clipPath' ? curtain.element : curtain.panel
   surface.style[property] = to
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
   const animation = surface.animate(
     [{ [property]: from }, { [property]: to }],
     { duration: 420, easing: 'cubic-bezier(0.65, 0, 0.35, 1)' }
@@ -143,8 +157,17 @@ const animateLogo = async (curtain: RouteCurtain) => {
   }
 }
 
-export const coverRouteCurtain = async (target: string) => {
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+export const coverRouteCurtain = async (
+  target: string,
+  coverReducedMotion = false
+) => {
+  const reducedMotion = window.matchMedia(
+    '(prefers-reduced-motion: reduce)'
+  ).matches
+  if (reducedMotion && !coverReducedMotion) {
+    cancelRouteCurtain()
+    return
+  }
   if (active) {
     // beforeEach 提前启动，beforeResolve 只等待同一次覆盖，不重播动画。
     if (active.target === target) return active.covered
@@ -238,6 +261,13 @@ export const coverRouteCurtain = async (target: string) => {
   }
   active = curtain
   setSmoothScrollLocked('route-curtain', true)
+  if (reducedMotion) {
+    panel.style.transform = coveredTransform
+    logo.style.opacity = '1'
+    element.dataset.phase = 'covered'
+    curtain.covered = Promise.resolve()
+    return curtain.covered
+  }
   curtain.covered = (async () => {
     await animate(curtain, panel.style.transform, coveredTransform)
     if (active !== curtain || curtain.revision !== 0) return
@@ -256,17 +286,6 @@ export const revealRouteCurtain = async (target: string) => {
   const revision = curtain.revision
   const current = () => active === curtain && curtain.revision === revision
   await curtain.covered
-  await nextTick()
-  // out-in 离场、挂载新页面以及滚动恢复完成后，等待新页登记的关键资源任务。
-  for (let i = 0; i < 4 && current(); i++) await frame()
-  const loading = useSiteLoading()
-  // 慢网下始终保留遮罩和 Logo；资源失败由任务和 router.onError 处理，不能超时揭开半成品页面。
-  let readyFrames = 0
-  while (current() && readyFrames < 2) {
-    readyFrames =
-      loading.pending || !loading.presentationReady ? 0 : readyFrames + 1
-    await frame()
-  }
   if (!current()) return
   // 保持呼吸当前透明度，避免加载完成时亮度跳变；无需等待呼吸周期结束即可擦除。
   curtain.logoBreath?.pause()

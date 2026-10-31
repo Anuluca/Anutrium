@@ -1,3 +1,18 @@
+.tool-grid() {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 2fr);
+  gap: 30px 0;
+  align-items: stretch;
+
+  > * {
+    min-width: 0;
+  }
+
+  @media (max-width: 900px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .font-squish(@origin: center) {
   display: inline-block;
   font-family: 'STSong', serif;

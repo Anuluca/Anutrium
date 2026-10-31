@@ -1059,7 +1059,15 @@ test('statue inscription overlaps letter reveals linearly and fades only after r
     expect((bottom - targetBottom) * direction).toBeLessThanOrEqual(1)
     previousBottom = bottom
     await expect(stage).toHaveAttribute('data-statue-label-reveal', '1.000')
+    if (i < 16)
+      await expect(stage).toHaveAttribute(
+        'data-statue-welcome-opacity',
+        '0.000'
+      )
   }
+  expect(
+    Number(await stage.getAttribute('data-statue-welcome-opacity'))
+  ).toBeGreaterThan(0)
   // 点击后首帧应仍保持半身裁切；随后裁切面与模型上升连续推进。
   expect(closingStates[0].clipHeight).toBeCloseTo(initialModel.clipHeight, 2)
   expect(closingStates[0].statueY).toBeCloseTo(initialModel.statueY, 2)

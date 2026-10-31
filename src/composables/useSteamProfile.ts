@@ -112,15 +112,11 @@ export const useSteamProfile = () => {
       (first, second) => second.playtime_forever - first.playtime_forever
     )
   )
-  const gameListItems = computed<SteamGameListItem[]>(() =>
+  const gameListItems = computed(() =>
     sortedGames.value.map((game, index) => ({
       ...game,
       indexLabel: String(index + 1).padStart(3, '0'),
-      lastPlayedLabel: game.rtime_last_played
-        ? formatDate(game.rtime_last_played)
-        : '',
       normalizedName: game.name.toLocaleLowerCase(formattingLocale.value),
-      playtimeLabel: formatPlaytime(game.playtime_forever),
     }))
   )
   const filteredGames = computed(() => {
@@ -133,8 +129,15 @@ export const useSteamProfile = () => {
       game.normalizedName.includes(query)
     )
   })
-  const visibleGames = computed(() =>
-    filteredGames.value.slice(0, visibleGameCount.value)
+  const visibleGames = computed<SteamGameListItem[]>(() =>
+    // 搜索只需要名称，日期与时长仅为当前展示的条目格式化。
+    filteredGames.value.slice(0, visibleGameCount.value).map((game) => ({
+      ...game,
+      lastPlayedLabel: game.rtime_last_played
+        ? formatDate(game.rtime_last_played)
+        : '',
+      playtimeLabel: formatPlaytime(game.playtime_forever),
+    }))
   )
   const recentGames = computed<SteamRecentGameItem[]>(() =>
     (steamData.value?.recentGames?.games ?? [])

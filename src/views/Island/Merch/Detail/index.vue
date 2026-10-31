@@ -39,31 +39,21 @@ import MediaGallery, {
 } from '@/components/MediaGallery/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
 
-interface MerchMedia extends GalleryMedia {
-  url: string
-  title?: string
-}
-
-interface MerchCollection {
-  id: string
-  title: string
-  cover?: string
-  photos: MerchMedia[]
-}
-
-type MerchGroups = Record<string, MerchCollection[]>
+import type { MerchCollection, MerchGroups } from '@/types/merch'
 
 const route = useRoute()
 const router = useRouter()
 const { t, tm } = useI18n()
 const collectionId = computed(() => route.params.collectionId as string)
-const collection = computed(() => {
-  const collections = Object.values(
-    tm('island.modules.photography.merch.data') as MerchGroups
-  ).flat()
-
-  return collections.find((item) => item.id === collectionId.value)
+// 数据或语言变化时重建索引；仅切换详情参数时直接复用。
+const collectionIndex = computed(() => {
+  const groups = tm('island.modules.photography.merch.data') as MerchGroups
+  const index = new Map<string, MerchCollection>()
+  for (const collections of Object.values(groups))
+    for (const item of collections) index.set(item.id, item)
+  return index
 })
+const collection = computed(() => collectionIndex.value.get(collectionId.value))
 
 const getMediaLabel = (media: GalleryMedia) =>
   media.title || t('island.modules.photography.merch.title')

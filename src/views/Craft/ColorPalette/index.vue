@@ -133,10 +133,21 @@ import ToolPanelCorners from '@/components/ToolPanelCorners/index.vue'
 
 const previewUrl = ref<string>('')
 const extractedColors = ref<string[]>([])
-const isExtracting = ref(false)
 const copied = ref(false)
 const copiedColor = ref('')
 let copiedColorTimer: number | null = null
+let copiedTimer: number | undefined
+let pendingImage: HTMLImageElement | undefined
+
+const releaseImage = () => {
+  if (pendingImage) {
+    pendingImage.onload = null
+    pendingImage.onerror = null
+    pendingImage.src = ''
+    pendingImage = undefined
+  }
+  if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)
+}
 
 const recommendedTools = [
   { label: '配色提取器', path: '/colorPalette' },
@@ -193,20 +204,26 @@ const handleDrop = (e: DragEvent) => {
 }
 
 const processImage = (file: File) => {
-  isExtracting.value = true
-  const reader = new FileReader()
-  reader.onload = (event) => {
-    const src = event.target?.result as string
-    previewUrl.value = src
-    analyzeColors(src)
-  }
-  reader.readAsDataURL(file)
+  if (!file.type.startsWith('image/')) return
+  releaseImage()
+  // 预览与取色共用 Blob URL，避免把整张照片复制成 Base64 字符串。
+  previewUrl.value = URL.createObjectURL(file)
+  extractedColors.value = []
+  analyzeColors(previewUrl.value)
 }
 
 const analyzeColors = (src: string) => {
   const img = new Image()
-  img.src = src
+  pendingImage = img
+  img.onerror = () => {
+    img.onload = null
+    img.onerror = null
+    pendingImage = undefined
+  }
   img.onload = () => {
+    img.onload = null
+    img.onerror = null
+    pendingImage = undefined
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d')
     if (!ctx) return
@@ -239,8 +256,8 @@ const analyzeColors = (src: string) => {
 
     const sorted = [...colorMap.entries()].sort((a, b) => b[1] - a[1])
     extractedColors.value = sorted.slice(0, 5).map((item) => item[0])
-    isExtracting.value = false
   }
+  img.src = src
 }
 
 const rgbToHex = (r: number, g: number, b: number) => {
@@ -284,7 +301,8 @@ const exportCssVariables = async () => {
   try {
     await navigator.clipboard.writeText(cssVariablesText.value)
     copied.value = true
-    setTimeout(() => {
+    window.clearTimeout(copiedTimer)
+    copiedTimer = window.setTimeout(() => {
       copied.value = false
     }, 2000)
   } catch (err) {
@@ -293,6 +311,8 @@ const exportCssVariables = async () => {
 }
 
 onBeforeUnmount(() => {
+  releaseImage()
+  window.clearTimeout(copiedTimer)
   if (copiedColorTimer !== null) {
     window.clearTimeout(copiedColorTimer)
   }
@@ -320,10 +340,7 @@ onBeforeUnmount(() => {
   animation: tacticalIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s both;
 }
 .pt-grid {
-  display: grid;
-  grid-template-columns: 5fr 2fr;
-  gap: 30px 0;
-  align-items: stretch;
+  .tool-grid();
 }
 
 .pt-panel {
@@ -661,9 +678,6 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 900px) {
-  .pt-grid {
-    grid-template-columns: 1fr;
-  }
   .pt-panel,
   .right-panel {
     min-height: 450px;

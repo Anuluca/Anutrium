@@ -8,6 +8,7 @@ const props = withDefaults(
     code?: string
     title?: string
     actionLabel?: string
+    clickToReturn?: boolean
   }>(),
   {
     embedded: false,
@@ -34,13 +35,18 @@ useResizeObserver([contentRoot, composition], () => {
   const root = contentRoot.value
   const inner = composition.value
   const image = inner.querySelector<HTMLElement>('.porygon')
+  const style = getComputedStyle(root)
+  const horizontalPadding =
+    parseFloat(style.paddingLeft) + parseFloat(style.paddingRight)
+  const verticalPadding =
+    parseFloat(style.paddingTop) + parseFloat(style.paddingBottom)
   compositionScale.value =
     (isCompact.value ? 1 : 0.8) *
     Math.min(
       1,
-      (root.clientWidth - (isCompact.value ? 24 : 0)) /
+      (root.clientWidth - horizontalPadding - (isCompact.value ? 24 : 0)) /
         Math.max(inner.offsetWidth, 1),
-      root.clientHeight /
+      (root.clientHeight - verticalPadding) /
         Math.max(inner.offsetHeight, image?.offsetHeight ?? 0, 1)
     )
 })
@@ -86,8 +92,15 @@ onUnmounted(() => {
       'is-entered': isEntered,
       'is-embedded': props.embedded,
       'is-title-only': !props.code,
+      'is-clickable': props.clickToReturn,
       'no-rem': props.embedded || isCompact,
     }"
+    :role="props.clickToReturn ? 'button' : undefined"
+    :tabindex="props.clickToReturn ? 0 : undefined"
+    :aria-label="props.clickToReturn ? props.actionLabel : undefined"
+    @click="props.clickToReturn && emit('returnHome')"
+    @keydown.enter.self.prevent="props.clickToReturn && emit('returnHome')"
+    @keydown.space.self.prevent="props.clickToReturn && emit('returnHome')"
   >
     <div ref="composition" class="inner">
       <div class="porygon" aria-hidden="true">
@@ -214,11 +227,11 @@ onUnmounted(() => {
         <slot name="action">
           <p
             class="last-show-text"
-            role="button"
-            tabindex="0"
-            @click="emit('returnHome')"
-            @keydown.enter="emit('returnHome')"
-            @keydown.space.prevent="emit('returnHome')"
+            :role="props.clickToReturn ? undefined : 'button'"
+            :tabindex="props.clickToReturn ? undefined : 0"
+            @click.stop="emit('returnHome')"
+            @keydown.enter.stop="emit('returnHome')"
+            @keydown.space.stop.prevent="emit('returnHome')"
           >
             -> {{ props.actionLabel }}
           </p>

@@ -15,6 +15,7 @@ import { useRoute, useRouter } from 'vue-router'
 import MobileScreenFrame from '@/components/MobileScreenFrame/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
 import { decorationActivityKey } from '@/composables/useDecorationActivity'
+import { PHOTO_ROUTE_PATH } from '@/config/atriumPhoto'
 import { islandModuleAtPath, type IslandModuleId } from '@/config/islandModules'
 import { TEMPLE_SCENE_RISE } from '@/config/templeCamera'
 import { templeExperience } from '@/config/templeExperience'
@@ -35,16 +36,19 @@ import { useTempleNavigation } from '@/stores/templeNavigation'
 import { flashActionButton } from '@/utils/flashActionButton'
 import { readHomeFeatures } from '@/utils/homeFeatures'
 import { hasJourneyReturnState } from '@/utils/journeyReturnState'
+import { isRouteCurtainCovered } from '@/utils/routeCurtain'
 import { setSmoothScrollLocked } from '@/utils/smoothScroll'
 import AboutOverlay from '@/views/About/AboutOverlay.vue'
 
-import AtriumPhotoControls from './components/AtriumPhotoControls.vue'
+import AtriumPhotoStudio from './components/AtriumPhotoStudio.vue'
 import FloraFocusLayout from './components/FloraFocusLayout.vue'
 import FocusContent from './components/FocusContent.vue'
 import TempleBackdrop from './components/TempleBackdrop.vue'
 import TempleClock from './components/TempleClock.vue'
 import TempleModuleCaption from './components/TempleModuleCaption.vue'
+import { usePaneResize } from './composables/usePaneResize'
 import { useTempleEntry } from './composables/useTempleEntry'
+import type { AtriumPhotoFraming } from './scene/atriumPhotoFraming'
 import { isHomeSceneDiagnosticsEnabled } from './scene/diagnostics'
 import { loadTempleFocusContent } from './focusContentLoader'
 import type {
@@ -68,6 +72,7 @@ let latestIslandAnchors: IslandModelAnchors | null = null
 const islandInteractive = ref(false)
 const islandOverviewLeaving = ref(false)
 let islandFocusLayout: {
+  getScrollRoot: () => HTMLElement | null | undefined
   updateAnchors: (anchors: IslandModelAnchors) => void
   closeDetail: () => boolean
   leaveOverview: () => Promise<void>
@@ -89,39 +94,77 @@ const navigation = useTempleNavigation()
 const floraPets = useFloraPets()
 const visual = visualState()
 const cursor = cursorState()
-const photoError = ref('')
+const photoFraming = ref<AtriumPhotoFraming>()
+const photoStudioMounted = ref(false)
+const photoRevealed = ref(false)
+let photoRevealFrame: number | undefined
+const cancelPhotoReveal = () => {
+  if (photoRevealFrame !== undefined) cancelAnimationFrame(photoRevealFrame)
+  photoRevealFrame = undefined
+}
+const revealPhotoMode = () => {
+  cancelPhotoReveal()
+  if (!navigation.photoMode) return
+  // 给背景保留帧一次实际绘制机会，避免首帧编译与淡出挤在同一帧。
+  photoRevealFrame = requestAnimationFrame(() => {
+    photoRevealFrame = requestAnimationFrame(() => {
+      photoRevealFrame = undefined
+      if (!navigation.photoMode) return
+      photoRevealed.value = true
+      document.documentElement.classList.remove('atrium-photo-pending')
+      document.documentElement.classList.add('atrium-photo-mode')
+    })
+  })
+}
 let photoTransitionTimer: ReturnType<typeof setTimeout> | undefined
-const setPhotoMode = (active: boolean) => {
+const finishPhotoTransition = () => {
+  if (navigation.photoMode) return
+  if (photoTransitionTimer) clearTimeout(photoTransitionTimer)
+  photoTransitionTimer = undefined
+  photoStudioMounted.value = false
+  photoRevealed.value = false
+  scene?.finishPhotoTransition()
+  document.documentElement.classList.remove(
+    'atrium-photo-transition',
+    'atrium-photo-pending'
+  )
+}
+const applyPhotoMode = (active: boolean) => {
+  if (navigation.photoMode === active) return
   if (!scene || (active && selected.value !== 'statue')) return
+  const alreadyMounted = photoStudioMounted.value
+  cancelPhotoReveal()
+  if (active) {
+    photoFraming.value = scene.getPhotoFraming()
+    photoStudioMounted.value = true
+  }
   navigation.photoMode = active
-  photoError.value = ''
   if (photoTransitionTimer) clearTimeout(photoTransitionTimer)
   document.documentElement.classList.add('atrium-photo-transition')
   scene.setPhotoMode(active)
-  document.documentElement.classList.toggle('atrium-photo-mode', active)
-  if (!active)
-    photoTransitionTimer = setTimeout(() => {
-      document.documentElement.classList.remove('atrium-photo-transition')
-    }, 400)
-}
-const capturePhoto = async () => {
-  try {
-    await scene?.capturePhoto()
-  } catch (error) {
-    photoError.value = '截图失败，请重试'
-    console.error(error)
+  if (active) {
+    document.documentElement.classList.add('atrium-photo-pending')
+    if (alreadyMounted) revealPhotoMode()
+  } else {
+    document.documentElement.classList.remove(
+      'atrium-photo-mode',
+      'atrium-photo-pending'
+    )
+    photoTransitionTimer = setTimeout(finishPhotoTransition, 1100)
   }
+}
+const setPhotoMode = (active: boolean) => {
+  if (active) {
+    if (!scene || selected.value !== 'statue') return
+    if (route.path !== PHOTO_ROUTE_PATH) void router.push(PHOTO_ROUTE_PATH)
+    else applyPhotoMode(true)
+  } else if (route.path === PHOTO_ROUTE_PATH) void router.push('/atrium')
+  else applyPhotoMode(false)
 }
 const photoKeydown = (event: KeyboardEvent) => {
   if (event.key === 'Escape' && navigation.photoMode) setPhotoMode(false)
 }
 onMounted(() => window.addEventListener('keydown', photoKeydown))
-watch(
-  () => route.path,
-  () => {
-    if (navigation.photoMode) setPhotoMode(false)
-  }
-)
 watch(
   () => visual.theme,
   (theme) => scene?.setColorMode(theme)
@@ -169,7 +212,7 @@ const clockVisible = computed(
   () =>
     entranceFinished.value &&
     !clockAwaitingSettle.value &&
-    (!selected.value || selected.value === 'statue') &&
+    !selected.value &&
     !navigation.aboutOpen
 )
 const menuCategory = ref<TempleCategoryId | null>(null)
@@ -234,85 +277,24 @@ const finishMenuExit = (element?: Element) => {
   menuExitElement = undefined
   resolve?.()
 }
-const resizing = ref(false)
-let resizeRevision = 0
-const resizeAnimations = new Set<Animation>()
-const cancelResize = () => {
-  resizeRevision++
-  resizeAnimations.forEach((animation) => animation.cancel())
-  resizeAnimations.clear()
-  resizing.value = false
-}
-const animateResize = async (
-  element: HTMLElement,
-  frames: Keyframe[],
-  duration: number
-) => {
-  const animation = element.animate(frames, {
-    duration,
-    easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
-    fill: 'both',
-  })
-  resizeAnimations.add(animation)
-  await animation.finished
-  return animation
-}
+const { resizing, cancel: cancelResize, run: resizePane } = usePaneResize()
 let expandClickFlash: Animation | undefined
 const toggleExpanded = async (event: MouseEvent) => {
   if (config.menu.layout === 'fullscreen' || resizing.value || !menu.value)
     return
   const scroll = focusContent.value?.getScrollRoot()
-  if (!scroll) return
+  const body = menu.value.querySelector<HTMLElement>('.temple-menu__body')
+  if (!scroll || !body) return
   expandClickFlash = flashActionButton(event.currentTarget as HTMLButtonElement)
-  const revision = ++resizeRevision
-  resizing.value = true
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
-  const pane = menu.value
-  const scrollTop = scroll.scrollTop
-  const expanding = !navigation.expanded
-  const before = pane.getBoundingClientRect()
-  try {
-    navigation.expanded = expanding
-    await nextTick()
-    if (revision !== resizeRevision) return
-    const after = pane.getBoundingClientRect()
-    scroll.scrollTop = scrollTop
-    const scale = before.width / after.width
-    const offset = before.x - after.x
-    const body = pane.querySelector<HTMLElement>('.temple-menu__body')!
-    // FLIP：只在切换时重排一次。外层变换边界，内层反向缩放保持文字比例。
-    await Promise.all([
-      animateResize(
-        pane,
-        [
-          { transform: `translateX(${offset}px) scaleX(${scale})` },
-          { transform: 'none' },
-        ],
-        reduced ? 1 : 1200
-      ),
-      animateResize(
-        body,
-        Array.from({ length: 33 }, (_, index) => {
-          const offset = index / 32
-          return {
-            offset,
-            transform: `scaleX(${1 / (scale + (1 - scale) * offset)})`,
-          }
-        }),
-        reduced ? 1 : 1200
-      ),
-    ])
-    if (revision !== resizeRevision) return
-    resizeAnimations.forEach((animation) => animation.cancel())
-    resizeAnimations.clear()
-    scroll.scrollTop = scrollTop
-    focusContent.value?.refreshGeometry()
-  } catch (error) {
-    if (!(error instanceof DOMException && error.name === 'AbortError'))
-      throw error
-  } finally {
-    if (revision === resizeRevision) resizing.value = false
-  }
+  await resizePane({
+    pane: menu.value,
+    content: [body],
+    scroll,
+    update: () => {
+      navigation.expanded = !navigation.expanded
+    },
+    refresh: () => focusContent.value?.refreshGeometry(),
+  })
 }
 const category = computed(() =>
   menuCategory.value ? templeCategoryById.get(menuCategory.value) : undefined
@@ -321,14 +303,24 @@ const scrollMenuFromBackground = (event: WheelEvent) => {
   if (
     config.menu.layout !== 'sidebar' ||
     !settled.value ||
-    !menuRevealed.value ||
-    navigation.expanded ||
     resizing.value ||
     navigation.aboutOpen ||
     event.ctrlKey ||
     !event.deltaY
   )
     return
+  // 三级详情优先接收背景滚轮；没有详情时沿用二级菜单的滚动条件。
+  const detailRoot =
+    islandFocusLayout?.getScrollRoot() ||
+    workDetailTarget.value?.querySelector<HTMLElement>(
+      '.scroll-viewport__scroll'
+    )
+  const root =
+    detailRoot ||
+    (menuRevealed.value && !navigation.expanded
+      ? focusContent.value?.getScrollRoot()
+      : null)
+  if (!root) return
   const target = event.target
   if (
     !(target instanceof Element) ||
@@ -337,11 +329,16 @@ const scrollMenuFromBackground = (event: WheelEvent) => {
     )
   )
     return
-  const root = focusContent.value?.getScrollRoot()
-  if (!root) return
   event.preventDefault()
   // 转发输入也会中断带 current 参数的自动定位，避免与用户滚动争抢位置。
-  root.dispatchEvent(new WheelEvent('wheel', event))
+  const forwarded = new WheelEvent('wheel', {
+    deltaY: event.deltaY,
+    deltaX: event.deltaX,
+    deltaMode: event.deltaMode,
+    cancelable: true,
+  })
+  root.dispatchEvent(forwarded)
+  if (forwarded.defaultPrevented) return
   const unit =
     event.deltaMode === WheelEvent.DOM_DELTA_PAGE
       ? root.clientHeight
@@ -388,6 +385,25 @@ watch(aboutBackgroundHidden, (hidden) => scene?.setOccluded(hidden), {
   flush: 'sync',
 })
 let disposed = false
+// 等待原场景完成构图后进入独立拍照场景，支持直达、刷新及历史导航。
+watch(
+  [() => route.path, selected, settled, status],
+  ([path, selection, isSettled, sceneStatus]) => {
+    if (path !== PHOTO_ROUTE_PATH) {
+      if (navigation.photoMode) applyPhotoMode(false)
+      return
+    }
+    if (
+      selection === 'statue' &&
+      isSettled &&
+      sceneStatus === 'ready' &&
+      !navigation.photoMode
+    )
+      applyPhotoMode(true)
+  },
+  { immediate: true, flush: 'post' }
+)
+
 const { siteEntryActive, waitForRouteEnter } = useTempleEntry()
 
 // 空白点击优先收起侧栏详情，第二次点击才退出作品集聚焦。
@@ -438,7 +454,7 @@ watch(
   () => navigation.revision,
   () => {
     if (navigation.ready) {
-      scene?.select(navigation.requested)
+      scene?.select(navigation.requested, isRouteCurtainCovered(route.fullPath))
       navigation.expanded = navigation.requestedExpanded
     }
   }
@@ -499,8 +515,11 @@ onMounted(async () => {
   document.body.classList.remove(`${shell}-shell-leaving`)
   document.body.classList.add(`${shell}-shell`)
   setSmoothScrollLocked('island-temple', true)
-  // 全局地平线加载仅属于首次入场；站内返回沿用路由过渡。
-  if (!siteEntryActive.value) loadingTask = siteLoading.beginTask('home-scene')
+  // 首次入口使用加载线，站内返回由路由遮罩等待场景的首帧。
+  const initialEntry = !siteEntryActive.value
+  loadingTask = siteLoading.beginTask('home-scene', 1, {
+    silent: !initialEntry,
+  })
   try {
     const [{ createHomeTemple }, homeFeatures] = await Promise.all([
       import('./templeScene'),
@@ -539,7 +558,12 @@ onMounted(async () => {
       entrySelection,
       entryIslandModule: () => islandModuleAtPath(route.path),
       dismissBackground: closeInlineDetail,
-      prepared: () => loadingTask?.finish(),
+      prepared: () => {
+        if (initialEntry) loadingTask?.finish()
+      },
+      rendered: () => {
+        if (!initialEntry) loadingTask?.finish()
+      },
       progress: (value) => loadingTask?.update(value),
       ready: () => {
         status.value = 'ready'
@@ -583,13 +607,16 @@ onMounted(async () => {
         if (
           id === 'statue' &&
           route.path !== '/atrium' &&
+          route.path !== PHOTO_ROUTE_PATH &&
           !islandModuleAtPath(route.path)
         )
           void router.push('/atrium')
         else if (
           previousSelection === 'statue' &&
           id !== 'statue' &&
-          (route.path === '/atrium' || islandModuleAtPath(route.path))
+          (route.path === '/atrium' ||
+            route.path === PHOTO_ROUTE_PATH ||
+            islandModuleAtPath(route.path))
         )
           void router.replace(
             id === 'sprigatito'
@@ -662,7 +689,9 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
-  setPhotoMode(false)
+  applyPhotoMode(false)
+  cancelPhotoReveal()
+  finishPhotoTransition()
   if (photoTransitionTimer) clearTimeout(photoTransitionTimer)
   window.removeEventListener('keydown', photoKeydown)
   document.documentElement.classList.remove('atrium-photo-mode')
@@ -846,15 +875,17 @@ onUnmounted(() => {
       </div>
     </Transition>
     <AboutOverlay @closed="restoreAboutBackground" />
-    <Transition name="atrium-photo-tools">
-      <AtriumPhotoControls
-        v-if="navigation.photoMode"
+    <Transition name="atrium-photo-tools" @after-leave="finishPhotoTransition">
+      <AtriumPhotoStudio
+        v-if="photoStudioMounted && photoFraming"
+        v-show="navigation.photoMode"
+        :framing="photoFraming"
+        :revealed="photoRevealed"
+        :mobile="config.id === 'mobile'"
+        @ready="revealPhotoMode"
         @exit="setPhotoMode(false)"
-        @capture="capturePhoto"
-        @pose="scene?.setPhotoPose($event)"
       />
     </Transition>
-    <p v-if="photoError" class="photo-error" role="alert">{{ photoError }}</p>
   </main>
 </template>
 

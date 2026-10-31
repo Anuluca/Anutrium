@@ -1,10 +1,49 @@
 <template>
-  <div class="island-notes-content is-embedded">
-    <main ref="noteListRef" class="study-note-list">
+  <div
+    class="island-notes-content is-embedded"
+    :class="{ 'is-loading': notesLoading && !notes.length }"
+  >
+    <ScrollViewport
+      ref="noteViewportRef"
+      class="study-note-list island-detail__viewport"
+      edge-scanlines
+    >
+      <template #header>
+        <FilterRail
+          v-if="!notesLoading || notes.length"
+          class="study-note-filters"
+          :aria-label="locale === 'en' ? 'Note categories' : '笔记分类'"
+          :items="categoryTabs"
+          :model-value="activeCategory"
+          horizontal
+          :show-avatar="false"
+          @update:model-value="selectCategory"
+        />
+      </template>
+      <div
+        v-if="notesLoading && !notes.length"
+        class="study-note-loading no-rem"
+        role="status"
+        :aria-label="locale === 'en' ? 'Loading notes' : '正在加载笔记'"
+      >
+        <el-icon :size="28" class="is-loading" aria-hidden="true">
+          <Loading />
+        </el-icon>
+      </div>
+      <p v-if="notesError" class="study-note-service" role="status">
+        {{
+          locale === 'en'
+            ? 'Online notes are unavailable.'
+            : '在线笔记暂时无法读取。'
+        }}
+        <button type="button" @click="reload">
+          {{ locale === 'en' ? 'Retry' : '重试' }}
+        </button>
+      </p>
       <section
         v-if="paginatedCards.length"
         ref="noteStackRef"
-        :key="`notes-page-${currentPage}`"
+        :key="`notes-${activeCategory}-${currentPage}`"
         class="study-note-stack"
         :class="{ 'is-ready': masonryReady }"
         :aria-label="t('island.modules.notes.studyNotes.title')"
@@ -16,14 +55,12 @@
           :class="{
             'study-note-card--with-image': card.note.image,
             'study-note-card--without-image': !card.note.image,
+            'is-activating': activatingNoteId === card.note.id,
           }"
-          :to="card.note.path"
+          :to="noteLocation(card.note)"
           :style="card.style"
+          @click.capture="activateNote($event, card.note)"
         >
-          <span class="study-note-card__category no-rem">
-            {{ typeMap[card.note.type].label }}
-          </span>
-
           <div v-if="card.note.image" class="study-note-card__visual">
             <picture>
               <source
@@ -44,65 +81,103 @@
           </div>
 
           <div class="study-note-card__copy">
-            <time
-              class="study-note-card__date no-rem"
-              :datetime="card.note.time"
-            >
-              {{ card.dateLabel }}
-            </time>
-            <h2>{{ card.note.title }}</h2>
+            <div class="study-note-card__meta no-rem">
+              <span class="study-note-card__category no-rem">
+                [<span class="study-note-card__category-text">{{
+                  NOTE_CATEGORIES[card.note.type]?.label.en || 'UNKNOWN'
+                }}</span
+                >]
+              </span>
+              <time
+                class="study-note-card__date no-rem"
+                :datetime="card.note.time"
+              >
+                {{ card.dateLabel }}
+              </time>
+            </div>
+            <h2 :class="locale === 'zhCn' && 'cn-font'">
+              {{ card.note.title }}
+            </h2>
           </div>
         </RouterLink>
       </section>
 
-      <div v-else class="study-note-empty">
+      <div v-else-if="!notesLoading && !notesError" class="study-note-empty">
         {{ t('island.modules.notes.studyNotes.empty') }}
       </div>
 
-      <nav
-        v-if="totalPages > 1"
-        class="study-note-pagination"
-        :aria-label="t('pagination.pageLabel')"
-      >
-        <button
-          type="button"
-          :disabled="currentPage === 1"
-          @click="setPage(currentPage - 1)"
+      <template #footer>
+        <nav
+          v-if="totalPages > 1"
+          class="study-note-pagination"
+          :aria-label="t('pagination.pageLabel')"
         >
-          {{ t('pagination.previousPage') }}
-        </button>
-        <button
-          v-for="page in totalPages"
-          :key="page"
-          type="button"
-          :class="{ 'is-active': page === currentPage }"
-          :aria-current="page === currentPage ? 'page' : undefined"
-          @click="setPage(page)"
-        >
-          {{ page }}
-        </button>
-        <button
-          type="button"
-          :disabled="currentPage === totalPages"
-          @click="setPage(currentPage + 1)"
-        >
-          {{ t('pagination.nextPage') }}
-        </button>
-      </nav>
-    </main>
+          <button
+            type="button"
+            :disabled="currentPage === 1"
+            @click="setPage(currentPage - 1)"
+          >
+            {{ t('pagination.previousPage') }}
+          </button>
+          <button
+            v-for="page in totalPages"
+            :key="page"
+            type="button"
+            :class="{ 'is-active': page === currentPage }"
+            :aria-current="page === currentPage ? 'page' : undefined"
+            @click="setPage(page)"
+          >
+            {{ page }}
+          </button>
+          <button
+            type="button"
+            :disabled="currentPage === totalPages"
+            @click="setPage(currentPage + 1)"
+          >
+            {{ t('pagination.nextPage') }}
+          </button>
+        </nav>
+      </template>
+    </ScrollViewport>
+    <ModalWrapper
+      :model-value="noteVisible"
+      dialog-class="note-detail-modal"
+      width="var(--note-modal-width)"
+      :close-title="locale === 'en' ? 'Close note (ESC)' : '关闭笔记 (ESC)'"
+      @update:model-value="setNoteVisible"
+      @closed="finishNoteClose"
+    >
+      <NoteReader v-if="openedNoteId" :id="openedNoteId" />
+    </ModalWrapper>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
+import { Loading } from '@element-plus/icons-vue'
 
+import FilterRail, {
+  type FilterRailItem,
+} from '@/components/FilterRail/index.vue'
+import ModalWrapper from '@/components/ModalWrapper/index.vue'
+import ScrollViewport from '@/components/ScrollViewport/index.vue'
+import { useNotes } from '@/composables/useNotes'
+import {
+  isNoteCategory,
+  isNoteCategoryIncludedInAll,
+  NOTE_CATEGORIES,
+  type NoteCategory,
+} from '@/config/noteCategories'
 import {
   getCardMobileThumbnailUrl,
   getCardThumbnailUrl,
 } from '@/utils/imageVariant'
 
-type StudyNoteType = 'frontend' | 'other'
+import NoteReader from './NoteReader.vue'
+
+type StudyNoteType = NoteCategory
 
 interface StudyNote {
   id: string
@@ -113,10 +188,6 @@ interface StudyNote {
   type: StudyNoteType
 }
 
-interface StudyNoteTypeConfig {
-  label: string
-}
-
 interface StudyNoteCard {
   note: StudyNote
   dateLabel: string
@@ -125,47 +196,162 @@ interface StudyNoteCard {
 
 const PAGE_SIZE = 20
 const currentPage = ref(1)
-const ENGLISH_DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
-  year: 'numeric',
-  month: 'short',
-  day: '2-digit',
-})
 
-const { locale, t, tm } = useI18n()
-const noteListRef = ref<HTMLElement | null>(null)
+const { locale, t } = useI18n()
+const noteViewportRef = ref<InstanceType<typeof ScrollViewport> | null>(null)
 const noteStackRef = ref<HTMLElement | null>(null)
 const masonryReady = ref(false)
 let masonryFrame: number | undefined
 let masonryObserver: ResizeObserver | undefined
 let disposed = false
 
-const notes = computed(
-  () => tm('island.modules.notes.studyNotes.data') as StudyNote[]
+const route = useRoute()
+const router = useRouter()
+const activeCategory = computed<NoteCategory | 'all'>(() =>
+  isNoteCategory(route.query.category) ? route.query.category : 'all'
 )
-const typeMap = computed(
-  () =>
-    tm('island.modules.notes.studyNotes.typeMap') as Record<
-      StudyNoteType,
-      StudyNoteTypeConfig
-    >
-)
-const totalPages = computed(() =>
-  Math.max(1, Math.ceil(notes.value.length / PAGE_SIZE))
-)
-
-const formatNoteDate = (date: string) => {
-  const [year, month, day] = date.split('-').map(Number)
-
-  if (locale.value !== 'en') {
-    return `${year} 年 ${month} 月 ${day} 日`
+const noteLocation = (note: StudyNote) => {
+  const target = router.resolve(note.path)
+  return {
+    path: target.path,
+    query: { ...route.query, ...target.query },
+    hash: target.hash || route.hash,
   }
-
-  return ENGLISH_DATE_FORMATTER.format(new Date(year, month - 1, day))
 }
+const activatingNoteId = ref('')
+let activationAnimations: Animation[] = []
+
+const activateNote = async (event: MouseEvent, note: StudyNote) => {
+  if (
+    event.button !== 0 ||
+    event.metaKey ||
+    event.ctrlKey ||
+    event.shiftKey ||
+    event.altKey
+  )
+    return
+  event.preventDefault()
+  if (activatingNoteId.value) return
+
+  const card = event.currentTarget as HTMLElement
+  activatingNoteId.value = note.id
+  const reducedMotion = window.matchMedia(
+    '(prefers-reduced-motion: reduce)'
+  ).matches
+  // 闪烁与弹窗导航同时开始，动画结束后清理卡片反馈。
+  const flash = (
+    element: HTMLElement,
+    property: 'backgroundColor' | 'color',
+    target: string
+  ) => {
+    const initial = getComputedStyle(element)[property]
+    return element.animate(
+      [
+        { [property]: initial, offset: 0 },
+        { [property]: target, offset: 0.2 },
+        { [property]: initial, offset: 0.4 },
+        { [property]: target, offset: 0.6 },
+        { [property]: target, offset: 1 },
+      ].map((frame) => ({ ...frame, easing: 'steps(1, end)' })),
+      {
+        duration: reducedMotion ? 0 : 320,
+        fill: 'forwards',
+      }
+    )
+  }
+  activationAnimations = [flash(card, 'backgroundColor', '#e23456')]
+  card
+    .querySelectorAll<HTMLElement>(
+      'h2, .study-note-card__date, .study-note-card__category'
+    )
+    .forEach((element) => {
+      activationAnimations.push(
+        flash(
+          element,
+          'color',
+          element.classList.contains('study-note-card__category')
+            ? '#fff'
+            : '#000'
+        )
+      )
+    })
+  try {
+    await Promise.all([
+      router.push(noteLocation(note)),
+      ...activationAnimations.map((animation) => animation.finished),
+    ])
+  } catch {
+    // 组件卸载会取消仍在播放的卡片动画。
+  } finally {
+    activationAnimations.forEach((animation) => animation.cancel())
+    activationAnimations = []
+    activatingNoteId.value = ''
+  }
+}
+const selectedNoteId = computed(() =>
+  typeof route.query.note === 'string' ? route.query.note : ''
+)
+const noteVisible = ref(false)
+const openedNoteId = ref('')
+watch(
+  selectedNoteId,
+  (id) => {
+    if (id) openedNoteId.value = id
+    noteVisible.value = !!id
+  },
+  { immediate: true }
+)
+const setNoteVisible = (visible: boolean) => {
+  noteVisible.value = visible
+  if (!visible && selectedNoteId.value) {
+    const query = { ...route.query }
+    delete query.note
+    void router.replace({ path: route.path, query, hash: route.hash })
+  }
+}
+// 离场动画结束后再卸载正文，避免关闭时内容提前消失。
+const finishNoteClose = () => {
+  if (!noteVisible.value) openedNoteId.value = ''
+}
+const { notes, error: notesError, loading: notesLoading, reload } = useNotes()
+const allNotes = computed(() =>
+  notes.value.filter((note) => isNoteCategoryIncludedInAll(note.type))
+)
+const categoryTabs = computed<FilterRailItem[]>(() => [
+  {
+    id: 'all',
+    title: 'ALL',
+    count: allNotes.value.length,
+  },
+  ...Object.entries(NOTE_CATEGORIES).map(([id, category]) => ({
+    id,
+    title: category.label.en,
+    count: notes.value.filter((note) => note.type === id).length,
+  })),
+])
+const filteredNotes = computed(() =>
+  activeCategory.value === 'all'
+    ? allNotes.value
+    : notes.value.filter((note) => note.type === activeCategory.value)
+)
+const selectCategory = (category: string) => {
+  if (category !== 'all' && !isNoteCategory(category)) return
+  if (route.query.category === category) return
+  void router.push({
+    path: route.path,
+    query: { ...route.query, category },
+    hash: route.hash,
+  })
+}
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(filteredNotes.value.length / PAGE_SIZE))
+)
+
+const formatNoteDate = (date: string) => date.replace(/-/g, '/')
 
 const paginatedCards = computed<StudyNoteCard[]>(() => {
   const pageStart = (currentPage.value - 1) * PAGE_SIZE
-  const pageNotes = notes.value.slice(pageStart, pageStart + PAGE_SIZE)
+  const pageNotes = filteredNotes.value.slice(pageStart, pageStart + PAGE_SIZE)
 
   return pageNotes.map((note, noteIndex) => {
     return {
@@ -241,30 +427,45 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   disposed = true
+  activationAnimations.forEach((animation) => animation.cancel())
   masonryObserver?.disconnect()
   if (masonryFrame !== undefined) cancelAnimationFrame(masonryFrame)
 })
 
 const setPage = (page: number) => {
   currentPage.value = Math.min(Math.max(1, page), totalPages.value)
-  noteListRef.value?.closest('.scroll-viewport__scroll')?.scrollTo({ top: 0 })
+  noteViewportRef.value?.scrollRoot?.scrollTo({ top: 0 })
 }
+// 包括浏览器前进、后退在内，分类变化统一回到第一页；仅开关正文不重置列表。
+watch(activeCategory, () => setPage(1), { flush: 'post' })
 </script>
 
 <style lang="less" scoped>
+@import '../../styles/noteTypography.less';
 @red: #e23456;
 @mono: 'UnboundedSans', 'Courier New', monospace;
 
+.study-note-filters.filter-rail--horizontal {
+  align-self: stretch;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 16px;
+}
+
 .island-notes-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
   color: var(--text-color);
   overflow: hidden;
   &.is-embedded {
     padding: 0;
     .study-note-list {
-      padding: 0 0 24px;
+      padding: 0;
     }
     .study-note-stack {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
   }
 }
@@ -275,8 +476,48 @@ const setPage = (page: number) => {
   }
 }
 
+.island-notes-content.is-embedded.is-loading {
+  height: 100%;
+
+  .study-note-list {
+    height: 100%;
+    padding: 0;
+  }
+}
+
+.study-note-loading.no-rem {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  color: var(--page-theme-color, #e23456);
+}
+
+.study-note-service {
+  margin-bottom: 16px;
+  color: var(--text-muted);
+  button {
+    color: @red;
+    cursor: pointer;
+  }
+}
+
 .study-note-list {
   padding: 24px 0 36px;
+
+  :deep(.filter-rail) {
+    flex-shrink: 0;
+  }
+
+  :deep(.scroll-viewport__scroll) {
+    padding-right: 0;
+    outline: none;
+  }
+
+  :deep(.scroll-viewport__scroll > div) {
+    min-height: 100%;
+    height: 100%;
+  }
 }
 
 .study-note-stack {
@@ -294,18 +535,15 @@ const setPage = (page: number) => {
 }
 
 .study-note-card {
+  --note-border-color: color-mix(in srgb, var(--border-color) 98%, #000 2%);
   position: relative;
   display: block;
   align-self: start;
   width: 100%;
   box-sizing: border-box;
   overflow: hidden;
-  border: 1px solid var(--border-color);
-  background-color: var(--surface-color);
-  background-image: linear-gradient(@red, @red);
-  background-position: left center;
-  background-repeat: no-repeat;
-  background-size: 0 100%;
+  border: 1px solid var(--note-border-color);
+  background-color: color-mix(in srgb, var(--bg-color) 82%, transparent);
   box-shadow: 0 14px 34px var(--shadow-color);
   break-inside: avoid;
   color: inherit;
@@ -314,8 +552,16 @@ const setPage = (page: number) => {
   clip-path: inset(0 100% 100% 0);
   animation: studyNoteCardRevealIn 0.72s cubic-bezier(0.22, 1, 0.36, 1) both;
   animation-delay: calc(0.14s + var(--note-index) * 120ms);
-  transition: background-size 0.36s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.3s ease;
+
+  &::before {
+    position: absolute;
+    z-index: 4;
+    inset: 0;
+    border: 1px solid @red;
+    content: '';
+    opacity: 0;
+    pointer-events: none;
+  }
 
   &::after {
     position: absolute;
@@ -325,22 +571,33 @@ const setPage = (page: number) => {
     width: 0;
     height: 0;
     box-sizing: border-box;
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--note-border-color);
     content: '';
     pointer-events: none;
     animation: studyNoteCardBorderIn 0.72s cubic-bezier(0.22, 1, 0.36, 1) both;
     animation-delay: calc(0.14s + var(--note-index) * 120ms);
   }
 
+  &__meta.no-rem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
   &__category.no-rem {
     display: block;
-    padding: 16px 16px 12px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     color: @red;
-    font-family: @mono;
-    font-size: 20px;
-    font-weight: normal;
-    line-height: 1;
+    .note-meta-typography();
     transition: color 0.3s ease;
+  }
+
+  &__category-text {
+    .note-category-text();
   }
 
   &__visual {
@@ -362,16 +619,15 @@ const setPage = (page: number) => {
   }
 
   &__copy {
-    padding: 12px 16px 20px;
+    padding: 12px 16px 12px;
   }
 
   &__date.no-rem {
     display: block;
+    flex-shrink: 0;
+    margin-left: auto;
     color: var(--text-muted);
-    font-family: 'alibaba-puhuiti', sans-serif;
-    font-size: 12px;
-    font-weight: 700;
-    line-height: 1;
+    .note-meta-typography();
     opacity: 0.5;
     transition: color 0.3s ease;
     white-space: nowrap;
@@ -380,44 +636,28 @@ const setPage = (page: number) => {
   &--without-image {
     .study-note-card__copy {
       padding-top: 18px;
-      padding-bottom: 28px;
+      padding-bottom: 16px;
     }
   }
 
   h2 {
+    width: 108.6957%;
     margin: 8px 0 0;
     color: var(--text-color);
-    font-family: 'alibaba-puhuiti', sans-serif;
-    font-size: clamp(19px, 1.65vw, 28px);
-    font-weight: 900;
-    line-height: 1.08;
-    text-wrap: balance;
-    transform-origin: left top;
+    font-family: 'UnboundedSans';
+    font-size: 26.4px;
+    .note-title-typography();
+    line-height: 1.15;
+    text-transform: uppercase;
+    transform-origin: left center;
     transition: color 0.3s ease, transform 0.36s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  &:hover {
-    background-size: 100% 100%;
-    box-shadow: -32px 0 56px 10px rgba(226, 52, 86, 0.31),
-      32px 0 56px 10px rgba(226, 52, 86, 0.31);
-
-    &::after {
-      border-color: rgba(255, 255, 255, 0.25);
+  &.is-activating {
+    &::before {
+      opacity: 1;
+      animation: none;
     }
-
-    .study-note-card__date {
-      color: #000;
-    }
-
-    .study-note-card__category {
-      color: #fff;
-    }
-
-    h2 {
-      color: #000;
-      transform: scale(1.04);
-    }
-
     .study-note-card__image {
       filter: saturate(0.88) contrast(1.02);
       transform: scale(1.025);
@@ -434,22 +674,41 @@ const setPage = (page: number) => {
   }
 }
 
+@media (hover: hover) and (pointer: fine) {
+  .study-note-card:not(.is-activating):hover::before {
+    animation: studyNoteBorderFlash 280ms steps(1, end) forwards;
+  }
+}
+
+@keyframes studyNoteBorderFlash {
+  0%,
+  40% {
+    opacity: 0;
+  }
+  20%,
+  60%,
+  100% {
+    opacity: 1;
+  }
+}
+
 .study-note-empty {
   display: grid;
   min-height: 320px;
   place-items: center;
   color: var(--text-faint);
   font-family: @mono;
-  font-size: 0.62rem;
-  letter-spacing: 0.08em;
+  font-size: 1.24rem;
+  letter-spacing: 0;
 }
 
 .study-note-pagination {
   display: flex;
+  flex-shrink: 0;
   justify-content: center;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 42px;
+  padding-top: 12px;
 
   button {
     min-width: 36px;
@@ -515,33 +774,20 @@ const setPage = (page: number) => {
   }
 
   .study-note-card {
-    &__category.no-rem {
-      padding: 14px 14px 10px;
-      font-size: 18px;
-    }
-
     &__visual {
       margin: 0 14px;
     }
 
     &__copy {
-      padding: 10px 14px 18px;
+      padding: 10px 14px 10px;
     }
 
     &--without-image {
       .study-note-card__copy {
         padding-top: 16px;
-        padding-bottom: 24px;
+        padding-bottom: 14px;
       }
     }
-
-    h2 {
-      font-size: clamp(18px, 3vw, 23px);
-    }
-  }
-
-  .study-note-pagination {
-    margin-top: 30px;
   }
 }
 
@@ -554,10 +800,17 @@ const setPage = (page: number) => {
   .study-note-stack {
     grid-template-columns: minmax(0, 1fr);
   }
+}
 
+@media screen and (max-aspect-ratio: 1) {
   .study-note-card {
     h2 {
-      font-size: clamp(20px, 5.6vw, 26px);
+      font-size: 38.72px;
+    }
+
+    &__category.no-rem,
+    &__date.no-rem {
+      font-size: 0.6844433rem;
     }
   }
 }
@@ -581,6 +834,29 @@ const setPage = (page: number) => {
     &__image {
       transition: none;
     }
+
+    &:hover::before {
+      animation: none;
+      opacity: 1;
+    }
+  }
+}
+</style>
+
+<style lang="less">
+.modal-wrapper-dialog.note-detail-modal.no-rem {
+  --note-modal-width: min(calc(100vw - 48px), 120vh);
+  height: 90vh;
+}
+.modal-wrapper-dialog.note-detail-modal.no-rem:not(
+    .modal-wrapper-dialog--origin-motion
+  ) {
+  width: var(--note-modal-width) !important;
+}
+@media (max-width: 768px) {
+  .modal-wrapper-dialog.note-detail-modal.no-rem {
+    --note-modal-width: min(calc(100vw - 20px), calc((100dvh - 192px) * 3 / 4));
+    height: calc(var(--note-modal-width) * 4 / 3);
   }
 }
 </style>

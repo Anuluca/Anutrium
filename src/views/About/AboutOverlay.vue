@@ -117,6 +117,7 @@ useEventListener(
           <ScrollViewport
             v-if="maskReady"
             edge-progress
+            edge-scanlines
             :progress-z-index="1200"
           >
             <Transition name="about-content" appear>

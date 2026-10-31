@@ -90,16 +90,24 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { onBeforeUnmount, reactive, ref } from 'vue'
 
 import ToolPageLayout from '@/components/ToolPageLayout/index.vue'
 import ToolPanelCorners from '@/components/ToolPanelCorners/index.vue'
 import { showErrorMessage, showSuccessMessage } from '@/utils/elementMessage'
 
-import 'element-plus/es/components/message/style/css'
-
 const dataUrl = ref('')
 const copied = ref(false)
+let pendingReader: FileReader | undefined
+let copiedTimer: number | undefined
+
+const cancelRead = () => {
+  if (!pendingReader) return
+  pendingReader.onload = null
+  pendingReader.onerror = null
+  if (pendingReader.readyState === FileReader.LOADING) pendingReader.abort()
+  pendingReader = undefined
+}
 const fileInfo = reactive({
   name: '',
   size: 0,
@@ -125,14 +133,22 @@ const handleDrop = (event: DragEvent) => {
 
 const processFile = (file: File) => {
   if (!file.type.startsWith('image/')) return
+  cancelRead()
+  dataUrl.value = ''
 
   fileInfo.name = file.name
   fileInfo.size = file.size
   fileInfo.type = file.type || 'image/*'
 
   const reader = new FileReader()
+  pendingReader = reader
   reader.onload = (event) => {
     dataUrl.value = String(event.target?.result || '')
+    cancelRead()
+  }
+  reader.onerror = () => {
+    cancelRead()
+    showErrorMessage('图片读取失败，请重试')
   }
   reader.readAsDataURL(file)
 }
@@ -144,7 +160,8 @@ const copyDataUrl = async () => {
     await navigator.clipboard.writeText(dataUrl.value)
     copied.value = true
     showSuccessMessage('复制成功')
-    setTimeout(() => {
+    window.clearTimeout(copiedTimer)
+    copiedTimer = window.setTimeout(() => {
       copied.value = false
     }, 1800)
   } catch (err) {
@@ -158,6 +175,11 @@ const formatSize = (size: number) => {
   if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`
   return `${(size / 1024 / 1024).toFixed(2)} MB`
 }
+
+onBeforeUnmount(() => {
+  cancelRead()
+  window.clearTimeout(copiedTimer)
+})
 </script>
 
 <style lang="less" scoped>
@@ -190,10 +212,7 @@ const formatSize = (size: number) => {
 }
 
 .pt-grid {
-  display: grid;
-  grid-template-columns: 5fr 2fr;
-  gap: 30px 0;
-  align-items: stretch;
+  .tool-grid();
 }
 
 .pt-panel,
@@ -429,10 +448,6 @@ const formatSize = (size: number) => {
 }
 
 @media (max-width: 900px) {
-  .pt-grid {
-    grid-template-columns: 1fr;
-  }
-
   .pt-panel,
   .right-panel {
     min-height: 480px;

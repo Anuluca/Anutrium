@@ -10,11 +10,15 @@ const messagePosition = {
   offset: DEFAULT_MESSAGE_OFFSET,
 }
 
-export const showSuccessMessage = (message: string) =>
-  ElMessage({ message, ...messagePosition, type: 'success' })
+export const showSuccessMessage = (
+  message: string,
+  options: { appendTo?: HTMLElement } = {}
+) => ElMessage({ message, ...messagePosition, ...options, type: 'success' })
 
-export const showErrorMessage = (message: string) =>
-  ElMessage({ message, ...messagePosition, type: 'error' })
+export const showErrorMessage = (
+  message: string,
+  options: { appendTo?: HTMLElement } = {}
+) => ElMessage({ message, ...messagePosition, ...options, type: 'error' })
 
 export const showWarningMessage = (message: string) =>
   ElMessage({

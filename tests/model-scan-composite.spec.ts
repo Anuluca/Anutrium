@@ -65,10 +65,17 @@ test('scan composite preserves 0.55 alpha, hides rear wires and keeps scan endpo
       gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, bytes)
       return [...bytes]
     }
+    // 单独验证当前基色的 0.55 合成强度，流光在独立场景测试中验证。
+    scan.flowEnabled.value = 0
     scan.progress.value = 1
     renderer.render(scene, camera)
     const interior = pixel(38, 70)
     const edge = pixel(64, 64)
+    scan.fillOpacity.value = 0
+    renderer.render(scene, camera)
+    const transparentInterior = pixel(38, 70)
+    const transparentEdge = pixel(64, 64)
+    scan.fillOpacity.value = 0.55
     const lines = renderer.info.render.lines
     prepass.visible = false
     renderer.render(scene, camera)
@@ -90,6 +97,8 @@ test('scan composite preserves 0.55 alpha, hides rear wires and keeps scan endpo
     return {
       interior,
       edge,
+      transparentInterior,
+      transparentEdge,
       rearWithoutDepth,
       empty,
       converted,
@@ -97,9 +106,14 @@ test('scan composite preserves 0.55 alpha, hides rear wires and keeps scan endpo
       lines,
     }
   })
+  expect(result.transparentInterior).toEqual([0, 0, 0, 0])
+  expect(result.transparentEdge[0]).toBeGreaterThan(100)
+  expect(result.transparentEdge[3]).toBeGreaterThan(230)
   expect(result.interior[0]).toBeLessThanOrEqual(1)
   expect(result.interior[3]).toBeCloseTo(0.55 * 255, -1)
-  expect(result.edge[0]).toBeGreaterThan(200)
+  expect(Math.abs(result.edge[0] - Math.round(0.55 * 255))).toBeLessThanOrEqual(
+    2
+  )
   expect(result.edge[3]).toBeGreaterThan(230)
   expect(result.rearWithoutDepth[0]).toBeGreaterThan(result.interior[0] + 50)
   expect(result.empty).toEqual([0, 0, 0, 0])

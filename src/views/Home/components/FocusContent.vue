@@ -10,6 +10,7 @@ import {
   watch,
 } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 import { useResizeObserver } from '@vueuse/core'
 
 import FooterSocialLinkBar from '@/components/FooterSocialLinkBar/index.vue'
@@ -29,10 +30,15 @@ const props = defineProps<{
   detailTarget?: HTMLElement | null
 }>()
 const navigation = useTempleNavigation()
+const router = useRouter()
 const { locale } = useI18n()
 const loadErrorTitle = computed(() =>
   locale.value === 'en' ? 'RESOURCE LOAD FAILED' : '资源获取失败'
 )
+const returnToOverview = () => {
+  navigation.request(null)
+  if (props.category === 'pokeyard') void router.push('/')
+}
 const emit = defineEmits<{
   (event: 'loading', category: TempleCategoryId): void
   (event: 'ready', category: TempleCategoryId): void
@@ -129,6 +135,7 @@ watch(() => props.category, loadContent, { immediate: true })
     }"
     :data-content="props.category"
     edge-progress
+    edge-scanlines
   >
     <template #default="{ scrollRoot }">
       <component
@@ -152,7 +159,9 @@ watch(() => props.category, loadContent, { immediate: true })
         :is="component"
         v-else-if="component"
         embedded
-        @return-home="navigation.request(null)"
+        :click-to-return="props.category === 'pokeyard'"
+        :action-label="locale === 'en' ? 'BACK' : '返回上一级'"
+        @return-home="returnToOverview"
       />
       <NotFoundContent
         v-else-if="failed"
@@ -231,11 +240,6 @@ watch(() => props.category, loadContent, { immediate: true })
   }
   :deep(.home-section-title) {
     color: var(--page-theme-color);
-  }
-  :deep(.home-section-rail__num) {
-    -webkit-text-stroke-color: var(--page-theme-color);
-    text-shadow: 0 0 10px
-      color-mix(in srgb, var(--page-theme-color) 27%, transparent);
   }
   :deep(.section-count strong) {
     color: color-mix(in srgb, var(--page-theme-color) 58%, transparent);

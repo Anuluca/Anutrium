@@ -1,44 +1,21 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed } from 'vue'
+
+import { useAnimatedProgress } from '@/composables/useAnimatedProgress'
 
 const props = withDefaults(
   defineProps<{ progress: number; fading?: boolean; animate?: boolean }>(),
   { fading: false, animate: false }
 )
-const displayed = ref(props.animate ? 0 : props.progress)
+const displayed = useAnimatedProgress(
+  () => props.progress,
+  () => props.animate
+)
 const emit = defineEmits<{ faded: [] }>()
 const percentage = computed(() => String(Math.floor(displayed.value)))
 const padding = computed(() =>
   '0'.repeat(Math.max(0, 3 - percentage.value.length))
 )
-let frame: number | undefined
-let lastTime = 0
-const advance = (now: number) => {
-  frame = undefined
-  displayed.value = Math.min(
-    props.progress,
-    displayed.value + Math.min((now - lastTime) / 1000, 0.1) * 100
-  )
-  lastTime = now
-  if (displayed.value < props.progress) frame = requestAnimationFrame(advance)
-}
-watch(
-  () => props.progress,
-  (value) => {
-    if (!props.animate) {
-      if (frame !== undefined) cancelAnimationFrame(frame)
-      frame = undefined
-      displayed.value = value
-    } else if (frame === undefined && value > displayed.value) {
-      lastTime = performance.now()
-      frame = requestAnimationFrame(advance)
-    }
-  },
-  { immediate: true }
-)
-onBeforeUnmount(() => {
-  if (frame !== undefined) cancelAnimationFrame(frame)
-})
 </script>
 
 <template>

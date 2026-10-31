@@ -3,10 +3,13 @@ import { computed, nextTick, onMounted, ref } from 'vue'
 import { useResizeObserver } from '@vueuse/core'
 
 import PageScrollProgress from '@/components/PageScrollProgress/index.vue'
+import { useNestedSmoothScroll } from '@/composables/useNestedSmoothScroll'
+import { useScrollScanlines } from '@/composables/useScrollScanlines'
 
 const props = defineProps<{
   edgeProgress?: boolean
   edgeFade?: boolean
+  edgeScanlines?: boolean
   progressZIndex?: number
 }>()
 const progressTop = ref(0)
@@ -25,6 +28,8 @@ const progressStyle = computed(() =>
 )
 const scrollRoot = ref<HTMLElement | null>(null)
 const content = ref<HTMLElement | null>(null)
+useNestedSmoothScroll(() => scrollRoot.value)
+useScrollScanlines(() => (props.edgeScanlines ? scrollRoot.value : null))
 const canScrollUp = ref(false)
 const canScrollDown = ref(false)
 const measure = () => {
@@ -33,6 +38,7 @@ const measure = () => {
   canScrollUp.value = element.scrollTop > 1
   canScrollDown.value =
     element.scrollTop + element.clientHeight < element.scrollHeight - 1
+  if (!props.edgeProgress) return
   const bounds = element.getBoundingClientRect()
   progressTop.value = bounds.top
   progressBottom.value = Math.max(0, window.innerHeight - bounds.bottom)
@@ -47,6 +53,7 @@ defineExpose({ scrollRoot, measure })
     class="scroll-viewport no-rem"
     :class="{
       'has-fixed-header': !!$slots.header,
+      'has-fixed-footer': !!$slots.footer,
     }"
   >
     <slot name="header" />
@@ -57,13 +64,14 @@ defineExpose({ scrollRoot, measure })
         'fade-top': edgeFade && canScrollUp,
         'fade-bottom': edgeFade && canScrollDown,
       }"
-      @scroll.passive="measure"
       data-lenis-prevent
       data-lenis-nested-scroll
       tabindex="0"
+      @scroll.passive="measure"
     >
       <div ref="content"><slot :scroll-root="scrollRoot" /></div>
     </div>
+    <slot name="footer" />
     <Teleport to="body" :disabled="!props.edgeProgress">
       <PageScrollProgress
         embedded
@@ -80,7 +88,8 @@ defineExpose({ scrollRoot, measure })
   min-height: 0;
   flex: 1;
   height: 100%;
-  &.has-fixed-header {
+  &.has-fixed-header,
+  &.has-fixed-footer {
     display: flex;
     flex-direction: column;
     .scroll-viewport__scroll {

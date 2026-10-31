@@ -9,7 +9,7 @@
         :reveal="false"
       >
         <template v-if="section.count != null" #actions>
-          <SectionCount :count="section.count" :label="section.countLabel" />
+          <NumberCount :count="section.count" />
         </template>
         <div
           v-if="index === 0"
@@ -282,7 +282,7 @@ import MediaGallery from '@/components/MediaGallery/index.vue'
 import MediaPhotoInfo from '@/components/MediaPhotoInfo/index.vue'
 import ModalContentTitle from '@/components/ModalContentTitle/index.vue'
 import ModalWrapper from '@/components/ModalWrapper/index.vue'
-import SectionCount from '@/components/SectionCount/index.vue'
+import NumberCount from '@/components/NumberCount/index.vue'
 import Sections from '@/components/Sections/index.vue'
 import { creativeIllustrationPreview } from '@/locales/dynamic/creativeIllustration'
 import { creativePhotographyPreview } from '@/locales/dynamic/creativePhotography'

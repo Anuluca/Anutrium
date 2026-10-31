@@ -43,7 +43,13 @@ test('collection boxes expand into a centered gallery and restore without shifti
   })
   const source = content.locator('.collection-card-entry').first()
   const viewport = page.locator('.island-detail .scroll-viewport__scroll')
-  await source.scrollIntoViewIfNeeded()
+  // 入场本身会移动卡片；先完成入场，再验证弹窗是否改变展架几何。
+  await source.evaluate(async (element) => {
+    await Promise.allSettled(
+      element.getAnimations().map((animation) => animation.finished)
+    )
+  })
+  await source.locator('button').scrollIntoViewIfNeeded()
   const position = () =>
     source.evaluate((element) => {
       const bounds = element.getBoundingClientRect()
@@ -99,6 +105,42 @@ test('collection boxes expand into a centered gallery and restore without shifti
     })
     await expect(page).toHaveURL(/\/atrium\/collections$/)
     await expect(modal.locator('.media-gallery__card').first()).toBeVisible()
+    await modal.getByRole('button', { name: '大图预览' }).click()
+    const thumbnails = modal.locator('.inline-image-preview__thumbnails')
+    await expect(thumbnails.locator('button').first()).toBeVisible()
+    const thumbnailFits = await thumbnails.evaluate((element) => {
+      const viewport = element.closest('.collection-card__gallery')!
+      return (
+        element.getBoundingClientRect().bottom <=
+        viewport.getBoundingClientRect().bottom + 1
+      )
+    })
+    expect(thumbnailFits).toBe(true)
+    const previewLayout = await modal.evaluate((element) => {
+      const bounds = (selector: string) =>
+        element.querySelector(selector)!.getBoundingClientRect()
+      const stage = bounds('.inline-image-preview__stage')
+      const figure = bounds('.inline-image-preview__figure')
+      const thumbnails = bounds('.inline-image-preview__thumbnails')
+      const next = bounds('.el-image-viewer__next')
+      return {
+        centerX: Math.abs(
+          figure.left + figure.width / 2 - stage.left - stage.width / 2
+        ),
+        centerY: Math.abs(
+          figure.top + figure.height / 2 - stage.top - stage.height / 2
+        ),
+        thumbnailGap: thumbnails.top - stage.bottom,
+        navigationWidth: next.width,
+        navigationHeight: next.height,
+      }
+    })
+    expect(previewLayout.centerX).toBeLessThanOrEqual(1)
+    expect(previewLayout.centerY).toBeLessThanOrEqual(1)
+    expect(previewLayout.thumbnailGap).toBeGreaterThanOrEqual(8)
+    expect(previewLayout.navigationWidth).toBeLessThanOrEqual(88)
+    expect(previewLayout.navigationHeight).toBeLessThanOrEqual(360)
+    await modal.getByRole('button', { name: '列表模式' }).click()
     await expect(modal.locator('.collection-card__screen-cover')).toHaveCSS(
       'opacity',
       '0'
@@ -125,7 +167,9 @@ test('collection boxes expand into a centered gallery and restore without shifti
         expectedWidth: Math.min(1280, innerWidth - 48),
       }
     })
-    expect(galleryLayout.columns).toBe(3)
+    expect(galleryLayout.columns).toBe(
+      testInfo.project.name === 'mobile-chrome' ? 2 : 3
+    )
     expect(galleryLayout.padding.every((value) => value >= 12)).toBe(true)
     expect(galleryLayout.width).toBeGreaterThanOrEqual(
       galleryLayout.expectedWidth - 1
@@ -152,7 +196,10 @@ test('collection boxes expand into a centered gallery and restore without shifti
     await page.mouse.wheel(0, 400)
     const during = await position()
     for (const key of Object.keys(initial) as (keyof typeof initial)[])
-      expect(Math.abs(during[key] - initial[key])).toBeLessThanOrEqual(1)
+      expect(
+        Math.abs(during[key] - initial[key]),
+        `${key}: ${JSON.stringify({ initial, during })}`
+      ).toBeLessThanOrEqual(1)
     await modal.evaluate((dialog) => {
       const probe = {
         running: true,
@@ -162,6 +209,7 @@ test('collection boxes expand into a centered gallery and restore without shifti
         handoff: [] as {
           returned: boolean
           ghostOpacity: number
+          shellOpacity: number
           dialogVisible: boolean
           delta: number
           coverAnimation: string
@@ -187,6 +235,7 @@ test('collection boxes expand into a centered gallery and restore without shifti
         probe.handoff.push({
           returned: !!source,
           ghostOpacity: ghost ? Number(getComputedStyle(ghost).opacity) : -1,
+          shellOpacity: Number(getComputedStyle(shell).opacity),
           dialogVisible: dialog.getClientRects().length > 0,
           coverAnimation: getComputedStyle(
             shell.querySelector('.collection-card__screen-cover')!
@@ -280,6 +329,7 @@ test('collection boxes expand into a centered gallery and restore without shifti
         (window as any).__collectionFontProbe.handoff as {
           returned: boolean
           ghostOpacity: number
+          shellOpacity: number
           dialogVisible: boolean
           delta: number
           coverAnimation: string
@@ -307,7 +357,9 @@ test('collection boxes expand into a centered gallery and restore without shifti
         .filter((sample) => sample.returned)
         .every(
           (sample) =>
-            sample.coverAnimation === 'none' && sample.coverOpacity === 1
+            sample.coverAnimation === 'none' &&
+            sample.coverOpacity === 1 &&
+            sample.shellOpacity === 1
         )
     ).toBe(true)
     expect(

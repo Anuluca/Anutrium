@@ -1,38 +1,18 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, watch } from 'vue'
+
+import { useAnimatedProgress } from '@/composables/useAnimatedProgress'
 
 const props = withDefaults(
   defineProps<{ progress: number; fading?: boolean; animate?: boolean }>(),
   { fading: false, animate: true }
 )
 const emit = defineEmits<{ complete: []; reveal: []; faded: [] }>()
-const displayed = ref(props.animate ? 0 : props.progress)
-const completing = computed(() => props.fading && displayed.value >= 100)
-let frame: number | undefined
-let lastTime = 0
-const advance = (now: number) => {
-  frame = undefined
-  displayed.value = Math.min(
-    props.progress,
-    displayed.value + Math.min((now - lastTime) / 1000, 0.1) * 100
-  )
-  lastTime = now
-  if (displayed.value < props.progress) frame = requestAnimationFrame(advance)
-}
-watch(
+const displayed = useAnimatedProgress(
   () => props.progress,
-  (value) => {
-    if (!props.animate) {
-      if (frame !== undefined) cancelAnimationFrame(frame)
-      frame = undefined
-      displayed.value = value
-    } else if (frame === undefined && value > displayed.value) {
-      lastTime = performance.now()
-      frame = requestAnimationFrame(advance)
-    }
-  },
-  { immediate: true }
+  () => props.animate
 )
+const completing = computed(() => props.fading && displayed.value >= 100)
 // 满宽后再通知入口退场，不能让模型在加载线仍伸展时提前入场。
 watch(
   completing,
@@ -55,9 +35,6 @@ const animationStart = (event: AnimationEvent) => {
   )
     emit('reveal')
 }
-onBeforeUnmount(() => {
-  if (frame !== undefined) cancelAnimationFrame(frame)
-})
 </script>
 
 <template>

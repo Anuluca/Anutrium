@@ -16,7 +16,7 @@
       :title-en="t('flanerie.videoLabel', {}, { locale: 'en' })"
     >
       <template #actions>
-        <SectionCount :count="videos.length" label="VIDEOS" />
+        <NumberCount :count="videos.length" />
       </template>
       <JourneyVideoPlayer
         :videos="videos"
@@ -35,7 +35,7 @@
       :title-en="t('flanerie.photoLabel', {}, { locale: 'en' })"
     >
       <template #actions>
-        <SectionCount :count="photos.length" label="PHOTOS" />
+        <NumberCount :count="photos.length" />
       </template>
       <MediaGallery
         :items="paginatedPhotos"
@@ -96,8 +96,8 @@ import MediaGallery, {
   type GalleryMedia,
 } from '@/components/MediaGallery/index.vue'
 import MediaPhotoInfo from '@/components/MediaPhotoInfo/index.vue'
+import NumberCount from '@/components/NumberCount/index.vue'
 import PageFooter from '@/components/PageFooter/index.vue'
-import SectionCount from '@/components/SectionCount/index.vue'
 import Sections from '@/components/Sections/index.vue'
 import { isTempleRouteName } from '@/config/templeNavigation'
 import { getBilibiliEmbedUrl } from '@/utils/bilibiliVideo'

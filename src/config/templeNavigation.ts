@@ -1,9 +1,11 @@
+import { PHOTO_ROUTE_PATH } from './atriumPhoto'
 import { islandModuleAtPath, islandModules } from './islandModules'
 import { pageThemeColors } from './pageThemes'
 
 const templeRouteNames = new Set<string>([
   'HOME',
   'ATRIUM',
+  'ATRIUM_PHOTO',
   ...Object.values(islandModules).map((module) => module.routeName),
 ])
 export const isTempleRouteName = (name: unknown) =>
@@ -130,6 +132,7 @@ const moduleByPath = new Map<string, TempleEntryId>([
     item.id,
   ]),
   ['/atrium', 'statue'],
+  [PHOTO_ROUTE_PATH, 'statue'],
   ['/floratrium', 'sprigatito'],
 ])
 export const templeModuleAtPath = (path: string): TempleEntryId | null =>
@@ -146,6 +149,23 @@ export const needsFreshTempleScene = (
     templeModuleAtPath(to) ||
     templeModuleAtPath(`/${String(moduleQuery || '')}`)
   return !!islandModuleAtPath(from) && !!destination && destination !== 'statue'
+}
+
+export const needsTempleRouteCurtain = (
+  from: string,
+  to: string,
+  fromModule?: unknown,
+  toModule?: unknown,
+  sourceSelection?: TempleEntryId | null
+) => {
+  const source =
+    templeModuleAtPath(from) ||
+    templeModuleAtPath(`/${String(fromModule || '')}`) ||
+    sourceSelection
+  return (
+    (!!source && source !== 'statue' && !!islandModuleAtPath(to)) ||
+    (!!islandModuleAtPath(from) && to === '/' && !toModule)
+  )
 }
 
 // 无效或重复参数不覆盖现有的站内返回状态。

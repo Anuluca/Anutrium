@@ -1,0 +1,151 @@
+// 拍照工具按钮与设置面板共用的视觉参数。
+@photo-tool-background: rgba(24, 24, 27, 0.65);
+@photo-tool-blur: 12px;
+@photo-tool-text: #fffff4;
+@photo-tool-muted: rgba(255, 255, 244, 0.6);
+@photo-tool-accent: #18c6a6;
+@photo-tool-track: #3d3d42;
+@photo-tool-thumb-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+
+.photo-tool-surface() {
+  background: @photo-tool-background;
+  -webkit-backdrop-filter: blur(@photo-tool-blur);
+  backdrop-filter: blur(@photo-tool-blur);
+}
+
+// 整个拍照 HUD 共用的安全区，保留现有 40px 边距并避开设备遮挡。
+.photo-tool-safe-insets() {
+  --photo-toolbar-height: 76px;
+  --photo-control-gap: 16px;
+  --photo-mobile-hint-height: 28px;
+  --photo-mobile-action-size: min(
+    88px,
+    calc((var(--photo-safe-width) - 16px) / 3)
+  );
+  --photo-safe-top: max(40px, env(safe-area-inset-top, 0px));
+  --photo-safe-right: max(40px, env(safe-area-inset-right, 0px));
+  --photo-safe-bottom: max(40px, env(safe-area-inset-bottom, 0px));
+  --photo-safe-left: max(40px, env(safe-area-inset-left, 0px));
+  --photo-safe-height: calc(
+    100dvh - var(--photo-safe-top) - var(--photo-safe-bottom)
+  );
+  --photo-safe-width: calc(
+    100vw - var(--photo-safe-left) - var(--photo-safe-right)
+  );
+}
+
+.photo-tool-fields() {
+  :deep(.photo-tool-reset),
+  :deep(.photo-tool-toggle) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: auto;
+    height: auto;
+    flex: none;
+    padding: 6px 10px;
+    border: 0;
+    background: transparent;
+    color: @photo-tool-accent;
+    font: 700 16px/1.4 'alibaba-puhuiti', sans-serif;
+    cursor: pointer;
+    svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+  }
+  :deep(.photo-tool-reset) {
+    width: max-content;
+    background: @photo-tool-track;
+    color: @photo-tool-text;
+    &:hover,
+    &:focus-visible {
+      color: @photo-tool-accent;
+    }
+  }
+  :deep(.photo-tool-group) {
+    margin-top: 20px;
+    & + .photo-tool-group {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255, 255, 244, 0.18);
+    }
+    .photo-tool-field:first-child {
+      margin-top: 0;
+    }
+  }
+  :deep(.photo-tool-group__title) {
+    margin: 0;
+    font: 900 clamp(28px, 4vw, 40px) / 1.15 'alibaba-puhuiti', sans-serif;
+    letter-spacing: -0.04em;
+    text-align: left;
+    color: @photo-tool-text;
+    -webkit-mask-image: linear-gradient(to bottom, #000 15%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 15%, transparent 100%);
+    & + .photo-tool-field {
+      margin-top: 0;
+    }
+  }
+  :deep(.photo-tool-fields-row) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 16px;
+    .photo-tool-field {
+      margin-top: 0;
+      min-width: 0;
+    }
+    .photo-tool-field__label {
+      gap: 6px;
+      output {
+        font-size: 18px;
+      }
+    }
+    .photo-tool-options button {
+      padding: 8px 6px;
+      font-size: 16px;
+    }
+  }
+  :deep(.photo-tool-field) {
+    margin-top: 20px;
+  }
+  :deep(.photo-tool-field__label) {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    output {
+      font-size: 22px;
+    }
+  }
+  :deep(.photo-tool-options) {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    button {
+      flex: 1;
+      width: auto;
+      height: auto;
+      padding: 10px 12px;
+      border: 3px solid transparent;
+      background: var(--photo-option-background, @photo-tool-track);
+      color: @photo-tool-muted;
+      font: inherit;
+      cursor: pointer;
+      &[aria-pressed='true'] {
+        border-color: @photo-tool-accent;
+        color: @photo-tool-text;
+      }
+    }
+    &.photo-tool-options--colors {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      button,
+      button[aria-pressed='true'] {
+        color: #000;
+      }
+    }
+  }
+}

@@ -1,5 +1,38 @@
 import * as THREE from 'three'
 
+/** Atrium 与拍照共用线框合成及深度预通道配置，防止两处材质逐渐偏离。 */
+export function createModelWireMaterials(
+  color: THREE.Color | number,
+  clippingPlanes?: THREE.Plane[]
+) {
+  const clipping = clippingPlanes ? { clippingPlanes } : {}
+  return {
+    wire: new THREE.MeshBasicMaterial({
+      color,
+      wireframe: false,
+      transparent: true,
+      premultipliedAlpha: true,
+      opacity: 0,
+      depthWrite: false,
+      toneMapped: false,
+      ...clipping,
+    }),
+    depth: new THREE.MeshBasicMaterial({
+      color: 0x000000,
+      colorWrite: false,
+      opacity: 0,
+      transparent: true,
+      toneMapped: false,
+      depthTest: true,
+      depthWrite: true,
+      polygonOffset: true,
+      polygonOffsetFactor: 1,
+      polygonOffsetUnits: 1,
+      ...clipping,
+    }),
+  }
+}
+
 /** 物理表面与合成表面共享变形后的模型空间分界，动画只改变 uniform。 */
 export function createModelScan(
   color: THREE.Color,
@@ -9,11 +42,13 @@ export function createModelScan(
   const bounds = { value: new THREE.Vector2(0, 1) }
   const flowTime = { value: 0 }
   const flowEnabled = { value: 1 }
+  const fillOpacity = { value: 0.55 }
   const uniforms = {
     islandScanProgress: progress,
     islandScanBounds: bounds,
     islandFlowTime: flowTime,
     islandFlowEnabled: flowEnabled,
+    islandWireFillOpacity: fillOpacity,
     islandFlowReferenceHeight: { value: referenceHeight },
   }
   const install = (material: THREE.Material, layer: 'chrome' | 'composite') => {
@@ -62,7 +97,7 @@ export function createModelScan(
           uniform float islandScanProgress; uniform vec3 islandScanColor;
           ${
             layer === 'composite'
-              ? 'varying vec3 islandBarycentric; varying vec3 islandFlowPhase; uniform float islandFlowEnabled;'
+              ? 'varying vec3 islandBarycentric; varying vec3 islandFlowPhase; uniform float islandFlowEnabled; uniform float islandWireFillOpacity;'
               : ''
           }
           float islandScanHash(vec2 p) { return fract(sin(dot(p, vec2(53.37, 117.13))) * 15837.31); }
@@ -98,7 +133,7 @@ export function createModelScan(
             float wireDistance = min(min(pixelDistance.x, pixelDistance.y), pixelDistance.z);
             float wireCoverage = 1.0 - smoothstep(0.55, 1.25, wireDistance);
             float converted = (islandScanProgress >= 0.99999 || scanDistance < 0.0) ? 1.0 : 0.0;
-            diffuseColor.a = converted * (0.55 + 0.45 * wireCoverage);
+            diffuseColor.a = converted * (islandWireFillOpacity + (1.0 - islandWireFillOpacity) * wireCoverage);
             outgoingLight = vec3(0.0);
             vec3 scanRadiance = vec3(0.0);
             float scanAlpha = 0.0;
@@ -127,7 +162,7 @@ export function createModelScan(
           .replace(
             '#include <premultiplied_alpha_fragment>',
             `#include <premultiplied_alpha_fragment>
-            // 显示色彩空间中按覆盖率合成，保持黑色 0.55 填充与原线框的叠加语义。
+            // 显示色彩空间中按覆盖率合成；黑色面填充由独立 uniform 控制。
             gl_FragColor.rgb += linearToOutputTexel(vec4(islandScanColor, 1.0)).rgb * 0.55 * wireCoverage * converted;
             gl_FragColor.rgb += flowRadiance * converted;
             if (scanActive > 0.5) gl_FragColor.rgb += linearToOutputTexel(vec4(scanRadiance, 1.0)).rgb * scanAlpha;`
@@ -135,13 +170,14 @@ export function createModelScan(
       }
     }
     material.customProgramCacheKey = () =>
-      `${previousKey}:island-scan-flow-v17-${layer}`
+      `${previousKey}:island-scan-flow-v18-${layer}`
   }
   return {
     progress,
     bounds,
     flowTime,
     flowEnabled,
+    fillOpacity,
     install,
     advanceFlow(elapsed: number) {
       // 三组速度的共同周期为 20 秒；限制时钟范围，避免长期开页导致浮点精度退化。

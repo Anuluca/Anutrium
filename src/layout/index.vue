@@ -143,12 +143,17 @@
                   'is-active': activeNavigation === item.id,
                   'is-inner-active':
                     isInnerMenuRoute && activeNavigation === item.id,
+                  'submenu-dismissed':
+                    item.id === 'statue' && atriumMenuDismissed,
                 },
               ]"
               :style="{
                 '--module-theme-color':
                   'themeColor' in item ? item.themeColor : '#e23456',
               }"
+              @pointerleave="
+                item.id === 'statue' && (atriumMenuDismissed = false)
+              "
             >
               <button
                 v-if="!isTempleRoute || item.id !== 'about'"
@@ -165,14 +170,11 @@
                       : '关于'
                     : item.title
                 "
-                :style="{
-                  '--module-theme-color':
-                    'themeColor' in item ? item.themeColor : '#e23456',
-                }"
                 :disabled="
                   !item.enabled || (isTempleRoute && !navigation.ready)
                 "
                 :aria-pressed="activeNavigation === item.id"
+                @focus="item.id === 'statue' && (atriumMenuDismissed = false)"
                 @click="activateNavigation(item.id)"
               >
                 <InfoFilled
@@ -198,11 +200,12 @@
                 @click.stop
               >
                 <RouterLink
-                  v-for="module in islandModules"
+                  v-for="module in atriumMenuItems"
                   :key="module.path"
                   :to="module.path"
                   class="atrium-submenu-link"
                   :class="{ 'is-current': route.path === module.path }"
+                  @click="dismissAtriumMenu"
                   ><TextRoll
                     class="atrium-submenu-title"
                     :text="module.menuTitle"
@@ -298,7 +301,7 @@
               </div>
             </button>
             <button
-              v-for="item in mobileMenuItems"
+              v-for="(item, index) in mobileMenuItems"
               :key="item.id"
               type="button"
               class="temple-nav-action"
@@ -308,6 +311,7 @@
               :data-temple-nav="item.id"
               :aria-label="item.id === 'about' ? 'ABOUT / 关于' : undefined"
               :style="{
+                '--menu-entry-delay': `${(index + 1) * 75}ms`,
                 '--module-theme-color':
                   'themeColor' in item ? item.themeColor : '#e23456',
               }"
@@ -400,7 +404,10 @@
           @enter-cancelled="completeRouteTransition"
           @leave-cancelled="completeRouteLeave"
         >
-          <component :is="Component" v-if="props.contentActive" />
+          <component
+            :is="Component"
+            v-if="props.contentActive && !routeContentBlocked"
+          />
         </transition>
       </router-view>
       <div id="page-footer-portal" class="page-footer-portal" />
@@ -477,6 +484,7 @@ import {
   getPageMaxScrollTop,
   getPageScrollTop,
 } from '@/utils/pageScroll'
+import { routeContentBlocked } from '@/utils/routeCurtain'
 
 import { useMobileMenu } from './useMobileMenu'
 import { useRouteShellGeometry } from './useRouteShellGeometry'
@@ -695,11 +703,17 @@ const theme = computed(() => visualStateStore.theme)
 const desktopMenuGroups = computed(() =>
   isTempleRoute.value ? templeDesktopMenuGroups : templeRouteDesktopMenuGroups
 )
+const atriumMenuItems = Object.values(islandModules)
 const activeNavigation = computed(() =>
   route.path === '/about' || navigation.aboutOpen
     ? 'about'
     : navigation.activeSelection
 )
+const atriumMenuDismissed = ref(false)
+const dismissAtriumMenu = (event: MouseEvent) => {
+  atriumMenuDismissed.value = true
+  ;(event.currentTarget as HTMLElement).blur()
+}
 const showHomeAboutAction = computed(
   () => isTempleRoute.value && navigation.entranceFinished
 )
@@ -724,11 +738,11 @@ const activateNavigation = async (id: TempleNavigationId) => {
 }
 const returnToInitialHome = async () => {
   closeMobileMenu()
-  // HOME 是显式复位；在路由切换前提交请求，避免子页返回逻辑自动恢复模块聚焦。
+  // 三级页返回先等待路由遮罩覆盖；其余入口沿用原有显式复位逻辑。
   consumeJourneyReturnState()
   navigation.returnModule = null
   navigation.returnExpanded = false
-  navigation.request(null)
+  if (!islandModuleAtPath(route.path)) navigation.request(null)
   await router.push('/')
   // 旅程详情的离场守卫会重新写入返回标记，导航完成后再清理一次。
   consumeJourneyReturnState()
@@ -1030,7 +1044,8 @@ const returnHome = () => {
       enterHomeImmersion()
       return
     }
-    navigation.request(null)
+    if (islandModuleAtPath(route.path)) void returnToInitialHome()
+    else navigation.request(null)
     return
   }
   if (isHomeRoute.value) {

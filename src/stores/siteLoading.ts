@@ -7,6 +7,7 @@ interface LoadingTask {
   progress: number
   weight: number
   state: TaskState
+  silent: boolean
 }
 
 export const useSiteLoading = defineStore('site-loading', () => {
@@ -16,6 +17,9 @@ export const useSiteLoading = defineStore('site-loading', () => {
   let token = 0
   const pending = computed(() =>
     [...tasks.values()].some((task) => task.state === 'loading')
+  )
+  const visiblePending = computed(() =>
+    [...tasks.values()].some((task) => task.state === 'loading' && !task.silent)
   )
   const progress = computed(() => {
     let total = 0
@@ -27,15 +31,25 @@ export const useSiteLoading = defineStore('site-loading', () => {
     return total ? Math.floor(completed / total) : 100
   })
 
-  function beginTask(key: string, weight = 1) {
+  function beginTask(
+    key: string,
+    weight = 1,
+    options: { silent?: boolean } = {}
+  ) {
     let task = tasks.get(key)
     if (!task || task.state !== 'loading') {
       if (!pending.value) {
         tasks.clear()
         batch.value++
-        presentationReady.value = false
+        if (!options.silent) presentationReady.value = false
       }
-      task = { token: ++token, progress: 0, weight, state: 'loading' }
+      task = {
+        token: ++token,
+        progress: 0,
+        weight,
+        state: 'loading',
+        silent: !!options.silent,
+      }
       tasks.set(key, task)
     }
     const taskToken = task.token
@@ -76,6 +90,7 @@ export const useSiteLoading = defineStore('site-loading', () => {
     tasks,
     batch,
     pending,
+    visiblePending,
     progress,
     presentationReady,
     beginTask,

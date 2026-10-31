@@ -69,7 +69,10 @@ watch(
   isTempleRoute,
   (home) => {
     if (typeof window === 'undefined') return
-    if (home && !entryAnimationReady.value) siteLoading.beginTask('home-scene')
+    if (home)
+      siteLoading.beginTask('home-scene', 1, {
+        silent: entryAnimationReady.value,
+      })
     else siteLoading.cancelTask('home-scene')
   },
   { immediate: true, flush: 'sync' }

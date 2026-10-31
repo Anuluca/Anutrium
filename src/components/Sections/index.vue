@@ -23,13 +23,22 @@
 
     <aside class="home-section-rail scroll-reveal-title" aria-hidden="true">
       <span class="home-section-rail__num">
-        <span class="home-section-rail__prefix">#</span
-        >{{ formattedSectionNumber.slice(1) }}
+        <span class="home-section-rail__prefix">#</span>
+        <span class="home-section-rail__value">{{
+          formattedSectionNumber.slice(1)
+        }}</span>
       </span>
     </aside>
 
     <div class="home-section-title-row scroll-reveal-title">
-      <h2 :id="sectionAnchorId" class="home-section-title">
+      <h2
+        :id="sectionAnchorId"
+        class="home-section-title"
+        :class="{
+          'home-section-title--bilingual': shouldShowTitleEn,
+          'home-section-title--chinese': hasChineseTitle,
+        }"
+      >
         <span class="home-section-title__text">{{ title }}</span>
         <span v-if="shouldShowTitleEn" class="home-section-title__en">
           {{ titleEn }}
@@ -64,6 +73,7 @@ const props = defineProps<{
   sectionNumber: string | number
   title: string
   titleEn?: string
+  showEnglishTitle?: boolean
   navigation?: boolean
   reveal?: boolean
   hasBackground?: boolean
@@ -79,8 +89,12 @@ const formattedSectionNumber = computed(
 )
 const sectionLabel = computed(() => props.titleEn || props.title)
 const shouldShowTitleEn = computed(
-  () => locale.value !== 'en' && Boolean(props.titleEn)
+  () =>
+    props.showEnglishTitle === true &&
+    locale.value !== 'en' &&
+    Boolean(props.titleEn)
 )
+const hasChineseTitle = computed(() => /[\u3400-\u9fff]/.test(props.title))
 
 const sectionAnchorId = computed(
   () =>
@@ -135,7 +149,6 @@ watch(
 
 .home-section-layout {
   --section-number-font-size: 2.05rem;
-
   position: relative;
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);
@@ -187,13 +200,12 @@ watch(
 
 .home-section-rail__num {
   display: block;
-  color: transparent;
+  opacity: 0.7;
+  color: var(--section-accent-color, var(--page-theme-color, #e23456));
   font-family: 'Anton', monospace;
   font-size: var(--section-number-font-size);
   line-height: 0.875;
   text-align: center;
-  -webkit-text-stroke: 1px
-    var(--section-accent-color, var(--page-theme-color, #e23456));
   text-shadow: 0 0 10px
     color-mix(
       in srgb,
@@ -203,8 +215,20 @@ watch(
 }
 
 .home-section-rail__prefix {
+  display: inline-block;
   font-size: 1.1em;
-  line-height: 0;
+  line-height: 1;
+  mask-image: linear-gradient(to right, rgb(0 0 0 / 60%) 50%, rgb(0 0 0 / 30%));
+  -webkit-mask-image: linear-gradient(
+    to right,
+    rgb(0 0 0 / 60%) 50%,
+    rgb(0 0 0 / 30%)
+  );
+}
+
+.home-section-rail__value {
+  display: inline-block;
+  transform: translateX(-0.1em);
 }
 
 .home-section-title {
@@ -215,7 +239,7 @@ watch(
   align-items: center;
   gap: 0.28rem;
   scroll-margin-top: 7rem;
-  margin-bottom: 20px;
+  margin: 0;
   padding: 0;
   color: var(--section-accent-color, var(--page-theme-color, #e23456));
   font-family: 'Anton', 'alibaba-puhuiti';
@@ -227,6 +251,27 @@ watch(
   display: block;
   line-height: 1;
   text-align: center;
+}
+
+.home-section-title--chinese .home-section-title__text {
+  letter-spacing: -0.04em;
+  transform: scaleX(0.92);
+  transform-origin: center;
+}
+
+.home-section-title--bilingual.home-section-title--chinese
+  .home-section-title__text {
+  transform: scale(0.92, 1.08);
+  transform-origin: top center;
+}
+
+.home-section-title--bilingual .home-section-title__text {
+  mask-image: linear-gradient(to bottom, #000 35%, rgb(0 0 0 / 30%) 100%);
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 35%,
+    rgb(0 0 0 / 30%) 100%
+  );
 }
 
 .home-section-title__en {
@@ -250,7 +295,7 @@ watch(
   grid-row: 1;
   grid-column: 1 / -1;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  align-items: center;
+  align-items: stretch;
   gap: 20px;
   margin-bottom: 0;
   padding-top: 0;
@@ -259,22 +304,24 @@ watch(
     grid-column: 2;
     margin-bottom: 0;
     justify-self: center;
+    align-self: center;
   }
 }
 
 .home-section-actions {
   grid-column: 3;
   justify-self: end;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
   transform: translateY(-2px);
 }
 
 @media screen and (max-aspect-ratio: @ratio-threshold) {
   .home-section-layout {
     --section-number-font-size: 2.1rem;
-
     column-gap: 0.8rem;
   }
-
   .home-section-title-row {
     gap: 10px;
   }
@@ -294,10 +341,8 @@ watch(
 @media screen and (max-width: 1024px) and (hover: none) and (pointer: coarse) {
   .home-section-layout {
     --section-number-font-size: 2.1rem;
-
     column-gap: 0.8rem;
   }
-
   .home-section-title-row {
     .home-section-title {
       min-width: 0;
@@ -308,6 +353,20 @@ watch(
 
   .home-section-actions {
     transform: translateY(-6px);
+  }
+}
+
+.home-section-title-row
+  .home-section-title:not(.home-section-title--bilingual) {
+  font-size: 1.78rem;
+  transform: translateY(-0.08em);
+}
+
+@media screen and (max-aspect-ratio: @ratio-threshold),
+  screen and (max-width: 1024px) and (hover: none) and (pointer: coarse) {
+  .home-section-title-row
+    .home-section-title:not(.home-section-title--bilingual) {
+    font-size: 1.83rem;
   }
 }
 </style>

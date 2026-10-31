@@ -3,6 +3,7 @@ import { expect, test } from '@playwright/test'
 for (const mode of ['mixed', 'square']) {
   test(`${mode} media use natural heights with the tallest image shared within each row`, async ({
     page,
+    isMobile,
   }) => {
     test.setTimeout(60000)
     await page.emulateMedia({ reducedMotion: 'reduce' })
@@ -60,6 +61,7 @@ for (const mode of ['mixed', 'square']) {
           width: bounds.width,
           ratio: image.naturalWidth / image.naturalHeight,
           limit: parseFloat(getComputedStyle(frame).maxHeight),
+          minimum: parseFloat(getComputedStyle(frame).minHeight) || 0,
           infoTop: card
             .querySelector('.media-gallery__info')
             ?.getBoundingClientRect().top,
@@ -73,9 +75,12 @@ for (const mode of ['mixed', 'square']) {
     }
     for (const row of rows.values()) {
       const expected = Math.max(
-        ...row.map((item) => Math.min(item.limit, item.width / item.ratio))
+        ...row.map((item) =>
+          Math.max(item.minimum, Math.min(item.limit, item.width / item.ratio))
+        )
       )
       for (const item of row) {
+        if (isMobile) expect(item.height).toBeGreaterThanOrEqual(180)
         expect(item.frameLeft).toBeGreaterThanOrEqual(item.cardLeft - 1)
         expect(item.frameRight).toBeLessThanOrEqual(item.cardRight + 1)
         expect(Math.abs(item.height - expected)).toBeLessThanOrEqual(1)

@@ -9,6 +9,7 @@ import {
   jsonResponse,
   withCors,
 } from './http'
+import { handleNotes } from './notes'
 import { fetchSteamProfile } from './steam'
 
 export { FloraLikes } from './floraLikes'
@@ -80,6 +81,9 @@ const worker: ExportedHandler<Env> = {
         origin,
         allowedOrigins
       )
+
+    if (/^\/(?:admin\/)?notes(?:\/|$)/.test(url.pathname))
+      return withCors(await handleNotes(request, env), origin, allowedOrigins)
 
     // 管理写入只在这个独立端点开放，其余既有接口继续只读。
     if (

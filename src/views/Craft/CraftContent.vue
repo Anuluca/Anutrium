@@ -29,7 +29,7 @@
 
     <div class="craft-workspace craft-enter craft-enter--list">
       <div class="tool-list">
-        <div class="tl-grid">
+        <ToolCardGrid>
           <ToolCard
             v-for="(tool, i) in filteredTools"
             :key="`${activeCategory}-${activeTag || 'all'}-${tool.id}`"
@@ -42,7 +42,7 @@
             @select="openTool(tool)"
             @tag-select="activeTag = $event"
           />
-        </div>
+        </ToolCardGrid>
         <div v-if="filteredTools.length === 0" class="tl-empty">
           NO MATCHED TOOLS
         </div>
@@ -64,6 +64,7 @@ import FilterRail, {
   type FilterRailItem,
 } from '@/components/FilterRail/index.vue'
 import ToolCard from '@/components/ToolCard/index.vue'
+import ToolCardGrid from '@/components/ToolCardGrid/index.vue'
 import { useScrollReveal } from '@/composables/useScrollReveal'
 import { useCraftNavigation } from '@/stores/craftNavigation'
 import { trackToolClick } from '@/utils/analytics'
@@ -88,7 +89,7 @@ const activateEntrance = () => {
   stopMenuObserver()
 }
 const { stop: stopMenuObserver } = useMutationObserver(
-  () => contentRoot.value?.closest('.temple-menu'),
+  () => contentRoot.value?.closest<HTMLElement>('.temple-menu'),
   activateEntrance,
   { attributes: true, attributeFilter: ['class'] }
 )
@@ -416,17 +417,6 @@ if (
   position: relative;
 }
 
-.tl-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 24px 20px;
-  margin-left: 2px;
-  margin-right: 2px;
-  margin-top: 20px;
-  margin-bottom: 2px;
-  position: relative;
-}
-
 .tl-empty {
   padding: 48px 0 20px;
   color: @muted;
@@ -442,12 +432,6 @@ if (
 
 .craft-content.is-embedded.is-expanded .tl-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-@media (max-width: 900px) {
-  .tl-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 600px) {

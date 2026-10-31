@@ -1,5 +1,33 @@
 import { expect, test } from './helpers/sceneDiagnostics'
 
+test('收藏品在内容显现后依次放入展架', async ({ page }) => {
+  test.setTimeout(90000)
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await page.goto('/atrium/collections', { waitUntil: 'domcontentloaded' })
+  const cards = page.locator('.collection-card-entry')
+  await expect(cards.first()).toBeAttached({ timeout: 45000 })
+  const samples = await cards.evaluateAll((elements) => {
+    const first = elements.slice(0, 2)
+    const animations = first.map((element) => element.getAnimations()[0])
+    if (animations.some((animation) => !animation)) return null
+    animations.forEach((animation) => animation.pause())
+    return [1500, 1700, 2150].map((time) => {
+      animations.forEach((animation) => (animation.currentTime = time))
+      return first.map((element) => ({
+        opacity: Number(getComputedStyle(element).opacity),
+        transform: getComputedStyle(element).transform,
+      }))
+    })
+  })
+  expect(samples).not.toBeNull()
+  expect(samples![0][0].opacity).toBeGreaterThan(0)
+  expect(samples![0][0].opacity).toBeLessThan(1)
+  expect(samples![0][0].transform).not.toBe('none')
+  if (samples![0][1]) expect(samples![0][1].opacity).toBe(0)
+  if (samples![1][1]) expect(samples![1][1].opacity).toBeGreaterThan(0)
+  expect(samples![2][0].opacity).toBe(1)
+})
+
 test('收藏品按行排列展架，展开和收起保留滚动位置', async ({ page }, info) => {
   test.setTimeout(90000)
   await page.routeWebSocket('ws://localhost:3000/**', (socket) =>
@@ -10,7 +38,6 @@ test('收藏品按行排列展架，展开和收起保留滚动位置', async ({
   const content = page.locator('.island-collections-content')
   await expect(content).toBeVisible({ timeout: 45000 })
   const button = page.getByRole('button', { name: '展开全屏内容', exact: true })
-  await expect(button).toBeEnabled()
   const mobile = info.project.name.includes('mobile')
   const readLayout = () =>
     content.evaluate((element) => {
@@ -48,6 +75,19 @@ test('收藏品按行排列展架，展开和收起保留滚动位置', async ({
     }
   }
   await verify(mobile ? 1 : 4)
+  if (mobile) {
+    await expect(button).toHaveCount(0)
+    const widths = await content.evaluate((element) => {
+      const panel = element.closest<HTMLElement>('.island-window')!
+      return {
+        panel: panel.getBoundingClientRect().width,
+        available: panel.parentElement!.getBoundingClientRect().width,
+      }
+    })
+    expect(Math.abs(widths.panel - widths.available)).toBeLessThanOrEqual(1)
+    return
+  }
+  await expect(button).toBeEnabled()
   const panel = page.locator('.island-panels .island-window--interests')
   const before = await panel.boundingBox()
   const scroll = page.locator(
@@ -76,7 +116,7 @@ test('收藏品按行排列展架，展开和收起保留滚动位置', async ({
   expect(await scroll.evaluate((element) => element.scrollTop)).toBe(40)
   await page.keyboard.press('Escape')
   await expect(page).toHaveURL(/\/atrium$/)
-  await expect(page.locator('.island-focus')).not.toHaveClass(
-    /has-collections-expanded/
-  )
+  await expect(
+    page.locator('.island-focus:not(.island-closing-snapshot)')
+  ).not.toHaveClass(/has-detail-expanded/)
 })

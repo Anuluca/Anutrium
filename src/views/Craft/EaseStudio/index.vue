@@ -326,10 +326,7 @@ const copyCss = async () => {
   animation: tacticalIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s both;
 }
 .pt-grid {
-  display: grid;
-  grid-template-columns: 5fr 2fr;
-  gap: 30px 0;
-  align-items: stretch;
+  .tool-grid();
 }
 
 .pt-panel {
@@ -683,10 +680,6 @@ input[type='range'] {
 }
 
 @media (max-width: 900px) {
-  .pt-grid {
-    grid-template-columns: 1fr;
-  }
-
   .pt-panel,
   .right-panel {
     min-height: 450px;

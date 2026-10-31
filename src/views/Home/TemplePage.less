@@ -335,7 +335,8 @@
       position: absolute;
       inset: 0 0 auto;
       height: 28svh;
-      z-index: 2;
+      // 画布为 0，内容为 2；顶部渐隐只覆盖背景画布。
+      z-index: 1;
       background: linear-gradient(to bottom, #000, transparent);
       opacity: 0;
       pointer-events: none;

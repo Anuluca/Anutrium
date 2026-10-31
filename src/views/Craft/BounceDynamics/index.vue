@@ -608,10 +608,7 @@ onBeforeUnmount(() => {
 }
 
 .pt-grid {
-  display: grid;
-  grid-template-columns: 5fr 2fr;
-  gap: 30px 0;
-  align-items: stretch;
+  .tool-grid();
 }
 
 .pt-panel {
@@ -879,10 +876,6 @@ input[type='range'] {
 }
 
 @media (max-width: 900px) {
-  .pt-grid {
-    grid-template-columns: 1fr;
-  }
-
   .bounce-stage {
     min-height: 520px;
   }

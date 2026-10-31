@@ -1,4 +1,5 @@
 @import './imageViewerDesktop.less';
+@import './elementSwitch.less';
 @import './homeImmersion.less';
 
 @import url(./font.less);
@@ -101,8 +102,7 @@ body.mobile-menu-scroll-locked {
 body.mobile-menu-scroll-locked {
   touch-action: none;
 
-  .sections-fixed-nav,
-  .detail-sections-nav {
+  .sections-fixed-nav {
     visibility: hidden;
     opacity: 0 !important;
     pointer-events: none;
@@ -230,8 +230,8 @@ body:has(.flora-focus-layout--mobile.is-album-expanded) {
   .el-image-viewer__mask {
     background: rgb(0 0 0 / 88%);
     opacity: 1;
-    -webkit-backdrop-filter: blur(14PX);
-    backdrop-filter: blur(14PX);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
   }
   .el-image-viewer__progress {
     padding: 6px 12px;
@@ -239,12 +239,12 @@ body:has(.flora-focus-layout--mobile.is-album-expanded) {
   }
   .el-image-viewer__close {
     z-index: 3;
-    top: 24PX;
-    right: 24PX;
-    width: 28PX;
-    height: 28PX;
-    font-size: 24PX;
-    border: 2PX solid var(--viewer-accent);
+    top: 24px;
+    right: 24px;
+    width: 28px;
+    height: 28px;
+    font-size: 24px;
+    border: 2px solid var(--viewer-accent);
     transform: rotate(45deg);
     box-shadow: none;
     .el-icon {
@@ -423,15 +423,15 @@ body:has(.flora-focus-layout--mobile.is-album-expanded) {
       &::before {
         top: auto;
         right: auto;
-        bottom: -16PX;
-        left: -16PX;
+        bottom: -16px;
+        left: -16px;
         border-width: 0 0 2px 2px;
       }
       &::after {
         top: auto;
         left: auto;
-        bottom: -16PX;
-        right: -16PX;
+        bottom: -16px;
+        right: -16px;
         border-width: 0 2px 2px 0;
       }
     }
@@ -450,15 +450,15 @@ body:has(.flora-focus-layout--mobile.is-album-expanded) {
       &::before {
         bottom: auto;
         right: auto;
-        top: -16PX;
-        left: -16PX;
+        top: -16px;
+        left: -16px;
         border-width: 2px 0 0 2px;
       }
       &::after {
         bottom: auto;
         left: auto;
-        top: -16PX;
-        right: -16PX;
+        top: -16px;
+        right: -16px;
         border-width: 2px 2px 0 0;
       }
     }
@@ -1020,7 +1020,7 @@ body .el-message-box {
   font-family: 'alibaba-puhuiti', sans-serif;
   font-weight: 900;
   // 大写 PX 不参与全站 rem 转换，确保提示文字保持可读的 18px。
-  font-size: 18PX;
+  font-size: 18px;
   line-height: 1.5;
   letter-spacing: -0.03em;
   transform-origin: center center;

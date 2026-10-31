@@ -11,6 +11,7 @@
         !isPointerInside ||
         !isPageVisible,
       'is-loading': isLoading,
+      'is-instant': isInstant,
     }"
   >
     <div class="cursor-scale" :class="{ 'is-clicked': isClicked }">
@@ -52,7 +53,7 @@ const navigation = useTempleNavigation()
 const HIDDEN_CURSOR_SELECTOR =
   '.no-cursor, .hide-cursor, .cursor-none, .native-cursor'
 const INTERACTIVE_CURSOR_SELECTOR =
-  'a, button, [role="button"], [data-magnetic], .is-clickable, .el-image-viewer__close, .el-image-viewer__prev, .el-image-viewer__next'
+  'a, button, [role="button"], [role="switch"]:not([aria-disabled="true"]), .el-switch:not(.is-disabled), [data-magnetic], .is-clickable, .el-image-viewer__close, .el-image-viewer__prev, .el-image-viewer__next'
 const FINE_POINTER_MEDIA = '(hover: hover) and (pointer: fine)'
 
 const cursorElement = ref(null)
@@ -185,6 +186,7 @@ const onWheel = (event) => {
 const shouldTrackCursor = computed(() => {
   return props.enabled && hasFinePointer.value
 })
+const isInstant = computed(() => cursorStateStore.isInstant)
 const isLoading = computed(() => cursorStateStore.isLoading)
 const isInteractiveCursor = computed(
   () =>
@@ -295,7 +297,8 @@ const render = (timestamp) => {
   if (!hasPointerPosition.value && !hasPendingPointerMove) return
 
   if (hasPendingPointerMove) {
-    const shouldSnap = shouldSnapToPointer || !hasPointerPosition.value
+    const shouldSnap =
+      isInstant.value || shouldSnapToPointer || !hasPointerPosition.value
     hasPendingPointerMove = false
     isPointerInside.value = true
 
@@ -402,6 +405,13 @@ onUnmounted(() => {
 
 watch(isCustomCursorReady, syncNativeCursor, { flush: 'sync' })
 
+watch(isInstant, (instant) => {
+  if (!instant || !hasPointerPosition.value || shouldHideCursor.value) return
+  // 切换时在下一绘制帧直接对齐最新位置；保留同帧多次输入只写入一次的调度。
+  shouldSnapToPointer = true
+  hasPendingPointerMove = true
+  startRender()
+})
 watch(shouldAnimateCursor, syncPointerListeners)
 watch([cursorIdleDelay, shouldAnimateCursor], () => {
   clearCursorIdle()

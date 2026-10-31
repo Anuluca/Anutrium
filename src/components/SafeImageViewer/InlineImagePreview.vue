@@ -34,7 +34,17 @@
         @pointerleave="isNavigationHovered = false"
       />
       <div class="inline-image-preview__canvas" :aria-busy="loading">
-        <figure class="inline-image-preview__figure">
+        <figure
+          class="inline-image-preview__figure"
+          :class="{ 'is-loading': loading }"
+        >
+          <span
+            v-if="loading"
+            class="inline-image-preview__placeholder"
+            role="status"
+            aria-busy="true"
+            :aria-label="locale === 'en' ? 'Loading media' : '媒体加载中'"
+          />
           <video
             v-if="activeIsVideo"
             :key="activeUrl"
@@ -78,9 +88,6 @@
             aria-hidden="true"
           />
         </figure>
-        <span v-if="loading" class="inline-image-preview__status" role="status">
-          {{ locale === 'en' ? 'Loading…' : '加载中…' }}
-        </span>
         <div v-if="failed" class="inline-image-preview__status" role="status">
           {{ locale === 'en' ? 'Unable to load media' : '媒体加载失败' }}
           <button v-if="!activeIsVideo" type="button" @click="retry">
@@ -322,6 +329,7 @@ onBeforeUnmount(() => {
 
 <style lang="less">
 @import '@/assets/style/imageViewerDesktop.less';
+@import '@/assets/style/mediaLoadingPlaceholder.less';
 
 .inline-image-preview {
   --viewer-accent: var(--page-theme-color, #e23456);
@@ -437,6 +445,22 @@ onBeforeUnmount(() => {
   }
 }
 
+.inline-image-preview__figure.is-loading {
+  aspect-ratio: var(--inline-media-ratio, 1);
+  max-height: var(--inline-image-max-height);
+
+  img,
+  video {
+    visibility: hidden;
+  }
+}
+
+.inline-image-preview__placeholder {
+  .media-loading-placeholder();
+  position: absolute;
+  inset: 0;
+}
+
 .inline-image-preview__info {
   display: flow-root;
 }
@@ -460,7 +484,7 @@ onBeforeUnmount(() => {
     justify-content: center;
     gap: 12px;
     font: 13px 'alibaba-puhuiti', sans-serif;
-    background: var(--bg-color, #101014);
+    background: transparent;
   }
 
   .inline-image-preview__thumbnails {

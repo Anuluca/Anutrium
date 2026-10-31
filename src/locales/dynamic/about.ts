@@ -3,6 +3,10 @@ import PokeAmice from '@/assets/img/about/pokeAmice.png'
 const aboutDynamic = {
   roadmap: [
     {
+      zhCn: '__【个人海湾】__页面__【游戏列表】__模块',
+      en: '__Game List__ module on the __Atrium__ page',
+    },
+    {
       zhCn: '__「宝可后院」__大模块',
       en: '__"POKEYARD"__ page',
     },

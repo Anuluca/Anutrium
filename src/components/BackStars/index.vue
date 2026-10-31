@@ -12,9 +12,15 @@ import { gsap } from 'gsap'
 
 import ParticlesBg from '@/components/ParticlesBg/index.vue'
 import type { ZodiacSignId } from '@/config/zodiacThemes'
+import {
+  PHOTO_THEMES,
+  useAtriumPhotoComponents,
+} from '@/stores/atriumPhotoComponents'
 import { addPageResizeListener } from '@/utils/pageScroll'
 
 import { zodiacGlyphPaths, zodiacGlyphViewBoxes } from './zodiacGlyphs'
+
+const photoComponents = useAtriumPhotoComponents()
 
 type ZodiacLayout = 'hero' | 'content' | 'red'
 
@@ -166,6 +172,19 @@ const stageStyle = computed(() => ({
   '--route-rotation': `${routeRotation.value}deg`,
 }))
 const containerStyle = computed(() => ({
+  ...(photoComponents.active
+    ? {
+        '--photo-black-gradient-opacity': photoComponents.settings.blackGradient
+          ? 1
+          : 0,
+        '--photo-zodiac-opacity': photoComponents.settings.zodiacOpacity / 100,
+        '--photo-zodiac-blur': `${photoComponents.settings.zodiacBlur}px`,
+        '--photo-stars-opacity': photoComponents.settings.starsOpacity / 100,
+        '--photo-stars-blur': `${photoComponents.settings.starsBlur}px`,
+        '--photo-background-color':
+          PHOTO_THEMES[photoComponents.settings.background].background,
+      }
+    : {}),
   '--background-top-inset': `${Math.max(0, props.topInset)}px`,
   '--chart-transition-duration':
     props.layoutTransitionDuration === undefined
@@ -180,7 +199,11 @@ const containerStyle = computed(() => ({
 const themeParticleColor = ref('#e23456')
 const chartTinted = computed(() => props.tinted || props.layout === 'red')
 const particleColor = computed(() =>
-  chartTinted.value ? themeParticleColor.value : '#ffffff'
+  photoComponents.active
+    ? PHOTO_THEMES[photoComponents.settings.background].accent
+    : chartTinted.value
+    ? themeParticleColor.value
+    : '#ffffff'
 )
 const particleQuantity = computed(() =>
   Math.round((isMobileViewport.value ? 25 : 100) * 0.65)
@@ -473,6 +496,7 @@ const containerClass = computed(() => [
   'star-container',
   props.theme,
   {
+    'is-photo-controlled': photoComponents.active,
     'menu-hidden': props.isTextMenu,
     'is-deep-black': props.deepBlack,
     'is-content-layout': props.layout === 'content',

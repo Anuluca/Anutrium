@@ -32,9 +32,11 @@ export const useImagePreloader = () => {
   }
 
   const cancelPendingPreloads = () => {
-    pendingImages.forEach((image) => {
+    pendingImages.forEach((image, url) => {
       image.onload = null
       image.onerror = null
+      // 取消的请求未完成；再次进入对应区域时仍需允许预加载。
+      requestedUrls.delete(url)
       image.src = ''
     })
     pendingImages.clear()

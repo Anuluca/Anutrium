@@ -21,6 +21,7 @@ test('loading line extends from the center and fades into the initial model hori
     const probe = {
       full: 0,
       fade: 0,
+      flash: 0,
       entered: 0,
       width: 0,
       offset: Infinity,
@@ -28,6 +29,11 @@ test('loading line extends from the center and fades into the initial model hori
     ;(window as any).loadingLineProbe = probe
     document.addEventListener('animationstart', (event) => {
       const animation = event as AnimationEvent
+      if (
+        (animation.target as Element).matches('.loading-line') &&
+        animation.animationName.includes('loading-line-flash')
+      )
+        probe.flash = performance.now()
       if (
         (animation.target as Element).matches('.loading-line') &&
         animation.animationName.includes('loading-line-lifecycle')
@@ -159,13 +165,17 @@ test('loading line extends from the center and fades into the initial model hori
     expect(
       Math.abs(projectionBounds.height + second!.y + 1 - viewport.height)
     ).toBeLessThanOrEqual(1)
-    const animations = await line.evaluate((el) =>
-      el.getAnimations().map((animation) => ({
-        name: (animation as CSSAnimation).animationName,
-        duration: animation.effect!.getTiming().duration,
-        delay: animation.effect!.getTiming().delay,
+    // 短闪烁可能已在几何采样期间结束；读取声明时长，并另外验证确实播放。
+    const animations = await line.evaluate((el) => {
+      const style = getComputedStyle(el)
+      const durations = style.animationDuration.split(',').map(parseFloat)
+      const delays = style.animationDelay.split(',').map(parseFloat)
+      return style.animationName.split(',').map((name, index) => ({
+        name: name.trim(),
+        duration: durations[index % durations.length] * 1000,
+        delay: delays[index % delays.length] * 1000,
       }))
-    )
+    })
     expect(animations).toEqual(
       expect.arrayContaining([
         {
@@ -187,6 +197,7 @@ test('loading line extends from the center and fades into the initial model hori
       )
       .toBeGreaterThan(0)
     const probe = await page.evaluate(() => (window as any).loadingLineProbe)
+    expect(probe.flash).toBeGreaterThanOrEqual(probe.full)
     expect(Math.abs(probe.width - viewport.width)).toBeLessThanOrEqual(1)
     expect(probe.offset).toBeLessThanOrEqual(1)
     expect(probe.fade - probe.full).toBeGreaterThanOrEqual(1200)

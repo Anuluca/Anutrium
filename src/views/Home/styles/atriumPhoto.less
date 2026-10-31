@@ -1,8 +1,14 @@
-@photo-ui: ~'.el-menu-layout-all, .footer-com, .footer-bottom-gradient, .home-about-action, .fullscreen, .mobile-menu-icon, .mobile-menu-panel, .mobile-menu-backdrop, .temple-obelisks, .temple-fullscreen-shade, .temple-stage::after, .cursor-position, .layout-border-toggle, .mobile-screen-frame, .mobile-experience-alert, .island-focus, .temple-backdrop, .temple-clock-group';
+@photo-ui: ~'.el-menu-layout-all, .footer-com, .footer-bottom-gradient, .home-about-action, .fullscreen, .mobile-menu-icon, .mobile-menu-panel, .mobile-menu-backdrop, .temple-obelisks, .temple-fullscreen-shade, .temple-stage::after, .temple-stage canvas, .layout-border-toggle, .mobile-screen-frame-bottom, .mobile-experience-alert, .island-focus, .temple-backdrop, .temple-clock-group';
 
 html.atrium-photo-transition {
   @{photo-ui} {
-    transition: opacity 0.35s ease, visibility 0s linear !important;
+    transition: opacity 0.9s ease, visibility 0s linear !important;
+  }
+}
+
+html.atrium-photo-pending {
+  @{photo-ui} {
+    pointer-events: none !important;
   }
 }
 
@@ -11,44 +17,55 @@ html.atrium-photo-mode {
     opacity: 0 !important;
     visibility: hidden !important;
     pointer-events: none !important;
-    transition: opacity 0.35s ease, visibility 0s linear 0.35s !important;
-  }
-  &.custom-cursor-enabled {
-    &,
-    * {
-      cursor: default !important;
-    }
-    button {
-      cursor: pointer !important;
-    }
-    .temple-stage canvas {
-      cursor: grab !important;
-    }
-    .temple-stage canvas:active {
-      cursor: grabbing !important;
-    }
+    transition: opacity 0.6s ease, visibility 0s linear 0.6s !important;
   }
 }
 
-.atrium-photo-tools-enter-active,
+// 原 WebGL 画布隐藏后，用持久二维帧承接过渡，避免暂停时画面被清空。
+.temple-stage.has-photo-snapshot > canvas:not(.temple-photo-snapshot) {
+  visibility: hidden !important;
+}
+.temple-page .temple-stage.has-photo-snapshot > canvas.temple-photo-snapshot {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  will-change: opacity;
+}
+.atrium-photo-tools-enter-active {
+  transition: opacity 0.6s ease;
+}
 .atrium-photo-tools-leave-active {
-  transition: opacity 0.35s ease;
+  transition: opacity 0.9s ease;
+  pointer-events: none;
 }
 .atrium-photo-tools-enter-from,
 .atrium-photo-tools-leave-to {
   opacity: 0;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  html.atrium-photo-transition,
-  html.atrium-photo-mode {
-    @{photo-ui} {
-      transition-duration: 0.01s !important;
-      transition-delay: 0s !important;
-    }
+// 只在拍照模式覆盖背景层；离开模式后恢复原有主题及路由样式。
+html.atrium-photo-mode .back-controller .star-container.is-photo-controlled {
+  &::before {
+    opacity: var(--photo-black-gradient-opacity, 1);
   }
-  .atrium-photo-tools-enter-active,
-  .atrium-photo-tools-leave-active {
-    transition-duration: 0.01s;
+  .zodiac-stage {
+    // 所有星宿元素在同一层合成透明度，0% 必须隐藏整个图层。
+    --stage-opacity: 1;
+    opacity: var(--photo-zodiac-opacity);
+    filter: blur(var(--photo-zodiac-blur));
+    transition: none;
+  }
+  .particle-viewport.is-visible {
+    opacity: var(--photo-stars-opacity);
+    filter: blur(var(--photo-stars-blur));
+    transition: none;
+  }
+  .backdrop-color-base {
+    background-color: var(--photo-background-color) !important;
+  }
+  .backdrop-color-transition {
+    opacity: 0;
   }
 }

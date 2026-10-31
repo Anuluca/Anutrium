@@ -959,13 +959,13 @@ test('archive groups all primary works by company above miscellaneous work', asy
 
   for (let index = 0; index < expectedHeadings.length; index += 1) {
     const section = sections.nth(index)
-    const count = section.locator('.section-count strong')
+    const count = section.locator('.number-count')
 
     await expect(section.locator('.home-section-title__text')).toHaveText(
       expectedHeadings[index]
     )
     await expect(section.locator('.home-section-rail__num')).toHaveText(
-      String(index + 1).padStart(2, '0')
+      `#${index + 1}`
     )
     await expect(section.locator('.shared-work-card')).toHaveCount(
       expectedCounts[index]
@@ -1068,7 +1068,7 @@ test('archive availability preserves square contribution cells without a status 
   }
 })
 
-test('section content spans the full width below an equally tall number and title', async ({
+test('section title stays centered above full-width content with a number', async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
@@ -1088,9 +1088,6 @@ test('section content spans the full width below an equally tall number and titl
 
   const geometry = await section.evaluate((element) => {
     const layoutBounds = element.getBoundingClientRect()
-    const numberBounds = element
-      .querySelector<HTMLElement>('.home-section-rail__num')!
-      .getBoundingClientRect()
     const titleBounds = element
       .querySelector<HTMLElement>('.home-section-title')!
       .getBoundingClientRect()
@@ -1100,38 +1097,20 @@ test('section content spans the full width below an equally tall number and titl
     const contentBounds = element
       .querySelector<HTMLElement>('.home-section-content')!
       .getBoundingClientRect()
-    const numberStyle = getComputedStyle(
-      element.querySelector<HTMLElement>('.home-section-rail__num')!
-    )
-    const canvasContext = document.createElement('canvas').getContext('2d')!
-    canvasContext.font = `${numberStyle.fontWeight} ${numberStyle.fontSize} ${numberStyle.fontFamily}`
-    const numberGlyphMetrics = canvasContext.measureText('01')
-    const numberGlyphHeight =
-      numberGlyphMetrics.actualBoundingBoxAscent +
-      numberGlyphMetrics.actualBoundingBoxDescent
 
     return {
       contentLeftOffset: Math.abs(contentBounds.left - layoutBounds.left),
-      headingCenterOffset: Math.abs(
-        numberBounds.top +
-          numberBounds.height / 2 -
-          (titleBounds.top + titleBounds.height / 2)
-      ),
-      titleCenterOffset:
+      titleCenterOffset: Math.abs(
         titleBounds.left +
-        titleBounds.width / 2 -
-        (titleRowBounds.left + titleRowBounds.width / 2),
-      headingVisualHeightDelta: Math.abs(
-        numberGlyphHeight + 2 - titleBounds.height
+          titleBounds.width / 2 -
+          (titleRowBounds.left + titleRowBounds.width / 2)
       ),
       verticalLineContent: getComputedStyle(element, '::before').content,
     }
   })
 
   expect(geometry.contentLeftOffset).toBeLessThanOrEqual(1)
-  expect(geometry.headingCenterOffset).toBeLessThanOrEqual(1)
-  expect(geometry.headingVisualHeightDelta).toBeLessThanOrEqual(1)
-  expect(Math.abs(geometry.titleCenterOffset)).toBeLessThanOrEqual(1)
+  expect(geometry.titleCenterOffset).toBeLessThanOrEqual(1)
   expect(geometry.verticalLineContent).toBe('none')
 })
 

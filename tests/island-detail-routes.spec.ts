@@ -156,7 +156,7 @@ test('Island history restores the same scene and module', async ({ page }) => {
   })
 })
 
-test('Island switches cards and detail through CRT without layout movement', async ({
+test('Island detail enters without CRT and leaves through CRT without layout movement', async ({
   page,
 }, info) => {
   test.setTimeout(90000)
@@ -181,13 +181,21 @@ test('Island switches cards and detail through CRT without layout movement', asy
         '.island-closing-snapshot [data-flash-item="LABORATORY"]'
       )
       const detail = root.querySelector<HTMLElement>('.island-window--ideas')!
+      const detailContent = root.querySelector<HTMLElement>('.island-detail')
+      const ghostWindow = document.querySelector<HTMLElement>(
+        '.island-closing-snapshot .island-window--ideas'
+      )
       trace.push({
         phase,
         time: performance.now(),
         siblingAnimation: getComputedStyle(sibling).animationName,
         selectedAnimation: getComputedStyle(selected).animationName,
         ghostAnimation: ghost && getComputedStyle(ghost).animationName,
+        ghostWindowAnimation:
+          ghostWindow && getComputedStyle(ghostWindow).animationName,
         detailAnimation: getComputedStyle(detail).animationName,
+        detailContentAnimation:
+          detailContent && getComputedStyle(detailContent).animationName,
         detailPresent: !!root.querySelector('.island-detail'),
         titleTransform: (
           root.querySelector('.island-item__title-text') as HTMLElement
@@ -210,7 +218,8 @@ test('Island switches cards and detail through CRT without layout movement', asy
   expect(leaving.selectedAnimation).toBe('none')
   expect(detail.time - leaving.time).toBeGreaterThanOrEqual(200)
   expect(detail.ghostAnimation).toBe('anutriumCrtOff')
-  expect(detail.detailAnimation).toBe('anutriumCrtOn')
+  expect(detail.detailAnimation).toBe('none')
+  expect(detail.detailContentAnimation).toMatch(/^island-detail-fade-in/)
   expect(detail.detailPresent).toBe(true)
   expect(detail.titleTransform).toBe('')
   const modelYaw = async () => {
@@ -251,6 +260,11 @@ test('Island switches cards and detail through CRT without layout movement', asy
   })
   await page.keyboard.press('Escape')
   await expect(root).toHaveAttribute('data-detail-phase', 'revealing')
+  const returnTrace = await page.evaluate(() => (window as any).islandCrtTrace)
+  expect(
+    returnTrace.find((entry: any) => entry.phase === 'revealing')
+      .ghostWindowAnimation
+  ).toBe('none')
   await page.waitForTimeout(100)
   const returningYaw = await modelYaw()
   expect(returningYaw).toBeGreaterThan(-Math.PI / 2)

@@ -40,7 +40,7 @@ import ToolRecommendationRow, {
 import { isTempleRouteName } from '@/config/templeNavigation'
 import { useCraftNavigation } from '@/stores/craftNavigation'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     backLabel?: string
     backPath?: string
@@ -60,7 +60,7 @@ withDefaults(
 )
 const craftNavigation = useCraftNavigation()
 const craftBackPath = computed(
-  () => craftNavigation.origin?.path || '/creative?current=craft'
+  () => craftNavigation.origin?.path || props.backPath
 )
 onBeforeRouteLeave((to) => {
   craftNavigation.restoring =

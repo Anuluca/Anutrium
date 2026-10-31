@@ -132,6 +132,28 @@ test('viewer theme, navigation hit areas, square tools and cursor work together'
       .toBeLessThanOrEqual(1)
   }
   if (mobile) {
+    const nativePress = await image.evaluate((element) => {
+      const touch = new Touch({
+        identifier: 1,
+        target: element,
+        clientX: 100,
+        clientY: 100,
+      })
+      const start = new TouchEvent('touchstart', {
+        bubbles: true,
+        cancelable: true,
+        touches: [touch],
+      })
+      element.dispatchEvent(start)
+      const end = new TouchEvent('touchend', {
+        bubbles: true,
+        cancelable: true,
+        touches: [],
+      })
+      element.dispatchEvent(end)
+      return { start: start.defaultPrevented, end: end.defaultPrevented }
+    })
+    expect(nativePress).toEqual({ start: false, end: false })
     const client = await page.context().newCDPSession(page)
     const original = (await image.boundingBox())!
     const center = {

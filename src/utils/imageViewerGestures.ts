@@ -23,6 +23,7 @@ export const bindImageViewerGestures = (
   onSwipe?: (direction: -1 | 1) => void
 ) => {
   let swipe: { start: Point; last: Point; pinched: boolean } | undefined
+  let touchGestureClaimed = false
   let gesture:
     | {
         image: HTMLImageElement
@@ -210,23 +211,37 @@ export const bindImageViewerGestures = (
         ? event.target.closest<HTMLImageElement>('.el-image-viewer__img')
         : null)
     if (!image?.naturalWidth || !event.touches.length) return
-    event.preventDefault()
+    if (event.touches.length > 1) event.preventDefault()
     event.stopImmediatePropagation()
     flushTransform()
     geometryCache.delete(image)
     measure(image)
     beforeGesture?.()
-    if (!gesture)
+    if (!gesture) {
+      touchGestureClaimed = event.touches.length > 1
       swipe = {
         start: midpoint(event.touches),
         last: midpoint(event.touches),
         pinched: event.touches.length > 1,
       }
-    else if (swipe && event.touches.length > 1) swipe.pinched = true
+    } else if (swipe && event.touches.length > 1) {
+      swipe.pinched = true
+      touchGestureClaimed = true
+    }
     begin(image, event.touches)
   }
   const move = (event: TouchEvent) => {
     if (!gesture || !gesture.image.isConnected || !event.touches.length) return
+    const point = midpoint(event.touches)
+    // 静止单指保留原生长按；超过轻微手抖范围后才接管拖动或切图。
+    if (
+      !touchGestureClaimed &&
+      event.touches.length === 1 &&
+      swipe &&
+      Math.hypot(point.x - swipe.start.x, point.y - swipe.start.y) < 8
+    )
+      return
+    touchGestureClaimed = true
     event.preventDefault()
     event.stopImmediatePropagation()
     if (Math.min(event.touches.length, 2) !== gesture.count) {
@@ -269,7 +284,7 @@ export const bindImageViewerGestures = (
   }
   const end = (event: TouchEvent) => {
     if (!gesture) return
-    event.preventDefault()
+    if (touchGestureClaimed) event.preventDefault()
     event.stopImmediatePropagation()
     flushTransform()
     if (event.touches.length && gesture.image.isConnected)
@@ -287,6 +302,7 @@ export const bindImageViewerGestures = (
         Math.abs(dy) > Math.abs(dx) * 1.2
       gesture = undefined
       swipe = undefined
+      touchGestureClaimed = false
       if (shouldSwitch) onSwipe?.(dy < 0 ? 1 : -1)
     }
   }

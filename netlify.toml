@@ -7,6 +7,18 @@
   VITE_GA4_MEASUREMENT_ID = "G-FEZS2B4N4L"
 
 [[redirects]]
+  from = "/api/notes/*"
+  to = "https://steam-api.anuluca.com/notes/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/notes"
+  to = "https://steam-api.anuluca.com/notes"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/api/floratrium/likes"
   to = "https://steam-api.anuluca.com/floratrium/likes"
   status = 200

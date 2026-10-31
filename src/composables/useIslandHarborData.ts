@@ -2,6 +2,8 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
+import { useNotes } from '@/composables/useNotes'
+
 export interface HarborItem {
   title: string
   subtitle: string
@@ -49,12 +51,7 @@ export const useIslandHarborData = () => {
         tm('island.modules.photography.merch.data') as Record<string, unknown[]>
       ).flat().length
   )
-  const studyNoteList = computed(
-    () =>
-      tm('island.modules.notes.studyNotes.data') as Array<{
-        image?: string
-      }>
-  )
+  const { notes: studyNoteList } = useNotes()
   const studyNoteCover = computed(
     () =>
       studyNoteList.value.find((note) => note.image)?.image ||
@@ -72,8 +69,9 @@ export const useIslandHarborData = () => {
         {
           title: '实验室',
           subtitle: 'LABORATORY',
-          count: '0 ITEMS',
+          count: '1 ITEM',
           img: developingPlaceholder,
+          path: '/atrium/laboratory',
         },
         {
           title: '笔记',

@@ -5,6 +5,8 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
+import { observeCountVisibility } from './visibilityObserver'
+
 const emit = defineEmits<{
   (event: 'end'): void
 }>()
@@ -24,11 +26,11 @@ const props = withDefaults(
 )
 
 const elementRef = ref<HTMLElement | null>(null)
-const currentValue = ref(props.from)
-const hasPlayed = ref(false)
-const isInView = ref(false)
+const currentValue = ref(Math.round(props.from))
+let hasPlayed = false
+let isInView = false
 let animationFrame: number | null = null
-let observer: IntersectionObserver | null = null
+let stopObserving: (() => void) | undefined
 
 const normalizedTarget = computed(() => Math.max(0, Math.trunc(props.to)))
 const formattedValue = computed(() =>
@@ -42,8 +44,8 @@ const stopAnimation = () => {
 }
 
 const play = () => {
-  if (hasPlayed.value) return
-  hasPlayed.value = true
+  if (hasPlayed) return
+  hasPlayed = true
 
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     currentValue.value = normalizedTarget.value
@@ -65,7 +67,9 @@ const play = () => {
     startTime ??= timestamp
     const progress = Math.min((timestamp - startTime) / duration, 1)
     const easedProgress = 1 - (1 - progress) ** 3
-    currentValue.value = startValue + distance * easedProgress
+    // 仅显示整数；数字不变时避免触发 Vue 更新。
+    const nextValue = Math.round(startValue + distance * easedProgress)
+    if (nextValue !== currentValue.value) currentValue.value = nextValue
 
     if (progress < 1) {
       animationFrame = requestAnimationFrame(step)
@@ -82,29 +86,22 @@ const play = () => {
 
 watch(normalizedTarget, () => {
   stopAnimation()
-  currentValue.value = props.from
-  hasPlayed.value = false
-  if (isInView.value) play()
+  currentValue.value = Math.round(props.from)
+  hasPlayed = false
+  if (isInView) play()
 })
 
 onMounted(() => {
   if (!elementRef.value) return
 
-  observer = new IntersectionObserver(
-    ([entry]) => {
-      if (!entry.isIntersecting) return
-      isInView.value = true
-      play()
-      observer?.disconnect()
-      observer = null
-    },
-    { threshold: 0.2 }
-  )
-  observer.observe(elementRef.value)
+  stopObserving = observeCountVisibility(elementRef.value, () => {
+    isInView = true
+    play()
+  })
 })
 
 onBeforeUnmount(() => {
   stopAnimation()
-  observer?.disconnect()
+  stopObserving?.()
 })
 </script>

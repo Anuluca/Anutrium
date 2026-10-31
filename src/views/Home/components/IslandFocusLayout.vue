@@ -14,9 +14,10 @@ import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { useResizeObserver } from '@vueuse/core'
 import gsap from 'gsap'
-import { Flip } from 'gsap/Flip'
 
+import DecodeText from '@/components/DecodeText/index.vue'
 import NotFoundContent from '@/components/NotFoundContent/index.vue'
+import NumberCount from '@/components/NumberCount/index.vue'
 import ScrollViewport from '@/components/ScrollViewport/index.vue'
 import SectionCount from '@/components/SectionCount/index.vue'
 import {
@@ -39,14 +40,16 @@ import {
 import { subscribePointerSamples } from '@/utils/pointerSamples'
 import { createScanlineCharacters } from '@/utils/scanlineMask'
 
-import { easeIslandDetailMotion } from '../scene/islandDetailMotion'
+import { usePaneResize } from '../composables/usePaneResize'
 import {
   createIslandLinkOverlay,
   islandAnchorByItem,
 } from '../scene/islandLinkOverlay'
 import type { IslandDetailSide } from '../templeScene'
 
-gsap.registerPlugin(Flip)
+const IslandLaboratoryContent = defineAsyncComponent(
+  () => import('./island/IslandLaboratoryContent.vue')
+)
 const IslandNotesContent = defineAsyncComponent(
   () => import('./island/IslandNotesContent.vue')
 )
@@ -61,7 +64,7 @@ const props = withDefaults(
   }>(),
   { mobile: false, interactive: true }
 )
-const { locale } = useI18n()
+const { locale, t } = useI18n()
 const emit = defineEmits<{
   (event: 'photo'): void
   (event: 'overview-leaving', active: boolean): void
@@ -77,9 +80,12 @@ const router = useRouter()
 type Selection = { group: string; item: IslandModuleId }
 const selectedItem = ref<Selection | null>(null)
 const detailContentReady = ref(false)
-const detailOpening = ref(false)
-const collectionsExpanded = ref(false)
-const detailResizing = ref(false)
+const detailExpanded = ref(false)
+const {
+  resizing: detailResizing,
+  cancel: cancelDetailResize,
+  run: resizeDetailPane,
+} = usePaneResize()
 const transitionItem = ref<Selection | null>(null)
 const phase = ref<'overview' | 'leaving' | 'detail' | 'revealing'>('overview')
 let transitionRevision = 0
@@ -154,6 +160,7 @@ const groups = computed(() => {
   }))
 })
 const root = ref<HTMLElement | null>(null)
+const layoutHeader = ref<HTMLElement | null>(null)
 const hoveredItem = ref<{ group: string; item: string } | null>(null)
 const hovered = computed(() => hoveredItem.value?.group ?? null)
 const coverFilterId = `island-cover-tint-${getCurrentInstance()?.uid}`
@@ -216,13 +223,12 @@ const failedCovers = ref(new Set<string>())
 const linkOverlay = createIslandLinkOverlay()
 let disposed = false
 let measureFrame: number | undefined
-let layoutMotion: gsap.core.Timeline | undefined
 const closingSnapshots = new Set<HTMLElement>()
 const clearClosingSnapshots = () => {
   closingSnapshots.forEach((snapshot) => snapshot.remove())
   closingSnapshots.clear()
 }
-// 保留旧布局的无交互快照，关屏与新布局开屏同时进行，避免旧卡片跟随详情布局跳位。
+// 保留旧布局的无交互快照，避免关屏时旧卡片跟随详情布局跳位。
 const closeViewSnapshot = (selection: Selection | null) => {
   if (!root.value || reducedMotion()) return
   const snapshot = root.value.cloneNode(true) as HTMLElement
@@ -230,7 +236,9 @@ const closeViewSnapshot = (selection: Selection | null) => {
   snapshot.setAttribute('aria-hidden', 'true')
   snapshot.setAttribute('inert', '')
   snapshot
-    .querySelectorAll('.island-filter-defs, .island-links, .island-targets')
+    .querySelectorAll(
+      '.island-filter-defs, .island-links, .island-targets, .island-detail-nav'
+    )
     .forEach((e) => e.remove())
   if (selection) {
     snapshot
@@ -249,7 +257,17 @@ const closeViewSnapshot = (selection: Selection | null) => {
   } else {
     snapshot.querySelectorAll('.island-window').forEach((element) => {
       element.classList.remove('crt-effect-enter-active')
-      element.classList.add('crt-effect-leave-active')
+      // 详情标题与计数独立闪烁，避免跟随父窗口的关屏动画缩放。
+      element
+        .querySelectorAll('.island-window__bar, .island-item__count')
+        .forEach((header) =>
+          header.classList.add('island-detail-header-leave-active')
+        )
+      element
+        .querySelectorAll(
+          '.island-detail, .island-detail-expand, .island-item__title'
+        )
+        .forEach((content) => content.classList.add('crt-effect-leave-active'))
     })
   }
   root.value.parentElement?.appendChild(snapshot)
@@ -261,7 +279,7 @@ const closeViewSnapshot = (selection: Selection | null) => {
 }
 const applyLayout = async (selection: Selection | null) => {
   if (disposed || !root.value) return
-  layoutMotion?.progress(1).kill()
+  cancelDetailResize()
   cardParallaxMotion?.kill()
   cardParallax.x = cardParallax.y = 0
   writeCardParallax()
@@ -278,7 +296,6 @@ const transitionDetail = async (
   const revision = ++transitionRevision
   clearClosingSnapshots()
   opening.value = false
-  detailOpening.value = false
   const selection = moduleId
     ? { group: islandModules[moduleId].group, item: moduleId }
     : null
@@ -294,9 +311,8 @@ const transitionDetail = async (
       if (disposed || revision !== transitionRevision) return
     }
     if (!initial) closeViewSnapshot(selectedItem.value ? null : selection)
-    collectionsExpanded.value = false
+    detailExpanded.value = false
     detailContentReady.value = true
-    detailOpening.value = !reducedMotion()
     phase.value = 'detail'
     emit(
       'detail-side',
@@ -308,7 +324,6 @@ const transitionDetail = async (
     if (disposed || revision !== transitionRevision) return
     await waitMotion(0.46)
     if (disposed || revision !== transitionRevision) return
-    detailOpening.value = false
     await nextTick()
     if (disposed || revision !== transitionRevision) return
     scheduleMeasure()
@@ -319,7 +334,7 @@ const transitionDetail = async (
       ?.focus({ preventScroll: true })
   } else if (previous) {
     if (selectedItem.value) closeViewSnapshot(null)
-    collectionsExpanded.value = false
+    detailExpanded.value = false
     detailContentReady.value = false
     transitionItem.value = previous
     emit('detail-side', null)
@@ -349,14 +364,19 @@ watch(
   },
   { flush: 'post' }
 )
-const toggleCollectionsExpanded = async (event: MouseEvent) => {
-  if (busy.value || detailResizing.value || !root.value) return
+const toggleDetailExpanded = async (event: MouseEvent) => {
+  if (busy.value || detailResizing.value || !root.value || !selectedItem.value)
+    return
+  const selection = selectedItem.value
   const panel = root.value.querySelector<HTMLElement>(
-    '.island-window--interests'
+    `[data-island-group="${selection.group}"]`
   )!
   const scroll = panel.querySelector<HTMLElement>('.scroll-viewport__scroll')!
-  const scrollTop = scroll.scrollTop
-  const state = Flip.getState(panel)
+  const content = [
+    panel.querySelector<HTMLElement>('.island-window__bar')!,
+    panel.querySelector<HTMLElement>(`[data-flash-item="${selection.item}"]`)!,
+    panel.querySelector<HTMLElement>('.island-detail')!,
+  ]
   const animation = flashActionButton(event.currentTarget as HTMLButtonElement)
   if (animation) {
     animations.add(animation)
@@ -364,24 +384,14 @@ const toggleCollectionsExpanded = async (event: MouseEvent) => {
       .catch(() => undefined)
       .finally(() => animations.delete(animation))
   }
-  detailResizing.value = true
-  collectionsExpanded.value = !collectionsExpanded.value
-  await nextTick()
-  if (disposed) return
-  scroll.scrollTop = scrollTop
-  layoutMotion = Flip.from(state, {
-    duration: reducedMotion() ? 0 : 1.2,
-    ease: easeIslandDetailMotion,
-    scale: true,
-    onUpdate: scheduleMeasure,
-    onComplete: () => {
-      gsap.set(panel, { clearProps: 'transform' })
-      detailResizing.value = false
-      scheduleMeasure()
+  await resizeDetailPane({
+    pane: panel,
+    content,
+    scroll,
+    update: () => {
+      detailExpanded.value = !detailExpanded.value
     },
-    onInterrupt: () => {
-      detailResizing.value = false
-    },
+    refresh: scheduleMeasure,
   })
 }
 const closeDetail = () => {
@@ -410,6 +420,12 @@ const leaveOverview = () => {
   return overviewExit
 }
 defineExpose({
+  getScrollRoot: () =>
+    phase.value === 'detail' && !busy.value && !detailResizing.value
+      ? root.value?.querySelector<HTMLElement>(
+          '.island-detail__viewport .scroll-viewport__scroll'
+        )
+      : null,
   updateAnchors: linkOverlay.updateAnchors,
   closeDetail,
   leaveOverview,
@@ -447,6 +463,12 @@ const itemGroups = new Map(
 const measure = (measureTitles = false) => {
   if (disposed || !root.value) return
   const bounds = root.value.getBoundingClientRect()
+  const headerBottom = layoutHeader.value
+    ? Math.max(
+        0,
+        layoutHeader.value.getBoundingClientRect().bottom - bounds.top
+      )
+    : 0
   const next: Record<string, { x: number; y: number }> = {}
   for (const [id, panel] of panels) {
     const rect = panel.getBoundingClientRect()
@@ -485,6 +507,11 @@ const measure = (measureTitles = false) => {
         ),
       ])
   }
+  if (props.mobile && headerBottom) {
+    const value = `${headerBottom}px`
+    if (root.value.style.getPropertyValue('--island-header-bottom') !== value)
+      root.value.style.setProperty('--island-header-bottom', value)
+  }
   for (const [title, scale] of scales) {
     if (titleScales.get(title) === scale) continue
     title.style.setProperty('--island-title-scale', scale)
@@ -507,6 +534,8 @@ const scheduleLayoutMeasure = () => {
   scheduleMeasure()
 }
 useResizeObserver(root, scheduleLayoutMeasure)
+useResizeObserver(layoutHeader, scheduleLayoutMeasure)
+
 useResizeObserver(
   Object.keys(islandAnchorByItem).map((id) => computed(() => panels.get(id))),
   scheduleLayoutMeasure
@@ -516,6 +545,7 @@ watch([root, locale, () => props.mobile], scheduleLayoutMeasure, {
   flush: 'post',
 })
 onMounted(() => {
+  layoutHeader.value = document.querySelector('.el-menu-layout-all')
   unsubscribeCardPointer = subscribePointerSamples((event) => {
     if (event.pointerType === 'touch' || !canHover.value || reducedMotion())
       return
@@ -562,10 +592,99 @@ const links = computed(() => {
 
 const animations = new Set<Animation>()
 const titleHoverAnimations = new Set<Animation>()
+const detailNavItems = Object.entries(islandModules) as [
+  IslandModuleId,
+  (typeof islandModules)[IslandModuleId]
+][]
+const detailNavCharacters = detailNavItems.map(([, module]) =>
+  Array.from(module.menuTitle)
+)
+// 完整文字始终参与布局；动画只移动字形，避免左右对齐随文字长度跳动。
+const detailNavDuration = {
+  enter:
+    700 +
+    800 +
+    (Math.max(...detailNavCharacters.map((title) => title.length)) - 1) * 20,
+  leave: 300,
+}
+const detailNavFlashes = new WeakMap<HTMLElement, Animation>()
+const detailNavPending = ref(false)
+const mobileDetailNavOpen = ref(false)
+const toggleMobileDetailNav = (event: Event) => {
+  if (!props.mobile || !selectedItem.value || phase.value !== 'detail') return
+  event.stopPropagation()
+  event.preventDefault()
+  mobileDetailNavOpen.value = !mobileDetailNavOpen.value
+}
+const closeMobileDetailNav = (event: KeyboardEvent) => {
+  if (!mobileDetailNavOpen.value || event.key !== 'Escape') return
+  event.preventDefault()
+  event.stopPropagation()
+  mobileDetailNavOpen.value = false
+}
+watch(
+  () => route.path,
+  () => {
+    mobileDetailNavOpen.value = false
+  }
+)
+onMounted(() => {
+  document.addEventListener('keydown', closeMobileDetailNav, true)
+})
+onBeforeUnmount(() => {
+  document.removeEventListener('keydown', closeMobileDetailNav, true)
+})
+const flashDetailNav = (element: HTMLElement) => {
+  detailNavFlashes.get(element)?.cancel()
+  if (props.mobile || reducedMotion()) return
+  const flash = element.querySelector<HTMLElement>('.island-detail-nav__flash')
+  if (!flash) return
+  const animation = flash.animate(
+    [1, 0, 1, 0, 0].map((opacity) => ({
+      opacity,
+      easing: 'steps(1, end)',
+    })),
+    { duration: 180 }
+  )
+  detailNavFlashes.set(element, animation)
+  animations.add(animation)
+  void animation.finished
+    .catch(() => undefined)
+    .finally(() => animations.delete(animation))
+  return animation
+}
+const hoverDetailNav = (event: PointerEvent, id: IslandModuleId) => {
+  if (
+    event.pointerType === 'touch' ||
+    detailNavPending.value ||
+    id === selectedItem.value?.item
+  )
+    return
+  flashDetailNav(event.currentTarget as HTMLElement)
+}
+const navigateDetail = async (event: MouseEvent, id: IslandModuleId) => {
+  if (busy.value || detailNavPending.value || id === selectedItem.value?.item)
+    return
+  detailNavPending.value = true
+  const previousPath = route.path
+  try {
+    await flashDetailNav(event.currentTarget as HTMLElement)?.finished
+    if (!disposed && route.path === previousPath)
+      await router.push(islandModules[id].path)
+  } catch {
+    // 闪烁被取消时不执行延迟跳转。
+  } finally {
+    detailNavPending.value = false
+  }
+}
+const selectMobileDetailNav = (event: MouseEvent, id: IslandModuleId) => {
+  mobileDetailNavOpen.value = false
+  void navigateDetail(event, id)
+}
 watch([() => hoveredItem.value?.item, canHover], ([item, enabled]) => {
   titleHoverAnimations.forEach((animation) => animation.cancel())
   titleHoverAnimations.clear()
-  if (!item || !enabled || reducedMotion()) return
+  if (props.mobile || !item || !enabled || reducedMotion()) return
   const title = itemTitles.get(item)
   if (!title) return
   const animation = title.animate(
@@ -585,7 +704,17 @@ const returnFromHeader = async (event: Event) => {
   if (!selectedItem.value || busy.value || phase.value !== 'detail') return
   const element = event.currentTarget as HTMLElement
   busy.value = true
-  const animation = flashActionButton(element, 240, { colorOnly: true })
+  const animation = element.classList.contains('island-window__bar')
+    ? reducedMotion()
+      ? undefined
+      : element.animate(
+          [1, 0, 1, 0, 1].map((opacity) => ({
+            opacity,
+            easing: 'steps(1, end)',
+          })),
+          { duration: 240 }
+        )
+    : flashActionButton(element, 240, { colorOnly: true })
   try {
     if (animation) {
       animations.add(animation)
@@ -640,7 +769,7 @@ onBeforeUnmount(() => {
   timers.clear()
   if (measureFrame !== undefined) cancelAnimationFrame(measureFrame)
   linkOverlay.dispose()
-  layoutMotion?.kill()
+  cancelDetailResize()
   animations.forEach((animation) => animation.cancel())
   titleHoverAnimations.forEach((animation) => animation.cancel())
 })
@@ -655,7 +784,8 @@ onBeforeUnmount(() => {
       'is-english': locale === 'en',
       'has-detail': selectedItem,
       'has-detail--right': selectedItem && detailSide === 'right',
-      'has-collections-expanded': collectionsExpanded,
+      'has-detail-expanded': detailExpanded,
+      'is-detail-resizing': detailResizing,
       'is-hover-disabled': !canHover,
     }"
     :data-detail-item="selectedItem?.item"
@@ -691,7 +821,7 @@ onBeforeUnmount(() => {
         <button
           class="island-photo-entry no-rem"
           type="button"
-          aria-label="进入拍照模式"
+          :aria-label="t('island.photoMode.enter')"
           @click.stop="emit('photo')"
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -705,13 +835,7 @@ onBeforeUnmount(() => {
         v-show="!selectedItem || selectedItem.group === group.id"
         :key="group.id"
         class="island-window"
-        :class="[
-          `island-window--${group.id}`,
-          {
-            'crt-effect-enter-active':
-              detailOpening && selectedItem?.group === group.id,
-          },
-        ]"
+        :class="`island-window--${group.id}`"
         :aria-hidden="!selectedItem || undefined"
         :data-island-group="group.id"
       >
@@ -734,9 +858,7 @@ onBeforeUnmount(() => {
           @keydown.enter.stop.prevent="returnFromHeader"
           @keydown.space.stop.prevent="returnFromHeader"
         >
-          <span class="island-window__glyph" aria-hidden="true">{{
-            group.id === 'interests' ? '◀' : '▶'
-          }}</span>
+          <span class="island-window__glyph" aria-hidden="true" />
           <h2 :ref="titleBindings.get(group.id)" :data-title="group.label">
             {{ group.label }}
           </h2>
@@ -761,8 +883,8 @@ onBeforeUnmount(() => {
             ]"
             :data-flash-item="item.subtitle"
             :style="openingStyle(item.subtitle)"
-            :role="selectedItem ? 'button' : undefined"
-            :tabindex="selectedItem ? 0 : undefined"
+            :role="selectedItem && !mobile ? 'button' : undefined"
+            :tabindex="selectedItem && !mobile ? 0 : undefined"
             @click.stop="returnFromHeader"
             @keydown.enter.stop.prevent="returnFromHeader"
             @keydown.space.stop.prevent="returnFromHeader"
@@ -787,10 +909,17 @@ onBeforeUnmount(() => {
                 ><span
                   :ref="itemTitleBindings.get(item.subtitle)"
                   class="island-item__title-text"
-                  ><template v-if="selectedItem">{{
-                    item.englishTitle
-                  }}</template
-                  ><template v-else
+                  :role="mobile && selectedItem ? 'button' : undefined"
+                  :tabindex="mobile && selectedItem ? 0 : undefined"
+                  :aria-expanded="
+                    mobile && selectedItem ? mobileDetailNavOpen : undefined
+                  "
+                  @click="toggleMobileDetailNav"
+                  @keydown.enter="toggleMobileDetailNav"
+                  @keydown.space="toggleMobileDetailNav"
+                  ><DecodeText
+                    v-if="selectedItem"
+                    :text="item.englishTitle" /><template v-else
                     ><span
                       v-for="(letter, index) in item.titleCharacters"
                       :key="index"
@@ -800,10 +929,20 @@ onBeforeUnmount(() => {
                         letter.character === ' ' ? '\u00a0' : letter.character
                       }}</span
                     ></template
-                  ></span
-                ></strong
-              >
+                  ><span
+                    v-if="mobile && selectedItem"
+                    class="island-mobile-dropdown-arrow"
+                    :class="{ 'is-open': mobileDetailNavOpen }"
+                    aria-hidden="true" /></span
+              ></strong>
+              <NumberCount
+                v-if="selectedItem && selectedItem.item === item.subtitle"
+                :key="selectedItem.item"
+                class="island-item__count"
+                :count="item.countValue"
+              />
               <SectionCount
+                v-else-if="!selectedItem"
                 class="island-item__count"
                 :count="item.countValue"
                 :label="item.countLabel"
@@ -817,18 +956,65 @@ onBeforeUnmount(() => {
             </figcaption>
           </figure>
         </div>
+        <div
+          v-if="
+            mobile && selectedItem?.group === group.id && mobileDetailNavOpen
+          "
+          class="island-mobile-dropdown-dismiss"
+          aria-hidden="true"
+          @click.stop="mobileDetailNavOpen = false"
+        />
+        <Transition
+          name="island-mobile-dropdown"
+          :duration="{ enter: 1200, leave: 300 }"
+        >
+          <nav
+            v-if="
+              mobile &&
+              selectedItem &&
+              phase === 'detail' &&
+              mobileDetailNavOpen
+            "
+            class="island-mobile-detail-dropdown"
+            aria-label="Atrium 模块"
+            @click.stop
+          >
+            <button
+              v-for="([id, module], index) in detailNavItems"
+              :key="id"
+              type="button"
+              :class="{ 'is-current': selectedItem.item === id }"
+              :aria-current="selectedItem.item === id ? 'page' : undefined"
+              :aria-label="module.menuTitle"
+              @click.stop="selectMobileDetailNav($event, id)"
+            >
+              <span class="island-detail-nav__label" aria-hidden="true"
+                ><span
+                  v-for="(character, characterIndex) in detailNavCharacters[
+                    index
+                  ]"
+                  :key="characterIndex"
+                  class="island-detail-nav__char-mask"
+                  ><span
+                    class="island-detail-nav__char"
+                    :style="{ '--char-delay': `${characterIndex * 20}ms` }"
+                    >{{ character }}</span
+                  ></span
+                ></span
+              >
+            </button>
+          </nav>
+        </Transition>
         <button
           v-if="
-            selectedItem?.item === 'COLLECTIBLES' &&
-            selectedItem.group === group.id &&
-            detailContentReady
+            !mobile && selectedItem?.group === group.id && detailContentReady
           "
           class="island-detail-expand"
           type="button"
-          :aria-label="collectionsExpanded ? '恢复半屏内容' : '展开全屏内容'"
-          :aria-expanded="collectionsExpanded"
+          :aria-label="detailExpanded ? '恢复半屏内容' : '展开全屏内容'"
+          :aria-expanded="detailExpanded"
           :disabled="busy || detailResizing"
-          @click.stop="toggleCollectionsExpanded"
+          @click.stop="toggleDetailExpanded"
         >
           <span />
         </button>
@@ -841,19 +1027,20 @@ onBeforeUnmount(() => {
           class="island-detail"
           :inert="detailResizing || undefined"
         >
-          <ScrollViewport
-            class="island-detail__viewport"
-            :edge-fade="selectedItem.item === 'COLLECTIBLES'"
-          >
-            <IslandNotesContent v-if="selectedItem.item === 'NOTES'" />
+          <IslandNotesContent v-if="selectedItem.item === 'NOTES'" />
+          <ScrollViewport v-else class="island-detail__viewport" edge-scanlines>
+            <IslandLaboratoryContent
+              v-if="selectedItem.item === 'LABORATORY'"
+            />
             <IslandCollectionsContent
               v-else-if="selectedItem.item === 'COLLECTIBLES'"
-              :expanded="collectionsExpanded"
+              :expanded="detailExpanded"
               :mobile="mobile"
             />
             <NotFoundContent
               v-else
               embedded
+              click-to-return
               :action-label="locale === 'en' ? 'BACK' : '返回模块总览'"
               @return-home="closeDetail"
             />
@@ -924,6 +1111,50 @@ onBeforeUnmount(() => {
         </g>
       </g>
     </svg>
+    <Transition
+      name="island-detail-nav"
+      :duration="reducedMotion() ? 0 : detailNavDuration"
+    >
+      <nav
+        v-if="!mobile && selectedItem && phase === 'detail' && !detailExpanded"
+        class="island-detail-nav"
+        :class="{
+          'island-detail-nav--right':
+            (selectedItem || transitionItem)?.group === 'interests',
+        }"
+        :aria-label="
+          locale === 'en' ? 'Atrium modules' : '个人海湾模块快捷跳转'
+        "
+      >
+        <button
+          v-for="([id, module], index) in detailNavItems"
+          :key="id"
+          type="button"
+          class="island-detail-nav__item"
+          :class="{ 'is-active': selectedItem.item === id }"
+          :aria-label="module.menuTitle"
+          :aria-current="selectedItem.item === id ? 'page' : undefined"
+          @pointerenter="hoverDetailNav($event, id)"
+          @click.stop="navigateDetail($event, id)"
+        >
+          <span class="island-detail-nav__label" aria-hidden="true">
+            <span
+              v-for="(character, characterIndex) in detailNavCharacters[index]"
+              :key="characterIndex"
+              class="island-detail-nav__char-mask"
+              ><span
+                class="island-detail-nav__char"
+                :style="{ '--char-delay': `${characterIndex * 20}ms` }"
+                >{{ character }}</span
+              ></span
+            >
+          </span>
+          <span class="island-detail-nav__flash" aria-hidden="true">{{
+            module.menuTitle
+          }}</span>
+        </button>
+      </nav>
+    </Transition>
     <!-- 视觉层在画布之后；独立透明按钮保留键盘和点击操作，不改变模型的绘制顺序。 -->
     <nav
       v-show="!selectedItem && phase === 'overview'"
@@ -965,7 +1196,10 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped lang="less">
+@import '@/assets/style/atriumDropdown.less';
 .island-focus.no-rem {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -979,6 +1213,7 @@ onBeforeUnmount(() => {
   --island-card-gap: 24px;
   --island-title-size: 72px;
   --island-bar-height: 28px;
+  --island-detail-header-height: 76px;
   --island-reserved-height: clamp(64px, 12svh, 120px);
   --island-title-overflow: calc(var(--island-title-size) / 2);
   &.island-closing-snapshot {
@@ -987,9 +1222,106 @@ onBeforeUnmount(() => {
     * {
       pointer-events: none !important;
     }
+    :not(.crt-effect-leave-active):not(.island-detail-header-leave-active) {
+      animation: none !important;
+    }
   }
   .island-filter-defs {
     position: absolute;
+  }
+  .island-detail-nav {
+    --detail-nav-muted-color: rgba(85, 193, 161, 0.5);
+    position: absolute;
+    z-index: 5;
+    bottom: var(--temple-panel-bottom, 64px);
+    left: var(--island-inline-inset);
+    transform: translateX(0);
+    transition: left 1.2s ease, transform 1.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: max-content;
+    pointer-events: none;
+  }
+  // Notes 的紧凑筛选栏位于侧栏导航的包围盒内，内容区需优先接收点击。
+  &.has-detail:not(.is-mobile):not(.has-detail-expanded)
+    .island-panels:has(.island-notes-content) {
+    z-index: 6;
+  }
+  .island-detail-nav--right {
+    left: calc(100% - var(--island-inline-inset));
+    transform: translateX(-100%);
+    align-items: flex-end;
+  }
+  .island-detail-nav--right .island-detail-nav__item > span:first-child {
+    background: rgba(10, 10, 10, 0.8);
+  }
+  .island-detail-nav__item {
+    position: relative;
+    pointer-events: auto;
+    min-height: 1em;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--detail-nav-muted-color);
+    font: 400 clamp(64px, 8vw, 112px) / 1 'Anton', sans-serif;
+    text-align: inherit;
+    -webkit-text-fill-color: transparent;
+    -webkit-text-stroke: 1px currentColor;
+    cursor: pointer;
+    &:not(.is-active):hover,
+    &:not(.is-active):focus-visible {
+      color: #e23456;
+      -webkit-text-fill-color: rgba(226, 52, 86, 0.25);
+    }
+    &.is-active {
+      color: #e23456;
+      -webkit-text-fill-color: currentColor;
+      -webkit-text-stroke: 0;
+      cursor: default;
+    }
+  }
+  .island-detail-nav__flash {
+    position: absolute;
+    inset: 0;
+    color: #e23456;
+    opacity: 0;
+    -webkit-text-fill-color: #e23456;
+    -webkit-text-stroke: 0;
+    pointer-events: none;
+  }
+  .island-detail-nav__label {
+    display: block;
+    line-height: 1;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .island-detail-nav__char-mask {
+    display: inline-block;
+    vertical-align: top;
+    overflow: clip;
+  }
+  .island-detail-nav__char {
+    display: block;
+    transform: translateX(0);
+  }
+  .island-detail-nav-enter-active .island-detail-nav__char {
+    transition: transform 800ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition-delay: calc(700ms + var(--char-delay));
+  }
+  .island-detail-nav-enter-from .island-detail-nav__char,
+  .island-detail-nav-leave-to .island-detail-nav__char {
+    transform: translateX(-105%);
+  }
+  .island-detail-nav-leave-active {
+    pointer-events: none;
+
+    .island-detail-nav__char {
+      transition: transform 300ms cubic-bezier(0.7, 0, 0.84, 0);
+    }
+    .island-detail-nav__item {
+      pointer-events: none;
+    }
   }
   .island-detail-shade {
     position: absolute;
@@ -1000,7 +1332,7 @@ onBeforeUnmount(() => {
     pointer-events: none;
     transition: opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1);
   }
-  &.has-collections-expanded .island-detail-shade {
+  &.has-detail-expanded .island-detail-shade {
     opacity: 1;
   }
   .island-panels,
@@ -1109,7 +1441,7 @@ onBeforeUnmount(() => {
       &::after {
         position: absolute;
         inset: -1px;
-        z-index: 1;
+        z-index: 2;
         border: 1px solid currentColor;
         border-top: 0;
         content: '';
@@ -1162,7 +1494,13 @@ onBeforeUnmount(() => {
       }
     }
     &__glyph {
-      font: 400 16px/1 'Anton', sans-serif;
+      flex: none;
+      width: 0;
+      height: 0;
+      border-top: 6px solid transparent;
+      border-bottom: 6px solid transparent;
+      border-left: 9px solid currentColor;
+      font-size: 0;
     }
     &__body {
       display: grid;
@@ -1275,14 +1613,9 @@ onBeforeUnmount(() => {
       }
     }
   }
-  .island-window--interests .island-window__body {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+  .island-window--interests .island-window__body,
   .island-window--ideas .island-window__body {
-    --ideas-lab-share: 30%;
-    grid-template-rows:
-      minmax(0, calc(var(--ideas-lab-share) + clamp(24px, 6svh, 64px)))
-      minmax(0, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   @container (max-height: 125px) {
     &:not(.has-detail) .island-item__title {
@@ -1297,6 +1630,10 @@ onBeforeUnmount(() => {
   }
   .island-window--interests .island-window__bar {
     flex-direction: row-reverse;
+    .island-window__glyph {
+      border-left: 0;
+      border-right: 9px solid currentColor;
+    }
     h2 {
       transform-origin: right center;
     }
@@ -1326,21 +1663,38 @@ onBeforeUnmount(() => {
         #000 min(80px, 28%)
       );
     }
-    .island-window__bar,
     .island-item {
       mask-image: var(--island-edge-mask, none);
       -webkit-mask-image: var(--island-edge-mask, none);
     }
     .island-window__bar {
-      // 渐隐覆盖外溢标题，避免遮罩把原来的上溢字形裁掉。
-      mask-size: 100% calc(100% + 2 * var(--island-title-size));
-      -webkit-mask-size: 100% calc(100% + 2 * var(--island-title-size));
-      mask-position: center;
-      -webkit-mask-position: center;
-      mask-repeat: no-repeat;
-      -webkit-mask-repeat: no-repeat;
-      mask-clip: no-clip;
-      -webkit-mask-clip: no-clip;
+      // 上边框在文字下方，下边框在文字上方；父层不加遮罩，兼容 Safari 外溢字形。
+      border-color: transparent;
+      &::before {
+        position: absolute;
+        inset: -1px;
+        z-index: 0;
+        border-top: 1px solid currentColor;
+        content: '';
+        pointer-events: none;
+      }
+      &::before,
+      &::after,
+      h2::after {
+        mask-image: var(--island-edge-mask, none);
+        -webkit-mask-image: var(--island-edge-mask, none);
+      }
+      h2 {
+        z-index: 1;
+        &::after {
+          mask-image: linear-gradient(to bottom, #000, rgb(0 0 0 / 40%)),
+            var(--island-edge-mask);
+          -webkit-mask-image: linear-gradient(to bottom, #000, rgb(0 0 0 / 40%)),
+            var(--island-edge-mask);
+          mask-composite: intersect;
+          -webkit-mask-composite: source-in;
+        }
+      }
     }
   }
   .island-targets {
@@ -1408,11 +1762,15 @@ onBeforeUnmount(() => {
       .island-anchor {
         --island-anchor-opacity: 0.85;
         opacity: var(--island-anchor-opacity);
+        animation: none;
         pointer-events: none;
       }
       .island-anchor__frame {
         transform: scale(1.8);
         filter: drop-shadow(0 0 4px rgb(39 239 189 / 45%));
+      }
+      .island-anchor__merge {
+        animation: island-detail-anchor-merge 5200ms infinite;
       }
       line {
         opacity: 0;
@@ -1500,7 +1858,25 @@ onBeforeUnmount(() => {
       transform: scale(1);
     }
   }
+  @keyframes island-detail-anchor-merge {
+    0% {
+      opacity: 0.85;
+      transform: scale(calc(var(--merge-scale) * 1.8));
+      animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    22.6% {
+      opacity: 0.65;
+    }
+    32.3%,
+    100% {
+      opacity: 0;
+      transform: scale(1.8);
+    }
+  }
   @media (prefers-reduced-motion: reduce) {
+    .island-detail-nav {
+      transition: none;
+    }
     .island-panels .island-window__bar,
     .island-panels .island-item {
       transition: none;
@@ -1509,11 +1885,17 @@ onBeforeUnmount(() => {
     .island-links g[data-link-group].is-active line,
     .island-links g[data-link-group].is-active .island-anchor,
     .island-links g[data-link-group].is-active .island-anchor__frame,
-    .island-links g[data-link-group].is-active .island-anchor__merge {
+    .island-links g[data-link-group].is-active .island-anchor__merge,
+    .island-links g[data-link-group].is-detail .island-anchor__merge {
       animation: none;
     }
   }
   &.is-mobile {
+    // 内容整体高于模型（0）和底部镂空（1），内部层级仅用于模块间排序。
+    z-index: 2;
+    &.island-closing-snapshot {
+      z-index: 4;
+    }
     --island-inline-inset: var(--temple-mobile-content-inset, 24px);
     --island-content-top: 114px;
     --island-card-gap: 18px;
@@ -1533,6 +1915,59 @@ onBeforeUnmount(() => {
     figcaption {
       inset-inline: 5px;
     }
+    &:not(.has-detail) {
+      --island-content-top: 73px;
+      --island-reserved-height: clamp(32px, 6svh, 60px);
+      --island-title-size: 40px;
+      --island-card-gap: 10px;
+      .island-window__bar {
+        &::before,
+        &::after {
+          top: 7px;
+        }
+        .island-window__glyph {
+          translate: 0 4px;
+        }
+      }
+      .island-window__bar h2 {
+        transform: translateY(
+            calc(var(--island-bar-height) - var(--island-title-size) + 4px)
+          )
+          scaleX(var(--island-title-scale, 1));
+        clip-path: inset(0 0 5px 0);
+      }
+      .island-panels,
+      .island-targets {
+        bottom: calc(var(--temple-panel-bottom, 64px) - 16px);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-rows: var(--island-reserved-height) auto minmax(0, 1fr) auto;
+        gap: 6px 16px;
+      }
+      .island-window--ideas {
+        grid-area: 2 / 1 / 3 / -1;
+      }
+      .island-window--interests {
+        grid-area: 4 / 1 / 5 / -1;
+      }
+      .island-window__body {
+        flex: none;
+        height: auto;
+        column-gap: calc(var(--island-card-gap) * 4);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-rows: auto;
+        .island-item {
+          width: 100%;
+          aspect-ratio: 3 / 4;
+          align-self: start;
+        }
+      }
+      [data-flash-item='LABORATORY'] .island-item__count :deep(small) {
+        translate: -48px 0;
+      }
+      [data-flash-item='NOTES'] .island-item__count :deep(strong) {
+        translate: 48px 0;
+      }
+    }
   }
   @media (max-height: 950px) {
     &:not(.has-detail):not(.is-mobile)
@@ -1548,10 +1983,6 @@ onBeforeUnmount(() => {
       --ideas-lab-share: 15%;
     }
     &.is-mobile:not(.has-detail) {
-      .island-window {
-        margin-top: -24px;
-        height: calc(100% + 24px);
-      }
       .island-window--ideas .island-window__body {
         --ideas-lab-share: 17%;
       }
@@ -1588,8 +2019,24 @@ onBeforeUnmount(() => {
     opacity: 0.4;
   }
   &.has-detail {
+    --island-expand-offset: -48px;
+    &.is-detail-resizing {
+      .island-window {
+        // 保留外侧展开按钮，同时裁掉提前布局到宽屏的内容。
+        clip-path: inset(-4px -48px);
+      }
+      .island-window,
+      .island-window__bar,
+      .island-item,
+      .island-detail {
+        transform-origin: left center;
+      }
+    }
+    .island-panels {
+      top: calc(var(--island-content-top) + 16px);
+    }
     .island-links {
-      z-index: 4;
+      z-index: 1;
     }
     .island-reserved {
       display: none;
@@ -1604,7 +2051,7 @@ onBeforeUnmount(() => {
       width: 68%;
       display: grid;
       grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr);
-      grid-template-rows: 76px minmax(0, 1fr);
+      grid-template-rows: var(--island-detail-header-height) minmax(0, 1fr);
       gap: 18px 0;
     }
     .island-window__bar {
@@ -1624,18 +2071,21 @@ onBeforeUnmount(() => {
       min-width: 0;
       align-items: center;
       opacity: 1;
-      background: #e23456;
+      color: var(--page-theme-color, #e23456);
+      background: transparent;
+      animation: island-detail-header-flash-in 0.24s steps(1, end) 0.35s both;
       h2 {
         align-self: center;
         font-family: 'UnboundedSans', 'alibaba-puhuiti', sans-serif;
         font-size: min(100cqh, 36cqw);
-        transform: scaleY(calc(100cqh / 1em));
+        transform: translateY(-3px) scaleY(calc(100cqh / 1em));
         transform-origin: left center;
         clip-path: none;
-        color: #000;
-        -webkit-text-fill-color: #000;
+        color: inherit;
+        -webkit-text-fill-color: currentColor;
         -webkit-text-stroke: 0;
-        mask-image: linear-gradient(to bottom, #000, rgba(0, 0, 0, 0.4));
+        mask-image: linear-gradient(to right, #000, rgba(0, 0, 0, 0.4));
+        -webkit-mask-image: linear-gradient(to right, #000, rgba(0, 0, 0, 0.4));
         &::after {
           visibility: hidden;
         }
@@ -1646,20 +2096,17 @@ onBeforeUnmount(() => {
         flex: none;
         width: 0;
         height: 0;
-        margin-left: auto;
+        margin-left: 3px;
         border-top: 6px solid transparent;
         border-bottom: 6px solid transparent;
-        border-right: 9px solid #000;
+        border-left: 0;
+        border-right: 9px solid currentColor;
         font-size: 0;
       }
     }
     .is-detail-return {
       pointer-events: auto;
       cursor: pointer;
-      &:hover,
-      &:focus-visible {
-        color: #e23456;
-      }
     }
     .island-window__body {
       display: contents;
@@ -1703,33 +2150,25 @@ onBeforeUnmount(() => {
           -webkit-mask-image: none;
           width: max-content;
           white-space: nowrap;
+          pointer-events: auto;
+          &:hover {
+            -webkit-text-fill-color: transparent;
+            -webkit-text-stroke: 1px currentColor;
+          }
         }
         font-size: min(9cqw, 100cqh);
       }
       .island-item__count {
         grid-area: 1 / 3;
         justify-self: end;
-        margin-left: 0;
-        color: inherit;
-        container-type: normal;
         align-self: center;
-        flex: none;
-        display: inline-grid;
+        display: block;
+        container-type: normal;
         width: auto;
         max-width: none;
-        gap: 0;
         transform: none;
-        :deep(small),
-        :deep(strong) {
-          font-size: 50cqh;
-          line-height: 1;
-          letter-spacing: normal;
-          color: #e23456;
-        }
-        :deep(small) {
-          -webkit-text-fill-color: transparent;
-          -webkit-text-stroke: 1px #e23456;
-        }
+        color: var(--page-theme-color, #e23456);
+        animation: island-detail-header-flash-in 0.24s steps(1, end) 0.35s both;
       }
     }
     .island-detail {
@@ -1742,8 +2181,18 @@ onBeforeUnmount(() => {
       color: var(--text-color);
       container-type: inline-size;
     }
+    .island-detail {
+      --island-detail-content-ready-delay: 1.27s;
+      animation: island-detail-fade-in 0.5s ease 0.95s both;
+    }
+    .island-detail-expand {
+      animation: island-detail-fade-in 0.5s ease 0.95s both;
+    }
     &.is-english .island-window__bar h2 {
       font-size: min(100cqh, 15cqw);
+    }
+    &:not(.is-english) .island-window--interests .island-window__bar h2 {
+      font-size: min(100cqh, 70cqw);
     }
     .island-detail__viewport {
       :deep(.scroll-viewport__scroll) {
@@ -1752,10 +2201,12 @@ onBeforeUnmount(() => {
       }
       :deep(.scroll-viewport__scroll > div) {
         min-height: 100%;
+        height: 100%;
       }
       :deep(.not-found-page.is-embedded) {
         min-height: 280px;
         height: 100%;
+        padding: 24px !important;
       }
     }
     &.has-detail--right .island-window {
@@ -1763,7 +2214,7 @@ onBeforeUnmount(() => {
     }
     .island-detail-expand {
       position: absolute;
-      right: -48px;
+      right: var(--island-expand-offset);
       top: 50%;
       width: 28px;
       height: 44px;
@@ -1791,12 +2242,12 @@ onBeforeUnmount(() => {
         transition: transform 0.3s ease;
       }
     }
-    &.has-collections-expanded {
+    &.has-detail-expanded {
+      --island-expand-offset: calc(-0.5 * var(--island-inline-inset) - 14px);
       .island-window {
         width: 100%;
       }
       .island-detail-expand {
-        right: calc(-0.5 * var(--island-inline-inset) - 14px);
         span {
           transform: rotate(180deg);
         }
@@ -1805,20 +2256,133 @@ onBeforeUnmount(() => {
         visibility: hidden;
       }
     }
+    &:not(.has-detail--right) .island-detail-expand {
+      right: auto;
+      left: var(--island-expand-offset);
+      span {
+        transform: rotate(180deg);
+      }
+    }
+    &:not(.has-detail--right).has-detail-expanded .island-detail-expand span {
+      transform: none;
+    }
     &.is-mobile {
+      --island-content-top: calc(var(--island-header-bottom, 56px) + 12px);
+      --island-detail-header-height: clamp(28px, 8vw, 40px);
+      .island-window__bar,
+      .island-item,
+      .island-item__title-text {
+        -webkit-tap-highlight-color: transparent;
+      }
+      .island-mobile-detail-dropdown {
+        position: absolute;
+        isolation: isolate;
+        z-index: 10;
+        top: calc(var(--island-detail-header-height) + 12px);
+        left: 50%;
+        width: 220px;
+        max-width: calc(100vw - 48px);
+        padding: 8px 0;
+        transform: translateX(-50%);
+        pointer-events: auto;
+        &::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          z-index: -1;
+          .atrium-dropdown-surface();
+          transform: scaleY(1);
+          transform-origin: top;
+        }
+        button {
+          display: block;
+          width: 100%;
+          min-height: 44px;
+          padding: 9px 20px;
+          border: 0;
+          background: transparent;
+          color: var(--text-color);
+          font: 400 32px/1 'Anton', sans-serif;
+          text-align: center;
+          cursor: pointer;
+          &.is-current {
+            color: transparent;
+            -webkit-text-stroke: 1px var(--page-theme-color, #e23456);
+          }
+        }
+      }
+      .island-mobile-dropdown-enter-active {
+        &::before {
+          transition: transform 800ms cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .island-detail-nav__char {
+          transition: transform 800ms cubic-bezier(0.16, 1, 0.3, 1);
+          transition-delay: calc(100ms + var(--char-delay));
+        }
+      }
+      .island-mobile-dropdown-enter-from,
+      .island-mobile-dropdown-leave-to {
+        &::before {
+          transform: scaleY(0);
+        }
+        .island-detail-nav__char {
+          transform: translateX(-105%);
+        }
+      }
+      .island-mobile-dropdown-leave-active {
+        pointer-events: none;
+        &::before {
+          transition: transform 300ms cubic-bezier(0.7, 0, 0.84, 0);
+        }
+        .island-detail-nav__char {
+          transition: transform 300ms cubic-bezier(0.7, 0, 0.84, 0);
+        }
+      }
+      .island-mobile-dropdown-arrow {
+        display: inline-block;
+        width: 0;
+        height: 0;
+        margin-left: 6px;
+        border-left: 5px solid transparent;
+        border-right: 5px solid transparent;
+        border-top: 6px solid currentColor;
+        vertical-align: middle;
+        transition: transform 0.3s ease;
+        &.is-open {
+          transform: rotate(180deg);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .island-mobile-dropdown-enter-active,
+        .island-mobile-dropdown-leave-active,
+        .island-mobile-dropdown-arrow {
+          transition: none;
+        }
+      }
+      .island-mobile-dropdown-dismiss {
+        position: fixed;
+        inset: 0;
+        z-index: 9;
+        pointer-events: auto;
+      }
+      .island-detail-shade {
+        background: rgba(0, 0, 0, 1);
+        opacity: 1;
+        transition: opacity 250ms ease 400ms;
+        @media (prefers-reduced-motion: reduce) {
+          transition: none;
+        }
+      }
+      .island-panels {
+        top: var(--island-content-top);
+        bottom: max(40px, calc(env(safe-area-inset-bottom) + 8px));
+      }
       .island-window {
-        width: 76%;
-        grid-template-rows: 62px minmax(0, 1fr);
+        width: 100%;
         gap: 12px 0;
       }
-      &.has-collections-expanded .island-window {
-        width: 100%;
-      }
-      .island-detail-expand {
-        right: -32px;
-      }
-      &.has-collections-expanded .island-detail-expand {
-        right: calc(-0.5 * var(--island-inline-inset) - 14px);
+      &[data-detail-item='COLLECTIBLES'] .island-window {
+        row-gap: 0;
       }
       .island-window__glyph {
         display: block;
@@ -1827,27 +2391,83 @@ onBeforeUnmount(() => {
       }
       .island-window__bar {
         padding: 0 3px;
+        width: 100%;
+        h2 {
+          transform: none;
+        }
+      }
+      &:not(.is-english) .island-window .island-window__bar h2 {
+        font-size: var(--island-detail-header-height);
       }
       .island-item figcaption {
         gap: 0;
         padding: 0;
       }
-      .island-item .island-item__title .island-item__title-text {
-        transform: scaleY(2.5);
-      }
-      .island-item__title {
-        font-size: 7cqw;
+      .island-item .island-item__title .island-item__title-text:hover {
+        -webkit-text-fill-color: currentColor;
+        -webkit-text-stroke: 0;
       }
     }
   }
 }
+.island-focus.no-rem.has-detail
+  .island-window
+  .island-detail-header-leave-active {
+  animation: island-detail-header-flash-out 0.24s steps(1, end) both;
+}
+
+@keyframes island-detail-header-flash-in {
+  0%,
+  40% {
+    opacity: 0;
+  }
+  20%,
+  60%,
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes island-detail-header-flash-out {
+  0%,
+  40% {
+    opacity: 1;
+  }
+  20%,
+  60%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes island-detail-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .island-focus .crt-effect-leave-active,
-  .island-focus .crt-effect-enter-active {
+  .island-focus .crt-effect-enter-active,
+  .island-focus.no-rem.has-detail
+    .island-window
+    .island-detail-header-leave-active {
     animation: none;
   }
   .island-focus .island-detail-shade {
     transition: none;
+  }
+  .island-focus .island-detail-nav__char {
+    transition: none !important;
+  }
+
+  .island-focus.no-rem.has-detail .island-window__bar,
+  .island-focus.no-rem.has-detail .island-item__count,
+  .island-focus.no-rem.has-detail .island-detail,
+  .island-focus.no-rem.has-detail .island-detail-expand {
+    animation: none;
   }
 }
 </style>

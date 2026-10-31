@@ -48,20 +48,24 @@
             </div>
           </span>
           <span class="collection-card__copy">
-            <strong>{{ collection.title }}</strong>
+            <strong
+              ><OverflowMarquee>{{ collection.title }}</OverflowMarquee></strong
+            >
             <small>
-              <template
-                v-for="subtitlePart in subtitleDisplayParts"
-                :key="subtitlePart.id"
-              >
-                <span
-                  v-if="subtitlePart.isSeparator"
-                  class="collection-card__copy-separator"
+              <OverflowMarquee>
+                <template
+                  v-for="subtitlePart in subtitleDisplayParts"
+                  :key="subtitlePart.id"
                 >
-                  ｜
-                </span>
-                <span v-else>{{ subtitlePart.text }}</span>
-              </template>
+                  <span
+                    v-if="subtitlePart.isSeparator"
+                    class="collection-card__copy-separator"
+                  >
+                    ｜
+                  </span>
+                  <span v-else>{{ subtitlePart.text }}</span>
+                </template>
+              </OverflowMarquee>
             </small>
             <span class="collection-card__count">
               <span>{{
@@ -79,24 +83,18 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
-import { getCardThumbnailUrl } from '@/utils/imageVariant'
+import OverflowMarquee from '@/components/OverflowMarquee/index.vue'
+import {
+  getCardMobileThumbnailUrl,
+  getCardThumbnailUrl,
+} from '@/utils/imageVariant'
 
-export interface MerchCollectionCardData {
-  id: string
-  title: string
-  subtitle: string
-  cover: string
-  coverOffsetX?: string | number
-  coverOffsetY?: string | number
-  photos: Array<{
-    url: string
-    title?: string
-  }>
-}
+import type { MerchCollection } from '@/types/merch'
 
 const props = defineProps<{
-  collection: MerchCollectionCardData
+  collection: MerchCollection
   countLabel: string
+  mobile?: boolean
   expanded?: boolean
   expandedTarget?: HTMLElement | null
   closing?: boolean
@@ -104,12 +102,14 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (event: 'select', collectionId: string, element: HTMLElement): void
+  (event: 'select', collection: MerchCollection, element: HTMLElement): void
 }>()
 
 const cardElement = ref<HTMLElement>()
 const primaryCover = computed(() =>
-  getCardThumbnailUrl(props.collection.photos[0]?.url || props.collection.cover)
+  (props.mobile ? getCardMobileThumbnailUrl : getCardThumbnailUrl)(
+    props.collection.photos[0]?.url || props.collection.cover
+  )
 )
 
 const subtitleDisplayParts = computed(() =>
@@ -141,7 +141,7 @@ const coverStyle = computed(() => ({
 
 const handleSelect = () => {
   if (!props.expanded && cardElement.value)
-    emit('select', props.collection.id, cardElement.value)
+    emit('select', props.collection, cardElement.value)
 }
 </script>
 
@@ -173,15 +173,12 @@ const handleSelect = () => {
     position: absolute;
     content: '';
     pointer-events: none;
-  }
-
-  &::after {
     top: var(--box-top-offset);
     right: -1px;
     left: -1px;
     height: var(--box-top-height);
     border: 1px solid #37373c;
-    background: linear-gradient(to bottom, #34343a, #222228 52%, #101014);
+    background: linear-gradient(to bottom, #353535, #232323 52%, #111 100%);
     clip-path: polygon(18px 0, calc(100% - 18px) 0, 100% 100%, 0 100%);
     box-shadow: inset 0 1px #4a4a50;
     transition: top 0.52s cubic-bezier(0.22, 1, 0.36, 1),
@@ -199,13 +196,11 @@ const handleSelect = () => {
   min-width: 0;
   padding: 0;
   overflow: hidden;
-  border: 1px solid #444448;
+  border: 1px solid #4d4d4d;
   color: #fff;
-  background: linear-gradient(145deg, #29272d, #101014 56%, #1d1015);
+  background: linear-gradient(145deg, #282828, #111 56%, #141414);
   text-align: left;
   cursor: pointer;
-
-  border: 1px solid rgb(77, 77, 77);
 
   &__media {
     position: absolute;
@@ -215,7 +210,7 @@ const handleSelect = () => {
     left: 7px;
     z-index: 1;
     overflow: hidden;
-    background: #08080a;
+    background: #080808;
 
     &::after {
       position: absolute;
@@ -226,9 +221,9 @@ const handleSelect = () => {
       background: radial-gradient(
         ellipse at center,
         transparent 45%,
-        rgba(0, 0, 0, 0.65) 100%
+        rgba(0, 0, 0, 0.35) 100%
       );
-      box-shadow: inset 0 0 22px rgba(0, 0, 0, 0.96);
+      box-shadow: inset 0 0 22px rgba(0, 0, 0, 0.5);
       opacity: 1;
       transition: opacity 0.3s ease;
     }
@@ -257,8 +252,8 @@ const handleSelect = () => {
     background: linear-gradient(
       to bottom,
       rgba(0, 0, 0, 0.02) 58%,
-      rgba(0, 0, 0, 0.42) 84%,
-      rgba(0, 0, 0, 0.78) 100%
+      rgba(0, 0, 0, 0.22) 84%,
+      rgba(0, 0, 0, 0.4) 100%
     );
   }
 
@@ -278,44 +273,43 @@ const handleSelect = () => {
   &__count {
     position: absolute;
     right: 0;
-    top: calc(50% - 2px);
+    top: calc(50% - 4px);
     transform: translateY(-50%);
     z-index: 6;
     display: inline-flex;
     flex-direction: column;
     align-items: flex-end;
     justify-content: flex-end;
-    height: var(--copy-text-height);
+    height: calc(var(--copy-text-height) * 1.12);
     box-sizing: border-box;
     gap: 1px;
     padding: 0 8px;
     color: #e23456;
     font-family: 'UnboundedSans', 'Courier New', monospace;
-    font-size: calc((var(--copy-text-height) - 1px) * 0.66);
+    font-size: calc((var(--copy-text-height) * 1.12 - 1px) * 0.66);
     font-weight: 900;
     line-height: 1;
+
+    > span {
+      font-family: 'Anton', sans-serif;
+      font-weight: 400;
+      -webkit-text-fill-color: transparent;
+      -webkit-text-stroke: 1px currentColor;
+      transform: translateY(6px);
+    }
 
     small.collection-card__unit {
       display: block;
       margin: 0;
-      color: rgba(255, 255, 255, 0.46);
-      font-family: inherit;
-      font-size: calc((var(--copy-text-height) - 1px) * 0.33);
+      color: rgba(255, 255, 255, 0.28);
+      font-family: 'alibaba-puhuiti', sans-serif;
+      font-weight: 900;
+      font-size: calc((var(--copy-text-height) * 1.12 - 1px) * 0.33);
       line-height: 1;
+      letter-spacing: -0.04em;
+      transform: scaleX(0.9);
+      transform-origin: right center;
     }
-  }
-
-  &__index {
-    position: absolute;
-    right: -3px;
-    bottom: -5px;
-    z-index: 4;
-    color: rgba(255, 255, 255, 0.2);
-    font-family: 'Anton', sans-serif;
-    font-size: 3rem;
-    font-weight: 400;
-    letter-spacing: 0.02em;
-    line-height: 1;
   }
 
   &__copy {
@@ -331,7 +325,7 @@ const handleSelect = () => {
     justify-content: center;
     box-sizing: border-box;
     border-top: 1px solid rgba(226, 52, 86, 0.46);
-    background: linear-gradient(110deg, #211c22, #0d0d11 64%, #251018);
+    background: linear-gradient(110deg, #1e1e1e, #0e0e0e 64%, #141414);
 
     strong {
       display: block;
@@ -341,7 +335,9 @@ const handleSelect = () => {
       font-size: 0.72rem;
       line-height: 1.2;
       font-weight: 900;
-      text-overflow: ellipsis;
+      letter-spacing: -0.04em;
+      transform: scale(1.08, 1.2);
+      transform-origin: left top;
       white-space: nowrap;
     }
 
@@ -352,8 +348,8 @@ const handleSelect = () => {
       color: rgba(255, 255, 255, 0.46);
       font-family: 'alibaba-puhuiti', sans-serif;
       font-size: 0.4rem;
+      font-weight: 900;
       line-height: 1.3;
-      text-overflow: ellipsis;
       white-space: nowrap;
     }
 
@@ -374,8 +370,9 @@ const handleSelect = () => {
     z-index: 4;
     transform: translateY(-10px);
 
-    .collection-card__media::after {
-      opacity: 0.45;
+    .collection-card__media::after,
+    .collection-card__shade {
+      opacity: 0;
     }
   }
 }
@@ -404,7 +401,7 @@ const handleSelect = () => {
     z-index: 6;
     overflow: auto;
     overscroll-behavior: contain;
-    background: #08080a;
+    background: #080808;
     padding: clamp(24px, 4vw, 64px);
     box-sizing: border-box;
     animation: anutriumCrtOn 220ms cubic-bezier(0.19, 1, 0.22, 1) 80ms backwards;
@@ -477,31 +474,27 @@ const handleSelect = () => {
   }
 
   .collection-card {
-    --copy-text-height: calc(0.54rem * 1.2 + 0.34rem * 1.3 + 3px);
+    --copy-text-height: calc(0.88rem * 1.2 + 0.52rem * 1.3 + 3px);
     &__count {
       padding: 0 5px;
     }
 
-    &__index {
-      font-size: 1.84rem;
-    }
-
     &__copy {
-      min-height: 62px;
-      padding: 10px 48px 10px 10px;
+      min-height: 98px;
+      padding: 10px 58px 10px 10px;
 
       strong {
-        font-size: 0.54rem;
+        font-size: 0.88rem;
       }
 
       small {
         margin-top: 3px;
-        font-size: 0.34rem;
+        font-size: 0.52rem;
       }
     }
 
     &__media {
-      bottom: 66px;
+      bottom: 102px;
     }
   }
 }

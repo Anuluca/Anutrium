@@ -14,6 +14,8 @@ import PageHeroTitle from '@/components/PageHeroTitle/index.vue'
 import PageScrollProgress from '@/components/PageScrollProgress/index.vue'
 import { useFrameTask } from '@/composables/useFrameTask'
 import { useIntersectionActivation } from '@/composables/useIntersectionActivation'
+import { useNestedSmoothScroll } from '@/composables/useNestedSmoothScroll'
+import { useScrollScanlines } from '@/composables/useScrollScanlines'
 
 import { useAboutPanels } from './composables/useAboutPanels'
 import { useCreditsPlayback } from './composables/useCreditsPlayback'
@@ -73,6 +75,8 @@ const {
   finishPanelLeave,
   toggleAboutPanel,
 } = useAboutPanels()
+useScrollScanlines(() => panelScrollRef.value)
+useNestedSmoothScroll(() => panelScrollRef.value)
 const passionVisible = ref(false)
 const neighborsRef = ref<HTMLElement | null>(null)
 const neighborsVisible = ref(false)
