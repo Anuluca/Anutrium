@@ -4,56 +4,54 @@ date: "2026-11-01"
 category: test
 ---
 
-This post is used for testing tag plugins. See [docs](http://zespia.tw/hexo/docs/tag-plugins.html) for more info.
+## 引用块
 
-## Block Quote
+### 普通引用
 
-### Normal blockquote
+> 这是普通引用内容，用于检查引用文字的边框、背景和段落间距。
 
-> Praesent diam elit, interdum ut pulvinar placerat, imperdiet at magna.
+### 引用书籍
 
-### Quote from a book
-
-{% blockquote David Levithan, Wide Awake %}
-Do not just seek happiness for yourself. Seek happiness for all. Through kindness. Through mercy.
+{% blockquote 大卫·利维坦，《清醒》 %}
+不要只为自己寻找幸福，也要为所有人寻找幸福。以善意，以慈悲。
 {% endblockquote %}
 
-### Quote from Twitter
+### 引用社交平台内容
 
 {% blockquote @DevDocs https://twitter.com/devdocs/status/356095192085962752 %}
-NEW: DevDocs now comes with syntax highlighting. http://devdocs.io
+新功能：DevDocs 现已支持语法高亮。 http://devdocs.io
 {% endblockquote %}
 
-### Quote from an article on the web
+### 引用网络文章
 
-{% blockquote Seth Godin http://sethgodin.typepad.com/seths_blog/2009/07/welcome-to-island-marketing.html Welcome to Island Marketing %}
-Every interaction is both precious and an opportunity to delight.
+{% blockquote 塞斯·高汀 http://sethgodin.typepad.com/seths_blog/2009/07/welcome-to-island-marketing.html 欢迎来到岛屿营销 %}
+每一次互动都很珍贵，也都是带来愉悦体验的机会。
 {% endblockquote %}
 
-## Code Block
+## 代码块
 
-### Normal code block
+### 普通代码块
 
 ```
 alert('Hello World!');
 ```
 
-### With caption
+### 带标题
 
 {% codeblock Array.map %}
 array.map(callback[, thisArg])
 {% endcodeblock %}
 
-### With caption and URL
+### 带标题和链接
 
 {% codeblock .compact http://underscorejs.org/#compact Underscore.js %}
 .compact([0, 1, false, 2, ‘’, 3]);
 => [1, 2, 3]
 {% endcodeblock %}
 
-### With marked lines
+### 标记指定行
 
-Line 1,7-8,10 should be marked with different color.
+第 1、7–8、10 行应以不同颜色标记。
 
 {% codeblock lang:js mark:1,7-8,10 %}
 const http = require('http');
@@ -69,30 +67,22 @@ http.createServer((req, res) => {
 });
 {% endcodeblock %}
 
-Note: Theme's style should support `.highlight.line.marked` (recommend to use the selection or current line color).
+说明：主题应支持指定行高亮，建议使用选区或当前行的强调色。
 
-### Gist
+## 抽出式引用
 
-{% gist 996818 %}
-
-### jsFiddle
-
-{% jsfiddle ccWP7 %}
-
-## Pullquote
-
-### Left
+### 左侧引用
 
 {% pullquote left %}
-Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+这是一段抽出式引用文字，用于检查引用区域的排版。
 {% endpullquote %}
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas tempus molestie arcu, et fringilla mauris placerat ac. Nullam luctus bibendum risus. Ut cursus sed ipsum feugiat egestas. Suspendisse elementum, velit eu consequat consequat, augue lorem dapibus libero, eget pulvinar dolor est sit amet nulla. Suspendisse a porta tortor, et posuere mi. Pellentesque ultricies, mi quis volutpat malesuada, erat felis vulputate nisl, ac congue ante tortor ut ante. Proin aliquam sem vel mauris tincidunt, eget scelerisque tortor euismod. Nulla tincidunt enim nec commodo dictum. Mauris id sapien et orci gravida luctus id ut dui. In vel vulputate odio. Duis vel turpis molestie, scelerisque enim eu, lobortis eros. Cras at ipsum gravida, sagittis ante vel, viverra tellus. Nunc mauris turpis, elementum ullamcorper nisl pretium, ultrices cursus justo. Mauris porttitor commodo eros, ac ornare orci interdum in. Cras fermentum cursus leo sed mattis. In dignissim lorem sem, sit amet elementum mauris venenatis ac.
+这是一段中文排版示例，用于检查抽出式引用与正文的组合效果。引用应保持独立的边框、背景和留白，正文按照阅读区域自然换行。较长的段落用于确认字体、行距以及不同屏幕尺寸下的显示效果。
 
-### Right
+### 右侧引用
 
 {% pullquote right %}
-Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+这是一段抽出式引用文字，用于检查引用区域的排版。
 {% endpullquote %}
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ligula justo, lobortis sit amet semper vel, dignissim sit amet libero. Praesent ac tempus ligula. Maecenas at gravida odio. Etiam tristique volutpat lacus eu faucibus. Donec non tempus arcu. Phasellus adipiscing, mauris nec mollis egestas, ipsum nunc auctor velit, et rhoncus lorem ipsum at ante. Praesent et sem in velit volutpat auctor. Duis vel mauris nulla. Maecenas mattis interdum ante, quis sagittis nibh cursus et. Nulla facilisi. Morbi convallis gravida tortor, ut fermentum enim gravida et. Nunc vel dictum nisl, non ultrices libero. Proin vestibulum felis eget orci consectetur lobortis. Vestibulum augue nulla, iaculis vitae augue vehicula, dignissim ultrices libero. Sed imperdiet urna et quam ultrices tincidunt nec ac magna. Etiam vel pharetra elit.
+这是一段中文排版示例，用于检查抽出式引用与正文的组合效果。引用应保持独立的边框、背景和留白，正文按照阅读区域自然换行。较长的段落用于确认字体、行距以及不同屏幕尺寸下的显示效果。

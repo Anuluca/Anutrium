@@ -1,19 +1,34 @@
-.media-cinco-hover() {
-  :deep(.media-gallery__cinco-surface) {
-    position: absolute;
-    z-index: 1;
-    display: grid;
-    overflow: hidden;
-    pointer-events: none;
+.cinco-surface() {
+  position: absolute;
+  z-index: 1;
+  display: grid;
+  overflow: hidden;
+  pointer-events: none;
+}
+.cinco-layer() {
+  position: relative;
+  grid-area: 1 / 1 / -1 / -1;
+  width: 100%;
+  height: 100%;
+  background-position: 50% 50%;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+.media-cinco-hover(@scoped: true) {
+  & when (@scoped = true) {
+    :deep(.media-gallery__cinco-surface) {
+      .cinco-surface();
+    }
+    :deep(.media-gallery__cinco-layer) {
+      .cinco-layer();
+    }
   }
-
-  :deep(.media-gallery__cinco-layer) {
-    position: relative;
-    grid-area: 1 / 1 / -1 / -1;
-    width: 100%;
-    height: 100%;
-    background-position: 50% 50%;
-    background-repeat: no-repeat;
-    background-size: cover;
+  & when (@scoped = false) {
+    .media-gallery__cinco-surface {
+      .cinco-surface();
+    }
+    .media-gallery__cinco-layer {
+      .cinco-layer();
+    }
   }
 }

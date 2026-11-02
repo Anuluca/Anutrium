@@ -69,3 +69,16 @@ export function useNestedSmoothScroll(
     { flush: 'post' }
   )
 }
+
+/** 同步内嵌 Lenis 的目标与实际位置，原生滚动模式保持相同行为。 */
+export function scrollNestedTo(
+  element: HTMLElement,
+  top: number,
+  immediate = false
+) {
+  const instance = bindings.get(element)?.instance
+  if (instance) {
+    instance.resize()
+    instance.scrollTo(top, { immediate })
+  } else element.scrollTo({ top })
+}

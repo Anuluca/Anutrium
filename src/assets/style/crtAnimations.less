@@ -1,0 +1,39 @@
+@keyframes anutriumCrtOn {
+  0% {
+    transform: scale3d(0, 0.005, 1);
+    filter: brightness(6) contrast(2);
+    opacity: 0;
+  }
+
+  20% {
+    transform: scale3d(1, 0.005, 1);
+    filter: brightness(4) contrast(1.5);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale3d(1, 1, 1);
+    filter: brightness(1) contrast(1);
+    opacity: var(--anutrium-crt-opacity, 1);
+  }
+}
+
+@keyframes anutriumCrtOff {
+  0% {
+    transform: scale3d(1, 1, 1);
+    filter: brightness(1);
+    opacity: 1;
+  }
+
+  55% {
+    transform: scale3d(1, 0.005, 1);
+    filter: brightness(4) contrast(1.5);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale3d(0, 0, 1);
+    filter: brightness(12);
+    opacity: 0;
+  }
+}

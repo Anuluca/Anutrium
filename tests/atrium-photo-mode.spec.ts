@@ -606,7 +606,7 @@ test('photo focal length toolbar changes perspective independently with an icon-
   await expect(stage).toHaveCount(0)
 })
 
-test('photo mode snaps its custom cursor to the latest input without inertia and restores smooth following on exit', async ({
+test('Atrium keeps instant cursor following while entering and leaving photo mode', async ({
   page,
 }, info) => {
   test.skip(info.project.name.includes('mobile'))
@@ -622,7 +622,7 @@ test('photo mode snaps its custom cursor to the latest input without inertia and
   await page.mouse.move(100, 100)
   const cursor = page.locator('.cursor-position')
   await expect(cursor).not.toHaveClass(/is-hidden/)
-  await expect(cursor).not.toHaveClass(/is-instant/)
+  await expect(cursor).toHaveClass(/is-instant/)
   const sample = (points: { x: number; y: number }[]) =>
     page.evaluate(async (points) => {
       const cursor = document.querySelector<HTMLElement>('.cursor-position')!
@@ -650,7 +650,7 @@ test('photo mode snaps its custom cursor to the latest input without inertia and
         writes,
       }
     }, points)
-  expect((await sample([{ x: 800, y: 400 }])).error).toBeGreaterThan(1)
+  expect((await sample([{ x: 800, y: 400 }])).error).toBeLessThanOrEqual(0.01)
   await page.getByRole('button', { name: '进入拍照模式' }).click()
   await expect(cursor).toHaveClass(/is-instant/)
   await expect(page.locator('.atrium-photo-stage')).toHaveAttribute(
@@ -666,8 +666,8 @@ test('photo mode snaps its custom cursor to the latest input without inertia and
   expect(result.writes).toBe(1)
   await page.getByRole('button', { name: '退出拍照模式' }).click()
   await expect(page.locator('.atrium-photo-studio')).toHaveCount(0)
-  await expect(cursor).not.toHaveClass(/is-instant/)
-  expect((await sample([{ x: 200, y: 150 }])).error).toBeGreaterThan(1)
+  await expect(cursor).toHaveClass(/is-instant/)
+  expect((await sample([{ x: 200, y: 150 }])).error).toBeLessThanOrEqual(0.01)
 })
 
 test('photo shutter flashes across the viewport, prevents duplicate exports and keeps the flash out of the saved image', async ({

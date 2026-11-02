@@ -1,13 +1,13 @@
 {
   "revision": "6bffcf4e80bdfe6d94fbcc7a9d155603c2c6c275",
   "assets": {
-    "https://octodex.github.com/images/minion.png": "minion.png",
-    "https://octodex.github.com/images/stormtroopocat.jpg": "stormtroopocat.jpg",
-    "https://octodex.github.com/images/dojocat.jpg": "dojocat.jpg",
-    "https://placehold.it/350x150.jpg": "placeholder-350x150.svg",
-    "wallpaper-2572384.jpg": "wallpaper-2572384.jpg",
-    "wallpaper-2311325.jpg": "wallpaper-2311325.jpg",
-    "wallpaper-878514.jpg": "wallpaper-878514.jpg"
+    "https://octodex.github.com/images/minion.png": "markdown-it-demo/minion.png",
+    "https://octodex.github.com/images/stormtroopocat.jpg": "markdown-it-demo/stormtroopocat.jpg",
+    "https://octodex.github.com/images/dojocat.jpg": "markdown-it-demo/dojocat.jpg",
+    "https://placehold.it/350x150.jpg": "images/placeholder-350x150.svg",
+    "wallpaper-2572384.jpg": "images/wallpaper-2572384.jpg",
+    "wallpaper-2311325.jpg": "images/wallpaper-2311325.jpg",
+    "wallpaper-878514.jpg": "images/wallpaper-878514.jpg"
   },
   "notes": [
     {
@@ -17,7 +17,8 @@
       "sourcePath": "source/_posts/test/hexo-unit-test/categories.md",
       "sourceUrl": "https://github.com/kaiiiz/hexo-theme-book-demo/blob/6bffcf4e80bdfe6d94fbcc7a9d155603c2c6c275/source/_posts/test/hexo-unit-test/categories.md",
       "originalBodySha256": "e5daf7ef2062c4eaeb390ff27fdeca40307eb2d5dc65e8fba08e2658713150ee",
-      "sha256": "fbfe97146f445921d9c6e10bdf9b385031cd3e2f25315966c3e0f0db6589a82f"
+      "sha256": "fbfe97146f445921d9c6e10bdf9b385031cd3e2f25315966c3e0f0db6589a82f",
+      "previousSha256": "fbfe97146f445921d9c6e10bdf9b385031cd3e2f25315966c3e0f0db6589a82f"
     },
     {
       "id": "ae4b6fee-ee58-4f6a-a747-ba50a0f836db",
@@ -26,7 +27,8 @@
       "sourcePath": "source/_posts/test/hexo-unit-test/elements.md",
       "sourceUrl": "https://github.com/kaiiiz/hexo-theme-book-demo/blob/6bffcf4e80bdfe6d94fbcc7a9d155603c2c6c275/source/_posts/test/hexo-unit-test/elements.md",
       "originalBodySha256": "2e5593e8390b4170e1f96d9ace0f2879a65767815cf11740c31472c04a6dc5e0",
-      "sha256": "57f16072bb42de07852ff6d568a6995371824b85fd627c2245827bd8c0e06cf0"
+      "sha256": "0336903aed2f7d332dff3c6739225e8e240eeaebd97c1404f7c7f91113393c1a",
+      "previousSha256": "0336903aed2f7d332dff3c6739225e8e240eeaebd97c1404f7c7f91113393c1a"
     },
     {
       "id": "b02a6530-9478-438a-a24a-eb8625837a51",
@@ -35,16 +37,8 @@
       "sourcePath": "source/_posts/test/hexo-unit-test/excerpts.md",
       "sourceUrl": "https://github.com/kaiiiz/hexo-theme-book-demo/blob/6bffcf4e80bdfe6d94fbcc7a9d155603c2c6c275/source/_posts/test/hexo-unit-test/excerpts.md",
       "originalBodySha256": "d2b1083e41b1e644228a2a3649b4934c9094b30f58f0a1b0f10d0717f22916b8",
-      "sha256": "bdd15063827af2a55c25c7983c27db9933af035e589bea4c98379d3294faf27e"
-    },
-    {
-      "id": "2f9544be-3229-4e83-a595-8793004a6644",
-      "title": "相册文章测试",
-      "file": "test__hexo-unit-test__gallery-post.md",
-      "sourcePath": "source/_posts/test/hexo-unit-test/gallery-post.md",
-      "sourceUrl": "https://github.com/kaiiiz/hexo-theme-book-demo/blob/6bffcf4e80bdfe6d94fbcc7a9d155603c2c6c275/source/_posts/test/hexo-unit-test/gallery-post.md",
-      "originalBodySha256": "0543b5ce577814b5d6140b402678b01c8b31c010b57a19501b8409fd7f149bfe",
-      "sha256": "f775862dc9b6da3a584366bf96c7caf2a06c660d53a063bbfbd9efae4d0ca473"
+      "sha256": "b20b306750fb14710262d654d94756ae073b012fe848c7e19df767cbf00e9c36",
+      "previousSha256": "b20b306750fb14710262d654d94756ae073b012fe848c7e19df767cbf00e9c36"
     },
     {
       "id": "dc5850bc-4e8b-4c44-a668-d9c83669673b",
@@ -53,7 +47,8 @@
       "sourcePath": "source/_posts/test/hexo-unit-test/hello-world.md",
       "sourceUrl": "https://github.com/kaiiiz/hexo-theme-book-demo/blob/6bffcf4e80bdfe6d94fbcc7a9d155603c2c6c275/source/_posts/test/hexo-unit-test/hello-world.md",
       "originalBodySha256": "9ef34ee171ed106bea77cb9f3f939abb3c144bed45b80cf093ce2fd0f5a9a150",
-      "sha256": "741b7bd4ae82fd689577a2a2e44bbf2716611a93b16559659161021d8b7ae9a1"
+      "sha256": "741b7bd4ae82fd689577a2a2e44bbf2716611a93b16559659161021d8b7ae9a1",
+      "previousSha256": "741b7bd4ae82fd689577a2a2e44bbf2716611a93b16559659161021d8b7ae9a1"
     },
     {
       "id": "78f6846b-8204-4f84-a611-c53e8cfb54ae",
@@ -62,7 +57,8 @@
       "sourcePath": "source/_posts/test/hexo-unit-test/images.md",
       "sourceUrl": "https://github.com/kaiiiz/hexo-theme-book-demo/blob/6bffcf4e80bdfe6d94fbcc7a9d155603c2c6c275/source/_posts/test/hexo-unit-test/images.md",
       "originalBodySha256": "23a75d7ac00108a528588e6f3f1ae2a36dbe472078ea600be2136b2dacc7b8ea",
-      "sha256": "b19aaafb452f9bfe41a7933d8cd87a993b4ab3656faffde60d46ead51d9c78f1"
+      "sha256": "9dd6d174799d97241b24511a01f3b53cb67f1e9ba7fe5bb17f870076edac2d96",
+      "previousSha256": "9dd6d174799d97241b24511a01f3b53cb67f1e9ba7fe5bb17f870076edac2d96"
     },
     {
       "id": "6eae9567-2124-479f-a9d4-8352bc72bbed",
@@ -71,16 +67,8 @@
       "sourcePath": "source/_posts/test/hexo-unit-test/link-post-without-title.md",
       "sourceUrl": "https://github.com/kaiiiz/hexo-theme-book-demo/blob/6bffcf4e80bdfe6d94fbcc7a9d155603c2c6c275/source/_posts/test/hexo-unit-test/link-post-without-title.md",
       "originalBodySha256": "dfee86cc5a0350da1bde71ae2840625320f52dafa5cda4dda6ea083f14333fde",
-      "sha256": "d3612cfbdccf4fe2b6ad796752fadbdf6dfa353235aab51543b6c4d98a28cd23"
-    },
-    {
-      "id": "1f1d8484-543d-4003-ade4-09b2ee72ef73",
-      "title": "链接文章测试",
-      "file": "test__hexo-unit-test__link-post.md",
-      "sourcePath": "source/_posts/test/hexo-unit-test/link-post.md",
-      "sourceUrl": "https://github.com/kaiiiz/hexo-theme-book-demo/blob/6bffcf4e80bdfe6d94fbcc7a9d155603c2c6c275/source/_posts/test/hexo-unit-test/link-post.md",
-      "originalBodySha256": "f85631f6805646d77b736c90f62dee87cbcd6df9f39726a7a339276c3eee941f",
-      "sha256": "c12a7dd2e7d82f06fda178677eed39c847aa9fd9e4961fbd50d5fed7092ba7bd"
+      "sha256": "8f5d3158b7f441a1207fab37ad24275381e2574a7bbd6bfad1a8ea985952452a",
+      "previousSha256": "8f5d3158b7f441a1207fab37ad24275381e2574a7bbd6bfad1a8ea985952452a"
     },
     {
       "id": "d194e518-79e6-4ee4-a181-c50b6ec8f9d0",
@@ -89,7 +77,8 @@
       "sourcePath": "source/_posts/test/hexo-unit-test/long-title.md",
       "sourceUrl": "https://github.com/kaiiiz/hexo-theme-book-demo/blob/6bffcf4e80bdfe6d94fbcc7a9d155603c2c6c275/source/_posts/test/hexo-unit-test/long-title.md",
       "originalBodySha256": "f12f54525d2b7130eb8d4e7f7a6db4b17217e046e6d7f29ae745d8f2cfe13cc6",
-      "sha256": "d9394f2e49fa42ce1c98221ed5a8c077f50b94b8fffaab7e3943b14097f2b840"
+      "sha256": "2dd5a090180f801bafa8365e9a75efaccfc63d07b4d2f59dc97a88eaa87f658f",
+      "previousSha256": "2dd5a090180f801bafa8365e9a75efaccfc63d07b4d2f59dc97a88eaa87f658f"
     },
     {
       "id": "7b8e24fd-5c28-4735-ab6c-2b906a814e05",
@@ -98,7 +87,8 @@
       "sourcePath": "source/_posts/test/hexo-unit-test/no-title.md",
       "sourceUrl": "https://github.com/kaiiiz/hexo-theme-book-demo/blob/6bffcf4e80bdfe6d94fbcc7a9d155603c2c6c275/source/_posts/test/hexo-unit-test/no-title.md",
       "originalBodySha256": "c55eddec5ca345446e1a05b5975c83b9341295da68c0bb757b94c87462aae6df",
-      "sha256": "3c1bb7acbbabc52fefe2f8f87180459ba20f2cd4d5eee874754f35dc1366b19f"
+      "sha256": "9f2ca6705e09b4d744255ae56eb1aeafaf35c367654db0e78f222697212e4b4a",
+      "previousSha256": "9f2ca6705e09b4d744255ae56eb1aeafaf35c367654db0e78f222697212e4b4a"
     },
     {
       "id": "0d9df5bb-f7e4-47c6-ada7-8f8c094ec5ec",
@@ -107,16 +97,8 @@
       "sourcePath": "source/_posts/test/hexo-unit-test/tag-plugins.md",
       "sourceUrl": "https://github.com/kaiiiz/hexo-theme-book-demo/blob/6bffcf4e80bdfe6d94fbcc7a9d155603c2c6c275/source/_posts/test/hexo-unit-test/tag-plugins.md",
       "originalBodySha256": "6aef30918a78c607f3ac1fff860605fc8179df5305360838ecc0cebf533b1832",
-      "sha256": "d60333ee4e1c30e41eea841448cf9bbe47c3f11367b5acc5d68439a94b065acf"
-    },
-    {
-      "id": "534d5268-1ddc-465a-a2b6-faae7ff0f8d2",
-      "title": "标签测试",
-      "file": "test__hexo-unit-test__tags.md",
-      "sourcePath": "source/_posts/test/hexo-unit-test/tags.md",
-      "sourceUrl": "https://github.com/kaiiiz/hexo-theme-book-demo/blob/6bffcf4e80bdfe6d94fbcc7a9d155603c2c6c275/source/_posts/test/hexo-unit-test/tags.md",
-      "originalBodySha256": "36b8c6c06e7f92e6d4731c3764c63ea7aaeeeb92da5655f6e08916831bb1de1b",
-      "sha256": "1fdcc179bcc865f7a96ae8fb7326d84bc24c27485873419993d1925c5d2ec064"
+      "sha256": "6bc1405c6263e79d4b5ef3c1b072e0f5c8ded408339a58ca601e9a810b60fa17",
+      "previousSha256": "6bc1405c6263e79d4b5ef3c1b072e0f5c8ded408339a58ca601e9a810b60fa17"
     },
     {
       "id": "dbf99f3e-0619-4062-a911-6538e40cae70",
@@ -125,25 +107,8 @@
       "sourcePath": "source/_posts/test/hexo-unit-test/videos.md",
       "sourceUrl": "https://github.com/kaiiiz/hexo-theme-book-demo/blob/6bffcf4e80bdfe6d94fbcc7a9d155603c2c6c275/source/_posts/test/hexo-unit-test/videos.md",
       "originalBodySha256": "b1c9c9d3a18c4751c49f3889a3131dc876c3a74d683b2ab5111a89b06d1de1f6",
-      "sha256": "d153b07aa7dd977f7d12b25483eaff9bde54464e6d4f94fab3a1f798e9d54d8d"
-    },
-    {
-      "id": "2a0ee7ba-5baa-4864-ad78-8e712dbbb28f",
-      "title": "中文测试",
-      "file": "test__hexo-unit-test__中文測試.md",
-      "sourcePath": "source/_posts/test/hexo-unit-test/中文測試.md",
-      "sourceUrl": "https://github.com/kaiiiz/hexo-theme-book-demo/blob/6bffcf4e80bdfe6d94fbcc7a9d155603c2c6c275/source/_posts/test/hexo-unit-test/中文測試.md",
-      "originalBodySha256": "aab9b1c60a30328f116ada295ef8bd5a165458753d697f7f425a76488d3b0323",
-      "sha256": "f16140a292a1253ccf7e14e1124669c028d7c075df4b907ec826dc8e91214000"
-    },
-    {
-      "id": "b8ea1b29-4f59-4678-a81a-8f2c8ae1c97d",
-      "title": "日语测试",
-      "file": "test__hexo-unit-test__日本語テスト.md",
-      "sourcePath": "source/_posts/test/hexo-unit-test/日本語テスト.md",
-      "sourceUrl": "https://github.com/kaiiiz/hexo-theme-book-demo/blob/6bffcf4e80bdfe6d94fbcc7a9d155603c2c6c275/source/_posts/test/hexo-unit-test/日本語テスト.md",
-      "originalBodySha256": "47874b444898b15453af6f3fc181e080305907fd044875c742bf9bbf28e2dc0c",
-      "sha256": "a4cdc0050076713aaa153adf40a844ce32a36f339088adbaba93283ec6d70abf"
+      "sha256": "47ea50a8be89592b72c8d69112faed7c41c0df479e227f9e48def2b491f41f2b",
+      "previousSha256": "47ea50a8be89592b72c8d69112faed7c41c0df479e227f9e48def2b491f41f2b"
     },
     {
       "id": "5d357fe2-81f2-434b-a990-a51efa4a1f91",
@@ -152,7 +117,8 @@
       "sourcePath": "source/_posts/demo/render/footnotes-demo.md",
       "sourceUrl": "https://github.com/kaiiiz/hexo-theme-book-demo/blob/6bffcf4e80bdfe6d94fbcc7a9d155603c2c6c275/source/_posts/demo/render/footnotes-demo.md",
       "originalBodySha256": "038c76a16649b0a09542c637eefa6d053ecae18691c42315042ddfee2aa46236",
-      "sha256": "4b896785c31d4c69613fcdbece4ba2309660fe2a2f490e0173f4e1a183a57dd4"
+      "sha256": "3917ebc86fa401fed8804413e15b755385f5374d38107188ff23b7b463c49899",
+      "previousSha256": "3917ebc86fa401fed8804413e15b755385f5374d38107188ff23b7b463c49899"
     },
     {
       "id": "aab06b1a-9a93-4786-a057-920e27bd723c",
@@ -161,7 +127,8 @@
       "sourcePath": "source/_posts/demo/render/katex-demo.md",
       "sourceUrl": "https://github.com/kaiiiz/hexo-theme-book-demo/blob/6bffcf4e80bdfe6d94fbcc7a9d155603c2c6c275/source/_posts/demo/render/katex-demo.md",
       "originalBodySha256": "6bc39c29515994ec8732449881b3b11a4ee976213f7bb927e52ebf2b781f4b80",
-      "sha256": "a5c3b1415c2978d686aaf04082e3a829ee32a5b777f6ec1aac1efde084a7d6f4"
+      "sha256": "eed57ecd199f135c5a582275431cadfe799502b60f99d0876d8e6bf83e712941",
+      "previousSha256": "eed57ecd199f135c5a582275431cadfe799502b60f99d0876d8e6bf83e712941"
     },
     {
       "id": "b01b2d42-caec-4e0f-ad37-439c68ae3b29",
@@ -170,7 +137,8 @@
       "sourcePath": "source/_posts/demo/render/markdown-it-demo.md",
       "sourceUrl": "https://github.com/kaiiiz/hexo-theme-book-demo/blob/6bffcf4e80bdfe6d94fbcc7a9d155603c2c6c275/source/_posts/demo/render/markdown-it-demo.md",
       "originalBodySha256": "2530f3a6107d9a814fff7e5cc782421028577f3d0940cc83782256844ca02e04",
-      "sha256": "ab63cab66984c11f423312048349d0a01a58d5998c3df079c98aa649b3d7e7df"
+      "sha256": "aa807d73e6349ee4f2c050efc10ffc157403e52483ba15150acc5124b9c9fde1",
+      "previousSha256": "aa807d73e6349ee4f2c050efc10ffc157403e52483ba15150acc5124b9c9fde1"
     },
     {
       "id": "124e9afe-3958-4289-a9de-b19a0d8cbe68",
@@ -179,26 +147,51 @@
       "sourcePath": "source/_posts/demo/render/md-container.md",
       "sourceUrl": "https://github.com/kaiiiz/hexo-theme-book-demo/blob/6bffcf4e80bdfe6d94fbcc7a9d155603c2c6c275/source/_posts/demo/render/md-container.md",
       "originalBodySha256": "b05ff9defea332cac5c6df1880a5ad241be70e2642817e61b90546ac428ff5ee",
-      "sha256": "5542b5b0166295865c7016cc6c768f6115a437d2ae5ddd90e708c081a937869e"
+      "sha256": "5542b5b0166295865c7016cc6c768f6115a437d2ae5ddd90e708c081a937869e",
+      "previousSha256": "5542b5b0166295865c7016cc6c768f6115a437d2ae5ddd90e708c081a937869e"
     },
     {
       "id": "adda7499-cf70-4049-a03f-1b6aae8a1947",
-      "title": "英语长文测试",
+      "title": "The Gift of the Magi",
       "file": "demo__lorem-ipsum__en-demo.md",
       "sourcePath": "source/_posts/demo/lorem-ipsum/en-demo.md",
       "sourceUrl": "https://github.com/kaiiiz/hexo-theme-book-demo/blob/6bffcf4e80bdfe6d94fbcc7a9d155603c2c6c275/source/_posts/demo/lorem-ipsum/en-demo.md",
       "originalBodySha256": "eb2cbfb233f071ba1cbd01008d59947cd8352884182989648bf0fdc1e5e16cba",
-      "sha256": "fc9215c5098c92fbbad4f904c568bf319343c1e99cc12521cba30ab873d86aec"
+      "sha256": "09f44bca04338ebd7d5ea777414e63cb4f687d160de527be96d211b8a22edfa5",
+      "previousSha256": "09f44bca04338ebd7d5ea777414e63cb4f687d160de527be96d211b8a22edfa5"
     },
     {
       "id": "4d38b91d-7606-4961-a39e-4f72787a0475",
-      "title": "日语长文测试",
+      "title": "日本語長文テスト",
       "file": "demo__lorem-ipsum__jp-demo.md",
       "sourcePath": "source/_posts/demo/lorem-ipsum/jp-demo.md",
       "sourceUrl": "https://github.com/kaiiiz/hexo-theme-book-demo/blob/6bffcf4e80bdfe6d94fbcc7a9d155603c2c6c275/source/_posts/demo/lorem-ipsum/jp-demo.md",
       "originalBodySha256": "437c959785fb319353d8f02885bb28013d86474dcf079b3fddd1d5e4d9203cb0",
-      "sha256": "dbd2a757631b3253e2dc660667da054627ce325410bde82bcebc79d9d17fdd9e"
+      "sha256": "51843bca187e350537340c7bc10a8fa1c4a3409fce655e387f97dde6c1c22201",
+      "previousSha256": "51843bca187e350537340c7bc10a8fa1c4a3409fce655e387f97dde6c1c22201"
     },
+    {
+      "id": "333d9f62-5c36-4568-a19d-3672d08e2b41",
+      "title": "简体中文长文测试",
+      "file": "demo__lorem-ipsum__sc-demo.md",
+      "sourcePath": "source/_posts/demo/lorem-ipsum/sc-demo.md",
+      "sourceUrl": "https://github.com/kaiiiz/hexo-theme-book-demo/blob/6bffcf4e80bdfe6d94fbcc7a9d155603c2c6c275/source/_posts/demo/lorem-ipsum/sc-demo.md",
+      "originalBodySha256": "d63d32e143b6d60a017332e438d85822168a2aa43a5c597071ccb91b7bf249ed",
+      "sha256": "c65732de8cb470c4894201966425b759cf22f8ed87556a8a7bd5cfb927ce1697",
+      "previousSha256": "c65732de8cb470c4894201966425b759cf22f8ed87556a8a7bd5cfb927ce1697"
+    },
+    {
+      "id": "524d3242-4706-4277-a119-95f00fbc68d0",
+      "title": "繁体中文长文测试",
+      "file": "demo__lorem-ipsum__tc-demo.md",
+      "sourcePath": "source/_posts/demo/lorem-ipsum/tc-demo.md",
+      "sourceUrl": "https://github.com/kaiiiz/hexo-theme-book-demo/blob/6bffcf4e80bdfe6d94fbcc7a9d155603c2c6c275/source/_posts/demo/lorem-ipsum/tc-demo.md",
+      "originalBodySha256": "cfadcdee65ec93ac8e7df3dac09aef205a30bf74e424b05cd4223a0689590a77",
+      "sha256": "93149632e0c560127aae891704ca0dc651311b59bd71b37e76e1170dd69546a7",
+      "previousSha256": "93149632e0c560127aae891704ca0dc651311b59bd71b37e76e1170dd69546a7"
+    }
+  ],
+  "removedNotes": [
     {
       "id": "c66e6b0e-16fb-409f-a1c4-883d6b942c51",
       "title": "韩语长文测试",
@@ -209,22 +202,54 @@
       "sha256": "609ad7079da98ac52d73a9c425daf685abb5e865a4ddbd9100aa298aa53b3245"
     },
     {
-      "id": "333d9f62-5c36-4568-a19d-3672d08e2b41",
-      "title": "简体中文长文测试",
-      "file": "demo__lorem-ipsum__sc-demo.md",
-      "sourcePath": "source/_posts/demo/lorem-ipsum/sc-demo.md",
-      "sourceUrl": "https://github.com/kaiiiz/hexo-theme-book-demo/blob/6bffcf4e80bdfe6d94fbcc7a9d155603c2c6c275/source/_posts/demo/lorem-ipsum/sc-demo.md",
-      "originalBodySha256": "d63d32e143b6d60a017332e438d85822168a2aa43a5c597071ccb91b7bf249ed",
-      "sha256": "19e810b555441782d2f1db6233fd61e244812e53789ef34b4df632c6dbeef31d"
+      "id": "2f9544be-3229-4e83-a595-8793004a6644",
+      "title": "相册文章测试",
+      "file": "test__hexo-unit-test__gallery-post.md",
+      "sourcePath": "source/_posts/test/hexo-unit-test/gallery-post.md",
+      "sourceUrl": "https://github.com/kaiiiz/hexo-theme-book-demo/blob/6bffcf4e80bdfe6d94fbcc7a9d155603c2c6c275/source/_posts/test/hexo-unit-test/gallery-post.md",
+      "originalBodySha256": "0543b5ce577814b5d6140b402678b01c8b31c010b57a19501b8409fd7f149bfe",
+      "sha256": "f775862dc9b6da3a584366bf96c7caf2a06c660d53a063bbfbd9efae4d0ca473",
+      "previousSha256": "f775862dc9b6da3a584366bf96c7caf2a06c660d53a063bbfbd9efae4d0ca473"
     },
     {
-      "id": "524d3242-4706-4277-a119-95f00fbc68d0",
-      "title": "繁体中文长文测试",
-      "file": "demo__lorem-ipsum__tc-demo.md",
-      "sourcePath": "source/_posts/demo/lorem-ipsum/tc-demo.md",
-      "sourceUrl": "https://github.com/kaiiiz/hexo-theme-book-demo/blob/6bffcf4e80bdfe6d94fbcc7a9d155603c2c6c275/source/_posts/demo/lorem-ipsum/tc-demo.md",
-      "originalBodySha256": "cfadcdee65ec93ac8e7df3dac09aef205a30bf74e424b05cd4223a0689590a77",
-      "sha256": "7a686d9dbb401a9a1083976fa747a06ba393cd10d658f6b1bf4d6196f4cbd5aa"
+      "id": "1f1d8484-543d-4003-ade4-09b2ee72ef73",
+      "title": "链接文章测试",
+      "file": "test__hexo-unit-test__link-post.md",
+      "sourcePath": "source/_posts/test/hexo-unit-test/link-post.md",
+      "sourceUrl": "https://github.com/kaiiiz/hexo-theme-book-demo/blob/6bffcf4e80bdfe6d94fbcc7a9d155603c2c6c275/source/_posts/test/hexo-unit-test/link-post.md",
+      "originalBodySha256": "f85631f6805646d77b736c90f62dee87cbcd6df9f39726a7a339276c3eee941f",
+      "sha256": "c12a7dd2e7d82f06fda178677eed39c847aa9fd9e4961fbd50d5fed7092ba7bd",
+      "previousSha256": "c12a7dd2e7d82f06fda178677eed39c847aa9fd9e4961fbd50d5fed7092ba7bd"
+    },
+    {
+      "id": "2a0ee7ba-5baa-4864-ad78-8e712dbbb28f",
+      "title": "中文测试",
+      "file": "test__hexo-unit-test__中文測試.md",
+      "sourcePath": "source/_posts/test/hexo-unit-test/中文測試.md",
+      "sourceUrl": "https://github.com/kaiiiz/hexo-theme-book-demo/blob/6bffcf4e80bdfe6d94fbcc7a9d155603c2c6c275/source/_posts/test/hexo-unit-test/中文測試.md",
+      "originalBodySha256": "aab9b1c60a30328f116ada295ef8bd5a165458753d697f7f425a76488d3b0323",
+      "sha256": "f16140a292a1253ccf7e14e1124669c028d7c075df4b907ec826dc8e91214000",
+      "previousSha256": "f16140a292a1253ccf7e14e1124669c028d7c075df4b907ec826dc8e91214000"
+    },
+    {
+      "id": "b8ea1b29-4f59-4678-a81a-8f2c8ae1c97d",
+      "title": "日本語テスト",
+      "file": "test__hexo-unit-test__日本語テスト.md",
+      "sourcePath": "source/_posts/test/hexo-unit-test/日本語テスト.md",
+      "sourceUrl": "https://github.com/kaiiiz/hexo-theme-book-demo/blob/6bffcf4e80bdfe6d94fbcc7a9d155603c2c6c275/source/_posts/test/hexo-unit-test/日本語テスト.md",
+      "originalBodySha256": "47874b444898b15453af6f3fc181e080305907fd044875c742bf9bbf28e2dc0c",
+      "sha256": "d80fa817acd636afed1bff3225fc482e85e2ef800bb7de4adadfaab022d60d7d",
+      "previousSha256": "d80fa817acd636afed1bff3225fc482e85e2ef800bb7de4adadfaab022d60d7d"
+    },
+    {
+      "id": "534d5268-1ddc-465a-a2b6-faae7ff0f8d2",
+      "title": "标签测试",
+      "file": "test__hexo-unit-test__tags.md",
+      "sourcePath": "source/_posts/test/hexo-unit-test/tags.md",
+      "sourceUrl": "https://github.com/kaiiiz/hexo-theme-book-demo/blob/6bffcf4e80bdfe6d94fbcc7a9d155603c2c6c275/source/_posts/test/hexo-unit-test/tags.md",
+      "originalBodySha256": "36b8c6c06e7f92e6d4731c3764c63ea7aaeeeb92da5655f6e08916831bb1de1b",
+      "sha256": "3898eb8d483a3852d576a7f29d9c2d96bc7a5b4b5fa1b9cac56b271530e28d47",
+      "previousSha256": "3898eb8d483a3852d576a7f29d9c2d96bc7a5b4b5fa1b9cac56b271530e28d47"
     }
   ]
 }

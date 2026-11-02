@@ -2833,13 +2833,8 @@ export function createHomeTemple(
     if (selected === 'statue' && statueMesh && callbacks.islandAnchors) {
       screenProjection.object(statueMesh.matrixWorld)
       islandNodQuaternion.setFromAxisAngle(islandNodAxis, headNodAngle.value)
-      // 锚点取自路卡的下胸、双手与双辫，随模型世界矩阵与镜头一起投影。
-      projectIslandAnchor(
-        islandModelAnchors.chest,
-        0,
-        config.id === 'mobile' ? 2.08 : 1.7,
-        0.34162
-      )
+      // 胸口刺使用统一的模型坐标，设备构图差异由世界矩阵与镜头投影处理。
+      projectIslandAnchor(islandModelAnchors.chest, 0, 2.04385, 0.34162)
       // 双手定位到手背刺根部连接环中心，随模型转动保持贴合。
       projectIslandAnchor(
         islandModelAnchors.rightHand,

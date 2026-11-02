@@ -4,7 +4,7 @@ date: "2026-11-01"
 category: test
 ---
 
-This is a video test post.
+这篇文章用于测试不同平台的视频嵌入效果。
 
 **Youtube**
 
@@ -13,3 +13,8 @@ This is a video test post.
 **Vimeo**
 
 {% vimeo 82090131 %}
+
+
+**Bilibili**
+
+{% bilibili BV1Q5cWeyEZe %}

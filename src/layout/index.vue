@@ -472,7 +472,7 @@ import {
   syncPageTheme,
   syncSeoMeta,
 } from '@/router'
-import { visualState } from '@/stores'
+import { cursorState, visualState } from '@/stores'
 import { useFloraPets } from '@/stores/floraPets'
 import { useTempleNavigation } from '@/stores/templeNavigation'
 import { consumeJourneyReturnState } from '@/utils/journeyReturnState'
@@ -552,6 +552,16 @@ const navigationEntryReady = ref(false)
 
 const route = useRoute()
 const router = useRouter()
+const cursorStateStore = cursorState()
+const atriumCursorSource = 'atrium-route'
+watch(
+  () =>
+    route.path === '/atrium' ||
+    route.path.startsWith('/atrium/') ||
+    route.meta.activeMenu === '/atrium',
+  (active) => cursorStateStore.setInstant(atriumCursorSource, active),
+  { immediate: true, flush: 'sync' }
+)
 const visualStateStore = visualState()
 const isHomeRoute = computed(() => route.name === 'TEST2')
 const isTempleRoute = computed(() => isTempleRouteName(route.name))
@@ -1117,6 +1127,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  cursorStateStore.setInstant(atriumCursorSource, false)
   document.removeEventListener('click', restoreHomeImmersionFromClick, true)
   document.removeEventListener('keydown', restoreHomeImmersionFromKey, true)
   document.removeEventListener('fullscreenchange', syncImmersionFullscreen)

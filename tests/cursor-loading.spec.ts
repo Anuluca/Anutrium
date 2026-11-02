@@ -2,6 +2,38 @@ import { expect, test } from '@playwright/test'
 
 const PAGE_LOAD_TIMEOUT = 20_000
 
+test('Atrium and its modules use instant following and release it on exit', async ({
+  page,
+}, info) => {
+  test.skip(info.project.name.includes('mobile'))
+  test.setTimeout(90000)
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.route('https://steam-api.anuluca.com/notes**', (route) =>
+    route.fulfill({ json: { notes: [], nextCursor: null } })
+  )
+  await page.goto('/atrium', { waitUntil: 'domcontentloaded' })
+  const cursor = page.locator('.cursor-position')
+  await expect(cursor).toBeAttached({ timeout: 45000 })
+  await page.mouse.move(100, 100)
+  await expect(cursor).toHaveClass(/is-instant/)
+  for (const path of [
+    '/atrium/notes',
+    '/atrium/laboratory',
+    '/atrium/games',
+    '/atrium/collections',
+    '/games/sleepingdogs/bullsAndCows',
+    '/404',
+  ]) {
+    await page.evaluate(async (path) => {
+      await (
+        document.querySelector('#app') as any
+      ).__vue_app__.config.globalProperties.$router.push(path)
+    }, path)
+    if (path === '/404') await expect(cursor).not.toHaveClass(/is-instant/)
+    else await expect(cursor).toHaveClass(/is-instant/)
+  }
+})
+
 test('cursor initialization keeps the native cursor until custom positioning is ready', async ({
   page,
 }, testInfo) => {

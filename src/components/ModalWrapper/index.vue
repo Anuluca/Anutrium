@@ -56,8 +56,13 @@
     />
   </ElDialog>
 
-  <Teleport v-if="title && backgroundTitleTarget" :to="backgroundTitleTarget">
+  <Teleport
+    v-if="backgroundTitleTarget && (title || $slots.viewport)"
+    :to="backgroundTitleTarget"
+  >
+    <slot name="viewport" />
     <OverlayBackgroundTitle
+      v-if="title"
       :title="title"
       :active="dialogVisible"
       :color="themeColor"
@@ -185,9 +190,9 @@ onBeforeUnmount(() => {
 })
 
 const getDialogElement = () =>
-  [...document.querySelectorAll<HTMLElement>('.modal-wrapper-dialog')].find(
-    (dialog) => dialog.getClientRects().length > 0
-  ) ?? null
+  scrollRegion.value?.closest<HTMLElement>('.modal-wrapper-dialog') ?? null
+
+defineExpose({ getDialogElement })
 
 const resolveBackgroundTitleTarget = async () => {
   await nextTick()

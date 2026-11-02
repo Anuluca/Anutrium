@@ -1,0 +1,30 @@
+[
+  {
+    "file": "demo__lorem-ipsum__sc-demo.md",
+    "title": "滕王阁序",
+    "source": "https://zh.wikisource.org/zh-hans/滕王閣序",
+    "bodySha256": "00c503eb1a35e356b5e24369d7dd02c0433b8e7c4b6ee6465788869f0bcf8fa1",
+    "paragraphs": 8
+  },
+  {
+    "file": "demo__lorem-ipsum__tc-demo.md",
+    "title": "前赤壁賦",
+    "source": "https://zh.wikisource.org/zh-hant/前赤壁賦",
+    "bodySha256": "8d7b8ff4536eb5929ed7dc3dc9c135676f4ef32e9e754176a664604d8761696a",
+    "paragraphs": 6
+  },
+  {
+    "file": "demo__lorem-ipsum__jp-demo.md",
+    "title": "羅生門",
+    "source": "https://www.aozora.gr.jp/cards/000879/files/127_15260.html",
+    "bodySha256": "14340132f72d6737156e0628482aada112702171391fbd64ddd3af38204b895f",
+    "paragraphs": 37
+  },
+  {
+    "file": "demo__lorem-ipsum__en-demo.md",
+    "title": "The Gift of the Magi",
+    "source": "https://en.wikisource.org/wiki/The_Four_Million/The_Gift_of_the_Magi",
+    "bodySha256": "e9b1c101b057813ea50880f0fcb09ca10e0672803bd1bf2e6c36a22d1fa03b0e",
+    "paragraphs": 45
+  }
+]

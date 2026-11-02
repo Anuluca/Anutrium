@@ -1534,13 +1534,31 @@ onBeforeUnmount(() => {
     picture {
       position: absolute;
       inset: -20px;
+      z-index: 0;
       display: block;
       width: calc(100% + 40px);
       height: calc(100% + 40px);
       opacity: 0.75;
+      &::before {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        content: '';
+        backdrop-filter: blur(6px) brightness(0.55);
+        -webkit-backdrop-filter: blur(6px) brightness(0.55);
+        mask-image: linear-gradient(to bottom, #000, transparent 50%, #000);
+        -webkit-mask-image: linear-gradient(
+          to bottom,
+          #000,
+          transparent 50%,
+          #000
+        );
+        pointer-events: none;
+      }
       &::after {
         position: absolute;
         inset: 0;
+        z-index: 2;
         content: '';
         background: repeating-linear-gradient(
           to bottom,
@@ -1559,6 +1577,7 @@ onBeforeUnmount(() => {
     figcaption {
       position: absolute;
       inset: 8px 10px;
+      z-index: 1;
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
       grid-template-rows: auto minmax(0, 1fr);

@@ -4,4 +4,4 @@ date: "2026-11-01"
 category: test
 ---
 
-This post has a long title. Make sure the title displayed right.
+这篇文章使用较长的标题。请检查标题能否正确显示，以及在不同屏幕宽度下能否正常换行。

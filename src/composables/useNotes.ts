@@ -3,6 +3,12 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import type { NoteSummary } from '@/utils/noteDocument'
 
 const remoteNotes = ref<NoteSummary[]>([])
+// 概览与列表共享排序结果，只有远端列表更新时重新排序。
+const sortedNotes = computed(() =>
+  [...remoteNotes.value].sort(
+    (a, b) => b.time.localeCompare(a.time) || a.id.localeCompare(b.id)
+  )
+)
 const error = ref(false)
 const loading = ref(false)
 let pending: Promise<void> | undefined
@@ -78,11 +84,7 @@ export function useNotes() {
     }
   })
   return {
-    notes: computed(() =>
-      [...remoteNotes.value].sort(
-        (a, b) => b.time.localeCompare(a.time) || a.id.localeCompare(b.id)
-      )
-    ),
+    notes: sortedNotes,
     error,
     loading,
     reload,

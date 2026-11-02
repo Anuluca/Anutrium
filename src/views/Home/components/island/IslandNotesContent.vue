@@ -1,7 +1,10 @@
 <template>
   <div
     class="island-notes-content is-embedded"
-    :class="{ 'is-loading': notesLoading && !notes.length }"
+    :class="{
+      'is-loading': notesLoading && !notes.length,
+      'is-reading': !!openedNoteId,
+    }"
   >
     <ScrollViewport
       ref="noteViewportRef"
@@ -9,16 +12,29 @@
       edge-scanlines
     >
       <template #header>
-        <FilterRail
-          v-if="!notesLoading || notes.length"
-          class="study-note-filters"
-          :aria-label="locale === 'en' ? 'Note categories' : '笔记分类'"
-          :items="categoryTabs"
-          :model-value="activeCategory"
-          horizontal
-          :show-avatar="false"
-          @update:model-value="selectCategory"
-        />
+        <div v-if="!notesLoading || notes.length" class="study-note-toolbar">
+          <FilterRail
+            class="study-note-filters"
+            :aria-label="locale === 'en' ? 'Note categories' : '笔记分类'"
+            :items="categoryTabs"
+            :model-value="activeCategory"
+            horizontal
+            :show-avatar="false"
+            @update:model-value="selectCategory"
+          />
+          <button
+            class="study-note-refresh"
+            type="button"
+            :aria-label="locale === 'en' ? 'Refresh notes' : '刷新笔记'"
+            :title="locale === 'en' ? 'Refresh notes' : '刷新笔记'"
+            :disabled="notesLoading"
+            @click="refreshNotes"
+          >
+            <el-icon :class="{ 'is-loading': notesLoading }" aria-hidden="true">
+              <Refresh />
+            </el-icon>
+          </button>
+        </div>
       </template>
       <div
         v-if="notesLoading && !notes.length"
@@ -45,7 +61,7 @@
         ref="noteStackRef"
         :key="`notes-${activeCategory}-${currentPage}`"
         class="study-note-stack"
-        :class="{ 'is-ready': masonryReady }"
+        :class="{ 'is-ready': masonryReady && contentRevealed }"
         :aria-label="t('island.modules.notes.studyNotes.title')"
       >
         <RouterLink
@@ -53,7 +69,6 @@
           :key="card.note.id"
           class="study-note-card"
           :class="{
-            'study-note-card--with-image': card.note.image,
             'study-note-card--without-image': !card.note.image,
             'is-activating': activatingNoteId === card.note.id,
           }"
@@ -62,25 +77,30 @@
           @click.capture="activateNote($event, card.note)"
         >
           <div v-if="card.note.image" class="study-note-card__visual">
-            <picture>
-              <source
-                media="(max-width: 768px)"
-                :srcset="getCardMobileThumbnailUrl(card.note.image)"
-              />
-              <img
-                class="study-note-card__image"
-                :src="getCardThumbnailUrl(card.note.image)"
-                :alt="card.note.title"
-                width="768"
-                height="576"
-                decoding="async"
-                loading="lazy"
-                @load="scheduleMasonryLayout"
-              />
-            </picture>
+            <div class="study-note-card__media">
+              <picture>
+                <source
+                  media="(max-width: 768px)"
+                  :srcset="card.mobileThumbnail"
+                />
+                <img
+                  class="study-note-card__image"
+                  :src="card.thumbnail"
+                  :alt="card.note.title"
+                  width="768"
+                  height="576"
+                  decoding="async"
+                  loading="lazy"
+                  @load="scheduleMasonryLayout"
+                />
+              </picture>
+            </div>
           </div>
 
           <div class="study-note-card__copy">
+            <h2 :class="locale === 'zhCn' && 'cn-font'">
+              {{ card.note.title }}
+            </h2>
             <div class="study-note-card__meta no-rem">
               <span class="study-note-card__category no-rem">
                 [<span class="study-note-card__category-text">{{
@@ -95,9 +115,6 @@
                 {{ card.dateLabel }}
               </time>
             </div>
-            <h2 :class="locale === 'zhCn' && 'cn-font'">
-              {{ card.note.title }}
-            </h2>
           </div>
         </RouterLink>
       </section>
@@ -114,10 +131,11 @@
         >
           <button
             type="button"
+            :aria-label="t('pagination.previousPage')"
             :disabled="currentPage === 1"
             @click="setPage(currentPage - 1)"
           >
-            {{ t('pagination.previousPage') }}
+            <span aria-hidden="true">◀</span>
           </button>
           <button
             v-for="page in totalPages"
@@ -131,38 +149,95 @@
           </button>
           <button
             type="button"
+            :aria-label="t('pagination.nextPage')"
             :disabled="currentPage === totalPages"
             @click="setPage(currentPage + 1)"
           >
-            {{ t('pagination.nextPage') }}
+            <span aria-hidden="true">▶</span>
           </button>
         </nav>
       </template>
     </ScrollViewport>
     <ModalWrapper
+      ref="noteModalRef"
       :model-value="noteVisible"
-      dialog-class="note-detail-modal"
+      :dialog-class="`note-detail-modal${
+        switchingNoteId ? ' is-switching' : ''
+      }`"
       width="var(--note-modal-width)"
       :close-title="locale === 'en' ? 'Close note (ESC)' : '关闭笔记 (ESC)'"
       @update:model-value="setNoteVisible"
       @closed="finishNoteClose"
     >
-      <NoteReader v-if="openedNoteId" :id="openedNoteId" />
+      <template #viewport>
+        <div
+          class="note-detail-stage no-rem"
+          :class="{ 'is-switching': !!switchingNoteId }"
+        >
+          <div
+            v-if="switchingNoteId"
+            ref="outgoingNoteShellRef"
+            class="note-detail-nav note-detail-outgoing no-rem"
+            :style="noteSwitchOrigin"
+            aria-hidden="true"
+          />
+          <button
+            v-if="previousNote"
+            type="button"
+            class="note-detail-nav note-detail-nav--prev no-rem"
+            :class="{ 'is-incoming': switchingNoteId === previousNote.id }"
+            :disabled="!!switchingNoteId"
+            :aria-label="`${locale === 'en' ? 'Previous note' : '上一篇'}: ${
+              previousNote.title
+            }`"
+            @click.stop="navigateNote($event, previousNote)"
+          />
+          <button
+            v-if="nextNote"
+            type="button"
+            class="note-detail-nav note-detail-nav--next no-rem"
+            :class="{ 'is-incoming': switchingNoteId === nextNote.id }"
+            :disabled="!!switchingNoteId"
+            :aria-label="`${locale === 'en' ? 'Next note' : '下一篇'}: ${
+              nextNote.title
+            }`"
+            @click.stop="navigateNote($event, nextNote)"
+          />
+        </div>
+      </template>
+      <NoteReader
+        v-if="openedNoteId"
+        :id="openedNoteId"
+        :active="noteVisible"
+        :fade-only="!!switchingNoteId"
+        :load-document="loadNoteDocument"
+        @ready="handleNoteReady"
+      />
     </ModalWrapper>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  shallowRef,
+  watch,
+} from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
-import { Loading } from '@element-plus/icons-vue'
+import { Loading, Refresh } from '@element-plus/icons-vue'
 
 import FilterRail, {
   type FilterRailItem,
 } from '@/components/FilterRail/index.vue'
 import ModalWrapper from '@/components/ModalWrapper/index.vue'
 import ScrollViewport from '@/components/ScrollViewport/index.vue'
+import { useFrameTask } from '@/composables/useFrameTask'
+import { useNoteNavigation } from '@/composables/useNoteNavigation'
 import { useNotes } from '@/composables/useNotes'
 import {
   isNoteCategory,
@@ -170,38 +245,31 @@ import {
   NOTE_CATEGORIES,
   type NoteCategory,
 } from '@/config/noteCategories'
+import { showSuccessMessage } from '@/utils/elementMessage'
 import {
   getCardMobileThumbnailUrl,
   getCardThumbnailUrl,
 } from '@/utils/imageVariant'
+import type { NoteSummary } from '@/utils/noteDocument'
 
 import NoteReader from './NoteReader.vue'
 
-type StudyNoteType = NoteCategory
-
-interface StudyNote {
-  id: string
-  title: string
-  time: string
-  image?: string
-  path: string
-  type: StudyNoteType
-}
-
 interface StudyNoteCard {
-  note: StudyNote
+  note: NoteSummary
   dateLabel: string
+  thumbnail?: string
+  mobileThumbnail?: string
   style: Record<string, string | number>
 }
 
-const PAGE_SIZE = 20
+const PAGE_SIZE = 12
 const currentPage = ref(1)
 
 const { locale, t } = useI18n()
 const noteViewportRef = ref<InstanceType<typeof ScrollViewport> | null>(null)
 const noteStackRef = ref<HTMLElement | null>(null)
 const masonryReady = ref(false)
-let masonryFrame: number | undefined
+const contentRevealed = ref(false)
 let masonryObserver: ResizeObserver | undefined
 let disposed = false
 
@@ -210,7 +278,7 @@ const router = useRouter()
 const activeCategory = computed<NoteCategory | 'all'>(() =>
   isNoteCategory(route.query.category) ? route.query.category : 'all'
 )
-const noteLocation = (note: StudyNote) => {
+const noteLocation = (note: NoteSummary) => {
   const target = router.resolve(note.path)
   return {
     path: target.path,
@@ -221,7 +289,7 @@ const noteLocation = (note: StudyNote) => {
 const activatingNoteId = ref('')
 let activationAnimations: Animation[] = []
 
-const activateNote = async (event: MouseEvent, note: StudyNote) => {
+const activateNote = async (event: MouseEvent, note: NoteSummary) => {
   if (
     event.button !== 0 ||
     event.metaKey ||
@@ -288,52 +356,50 @@ const activateNote = async (event: MouseEvent, note: StudyNote) => {
     activatingNoteId.value = ''
   }
 }
-const selectedNoteId = computed(() =>
-  typeof route.query.note === 'string' ? route.query.note : ''
-)
-const noteVisible = ref(false)
-const openedNoteId = ref('')
-watch(
-  selectedNoteId,
-  (id) => {
-    if (id) openedNoteId.value = id
-    noteVisible.value = !!id
-  },
-  { immediate: true }
-)
-const setNoteVisible = (visible: boolean) => {
-  noteVisible.value = visible
-  if (!visible && selectedNoteId.value) {
-    const query = { ...route.query }
-    delete query.note
-    void router.replace({ path: route.path, query, hash: route.hash })
-  }
-}
-// 离场动画结束后再卸载正文，避免关闭时内容提前消失。
-const finishNoteClose = () => {
-  if (!noteVisible.value) openedNoteId.value = ''
-}
 const { notes, error: notesError, loading: notesLoading, reload } = useNotes()
-const allNotes = computed(() =>
-  notes.value.filter((note) => isNoteCategoryIncludedInAll(note.type))
-)
+const categoryGroups = computed(() => {
+  const groups = new Map<NoteCategory | 'all', NoteSummary[]>([['all', []]])
+  for (const id of Object.keys(NOTE_CATEGORIES) as NoteCategory[])
+    groups.set(id, [])
+  for (const note of notes.value) {
+    groups.get(note.type)?.push(note)
+    if (isNoteCategoryIncludedInAll(note.type)) groups.get('all')!.push(note)
+  }
+  return groups
+})
 const categoryTabs = computed<FilterRailItem[]>(() => [
-  {
-    id: 'all',
-    title: 'ALL',
-    count: allNotes.value.length,
-  },
+  { id: 'all', title: 'ALL', count: categoryGroups.value.get('all')!.length },
   ...Object.entries(NOTE_CATEGORIES).map(([id, category]) => ({
     id,
     title: category.label.en,
-    count: notes.value.filter((note) => note.type === id).length,
+    count: categoryGroups.value.get(id as NoteCategory)!.length,
   })),
 ])
-const filteredNotes = computed(() =>
-  activeCategory.value === 'all'
-    ? allNotes.value
-    : notes.value.filter((note) => note.type === activeCategory.value)
+const filteredNotes = shallowRef<NoteSummary[]>([])
+// Vue 3.2 会向下传播 computed 的失效；只在分类或数据实际变化时替换列表，
+// 避免 note 查询参数变化连带重建索引、卡片和瀑布流测量。
+watch(
+  [categoryGroups, activeCategory],
+  ([groups, category]) => {
+    filteredNotes.value = groups.get(category)!
+  },
+  { immediate: true, flush: 'sync' }
 )
+const {
+  noteVisible,
+  openedNoteId,
+  noteModalRef,
+  switchingNoteId,
+  outgoingNoteShellRef,
+  noteSwitchOrigin,
+  previousNote,
+  nextNote,
+  setNoteVisible,
+  finishNoteClose,
+  navigateNote,
+  handleNoteReady,
+  loadNoteDocument,
+} = useNoteNavigation(filteredNotes, noteLocation)
 const selectCategory = (category: string) => {
   if (category !== 'all' && !isNoteCategory(category)) return
   if (route.query.category === category) return
@@ -357,6 +423,10 @@ const paginatedCards = computed<StudyNoteCard[]>(() => {
     return {
       note,
       dateLabel: formatNoteDate(note.time),
+      thumbnail: note.image ? getCardThumbnailUrl(note.image) : undefined,
+      mobileThumbnail: note.image
+        ? getCardMobileThumbnailUrl(note.image)
+        : undefined,
       style: {
         '--note-index': noteIndex,
       },
@@ -393,13 +463,7 @@ const updateMasonryLayout = () => {
   masonryReady.value = hasCompleteMeasurements
 }
 
-const scheduleMasonryLayout = () => {
-  if (disposed || masonryFrame !== undefined) return
-  masonryFrame = requestAnimationFrame(() => {
-    masonryFrame = undefined
-    updateMasonryLayout()
-  })
-}
+const { schedule: scheduleMasonryLayout } = useFrameTask(updateMasonryLayout)
 
 const observeMasonryLayout = async () => {
   masonryReady.value = false
@@ -410,7 +474,7 @@ const observeMasonryLayout = async () => {
   const stack = noteStackRef.value
   if (!stack) return
 
-  masonryObserver = new ResizeObserver(scheduleMasonryLayout)
+  masonryObserver ??= new ResizeObserver(scheduleMasonryLayout)
   masonryObserver.observe(stack)
   stack
     .querySelectorAll<HTMLElement>('.study-note-card')
@@ -421,6 +485,15 @@ const observeMasonryLayout = async () => {
 watch(paginatedCards, observeMasonryLayout, { flush: 'post' })
 
 onMounted(() => {
+  // 等详情容器显现后再播放卡片动画，避免前几张在父级隐藏时已淡入完毕。
+  const entrance = noteViewportRef.value?.scrollRoot
+    ?.closest('.island-detail')
+    ?.getAnimations()
+  void Promise.allSettled(
+    (entrance ?? []).map((animation) => animation.finished)
+  ).then(() => {
+    if (!disposed) contentRevealed.value = true
+  })
   observeMasonryLayout()
   document.fonts?.ready.then(scheduleMasonryLayout)
 })
@@ -429,12 +502,17 @@ onBeforeUnmount(() => {
   disposed = true
   activationAnimations.forEach((animation) => animation.cancel())
   masonryObserver?.disconnect()
-  if (masonryFrame !== undefined) cancelAnimationFrame(masonryFrame)
 })
 
 const setPage = (page: number) => {
   currentPage.value = Math.min(Math.max(1, page), totalPages.value)
   noteViewportRef.value?.scrollRoot?.scrollTo({ top: 0 })
+}
+const refreshNotes = async () => {
+  await reload()
+  if (disposed || notesError.value) return
+  if (currentPage.value > totalPages.value) setPage(totalPages.value)
+  showSuccessMessage('NOTES已刷新')
 }
 // 包括浏览器前进、后退在内，分类变化统一回到第一页；仅开关正文不重置列表。
 watch(activeCategory, () => setPage(1), { flush: 'post' })
@@ -445,11 +523,43 @@ watch(activeCategory, () => setPage(1), { flush: 'post' })
 @red: #e23456;
 @mono: 'UnboundedSans', 'Courier New', monospace;
 
-.study-note-filters.filter-rail--horizontal {
+.study-note-toolbar {
+  display: flex;
   align-self: stretch;
   width: 100%;
   box-sizing: border-box;
   margin-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.study-note-filters.filter-rail--horizontal {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  border-bottom: 0;
+}
+
+.study-note-refresh {
+  display: grid;
+  flex: 0 0 1.8rem;
+  place-items: center;
+  justify-items: end;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  cursor: pointer;
+
+  &:hover:not(:disabled),
+  &:focus-visible {
+    color: var(--text-color);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
 
 .island-notes-content {
@@ -464,9 +574,6 @@ watch(activeCategory, () => setPage(1), { flush: 'post' })
     .study-note-list {
       padding: 0;
     }
-    .study-note-stack {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
   }
 }
 
@@ -477,11 +584,11 @@ watch(activeCategory, () => setPage(1), { flush: 'post' })
 }
 
 .island-notes-content.is-embedded.is-loading {
-  height: 100%;
-
   .study-note-list {
     height: 100%;
-    padding: 0;
+    :deep(.scroll-viewport__scroll.no-rem) {
+      padding-right: 0;
+    }
   }
 }
 
@@ -503,14 +610,12 @@ watch(activeCategory, () => setPage(1), { flush: 'post' })
 }
 
 .study-note-list {
-  padding: 24px 0 36px;
-
   :deep(.filter-rail) {
     flex-shrink: 0;
   }
 
-  :deep(.scroll-viewport__scroll) {
-    padding-right: 0;
+  :deep(.scroll-viewport__scroll.no-rem) {
+    padding-right: 16px;
     outline: none;
   }
 
@@ -521,15 +626,17 @@ watch(activeCategory, () => setPage(1), { flush: 'post' })
 }
 
 .study-note-stack {
+  --note-entry-play-state: paused;
+  padding-bottom: 32px;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   grid-auto-rows: 1px;
   column-gap: 10px;
   row-gap: 0;
   opacity: 0;
-  transition: opacity 0.2s ease;
 
   &.is-ready {
+    --note-entry-play-state: running;
     opacity: 1;
   }
 }
@@ -549,9 +656,10 @@ watch(activeCategory, () => setPage(1), { flush: 'post' })
   color: inherit;
   isolation: isolate;
   text-decoration: none;
-  clip-path: inset(0 100% 100% 0);
-  animation: studyNoteCardRevealIn 0.72s cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: calc(0.14s + var(--note-index) * 120ms);
+  opacity: 0;
+  animation: studyNoteCardFadeIn 0.45s ease-out both;
+  animation-delay: calc(0.08s + var(--note-index) * 100ms);
+  animation-play-state: var(--note-entry-play-state, running);
 
   &::before {
     position: absolute;
@@ -561,21 +669,6 @@ watch(activeCategory, () => setPage(1), { flush: 'post' })
     content: '';
     opacity: 0;
     pointer-events: none;
-  }
-
-  &::after {
-    position: absolute;
-    z-index: 3;
-    top: 0;
-    left: 0;
-    width: 0;
-    height: 0;
-    box-sizing: border-box;
-    border: 1px solid var(--note-border-color);
-    content: '';
-    pointer-events: none;
-    animation: studyNoteCardBorderIn 0.72s cubic-bezier(0.22, 1, 0.36, 1) both;
-    animation-delay: calc(0.14s + var(--note-index) * 120ms);
   }
 
   &__meta.no-rem {
@@ -593,6 +686,7 @@ watch(activeCategory, () => setPage(1), { flush: 'post' })
     white-space: nowrap;
     color: @red;
     .note-meta-typography();
+    .note-category-typography();
     transition: color 0.3s ease;
   }
 
@@ -601,12 +695,51 @@ watch(activeCategory, () => setPage(1), { flush: 'post' })
   }
 
   &__visual {
-    margin: 0 16px;
+    position: relative;
+    margin: 0;
+    -webkit-mask-image: linear-gradient(to bottom, #000 50%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 50%, transparent 100%);
     overflow: hidden;
     background: rgba(128, 128, 128, 0.1);
+  }
+
+  &__media {
+    position: relative;
+    transition: transform 1.3s ease;
 
     picture {
       display: contents;
+    }
+
+    // 两级带遮罩的模糊叠层保留顶部细节，向底部逐渐增强，无需重复加载图片。
+    &::before,
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    &::before {
+      z-index: 1;
+      -webkit-backdrop-filter: blur(3px);
+      backdrop-filter: blur(3px);
+      -webkit-mask-image: linear-gradient(
+        to bottom,
+        transparent 50%,
+        #000 100%
+      );
+      mask-image: linear-gradient(to bottom, transparent 50%, #000 100%);
+    }
+    &::after {
+      z-index: 2;
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+      -webkit-mask-image: linear-gradient(
+        to bottom,
+        transparent 75%,
+        #000 100%
+      );
+      mask-image: linear-gradient(to bottom, transparent 75%, #000 100%);
     }
   }
 
@@ -615,11 +748,11 @@ watch(activeCategory, () => setPage(1), { flush: 'post' })
     width: 100%;
     height: auto;
     filter: saturate(0.68) contrast(1.03);
-    transition: filter 0.45s ease, transform 0.65s ease;
+    transition: filter 0.45s ease;
   }
 
   &__copy {
-    padding: 12px 16px 12px;
+    padding: 0 16px 12px;
   }
 
   &__date.no-rem {
@@ -642,10 +775,10 @@ watch(activeCategory, () => setPage(1), { flush: 'post' })
 
   h2 {
     width: 108.6957%;
-    margin: 8px 0 0;
+    margin: 0 0 8px;
     color: var(--text-color);
     font-family: 'UnboundedSans';
-    font-size: 26.4px;
+    font-size: 30px;
     .note-title-typography();
     line-height: 1.15;
     text-transform: uppercase;
@@ -660,21 +793,23 @@ watch(activeCategory, () => setPage(1), { flush: 'post' })
     }
     .study-note-card__image {
       filter: saturate(0.88) contrast(1.02);
-      transform: scale(1.025);
+    }
+    .study-note-card__media {
+      transform: scale(1.05);
     }
   }
 
   &:focus-visible {
     outline: 2px solid @red;
     outline-offset: 4px;
-
-    &::after {
-      border-color: @red;
-    }
   }
 }
 
 @media (hover: hover) and (pointer: fine) {
+  .study-note-card:hover .study-note-card__media {
+    transform: scale(1.05);
+  }
+
   .study-note-card:not(.is-activating):hover::before {
     animation: studyNoteBorderFlash 280ms steps(1, end) forwards;
   }
@@ -718,8 +853,9 @@ watch(activeCategory, () => setPage(1), { flush: 'post' })
     color: var(--text-muted);
     background: var(--surface-color);
     cursor: pointer;
-    font-family: @mono;
+    font-family: 'alibaba-puhuiti', sans-serif;
     font-size: 0.56rem;
+    font-weight: 900;
     transition: border-color 0.2s, color 0.2s, background 0.2s;
 
     &:hover:not(:disabled),
@@ -737,49 +873,19 @@ watch(activeCategory, () => setPage(1), { flush: 'post' })
   }
 }
 
-@keyframes studyNoteCardRevealIn {
-  99.9% {
-    clip-path: inset(0);
+@keyframes studyNoteCardFadeIn {
+  from {
+    opacity: 0;
   }
-
-  100% {
-    clip-path: none;
-  }
-}
-
-@keyframes studyNoteCardBorderIn {
   to {
-    width: 100%;
-    height: 100%;
-  }
-}
-
-@media (max-width: 1100px) {
-  .study-note-stack {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    opacity: 1;
   }
 }
 
 @media (max-width: 900px) {
-  .island-notes-content {
-    padding-top: 88px;
-  }
-
-  .study-note-list {
-    padding: 38px 18px 28px;
-  }
-
-  .study-note-stack {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .study-note-card {
-    &__visual {
-      margin: 0 14px;
-    }
-
     &__copy {
-      padding: 10px 14px 10px;
+      padding: 0 14px 10px;
     }
 
     &--without-image {
@@ -791,21 +897,16 @@ watch(activeCategory, () => setPage(1), { flush: 'post' })
   }
 }
 
-@media (max-width: 600px) {
-  .study-note-list {
-    padding-right: 14px;
-    padding-left: 14px;
-  }
-
-  .study-note-stack {
-    grid-template-columns: minmax(0, 1fr);
+@media (max-width: 768px) {
+  .island-notes-content.is-embedded .study-note-stack {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media screen and (max-aspect-ratio: 1) {
   .study-note-card {
     h2 {
-      font-size: 38.72px;
+      font-size: 44px;
     }
 
     &__category.no-rem,
@@ -816,22 +917,13 @@ watch(activeCategory, () => setPage(1), { flush: 'post' })
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .study-note-stack {
-    transition: none;
-  }
-
   .study-note-card {
     animation: none;
-    clip-path: none;
+    opacity: 1;
     transition: none;
 
-    &::after {
-      width: 100%;
-      height: 100%;
-      animation: none;
-    }
-
-    &__image {
+    &__image,
+    &__media {
       transition: none;
     }
 
@@ -843,20 +935,4 @@ watch(activeCategory, () => setPage(1), { flush: 'post' })
 }
 </style>
 
-<style lang="less">
-.modal-wrapper-dialog.note-detail-modal.no-rem {
-  --note-modal-width: min(calc(100vw - 48px), 120vh);
-  height: 90vh;
-}
-.modal-wrapper-dialog.note-detail-modal.no-rem:not(
-    .modal-wrapper-dialog--origin-motion
-  ) {
-  width: var(--note-modal-width) !important;
-}
-@media (max-width: 768px) {
-  .modal-wrapper-dialog.note-detail-modal.no-rem {
-    --note-modal-width: min(calc(100vw - 20px), calc((100dvh - 192px) * 3 / 4));
-    height: calc(var(--note-modal-width) * 4 / 3);
-  }
-}
-</style>
+<style lang="less" src="../../styles/noteModal.less"></style>

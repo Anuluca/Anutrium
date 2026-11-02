@@ -3,17 +3,17 @@
 ## 实现范围
 
 - 删除旧的 6 条占位数据及废弃的 `essaysTalks.ts`，移除对应导入和国际化入口。
-- 初始演示已由 24 篇中文标题的参考测试笔记替换；来源、正文适配、发布与验证见 [渲染测试语料](notes-book-tests.md)。
+- 初始演示已由参考测试笔记替换（当前线上 16 篇、本地回归语料 18 篇）；来源、正文适配、发布与验证见 [渲染测试语料](notes-book-tests.md)。
 - Notes 复用 `ScrollViewport` 的固定头部和底部插槽；分类栏与分页器留在面板内，只有卡片区域滚动。切换分页或分类后将卡片区滚动位置重置为顶部。
 - 按用户确认保留 R2 的 `Island/notes/` 历史图片、视频，不执行本地或线上素材删除。
-- 点击卡片使用 `ModalWrapper` 弹窗阅读，复用电视机动画与外侧底部居中关闭按钮；`/atrium/notes?note=<id>` 可直接打开弹窗。列表保持挂载，关闭后保留滚动位置。桌面弹窗高度固定为 `90vh`，宽度按 `4:3` 计算，取消固定像素宽度上限，仅限制不超过视口宽度减 `48px`；桌面可用宽度不足时优先保留高度，比例随可用宽度调整；手机宽高比固定为 `3:4`，受视口宽度减 `20px`、高度减 `192px` 的可用空间限制。尺寸由视口与比例决定，加载和短内容不改变尺寸。
+- 点击卡片使用 `ModalWrapper` 弹窗阅读，复用电视机动画与外侧底部居中关闭按钮；`/atrium/notes?note=<id>` 可直接打开弹窗。列表保持挂载，关闭后保留滚动位置。桌面弹窗以 `16:9` 按视口最大可用宽高铺开，无固定像素宽度上限，并为窗口外关闭按钮预留空间。手机列表每行两张卡片；详情按 `100dvh` 铺满可用高度，上、左、右各留 `8px` 并避让安全区域，底部预留 `76px` 与底部安全区域。关闭按钮位于弹窗下方 `12px`，点击区域 `44px`，下方留 `20px`；阅读期间隐藏底部移动端提示，避免遮挡关闭按钮。加载和短内容不改变弹窗尺寸。
 
 ## 文件与渲染
 
 - 原演示笔记曾迁入 R2：`notes/46625c0b-2bd5-491e-aef9-da54e9ac3700.md`；2026-11-01 已在 24 篇新测试笔记发布并回读校验后按版本删除。前后台均从服务器读取，不内置演示条目或正文。
 - `tests/fixtures/notes/markdown-demo.md` 仅供测试，不进入运行时数据源。
 - 所有笔记来自 UTF-8 `.md` 文件，标题、日期、分类、可选封面与正文保存为单文件。
-- Markdown 转换使用 `markdown-it`，扩展支持公式、脚注、提示容器、定义列表、任务列表及 Hexo 测试标签；原始 HTML 开关仍关闭，仅放行受控展示标签，并保留危险链接协议校验。
+- Markdown 转换使用 `markdown-it`，扩展支持公式、脚注、提示容器、定义列表、任务列表及 Hexo 测试标签；原始 HTML 开关仍关闭，仅放行受控展示标签，并保留危险链接协议校验。AnuConsole 的实时预览与查看弹窗通过 `scripts/sync-note-preview.mjs` 使用网站同源的渲染器、正文样式和字体，可用 `--check` 校验一致性。
 - 内容通过 `parseNoteDocument` 校验。文件最大 256 KiB，YAML 元信息最大 4 KiB，禁止别名、重复字段、未知字段和无效日期。
 - `AnuConsole/src/lib/note-document.ts` 与网站 `src/utils/noteDocument.ts` 使用相同协议；修改协议与标签配置时同步两端并运行测试。
 
@@ -31,7 +31,7 @@ cover: "https://assets.anuluca.com/path/to/image.jpg"
 ```
 
 - `category`：`technology`（技术）、`pokemon`（宝可梦）、`daily`（日常）、`test`（测试）。
-- 标签定义集中在 `src/config/noteCategories.ts`，后台镜像为 `AnuConsole/src/lib/note-categories.ts`；`test` 配置 `excludeFromAll: true`，前台 ALL 的列表、计数与分页均排除测试文章，TEST 单独展示；新增标签时同步配置即可自动更新选项、展示与文件校验，不再修改多处条件分支。旧本地草稿的 `frontend` 映射为技术、`other` 映射为日常，新文件不再接受旧标签。
+- 标签定义集中在 `src/config/noteCategories.ts`，后台镜像为 `AnuConsole/src/lib/note-categories.ts`；`test` 配置 `excludeFromAll: true`，前台 ALL 的列表、计数与分页均排除测试文章，TEST 单独展示；新增标签时同步配置即可自动更新选项、展示与文件校验，不再修改多处条件分支。新文件不接受旧的 frontend／other 标签。
 - `cover`：可省略；存在时必须是线上 R2 地址。
 - 无元信息的 `.md` 可通过 AnuConsole 导入，后台用文件名填充标题，并由表单补全元信息。
 
@@ -39,7 +39,7 @@ cover: "https://assets.anuluca.com/path/to/image.jpg"
 
 1. 管理员进入 AnuConsole `/anutrium/notes`。
 2. 导入 `.md`，或填写标题、分类、日期、可选封面与 Markdown 正文。
-3. 检查实时预览，点击「发布笔记」。未发布内容保存在当前浏览器本地草稿中。
+3. 检查实时预览，点击「发布笔记」。不保存本地草稿，关闭编辑弹窗或刷新会丢弃尚未提交的内容。
 4. 后台执行 `requireAdmin()` 与同源校验，通过服务端请求 Worker；只读账号仅可读取列表。
 5. Worker 复用 `HOME_FEATURES_TOKEN` 鉴权，将原始文件写入 `notes/<uuid>.md`。同一次 R2 写入附带列表索引元数据，不创建独立 JSON 索引。
 6. 新增通过 PUT，相同 ID 与内容的重试保持幂等。编辑通过 PATCH，必须携带读取时的实体标签（ETag）；版本不匹配返回 412，不覆盖服务器内容。
@@ -61,13 +61,23 @@ cover: "https://assets.anuluca.com/path/to/image.jpg"
 - 前台生产使用 Netlify `/api/notes` 同源代理；开发直接读取线上 Worker，不使用本地文件回退。
 - 服务异常时保留已读列表并显示重试入口；首次读取失败或服务器返回空列表时，不生成本地笔记；不存在的文件显示明确错误。
 
+## 分类直达链接
+
+- ALL：`/atrium/notes?category=all`（省略参数同样显示 ALL，排除测试文章）。
+- TECHNOLOGY：`/atrium/notes?category=technology`。
+- POKÉMON：`/atrium/notes?category=pokemon`。
+- DAILY：`/atrium/notes?category=daily`。
+- TEST：`/atrium/notes?category=test`。
+- 点击分类使用路由历史记录，刷新与前进／后退会恢复对应分类；无效或重复的分类参数回退为 ALL。切换分类重置为第一页。
+- 从分类列表打开笔记时保留 `category`、其他查询参数与 URL hash；关闭弹窗只移除 `note`，不重置当前分类和列表位置。
+
 ## 查询、编辑与删除
 
 - AnuConsole 支持标题搜索、分类筛选、服务器正文预览和 Markdown 原文查看；只读账号只显示读取操作。
 - 点击编辑后，表单载入原文件及 ETag，保存更新同一篇文章，不创建重复条目。
-- 未保存内容自动保存为本地草稿，同时记录原文章 ID 与版本。刷新后恢复草稿仍使用原版本校验；切换、新建、导入或重新载入前确认未保存修改。
+- 编辑期间保留原文章 ID 与版本；不保存或恢复本地草稿。编辑／新增仅通过按钮打开桌面 16:9／手机 3:4 弹窗，发布按钮固定在底部，预览栏与网站共用渲染器。封面只填写 R2 路径，保存时补全固定资源域名，文件中仍为完整 URL。
 - 删除复用后台 `ManagementModal` 的 danger 确认框，支持取消和 Escape，不自动转移焦点。
-- 修改或删除发生版本冲突时保留当前文章与草稿，要求用户查看最新服务器内容后再操作。
+- 修改或删除发生版本冲突时保留当前文章与窗口内编辑内容，要求用户查看最新服务器内容后再操作。
 - Worker 正文／写入响应使用 `X-Note-Version` 保留 R2 原始 ETag；后台代理和编辑器优先读取该版本头。CDN 压缩可能将 HTTP `ETag` 转为弱标记，不能直接用于强版本校验。[Cloudflare ETag 说明](https://developers.cloudflare.com/cache/reference/etag-headers/)
 - R2 的 `delete()` 没有条件删除参数，因此 DELETE 使用带 ETag 条件的单次 `put()` 清空正文，并仅保留无正文的删除标记。公开／管理读取均返回 404，列表排除该条目，旧 ID 不能重新创建；不提供恢复功能。
 - 条件写入在存储层检查版本，避免「先检查、再无条件删除」的并发窗口。[R2 条件操作参考](https://developers.cloudflare.com/r2/api/workers/workers-api-reference/#conditional-operations)
@@ -109,3 +119,22 @@ cover: "https://assets.anuluca.com/path/to/image.jpg"
 - 线上原有 24 篇文章均通过 PATCH + 原始 `X-Note-Version` 更新为 `category: test`，逐篇公开回读并核对 SHA-256；只改变分类行，正文、标题、日期与封面不变。
 - 原文、更新文件、版本与逐篇验证结果备份于忽略提交的 `.tmp/notes-test-category-2026-10-31T18-23-00-397Z/`。备份不包含管理密钥。迁移脚本：`scripts/migrate-notes-test-category.mjs`，先 `--prepare` 生成计划，再 `--apply <plan.json>` 按版本更新，版本冲突时停止。
 - 校验：网站与后台类型检查、后台文件协议 5 项、Worker 8 项、前台筛选／渲染 8 项通过。Worker 已部署，网站与后台界面代码保留在各自工作区。
+
+- Notes 列表每页 12 篇；卡片网格底部预留 32px 源码间距（按现有 px→rem 规则缩放），留白随列表滚动，分类栏与分页器固定。
+
+- Notes 进度条仅覆盖标签栏与分页器之间的滚动区，内容右侧保留 16px 间距。ScrollViewport 内嵌进度条使用布局偏移测量，避免 CRT 入场缩放影响坐标；测量复用 useFrameTask 合并。
+
+- 详情头部顺序为大标题在上、标签与日期在下，正文与后台查看／编辑预览一致；标题与元信息之间保留 8px 间距。
+- 阅读入场：保留 ModalWrapper 电视机开窗；标题模块初始目标 1.6 倍居中，整块标题采用 4% 高度柔边从下向上擦入，无额外延迟、持续 1.8 秒，缓动采用参考页的 (0.496, 0.004, 0, 1)。标题擦入收尾时（时间轴第 1.08 秒）标签先快速闪烁两下，再播放日期的两次闪烁（各 0.28 秒），完整停留 0.4 秒，再用 0.8 秒上移缩小归位，最后开始正文入场，长标题限制在可视范围。正文采用首屏语义块轻错峰入场。
+- `src/utils/noteEntrance.ts` 为两端共用控制器；正文直接对首屏顶层语义块做 0.4 秒淡入与 8px 上移，相邻错峰约 40ms，总错峰不超过 200ms；引用、列表、表格、代码与公式保持完整，后续内容直接可见。不再使用 SplitText 或逐段滚动触发。
+- 窗口尺寸改变、减少动态效果或入场期间滚动时恢复自然排版；关闭清理动画与尺寸观察器。后台仅查看弹窗播放整套入场，编辑实时预览即时更新。
+
+- 重开入场由弹窗 active 状态触发，不依赖文章 ID／正文变化；关闭退场期间保留阅读器和当前画面，快速重开相同文章也重新创建动画。开窗后一帧再读取动画与初始尺寸，避免隐藏容器恢复尺寸被误判为缩放中断。
+
+
+## 笔记隐藏
+
+- AnuConsole 列表提供「隐藏」开关，点击即按当前 ETag 条件保存；新建／编辑表单也可设置，随发布／保存提交。默认关闭，旧文件缺少字段时保持显示。
+- Markdown 元信息新增可选 `hidden: true/false`，隐藏状态随正文一次写入 R2，并同步列表索引。隐藏后公开列表排除该笔记，公开详情返回 404；后台仍可查看、编辑、删除或关闭隐藏开关恢复显示。
+- 版本冲突时不更新开关，保留服务器内容并提示刷新；仅管理员可写入，沿用同源校验和原始 `X-Note-Version`。
+- Anutrium 刷新后读取最新状态；已打开页面仍遵循原有 60 秒列表缓存。需先部署支持此字段的 Worker，再发布 AnuConsole。

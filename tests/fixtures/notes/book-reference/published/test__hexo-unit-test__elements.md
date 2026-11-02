@@ -4,66 +4,66 @@ date: "2026-11-01"
 category: test
 ---
 
-The purpose of this post is to help you make sure all of HTML elements can display properly. If you use CSS reset, don't forget to redefine the style by yourself.
+这篇文章用于检查各种 HTML 元素能否正确显示。如果使用了样式重置，请为这些元素重新定义所需的样式。
 
 ---
 
-# Heading 1
+# 一级标题
 
-## Heading 2
+## 二级标题
 
-### Heading 3
+### 三级标题
 
-#### Heading 4
+#### 四级标题
 
-##### Heading 5
+##### 五级标题
 
-###### Heading 6
+###### 六级标题
 
 ---
 
-## Paragraph
+## 段落
 
-Lorem ipsum dolor sit amet, [test link]() consectetur adipiscing elit. **Strong text** pellentesque ligula commodo viverra vehicula. *Italic text* at ullamcorper enim. Morbi a euismod nibh. <u>Underline text</u> non elit nisl. ~~Deleted text~~ tristique, sem id condimentum tempus, metus lectus venenatis mauris, sit amet semper lorem felis a eros. Fusce egestas nibh at sagittis auctor. Sed ultricies ac arcu quis molestie. Donec dapibus nunc in nibh egestas, vitae volutpat sem iaculis. Curabitur sem tellus, elementum nec quam id, fermentum laoreet mi. Ut mollis ullamcorper turpis, vitae facilisis velit ultricies sit amet. Etiam laoreet dui odio, id tempus justo tincidunt id. Phasellus scelerisque nunc sed nunc ultricies accumsan.
+这是用于检查段落排版的示例文字。[测试链接](https://example.com)可以检查链接样式，**加粗文字**用于检查强调效果，*斜体文字*用于检查倾斜效果。<u>下划线文字</u>与~~删除线文字~~分别用于检查下划线和删除线的显示。段落需要保持清晰的行距，在容器宽度变化时自然换行，并与相邻段落保留适当的间隔。
 
-Interdum et malesuada fames ac ante ipsum primis in faucibus. `Sed erat diam`, blandit eget felis aliquam, rhoncus varius urna. Donec tellus sapien, sodales eget ante vitae, feugiat ullamcorper urna. Praesent auctor dui vitae dapibus eleifend. Proin viverra mollis neque, ut ullamcorper elit posuere eget.
+这是另一个段落，其中包含 `行内代码`。请检查代码背景、字体及其与中文之间的间距，确认文字没有超出阅读区域。
 
-> Praesent diam elit, interdum ut pulvinar placerat, imperdiet at magna.
+> 这是一段引用文字，用于检查引用块的边框、背景、上下内边距和字体颜色。
 
-Maecenas ornare arcu at mi suscipit, non molestie tortor ultrices. Aenean convallis, diam et congue ultricies, erat magna tincidunt orci, pulvinar posuere mi sapien ac magna. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Praesent vitae placerat mauris. Nullam laoreet ante posuere tortor blandit auctor. Sed id ligula volutpat leo consequat placerat. Mauris fermentum dolor sed augue malesuada sollicitudin. Vivamus ultrices nunc felis, quis viverra orci eleifend ut. Donec et quam id urna cursus posuere. Donec elementum scelerisque laoreet.
+引用块之后的普通段落应恢复正文样式。较长的连续文字用于检查换行行为、段落之间的距离和整体阅读节奏，避免在不同屏幕上出现文字重叠或内容溢出。
 
-## List Types
+## 列表类型
 
-### Definition List (dl)
+### 定义列表（dl）
 
-<dl><dt>Definition List Title</dt><dd>This is a definition list division.</dd></dl>
+<dl><dt>定义列表标题</dt><dd>这是定义列表中的解释内容。</dd></dl>
 
-### Ordered List (ol)
+### 有序列表（ol）
 
-1. List Item 1
-2. List Item 2
-3. List Item 3
+1. 列表项目一
+2. 列表项目二
+3. 列表项目三
 
-### Unordered List (ul)
+### 无序列表（ul）
 
-- List Item 1
-- List Item 2
-- List Item 3
+- 列表项目一
+- 列表项目二
+- 列表项目三
 
-### Checkbox List (ul)
+### 任务列表（ul）
 
-- [ ] List Item 1 unchecked
-- [x] List Item 2 checked
-- [X] List Item 3 checked
+- [ ] 列表项目一：未完成
+- [x] 列表项目二：已完成
+- [X] 列表项目三：已完成
 
-## Table
+## 表格
 
-| Table Header 1 | Table Header 2 | Table Header 3 |
+| 表头一 | 表头二 | 表头三 |
 | - | - | - |
-| Division 1 | Division 2 | Division 3 |
-| Division 1 | Division 2 | Division 3 |
-| Division 1 | Division 2 | Division 3 |
+| 单元格一 | 单元格二 | 单元格三 |
+| 单元格一 | 单元格二 | 单元格三 |
+| 单元格一 | 单元格二 | 单元格三 |
 
-## Misc Stuff - abbr, acronym, sub, sup, etc.
+## 其他元素：缩写、首字母缩略词、上下标等
 
-Lorem <sup>superscript</sup> dolor <sub>subscript</sub> amet, consectetuer adipiscing elit. Nullam dignissim convallis est. Quisque aliquam. <cite>cite</cite>. Nunc iaculis suscipit dui. Nam sit amet sem. Aliquam libero nisi, imperdiet at, tincidunt nec, gravida vehicula, nisl. Praesent mattis, massa quis luctus fermentum, turpis mi volutpat justo, eu volutpat enim diam eget metus. Maecenas ornare tortor. Donec sed tellus eget sapien fringilla nonummy. <acronym title="National Basketball Association">NBA</acronym> Mauris a ante. Suspendisse quam sem, consequat at, commodo vitae, feugiat in, nunc. Morbi imperdiet augue quis tellus.  <abbr title="Avenue">AVE</abbr>
+这里包含<sup>上标文字</sup>和<sub>下标文字</sub>，用于检查上下标的位置与字号。<cite>引用来源</cite>用于标注作品或来源名称。<acronym title="美国职业篮球联赛">NBA</acronym>是首字母缩略词示例；<abbr title="大街">AVE</abbr>是缩写示例。将指针悬停在带说明的缩写上，可以查看完整含义。

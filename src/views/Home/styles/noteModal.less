@@ -1,0 +1,197 @@
+.el-overlay-dialog:has(> .note-detail-stage) {
+  overflow: clip;
+}
+// 中央弹窗与相邻空外壳共用尺寸，移动端继续沿用上下切换。
+.note-detail-stage.no-rem,
+.modal-wrapper-dialog.note-detail-modal.no-rem {
+  --note-modal-width: min(
+    calc(100vw - 160px),
+    calc((100dvh - max(80px, 3rem)) * 16 / 9)
+  );
+  --note-modal-height: calc(var(--note-modal-width) * 9 / 16);
+}
+.note-detail-stage.no-rem {
+  --note-shell-peek: clamp(32px, 4vw, 56px);
+  --note-shell-width: calc(var(--note-modal-width) * 0.9);
+  --note-shell-height: calc(var(--note-modal-height) * 0.9);
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  overflow: clip;
+  pointer-events: none;
+
+  &.is-switching {
+    z-index: 0;
+    .note-detail-nav:not(.is-incoming):not(.note-detail-outgoing) {
+      visibility: hidden;
+    }
+  }
+}
+.note-detail-nav.no-rem {
+  position: absolute;
+  box-sizing: border-box;
+  top: calc((100% - var(--note-shell-height)) / 2 - 1rem);
+  width: var(--note-shell-width);
+  height: var(--note-shell-height);
+  padding: 0;
+  border: 1px solid
+    color-mix(in srgb, var(--page-theme-color, #e23456) 35%, transparent);
+  border-radius: 0;
+  background: #050505;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.85);
+  pointer-events: auto;
+  cursor: pointer;
+  transform-origin: 0 0;
+  animation: noteNeighborEnter 840ms 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  &.is-incoming,
+  &.note-detail-outgoing {
+    animation: none;
+    will-change: transform;
+  }
+  &.note-detail-outgoing {
+    pointer-events: none;
+  }
+
+  &::before,
+  &::after {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    bottom: 10px;
+    border: 1px solid
+      color-mix(in srgb, var(--page-theme-color, #e23456) 45%, transparent);
+    border-top: 0;
+    content: '';
+    pointer-events: none;
+  }
+  &::before {
+    left: 10px;
+    border-right: 0;
+  }
+  &::after {
+    right: 10px;
+    border-left: 0;
+  }
+  &:focus-visible {
+    border-color: var(--page-theme-color, #e23456);
+    outline: none;
+  }
+  &:disabled {
+    cursor: default;
+  }
+}
+.note-detail-nav--prev.no-rem {
+  --note-shell-enter-x: calc(0px - var(--note-shell-peek) - 24px);
+  --note-shell-enter-y: 0px;
+  left: calc(var(--note-shell-peek) - var(--note-shell-width));
+}
+.note-detail-nav--next.no-rem {
+  --note-shell-enter-x: calc(var(--note-shell-peek) + 24px);
+  --note-shell-enter-y: 0px;
+  right: calc(var(--note-shell-peek) - var(--note-shell-width));
+}
+@keyframes noteNeighborEnter {
+  from {
+    translate: var(--note-shell-enter-x) var(--note-shell-enter-y);
+    opacity: 0;
+  }
+  to {
+    translate: 0px 0px;
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .note-detail-nav.no-rem {
+    animation: none;
+  }
+}
+@media (hover: hover) and (pointer: fine) {
+  .note-detail-nav.no-rem:hover {
+    border-color: var(--page-theme-color, #e23456);
+  }
+}
+.modal-wrapper-dialog.note-detail-modal.no-rem {
+  height: var(--note-modal-height);
+  max-height: none !important;
+  .modal-scroll-region {
+    overflow: hidden;
+  }
+  &.is-switching {
+    background: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    .modal-close-row,
+    .modal-scroll-progress,
+    .modal-scanlines,
+    > .el-dialog__body > .corner {
+      visibility: hidden;
+    }
+    .note-reader {
+      pointer-events: none;
+    }
+  }
+}
+.modal-wrapper-dialog.note-detail-modal.no-rem:not(
+    .modal-wrapper-dialog--origin-motion
+  ) {
+  width: var(--note-modal-width) !important;
+}
+@media (max-width: 768px) {
+  body:has(.island-notes-content.is-reading) {
+    .mobile-experience-alert,
+    .footer-com,
+    .footer-bottom-gradient {
+      visibility: hidden;
+    }
+  }
+
+  .note-detail-stage.no-rem,
+  .modal-wrapper-dialog.note-detail-modal.no-rem {
+    --note-modal-top-gap: calc(44px + env(safe-area-inset-top, 0px));
+    --note-modal-left-gap: calc(8px + env(safe-area-inset-left, 0px));
+    --note-modal-right-gap: calc(8px + env(safe-area-inset-right, 0px));
+    --note-modal-bottom-gap: calc(112px + env(safe-area-inset-bottom, 0px));
+    --note-modal-width: calc(
+      100vw - var(--note-modal-left-gap) - var(--note-modal-right-gap)
+    );
+    --note-modal-height: calc(
+      100dvh - var(--note-modal-top-gap) - var(--note-modal-bottom-gap)
+    );
+  }
+  .note-detail-stage.no-rem {
+    --note-shell-peek: 28px;
+  }
+  .note-detail-nav.no-rem {
+    --note-shell-enter-x: 0px;
+    left: calc((100% - var(--note-shell-width)) / 2);
+    right: auto;
+  }
+  .note-detail-nav--prev.no-rem {
+    --note-shell-enter-y: calc(0px - var(--note-shell-peek) - 24px);
+    top: calc(var(--note-shell-peek) - var(--note-shell-height));
+  }
+  .note-detail-nav--next.no-rem {
+    --note-shell-enter-y: calc(var(--note-shell-peek) + 24px);
+    top: auto;
+    bottom: calc(var(--note-shell-peek) - var(--note-shell-height));
+  }
+  .modal-wrapper-dialog.note-detail-modal.no-rem {
+    margin: var(--note-modal-top-gap) var(--note-modal-right-gap)
+      var(--note-modal-bottom-gap) var(--note-modal-left-gap) !important;
+
+    .modal-close-row .diamond-close-btn {
+      top: calc(100% + 1px + (var(--note-modal-bottom-gap) - 76px) / 2);
+      width: 44px;
+      height: 44px;
+    }
+  }
+}
+@media (min-width: 769px) {
+  .modal-wrapper-dialog.note-detail-modal.no-rem
+    .modal-close-row
+    .diamond-close-btn {
+    // 桌面居中布局含 2rem 底部外边距，按钮高 1.2rem；按钮处于剩余空白的中心。
+    top: calc(100% + 1px + (100dvh - var(--note-modal-height) - 0.4rem) / 4);
+  }
+}

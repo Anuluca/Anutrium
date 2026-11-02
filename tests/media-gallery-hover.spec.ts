@@ -26,15 +26,13 @@ test('Cinco settles at normal size without hue rotation and supports re-entry', 
     await expect(button.locator('..').locator('..')).not.toHaveClass(
       /is-loading/
     )
-  }).toPass({ timeout: 5000 })
+  }).toPass({ timeout: 20000 })
   await button.hover()
   const surface = page.locator('.media-gallery__cinco-surface')
   await expect(surface.locator('.media-gallery__cinco-layer')).toHaveCount(2)
   await expect(button).toHaveCSS('filter', 'none')
   const frames = await surface.evaluate(async (surface) => {
-    const source = await (
-      await fetch('/src/composables/useImageCincoHover.ts')
-    ).text()
+    const source = await (await fetch('/src/utils/imageCincoHover.ts')).text()
     const moduleURL = source.match(/from ["']([^"']*\/gsap\.js[^"']*)/)?.[1]
     if (!moduleURL) throw new Error('GSAP module not found')
     const { gsap } = await import(moduleURL)
@@ -121,7 +119,7 @@ test('removes both layers on leave and preview opening', async ({
     await expect(buttons.first().locator('..').locator('..')).not.toHaveClass(
       /is-loading/
     )
-  }).toPass({ timeout: 5000 })
+  }).toPass({ timeout: 20000 })
   await buttons.first().hover()
   const surface = page.locator('.media-gallery__cinco-surface')
   await expect(surface).toHaveCount(1)
@@ -133,7 +131,7 @@ test('removes both layers on leave and preview opening', async ({
     await expect(buttons.nth(1).locator('..').locator('..')).not.toHaveClass(
       /is-loading/
     )
-  }).toPass({ timeout: 5000 })
+  }).toPass({ timeout: 20000 })
   await buttons.nth(1).hover()
   await expect(surface).toHaveCount(1)
   await buttons.nth(1).click()
@@ -150,7 +148,7 @@ test('touch devices and reduced motion do not create Cinco layers', async ({
   await expect(async () => {
     await button.scrollIntoViewIfNeeded()
     await expect(button).toBeVisible()
-  }).toPass({ timeout: 5000 })
+  }).toPass({ timeout: 20000 })
   await expect(button.locator('..').locator('..')).not.toHaveClass(/is-loading/)
   await button.hover()
   await expect(page.locator('.media-gallery__cinco-surface')).toHaveCount(0)

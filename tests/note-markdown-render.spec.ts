@@ -19,8 +19,8 @@ const render = (suffix: string) => {
   )
 }
 
-test('all 24 source documents render, including every extended syntax', () => {
-  expect(manifest.notes).toHaveLength(24)
+test('all 18 source documents render, including every extended syntax', () => {
+  expect(manifest.notes).toHaveLength(18)
   for (const note of manifest.notes) {
     const parsed = parseNoteDocument(
       readFileSync(
@@ -32,8 +32,8 @@ test('all 24 source documents render, including every extended syntax', () => {
     expect(renderNoteMarkdown(parsed.body)).toBeTruthy()
   }
   const elements = render('/elements.md')
-  expect(elements).toContain('<u>Underline text</u>')
-  expect(elements).toContain('<dl><dt>Definition List Title</dt>')
+  expect(elements).toContain('<u>下划线文字</u>')
+  expect(elements).toContain('<dl><dt>定义列表标题</dt>')
   expect(elements.match(/type="checkbox"/g)).toHaveLength(3)
   expect(elements.match(/checked=""/g)).toHaveLength(2)
   const extended = render('/markdown-it-demo.md')
@@ -58,16 +58,19 @@ test('all 24 source documents render, including every extended syntax', () => {
     expect(render('/md-container.md')).toContain(`class="${type}"`)
   const hexo = render('/tag-plugins.md')
   expect(hexo).not.toContain('{%')
-  expect(hexo).toContain('David Levithan')
+  expect(hexo).toContain('大卫·利维坦')
   expect(hexo).toContain('class="note-quote right"')
   expect(hexo.match(/note-code-line is-marked/g)).toHaveLength(4)
-  expect(hexo).toContain('https://gist.github.com/996818.pibb')
-  expect(hexo).toContain('https://jsfiddle.net/ccWP7/embedded/')
+  expect(hexo).not.toContain('https://gist.github.com/')
+  expect(hexo).not.toContain('https://jsfiddle.net/')
   expect(render('/videos.md')).toContain(
     'https://www.youtube-nocookie.com/embed/TIbZDRXM-Tg'
   )
   expect(render('/videos.md')).toContain(
     'https://player.vimeo.com/video/82090131'
+  )
+  expect(render('/videos.md')).toContain(
+    'https://player.bilibili.com/player.html?bvid=BV1Q5cWeyEZe&amp;autoplay=0'
   )
 })
 
@@ -79,6 +82,7 @@ test('extended Markdown keeps scripts, HTML attributes, links and TeX commands s
       '<u onclick="alert(1)">unsafe</u>',
       '[unsafe](javascript:alert(1))',
       '{% youtube ../unsafe %}',
+      '{% bilibili BV1Q5cWeyEZe" onload=alert(1) %}',
       '{% gist 996818" onload="alert(1) %}',
       '$\\href{javascript:alert(1)}{unsafe}$',
     ].join('\n\n')
@@ -135,4 +139,70 @@ test('YouTube hover hides the custom cursor and restores it after leaving', asyn
     await page.mouse.move(500, 350)
     await expect(cursor).not.toHaveClass(/is-hidden/)
   }
+})
+
+test('excerpt separator stops rendering without treating code comments as separators', () => {
+  const html = render('/excerpts.md')
+  expect(html).toContain('以下内容为可见摘要')
+  expect(html).not.toContain('more')
+  expect(html).not.toContain('这是第二段隐藏内容')
+  expect(renderNoteMarkdown('摘要\n<!-- more -->\n隐藏内容')).toBe(
+    '<p>摘要</p>\n'
+  )
+  const code = renderNoteMarkdown('```html\n<!-- more -->\n```\n\n代码后的文字')
+  expect(code).toContain('more')
+  expect(code).toContain('代码后的文字')
+  expect(renderNoteMarkdown('    <!-- more -->\n\n缩进代码后的文字')).toContain(
+    '缩进代码后的文字'
+  )
+})
+
+test('body links open new windows while footnote navigation stays in the reader', () => {
+  const html = renderNoteMarkdown(
+    '[外部](https://example.com) [相对](/notes) [邮件](mailto:test@example.com) [锚点](#section)'
+  )
+  expect(html.match(/target="_blank" rel="noopener noreferrer"/g)).toHaveLength(
+    3
+  )
+  expect(html).toContain('<a href="#section">锚点</a>')
+  expect(render('/footnotes-demo.md')).not.toMatch(
+    /href="#fn[^"]*"[^>]*target=/
+  )
+})
+
+test('all code blocks number each line and preserve multiline highlighting and source text', async ({
+  page,
+}) => {
+  const source = '/* 第一行\n第二行 */\n\nconst text = "<script>";'
+  const html = renderNoteMarkdown(
+    '```js\n' + source + '\n```\n\n    缩进代码\n    第二行'
+  )
+  await page.setContent(html)
+  const blocks = page.locator('pre > code')
+  await expect(blocks).toHaveCount(2)
+  await expect(blocks.nth(0).locator(':scope > .note-code-line')).toHaveCount(4)
+  await expect(blocks.nth(1).locator(':scope > .note-code-line')).toHaveCount(2)
+  expect(await blocks.nth(0).textContent()).toBe(source)
+  await expect(
+    blocks.nth(0).locator('[data-line="2"] .hljs-comment')
+  ).toHaveText('第二行 */')
+  await expect(page.locator('script')).toHaveCount(0)
+})
+
+test('literature fixtures contain complete public-domain works and removed modules stay absent', () => {
+  expect(render('/sc-demo.md')).toContain('豫章故郡')
+  expect(render('/sc-demo.md')).toContain('落霞与孤鹜齐飞')
+  expect(render('/sc-demo.md')).toContain('槛外长江空自流')
+  expect(render('/tc-demo.md')).toContain('不知東方之既白')
+  expect(render('/jp-demo.md')).toContain('下人の行方は、誰も知らない')
+  expect(render('/en-demo.md')).toContain('They are the magi')
+  for (const suffix of [
+    '/gallery-post.md',
+    '/link-post.md',
+    '/中文測試.md',
+    '/日本語テスト.md',
+  ])
+    expect(
+      manifest.notes.some((note) => note.sourcePath.endsWith(suffix))
+    ).toBe(false)
 })

@@ -256,6 +256,80 @@ try {
       400
     )
   })
+  await test('hidden notes stay manageable but disappear from every public page and direct reads, and can be restored', async () => {
+    const id = randomUUID()
+    const created = await write(id)
+    const version = created.headers.get('X-Note-Version')
+    const hiddenSource = document.replace(
+      'category: technology',
+      'category: technology\nhidden: true'
+    )
+    const saved = await mutation('PATCH', id, version, hiddenSource)
+    assert.equal(saved.status, 200)
+    const hiddenVersion = saved.headers.get('X-Note-Version')
+    assert.notEqual(hiddenVersion, version)
+    assert.equal((await call(`/notes/${id}`)).status, 404)
+    const adminRead = await call(`/admin/notes/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    assert.equal(await adminRead.text(), hiddenSource)
+    assert.equal(adminRead.headers.get('X-Note-Version'), hiddenVersion)
+    for (const admin of [false, true]) {
+      const entries = []
+      let cursor = null
+      do {
+        const page = await (
+          await call(
+            `${admin ? '/admin' : ''}/notes${
+              cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''
+            }`,
+            admin
+              ? { headers: { Authorization: `Bearer ${token}` } }
+              : undefined
+          )
+        ).json()
+        entries.push(...page.notes)
+        cursor = page.nextCursor
+      } while (cursor)
+      const note = entries.find((note) => note.id === id)
+      if (admin) {
+        assert.equal(note.hidden, true)
+        assert.equal(note.etag, hiddenVersion)
+      } else assert.equal(note, undefined)
+    }
+    assert.equal((await mutation('PATCH', id, version, document)).status, 412)
+    assert.equal((await call(`/notes/${id}`)).status, 404)
+    assert.equal(
+      (
+        await mutation(
+          'PATCH',
+          id,
+          hiddenVersion,
+          hiddenSource.replace('hidden: true', 'hidden: false')
+        )
+      ).status,
+      200
+    )
+    assert.equal((await call(`/notes/${id}`)).status, 200)
+    const bucket = await mf.getR2Bucket('FLORATRIUM_BUCKET')
+    assert.equal(
+      (await bucket.head(`notes/${id}.md`)).customMetadata.hidden,
+      'false'
+    )
+    const hiddenId = randomUUID()
+    assert.equal((await write(hiddenId, hiddenSource)).status, 201)
+    assert.equal((await call(`/notes/${hiddenId}`)).status, 404)
+    for (const value of ['yes', '1', 'null', '[true]', '{value: true}'])
+      assert.equal(
+        (
+          await write(
+            randomUUID(),
+            hiddenSource.replace('hidden: true', `hidden: ${value}`)
+          )
+        ).status,
+        400
+      )
+  })
 } finally {
   await mf.dispose()
 }

@@ -4,11 +4,11 @@ date: "2026-11-01"
 category: test
 ---
 
-# Examples - mathematical typesetting
+# 数学公式排版示例
 
-## Example 1
+## 示例 1
 
-If the text between `$$` contains newlines it will rendered in display mode:
+如果两个 `$$` 之间的文本包含换行，公式将以独立块形式显示：
 
 ```
 $$
@@ -20,7 +20,7 @@ $$
 f(x) = \int_{-\infty}^\infty\hat f(\xi)\,e^{2 \pi i \xi x}\,d\xi
 $$
 
-## Example 2
+## 示例 2
 
 ```
 $$
@@ -32,14 +32,14 @@ $$
 \frac{1}{\Bigl(\sqrt{\phi \sqrt{5}}-\phi\Bigr) e^{\frac25 \pi}} = 1+\frac{e^{-2\pi}} {1+\frac{e^{-4\pi}} {1+\frac{e^{-6\pi}} {1+\frac{e^{-8\pi}} {1+\cdots} } } }
 $$
 
-## Example 3
+## 示例 3
 
 ```
 $$
-1 +  \frac{q^2}{(1-q)}+\frac{q^6}{(1-q)(1-q^2)}+\cdots = \prod_{j=0}^{\infty}\frac{1}{(1-q^{5j+2})(1-q^{5j+3})}, \quad\quad \text{for }\lvert q\rvert<1.
+1 +  \frac{q^2}{(1-q)}+\frac{q^6}{(1-q)(1-q^2)}+\cdots = \prod_{j=0}^{\infty}\frac{1}{(1-q^{5j+2})(1-q^{5j+3})}, \quad\quad \text{当 }\lvert q\rvert<1.
 $$
 ```
 
 $$
-1 +  \frac{q^2}{(1-q)}+\frac{q^6}{(1-q)(1-q^2)}+\cdots = \prod_{j=0}^{\infty}\frac{1}{(1-q^{5j+2})(1-q^{5j+3})}, \quad\quad \text{for }\lvert q\rvert<1.
+1 +  \frac{q^2}{(1-q)}+\frac{q^6}{(1-q)(1-q^2)}+\cdots = \prod_{j=0}^{\infty}\frac{1}{(1-q^{5j+2})(1-q^{5j+3})}, \quad\quad \text{当 }\lvert q\rvert<1.
 $$

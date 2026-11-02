@@ -4,27 +4,15 @@ date: "2026-11-01"
 category: test
 ---
 
----
-__Advertisement :)__
-
-- __[pica](https://nodeca.github.io/pica/demo/)__ - high quality and fast image
-  resize in browser.
-- __[babelfish](https://github.com/nodeca/babelfish/)__ - developer friendly
-  i18n with plurals support and easy syntax.
-
-You will like those projects!
-
----
-
-# h1 Heading 8-)
-## h2 Heading
-### h3 Heading
-#### h4 Heading
-##### h5 Heading
-###### h6 Heading
+# 一级标题 8-)
+## 二级标题
+### 三级标题
+#### 四级标题
+##### 五级标题
+###### 六级标题
 
 
-## Horizontal Rules
+## 分割线
 
 ___
 
@@ -33,87 +21,87 @@ ___
 ***
 
 
-## Typographic replacements
+## 排版字符替换
 
-Enable typographer option to see result.
+启用 typographer 选项后，可以查看排版字符自动替换的效果。
 
 (c) (C) (r) (R) (tm) (TM) (p) (P) +-
 
-test.. test... test..... test?..... test!....
+测试.. 测试... 测试..... 测试?..... 测试!....
 
 !!!!!! ???? ,,  -- ---
 
-"Smartypants, double quotes" and 'single quotes'
+"智能排版的双引号"与'单引号'
 
 
-## Emphasis
+## 强调
 
-**This is bold text**
+**这是加粗文字**
 
-__This is bold text__
+__这是加粗文字__
 
-*This is italic text*
+*这是斜体文字*
 
-_This is italic text_
+_这是斜体文字_
 
-~~Strikethrough~~
-
-
-## Blockquotes
+~~删除线~~
 
 
-> Blockquotes can also be nested...
->> ...by using additional greater-than signs right next to each other...
-> > > ...or with spaces between arrows.
+## 引用块
 
 
-## Lists
-
-Unordered
-
-+ Create a list by starting a line with `+`, `-`, or `*`
-+ Sub-lists are made by indenting 2 spaces:
-  - Marker character change forces new list start:
-    * Ac tristique libero volutpat at
-    + Facilisis in pretium nisl aliquet
-    - Nulla volutpat aliquam velit
-+ Very easy!
-
-Ordered
-
-1. Lorem ipsum dolor sit amet
-2. Consectetur adipiscing elit
-3. Integer molestie lorem at massa
+> 引用块也可以嵌套……
+>> ……只需连续添加大于号……
+> > > ……也可以在大于号之间加入空格。
 
 
-1. You can use sequential numbers...
-1. ...or keep all the numbers as `1.`
+## 列表
 
-Start numbering with offset:
+无序列表
 
-57. foo
-1. bar
++ 在行首使用 `+`、`-` 或 `*` 创建列表
++ 缩进两个空格即可创建子列表：
+  - 更换标记符号会开始一个新列表：
+    * 第一个子列表项目
+    + 第二个子列表项目
+    - 第三个子列表项目
++ 使用方法很简单！
 
+有序列表
 
-## Code
-
-Inline `code`
-
-Indented code
-
-    // Some comments
-    line 1 of code
-    line 2 of code
-    line 3 of code
+1. 第一个有序列表项目
+2. 第二个有序列表项目
+3. 第三个有序列表项目
 
 
-Block code "fences"
+1. 可以使用连续编号……
+1. ……也可以让所有项目都使用 `1.`
+
+从指定编号开始：
+
+57. 项目甲
+1. 项目乙
+
+
+## 代码
+
+行内 `代码`
+
+缩进代码块
+
+    // 示例注释
+    代码第一行
+    代码第二行
+    代码第三行
+
+
+围栏代码块
 
 ```
-Sample text here...
+这里是示例文字……
 ```
 
-Syntax highlighting
+语法高亮
 
 ``` js
 var foo = function (bar) {
@@ -123,62 +111,61 @@ var foo = function (bar) {
 console.log(foo(5));
 ```
 
-## Tables
+## 表格
 
-| Option | Description |
+| 选项 | 说明 |
 | ------ | ----------- |
-| data   | path to data files to supply the data that will be passed into templates. |
-| engine | engine to be used for processing templates. Handlebars is the default. |
-| ext    | extension to be used for dest files. |
+| data   | 数据文件路径，用于提供传入模板的数据。 |
+| engine | 用于处理模板的引擎，默认使用 Handlebars。 |
+| ext    | 目标文件使用的扩展名。 |
 
-Right aligned columns
+右对齐的列
 
-| Option | Description |
+| 选项 | 说明 |
 | ------:| -----------:|
-| data   | path to data files to supply the data that will be passed into templates. |
-| engine | engine to be used for processing templates. Handlebars is the default. |
-| ext    | extension to be used for dest files. |
+| data   | 数据文件路径，用于提供传入模板的数据。 |
+| engine | 用于处理模板的引擎，默认使用 Handlebars。 |
+| ext    | 目标文件使用的扩展名。 |
 
 
-## Links
+## 链接
 
-[link text](http://dev.nodeca.com)
+[链接文字](http://dev.nodeca.com)
 
-[link with title](http://nodeca.github.io/pica/demo/ "title text!")
+[带标题的链接](http://nodeca.github.io/pica/demo/ "链接标题！")
 
-Autoconverted link https://github.com/nodeca/pica (enable linkify to see)
-
-
-## Images
-
-![Minion](https://assets.anuluca.com/note-assets/book-demo/minion.png)
-![Stormtroopocat](https://assets.anuluca.com/note-assets/book-demo/stormtroopocat.jpg "The Stormtroopocat")
-
-Like links, Images also have a footnote style syntax
-
-![Alt text][id]
-
-With a reference later in the document defining the URL location:
-
-[id]: https://assets.anuluca.com/note-assets/book-demo/dojocat.jpg  "The Dojocat"
+自动识别的链接 https://github.com/nodeca/pica （启用 linkify 后可查看效果）
 
 
-## Plugins
+## 图片
 
-The killer feature of `markdown-it` is very effective support of
-[syntax plugins](https://www.npmjs.org/browse/keyword/markdown-it-plugin).
+![小黄人猫](https://assets.anuluca.com/Island/notes/markdown-it-demo/minion.png)
+![冲锋队猫](https://assets.anuluca.com/Island/notes/markdown-it-demo/stormtroopocat.jpg "冲锋队猫")
+
+与链接一样，图片也支持引用式语法
+
+![图片替代文字][id]
+
+在文档后方定义引用对应的图片地址：
+
+[id]: https://assets.anuluca.com/Island/notes/markdown-it-demo/dojocat.jpg  "道场猫"
 
 
-### [Emojies](https://github.com/markdown-it/markdown-it-emoji)
+## 插件
 
-> Classic markup: :wink: :crush: :cry: :tear: :laughing: :yum:
+`markdown-it` 的一个主要特点是高效支持[语法插件](https://www.npmjs.org/browse/keyword/markdown-it-plugin)。
+
+
+### [表情符号](https://github.com/markdown-it/markdown-it-emoji)
+
+> 常规标记： :wink: :crush: :cry: :tear: :laughing: :yum:
 >
-> Shortcuts (emoticons): :-) :-( 8-) ;)
+> 快捷表情： :-) :-( 8-) ;)
 
-see [how to change output](https://github.com/markdown-it/markdown-it-emoji#change-output) with twemoji.
+参阅[如何更改输出](https://github.com/markdown-it/markdown-it-emoji#change-output)，使用 twemoji 替换表情输出。
 
 
-### [Subscript](https://github.com/markdown-it/markdown-it-sub) / [Superscript](https://github.com/markdown-it/markdown-it-sup)
+### [下标](https://github.com/markdown-it/markdown-it-sub) / [上标](https://github.com/markdown-it/markdown-it-sup)
 
 - 19^th^
 - H~2~O
@@ -186,66 +173,66 @@ see [how to change output](https://github.com/markdown-it/markdown-it-emoji#chan
 
 ### [\<ins>](https://github.com/markdown-it/markdown-it-ins)
 
-++Inserted text++
+++插入的文字++
 
 
 ### [\<mark>](https://github.com/markdown-it/markdown-it-mark)
 
-==Marked text==
+==标记的文字==
 
 
-### [Footnotes](https://github.com/markdown-it/markdown-it-footnote)
+### [脚注](https://github.com/markdown-it/markdown-it-footnote)
 
-Footnote 1 link[^first].
+脚注一链接[^first].
 
-Footnote 2 link[^second].
+脚注二链接[^second].
 
-Inline footnote^[Text of inline footnote] definition.
+行内脚注^[行内脚注的内容]定义。
 
-Duplicated footnote reference[^second].
+重复引用同一条脚注[^second].
 
-[^first]: Footnote **can have markup**
+[^first]: 脚注**可以包含格式标记**
 
-    and multiple paragraphs.
+    也可以包含多个段落。
 
-[^second]: Footnote text.
-
-
-### [Definition lists](https://github.com/markdown-it/markdown-it-deflist)
-
-Term 1
-
-:   Definition 1
-with lazy continuation.
-
-Term 2 with *inline markup*
-
-:   Definition 2
-
-        { some code, part of Definition 2 }
-
-    Third paragraph of definition 2.
-
-_Compact style:_
-
-Term 1
-  ~ Definition 1
-
-Term 2
-  ~ Definition 2a
-  ~ Definition 2b
+[^second]: 脚注内容。
 
 
-### [Abbreviations](https://github.com/markdown-it/markdown-it-abbr)
+### [定义列表](https://github.com/markdown-it/markdown-it-deflist)
 
-This is HTML abbreviation example.
+术语一
 
-It converts "HTML", but keep intact partial entries like "xxxHTMLyyy" and so on.
+:   定义一，
+下一行无需额外缩进。
 
-*[HTML]: Hyper Text Markup Language
+带有*行内格式*的术语二
 
-### [Custom containers](https://github.com/markdown-it/markdown-it-container)
+:   定义二
+
+        { 示例代码，属于定义二 }
+
+    定义二的第三个段落。
+
+_紧凑样式：_
+
+术语一
+  ~ 定义一
+
+术语二
+  ~ 定义二甲
+  ~ 定义二乙
+
+
+### [缩写](https://github.com/markdown-it/markdown-it-abbr)
+
+这是 HTML 缩写示例。
+
+独立的 "HTML" 会转换为缩写标签，而 "xxxHTMLyyy" 这类单词中的片段会保持原样。
+
+*[HTML]: 超文本标记语言
+
+### [自定义容器](https://github.com/markdown-it/markdown-it-container)
 
 ::: warning
-*here be dragons*
+*这里有需要注意的内容*
 :::

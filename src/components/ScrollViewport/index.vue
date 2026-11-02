@@ -3,6 +3,7 @@ import { computed, nextTick, onMounted, ref } from 'vue'
 import { useResizeObserver } from '@vueuse/core'
 
 import PageScrollProgress from '@/components/PageScrollProgress/index.vue'
+import { useFrameTask } from '@/composables/useFrameTask'
 import { useNestedSmoothScroll } from '@/composables/useNestedSmoothScroll'
 import { useScrollScanlines } from '@/composables/useScrollScanlines'
 
@@ -24,32 +25,45 @@ const progressStyle = computed(() =>
         left: 'auto',
         zIndex: props.progressZIndex,
       }
-    : undefined
+    : { top: `${progressTop.value}px`, bottom: `${progressBottom.value}px` }
 )
+const viewportRoot = ref<HTMLElement | null>(null)
 const scrollRoot = ref<HTMLElement | null>(null)
 const content = ref<HTMLElement | null>(null)
 useNestedSmoothScroll(() => scrollRoot.value)
 useScrollScanlines(() => (props.edgeScanlines ? scrollRoot.value : null))
 const canScrollUp = ref(false)
 const canScrollDown = ref(false)
-const measure = () => {
+const readGeometry = () => {
   const element = scrollRoot.value
   if (!element) return
   canScrollUp.value = element.scrollTop > 1
   canScrollDown.value =
     element.scrollTop + element.clientHeight < element.scrollHeight - 1
-  if (!props.edgeProgress) return
-  const bounds = element.getBoundingClientRect()
-  progressTop.value = bounds.top
-  progressBottom.value = Math.max(0, window.innerHeight - bounds.bottom)
+  const viewport = viewportRoot.value
+  if (!viewport) return
+  if (props.edgeProgress) {
+    const bounds = element.getBoundingClientRect()
+    progressTop.value = bounds.top
+    progressBottom.value = Math.max(0, window.innerHeight - bounds.bottom)
+  } else {
+    // 使用布局尺寸避开父级 CRT 缩放，只覆盖固定头尾之间的实际滚动区域。
+    progressTop.value = element.offsetTop
+    progressBottom.value = Math.max(
+      0,
+      viewport.clientHeight - element.offsetTop - element.offsetHeight
+    )
+  }
 }
-useResizeObserver([scrollRoot, content], measure)
+const { schedule: measure } = useFrameTask(readGeometry)
+useResizeObserver([scrollRoot, content, viewportRoot], measure)
 onMounted(() => nextTick(measure))
 defineExpose({ scrollRoot, measure })
 </script>
 
 <template>
   <div
+    ref="viewportRoot"
     class="scroll-viewport no-rem"
     :class="{
       'has-fixed-header': !!$slots.header,

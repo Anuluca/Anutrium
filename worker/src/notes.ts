@@ -131,6 +131,7 @@ export async function handleNotes(request: Request, env: Env) {
           title: metadata.title,
           time: metadata.time,
           type: metadata.type,
+          hidden: String(metadata.hidden === true),
           ...(metadata.image ? { image: metadata.image } : {}),
         },
       })
@@ -151,7 +152,11 @@ export async function handleNotes(request: Request, env: Env) {
     }
     if (id) {
       const object = await env.FLORATRIUM_BUCKET.get(`${PREFIX}${id}.md`)
-      if (!object || object.customMetadata?.deleted === 'true')
+      if (
+        !object ||
+        object.customMetadata?.deleted === 'true' ||
+        (!admin && object.customMetadata?.hidden === 'true')
+      )
         return respond({ error: 'not_found' }, 404)
       return new Response(object.body, {
         headers: {
@@ -178,6 +183,7 @@ export async function handleNotes(request: Request, env: Env) {
       const meta = object.customMetadata
       if (
         meta?.deleted === 'true' ||
+        (!admin && meta?.hidden === 'true') ||
         !object.key.endsWith('.md') ||
         !ID.test(noteId) ||
         !meta?.title ||
@@ -192,6 +198,7 @@ export async function handleNotes(request: Request, env: Env) {
           title: meta.title,
           time: meta.time,
           type: meta.type,
+          ...(meta.hidden === 'true' ? { hidden: true } : {}),
           ...(meta.image ? { image: meta.image } : {}),
           path: `/atrium/notes?note=${noteId}`,
         },

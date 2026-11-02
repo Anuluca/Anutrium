@@ -29,6 +29,8 @@ const mountSection = async (
       if (offscreen)
         document.querySelector<HTMLElement>('#fixture')!.style.paddingTop =
           '1800px'
+      // 测试场景分别挂载独立根组件，不作为生产组件文件拆分。
+      // eslint-disable-next-line vue/one-component-per-file
       const app = createApp({
         setup() {
           provide(sectionFadeOnlyKey, ref(fadeOnly))
@@ -81,6 +83,7 @@ test('bilingual heading fades without moving its English subtitle', async ({
     const { default: i18n } = await import('/src/locales/index.ts')
     i18n.global.locale.value = 'zhCn'
     const bilingual = ref(false)
+    // eslint-disable-next-line vue/one-component-per-file
     createApp({
       render: () =>
         h(Sections, {

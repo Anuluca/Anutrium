@@ -1,5 +1,7 @@
 import type MarkdownIt from 'markdown-it'
 
+import { renderNoteCodeLines, wrapNoteCodeFrame } from './noteCodeLines'
+
 /** 仅解释测试集中的 Hexo 标签，不执行模板代码，也不接受任意嵌入地址。 */
 export function noteHexoTags(markdown: MarkdownIt) {
   const escape = markdown.utils.escapeHtml
@@ -14,8 +16,28 @@ export function noteHexoTags(markdown: MarkdownIt) {
   const citation = (args: string) => {
     const match = args.match(/^(.*?)\s+(https?:\/\/\S+)(?:\s+([\s\S]+))?$/)
     if (match)
-      return `${escape(match[1])} ${safeLink(match[2], match[3] || match[2])}`
-    return escape(args)
+      return `<strong>${markdown.renderInline(
+        match[1]
+      )}</strong> <cite>${safeLink(match[2], match[3] || match[2])}</cite>`
+    const book = args.match(/^(.*?)[,，]\s*([\s\S]+)$/)
+    if (book)
+      return `<strong>${markdown.renderInline(
+        book[1]
+      )}</strong>，<cite>${markdown.renderInline(book[2])}</cite>`
+    return markdown.renderInline(args)
+  }
+  const codeCaption = (caption: string) => {
+    const parts = caption.match(/^(.*?)\s+(https?:\/\/\S+)(?:\s+([\s\S]+))?$/)
+    return `<figcaption><span class="note-code-caption-title">${escape(
+      parts ? parts[1] : caption
+    )}</span>${
+      parts
+        ? `<span class="note-code-caption-link">${safeLink(
+            parts[2],
+            parts[3] || parts[2]
+          )}</span>`
+        : ''
+    }</figcaption>`
   }
   const iframe = (
     source: string,
@@ -23,7 +45,7 @@ export function noteHexoTags(markdown: MarkdownIt) {
     referrerPolicy = 'no-referrer'
   ) =>
     `<div class="note-embed${
-      title === 'YouTube' ? ' native-cursor' : ''
+      title === 'YouTube' || title === 'Bilibili' ? ' native-cursor' : ''
     }"><iframe src="${escape(source)}" title="${escape(
       title
     )}" loading="lazy" sandbox="allow-scripts allow-same-origin allow-presentation" referrerpolicy="${referrerPolicy}" allowfullscreen></iframe></div>\n`
@@ -37,7 +59,7 @@ export function noteHexoTags(markdown: MarkdownIt) {
         state.eMarks[start]
       )
       const match = line.match(
-        /^{%\s*(blockquote|pullquote|codeblock|youtube|vimeo|gist|jsfiddle)\s*(.*?)\s*%}\s*$/
+        /^{%\s*(blockquote|pullquote|codeblock|youtube|vimeo|bilibili|gist|jsfiddle)\s*(.*?)\s*%}\s*$/
       )
       if (!match || state.sCount[start] - state.blkIndent >= 4) return false
       const [, type, args] = match
@@ -89,30 +111,27 @@ export function noteHexoTags(markdown: MarkdownIt) {
       const language = args.match(/(?:^|\s)lang:([\w+-]+)/)?.[1] || ''
       const marked = args.match(/(?:^|\s)mark:([\d,-]+)/)?.[1] || ''
       const caption = args.replace(/(?:^|\s)(?:lang|mark):\S+/g, '').trim()
-      const lines = token.content.replace(/\n$/, '').split('\n')
-      const ranges = marked
-        .split(',')
-        .map((range) => range.split('-').map(Number))
-      const content = lines
-        .map((line, lineIndex) => {
-          const isMarked = ranges.some(
-            ([first, last = first]) =>
-              lineIndex + 1 >= first && lineIndex + 1 <= last
-          )
-          const highlighted =
-            options.highlight?.(line, language, '') || escape(line)
-          return `<span class="note-code-line${
-            isMarked ? ' is-marked' : ''
-          }" data-line="${lineIndex + 1}">${highlighted || ' '}</span>`
-        })
-        .join('')
+      const content = renderNoteCodeLines(
+        options.highlight?.(token.content, language, '') ||
+          escape(token.content),
+        marked
+      )
       return `<figure class="note-code-block">${
-        caption ? `<figcaption>${citation(caption)}</figcaption>` : ''
-      }<pre><code class="language-${escape(
-        language
-      )}">${content}</code></pre></figure>\n`
+        caption ? codeCaption(caption) : ''
+      }${wrapNoteCodeFrame(
+        `<pre><code class="language-${escape(
+          language
+        )}">${content}</code></pre>`,
+        token.content
+      )}</figure>\n`
     }
     const id = args.split(/\s+/)[0]
+    if (type === 'bilibili' && /^BV[1-9A-HJ-NP-Za-km-z]{10}$/.test(id))
+      return iframe(
+        `https://player.bilibili.com/player.html?bvid=${id}&autoplay=0`,
+        'Bilibili',
+        'strict-origin-when-cross-origin'
+      )
     if (type === 'youtube' && /^[\w-]{11}$/.test(id))
       // YouTube 用 Referer 验证嵌入来源；隐藏来源会触发播放器错误 153。
       return iframe(

@@ -4,27 +4,27 @@ date: "2026-11-01"
 category: test
 ---
 
-# Footnotes
+# 脚注
 
-You can hover on link to peek the content of footnotes.
+将指针悬停在脚注链接上，可以预览脚注内容。
 
-Please use markdown-it renderer, and install [markdown-it-footnote](https://github.com/markdown-it/markdown-it-footnote) plugin.
+请使用 markdown-it 渲染器，并安装 [markdown-it-footnote](https://github.com/markdown-it/markdown-it-footnote) 插件。
 
-## Example
+## 示例
 
-Footnote 1 link[^first].
+脚注一链接[^first].
 
-Footnote 2 link[^second].
+脚注二链接[^second].
 
-Inline footnote^[Text of inline footnote] definition.
+行内脚注^[行内脚注的内容]定义。
 
-Duplicated footnote reference[^second].
+重复引用同一条脚注[^second].
 
-[^first]: Footnote **can have markup**
+[^first]: 脚注**可以包含格式标记**
 
-    and multiple paragraphs.
+    也可以包含多个段落。
 
-[^second]: Footnote text.
+[^second]: 脚注内容。
 
 ## ...
 
