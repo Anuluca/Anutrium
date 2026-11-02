@@ -32,8 +32,8 @@
       <DiamondCloseBtn :title="closeTitle" @click="requestClose" />
     </div>
 
-    <div class="corner corner-bl" />
-    <div class="corner corner-br" />
+    <div class="corner corner-tl" aria-hidden="true" />
+    <div class="corner corner-br" aria-hidden="true" />
 
     <div class="modal-scanlines" />
 
@@ -248,6 +248,8 @@ const handleClosed = () => {
 </script>
 
 <style lang="less" scoped>
+@import '../../assets/style/modalFrame.less';
+
 .modal-scanlines {
   position: absolute;
   inset: 0;
@@ -263,29 +265,13 @@ const handleClosed = () => {
 }
 
 .corner {
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  border: 1px solid
-    color-mix(
-      in srgb,
-      var(--modal-accent, var(--page-theme-color, #e23456)) 45%,
-      transparent
-    );
-  z-index: 5;
-  pointer-events: none;
+  .modal-frame-corner();
 
-  &-bl {
-    bottom: 10px;
-    left: 10px;
-    border-right: 0;
-    border-top: 0;
+  &-tl {
+    .modal-frame-corner-top-left();
   }
   &-br {
-    bottom: 10px;
-    right: 10px;
-    border-left: 0;
-    border-top: 0;
+    .modal-frame-corner-bottom-right();
   }
 }
 </style>
@@ -324,6 +310,12 @@ const handleClosed = () => {
 </style>
 
 <style lang="less">
+@import '../../assets/style/modalFrame.less';
+
+.modal-wrapper-dialog.no-rem {
+  .modal-frame-variables();
+}
+
 .modal-wrapper-dialog {
   --modal-accent: var(--modal-theme-color, var(--page-theme-color, #e23456));
 
@@ -331,7 +323,7 @@ const handleClosed = () => {
   z-index: 1;
   background: #050505 !important;
   color: var(--text-color);
-  border: 1px solid color-mix(in srgb, var(--modal-accent) 35%, transparent) !important;
+  border: var(--modal-border-width) solid var(--modal-border-color) !important;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.85) !important;
 
   margin: 0 0 60px !important;

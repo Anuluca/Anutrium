@@ -1,6 +1,7 @@
 import { expect, type Page, test } from '@playwright/test'
 
 import { templeModuleAtPath } from '../src/config/templeNavigation'
+import { expectModalFrame } from './helpers/modalFrame'
 import {
   expectPagePositionToMatch,
   readPagePosition,
@@ -536,6 +537,7 @@ test('footer modal preserves the page position while open and after closing', as
   )
   expect(modalTheme.dialogAccent).toBe(pageAccent)
   expect(modalTheme.closeAccent).toBe(pageAccent)
+  await expectModalFrame(modal)
 
   expectPagePositionToMatch(
     await readPagePosition(page, '.about-page'),

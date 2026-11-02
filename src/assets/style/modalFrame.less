@@ -1,0 +1,40 @@
+.modal-frame-variables() {
+  --modal-border-width: 3px;
+  --modal-corner-width: 8px;
+  --modal-corner-size: 24px;
+  --modal-border-color: color-mix(
+    in srgb,
+    var(--modal-accent) 35%,
+    transparent
+  );
+  --modal-corner-color: color-mix(
+    in srgb,
+    var(--modal-accent) 45%,
+    transparent
+  );
+}
+
+.modal-frame-corner() {
+  position: absolute;
+  box-sizing: border-box;
+  width: var(--modal-corner-size);
+  height: var(--modal-corner-size);
+  border: var(--modal-corner-width) solid var(--modal-corner-color);
+  z-index: 5;
+  pointer-events: none;
+}
+
+// 与外边框重合，并将增粗部分向弹窗外侧延伸。
+.modal-frame-corner-top-left() {
+  top: calc(0px - var(--modal-corner-width));
+  left: calc(0px - var(--modal-corner-width));
+  border-right: 0;
+  border-bottom: 0;
+}
+
+.modal-frame-corner-bottom-right() {
+  bottom: calc(0px - var(--modal-corner-width));
+  right: calc(0px - var(--modal-corner-width));
+  border-left: 0;
+  border-top: 0;
+}

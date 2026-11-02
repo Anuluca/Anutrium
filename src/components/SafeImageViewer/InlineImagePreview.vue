@@ -44,7 +44,9 @@
             role="status"
             aria-busy="true"
             :aria-label="locale === 'en' ? 'Loading media' : '媒体加载中'"
-          />
+          >
+            <LoadingLogo />
+          </span>
           <video
             v-if="activeIsVideo"
             :key="activeUrl"
@@ -147,6 +149,7 @@ import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useResizeObserver } from '@vueuse/core'
 
+import LoadingLogo from '@/components/LoadingLogo/index.vue'
 import OverlayBackgroundTitle from '@/components/OverlayBackgroundTitle/index.vue'
 import { useDecorationActivity } from '@/composables/useDecorationActivity'
 import { getCardThumbnailUrl } from '@/utils/imageVariant'
@@ -329,7 +332,6 @@ onBeforeUnmount(() => {
 
 <style lang="less">
 @import '@/assets/style/imageViewerDesktop.less';
-@import '@/assets/style/mediaLoadingPlaceholder.less';
 
 .inline-image-preview {
   --viewer-accent: var(--page-theme-color, #e23456);
@@ -456,9 +458,11 @@ onBeforeUnmount(() => {
 }
 
 .inline-image-preview__placeholder {
-  .media-loading-placeholder();
   position: absolute;
   inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
 }
 
 .inline-image-preview__info {

@@ -36,7 +36,9 @@
       role="status"
       aria-busy="true"
       :aria-label="locale === 'en' ? 'Loading image' : '图片加载中'"
-    />
+    >
+      <LoadingLogo />
+    </div>
     <div v-if="activeVideo" class="safe-image-viewer__video-stage">
       <video
         :key="activeVideo"
@@ -90,6 +92,7 @@ import { useI18n } from 'vue-i18n'
 import { Download, Minus, Plus } from '@element-plus/icons-vue'
 import { ElIcon, ElImageViewer } from 'element-plus'
 
+import LoadingLogo from '@/components/LoadingLogo/index.vue'
 import OverlayBackgroundTitle from '@/components/OverlayBackgroundTitle/index.vue'
 import { useOverlayScrollLock } from '@/composables/useOverlayScrollLock'
 import { showErrorMessage, showSuccessMessage } from '@/utils/elementMessage'
@@ -462,7 +465,6 @@ useOverlayScrollLock('safe-image-viewer', () => !props.inline)
 </script>
 
 <style lang="less">
-@import '@/assets/style/mediaLoadingPlaceholder.less';
 .el-image-viewer__wrapper {
   .safe-image-viewer__background-title {
     z-index: 0;
@@ -591,23 +593,20 @@ useOverlayScrollLock('safe-image-viewer', () => !props.inline)
 }
 
 .safe-image-viewer__placeholder {
+  display: grid;
+  place-items: center;
   position: absolute;
   top: 50%;
   left: 50%;
   width: min(72vw, 960px);
   height: min(66vh, 640px);
   transform: translate(-50%, -50%);
-  .media-loading-placeholder();
+  pointer-events: none;
 }
 .el-image-viewer__wrapper:has(.safe-image-viewer__placeholder) {
   .el-image-viewer__img,
   .safe-image-viewer__corners {
     visibility: hidden;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .safe-image-viewer__placeholder {
-    animation: none;
   }
 }
 @media (max-width: 768px) {

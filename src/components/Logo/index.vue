@@ -1,5 +1,5 @@
 <template>
-  <div class="svg-container">
+  <div class="svg-container" :class="{ 'is-looping': loop }">
     <svg
       viewBox="0 0 200 250"
       xmlns="http://www.w3.org/2000/svg"
@@ -29,6 +29,7 @@
         fill="none"
         :class="['main-color', { 'draw-animation': active }, 'delay-1']"
         stroke-width="14"
+        :pathLength="loop ? 1 : undefined"
         stroke-linejoin="miter"
       />
       <polyline
@@ -36,6 +37,7 @@
         fill="none"
         :class="['main-color delay-1-6', { 'draw-animation': active }]"
         stroke-width="14"
+        :pathLength="loop ? 1 : undefined"
       />
 
       <rect
@@ -52,6 +54,7 @@
         fill="none"
         :class="['main-color', { 'draw-animation': active }, 'delay-1']"
         stroke-width="14"
+        :pathLength="loop ? 1 : undefined"
         stroke-linejoin="miter"
       />
     </svg>
@@ -70,6 +73,10 @@ const props = defineProps({
   active: {
     type: Boolean,
     default: true,
+  },
+  loop: {
+    type: Boolean,
+    default: false,
   },
 })
 
@@ -91,6 +98,30 @@ const maskId = computed(() => `mask-${props.id}`)
   stroke-dasharray: 600;
   stroke-dashoffset: 600;
   animation: draw 3s ease-out forwards;
+}
+
+.is-looping .draw-animation {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation-duration: 1.5s;
+  animation-iteration-count: infinite;
+  animation-fill-mode: both;
+}
+
+.is-looping .delay-1 {
+  animation-delay: 0.2s;
+}
+
+.is-looping .delay-1-6 {
+  animation-delay: 0.4s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .is-looping .draw-animation {
+    animation: none;
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
+  }
 }
 
 .delay-1-6 {

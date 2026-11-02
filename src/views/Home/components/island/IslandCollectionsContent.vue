@@ -729,13 +729,11 @@ onBeforeUnmount(() => {
   height: 76dvh;
   max-height: calc(100dvh - 140px) !important;
   padding: 0 !important;
-  border: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
   .modal-scroll-region {
     overflow: visible;
   }
-  .corner,
   .modal-scanlines,
   .modal-scroll-progress {
     display: none;
@@ -745,12 +743,6 @@ onBeforeUnmount(() => {
     height: 100%;
     min-height: 0;
     flex: 1;
-  }
-  .media-gallery {
-    grid-template-columns: repeat(
-      var(--media-gallery-columns, 3),
-      minmax(0, 1fr)
-    );
   }
 }
 
@@ -765,7 +757,7 @@ onBeforeUnmount(() => {
   }
   .media-gallery--preview .media-gallery__toolbar {
     flex: none;
-    padding-bottom: 12px;
+    padding-bottom: 6px;
   }
   .inline-image-preview {
     flex: 1;

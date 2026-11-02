@@ -28,9 +28,14 @@
             :aria-label="locale === 'en' ? 'Refresh notes' : '刷新笔记'"
             :title="locale === 'en' ? 'Refresh notes' : '刷新笔记'"
             :disabled="notesLoading"
+            :aria-busy="notesLoading"
             @click="refreshNotes"
           >
-            <el-icon :class="{ 'is-loading': notesLoading }" aria-hidden="true">
+            <LoadingLogo
+              v-if="notesLoading"
+              class="study-note-refresh__loading"
+            />
+            <el-icon v-else aria-hidden="true">
               <Refresh />
             </el-icon>
           </button>
@@ -42,9 +47,7 @@
         role="status"
         :aria-label="locale === 'en' ? 'Loading notes' : '正在加载笔记'"
       >
-        <el-icon :size="28" class="is-loading" aria-hidden="true">
-          <Loading />
-        </el-icon>
+        <LoadingLogo />
       </div>
       <p v-if="notesError" class="study-note-service" role="status">
         {{
@@ -229,11 +232,12 @@ import {
 } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
-import { Loading, Refresh } from '@element-plus/icons-vue'
+import { Refresh } from '@element-plus/icons-vue'
 
 import FilterRail, {
   type FilterRailItem,
 } from '@/components/FilterRail/index.vue'
+import LoadingLogo from '@/components/LoadingLogo/index.vue'
 import ModalWrapper from '@/components/ModalWrapper/index.vue'
 import ScrollViewport from '@/components/ScrollViewport/index.vue'
 import { useFrameTask } from '@/composables/useFrameTask'
@@ -562,6 +566,10 @@ watch(activeCategory, () => setPage(1), { flush: 'post' })
   }
 }
 
+.study-note-refresh__loading.no-rem {
+  --loading-logo-height: 18px;
+}
+
 .island-notes-content {
   display: flex;
   flex-direction: column;
@@ -761,6 +769,7 @@ watch(activeCategory, () => setPage(1), { flush: 'post' })
     margin-left: auto;
     color: var(--text-muted);
     .note-meta-typography();
+    .note-date-typography();
     opacity: 0.5;
     transition: color 0.3s ease;
     white-space: nowrap;
@@ -781,7 +790,7 @@ watch(activeCategory, () => setPage(1), { flush: 'post' })
     font-size: 30px;
     .note-title-typography();
     line-height: 1.15;
-    text-transform: uppercase;
+    text-transform: none;
     transform-origin: left center;
     transition: color 0.3s ease, transform 0.36s cubic-bezier(0.22, 1, 0.36, 1);
   }

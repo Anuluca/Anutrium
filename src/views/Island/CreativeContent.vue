@@ -64,7 +64,7 @@
                   v-else
                   :key="photography.page"
                   :items="photography.items"
-                  :columns="navigation.expanded ? 4 : 3"
+                  :columns="navigation.expanded ? { desktop: 4 } : undefined"
                   :get-media-label="
                     () => (locale === 'en' ? 'Photography' : '摄影')
                   "
@@ -159,7 +159,7 @@
                   v-else
                   :key="illustration.page"
                   :items="illustrationItems"
-                  :columns="navigation.expanded ? 4 : 3"
+                  :columns="navigation.expanded ? { desktop: 4 } : undefined"
                   :get-media-label="
                     () => (locale === 'en' ? 'Illustration' : '绘画')
                   "

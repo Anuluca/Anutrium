@@ -159,7 +159,7 @@ export function useNoteNavigation(
     // 关闭窗口会取消所有动画；立即接管拒绝，避免淡出期间出现未处理的取消异常。
     void movement.catch(() => {})
     const fadeOut = reader.animate([{ opacity: 1 }, { opacity: 0 }], {
-      duration: reducedMotion ? 0 : 250,
+      duration: reducedMotion ? 0 : 150,
       easing: 'ease-out',
       fill: 'forwards',
     })
@@ -176,8 +176,7 @@ export function useNoteNavigation(
       await ready
       if (revision !== noteSwitchRevision || !noteVisible.value) return
       const fadeIn = reader.animate([{ opacity: 0 }, { opacity: 1 }], {
-        duration: reducedMotion ? 0 : 450,
-        delay: reducedMotion ? 0 : 100,
+        duration: reducedMotion ? 0 : 250,
         easing: 'ease-out',
         fill: 'both',
       })

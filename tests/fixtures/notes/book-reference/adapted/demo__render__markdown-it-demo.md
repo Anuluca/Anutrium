@@ -133,8 +133,8 @@ console.log(foo(5));
 
 ## 图片
 
-![小黄人猫](https://assets.anuluca.com/Island/notes/markdown-it-demo/minion.png)
-![冲锋队猫](https://assets.anuluca.com/Island/notes/markdown-it-demo/stormtroopocat.jpg "冲锋队猫")
+![小黄人猫](https://assets.anuluca.com/Island/notes/other/minion.png)
+![冲锋队猫](https://assets.anuluca.com/Island/notes/other/stormtroopocat.jpg "冲锋队猫")
 
 与链接一样，图片也支持引用式语法
 
@@ -142,7 +142,7 @@ console.log(foo(5));
 
 在文档后方定义引用对应的图片地址：
 
-[id]: https://assets.anuluca.com/Island/notes/markdown-it-demo/dojocat.jpg  "道场猫"
+[id]: https://assets.anuluca.com/Island/notes/other/dojocat.jpg  "道场猫"
 
 
 ## 插件

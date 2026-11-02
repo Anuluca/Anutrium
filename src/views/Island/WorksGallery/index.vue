@@ -9,6 +9,7 @@
     <main class="works-gallery">
       <MediaGallery
         v-if="work.photos.length"
+        :columns="{ desktop: 2 }"
         :entrance-step-ms="90"
         :items="work.photos"
         :get-media-label="getMediaLabel"
@@ -101,25 +102,6 @@ const showMediaInfo = (media: GalleryMedia) => Boolean(media.title)
       transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
     transition-delay: 0s;
     will-change: opacity, transform;
-  }
-
-  :deep(.media-gallery) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  :deep(.media-gallery__card::after) {
-    display: none !important;
-  }
-
-  :deep(.media-gallery__card:nth-of-type(odd)::after) {
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    display: block !important;
-    width: 1px;
-    content: '';
-    background: rgba(255, 255, 255, 0.05);
   }
 }
 

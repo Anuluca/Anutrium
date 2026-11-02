@@ -388,7 +388,7 @@ test('note modal keeps desktop 16:9 size and fills mobile height with space for 
     await expect(modal.locator('.note-reader [role="status"]')).toBeVisible()
     await expectLoadingCentered(
       page,
-      '.note-reader__loading .el-icon.is-loading',
+      '.note-reader__loading .loading-logo',
       '.note-detail-modal .modal-scroll-region'
     )
     const measure = () =>
@@ -460,17 +460,10 @@ test('note modal keeps desktop 16:9 size and fills mobile height with space for 
       { width: 320, height: 568 },
     ]) {
       await page.setViewportSize(viewport)
-      await expect
-        .poll(
-          async () => {
-            const size = await measure()
-            return viewport.width <= 768
-              ? Math.round(size.height)
-              : Number((size.width / size.height).toFixed(3))
-          },
-          { timeout: 15000 }
-        )
-        .toBe(viewport.width <= 768 ? viewport.height - 156 : 1.778)
+      // 桌面端缩放前后均为 16:9，须等待实际尺寸更新，不能只等宽高比。
+      await expect(async () => verifySize(await measure())).toPass({
+        timeout: 15000,
+      })
       const result = await measure()
       verifySize(result)
       if (viewport.width > 768) {
@@ -620,7 +613,7 @@ test('direct Notes access shares one first request and centers the image-list lo
     await expect(page.locator('.study-note-empty')).toHaveCount(0)
     await expectLoadingCentered(
       page,
-      '.study-note-loading .el-icon.is-loading',
+      '.study-note-loading .loading-logo',
       '.island-detail__viewport .scroll-viewport__scroll'
     )
     release()
@@ -956,7 +949,7 @@ test('manual refresh bypasses the cache, keeps the category and clamps paginatio
     expect(requests).toBe(1)
     await refresh.click()
     await expect(refresh).toBeDisabled()
-    await expect(refresh.locator('.is-loading')).toHaveCount(1)
+    await expect(refresh.locator('.loading-logo')).toHaveCount(1)
     await expect.poll(() => requests).toBe(2)
     await expect(page.getByText('NOTES已刷新', { exact: true })).toHaveCount(0)
     release()
@@ -1203,12 +1196,31 @@ test('note entrance wipes the enlarged title, reveals metadata, holds then moves
       move: move.duration(),
       body: (window as any).__noteBodyTween.vars.duration,
       bodyTotal: (window as any).__noteBodyTween.duration(),
+      titleFlashes: timeline
+        .getChildren(false, true, false)
+        .filter(
+          (tween: any) =>
+            tween.targets().includes(element.querySelector('h1')) &&
+            typeof tween.vars.opacity === 'number'
+        )
+        .map((tween: any) => ({
+          opacity: tween.vars.opacity,
+          time: tween.startTime(),
+        })),
     }
   })
   expect(timing.hold).toBeCloseTo(0.4, 5)
   expect(timing.move).toBe(1.6)
   expect(timing.body).toBe(0.8)
   expect(timing.bodyTotal).toBeLessThanOrEqual(1.21)
+  expect(
+    timing.titleFlashes.map((flash: { opacity: number }) => flash.opacity)
+  ).toEqual([1, 0, 1, 0])
+  expect(timing.titleFlashes[3].time - timing.titleFlashes[0].time).toBeCloseTo(
+    0.18,
+    5
+  )
+  expect(timing.titleFlashes[3].time).toBeLessThan(1.8)
   expect(await page.evaluate(() => (window as any).noteMetaFlashes)).toEqual([
     1, 0, 1, 0, 1,
   ])
@@ -1380,7 +1392,7 @@ test('semantic body entrance preserves Markdown nodes and leaves later blocks vi
   await expect(body.locator('[data-note-reveal]')).toHaveCount(0)
 })
 
-test('note title stays outside the body scroller and desktop wheels use nested Lenis', async ({
+test('note title compacts outside the body scroller and desktop wheels use nested Lenis', async ({
   page,
 }, info) => {
   const source =
@@ -1406,6 +1418,7 @@ test('note title stays outside the body scroller and desktop wheels use nested L
         width: box.width,
         height: box.height,
         font: getComputedStyle(title).fontSize,
+        gap: parseFloat(getComputedStyle(title).marginBottom),
         transform: getComputedStyle(title).transform,
         insideScroll: !!el.closest('.note-reader__body-scroll'),
       }
@@ -1413,10 +1426,66 @@ test('note title stays outside the body scroller and desktop wheels use nested L
   const before = await measureHeader()
   expect(before.insideScroll).toBe(false)
   expect(await scroll.evaluate((el) => el.clientHeight)).toBeGreaterThan(80)
+  const progress = reader.locator('.page-scroll-progress')
+  const progressBefore = (await progress.boundingBox())!
+  expect(
+    Math.abs(progressBefore.y - (before.top + before.height))
+  ).toBeLessThanOrEqual(1)
+  const assertFixedProgress = async () => {
+    const box = (await progress.boundingBox())!
+    expect(Math.abs(box.y - progressBefore.y)).toBeLessThanOrEqual(1)
+    expect(Math.abs(box.height - progressBefore.height)).toBeLessThanOrEqual(1)
+    const edge = await page.locator('.note-detail-modal').evaluate((el) => {
+      return (
+        el.getBoundingClientRect().right -
+        parseFloat(getComputedStyle(el).borderRightWidth)
+      )
+    })
+    expect(Math.abs(box.x + box.width - edge)).toBeLessThanOrEqual(1)
+    const bottom = await page.locator('.note-detail-modal').evaluate((el) => {
+      return (
+        el.getBoundingClientRect().bottom -
+        parseFloat(getComputedStyle(el).borderBottomWidth)
+      )
+    })
+    expect(Math.abs(box.y + box.height - bottom)).toBeLessThanOrEqual(1)
+  }
+  await assertFixedProgress()
+  expect(
+    await scroll.evaluate((el) => getComputedStyle(el).scrollbarWidth)
+  ).toBe('none')
+  await reader.evaluate((el) => {
+    const samples: { top: number; height: number }[] = []
+    ;(window as any).noteProgressBounds = samples
+    const start = performance.now()
+    const sample = () => {
+      const box = el
+        .querySelector('.page-scroll-progress')!
+        .getBoundingClientRect()
+      samples.push({ top: box.top, height: box.height })
+      if (performance.now() - start < 500) requestAnimationFrame(sample)
+    }
+    requestAnimationFrame(sample)
+  })
   await scroll.evaluate((el) => {
     el.scrollTop = 360
   })
-  expect(await measureHeader()).toEqual(before)
+  await expect(reader).toHaveClass(/is-header-compact/)
+  await expect
+    .poll(async () => (await measureHeader()).height)
+    .toBeLessThan(before.height)
+  const compact = await measureHeader()
+  expect(parseFloat(compact.font)).toBeLessThan(parseFloat(before.font))
+  expect(compact.gap).toBeLessThan(before.gap)
+  expect(compact.insideScroll).toBe(false)
+  await assertFixedProgress()
+  await expect
+    .poll(() =>
+      progress.evaluate((el) =>
+        parseFloat(el.style.getPropertyValue('--page-scroll-progress-scale'))
+      )
+    )
+    .toBeGreaterThan(0)
   await expect(reader.locator('.note-reader__scroll-header')).toHaveCount(0)
   await expect.poll(() => scroll.evaluate((el) => el.scrollTop)).toBe(360)
   expect(
@@ -1427,6 +1496,18 @@ test('note title stays outside the body scroller and desktop wheels use nested L
   await scroll.evaluate((el) => {
     el.scrollTop = 0
   })
+  await expect(reader).not.toHaveClass(/is-header-compact/)
+  await expect.poll(measureHeader).toEqual(before)
+  await assertFixedProgress()
+  const progressSamples = await page.evaluate(
+    () =>
+      (window as any).noteProgressBounds as { top: number; height: number }[]
+  )
+  expect(progressSamples.length).toBeGreaterThan(1)
+  for (const box of progressSamples) {
+    expect(Math.abs(box.top - progressBefore.y)).toBeLessThanOrEqual(1)
+    expect(Math.abs(box.height - progressBefore.height)).toBeLessThanOrEqual(1)
+  }
   await page.emulateMedia({ reducedMotion: 'no-preference' })
   const touch = await page.evaluate(
     () => matchMedia('(hover: none) and (pointer: coarse)').matches
@@ -1440,11 +1521,25 @@ test('note title stays outside the body scroller and desktop wheels use nested L
       passive: true,
     })
   })
+  await scroll.evaluate((el) => {
+    el.addEventListener(
+      'wheel',
+      (event) => {
+        ;(window as any).noteInputWheelDelta = event.deltaY
+      },
+      { once: true, passive: true }
+    )
+  })
   await scroll.hover()
   await page.mouse.wheel(0, 320)
+  // 手机驱动的设备像素输入与 WheelEvent 的 CSS 像素不同；按实际接收的输入检查交接。
+  const wheelDelta = await page.evaluate(() =>
+    Math.abs((window as any).noteInputWheelDelta)
+  )
+  expect(wheelDelta).toBeGreaterThan(0)
   await expect
     .poll(() => scroll.evaluate((el) => el.scrollTop))
-    .toBeGreaterThan(250)
+    .toBeGreaterThan(Math.min(250, wheelDelta * 0.75))
   if (!touch) {
     const samples = await page.evaluate(
       () => (window as any).noteWheelSamples as number[]
@@ -1453,7 +1548,10 @@ test('note title stays outside the body scroller and desktop wheels use nested L
       new Set(samples.map((value) => Math.round(value))).size
     ).toBeGreaterThan(3)
   }
-  expect(await measureHeader()).toEqual(before)
+  await expect(reader).toHaveClass(/is-header-compact/)
+  await expect
+    .poll(async () => (await measureHeader()).height)
+    .toBeLessThan(before.height)
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await expect(scroll).not.toHaveClass(/lenis/)
   await scroll.evaluate((el) => {
@@ -1464,6 +1562,7 @@ test('note title stays outside the body scroller and desktop wheels use nested L
     .poll(() => scroll.evaluate((el) => el.scrollTop))
     .toBeGreaterThan(1000)
   expect(await page.evaluate(() => window.scrollY)).toBe(0)
+  await assertFixedProgress()
   await page.screenshot({ path: info.outputPath('note-fixed-header.png') })
 })
 

@@ -3,7 +3,13 @@
     ref="readerElement"
     :data-note-enter="note && !loading ? 'pending' : undefined"
     class="note-reader no-rem native-cursor"
-    :class="{ 'is-loading': loading }"
+    :class="{ 'is-loading': loading, 'is-header-compact': headerCompact }"
+    @wheel.capture="headerScrollGate.wheel"
+    @touchstart.capture.passive="headerScrollGate.touchStart"
+    @touchmove.capture="headerScrollGate.touchMove"
+    @touchend.capture.passive="headerScrollGate.touchEnd"
+    @touchcancel.capture.passive="headerScrollGate.touchEnd"
+    @keydown.capture="headerScrollGate.keydown"
   >
     <div
       v-if="loading"
@@ -11,9 +17,7 @@
       role="status"
       :aria-label="locale === 'en' ? 'Loading note' : '正在加载笔记详情'"
     >
-      <el-icon :size="28" class="is-loading" aria-hidden="true">
-        <Loading />
-      </el-icon>
+      <LoadingLogo />
     </div>
     <div v-else-if="error" class="note-reader__error" role="alert">
       <p>{{ error }}</p>
@@ -22,18 +26,20 @@
       </button>
     </div>
     <template v-else-if="note">
-      <header class="note-reader__header">
-        <h1>{{ note.metadata.title }}</h1>
-        <div class="note-reader__meta">
-          <span class="note-reader__category">
-            [<span class="note-reader__category-text">{{
-              NOTE_CATEGORIES[note.metadata.type].label.en
-            }}</span
-            >]
-          </span>
-          <time :datetime="note.metadata.time">{{
-            note.metadata.time.replace(/-/g, '/')
-          }}</time>
+      <header ref="headerElement" class="note-reader__header">
+        <div class="note-reader__heading">
+          <h1>{{ note.metadata.title }}</h1>
+          <div class="note-reader__meta">
+            <span class="note-reader__category">
+              [<span class="note-reader__category-text">{{
+                NOTE_CATEGORIES[note.metadata.type].label.en
+              }}</span
+              >]
+            </span>
+            <time :datetime="note.metadata.time">{{
+              note.metadata.time.replace(/-/g, '/')
+            }}</time>
+          </div>
         </div>
       </header>
       <div class="note-reader__body-frame">
@@ -43,11 +49,12 @@
           data-lenis-prevent
           data-lenis-nested-scroll
           tabindex="0"
+          @scroll.passive="updateHeader.schedule"
         >
           <!-- 渲染器仅允许受控展示标签并校验链接协议，正文来自 Markdown 转换。 -->
           <!-- eslint-disable vue/no-v-html -->
           <div
-            class="note-markdown"
+            class="note-content"
             @click="handleContentClick"
             @pointerover="handleImageEnter"
             @pointerover.capture="handleNoteTooltipEnter"
@@ -58,16 +65,19 @@
             @pointerout="handleImageLeave"
             @pointercancel="imageHover.stop"
             @keydown="handleContentKeydown"
-            v-html="html"
-          />
+          >
+            <NoteMarkdown :body="note.body" />
+          </div>
           <!-- eslint-enable vue/no-v-html -->
         </div>
-        <PageScrollProgress
-          embedded
-          :scroll-target="bodyScrollElement"
-          color="var(--modal-theme-color, #e23456)"
-        />
       </div>
+      <!-- 轨道以阅读器为定位容器，避免标题收起时跟随正文区域向上延伸。 -->
+      <PageScrollProgress
+        embedded
+        :style="{ top: `${progressTop}px` }"
+        :scroll-target="bodyScrollElement"
+        color="var(--modal-theme-color, #e23456)"
+      />
     </template>
   </article>
   <SafeImageViewer
@@ -80,25 +90,21 @@
 </template>
 
 <script setup lang="ts">
-import {
-  computed,
-  nextTick,
-  onBeforeUnmount,
-  ref,
-  shallowRef,
-  watch,
-} from 'vue'
+import { nextTick, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Loading } from '@element-plus/icons-vue'
+import { useResizeObserver } from '@vueuse/core'
 
+import LoadingLogo from '@/components/LoadingLogo/index.vue'
 import PageScrollProgress from '@/components/PageScrollProgress/index.vue'
 import SafeImageViewer from '@/components/SafeImageViewer/index.vue'
+import { useFrameTask } from '@/composables/useFrameTask'
 import { useImageCincoHover } from '@/composables/useImageCincoHover'
 import {
   scrollNestedTo,
   useNestedSmoothScroll,
 } from '@/composables/useNestedSmoothScroll'
 import type { NoteDocument } from '@/composables/useNoteDocuments'
+import { useNoteHeaderScrollGate } from '@/composables/useNoteHeaderScrollGate'
 import { NOTE_CATEGORIES } from '@/config/noteCategories'
 import { createNoteEntrance } from '@/utils/noteEntrance'
 import {
@@ -106,13 +112,44 @@ import {
   handleNoteTooltipEnter,
   handleNoteTooltipLeave,
 } from '@/utils/noteTooltip'
-import { renderNoteMarkdown } from '@/utils/renderNoteMarkdown'
+
+import NoteMarkdown from './NoteMarkdown.vue'
 
 import 'katex/dist/katex.min.css'
 import 'highlight.js/styles/github-dark.css'
 
 const readerElement = ref<HTMLElement | null>(null)
 const bodyScrollElement = ref<HTMLElement | null>(null)
+const headerElement = ref<HTMLElement | null>(null)
+const progressTop = ref(0)
+let progressHeaderLocked = false
+const measureProgressTop = () => {
+  const header = headerElement.value
+  if (!header || progressHeaderLocked) return
+  progressTop.value = header.offsetTop + header.offsetHeight
+}
+const updateProgressTop = useFrameTask(measureProgressTop)
+useResizeObserver(headerElement, updateProgressTop.schedule)
+watch(headerElement, () => {
+  progressHeaderLocked = false
+  updateProgressTop.schedule()
+})
+const headerCompact = ref(false)
+let previousHeaderScrollTop = 0
+const updateHeader = useFrameTask(() => {
+  const scroll = bodyScrollElement.value
+  if (!scroll || !props.active || headerScrollGate.isBlocking()) return
+  const previousTop = previousHeaderScrollTop
+  previousHeaderScrollTop = scroll.scrollTop
+  // 分开收起、恢复阈值，避免标题高度变化引起临界位置反复切换。
+  if (scroll.scrollTop > 96) {
+    // 只在首次收起前记录完整标题占位，收起和恢复动画均不改变轨道。
+    measureProgressTop()
+    progressHeaderLocked = true
+    headerCompact.value = true
+  } else if (scroll.scrollTop <= 4 && scroll.scrollTop < previousTop)
+    headerCompact.value = false
+})
 let entrance: ReturnType<typeof createNoteEntrance> | undefined
 let entranceRevision = 0
 const props = withDefaults(
@@ -127,6 +164,21 @@ const props = withDefaults(
     fadeOnly: false,
   }
 )
+const headerScrollGate = useNoteHeaderScrollGate({
+  header: () => headerElement.value,
+  scroll: () => bodyScrollElement.value,
+  active: () => props.active,
+  compact: () => headerCompact.value,
+  compactHeader: () => {
+    measureProgressTop()
+    progressHeaderLocked = true
+    headerCompact.value = true
+  },
+  expandHeader: () => {
+    headerCompact.value = false
+    previousHeaderScrollTop = 0
+  },
+})
 const emit = defineEmits<{ ready: [id: string] }>()
 useNestedSmoothScroll(() => (props.active ? bodyScrollElement.value : null))
 const { locale } = useI18n()
@@ -135,18 +187,9 @@ const loading = ref(false)
 const error = ref('')
 let loadRevision = 0
 let requestedId = ''
-const renderedNotes = new WeakMap<NoteDocument, string>()
-const html = computed(() => {
-  const document = note.value
-  if (!document) return ''
-  const cached = renderedNotes.get(document)
-  if (cached !== undefined) return cached
-  const rendered = renderNoteMarkdown(document.body)
-  renderedNotes.set(document, rendered)
-  return rendered
-})
 const imageHover = useImageCincoHover({ glowStrength: 0.5 })
 const handleImageEnter = (event: PointerEvent) => {
+  if ((event.target as HTMLElement).closest('.note-gallery')) return
   const wrapper = (event.target as HTMLElement).closest<HTMLElement>(
     '.note-image-hover'
   )
@@ -226,6 +269,7 @@ const followNoteAnchor = (event: MouseEvent) => {
   )
 }
 const load = async () => {
+  headerScrollGate.reset()
   const revision = ++loadRevision
   const id = props.id
   const refresh = !!error.value && requestedId === id
@@ -267,6 +311,7 @@ watch(
 watch([note, loading, () => props.active], async () => {
   const revision = ++entranceRevision
   // 关闭阶段保留正文与当前画面，重开时即使文章未改变也重新建立入场。
+  headerScrollGate.reset()
   if (!props.active) return
   entrance?.destroy()
   entrance = undefined
@@ -276,6 +321,11 @@ watch([note, loading, () => props.active], async () => {
     const scroll = bodyScrollElement.value
     if (!scroll) return
     // 复用中的阅读器同样重置 Lenis 目标，避免旧惯性将重开的正文带回原位置。
+    updateHeader.cancel()
+    progressHeaderLocked = false
+    headerCompact.value = false
+    previousHeaderScrollTop = 0
+    updateProgressTop.schedule()
     scrollNestedTo(scroll, 0, true)
     if (props.fadeOnly) readerElement.value.dataset.noteEnter = 'ready'
     else

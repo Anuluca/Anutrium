@@ -74,11 +74,16 @@ export function useNestedSmoothScroll(
 export function scrollNestedTo(
   element: HTMLElement,
   top: number,
-  immediate = false
+  immediate = false,
+  options: { smoothNative?: boolean } = {}
 ) {
   const instance = bindings.get(element)?.instance
   if (instance) {
     instance.resize()
     instance.scrollTo(top, { immediate })
-  } else element.scrollTo({ top })
+  } else
+    element.scrollTo({
+      top,
+      behavior: !immediate && options.smoothNative ? 'smooth' : 'auto',
+    })
 }

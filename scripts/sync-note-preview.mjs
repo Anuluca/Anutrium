@@ -20,8 +20,20 @@ const output = async (file, data) => {
 }
 const copy = async (source, target) => output(target, await readFile(source))
 await mkdir(destination, { recursive: true })
+// 后台保持自包含，同时共用网站唯一的联系方式配置。
+await output(
+  path.join(destination, 'renderNoteMarkdown.ts'),
+  (
+    await readFile(path.join(root, 'src/utils/renderNoteMarkdown.ts'), 'utf8')
+  ).replace('../locales/modules/contactLinks', './contactLinks')
+)
+await copy(
+  path.join(root, 'src/locales/modules/contactLinks.ts'),
+  path.join(destination, 'contactLinks.ts')
+)
 for (const file of [
-  'renderNoteMarkdown.ts',
+  'noteWidgets.ts',
+  'imageVariant.ts',
   'noteHexoTags.ts',
   'noteCodeLines.ts',
   'noteTooltip.ts',

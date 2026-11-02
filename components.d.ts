@@ -46,6 +46,7 @@ declare module '@vue/runtime-core' {
     LayoutBorderToggle: typeof import('./src/components/LayoutBorderToggle/index.vue')['default']
     LinkFlowMark: typeof import('./src/components/LinkFlowMark/index.vue')['default']
     LoadingLine: typeof import('./src/components/LoadingLine/index.vue')['default']
+    LoadingLogo: typeof import('./src/components/LoadingLogo/index.vue')['default']
     LoadingPercentage: typeof import('./src/components/LoadingPercentage/index.vue')['default']
     Logo: typeof import('./src/components/Logo/index.vue')['default']
     Logo_rotating3D: typeof import('./src/components/Logo_rotating3D/index.vue')['default']

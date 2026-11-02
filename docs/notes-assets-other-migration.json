@@ -1,0 +1,66 @@
+{
+  "date": "2026-11-02",
+  "destination": "Island/notes/other/",
+  "assets": [
+    {
+      "from": "images/placeholder-350x150.svg",
+      "to": "other/placeholder-350x150.svg",
+      "sha256": "6de49f7d8b63e643cd6d0363ac139c206747d1de393371495bc1025662a26c2a",
+      "size": 249
+    },
+    {
+      "from": "images/wallpaper-2311325.jpg",
+      "to": "other/wallpaper-2311325.jpg",
+      "sha256": "91e7164632e1c8c03765e572b061a329c1ac211fea6752565c32c0104cc84e84",
+      "size": 741952
+    },
+    {
+      "from": "images/wallpaper-2572384.jpg",
+      "to": "other/wallpaper-2572384.jpg",
+      "sha256": "15ff735d37fffa4db361c8123cf391935a9fd403487dec1ce8bdd9135fb52f63",
+      "size": 219848
+    },
+    {
+      "from": "images/wallpaper-878514.jpg",
+      "to": "other/wallpaper-878514.jpg",
+      "sha256": "af564fb3beff7292bd5cad6172c91aa281715806abde5eccb3fa4855b0c5748e",
+      "size": 618650
+    },
+    {
+      "from": "markdown-it-demo/dojocat.jpg",
+      "to": "other/dojocat.jpg",
+      "sha256": "eb7581833dcc336a871669e9926111f35d0f6c200c5c8b389bb1669b37a7e74f",
+      "size": 30824
+    },
+    {
+      "from": "markdown-it-demo/minion.png",
+      "to": "other/minion.png",
+      "sha256": "731bd0bdc00e6c1dbcf9b0810bbc0ebb8b0bfabb419ccdf6049df8289e71b19f",
+      "size": 28187
+    },
+    {
+      "from": "markdown-it-demo/stormtroopocat.jpg",
+      "to": "other/stormtroopocat.jpg",
+      "sha256": "e45a1d7ad1cae041034dfcfcf67c64a167f31b2366208ce6ee26fc31a581b031",
+      "size": 38956
+    }
+  ],
+  "updatedNotes": [
+    {
+      "id": "78f6846b-8204-4f84-a611-c53e8cfb54ae",
+      "title": "图片测试",
+      "sha256": "e4d844787955f2e245804ec937533a812ca890b5633f6dd7a298cab400b9fd30"
+    },
+    {
+      "id": "b01b2d42-caec-4e0f-ad37-439c68ae3b29",
+      "title": "基础语法与扩展渲染演示",
+      "sha256": "f63613de4433274e35fba930acef3c94bb3a1ef038b1dfc3e9bf01a7ca9b9012"
+    },
+    {
+      "id": "b02a6530-9478-438a-a24a-eb8625837a51",
+      "title": "摘要测试",
+      "sha256": "9f41644030f1e42fa81e738fd056df14f65e8ee825e99891004546b0b0f5e4de"
+    }
+  ],
+  "verified": true
+}

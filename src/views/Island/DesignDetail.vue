@@ -142,7 +142,9 @@ useEventListener(
         ref="gallery"
         :key="work.id"
         :items="galleryItems"
-        :columns="work.id === 'appleMusicCover' ? 4 : 3"
+        :columns="
+          work.id === 'appleMusicCover' ? { desktop: 4, mobile: 4 } : undefined
+        "
         :get-media-label="(item) => item.device || title"
         preserve-image-colors
       >
@@ -178,9 +180,6 @@ useEventListener(
   :deep(.media-gallery--preview) {
     align-content: center;
     padding-block: 52px;
-  }
-  :deep(.media-gallery--four-columns) {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
   :deep(.media-gallery__toolbar) {
     position: absolute;

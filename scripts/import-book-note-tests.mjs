@@ -30,15 +30,14 @@ const titles = {
 }
 const assetBase = 'https://assets.anuluca.com/Island/notes/'
 const assets = {
-  'https://octodex.github.com/images/minion.png': 'markdown-it-demo/minion.png',
+  'https://octodex.github.com/images/minion.png': 'other/minion.png',
   'https://octodex.github.com/images/stormtroopocat.jpg':
-    'markdown-it-demo/stormtroopocat.jpg',
-  'https://octodex.github.com/images/dojocat.jpg':
-    'markdown-it-demo/dojocat.jpg',
-  'https://placehold.it/350x150.jpg': 'images/placeholder-350x150.svg',
-  'wallpaper-2572384.jpg': 'images/wallpaper-2572384.jpg',
-  'wallpaper-2311325.jpg': 'images/wallpaper-2311325.jpg',
-  'wallpaper-878514.jpg': 'images/wallpaper-878514.jpg',
+    'other/stormtroopocat.jpg',
+  'https://octodex.github.com/images/dojocat.jpg': 'other/dojocat.jpg',
+  'https://placehold.it/350x150.jpg': 'other/placeholder-350x150.svg',
+  'wallpaper-2572384.jpg': 'other/wallpaper-2572384.jpg',
+  'wallpaper-2311325.jpg': 'other/wallpaper-2311325.jpg',
+  'wallpaper-878514.jpg': 'other/wallpaper-878514.jpg',
 }
 // 保留后台为图片测试添加的封面，与正文共用同一个素材路径。
 const covers = {

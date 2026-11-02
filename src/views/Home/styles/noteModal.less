@@ -1,3 +1,9 @@
+@import '../../../assets/style/modalFrame.less';
+
+.el-overlay:has(> .el-overlay-dialog > .note-detail-stage.no-rem) {
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
 .el-overlay-dialog:has(> .note-detail-stage) {
   overflow: clip;
 }
@@ -11,7 +17,9 @@
   --note-modal-height: calc(var(--note-modal-width) * 9 / 16);
 }
 .note-detail-stage.no-rem {
-  --note-shell-peek: clamp(32px, 4vw, 56px);
+  .modal-frame-variables();
+  --modal-accent: var(--page-theme-color, #e23456);
+  --note-shell-peek: clamp(48px, 6vw, 80px);
   --note-shell-width: calc(var(--note-modal-width) * 0.9);
   --note-shell-height: calc(var(--note-modal-height) * 0.9);
   position: fixed;
@@ -34,8 +42,7 @@
   width: var(--note-shell-width);
   height: var(--note-shell-height);
   padding: 0;
-  border: 1px solid
-    color-mix(in srgb, var(--page-theme-color, #e23456) 35%, transparent);
+  border: var(--modal-border-width) solid var(--modal-border-color);
   border-radius: 0;
   background: #050505;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.85);
@@ -55,23 +62,15 @@
 
   &::before,
   &::after {
-    position: absolute;
-    width: 12px;
-    height: 12px;
-    bottom: 10px;
-    border: 1px solid
-      color-mix(in srgb, var(--page-theme-color, #e23456) 45%, transparent);
-    border-top: 0;
+    .modal-frame-corner();
     content: '';
     pointer-events: none;
   }
   &::before {
-    left: 10px;
-    border-right: 0;
+    .modal-frame-corner-top-left();
   }
   &::after {
-    right: 10px;
-    border-left: 0;
+    .modal-frame-corner-bottom-right();
   }
   &:focus-visible {
     border-color: var(--page-theme-color, #e23456);
@@ -114,14 +113,18 @@
 .modal-wrapper-dialog.note-detail-modal.no-rem {
   height: var(--note-modal-height);
   max-height: none !important;
+  padding-right: 0 !important;
+  padding-bottom: 0 !important;
   .modal-scroll-region {
     overflow: hidden;
+  }
+  > .el-dialog__body > .modal-scroll-progress {
+    display: none;
   }
   &.is-switching {
     background: transparent !important;
     border-color: transparent !important;
     box-shadow: none !important;
-    .modal-close-row,
     .modal-scroll-progress,
     .modal-scanlines,
     > .el-dialog__body > .corner {
@@ -177,11 +180,17 @@
     bottom: calc(var(--note-shell-peek) - var(--note-shell-height));
   }
   .modal-wrapper-dialog.note-detail-modal.no-rem {
+    // 公共弹窗的 10px 会转为 1/3rem，此处按实际尺寸减半。
+    padding-top: 0.1666667rem !important;
+    padding-left: 0.1666667rem !important;
     margin: var(--note-modal-top-gap) var(--note-modal-right-gap)
       var(--note-modal-bottom-gap) var(--note-modal-left-gap) !important;
 
     .modal-close-row .diamond-close-btn {
-      top: calc(100% + 1px + (var(--note-modal-bottom-gap) - 76px) / 2);
+      top: calc(
+        100% + var(--modal-border-width) + (var(--note-modal-bottom-gap) - 76px) /
+          2
+      );
       width: 44px;
       height: 44px;
     }
@@ -192,6 +201,9 @@
     .modal-close-row
     .diamond-close-btn {
     // 桌面居中布局含 2rem 底部外边距，按钮高 1.2rem；按钮处于剩余空白的中心。
-    top: calc(100% + 1px + (100dvh - var(--note-modal-height) - 0.4rem) / 4);
+    top: calc(
+      100% + var(--modal-border-width) +
+        (100dvh - var(--note-modal-height) - 0.4rem) / 4
+    );
   }
 }

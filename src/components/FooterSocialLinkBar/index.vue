@@ -9,7 +9,9 @@
   >
     <template v-for="social in socialLinks" :key="social.type">
       <button
-        v-if="social.type === 'WEIBO' || social.type === 'WECHAT'"
+        v-if="
+          (social.type === 'WEIBO' && !weiboDirect) || social.type === 'WECHAT'
+        "
         class="footer-social-links__item"
         type="button"
         :aria-label="social.label"
@@ -134,6 +136,7 @@ const props = withDefaults(
     switchInstant?: boolean
     types?: readonly FooterSocialType[]
     showPlatforms?: boolean
+    weiboDirect?: boolean
   }>(),
   {
     switchActive: false,

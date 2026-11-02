@@ -2,8 +2,11 @@
   <div
     ref="galleryRef"
     class="media-gallery"
+    :style="{
+      '--media-gallery-desktop-columns': columnConfig.desktop,
+      '--media-gallery-mobile-columns': columnConfig.mobile,
+    }"
     :class="{
-      'media-gallery--four-columns': columns === 4,
       'media-gallery--preview': displayMode === 'preview',
       'media-gallery--staggered': staggeredEntrance,
       'media-gallery--preserve-image-colors': preserveImageColors,
@@ -41,6 +44,13 @@
         v-for="(media, index) in items"
         :key="media.url"
         class="media-gallery__card"
+        :class="{
+          'is-row-start': index % currentColumns === 0,
+          'is-row-end': (index + 1) % currentColumns === 0,
+          'is-last-row':
+            index >=
+            Math.floor((items.length - 1) / currentColumns) * currentColumns,
+        }"
         :style="entranceStyles[index]"
       >
         <div
@@ -53,6 +63,15 @@
             class="media-gallery__frame"
             :class="{ 'is-loading': !loadedMediaUrls.has(media.url) }"
           >
+            <div
+              v-if="!loadedMediaUrls.has(media.url)"
+              class="media-gallery__loading"
+              role="status"
+              aria-busy="true"
+              :aria-label="locale === 'en' ? 'Loading media' : '媒体加载中'"
+            >
+              <LoadingLogo />
+            </div>
             <div class="media-gallery__stage">
               <button
                 v-if="mediaIndex.videoUrls.has(media.url)"
@@ -71,6 +90,7 @@
                   playsinline
                   preload="none"
                   @loadedmetadata="markVideoLoaded($event, media.url)"
+                  @error="markMediaLoaded(media.url)"
                 />
               </button>
               <button
@@ -97,6 +117,7 @@
                     width="768"
                     height="576"
                     @load="markImageDecoded($event, media.url)"
+                    @error="markMediaLoaded(media.url)"
                   />
                 </picture>
               </button>
@@ -160,8 +181,9 @@ import {
 } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Grid, Picture as PictureIcon } from '@element-plus/icons-vue'
-import { useDocumentVisibility } from '@vueuse/core'
+import { useDocumentVisibility, useMediaQuery } from '@vueuse/core'
 
+import LoadingLogo from '@/components/LoadingLogo/index.vue'
 import SafeImageViewer from '@/components/SafeImageViewer/index.vue'
 import { useImageCincoHover } from '@/composables/useImageCincoHover'
 import { useIntersectionActivation } from '@/composables/useIntersectionActivation'
@@ -184,6 +206,11 @@ export interface GalleryMedia {
   time?: string
 }
 
+export interface GalleryColumns {
+  desktop?: number
+  mobile?: number
+}
+
 const props = withDefaults(
   defineProps<{
     items: GalleryMedia[]
@@ -194,7 +221,7 @@ const props = withDefaults(
     entranceReady?: boolean
     entranceStepMs?: number
     preserveImageColors?: boolean
-    columns?: 3 | 4
+    columns?: number | GalleryColumns
   }>(),
   {
     getMediaLabel: (media: GalleryMedia) => media.title || 'Photo',
@@ -204,8 +231,28 @@ const props = withDefaults(
     entranceReady: true,
     entranceStepMs: 70,
     preserveImageColors: false,
-    columns: 3,
+    columns: (): GalleryColumns => ({ desktop: 3, mobile: 2 }),
   }
+)
+
+const normalizeColumns = (value: number | undefined, fallback: number) =>
+  Number.isFinite(value) && Number(value) >= 1
+    ? Math.floor(Number(value))
+    : fallback
+const columnConfig = computed(() => {
+  const config =
+    typeof props.columns === 'number'
+      ? { desktop: props.columns }
+      : props.columns
+  return {
+    desktop: normalizeColumns(config.desktop, 3),
+    mobile: normalizeColumns(config.mobile, 2),
+  }
+})
+// 与组件现有媒体查询保持一致，行首、行尾及末行装饰随响应式列数同步变化。
+const isMobileLayout = useMediaQuery('(max-width: 900px)')
+const currentColumns = computed(() =>
+  isMobileLayout.value ? columnConfig.value.mobile : columnConfig.value.desktop
 )
 
 const { locale } = useI18n()
@@ -515,9 +562,8 @@ onBeforeUnmount(() => {
 
 <style lang="less" scoped>
 @import '@/assets/style/mediaCincoHover.less';
-@import '@/assets/style/mediaLoadingPlaceholder.less';
 .media-gallery {
-  --media-gallery-columns: 3;
+  --media-gallery-columns: var(--media-gallery-desktop-columns, 3);
   display: grid;
   grid-template-columns: repeat(var(--media-gallery-columns), minmax(0, 1fr));
   gap: 0;
@@ -530,7 +576,7 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: flex-end;
   gap: 0;
-  padding: 0 0 16px;
+  padding: 0 0 8px;
 
   button {
     display: grid;
@@ -596,9 +642,6 @@ onBeforeUnmount(() => {
     background: rgba(255, 255, 255, 0.05);
     pointer-events: none;
   }
-  &:nth-of-type(3n)::after {
-    display: none;
-  }
 }
 
 .media-gallery--staggered:not(.is-entered) .media-gallery__frame {
@@ -655,6 +698,15 @@ onBeforeUnmount(() => {
   max-width: 100%;
 }
 
+.media-gallery__loading {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
 .media-gallery__shell {
   // 宽度按媒体比例收敛；两层子网格共享每行的图片区和信息栏高度。
   width: min(
@@ -695,11 +747,6 @@ onBeforeUnmount(() => {
 
   &.is-loading {
     overflow: hidden;
-
-    &::before {
-      .media-loading-placeholder();
-      opacity: 1;
-    }
 
     img,
     video {
@@ -839,61 +886,25 @@ onBeforeUnmount(() => {
   }
 }
 
-@media (min-width: 901px) {
-  .media-gallery:not(.media-gallery--four-columns)
-    .media-gallery__card:nth-of-type(3n + 1):nth-last-of-type(-n + 3) {
-    &,
-    & ~ .media-gallery__card {
-      border-bottom-color: transparent;
-    }
-  }
+.media-gallery__card.is-row-start {
+  padding-left: 0;
+}
 
-  .media-gallery__card:nth-of-type(3n + 1) {
-    padding-left: 0;
-  }
-  .media-gallery__card:nth-of-type(3n) {
-    padding-right: 0;
-  }
-  .media-gallery--four-columns {
-    --media-gallery-columns: 4;
+.media-gallery__card.is-row-end {
+  padding-right: 0;
 
-    .media-gallery__card:nth-of-type(4n + 1):nth-last-of-type(-n + 4) {
-      &,
-      & ~ .media-gallery__card {
-        border-bottom-color: transparent;
-      }
-    }
-
-    .media-gallery__card {
-      padding-right: 10px;
-      padding-left: 10px;
-
-      &::after {
-        display: block;
-      }
-      &:nth-of-type(4n + 1) {
-        padding-left: 0;
-      }
-      &:nth-of-type(4n) {
-        padding-right: 0;
-        &::after {
-          display: none;
-        }
-      }
-    }
+  &::after {
+    display: none;
   }
+}
+
+.media-gallery__card.is-last-row {
+  border-bottom-color: transparent;
 }
 
 @media (max-width: 900px) {
   .media-gallery {
-    --media-gallery-columns: 2;
-  }
-
-  .media-gallery__card:nth-of-type(2n + 1):nth-last-of-type(-n + 2) {
-    &,
-    & ~ .media-gallery__card {
-      border-bottom-color: transparent;
-    }
+    --media-gallery-columns: var(--media-gallery-mobile-columns, 2);
   }
 
   .media-gallery__card {
@@ -902,19 +913,7 @@ onBeforeUnmount(() => {
     /* prettier-ignore */
     --media-gallery-max-height: clamp(180PX, 48vw, 240PX);
 
-    &:nth-of-type(odd) {
-      padding-left: 0;
-    }
-    &:nth-of-type(even) {
-      padding-right: 0;
-    }
-
     &::after {
-      display: none;
-    }
-
-    &:nth-of-type(odd)::after {
-      display: block;
       background: rgba(255, 255, 255, 0.04);
     }
   }
@@ -931,11 +930,6 @@ onBeforeUnmount(() => {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .media-gallery__frame.is-loading::before {
-    animation: none;
-    background-position: 50% 0;
-  }
-
   .media-gallery--staggered:not(.is-entered) .media-gallery__frame,
   .media-gallery--staggered:not(.is-entered):not(.media-gallery--preview)
     .media-gallery__info {

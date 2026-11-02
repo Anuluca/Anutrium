@@ -138,3 +138,55 @@ cover: "https://assets.anuluca.com/path/to/image.jpg"
 - Markdown 元信息新增可选 `hidden: true/false`，隐藏状态随正文一次写入 R2，并同步列表索引。隐藏后公开列表排除该笔记，公开详情返回 404；后台仍可查看、编辑、删除或关闭隐藏开关恢复显示。
 - 版本冲突时不更新开关，保留服务器内容并提示刷新；仅管理员可写入，沿用同源校验和原始 `X-Note-Version`。
 - Anutrium 刷新后读取最新状态；已打开页面仍遵循原有 60 秒列表缓存。需先部署支持此字段的 Worker，再发布 AnuConsole。
+
+## 正文内容块
+
+正文支持以下受控扩展，仍保存为单个 `.md`，无需新增元信息或数据库。AnuConsole「插入内容块」可在正文选区处生成语法；也可导入包含该语法的文件。图片列表在网站复用 `MediaGallery`（网格／预览切换、原图查看），分组栏复用 Notes 分类使用的 `FilterRail`。后台共享解析器，提供可切换分组的缩略图预览。
+
+```markdown
+::::: tabs
+
+:::: tab 分组一
+
+::: gallery
+![图片说明](https://assets.anuluca.com/Island/notes/example.jpg)
+:::
+
+::::
+
+:::: tab 分组二
+
+普通 Markdown 正文。
+
+::::
+
+:::::
+
+::: tool-card
+[工具名称](https://example.com/)
+
+工具说明，可使用普通 Markdown。
+:::
+```
+
+- 外层分组使用 5 个冒号、单页使用 4 个、图片列表使用 3 个；结束标记必须与所属块的冒号数量对应。
+- 图片列表只接受线上 R2 图片；图注取自图片替代文本。混入其他正文时回退为普通 Markdown，避免丢失内容。
+- 工具卡为受控 Markdown 展示块，链接沿用现有协议校验，不接受 Vue 模板、脚本或任意 HTML。
+- 未闭合块按普通 Markdown 显示；嵌套最多解析 8 层。语法解析基于块规则，代码围栏内的标记不会触发内容块。
+- 新增日志源文件为 `docs/notes/corocoro-pokemon.md`：保留参考文章 40 张图片及顺序，分为 BW、BW2、XY、ORAS、SM、假图六组；运行时仍从 Worker／R2 读取，不导入本地正文。
+
+2026-11-02 已通过 AnuConsole 的同源管理接口新增《Corocoro宝可梦情报》，分类 `pokemon`，封面为 `Island/notes/pokemonCorocoro/BW2/IMG_2129.jpg`。文章 ID 为 `a12ee06a-a95f-4cbc-9b65-ff71bbca5371`；公开接口逐字节回读、列表分类／封面校验以及 40 张线上原图的 HTTP 200 检查均通过。发布回执见 `notes/corocoro-pokemon.publication.json`。网站与后台的内容块代码需随各自应用部署生效。
+
+内容块验证：网站 `yarn type-check`、`yarn build-only`、受影响文件 ESLint、两端预览同步检查均通过；新增内容块桌面／手机共 4 项测试通过，原有 18 篇语料与安全渲染测试通过，`yarn check:overlay-scroll` 和 `yarn test:overlay-scroll --config=playwright.audit.config.ts`（10 项）通过。本地使用真实线上笔记与 R2 缩略图检查，六个分组正常，浏览器无未捕获错误。后台另完成桌面、手机 Chromium 与手机 WebKit 的插入及刷新回归；未进行 Safari 真机验证。
+
+原有 Notes 列表、阅读器和前后篇导航的桌面／手机回归共 52 项全部通过（`tests/island-notes.spec.ts`、`tests/note-navigation.spec.ts`）。
+
+### 简易联系栏
+
+正文插入空的 `::: social-links` / `:::` 块，可复用 `FooterSocialLinkBar`，仅显示微信、邮箱、微博、B 站，按该顺序排列。微信沿用复制／唤起逻辑，微博在新窗口打开个人主页；不包含游戏平台。后台预览使用同源联系方式配置展示链接和微信号，配置随预览同步脚本生成，不单独维护副本。
+
+《Corocoro宝可梦情报》已按作者要求移除来源声明与两段导语，替换为「如有遗漏欢迎讨论补充」及上述联系栏。
+
+联系栏可使用 `::: social-links 如有遗漏欢迎补充` 添加同一行的说明文字，结束标记仍为 `:::`。说明与组件垂直居中，颜色由联系栏自身管理，阅读器的普通链接颜色不覆盖该组件。《Corocoro宝可梦情报》的联系行位于整个图片分组块之后。
+
+标题与正文滚动按顺序衔接：首次竖向滚轮、触屏滑动或键盘翻页先触发标题收起，标题过渡结束后才将暂存位移交给正文；同一次触屏手势的后续移动可继续滚动，之后的手势保留原生惯性。回到顶部向上滑动时恢复展开，关闭、重开和切换笔记时清理输入队列。减少动态效果模式直接交接，不等待动画。

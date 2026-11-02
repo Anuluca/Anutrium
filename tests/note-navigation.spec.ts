@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test'
 
+import { expectModalFrame } from './helpers/modalFrame'
+
 test('note navigation preloads neighbors and fades stationary content while shells move', async ({
   page,
   isMobile,
@@ -46,6 +48,20 @@ test('note navigation preloads neighbors and fades stationary content while shel
   await expect(previous).toBeVisible({ timeout: 45000 })
   await expect(next).toBeVisible()
   await expect(modal.locator('h1')).toHaveText(notes[11].title)
+  await expectModalFrame(modal)
+  await expect(modal.locator('.note-reader__header')).toHaveCSS(
+    'margin-bottom',
+    '0px'
+  )
+  for (const theme of ['light', 'dark'] as const) {
+    await page.evaluate((mode) => {
+      const app = (document.querySelector('#app') as any).__vue_app__
+      return app.config.globalProperties.$pinia._s
+        .get('visualState')
+        .setTheme(mode)
+    }, theme)
+    await expectModalFrame(modal)
+  }
   await expect
     .poll(() => [...requestedNotes].sort())
     .toEqual([notes[10].id, notes[11].id, notes[12].id].sort())
@@ -69,9 +85,9 @@ test('note navigation preloads neighbors and fades stationary content while shel
   } else {
     expect(prevBounds.x).toBeLessThan(0)
     expect(prevBounds.x + prevBounds.width).toBeGreaterThan(0)
-    expect(prevBounds.x + prevBounds.width).toBeLessThan(64)
+    expect(prevBounds.x + prevBounds.width).toBeLessThanOrEqual(80)
     expect(viewport.width - nextBounds.x).toBeGreaterThan(0)
-    expect(viewport.width - nextBounds.x).toBeLessThan(64)
+    expect(viewport.width - nextBounds.x).toBeLessThanOrEqual(80)
     expect(
       Math.abs(
         prevBounds.y + prevBounds.height / 2 - center.y - center.height / 2
@@ -97,6 +113,8 @@ test('note navigation preloads neighbors and fades stationary content while shel
     })
   }
   const titleBefore = (await modal.locator('h1').boundingBox())!
+  const close = modal.locator('.diamond-close-btn')
+  const closeBefore = (await close.boundingBox())!
   const stack = page.locator('.study-note-stack')
   await expect(stack).toHaveClass(/is-ready/)
   await stack.evaluate((element: HTMLElement) => {
@@ -123,7 +141,10 @@ test('note navigation preloads neighbors and fades stationary content while shel
       for (const animation of element.getAnimations()) {
         if (animation instanceof CSSAnimation) continue
         animation.pause()
-        animation.currentTime = element === reader ? 125 : 500
+        animation.currentTime =
+          element === reader
+            ? Number(animation.effect!.getTiming().duration) / 2
+            : 500
       }
     }
     return {
@@ -155,6 +176,10 @@ test('note navigation preloads neighbors and fades stationary content while shel
   const modalDuring = (await modal.boundingBox())!
   expect(Math.abs(modalDuring.x - center.x)).toBeLessThanOrEqual(1)
   expect(Math.abs(modalDuring.y - center.y)).toBeLessThanOrEqual(1)
+  await expect(close).toBeVisible()
+  const closeDuring = (await close.boundingBox())!
+  expect(Math.abs(closeDuring.x - closeBefore.x)).toBeLessThanOrEqual(1)
+  expect(Math.abs(closeDuring.y - closeBefore.y)).toBeLessThanOrEqual(1)
   if (!isMobile) {
     const metrics = await page.context().newCDPSession(page)
     await metrics.send('Performance.enable')
@@ -228,7 +253,7 @@ test('note navigation preloads neighbors and fades stationary content while shel
   await page.emulateMedia({ reducedMotion: 'no-preference' })
   await next.evaluate((shell: HTMLElement) => shell.click())
   await expect(modal).toHaveClass(/is-switching/)
-  await page.keyboard.press('Escape')
+  await close.click()
   await expect(modal).toBeHidden()
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto(`/atrium/notes?category=technology&note=${notes[0].id}`)

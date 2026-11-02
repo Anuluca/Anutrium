@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test'
 
+import { expectModalFrame } from './helpers/modalFrame'
+
 test.beforeEach(async ({ page }) => {
   await page.routeWebSocket('ws://localhost:3000/**', (socket) =>
     socket.close()
@@ -105,6 +107,7 @@ test('collection boxes expand into a centered gallery and restore without shifti
     })
     await expect(page).toHaveURL(/\/atrium\/collections$/)
     await expect(modal.locator('.media-gallery__card').first()).toBeVisible()
+    await expectModalFrame(modal)
     await modal.getByRole('button', { name: '大图预览' }).click()
     const thumbnails = modal.locator('.inline-image-preview__thumbnails')
     await expect(thumbnails.locator('button').first()).toBeVisible()

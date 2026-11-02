@@ -1,7 +1,70 @@
 /* eslint-disable vue/one-component-per-file */
 import { expect, type Route, test } from '@playwright/test'
 
-test('preview shows a shimmer on initial load and switches, and clears it on success or failure', async ({
+test('image lists reuse looping SVG logos with unique masks and settle on success or failure', async ({
+  page,
+}) => {
+  await page.route('http://localhost:3000/gallery-logo-fixture', (route) =>
+    route.fulfill({
+      contentType: 'text/html',
+      body: '<meta name="viewport" content="width=device-width, initial-scale=1"><body style="margin:0"><div id="fixture" style="width:min(100%,640px)"></div></body>',
+    })
+  )
+  const requests = new Map<string, Route>()
+  await page.route(/gallery-logo-(first|second)\.png(?:\?|$)/, (route) => {
+    requests.set(new URL(route.request().url()).pathname, route)
+  })
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await page.goto('/gallery-logo-fixture')
+  await page.evaluate(async () => {
+    const { createApp, h } = await import('/node_modules/.vite/deps/vue.js')
+    const { default: Gallery } = await import(
+      '/src/components/MediaGallery/index.vue'
+    )
+    const { default: i18n } = await import('/src/locales/index.ts')
+    createApp({
+      render: () =>
+        h(
+          'div',
+          ['first', 'second'].map((name) =>
+            h(Gallery, {
+              items: [
+                { url: `https://assets.anuluca.com/gallery-logo-${name}.png` },
+              ],
+            })
+          )
+        ),
+    })
+      .use(i18n)
+      .mount('#fixture')
+  })
+  const logos = page.locator('.media-gallery__loading .loading-logo')
+  await expect(logos).toHaveCount(2)
+  await expect(logos.locator('svg')).toHaveCount(2)
+  const maskIds = await logos
+    .locator('mask')
+    .evaluateAll((elements) => elements.map((element) => element.id))
+  expect(new Set(maskIds).size).toBe(2)
+  const stroke = logos.first().locator('.draw-animation').first()
+  await expect(stroke).toHaveCSS('animation-iteration-count', 'infinite')
+  const iteration = await stroke.evaluate((element) => {
+    const animation = element.getAnimations()[0]
+    animation.currentTime = 6500
+    return animation.effect!.getComputedTiming().currentIteration
+  })
+  expect(iteration).toBeGreaterThanOrEqual(2)
+  await expect.poll(() => requests.size).toBe(2)
+  await requests.get('/gallery-logo-first.png')!.fulfill({
+    contentType: 'image/svg+xml',
+    body: '<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480"/>',
+  })
+  await expect(logos).toHaveCount(1)
+  await requests.get('/gallery-logo-second.png')!.abort()
+  await expect(logos).toHaveCount(0)
+  await expect(page.locator('.media-gallery__frame.is-loading')).toHaveCount(0)
+})
+
+test('preview shows a looping SVG logo on initial load and switches, and clears it on success or failure', async ({
   page,
 }) => {
   await page.route('http://localhost:3000/', (route) =>
@@ -42,9 +105,9 @@ test('preview shows a shimmer on initial load and switches, and clears it on suc
   const image = viewer.locator('.el-image-viewer__img')
   await expect(placeholder).toBeVisible()
   await expect(placeholder).toHaveAttribute('aria-busy', 'true')
-  await expect(placeholder).toHaveCSS(
-    'animation-name',
-    'viewer-placeholder-shimmer'
+  await expect(placeholder.locator('.draw-animation').first()).toHaveCSS(
+    'animation-iteration-count',
+    'infinite'
   )
   await expect(image).toBeHidden()
   const bounds = await placeholder.boundingBox()
@@ -83,7 +146,10 @@ test('preview shows a shimmer on initial load and switches, and clears it on suc
     )
   ).toBe(true)
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await expect(placeholder).toHaveCSS('animation-name', 'none')
+  await expect(placeholder.locator('.draw-animation').first()).toHaveCSS(
+    'animation-name',
+    'none'
+  )
   await finish('second')
   await expect(placeholder).toHaveCount(0)
   await expect(image).toBeVisible()
@@ -112,7 +178,7 @@ test('preview shows a shimmer on initial load and switches, and clears it on suc
   await expect(image).toBeVisible()
 })
 
-test('inline preview keeps its background visible and confines loading shimmer to the image', async ({
+test('inline preview keeps its background visible and confines the loading SVG logo to the image', async ({
   page,
 }) => {
   await page.route('http://localhost:3000/inline-loading-fixture', (route) =>
@@ -146,9 +212,9 @@ test('inline preview keeps its background visible and confines loading shimmer t
   const preview = page.locator('.inline-image-preview')
   const placeholder = preview.locator('.inline-image-preview__placeholder')
   await expect(placeholder).toBeVisible()
-  await expect(placeholder).toHaveCSS(
-    'animation-name',
-    'viewer-placeholder-shimmer'
+  await expect(placeholder.locator('.draw-animation').first()).toHaveCSS(
+    'animation-iteration-count',
+    'infinite'
   )
   await expect(preview.locator('.inline-image-preview__status')).toHaveCount(0)
   const geometry = await placeholder.evaluate((element) => {
@@ -179,7 +245,10 @@ test('inline preview keeps its background visible and confines loading shimmer t
   await preview.getByRole('button', { name: '下一张', exact: true }).click()
   await expect(placeholder).toBeVisible()
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await expect(placeholder).toHaveCSS('animation-name', 'none')
+  await expect(placeholder.locator('.draw-animation').first()).toHaveCSS(
+    'animation-name',
+    'none'
+  )
   await expect.poll(() => requests.has('/inline-loading-second.png')).toBe(true)
   await requests.get('/inline-loading-second.png')!.abort()
   await expect(placeholder).toHaveCount(0)

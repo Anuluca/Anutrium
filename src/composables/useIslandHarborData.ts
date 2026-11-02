@@ -52,11 +52,6 @@ export const useIslandHarborData = () => {
       ).flat().length
   )
   const { notes: studyNoteList } = useNotes()
-  const studyNoteCover = computed(
-    () =>
-      studyNoteList.value.find((note) => note.image)?.image ||
-      createIslandPlaceholder('STUDY NOTES')
-  )
   const developingPlaceholder = createIslandPlaceholder('WIP')
 
   const harborSections: HarborSection[] = [
@@ -79,9 +74,7 @@ export const useIslandHarborData = () => {
           get count() {
             return `${studyNoteList.value.length} NOTES`
           },
-          get img() {
-            return studyNoteCover.value
-          },
+          img: 'https://assets.anuluca.com/Island/notes/pokemonCorocoro/XY/IMG_2133.jpg?image=card-thumb',
           path: '/atrium/notes',
         },
       ],

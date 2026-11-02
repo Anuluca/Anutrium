@@ -385,7 +385,7 @@ defineExpose({ closeExpanded })
                 class="flora-album-gallery__friend-group"
               >
                 <MediaGallery
-                  :columns="4"
+                  :columns="{ desktop: 4 }"
                   :items="group.items"
                   :get-media-label="
                     () => group.name[locale === 'en' ? 'en' : 'zhCn']
@@ -443,7 +443,7 @@ defineExpose({ closeExpanded })
                 :data-stage="group.id"
               >
                 <MediaGallery
-                  :columns="4"
+                  :columns="{ desktop: 4 }"
                   :items="group.items"
                   :get-media-label="() => title"
                   preserve-image-colors
