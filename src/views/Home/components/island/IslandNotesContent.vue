@@ -6,6 +6,7 @@
       'is-reading': !!openedNoteId,
     }"
   >
+    <NoteCoverDitherFilter id="note-card-dither-veil" :strength="0.5" />
     <ScrollViewport
       ref="noteViewportRef"
       class="study-note-list island-detail__viewport"
@@ -256,6 +257,7 @@ import {
 } from '@/utils/imageVariant'
 import type { NoteSummary } from '@/utils/noteDocument'
 
+import NoteCoverDitherFilter from './NoteCoverDitherFilter.vue'
 import NoteReader from './NoteReader.vue'
 
 interface StudyNoteCard {
@@ -755,7 +757,7 @@ watch(activeCategory, () => setPage(1), { flush: 'post' })
     display: block;
     width: 100%;
     height: auto;
-    filter: saturate(0.68) contrast(1.03);
+    filter: url('#note-card-dither-veil');
     transition: filter 0.45s ease;
   }
 
@@ -801,7 +803,7 @@ watch(activeCategory, () => setPage(1), { flush: 'post' })
       animation: none;
     }
     .study-note-card__image {
-      filter: saturate(0.88) contrast(1.02);
+      filter: url('#note-card-dither-veil');
     }
     .study-note-card__media {
       transform: scale(1.05);

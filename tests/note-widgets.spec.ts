@@ -11,6 +11,26 @@ const source = readFileSync('docs/notes/corocoro-pokemon.md', 'utf8')
 const parsed = parseNoteDocument(source)
 const id = 'a12ee06a-a95f-4cbc-9b65-ff71bbca5371'
 
+test('gallery column overrides are bounded and preserve existing defaults', () => {
+  const gallery = (option = '') =>
+    `::: gallery${
+      option ? ` ${option}` : ''
+    }\n![图标](https://assets.anuluca.com/icon.svg)\n:::`
+  expect(renderNoteContent(gallery('columns=6')).widgets[0]).toMatchObject({
+    type: 'gallery',
+    columns: 6,
+  })
+  expect(renderNoteMarkdown(gallery('columns=6'))).toContain(
+    'style="grid-template-columns:repeat(6,minmax(0,1fr))"'
+  )
+  for (const option of ['', 'columns=0', 'columns=7', 'columns=6; color:red']) {
+    expect(renderNoteContent(gallery(option)).widgets[0]).not.toHaveProperty(
+      'columns'
+    )
+    expect(renderNoteMarkdown(gallery(option))).not.toContain('style=')
+  }
+})
+
 test('Corocoro preserves all 40 images and six groups; fenced examples and unsafe links stay inert', () => {
   expect(parsed.metadata.type).toBe('pokemon')
   expect(parsed.metadata.image).toBe(

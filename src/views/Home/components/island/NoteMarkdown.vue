@@ -15,7 +15,10 @@
       >
         <MediaGallery
           :items="widget.items"
-          :columns="{ desktop: 3, mobile: 2 }"
+          :columns="{
+            desktop: widget.columns ?? 3,
+            mobile: widget.columns ?? 2,
+          }"
           preserve-image-colors
         />
       </div>
