@@ -94,6 +94,19 @@ test('Pokémon overview fits the reader and retains hover information', async ({
   )
   expect(rows[0]).toBe(desktop ? 10 : 6)
   if (desktop) expect(rows).toEqual([...Array(9).fill(10), 7])
+  const tableOffsets = await page
+    .locator('.note-markdown table')
+    .evaluateAll((tables) =>
+      tables.map((table) => {
+        const bounds = table.getBoundingClientRect()
+        const parent = table.parentElement!.getBoundingClientRect()
+        return Math.abs(
+          bounds.left + bounds.width / 2 - parent.left - parent.width / 2
+        )
+      })
+    )
+  expect(tableOffsets.length).toBeGreaterThan(10)
+  expect(Math.max(...tableOffsets)).toBeLessThanOrEqual(1)
   const trigger = grid.locator('abbr').nth(3)
   await trigger.focus()
   const tooltip = page.getByRole('tooltip')
