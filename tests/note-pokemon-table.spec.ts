@@ -25,7 +25,7 @@ test('Pokémon overview preserves all species, order, details and an empty cover
   expect(ids).toHaveLength(97)
   expect(new Set(ids).size).toBe(97)
   expect(ids).toEqual([...ids].sort((a, b) => a - b))
-  expect(content.html).toContain('data-note-title="#0150 超梦；《红／绿／蓝》')
+  expect(content.html).toContain('data-note-title="《红／绿／蓝》')
   expect(content.html).toContain('《白金》需外部作品或活动前置')
   expect(content.html).toContain('十一、使用这份名单时的判断方法')
 })
@@ -62,9 +62,9 @@ test('Pokémon overview fits the reader and retains hover information', async ({
   await expect(grid.locator('img')).toHaveCount(97, { timeout: 45000 })
   await expect(grid.locator('abbr').nth(3)).toHaveAttribute(
     'data-note-title',
-    /超梦.*红／绿／蓝/
+    /^《红／绿／蓝》/
   )
-  await expect(grid.locator('img').first()).toHaveCSS('width', '32px')
+  await expect(grid.locator('img').first()).toHaveCSS('width', '64px')
   const geometry = await grid.evaluate((element) => ({
     overflow: element.scrollWidth - element.clientWidth,
     readerOverflow:
@@ -76,7 +76,8 @@ test('Pokémon overview fits the reader and retains hover information', async ({
   await trigger.focus()
   const tooltip = page.getByRole('tooltip')
   await expect(tooltip).toBeVisible()
-  await expect(tooltip).toContainText('超梦')
+  await expect(tooltip).not.toContainText('#0150')
+  await expect(tooltip).not.toContainText('超梦')
   await expect(tooltip).toContainText('《红／绿／蓝》')
   const box = await tooltip.boundingBox()
   expect(box!.x).toBeGreaterThanOrEqual(0)

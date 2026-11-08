@@ -27,8 +27,8 @@
     }
   }
   img {
-    width: 32px;
-    height: 32px;
+    width: 64px;
+    height: 64px;
     object-fit: contain;
   }
   .note-image-label {
@@ -62,5 +62,22 @@
   }
   @media (prefers-reduced-motion: reduce) {
     animation: none;
+  }
+}
+
+@media screen and (max-aspect-ratio: 1) {
+  .note-reader.no-rem .note-markdown table.note-image-table {
+    display: block;
+    tbody {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    tr {
+      display: contents;
+    }
+    td {
+      display: block;
+      min-width: 0;
+    }
   }
 }
