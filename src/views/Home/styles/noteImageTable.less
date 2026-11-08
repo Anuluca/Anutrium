@@ -1,15 +1,14 @@
 .note-reader.no-rem .note-markdown table.note-image-table {
-  display: table;
-  width: 100%;
-  table-layout: fixed;
-  overflow: visible;
+  display: block;
+  width: fit-content;
+  overflow-x: auto;
   margin: 0 0 24px;
 
   thead {
     display: none;
   }
   td {
-    padding: 6px 2px;
+    padding: 6px 8px;
     text-align: center;
     vertical-align: top;
   }
@@ -32,9 +31,9 @@
     object-fit: contain;
   }
   .note-image-label {
-    font-size: 10px;
+    font-size: 20px;
     line-height: 1.4;
-    overflow-wrap: anywhere;
+    white-space: nowrap;
   }
 }
 
@@ -62,22 +61,5 @@
   }
   @media (prefers-reduced-motion: reduce) {
     animation: none;
-  }
-}
-
-@media screen and (max-aspect-ratio: 1) {
-  .note-reader.no-rem .note-markdown table.note-image-table {
-    display: block;
-    tbody {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-    tr {
-      display: contents;
-    }
-    td {
-      display: block;
-      min-width: 0;
-    }
   }
 }

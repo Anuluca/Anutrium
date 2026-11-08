@@ -12,9 +12,7 @@ const parsed = parseNoteDocument(source)
 
 test('Pokémon overview preserves all species, order, details and an empty cover', () => {
   const content = renderNoteContent(parsed.body)
-  expect(parsed.metadata.title).toBe(
-    '宝可梦系列二周目才能获取的本世代宝可梦整理'
-  )
+  expect(parsed.metadata.title).toBe('原作二周目才能获取的本世代宝可梦整理')
   expect(parsed.metadata.type).toBe('pokemon')
   expect(parsed.metadata.image).toBeUndefined()
   expect(content.widgets).toEqual([])
@@ -65,8 +63,17 @@ test('Pokémon overview fits the reader and retains hover information', async ({
     /^《红／绿／蓝》/
   )
   await expect(grid.locator('img').first()).toHaveCSS('width', '96px')
+  await expect(grid.locator('.note-image-label').first()).toHaveCSS(
+    'font-size',
+    '20px'
+  )
+  const labelHeights = await grid
+    .locator('.note-image-label')
+    .evaluateAll((elements) =>
+      elements.map((el) => el.getBoundingClientRect().height)
+    )
+  expect(Math.max(...labelHeights)).toBeLessThanOrEqual(29)
   const geometry = await grid.evaluate((element) => ({
-    overflow: element.scrollWidth - element.clientWidth,
     readerOverflow:
       element.closest('.note-reader')!.scrollWidth -
       element.closest('.note-reader')!.clientWidth,
@@ -92,6 +99,6 @@ test('Pokémon overview fits the reader and retains hover information', async ({
   expect(geometry.introduction).toBe(
     '由于本人习惯每次通关都尽量用本世代宝可梦组成通关队伍，且尽量不使用用过的宝可梦，所以整理了这个表格。'
   )
-  expect(geometry.overflow).toBeLessThanOrEqual(1)
+  await expect(grid).toHaveCSS('overflow-x', 'auto')
   expect(geometry.readerOverflow).toBeLessThanOrEqual(1)
 })
