@@ -4,6 +4,10 @@ date: "2026-11-09"
 category: pokemon
 ---
 
+# 总览
+
+由于本人习惯每次通关都尽量用本世代宝可梦组成通关队伍，且尽量不使用用过的宝可梦，所以整理了这个表格。
+
 |  |  |  |  |  |  |
 | --- | --- | --- | --- | --- | --- |
 | <abbr title="《钻石／珍珠》：获取“自爆磁怪”时提到的前置条件；小磁怪需要全国图鉴后的大量出现；《晶灿钻石／明亮珍珠》：复刻版的地下大洞窟使拉鲁拉丝、波克比、小山猪、雪童子、小磁怪等更早出现，所以不能完全照搬原版《钻石／珍珠》的限制。">![#0081 小磁怪](https://assets.anuluca.com/Island/notes/postgame-pokemon/sv-icons/0081.png)</abbr> | <abbr title="《钻石／珍珠》：获取“大舌舔”时提到的前置条件；大舌头需全国图鉴后获取">![#0108 大舌头](https://assets.anuluca.com/Island/notes/postgame-pokemon/sv-icons/0108.png)</abbr> | <abbr title="《钻石／珍珠》：获取“叶伊布、冰伊布”时提到的前置条件；伊布需要全国图鉴后领取；《晶灿钻石／明亮珍珠》：获取“叶伊布、冰伊布”时提到的前置条件；全国图鉴后获得伊布再进化">![#0133 伊布](https://assets.anuluca.com/Island/notes/postgame-pokemon/sv-icons/0133.png)</abbr> | <abbr title="《红／绿／蓝》《皮卡丘》《火红／叶绿》《Let&#x27;s Go！皮卡丘／伊布》：通关后进入华蓝洞窟捕捉">![#0150 超梦](https://assets.anuluca.com/Island/notes/postgame-pokemon/sv-icons/0150.png)</abbr> | <abbr title="《钻石／珍珠》：获取“波克基斯”时提到的前置条件；波克比需要全国图鉴后获取；《晶灿钻石／明亮珍珠》：复刻版的地下大洞窟使拉鲁拉丝、波克比、小山猪、雪童子、小磁怪等更早出现，所以不能完全照搬原版《钻石／珍珠》的限制。">![#0175 波克比](https://assets.anuluca.com/Island/notes/postgame-pokemon/sv-icons/0175.png)</abbr> | <abbr title="《钻石／珍珠》：获取“远古巨蜓”时提到的前置条件；蜻蜻蜓需要全国图鉴后获取；《晶灿钻石／明亮珍珠》：获取“远古巨蜓”时提到的前置条件；全国图鉴后获得蜻蜻蜓">![#0193 蜻蜻蜓](https://assets.anuluca.com/Island/notes/postgame-pokemon/sv-icons/0193.png)</abbr> |

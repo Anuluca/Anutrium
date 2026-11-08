@@ -18,7 +18,7 @@ test('Pokémon overview preserves all species, order, details and an empty cover
   expect(parsed.metadata.type).toBe('pokemon')
   expect(parsed.metadata.image).toBeUndefined()
   expect(content.widgets).toEqual([])
-  expect(content.html).toMatch(/^<table class="note-image-table"/)
+  expect(parsed.body).toMatch(/^# 总览\n\n/)
   const ids = [...content.html.matchAll(/alt="#(\d+) /g)].map((m) =>
     Number(m[1])
   )
@@ -64,13 +64,15 @@ test('Pokémon overview fits the reader and retains hover information', async ({
     'data-note-title',
     /^《红／绿／蓝》/
   )
-  await expect(grid.locator('img').first()).toHaveCSS('width', '64px')
+  await expect(grid.locator('img').first()).toHaveCSS('width', '96px')
   const geometry = await grid.evaluate((element) => ({
     overflow: element.scrollWidth - element.clientWidth,
     readerOverflow:
       element.closest('.note-reader')!.scrollWidth -
       element.closest('.note-reader')!.clientWidth,
-    first: element.parentElement!.firstElementChild === element,
+    overview:
+      element.previousElementSibling?.previousElementSibling?.textContent,
+    introduction: element.previousElementSibling?.textContent,
   }))
   const trigger = grid.locator('abbr').nth(3)
   await trigger.focus()
@@ -86,7 +88,10 @@ test('Pokémon overview fits the reader and retains hover information', async ({
   await expect(tooltip).toHaveCount(0)
   await trigger.hover()
   await expect(page.getByRole('tooltip')).toBeVisible()
-  expect(geometry.first).toBe(true)
+  expect(geometry.overview).toBe('总览')
+  expect(geometry.introduction).toBe(
+    '由于本人习惯每次通关都尽量用本世代宝可梦组成通关队伍，且尽量不使用用过的宝可梦，所以整理了这个表格。'
+  )
   expect(geometry.overflow).toBeLessThanOrEqual(1)
   expect(geometry.readerOverflow).toBeLessThanOrEqual(1)
 })
