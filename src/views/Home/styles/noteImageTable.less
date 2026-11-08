@@ -63,3 +63,21 @@
     animation: none;
   }
 }
+
+@media screen and (aspect-ratio > 1) {
+  .note-reader.no-rem .note-markdown table.note-image-table {
+    tbody {
+      display: grid;
+      grid-template-columns: repeat(10, minmax(max-content, 1fr));
+    }
+    tr {
+      display: contents;
+    }
+    td {
+      display: block;
+    }
+    td:empty {
+      display: none;
+    }
+  }
+}

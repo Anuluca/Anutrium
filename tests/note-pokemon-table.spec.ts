@@ -81,6 +81,19 @@ test('Pokémon overview fits the reader and retains hover information', async ({
       element.previousElementSibling?.previousElementSibling?.textContent,
     introduction: element.previousElementSibling?.textContent,
   }))
+  const rows = await grid.locator('img').evaluateAll((elements) => {
+    const grouped = new Map<number, number>()
+    for (const element of elements) {
+      const top = Math.round(element.getBoundingClientRect().top)
+      grouped.set(top, (grouped.get(top) || 0) + 1)
+    }
+    return [...grouped.values()]
+  })
+  const desktop = await page.evaluate(
+    () => matchMedia('(aspect-ratio > 1)').matches
+  )
+  expect(rows[0]).toBe(desktop ? 10 : 6)
+  if (desktop) expect(rows).toEqual([...Array(9).fill(10), 7])
   const trigger = grid.locator('abbr').nth(3)
   await trigger.focus()
   const tooltip = page.getByRole('tooltip')
