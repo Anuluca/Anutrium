@@ -690,15 +690,17 @@ test('shared category tabs filter before pagination and reset to the first page'
   await expect(tabs).toHaveClass(/filter-rail--horizontal/)
   await expect(tabs.locator('strong')).toHaveText([
     'ALL',
-    'TECHNOLOGY',
-    'POKÉMON',
     'DAILY',
+    'POKÉMON',
+    'TECHNOLOGY',
+    'DESIGN',
     'TEST',
   ])
   await expect(tabs.locator('.filter-rail__count')).toHaveText([
     '22',
-    '21',
+    '0',
     '1',
+    '21',
     '0',
     '2',
   ])
@@ -739,8 +741,9 @@ test('shared category tabs filter before pagination and reset to the first page'
   await expect(pagination.locator('[aria-current="page"]')).toHaveText('1')
   await expect(tabs.locator('.filter-rail__count')).toHaveText([
     '22',
-    '21',
+    '0',
     '1',
+    '21',
     '0',
     '2',
   ])
