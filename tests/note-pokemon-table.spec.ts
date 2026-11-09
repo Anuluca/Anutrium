@@ -72,7 +72,10 @@ test('Pokémon overview fits the reader and retains hover information', async ({
     .evaluateAll((elements) =>
       elements.map((el) => el.getBoundingClientRect().height)
     )
-  expect(Math.max(...labelHeights)).toBeLessThanOrEqual(29)
+  const desktop = await page.evaluate(
+    () => matchMedia('(aspect-ratio > 1)').matches
+  )
+  expect(Math.max(...labelHeights)).toBeLessThanOrEqual(desktop ? 29 : 57)
   const geometry = await grid.evaluate((element) => ({
     readerOverflow:
       element.closest('.note-reader')!.scrollWidth -
@@ -89,11 +92,21 @@ test('Pokémon overview fits the reader and retains hover information', async ({
     }
     return [...grouped.values()]
   })
-  const desktop = await page.evaluate(
-    () => matchMedia('(aspect-ratio > 1)').matches
+  expect(rows[0]).toBe(desktop ? 10 : 3)
+  expect(rows).toEqual(
+    desktop ? [...Array(9).fill(10), 7] : [...Array(32).fill(3), 1]
   )
-  expect(rows[0]).toBe(desktop ? 10 : 6)
-  if (desktop) expect(rows).toEqual([...Array(9).fill(10), 7])
+  if (!desktop) {
+    expect(
+      await grid.evaluate((el) => el.scrollWidth - el.clientWidth)
+    ).toBeLessThanOrEqual(1)
+    const nameHeights = await grid
+      .locator('.note-image-label__name')
+      .evaluateAll((elements) =>
+        elements.map((el) => el.getBoundingClientRect().height)
+      )
+    expect(Math.max(...nameHeights)).toBeLessThanOrEqual(29)
+  }
   const tableOffsets = await page
     .locator('.note-markdown table')
     .evaluateAll((tables) =>
