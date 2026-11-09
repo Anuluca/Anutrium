@@ -223,10 +223,33 @@ test('wheel, touch and keyboard input wait for the header before scrolling conte
             content = root
               .querySelector('.note-reader__heading')!
               .getBoundingClientRect()
-          return Math.abs(header.height - content.height * 2)
+          const style = getComputedStyle(
+            root.querySelector('.note-reader__header')!
+          )
+          return Math.abs(
+            header.height -
+              parseFloat(style.paddingTop) -
+              parseFloat(style.paddingBottom) -
+              content.height * 2
+          )
         })
       )
       .toBeLessThanOrEqual(1)
+  }
+
+  async function waitForCompact() {
+    await expect(reader).toHaveClass(/is-header-compact/)
+    await expect
+      .poll(() =>
+        reader.evaluate(
+          (root) =>
+            root
+              .querySelector('.note-reader__header')!
+              .getAnimations({ subtree: true })
+              .filter((animation) => animation.playState === 'running').length
+        )
+      )
+      .toBe(0)
   }
 
   await scroll.hover()
@@ -239,11 +262,17 @@ test('wheel, touch and keyboard input wait for the header before scrolling conte
       )
   )
   await wheel(160)
+  await waitForCompact()
+  expect(await scroll.evaluate((el) => el.scrollTop)).toBeLessThanOrEqual(1)
+  await wheel(100)
   await assertOrdered()
   await reset()
 
   await scroll.click({ position: { x: 10, y: 10 } })
   await startRecording()
+  await page.keyboard.press('PageDown')
+  await waitForCompact()
+  expect(await scroll.evaluate((el) => el.scrollTop)).toBeLessThanOrEqual(1)
   await page.keyboard.press('PageDown')
   await assertOrdered()
   await reset()
@@ -286,7 +315,7 @@ test('wheel, touch and keyboard input wait for the header before scrolling conte
     }
     await startRecording()
     await send('touchStart', y)
-    for (let step = 1; step <= 14; step++) {
+    for (let step = 1; step <= 24; step++) {
       await send('touchMove', y - step * 10)
       await page.evaluate(
         () =>
@@ -295,7 +324,7 @@ test('wheel, touch and keyboard input wait for the header before scrolling conte
           )
       )
     }
-    await send('touchEnd', y - 140)
+    await send('touchEnd', y - 240)
     await assertOrdered()
     await session?.detach()
   }
@@ -358,7 +387,15 @@ test('pulling down at the top restores the header even without a scroll event', 
               content = root
                 .querySelector('.note-reader__heading')!
                 .getBoundingClientRect()
-            return Math.abs(header.height - content.height * ratio)
+            const style = getComputedStyle(
+              root.querySelector('.note-reader__header')!
+            )
+            return Math.abs(
+              header.height -
+                parseFloat(style.paddingTop) -
+                parseFloat(style.paddingBottom) -
+                content.height * ratio
+            )
           },
           compact ? 1 : 2
         )
@@ -434,4 +471,81 @@ test('pulling down at the top restores the header even without a scroll event', 
     await settled(false)
     await session?.detach()
   }
+})
+
+test('the first scroll gesture only compacts the header without replaying buffered distance', async ({
+  page,
+}) => {
+  test.setTimeout(90000)
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  const source = `---\ntitle: "首次滚动衔接回归"\ndate: "2024-11-12"\ncategory: daily\n---\n\n${'正文段落，用于检查首次下滑不能跳过内容。\n\n'.repeat(
+    150
+  )}`
+  await page.route('https://steam-api.anuluca.com/notes**', (route) =>
+    new URL(route.request().url()).pathname.endsWith(id)
+      ? route.fulfill({ contentType: 'text/markdown', body: source })
+      : route.fulfill({
+          json: {
+            notes: [
+              {
+                id,
+                title: '首次滚动衔接回归',
+                time: '2024-11-12',
+                type: 'daily',
+              },
+            ],
+            nextCursor: null,
+          },
+        })
+  )
+  await page.goto(`/atrium/notes?note=${id}`, { waitUntil: 'domcontentloaded' })
+  const reader = page.locator('.note-reader')
+  const scroll = reader.locator('.note-reader__body-scroll')
+  await expect(reader).toHaveAttribute('data-note-enter', 'ready', {
+    timeout: 45000,
+  })
+  await scroll.hover()
+  const frames = await reader.evaluate(async (root) => {
+    const scroll = root.querySelector<HTMLElement>('.note-reader__body-scroll')!
+    const samples: number[] = []
+    const start = performance.now()
+    // 模拟触控板在标题过渡期间持续产生滚动输入。
+    scroll.dispatchEvent(
+      new WheelEvent('wheel', { deltaY: 1200, bubbles: true, cancelable: true })
+    )
+    await new Promise<void>((resolve) => {
+      const sample = () => {
+        const elapsed = performance.now() - start
+        samples.push(scroll.scrollTop)
+        if (elapsed > 30 && elapsed < 250)
+          scroll.dispatchEvent(
+            new WheelEvent('wheel', {
+              deltaY: 90,
+              bubbles: true,
+              cancelable: true,
+            })
+          )
+        if (elapsed >= 1100) resolve()
+        else requestAnimationFrame(sample)
+      }
+      requestAnimationFrame(sample)
+    })
+    return samples
+  })
+  await expect(reader).toHaveClass(/is-header-compact/)
+  expect(Math.max(...frames)).toBeLessThanOrEqual(1)
+  // 标题收起后的新输入才滚动正文，不能把之前累积的距离补交给正文。
+  await page.mouse.wheel(0, 100)
+  await expect
+    .poll(() => scroll.evaluate((el) => el.scrollTop))
+    .toBeGreaterThan(20)
+  expect(await scroll.evaluate((el) => el.scrollTop)).toBeLessThanOrEqual(101)
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await scroll.evaluate((el) => el.scrollTo({ top: 0, behavior: 'auto' }))
+  await expect(reader).not.toHaveClass(/is-header-compact/)
+  await page.mouse.wheel(0, 100)
+  await expect
+    .poll(() => scroll.evaluate((el) => el.scrollTop))
+    .toBeGreaterThan(20)
+  expect(await scroll.evaluate((el) => el.scrollTop)).toBeLessThanOrEqual(101)
 })

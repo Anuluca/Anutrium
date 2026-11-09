@@ -7,8 +7,13 @@ import type {
 import NProgress from 'nprogress'
 import { gsap } from 'gsap'
 import { pageThemeColors } from '@/config/pageThemes'
+import { aiReplicaExperiments } from '@/config/aiReplicaExperiments'
 import { PHOTO_ROUTE_PATH } from '@/config/atriumPhoto'
-import { islandModuleAtPath, islandModules } from '@/config/islandModules'
+import {
+  AI_AGENT_TEST_PATH,
+  islandModuleAtPath,
+  islandModules,
+} from '@/config/islandModules'
 import {
   isTempleRouteName,
   needsFreshTempleScene,
@@ -136,10 +141,6 @@ const PAGE_DESCRIPTIONS: Record<string, { zhCn: string; en: string }> = {
     zhCn: 'Anutrium 是前端工程师 Anuluca 的个人网站，记录作品、创意工具、生活记录与设计实践。',
     en: 'Anutrium is the portfolio of frontend engineer Anuluca, featuring web projects, creative tools, travel logs, and design experiments.',
   },
-  TEST2: {
-    zhCn: 'Anutrium 原主页的交互与内容实验。',
-    en: 'Interactive experiments from the original Anutrium homepage.',
-  },
   ARCHIVE: {
     zhCn: '浏览 Anuluca 的主要项目与个人项目，包括 Vue、React、TypeScript、Three.js、WebGL 与数据可视化实践。',
     en: 'Explore Anuluca’s main and personal projects across Vue, React, TypeScript, Three.js, WebGL, and data visualization.',
@@ -151,10 +152,6 @@ const PAGE_DESCRIPTIONS: Record<string, { zhCn: string; en: string }> = {
   CRAFT: {
     zhCn: '由 Anuluca 设计与开发的前端创意工具和交互实验。',
     en: 'Frontend utilities and interactive experiments designed and built by Anuluca.',
-  },
-  ABOUT: {
-    zhCn: '了解前端工程师 Anuluca 的经历、技能与设计理念。',
-    en: 'About Anuluca, a frontend engineer: experience, skills, and design approach.',
   },
   ATRIUM: {
     zhCn: 'Anuluca 的个人内容与兴趣空间。',
@@ -174,19 +171,9 @@ const DESCRIPTION_ROUTE_GROUPS: Record<string, keyof typeof PAGE_DESCRIPTIONS> =
     IMAGEBASE64: 'CRAFT',
     SLEEPING_DOGS_BULLS_AND_COWS: 'ATRIUM',
     SLEEPING_DOGS_SAFETY_BOX: 'ATRIUM',
-    TEST: 'ATRIUM',
-    ATRIUM_IMAGE_LOG: 'ATRIUM',
-    ATRIUM_IMAGE_LOG_DETAIL: 'ATRIUM',
-    ATRIUM_ILLUSTRATION: 'ATRIUM',
-    ATRIUM_TRAINER_CARD: 'ATRIUM',
   }
 
-const LEGACY_RED_BACKGROUND_GROUPS = new Set([
-  'ABOUT',
-  'HOME',
-  'TEST2',
-  'ATRIUM',
-])
+const LEGACY_RED_BACKGROUND_GROUPS = new Set(['HOME', 'ATRIUM'])
 
 export type PageLayout = 'main' | 'sub'
 
@@ -210,19 +197,6 @@ type RouteConfig = RouteRecordRaw & {
 
 export const routes: RouteConfig[] = [
   {
-    path: '/test2',
-    name: 'TEST2',
-    component: () => import('@/views/Test2/index.vue'),
-    meta: {
-      titleEn: 'TEST2',
-      titleCn: 'test2',
-      fullFooter: false,
-      pageFooter: false,
-      pageLayout: 'main',
-      ifShow: false,
-    },
-  },
-  {
     path: '/flanerie/:vlogId',
     name: 'FLANERIE_DETAIL',
     component: () => import('@/views/Flânerie/Detail/index.vue'),
@@ -241,7 +215,6 @@ export const routes: RouteConfig[] = [
 
   {
     path: '/:module(archive|flanerie|pokeyard|creative|floratrium)?',
-    alias: ['/home2'],
     name: 'HOME',
     component: () => import('@/views/Home/index.vue'),
     meta: {
@@ -286,6 +259,21 @@ export const routes: RouteConfig[] = [
       ifShow: false,
     },
   },
+  {
+    path: AI_AGENT_TEST_PATH,
+    name: 'ATRIUM_AI_AGENT_TEST',
+    component: () => import('@/views/Home/index.vue'),
+    meta: {
+      activeMenu: '/atrium',
+      starBackground: 'default',
+      titleEn: 'AI AGENT CAPABILITY TEST',
+      titleCn: 'AI Agent 能力测试',
+      fullFooter: false,
+      pageFooter: true,
+      pageLayout: 'main',
+      ifShow: false,
+    },
+  },
   ...Object.values(islandModules).map<RouteConfig>((module) => ({
     path: module.path,
     name: module.routeName,
@@ -301,118 +289,7 @@ export const routes: RouteConfig[] = [
       ifShow: false,
     },
   })),
-  {
-    path: '/atrium/photography',
-    name: 'ATRIUM_PHOTOGRAPHY',
-    component: () => import('@/views/Island/Photography/index.vue'),
-    meta: {
-      activeMenu: '/atrium',
-      titleEn: 'PHOTOGRAPHY',
-      titleCn: '摄影作品',
-      fullFooter: true,
-      pageFooter: true,
-      pageLayout: 'sub',
-      ifShow: false,
-      noMenu: false,
-      starBackground: 'deep-black',
-    },
-  },
 
-  {
-    path: '/atrium/merch/:collectionId',
-    name: 'ATRIUM_MERCH_DETAIL',
-    component: () => import('@/views/Island/Merch/Detail/index.vue'),
-    meta: {
-      activeMenu: '/atrium',
-      titleEn: 'COLLECTIBLES',
-      titleCn: '收藏品',
-      fullFooter: true,
-      pageFooter: true,
-      pageLayout: 'sub',
-      ifShow: false,
-      noMenu: false,
-      starBackground: 'deep-black',
-    },
-  },
-  {
-    path: '/atrium/image-log',
-    name: 'ATRIUM_IMAGE_LOG',
-    component: () => import('@/views/Island/ImageLog/index.vue'),
-    meta: {
-      activeMenu: '/atrium',
-      titleEn: 'IMAGE LOG',
-      titleCn: '图像记录',
-      fullFooter: true,
-      pageFooter: true,
-      pageLayout: 'sub',
-      ifShow: false,
-      noMenu: false,
-      starBackground: 'deep-black',
-    },
-  },
-  {
-    path: '/atrium/image-log/:albumId',
-    name: 'ATRIUM_IMAGE_LOG_DETAIL',
-    component: () => import('@/views/Island/ImageLog/Detail/index.vue'),
-    meta: {
-      activeMenu: '/atrium',
-      titleEn: 'IMAGE LOG',
-      titleCn: '图像记录',
-      fullFooter: true,
-      pageFooter: true,
-      pageLayout: 'sub',
-      ifShow: false,
-      noMenu: false,
-      starBackground: 'deep-black',
-    },
-  },
-  {
-    path: '/atrium/illustration',
-    name: 'ATRIUM_ILLUSTRATION',
-    component: () => import('@/views/Island/WorksGallery/index.vue'),
-    meta: {
-      activeMenu: '/atrium',
-      titleEn: 'ILLUSTRATION',
-      titleCn: '绘画',
-      fullFooter: true,
-      pageFooter: true,
-      pageLayout: 'sub',
-      ifShow: false,
-      noMenu: false,
-      starBackground: 'deep-black',
-    },
-  },
-  {
-    path: '/atrium/trainer-card',
-    name: 'ATRIUM_TRAINER_CARD',
-    component: () => import('@/views/Island/WorksGallery/index.vue'),
-    meta: {
-      activeMenu: '/atrium',
-      titleEn: 'TRAINER CARD',
-      titleCn: '训练家卡',
-      fullFooter: true,
-      pageFooter: true,
-      pageLayout: 'sub',
-      ifShow: false,
-      noMenu: false,
-      starBackground: 'deep-black',
-    },
-  },
-
-  {
-    path: '/about',
-    name: 'ABOUT',
-    component: () => import('@/views/About/index.vue'),
-    meta: {
-      updatedAt: '2026-07-11',
-      titleEn: 'ABOUT',
-      titleCn: '关于',
-      fullFooter: false,
-      pageFooter: true,
-      pageLayout: 'main',
-      ifShow: true,
-    },
-  },
   {
     path: '/404',
     name: '404',
@@ -525,12 +402,12 @@ export const routes: RouteConfig[] = [
     },
   },
   {
-    path: '/ai-playground/arknightxpersona3reload',
-    name: 'ARKNIGHT_PERSONA_RELOAD',
-    component: () => import('@/views/AiPlayground/ArknightPersona/index.vue'),
+    path: '/laboratory/monkey-typewriter',
+    name: 'MONKEY_TYPEWRITER',
+    component: () => import('@/views/MonkeyTypewriter/index.vue'),
     meta: {
-      titleEn: 'ARKNIGHTS × PERSONA 3 RELOAD',
-      titleCn: 'GPT-6-Astra前端UI复刻',
+      titleEn: 'MONKEY TYPEWRITER',
+      titleCn: '猴子打字',
       fullFooter: true,
       pageFooter: true,
       pageLayout: 'sub',
@@ -539,6 +416,21 @@ export const routes: RouteConfig[] = [
       starBackground: 'deep-black',
     },
   },
+  ...aiReplicaExperiments.map<RouteConfig>((experiment) => ({
+    path: experiment.path,
+    name: experiment.routeName,
+    component: () => import('@/views/AiPlayground/index.vue'),
+    meta: {
+      titleEn: experiment.pageTitleEn,
+      titleCn: experiment.pageTitle,
+      fullFooter: true,
+      pageFooter: true,
+      pageLayout: 'sub',
+      ifShow: false,
+      noMenu: true,
+      starBackground: 'deep-black',
+    },
+  })),
   {
     path: '/games/sleepingdogs/bullsAndCows',
     name: 'SLEEPING_DOGS_BULLS_AND_COWS',
@@ -570,21 +462,6 @@ export const routes: RouteConfig[] = [
       ifShow: false,
       noMenu: true,
       starBackground: 'deep-black',
-    },
-  },
-  {
-    path: '/test',
-    name: 'TEST',
-    component: () => import('@/views/Island/index.vue'),
-    meta: {
-      activeMenu: '/atrium',
-      updatedAt: '2026-07-18',
-      titleEn: 'ATRIUM',
-      titleCn: '个人海湾',
-      fullFooter: true,
-      pageFooter: false,
-      pageLayout: 'sub',
-      ifShow: false,
     },
   },
 ]
@@ -696,11 +573,6 @@ export const syncPageTheme = (
     isTempleRouteName(route.name) && moduleGroup === 'ISLAND'
       ? 'CREATIVE'
       : moduleGroup || getPageThemeGroup(route)
-  if (pageGroup === 'ABOUT') {
-    if (!rootStyle.getPropertyValue('--page-theme-color'))
-      rootStyle.setProperty('--page-theme-color', pageThemeColors.HOME)
-    return
-  }
 
   const nextColor = colorOverride || pageThemeColors[pageGroup] || '#e23456'
   const currentColor = rootStyle.getPropertyValue('--page-theme-color').trim()

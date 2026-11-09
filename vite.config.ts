@@ -8,8 +8,6 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 import { floratriumDevPlugin } from './scripts/lib/floratriumDevPlugin'
 import { islandModules } from './src/config/islandModules'
-import imageLog from './src/locales/dynamic/island/Photography/imageLog'
-import merch from './src/locales/dynamic/island/Photography/merch'
 
 const path = require('path')
 
@@ -24,13 +22,6 @@ const lastUpdate = new Intl.DateTimeFormat('zh-CN', {
   month: '2-digit',
   day: '2-digit',
 }).format(new Date(lastCommitTime))
-
-const merchDetailRoutes = Object.values(merch).flatMap((collections) =>
-  collections.map((collection) => `/atrium/merch/${collection.id}`)
-)
-const imageLogDetailRoutes = imageLog.map(
-  (album) => `/atrium/image-log/${album.id}`
-)
 
 export default defineConfig({
   define: {
@@ -206,20 +197,14 @@ export default defineConfig({
       '/htmlEntities',
       '/base64Codec',
       '/imageBase64',
-      '/about',
       '/atrium',
       ...Object.values(islandModules).map((module) => module.path),
       '/floratrium',
       '/creative',
-      '/atrium/photography',
-      ...merchDetailRoutes,
-      '/atrium/image-log',
-      ...imageLogDetailRoutes,
-      '/atrium/illustration',
-      '/atrium/trainer-card',
       '/games/sleepingdogs/bullsAndCows',
       '/games/sleepingdogs/saftybox',
       '/ai-playground/arknightxpersona3reload',
+      '/laboratory/monkey-typewriter',
     ],
   },
   base: '/',

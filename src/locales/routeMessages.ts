@@ -2,25 +2,17 @@ import i18n from './index'
 import { resolveLocalePair } from './resolveLocalePair'
 
 type MessageModule = { default: unknown }
-type MessageDomain =
-  | 'about'
-  | 'archive'
-  | 'craft'
-  | 'flanerie'
-  | 'home'
-  | 'island'
+type MessageDomain = 'about' | 'archive' | 'craft' | 'flanerie' | 'island'
 
 const messageLoaders: Record<MessageDomain, () => Promise<MessageModule>> = {
   about: () => import('./modules/about'),
   archive: () => import('./modules/archive'),
   craft: () => import('./modules/craft'),
   flanerie: () => import('./modules/flanerie'),
-  home: () => import('./modules/home'),
   island: () => import('./modules/island'),
 }
 
 const routeMessageDomains: Record<string, MessageDomain[]> = {
-  TEST2: ['home', 'archive', 'craft', 'flanerie'],
   // 首页场景不消费这些文案；嵌入面板在挂载前按需加载，避免阻塞首屏。
   HOME: [],
   ATRIUM: [],
@@ -34,14 +26,6 @@ const routeMessageDomains: Record<string, MessageDomain[]> = {
   HTMLENTITIES: ['craft'],
   BASE64CODEC: ['craft'],
   IMAGEBASE64: ['craft'],
-  ABOUT: ['about'],
-  ATRIUM_PHOTOGRAPHY: ['island'],
-  ATRIUM_MERCH_DETAIL: ['island'],
-  ATRIUM_IMAGE_LOG: ['island'],
-  ATRIUM_IMAGE_LOG_DETAIL: ['island'],
-  ATRIUM_ILLUSTRATION: ['island'],
-  ATRIUM_TRAINER_CARD: ['island'],
-  TEST: ['island'],
 }
 
 const messageLoads = new Map<MessageDomain, Promise<void>>()

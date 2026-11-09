@@ -21,6 +21,8 @@ const island = {
     modelForm: { zhCn: '模型形态', en: 'Model appearance' },
     modelDefault: { zhCn: '默认', en: 'Default' },
     modelWireframe: { zhCn: '网格', en: 'Wireframe' },
+    modelWireThickness: { zhCn: '网格粗细', en: 'Wireframe thickness' },
+    modelWireDensity: { zhCn: '网格密集程度', en: 'Wireframe density' },
     modelOutline: { zhCn: '模型描边', en: 'Model outline' },
     backgroundCyan: { zhCn: '青色', en: 'Cyan' },
     backgroundPink: { zhCn: '粉色', en: 'Pink' },
@@ -57,54 +59,8 @@ const island = {
       en: 'Capture failed. Please try again.',
     },
   },
-  page: {
-    ariaLabel: {
-      zhCn: '个人海湾',
-      en: 'Personal Harbor',
-    },
-    headerMeta: {
-      zhCn: '随手拍下世界，也认真收藏日常。',
-      en: 'Photographs from everywhere and from home.',
-    },
-  },
   modules: {
     photography: {
-      photoWorks: {
-        title: {
-          zhCn: '摄影作品',
-          en: 'PHOTOGRAPHY',
-        },
-        tagline: {
-          zhCn: '到处走走，到处拍拍。',
-          en: 'Wander around. Photograph everywhere.',
-        },
-        collectionNavigation: {
-          zhCn: '摄影作品分类',
-          en: 'Photography collections',
-        },
-        subjectNavigation: {
-          zhCn: '拍摄对象分类',
-          en: 'Photography subjects',
-        },
-        allPhotos: {
-          zhCn: '全部',
-          en: 'ALL',
-        },
-        photoUnit: {
-          zhCn: '',
-          en: 'PHOTOS',
-        },
-        photoFallback: {
-          zhCn: '摄影作品',
-          en: 'Photograph',
-        },
-        empty: {
-          zhCn: '影像正在冲洗中',
-          en: 'PHOTOGRAPHS ARE DEVELOPING',
-        },
-        img: 'https://assets.anuluca.com/Island/picWork/normal/DSC00812-01-01.jpeg',
-        data: dynamic.photoWorks,
-      },
       merch: {
         title: {
           zhCn: '收藏品',
@@ -125,46 +81,6 @@ const island = {
         img: 'https://assets.anuluca.com/Island/merch/lucarioonearm/DSC01408.jpg',
         data: dynamic.merch,
       },
-      imageLog: {
-        title: {
-          zhCn: '图像记录',
-          en: 'IMAGE LOG',
-        },
-        tagline: {
-          zhCn: '记录留档，等人考古。',
-          en: 'Archived for future excavation.',
-        },
-        albumLabel: {
-          zhCn: 'PICS',
-          en: 'PICS',
-        },
-        empty: {
-          zhCn: '图像记录仍在整理中',
-          en: 'IMAGE LOG IS IN DEVELOPMENT',
-        },
-        img: 'https://assets.anuluca.com/Island/picRecord/covid/IMG_20200128_185746.jpg',
-        data: dynamic.imageLog,
-      },
-    },
-    works: {
-      illustration: {
-        img: 'https://placehold.co/760x480/14070c/e23456?text=WIP',
-        empty: {
-          zhCn: '绘画作品仍在整理中',
-          en: 'ILLUSTRATIONS ARE IN DEVELOPMENT',
-        },
-        data: dynamic.works.illustration,
-      },
-      trainerCard: {
-        img: 'https://placehold.co/760x480/14070c/e23456?text=WIP',
-        empty: {
-          zhCn: '训练家卡仍在整理中',
-          en: 'TRAINER CARDS ARE IN DEVELOPMENT',
-        },
-        data: dynamic.works.trainerCard,
-      },
-      experiments: dynamic.works.experiments,
-      designGoods: dynamic.works.designGoods,
     },
     notes: {
       studyNotes: {
@@ -190,20 +106,6 @@ const island = {
     games: {
       library: dynamic.game,
     },
-  },
-  latest: {
-    title: {
-      zhCn: '最近更新',
-      en: 'LATEST',
-    },
-    pages: dynamic.latestPages,
-  },
-  player: {
-    ariaLabel: {
-      zhCn: '音乐推荐',
-      en: 'Featured music',
-    },
-    tracks: dynamic.tracks,
   },
 } as const
 

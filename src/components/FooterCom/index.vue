@@ -169,7 +169,6 @@ let marqueeResizeObserver: ResizeObserver | null = null
 let hasPlayedEntryAnimation = false
 const FOOTER_ENTRY_DELAY = 800
 let footerEntryTimer: number | null = null
-const isDev = import.meta.env.DEV
 const preview = ref<{ src: string; left: number; bottom: number } | null>(null)
 let previewQuery: MediaQueryList | null = null
 let previewAnchor: HTMLElement | null = null
@@ -348,13 +347,6 @@ watch(() => route.fullPath, hidePreview)
   >
     <div ref="footerContent" class="footer-content">
       <div class="left">
-        <button
-          v-if="isDev"
-          class="footer-test-entry"
-          type="button"
-          aria-label="打开开发测试页"
-          @click="router.push('/test')"
-        />
         <div class="language">
           <button
             type="button"

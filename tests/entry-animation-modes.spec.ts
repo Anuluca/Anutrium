@@ -6,18 +6,9 @@ test.beforeEach(async ({ page }) => {
   )
 })
 
-test('home, module entries and about use the horizon intro', async ({
-  page,
-}) => {
+test('home and module entries use the horizon intro', async ({ page }) => {
   test.setTimeout(60000)
-  for (const path of [
-    '/',
-    '/archive',
-    '/flanerie',
-    '/pokeyard',
-    '/atrium',
-    '/about',
-  ]) {
+  for (const path of ['/', '/archive', '/flanerie', '/pokeyard', '/atrium']) {
     await page.goto(path, { waitUntil: 'domcontentloaded' })
     const overlay = page.locator('.entry-overlay-container')
     await expect(overlay, path).toHaveClass(/entry-mode--horizon/)

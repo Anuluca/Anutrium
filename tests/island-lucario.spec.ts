@@ -52,14 +52,14 @@ test('personal bay blocks page scrolling and restores it after leaving', async (
   await page.evaluate(() =>
     (
       document.querySelector('.layout-page') as any
-    ).__vueParentComponent.proxy.$router.push('/about')
+    ).__vueParentComponent.proxy.$router.push('/colorPalette')
   )
   await expect(root).toHaveCount(0)
-  await expect(page.locator('.about-page')).toBeVisible()
+  await expect(page.locator('.palette-tool')).toBeVisible()
   // 离场及菜单关闭后，目标页应恢复正常滚动。
   await expect
     .poll(async () => {
-      await page.locator('.about-page').evaluate(() => {
+      await page.locator('.palette-tool').evaluate(() => {
         document.body.scrollTop = 100
       })
       await page.waitForTimeout(100)
@@ -363,9 +363,9 @@ test('island simplifies its model and follows the pointer with its head, then le
   await page.evaluate(() =>
     (
       document.querySelector('.layout-page') as any
-    ).__vueParentComponent.proxy.$router.push('/about')
+    ).__vueParentComponent.proxy.$router.push('/colorPalette')
   )
-  await expect(page.locator('.about-page')).toBeVisible()
+  await expect(page.locator('.palette-tool')).toBeVisible()
   await expect(root).toHaveCount(0)
   await expect
     .poll(() =>

@@ -17,6 +17,7 @@
   "migrations": [
     { "tag": "flora-likes-v1", "new_sqlite_classes": ["FloraLikes"] }
   ],
+  "ratelimits": [{ "name": "MONKEY_CREATE_LIMITER", "namespace_id": "7301", "simple": { "limit": 5, "period": 60 } }],
   "vars": {
     "GA4_PROPERTY_ID": "353411419",
     "GA4_STREAM_ID": "4620543849",

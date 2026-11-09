@@ -17,11 +17,14 @@ const openPanel = async (page: Page, name: string) => {
 }
 const closePanel = async (page: Page) => {
   await page.keyboard.press('Escape')
-  await expect(page.locator('.el-overlay-dialog')).toBeHidden()
+  await expect(page.locator('.el-overlay-dialog:visible')).toHaveCount(0)
 }
 
 test.beforeEach(async ({ page }) => {
   await page.goto(route, { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.footer-bottom-gradient--ready')).toBeAttached({
+    timeout: 20000,
+  })
   await expect(page.locator('.ark-scene')).toHaveClass(/scene-ready/)
   await page.waitForTimeout(1600)
 })
@@ -32,9 +35,10 @@ test('desktop scene renders the requested copy and every menu is clickable', asy
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(
     'GPT-6-Astra前端UI复刻'
   )
-  await expect(page.locator('.replica-credit')).toHaveText(
-    '使用GPT-6 Astra 高进行的《明日方舟》UI复刻'
+  await expect(page.locator('.replica-credit__description')).toHaveText(
+    '使用GPT-6 Astra High 一句话通过参考图生成的UI复刻'
   )
+  await expect(page.locator('.online-count')).toHaveCount(0)
   for (const name of [
     '终端',
     '恢复理智',

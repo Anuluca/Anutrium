@@ -228,6 +228,47 @@ watch(
             />
           </div>
         </div>
+        <div class="photo-tool-field">
+          <div class="photo-tool-field__label">
+            <label for="photo-model-wire-thickness">{{
+              t('island.photoMode.modelWireThickness')
+            }}</label>
+            <output for="photo-model-wire-thickness"
+              >{{ photoComponents.settings.modelWireThickness
+              }}<small>×</small></output
+            >
+          </div>
+          <PhotoToolRange
+            id="photo-model-wire-thickness"
+            v-model="photoComponents.settings.modelWireThickness"
+            :label="t('island.photoMode.modelWireThickness')"
+            :min="1"
+            :max="8"
+            unit="×"
+            :disabled="photoComponents.settings.modelForm !== 'wireframe'"
+          />
+        </div>
+        <div class="photo-tool-field">
+          <div class="photo-tool-field__label">
+            <label for="photo-model-wire-density">{{
+              t('island.photoMode.modelWireDensity')
+            }}</label>
+            <output for="photo-model-wire-density"
+              >{{ photoComponents.settings.modelWireDensity
+              }}<small>%</small></output
+            >
+          </div>
+          <PhotoToolRange
+            id="photo-model-wire-density"
+            v-model="photoComponents.settings.modelWireDensity"
+            :label="t('island.photoMode.modelWireDensity')"
+            :min="20"
+            :max="100"
+            :step="20"
+            unit="%"
+            :disabled="photoComponents.settings.modelForm !== 'wireframe'"
+          />
+        </div>
       </div>
       <div
         class="photo-tool-group"

@@ -19,10 +19,8 @@ const props = withDefaults(defineProps<{ entryActive?: boolean }>(), {
   entryActive: true,
 })
 
-const currentRouter = computed(() => route.path)
 const isTempleRoute = computed(() => isTempleRouteName(route.name))
 
-const isTextMenu = computed(() => currentRouter.value !== '/test2')
 const useDeepBlackBackground = computed(
   () => route.meta.starBackground === 'deep-black'
 )
@@ -49,15 +47,10 @@ const requestedActiveSign = computed<ZodiacSignId>(() => {
 
   if (routeName === 'ARCHIVE') return 'aquarius'
   if (routeName.startsWith('FLANERIE')) return 'sagittarius'
-  if (
-    routeName.startsWith('ATRIUM') ||
-    routeName === 'TEST' ||
-    redirectedPath.startsWith('/atrium')
-  ) {
+  if (routeName.startsWith('ATRIUM') || redirectedPath.startsWith('/atrium')) {
     return 'pisces'
   }
   if (craftRouteNames.has(routeName)) return 'gemini'
-  if (routeName === 'ABOUT') return 'pisces'
   return 'leo'
 })
 const activeSign = ref<ZodiacSignId>(requestedActiveSign.value)
@@ -83,21 +76,15 @@ watch(
 watch(
   () => visualStateStore.routeLeaveRevision,
   () => {
-    if (route.name !== 'ABOUT') activeSign.value = pendingActiveSign
+    activeSign.value = pendingActiveSign
   },
   { flush: 'sync' }
 )
 
 const zodiacLayout = computed(() => {
   if (isTempleRoute.value) return navigation.activeSelection ? 'content' : 'red'
-  return currentRouter.value === '/test2'
-    ? visualStateStore.zodiacLayout
-    : 'content'
+  return 'content'
 })
-const particlesVisible = computed(
-  () =>
-    currentRouter.value !== '/test2' || visualStateStore.homeStarfieldVisible
-)
 // About 关闭动画结束后再恢复星空与星盘，避免背景提前透出。
 const celestialVisible = computed(
   () => !navigation.aboutOpen && !navigation.aboutOverlayVisible
@@ -119,7 +106,7 @@ const simpleInitialEntrance = computed(
   <div class="back-controller">
     <BackStars
       :theme="visualStateStore.theme"
-      :is-text-menu="isTextMenu"
+      is-text-menu
       :deep-black="useDeepBlackBackground"
       :black-backdrop="isTempleRoute && navigation.activeSelection === 'statue'"
       :active-sign="activeSign"
@@ -128,7 +115,7 @@ const simpleInitialEntrance = computed(
         isTempleRoute ? TEMPLE_FOCUS_DURATION : undefined
       "
       :tinted="isTempleRoute"
-      :particles-visible="particlesVisible"
+      :particles-visible="true"
       :celestial-visible="celestialVisible"
       :motion-active="motionActive"
       :particle-fps="40"

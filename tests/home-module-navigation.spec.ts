@@ -378,36 +378,6 @@ test('collapsed and expanded cards and progress edge remain consistent', async (
   }
 })
 
-test('test harbor has the requested four groups and toolbox link', async ({
-  page,
-}, info) => {
-  await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto('/test', { waitUntil: 'domcontentloaded' })
-  const panels = page.locator(
-    info.project.name.includes('mobile') ? '.mobile-port' : '.port-panel'
-  )
-  await expect(panels).toHaveCount(4)
-  const groups = await panels.evaluateAll((items) =>
-    items.map((item) => ({
-      title: item.querySelector('.port-head p, .port-label em')!.textContent,
-      cards: Array.from(
-        item.querySelectorAll('.card-info strong, .mobile-card-info strong')
-      ).map((card) => card.textContent?.trim()),
-    }))
-  )
-  expect(groups).toEqual([
-    { title: 'ART', cards: ['摄影', '绘画'] },
-    { title: 'CREATIVE', cards: ['工具箱', '设计创作', '实验室'] },
-    { title: 'NOTES', cards: ['学习笔记', '杂谈'] },
-    { title: 'OTAKU', cards: ['游戏库', '收藏品'] },
-  ])
-  await panels
-    .nth(1)
-    .getByRole('button', { name: /工具箱/ })
-    .click()
-  await expect(page).toHaveURL(/\/creative\?current=craft$/)
-})
-
 test('simple entrance fades the whole model and focus lowers head pitch', async ({
   page,
 }) => {

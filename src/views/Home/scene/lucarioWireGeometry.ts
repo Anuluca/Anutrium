@@ -1,10 +1,15 @@
+import { MeshoptSimplifier } from 'meshoptimizer'
 import * as THREE from 'three'
+import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 
 import { createBarycentricGeometry } from './barycentricGeometry'
 
 /** 仅修饰线框副本：实体、拾取及深度预通道继续使用原始网格。 */
-export function createLucarioWireGeometry(source: THREE.BufferGeometry) {
-  const surface = source.clone()
+export function createLucarioWireGeometry(
+  source: THREE.BufferGeometry,
+  density = 1
+) {
+  let surface = source.clone()
   const positions = surface.getAttribute('position')
   const indices = surface.index!
   const coneFaces = new Set<number>()
@@ -47,6 +52,22 @@ export function createLucarioWireGeometry(source: THREE.BufferGeometry) {
     if (!surface.morphTargetsRelative)
       for (const target of surface.morphAttributes.position ?? [])
         target.setZ(vertex, target.getZ(vertex) + offset)
+  }
+  if (density < 1) {
+    // 只简化拍照线框副本，先焊接法线接缝，避免同一位置被误判为边界。
+    surface.deleteAttribute('normal')
+    const welded = mergeVertices(surface)
+    surface.dispose()
+    surface = welded
+    const [reduced] = MeshoptSimplifier.simplify(
+      Uint32Array.from(surface.index!.array),
+      surface.getAttribute('position').array as Float32Array,
+      3,
+      Math.max(3, Math.floor((surface.index!.count * density) / 3) * 3),
+      0.02,
+      ['LockBorder']
+    )
+    surface.setIndex(Array.from(reduced))
   }
   const result = createBarycentricGeometry(surface, (a, b) => {
     const hub =

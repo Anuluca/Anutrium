@@ -8,10 +8,11 @@ const props = withDefaults(
     label: string
     min: number
     max: number
+    disabled?: boolean
     step?: number
     unit?: string
   }>(),
-  { step: 1, unit: '' }
+  { step: 1, unit: '', disabled: false }
 )
 const emit = defineEmits<{
   (event: 'update:modelValue', value: number): void
@@ -33,12 +34,13 @@ const valueText = computed(
 )
 const onInput = (event: Event) => {
   const value = (event.target as HTMLInputElement).valueAsNumber
-  if (Number.isFinite(value)) emit('update:modelValue', value)
+  if (!props.disabled && Number.isFinite(value))
+    emit('update:modelValue', value)
 }
 </script>
 
 <template>
-  <div class="photo-tool-range no-rem">
+  <div class="photo-tool-range no-rem" :class="{ 'is-disabled': disabled }">
     <div
       class="photo-tool-range__control"
       :style="{
@@ -58,6 +60,7 @@ const onInput = (event: Event) => {
         :min="min"
         :max="max"
         :step="step"
+        :disabled="disabled"
         :value="modelValue"
         :aria-label="label"
         :aria-valuetext="valueText"
@@ -75,6 +78,12 @@ const onInput = (event: Event) => {
 @import '../styles/photoToolDesign.less';
 .photo-tool-range.no-rem {
   margin-top: 14px;
+  &.is-disabled {
+    opacity: 0.4;
+    input[type='range'] {
+      cursor: not-allowed;
+    }
+  }
   .photo-tool-range__control {
     position: relative;
     height: 22px;

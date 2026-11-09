@@ -21,7 +21,7 @@ test('pageviews cover entry, navigation and back without counting failed navigat
     const { installGoogleAnalytics } = await import('/src/utils/ga4')
     const router = createRouter({
       history: createMemoryHistory(),
-      routes: ['/', '/about', '/blocked'].map((path) => ({
+      routes: ['/', '/analytics-next', '/blocked'].map((path) => ({
         path,
         component: { template: '<div />' },
       })),
@@ -32,8 +32,8 @@ test('pageviews cover entry, navigation and back without counting failed navigat
       measurementId: 'G-TEST123',
       enabled: true,
     })
-    await router.push('/about')
-    await router.push('/about')
+    await router.push('/analytics-next')
+    await router.push('/analytics-next')
     await router.push('/blocked')
     await new Promise<void>((resolve) => {
       const stop = router.afterEach(() => {
@@ -47,17 +47,19 @@ test('pageviews cover entry, navigation and back without counting failed navigat
       Array.from(args as ArrayLike<unknown>)
     )
     dispose()
-    await router.push('/about')
+    await router.push('/analytics-next')
     return { commands, afterDispose: window.dataLayer!.length }
   })
   const pageviews = result.commands.filter((args) => args[1] === 'page_view')
   expect(pageviews.map((args) => args[2].page_location)).toEqual([
     'http://localhost:3000/',
-    'http://localhost:3000/about',
+    'http://localhost:3000/analytics-next',
     'http://localhost:3000/',
   ])
   expect(pageviews[1][2].page_referrer).toBe('http://localhost:3000/')
-  expect(pageviews[2][2].page_referrer).toBe('http://localhost:3000/about')
+  expect(pageviews[2][2].page_referrer).toBe(
+    'http://localhost:3000/analytics-next'
+  )
   expect(
     result.commands.find((args) => args[0] === 'config')![2].send_page_view
   ).toBe(false)

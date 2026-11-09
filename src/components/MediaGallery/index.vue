@@ -10,6 +10,7 @@
       'media-gallery--preview': displayMode === 'preview',
       'media-gallery--staggered': staggeredEntrance,
       'media-gallery--preserve-image-colors': preserveImageColors,
+      'media-gallery--lightweight-hover': lightweightImageHover,
       'is-entered': entranceStarted,
     }"
   >
@@ -41,7 +42,7 @@
     </div>
     <template v-if="displayMode === 'list'">
       <article
-        v-for="(media, index) in items"
+        v-for="(media, index) in listItems"
         :key="media.url"
         class="media-gallery__card"
         :class="{
@@ -49,7 +50,8 @@
           'is-row-end': (index + 1) % currentColumns === 0,
           'is-last-row':
             index >=
-            Math.floor((items.length - 1) / currentColumns) * currentColumns,
+            Math.floor((listItems.length - 1) / currentColumns) *
+              currentColumns,
         }"
         :style="entranceStyles[index]"
       >
@@ -77,14 +79,14 @@
                 v-if="mediaIndex.videoUrls.has(media.url)"
                 class="media-gallery__open"
                 type="button"
-                :aria-label="previewLabels[index]"
-                @click="openViewer(index)"
+                :aria-label="previewLabels[pageOffset + index]"
+                @click="openViewer(pageOffset + index)"
               >
                 <video
                   :ref="(element) => setVideoElement(media.url, element)"
                   :src="nearbyVideoUrls.has(media.url) ? media.url : undefined"
                   :data-video-src="media.url"
-                  :aria-label="previewLabels[index]"
+                  :aria-label="previewLabels[pageOffset + index]"
                   loop
                   muted
                   playsinline
@@ -97,9 +99,11 @@
                 v-else
                 class="media-gallery__open media-gallery__open--image"
                 type="button"
-                :aria-label="previewLabels[index]"
-                @click="openViewer(index)"
-                @pointerenter="startCincoHover"
+                :aria-label="previewLabels[pageOffset + index]"
+                @click="openViewer(pageOffset + index)"
+                @pointerenter="
+                  !lightweightImageHover && startCincoHover($event)
+                "
                 @pointerleave="leaveCincoHover"
                 @pointercancel="stopCincoHover"
               >
@@ -110,7 +114,7 @@
                   />
                   <img
                     :src="getMediaThumbnailUrl(media)"
-                    :alt="previewLabels[index]"
+                    :alt="previewLabels[pageOffset + index]"
                     :data-media-url="media.url"
                     loading="lazy"
                     decoding="async"
@@ -128,7 +132,7 @@
             v-if="showInfo && $slots.info && shouldShowMediaInfo(media)"
             class="media-gallery__info"
           >
-            <slot name="info" :item="media" :index="index" />
+            <slot name="info" :item="media" :index="pageOffset + index" />
           </div>
         </div>
       </article>
@@ -153,6 +157,16 @@
         </div>
       </template>
     </SafeImageViewer>
+
+    <Pagination
+      v-if="displayMode === 'list' && pagination && pageCount > 1"
+      class="media-gallery__pagination"
+      :page="currentPage"
+      :page-count="pageCount"
+      :total-items="items.length"
+      :mobile="isMobileLayout"
+      @select="selectPage"
+    />
 
     <SafeImageViewer
       v-if="showViewer"
@@ -184,6 +198,7 @@ import { Grid, Picture as PictureIcon } from '@element-plus/icons-vue'
 import { useDocumentVisibility, useMediaQuery } from '@vueuse/core'
 
 import LoadingLogo from '@/components/LoadingLogo/index.vue'
+import Pagination from '@/components/Pagination/index.vue'
 import SafeImageViewer from '@/components/SafeImageViewer/index.vue'
 import { useImageCincoHover } from '@/composables/useImageCincoHover'
 import { useIntersectionActivation } from '@/composables/useIntersectionActivation'
@@ -214,6 +229,8 @@ export interface GalleryColumns {
 const props = withDefaults(
   defineProps<{
     items: GalleryMedia[]
+    pagination?: boolean
+    pageSize?: number
     getMediaLabel?: (media: GalleryMedia) => string
     showMediaInfo?: (media: GalleryMedia) => boolean
     showInfo?: boolean
@@ -221,9 +238,12 @@ const props = withDefaults(
     entranceReady?: boolean
     entranceStepMs?: number
     preserveImageColors?: boolean
+    lightweightImageHover?: boolean
     columns?: number | GalleryColumns
   }>(),
   {
+    pagination: true,
+    pageSize: 28,
     getMediaLabel: (media: GalleryMedia) => media.title || 'Photo',
     showMediaInfo: () => true,
     showInfo: false,
@@ -231,6 +251,7 @@ const props = withDefaults(
     entranceReady: true,
     entranceStepMs: 70,
     preserveImageColors: false,
+    lightweightImageHover: false,
     columns: (): GalleryColumns => ({ desktop: 3, mobile: 2 }),
   }
 )
@@ -259,6 +280,34 @@ const { locale } = useI18n()
 const documentVisibility = useDocumentVisibility()
 const displayMode = ref<'list' | 'preview'>('list')
 const previewIndex = ref(0)
+const currentPage = ref(1)
+const effectivePageSize = computed(() => normalizeColumns(props.pageSize, 28))
+const pageCount = computed(() =>
+  Math.max(1, Math.ceil(props.items.length / effectivePageSize.value))
+)
+const pageOffset = computed(() =>
+  props.pagination ? (currentPage.value - 1) * effectivePageSize.value : 0
+)
+const listItems = computed(() =>
+  props.pagination
+    ? props.items.slice(
+        pageOffset.value,
+        pageOffset.value + effectivePageSize.value
+      )
+    : props.items
+)
+const selectPage = (page: number) => {
+  if (page < 1 || page > pageCount.value || page === currentPage.value) return
+  getVideoElements().forEach((video) => video.pause())
+  currentPage.value = page
+}
+watch(
+  () => props.items,
+  () => (currentPage.value = 1)
+)
+watch([pageCount, effectivePageSize, () => props.pagination], () => {
+  currentPage.value = Math.min(currentPage.value, pageCount.value)
+})
 const setDisplayMode = async (mode: 'list' | 'preview') => {
   if (displayMode.value === mode) return
   stopCincoHover()
@@ -342,7 +391,7 @@ const shouldObserveVideos = () =>
   displayMode.value === 'list' && mediaIndex.value.videoUrls.size > 0
 const entranceStyles = computed(() =>
   props.staggeredEntrance
-    ? props.items.map((_media, index) => ({
+    ? listItems.value.map((_media, index) => ({
         '--media-gallery-entry-delay': `${Math.max(
           0,
           index * props.entranceStepMs
@@ -506,45 +555,38 @@ const { refresh: observeVisibleVideos } = useIntersectionActivation(
   }
 )
 
-watch(
-  () => props.items,
-  async (_items, _previous, onCleanup) => {
-    let cancelled = false
-    onCleanup(() => (cancelled = true))
-    stopCincoHover()
-    showViewer.value = false
-    previewIndex.value = 0
-    const currentUrls = currentMediaUrls.value
-    // 列表切换会复用同 URL 的图片节点，不能清空其状态并等待不会重发的 load 事件。
-    for (const url of loadedMediaUrls)
-      if (!currentUrls.has(url)) loadedMediaUrls.delete(url)
-    for (const url of mediaAspectRatios.keys())
-      if (!currentUrls.has(url)) mediaAspectRatios.delete(url)
-    nearbyVideoUrls.clear()
-    void replayEntrance()
-    await nextTick()
-    if (cancelled) return
-    // 缓存图片可能在 DOM 更新前已完成加载；仅将真正加载成功的图片解除占位状态。
-    galleryRef.value
-      ?.querySelectorAll<HTMLImageElement>('img[data-media-url]')
-      .forEach((image) => {
-        if (
-          image.complete &&
-          image.naturalWidth > 0 &&
-          image.dataset.mediaUrl
-        ) {
-          mediaAspectRatios.set(
-            image.dataset.mediaUrl,
-            image.naturalWidth / image.naturalHeight
-          )
-          markMediaLoaded(image.dataset.mediaUrl)
-        }
-      })
-    observeGalleryEntrance()
-    observeNearbyVideos()
-    observeVisibleVideos()
-  }
-)
+watch(listItems, async (_items, _previous, onCleanup) => {
+  let cancelled = false
+  onCleanup(() => (cancelled = true))
+  stopCincoHover()
+  showViewer.value = false
+  previewIndex.value = pageOffset.value
+  const currentUrls = currentMediaUrls.value
+  // 列表切换会复用同 URL 的图片节点，不能清空其状态并等待不会重发的 load 事件。
+  for (const url of loadedMediaUrls)
+    if (!currentUrls.has(url)) loadedMediaUrls.delete(url)
+  for (const url of mediaAspectRatios.keys())
+    if (!currentUrls.has(url)) mediaAspectRatios.delete(url)
+  nearbyVideoUrls.clear()
+  void replayEntrance()
+  await nextTick()
+  if (cancelled) return
+  // 缓存图片可能在 DOM 更新前已完成加载；仅将真正加载成功的图片解除占位状态。
+  galleryRef.value
+    ?.querySelectorAll<HTMLImageElement>('img[data-media-url]')
+    .forEach((image) => {
+      if (image.complete && image.naturalWidth > 0 && image.dataset.mediaUrl) {
+        mediaAspectRatios.set(
+          image.dataset.mediaUrl,
+          image.naturalWidth / image.naturalHeight
+        )
+        markMediaLoaded(image.dataset.mediaUrl)
+      }
+    })
+  observeGalleryEntrance()
+  observeNearbyVideos()
+  observeVisibleVideos()
+})
 
 watch([showViewer, documentVisibility], ([open, visibility]) => {
   if (open) stopCincoHover()
@@ -605,6 +647,11 @@ onBeforeUnmount(() => {
       outline-offset: 3px;
     }
   }
+}
+
+.media-gallery__pagination {
+  grid-column: 1 / -1;
+  margin-top: 16px;
 }
 
 .media-gallery__preview {
@@ -785,6 +832,17 @@ onBeforeUnmount(() => {
     position: relative;
     z-index: 4;
     background: #000;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .media-gallery--lightweight-hover .media-gallery__open--image {
+    img {
+      transition: opacity 0.28s ease, transform 220ms ease-out;
+    }
+    &:hover img {
+      transform: scale(1.025);
+    }
   }
 }
 

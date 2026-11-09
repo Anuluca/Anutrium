@@ -416,9 +416,7 @@
       v-if="shouldShowPageScrollProgress"
       ref="pageScrollProgressElement"
       :top="headerBottom"
-      :color="
-        route.path === '/about' || navigation.aboutOpen ? '#E23456' : undefined
-      "
+      :color="navigation.aboutOpen ? '#E23456' : undefined"
     />
     <AboutOverlay v-if="!isTempleRoute" viewport />
     <button
@@ -452,7 +450,6 @@ import MenuToggleIcon from '@/components/MenuToggleIcon/index.vue'
 import PageScrollProgress from '@/components/PageScrollProgress/index.vue'
 import TextRoll from '@/components/TextRoll/index.vue'
 import { useFrameTask } from '@/composables/useFrameTask'
-import { HOME_RETURN_TO_PASSION_EVENT } from '@/config/homeNavigation'
 import { islandModuleAtPath, islandModules } from '@/config/islandModules'
 import { isTempleMutedMenuItem } from '@/config/templeModelDisplay'
 import {
@@ -563,7 +560,6 @@ watch(
   { immediate: true, flush: 'sync' }
 )
 const visualStateStore = visualState()
-const isHomeRoute = computed(() => route.name === 'TEST2')
 const isTempleRoute = computed(() => isTempleRouteName(route.name))
 const navigation = useTempleNavigation()
 const floraPets = useFloraPets()
@@ -646,18 +642,11 @@ const moduleThemeByPath: Readonly<Record<string, ModuleHeaderTheme>> = {
   '/archive': 'archive',
   '/flanerie': 'flanerie',
   '/atrium': 'island',
-  '/about': 'about',
 }
 const moduleRouteByPath = new Map(
   routes.map((item) => [normalizeMenuPath(item.path), item])
 )
-const hiddenModuleTitleRoutes = new Set([
-  'HOME',
-  'ATRIUM',
-  'TEST2',
-  '404',
-  'TEST',
-])
+const hiddenModuleTitleRoutes = new Set(['HOME', 'ATRIUM', '404'])
 const headerPresentation = computed(() => {
   const routeName = String(route.name || '')
   const modulePath = currentRouter.value
@@ -698,7 +687,6 @@ const isInnerMenuRoute = computed(
 )
 const moduleReturnPath = computed(() => {
   if (isTempleRoute.value) return null
-  if (route.path.startsWith('/atrium/merch/')) return '/atrium/collections'
   const parent = templeParentModule(route.path)
   return parent
     ? templeModulePaths[parent]
@@ -715,9 +703,7 @@ const desktopMenuGroups = computed(() =>
 )
 const atriumMenuItems = Object.values(islandModules)
 const activeNavigation = computed(() =>
-  route.path === '/about' || navigation.aboutOpen
-    ? 'about'
-    : navigation.activeSelection
+  navigation.aboutOpen ? 'about' : navigation.activeSelection
 )
 const atriumMenuDismissed = ref(false)
 const dismissAtriumMenu = (event: MouseEvent) => {
@@ -794,10 +780,7 @@ const pageScrollProgressElement = ref<{
   setProgress: (progress: number) => void
 } | null>(null)
 const shouldShowPageScrollProgress = computed(
-  () =>
-    !isTempleRoute.value &&
-    (visualStateStore.pageScrollProgressOverride !== null ||
-      isPageScrollable.value)
+  () => !isTempleRoute.value && isPageScrollable.value
 )
 const isHeaderScrollLayoutActive = ref(false)
 const isEntryContentRefreshing = ref(false)
@@ -1024,15 +1007,10 @@ const syncScrollState = () => {
   scrollProgress = cachedPageMaxScrollTop
     ? Math.min(100, (scrollTop / cachedPageMaxScrollTop) * 100)
     : 0
-  pageScrollProgressElement.value?.setProgress(
-    visualStateStore.pageScrollProgressOverride ?? scrollProgress
-  )
+  pageScrollProgressElement.value?.setProgress(scrollProgress)
 
   documentHeaderScrollProgress = Math.min(1, scrollTop / HEADER_SCROLL_DISTANCE)
-  const homeProgress = visualStateStore.homeHeaderScrollProgress
-  renderHeaderScrollProgress(
-    Math.max(documentHeaderScrollProgress, homeProgress)
-  )
+  renderHeaderScrollProgress(documentHeaderScrollProgress)
 }
 
 const refreshPageMetrics = () => {
@@ -1056,10 +1034,6 @@ const returnHome = () => {
     }
     if (islandModuleAtPath(route.path)) void returnToInitialHome()
     else navigation.request(null)
-    return
-  }
-  if (isHomeRoute.value) {
-    window.dispatchEvent(new CustomEvent(HOME_RETURN_TO_PASSION_EVENT))
     return
   }
 
@@ -1177,24 +1151,8 @@ watch(layoutShow, (visible) => {
   }, ENTRY_NAVIGATION_REVEAL_DELAY)
 })
 
-watch(
-  [
-    () => visualStateStore.homeHeaderScrollProgress,
-    () => visualStateStore.pageScrollProgressOverride,
-  ],
-  ([headerProgress, pageProgress]) => {
-    // 首页在同一帧更新两个进度值，合并响应可避免两次同步 watcher 调用。
-    renderHeaderScrollProgress(
-      Math.max(documentHeaderScrollProgress, headerProgress)
-    )
-    pageScrollProgressElement.value?.setProgress(pageProgress ?? scrollProgress)
-  }
-)
-
 watch(pageScrollProgressElement, (component) => {
-  component?.setProgress(
-    visualStateStore.pageScrollProgressOverride ?? scrollProgress
-  )
+  component?.setProgress(scrollProgress)
 })
 
 watch(showNavigation, (visible) => {

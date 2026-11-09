@@ -109,9 +109,7 @@ const router = useRouter()
 const route = useRoute()
 const { t, tm } = useI18n()
 const journeyBackPath = computed(() =>
-  ['home', 'home2'].includes(String(route.query.from))
-    ? '/?module=flanerie'
-    : '/flanerie'
+  route.query.from === 'home' ? '/?module=flanerie' : '/flanerie'
 )
 
 interface VideoItem extends JourneyVideo {
@@ -158,8 +156,7 @@ const setPage = (page: number) => {
 onBeforeRouteLeave((to) => {
   if (
     to.name === 'FLANERIE' ||
-    (isTempleRouteName(to.name) &&
-      ['home', 'home2'].includes(String(route.query.from)))
+    (isTempleRouteName(to.name) && route.query.from === 'home')
   )
     markJourneyReturn(vlogId.value)
 })

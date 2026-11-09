@@ -106,6 +106,8 @@ onMounted(async () => {
       background: 'red',
       blackGradient: true,
       modelOutline: false,
+      modelWireThickness: 1,
+      modelWireDensity: 100,
       modelForm: 'default',
     })
   }
@@ -127,7 +129,9 @@ onMounted(async () => {
     updatePhotoTheme()
     instance.setModelAppearance(
       photoComponents.settings.modelForm,
-      photoComponents.settings.modelOutline
+      photoComponents.settings.modelOutline,
+      photoComponents.settings.modelWireThickness,
+      photoComponents.settings.modelWireDensity
     )
     await instance.ready
     if (!disposed) {
@@ -153,8 +157,11 @@ watch(
   [
     () => photoComponents.settings.modelForm,
     () => photoComponents.settings.modelOutline,
+    () => photoComponents.settings.modelWireThickness,
+    () => photoComponents.settings.modelWireDensity,
   ],
-  ([form, outline]) => instance?.setModelAppearance(form, outline)
+  ([form, outline, thickness, density]) =>
+    instance?.setModelAppearance(form, outline, thickness, density)
 )
 const capture = async () => {
   if (!ready.value || !instance || capturing.value) return

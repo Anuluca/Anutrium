@@ -287,6 +287,77 @@ test('Island detail enters without CRT and leaves through CRT without layout mov
   expect(await page.evaluate(() => document.body.scrollTop)).toBe(0)
 })
 
+test('third-level content closes through CRT on same-side and cross-side switches and returning to overview', async ({
+  page,
+}) => {
+  test.setTimeout(90000)
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await page.goto('/atrium/laboratory', { waitUntil: 'domcontentloaded' })
+  const root = page.locator('.island-focus:not(.island-closing-snapshot)')
+  await expect(root.locator('.island-detail')).toBeVisible({ timeout: 45000 })
+
+  for (const [path, previous] of [
+    ['/atrium/notes', 'LABORATORY'],
+    ['/atrium/games', 'NOTES'],
+    ['/atrium/collections', 'GAME LIBRARY'],
+    ['/atrium', 'COLLECTIBLES'],
+  ]) {
+    await expect(root.locator('.island-detail')).toHaveCSS('opacity', '1')
+    const closing = await page.evaluate(async (path) => {
+      const app = (document.querySelector('#app') as any).__vue_app__
+      await app.config.globalProperties.$router.push(path)
+      const snapshot = document.querySelector<HTMLElement>(
+        '.island-closing-snapshot'
+      )!
+      const content = snapshot.querySelector<HTMLElement>('.island-detail')!
+      const animation = content
+        .getAnimations()
+        .find(
+          (animation) =>
+            animation instanceof CSSAnimation &&
+            animation.animationName === 'anutriumCrtOff'
+        )!
+      const read = () => {
+        const style = getComputedStyle(content)
+        return {
+          opacity: Number(style.opacity),
+          scaleY: new DOMMatrix(style.transform).m22,
+          layout: [
+            content.offsetTop,
+            content.offsetLeft,
+            content.offsetWidth,
+            content.offsetHeight,
+          ],
+        }
+      }
+      // 固定动画进度，验证关屏过程而非仅核对 class 名称。
+      animation.pause()
+      const duration = Number(animation.effect!.getTiming().duration)
+      animation.currentTime = 0
+      const start = read()
+      animation.currentTime = duration * 0.65
+      const middle = read()
+      animation.currentTime = duration
+      return {
+        module: snapshot.dataset.detailItem,
+        inert: snapshot.hasAttribute('inert'),
+        start,
+        middle,
+        end: read(),
+      }
+    }, path)
+    expect(closing.module).toBe(previous)
+    expect(closing.inert).toBe(true)
+    expect(closing.start.opacity).toBe(1)
+    expect(closing.middle.scaleY).toBeLessThan(0.01)
+    expect(closing.end.opacity).toBe(0)
+    expect(closing.middle.layout).toEqual(closing.start.layout)
+    expect(closing.end.layout).toEqual(closing.start.layout)
+    await expect(page.locator('.island-closing-snapshot')).toHaveCount(0)
+  }
+  await expect(root).toHaveAttribute('data-detail-phase', 'overview')
+})
+
 test('legacy list pages are removed while collection detail remains addressable', async ({
   page,
 }) => {

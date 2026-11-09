@@ -617,7 +617,11 @@ onUnmounted(() => {
                 class="zodiac-sign-position"
                 :style="sign.positionStyle"
               >
-                <div class="zodiac-sign-face" :style="sign.faceStyle">
+                <div
+                  class="zodiac-sign-face"
+                  :data-zodiac-sign="sign.id"
+                  :style="sign.faceStyle"
+                >
                   <span class="zodiac-glyph">
                     <span class="zodiac-glyph-text">{{ sign.glyph }}</span>
                     <svg

@@ -24,6 +24,7 @@ export function useNoteNavigation(
   const noteModalRef = ref<InstanceType<typeof ModalWrapper> | null>(null)
   const noteDocuments = useNoteDocuments()
   const switchingNoteId = ref('')
+  const hasSwitchedNote = ref(false)
   const switchingFromNoteId = ref('')
   const outgoingNoteShellRef = ref<HTMLElement | null>(null)
   const noteSwitchOrigin = ref<Record<string, string>>({})
@@ -64,6 +65,7 @@ export function useNoteNavigation(
   // 离场动画结束后再卸载正文，避免关闭时内容提前消失。
   const finishNoteClose = () => {
     if (!noteVisible.value) {
+      hasSwitchedNote.value = false
       openedNoteId.value = ''
       noteDocuments.clear()
     }
@@ -134,6 +136,7 @@ export function useNoteNavigation(
       height: `${target.height}px`,
     }
     switchingFromNoteId.value = openedNoteId.value
+    hasSwitchedNote.value = true
     switchingNoteId.value = note.id
     await nextTick()
     if (revision !== noteSwitchRevision || !outgoingNoteShellRef.value) return
@@ -195,6 +198,7 @@ export function useNoteNavigation(
     openedNoteId,
     noteModalRef,
     switchingNoteId,
+    hasSwitchedNote,
     outgoingNoteShellRef,
     noteSwitchOrigin,
     previousNote,

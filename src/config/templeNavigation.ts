@@ -6,6 +6,7 @@ const templeRouteNames = new Set<string>([
   'HOME',
   'ATRIUM',
   'ATRIUM_PHOTO',
+  'ATRIUM_AI_AGENT_TEST',
   ...Object.values(islandModules).map((module) => module.routeName),
 ])
 export const isTempleRouteName = (name: unknown) =>
@@ -178,12 +179,7 @@ export const parseTempleExpanded = (value: unknown): boolean | null => {
 export const templeParentModule = (path: string): TempleCategoryId | null => {
   if (path.startsWith('/flanerie/')) return 'flanerie'
   if (path.startsWith('/pokeyard/')) return 'pokeyard'
-  if (
-    path.startsWith('/atrium/') ||
-    path.startsWith('/games/') ||
-    path === '/test'
-  )
-    return 'island'
+  if (path.startsWith('/atrium/') || path.startsWith('/games/')) return 'island'
   if (
     /^\/(colorPalette|easeStudio|metronome|bounceDynamics|htmlEntities|base64Codec|imageBase64|ai-playground)(\/|$)/.test(
       path

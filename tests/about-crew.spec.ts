@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 import path from 'node:path'
 
+import { gotoHomeAboutOverlay } from './helpers/homeAboutOverlay'
 import {
   expectPagePositionToMatch,
   readPagePosition,
@@ -23,7 +24,7 @@ test('crew panel preserves page position, fits its container and restores the br
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto('/about', { waitUntil: 'domcontentloaded' })
+  await gotoHomeAboutOverlay(page)
   const trigger = page.locator('[aria-controls="about-crew-content"]')
   await expect(trigger).toBeVisible({ timeout: 20_000 })
   await expect(page.locator('.footer-bottom-gradient--ready')).toBeAttached({
@@ -104,7 +105,7 @@ test('switching windows immediately hides the old window and opens once from the
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto('/about', { waitUntil: 'domcontentloaded' })
+  await gotoHomeAboutOverlay(page)
   const left = page.locator('[aria-controls="about-changelog-panel"]')
   await expect(left).toBeVisible({ timeout: 20_000 })
   await page.waitForTimeout(2500)
@@ -189,7 +190,7 @@ for (const target of ['changelog', 'roadmap', 'crew'] as const) {
     page,
   }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
-    await page.goto('/about', { waitUntil: 'domcontentloaded' })
+    await gotoHomeAboutOverlay(page)
     const contentId =
       target === 'crew' ? 'about-crew-content' : `about-${target}-panel`
     const trigger = page.locator(`[aria-controls="${contentId}"]`)
@@ -301,7 +302,7 @@ test('staff credits localize labels and remain centered and scrollable', async (
 }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   for (const locale of ['zhCn', 'en']) {
-    await page.goto('/about', { waitUntil: 'domcontentloaded' })
+    await gotoHomeAboutOverlay(page)
     const trigger = page.locator('[aria-controls="about-crew-content"]')
     await expect(trigger).toBeVisible({ timeout: 20_000 })
     await page.waitForTimeout(2500)
@@ -345,7 +346,7 @@ test('credits enter after window expansion, autoplay and pause over text', async
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto('/about', { waitUntil: 'domcontentloaded' })
+  await gotoHomeAboutOverlay(page)
   const trigger = page.locator('[aria-controls="about-crew-content"]')
   await expect(trigger).toBeVisible({ timeout: 20_000 })
   await page.waitForTimeout(2500)
@@ -519,7 +520,7 @@ test('passion windows reuse the page progress bar and hide native scrollbars', a
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto('/about', { waitUntil: 'domcontentloaded' })
+  await gotoHomeAboutOverlay(page)
   const crew = page.locator('[aria-controls="about-crew-content"]')
   await expect(crew).toBeVisible({ timeout: 20_000 })
   await page.waitForTimeout(2500)
@@ -590,7 +591,7 @@ test('credits cache geometry, respect manual backwards scrolling and pause outsi
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto('/about', { waitUntil: 'domcontentloaded' })
+  await gotoHomeAboutOverlay(page)
   const trigger = page.locator('[aria-controls="about-crew-content"]')
   await expect(trigger).toBeVisible({ timeout: 20_000 })
   await page.waitForTimeout(2500)

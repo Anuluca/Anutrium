@@ -9,8 +9,6 @@ import {
 
 import LinkFlowMark from '@/components/LinkFlowMark/index.vue'
 import LogoRotating3D from '@/components/Logo_rotating3D/index.vue'
-import PageFooter from '@/components/PageFooter/index.vue'
-import PageHeroTitle from '@/components/PageHeroTitle/index.vue'
 import PageScrollProgress from '@/components/PageScrollProgress/index.vue'
 import { useFrameTask } from '@/composables/useFrameTask'
 import { useIntersectionActivation } from '@/composables/useIntersectionActivation'
@@ -42,9 +40,6 @@ interface NeighbourItem {
   description: string
 }
 
-const props = withDefaults(defineProps<{ embedded?: boolean }>(), {
-  embedded: false,
-})
 const emit = defineEmits<{ close: [] }>()
 const { locale, t, tm } = useI18n()
 const crewRoles = [
@@ -273,21 +268,13 @@ const roadmapItems = computed(() =>
 </script>
 
 <template>
-  <div
-    class="about-page"
-    :class="{
-      'main-container': !props.embedded,
-      'is-embedded': props.embedded,
-    }"
-  >
+  <div class="about-page is-embedded">
     <div
       ref="heroShellRef"
       class="about-hero-shell"
       :class="{ 'is-crew-open': crewOpen }"
     >
-      <section class="about-hero-section" :class="{ 'no-rem': props.embedded }">
-        <PageHeroTitle v-if="!props.embedded" title="ABOUT" color="#e23456" />
-
+      <section class="about-hero-section no-rem">
         <section
           ref="passionRef"
           class="passion-section no-rem"
@@ -746,8 +733,6 @@ const roadmapItems = computed(() =>
         </p>
       </div>
     </section>
-
-    <PageFooter v-if="!props.embedded" />
   </div>
 </template>
 

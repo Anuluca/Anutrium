@@ -3,7 +3,6 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { isTempleRouteName } from '@/config/templeNavigation'
 
-const ISLAND_ROUTE_NAME = 'TEST'
 const ISLAND_GEOMETRY_UNLOCK_DELAY = 260
 const islandShellClasses = ['island-pc-shell', 'island-mobile-shell'] as const
 const islandLeavingClasses = [
@@ -125,7 +124,7 @@ export function useRouteShellGeometry(
     restoreIslandRouteGeometry()
     document.body.classList.remove(...islandLeavingClasses)
 
-    if (route.name !== ISLAND_ROUTE_NAME && !isTempleRouteName(route.name)) {
+    if (!isTempleRouteName(route.name)) {
       document.body.classList.remove(...islandShellClasses)
     }
 
@@ -134,7 +133,6 @@ export function useRouteShellGeometry(
 
   const scheduleIslandGeometryUnlock = () => {
     if (
-      route.name === ISLAND_ROUTE_NAME ||
       isTempleRouteName(route.name) ||
       !hasIslandShellClass() ||
       islandGeometryUnlockTimer !== null

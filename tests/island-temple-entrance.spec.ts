@@ -325,9 +325,9 @@ test('cached initial scene resumes from half-raised pillars after returning', as
   await page.evaluate(() =>
     (
       document.querySelector('.layout-page') as any
-    ).__vueParentComponent.proxy.$router.push('/about')
+    ).__vueParentComponent.proxy.$router.push('/colorPalette')
   )
-  await expect(page.locator('.about-page')).toBeVisible({ timeout: 15000 })
+  await expect(page.locator('.palette-tool')).toBeVisible({ timeout: 15000 })
   await expect(page.locator('.route-curtain')).toHaveCount(0)
   await page.evaluate(() =>
     (

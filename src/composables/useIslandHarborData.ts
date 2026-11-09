@@ -1,6 +1,5 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
 
 import { useNotes } from '@/composables/useNotes'
 
@@ -20,13 +19,6 @@ interface HarborSection {
   items: HarborItem[]
 }
 
-export interface LatestPage {
-  title: string
-  module: string
-  path: string
-  img: string
-}
-
 export const createIslandPlaceholder = (
   label: string,
   width = 760,
@@ -43,7 +35,6 @@ export const splitHarborItemCount = (count: string) => {
 
 export const useIslandHarborData = () => {
   const { t, tm } = useI18n()
-  const router = useRouter()
 
   const merchCollectionCount = computed(
     () =>
@@ -106,17 +97,7 @@ export const useIslandHarborData = () => {
     },
   ]
 
-  const latestPages = computed<LatestPage[]>(() =>
-    (tm('island.latest.pages') as LatestPage[]).slice(0, 13)
-  )
-
-  const openHarborItem = (item: HarborItem) => {
-    router.push(item.path || '/404')
-  }
-
   return {
     harborSections,
-    latestPages,
-    openHarborItem,
   }
 }

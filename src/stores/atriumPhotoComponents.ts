@@ -52,6 +52,8 @@ export const useAtriumPhotoComponents = defineStore(
       background: 'red' as keyof typeof PHOTO_THEMES,
       blackGradient: true,
       modelOutline: false,
+      modelWireThickness: 1,
+      modelWireDensity: 100,
       modelForm: 'default' as 'default' | 'wireframe',
     })
     let initial = { ...settings }

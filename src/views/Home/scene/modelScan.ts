@@ -43,12 +43,14 @@ export function createModelScan(
   const flowTime = { value: 0 }
   const flowEnabled = { value: 1 }
   const fillOpacity = { value: 0.55 }
+  const wireThickness = { value: 1 }
   const uniforms = {
     islandScanProgress: progress,
     islandScanBounds: bounds,
     islandFlowTime: flowTime,
     islandFlowEnabled: flowEnabled,
     islandWireFillOpacity: fillOpacity,
+    islandWireThickness: wireThickness,
     islandFlowReferenceHeight: { value: referenceHeight },
   }
   const install = (material: THREE.Material, layer: 'chrome' | 'composite') => {
@@ -97,7 +99,7 @@ export function createModelScan(
           uniform float islandScanProgress; uniform vec3 islandScanColor;
           ${
             layer === 'composite'
-              ? 'varying vec3 islandBarycentric; varying vec3 islandFlowPhase; uniform float islandFlowEnabled; uniform float islandWireFillOpacity;'
+              ? 'varying vec3 islandBarycentric; varying vec3 islandFlowPhase; uniform float islandFlowEnabled; uniform float islandWireFillOpacity; uniform float islandWireThickness;'
               : ''
           }
           float islandScanHash(vec2 p) { return fract(sin(dot(p, vec2(53.37, 117.13))) * 15837.31); }
@@ -131,7 +133,9 @@ export function createModelScan(
             `
             vec3 pixelDistance = islandBarycentric / max(fwidth(islandBarycentric), vec3(0.00001));
             float wireDistance = min(min(pixelDistance.x, pixelDistance.y), pixelDistance.z);
-            float wireCoverage = 1.0 - smoothstep(0.55, 1.25, wireDistance);
+            // 最细档保留原覆盖率，增粗只移动边缘，保持抗锯齿过渡宽度。
+            float wireExpansion = (islandWireThickness - 1.0) * 0.9;
+            float wireCoverage = 1.0 - smoothstep(0.55 + wireExpansion, 1.25 + wireExpansion, wireDistance);
             float converted = (islandScanProgress >= 0.99999 || scanDistance < 0.0) ? 1.0 : 0.0;
             diffuseColor.a = converted * (islandWireFillOpacity + (1.0 - islandWireFillOpacity) * wireCoverage);
             outgoingLight = vec3(0.0);
@@ -170,7 +174,7 @@ export function createModelScan(
       }
     }
     material.customProgramCacheKey = () =>
-      `${previousKey}:island-scan-flow-v18-${layer}`
+      `${previousKey}:island-scan-flow-v19-${layer}`
   }
   return {
     progress,
@@ -178,6 +182,7 @@ export function createModelScan(
     flowTime,
     flowEnabled,
     fillOpacity,
+    wireThickness,
     install,
     advanceFlow(elapsed: number) {
       // 三组速度的共同周期为 20 秒；限制时钟范围，避免长期开页导致浮点精度退化。

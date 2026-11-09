@@ -121,7 +121,7 @@ useEventListener(
             :progress-z-index="1200"
           >
             <Transition name="about-content" appear>
-              <AboutContent embedded @click.stop @close="close" />
+              <AboutContent @click.stop @close="close" />
             </Transition>
           </ScrollViewport>
         </div>

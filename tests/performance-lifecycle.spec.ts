@@ -11,63 +11,6 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/__performance-audit')
 })
 
-test('cancelled image preloads can retry while completed URLs stay deduplicated', async ({
-  page,
-}) => {
-  const result = await page.evaluate(async () => {
-    const { createApp } = await import('/node_modules/.vite/deps/vue.js')
-    const { useImagePreloader } = await import(
-      '/src/composables/useImagePreloader.ts'
-    )
-    const originalImage = window.Image
-    const images: any[] = []
-    window.Image = class {
-      onload: (() => void) | null = null
-      onerror: (() => void) | null = null
-      src = ''
-      setAttribute() {}
-      constructor() {
-        images.push(this)
-      }
-    } as any
-    let preloader!: ReturnType<typeof useImagePreloader>
-    const app = createApp({
-      setup() {
-        preloader = useImagePreloader()
-        return () => null
-      },
-    })
-    app.mount('#fixture')
-    try {
-      preloader.preloadImages(['completed', 'cancelled', 'completed'])
-      images[0].onload()
-      preloader.cancelPendingPreloads()
-      const cancelledSource = images[1].src
-      preloader.preloadImages(['completed', 'cancelled'])
-      const retried = images.length
-      images[2].onerror()
-      preloader.preloadImages(['cancelled'])
-      app.unmount()
-      return {
-        cancelledSource,
-        retried,
-        total: images.length,
-        cleaned: images.every(
-          (image) => image.onload === null && image.onerror === null
-        ),
-      }
-    } finally {
-      window.Image = originalImage
-    }
-  })
-  expect(result).toEqual({
-    cancelledSource: '',
-    retried: 3,
-    total: 4,
-    cleaned: true,
-  })
-})
-
 test('shared progress reacts to animation toggles, resets and scope disposal', async ({
   page,
 }) => {

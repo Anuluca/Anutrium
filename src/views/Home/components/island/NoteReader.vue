@@ -52,23 +52,19 @@
           @scroll.passive="updateHeader.schedule"
         >
           <!-- 渲染器仅允许受控展示标签并校验链接协议，正文来自 Markdown 转换。 -->
-          <!-- eslint-disable vue/no-v-html -->
           <div
+            ref="bodyContentElement"
             class="note-content"
             @click="handleContentClick"
-            @pointerover="handleImageEnter"
             @pointerover.capture="handleNoteTooltipEnter"
             @pointerout.capture="handleNoteTooltipLeave"
             @focusin="handleNoteTooltipEnter"
             @focusout="handleNoteTooltipLeave"
             @animationend="handleNoteTooltipAnimationEnd"
-            @pointerout="handleImageLeave"
-            @pointercancel="imageHover.stop"
             @keydown="handleContentKeydown"
           >
             <NoteMarkdown :body="note.body" />
           </div>
-          <!-- eslint-enable vue/no-v-html -->
         </div>
       </div>
       <!-- 轨道以阅读器为定位容器，避免标题收起时跟随正文区域向上延伸。 -->
@@ -92,19 +88,19 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useResizeObserver } from '@vueuse/core'
+import { useMutationObserver, useResizeObserver } from '@vueuse/core'
 
 import LoadingLogo from '@/components/LoadingLogo/index.vue'
 import PageScrollProgress from '@/components/PageScrollProgress/index.vue'
 import SafeImageViewer from '@/components/SafeImageViewer/index.vue'
 import { useFrameTask } from '@/composables/useFrameTask'
-import { useImageCincoHover } from '@/composables/useImageCincoHover'
 import {
   scrollNestedTo,
   useNestedSmoothScroll,
 } from '@/composables/useNestedSmoothScroll'
 import type { NoteDocument } from '@/composables/useNoteDocuments'
 import { useNoteHeaderScrollGate } from '@/composables/useNoteHeaderScrollGate'
+import { useScrollScanlines } from '@/composables/useScrollScanlines'
 import { NOTE_CATEGORIES } from '@/config/noteCategories'
 import { createNoteEntrance } from '@/utils/noteEntrance'
 import {
@@ -120,13 +116,27 @@ import 'highlight.js/styles/github-dark.css'
 
 const readerElement = ref<HTMLElement | null>(null)
 const bodyScrollElement = ref<HTMLElement | null>(null)
+const bodyContentElement = ref<HTMLElement | null>(null)
 const headerElement = ref<HTMLElement | null>(null)
 const progressTop = ref(0)
+const backgroundHeight = ref(0)
+const COVER_SCROLL_RATIO = 0.015
+const backgroundOverscan = ref(8)
+const updateCoverOverscan = useFrameTask(() => {
+  const scroll = bodyScrollElement.value
+  if (!scroll) return
+  // 按内容总高度预留整个滚动过程的位移余量，避免图片移动后露出边缘。
+  backgroundOverscan.value = 8 + scroll.scrollHeight * COVER_SCROLL_RATIO
+})
+useResizeObserver(bodyContentElement, updateCoverOverscan.schedule)
 let progressHeaderLocked = false
 const measureProgressTop = () => {
   const header = headerElement.value
-  if (!header || progressHeaderLocked) return
-  progressTop.value = header.offsetTop + header.offsetHeight
+  if (!header) return
+  const height = header.offsetHeight
+  backgroundHeight.value = height
+  if (progressHeaderLocked) return
+  progressTop.value = header.offsetTop + height
 }
 const updateProgressTop = useFrameTask(measureProgressTop)
 useResizeObserver(headerElement, updateProgressTop.schedule)
@@ -138,11 +148,13 @@ const headerCompact = ref(false)
 let previousHeaderScrollTop = 0
 const updateHeader = useFrameTask(() => {
   const scroll = bodyScrollElement.value
-  if (!scroll || !props.active || headerScrollGate.isBlocking()) return
+  if (!scroll || !props.active) return
+  emit('backgroundScroll', Math.max(0, scroll.scrollTop) * COVER_SCROLL_RATIO)
+  if (headerScrollGate.isBlocking()) return
   const previousTop = previousHeaderScrollTop
   previousHeaderScrollTop = scroll.scrollTop
   // 分开收起、恢复阈值，避免标题高度变化引起临界位置反复切换。
-  if (scroll.scrollTop > 96) {
+  if (scroll.scrollTop > 96 && !headerCompact.value) {
     // 只在首次收起前记录完整标题占位，收起和恢复动画均不改变轨道。
     measureProgressTop()
     progressHeaderLocked = true
@@ -179,30 +191,52 @@ const headerScrollGate = useNoteHeaderScrollGate({
     previousHeaderScrollTop = 0
   },
 })
-const emit = defineEmits<{ ready: [id: string] }>()
+const emit = defineEmits<{
+  ready: [id: string]
+  backgroundScroll: [shift: number]
+  backgroundChange: [
+    state: {
+      image?: string
+      height: number
+      phase: string
+      overscan: number
+    }
+  ]
+}>()
+const backgroundPhase = ref('pending')
+useMutationObserver(
+  readerElement,
+  () => {
+    backgroundPhase.value = readerElement.value?.dataset.noteEnter || 'pending'
+  },
+  { attributes: true, attributeFilter: ['data-note-enter'] }
+)
 useNestedSmoothScroll(() => (props.active ? bodyScrollElement.value : null))
+useScrollScanlines(() => bodyScrollElement.value)
 const { locale } = useI18n()
 const note = shallowRef<NoteDocument | null>(null)
 const loading = ref(false)
+let hadBackgroundImage: boolean | undefined
+watch(
+  [note, loading, backgroundHeight, backgroundPhase, backgroundOverscan],
+  () => {
+    const image = !loading.value ? note.value?.metadata.image : undefined
+    // 无封面时只发送一次清空状态，避免正文滚动持续更新整个列表组件。
+    if (!image && hadBackgroundImage === false) return
+    hadBackgroundImage = !!image
+    emit('backgroundChange', {
+      image,
+      height: backgroundHeight.value,
+      phase: backgroundPhase.value,
+      overscan: backgroundOverscan.value,
+    })
+  },
+  { immediate: true }
+)
+
 const error = ref('')
 let loadRevision = 0
 let requestedId = ''
-const imageHover = useImageCincoHover({ glowStrength: 0.5 })
-const handleImageEnter = (event: PointerEvent) => {
-  if ((event.target as HTMLElement).closest('.note-gallery')) return
-  const wrapper = (event.target as HTMLElement).closest<HTMLElement>(
-    '.note-image-hover'
-  )
-  if (wrapper && !wrapper.contains(event.relatedTarget as Node | null))
-    imageHover.start(event, wrapper)
-}
-const handleImageLeave = (event: PointerEvent) => {
-  const wrapper = (event.target as HTMLElement).closest<HTMLElement>(
-    '.note-image-hover'
-  )
-  if (wrapper && !wrapper.contains(event.relatedTarget as Node | null))
-    imageHover.leave()
-}
 const imagePreview = ref<{
   urls: string[]
   labels: string[]
@@ -211,7 +245,6 @@ const imagePreview = ref<{
 const openContentImage = (target: HTMLElement, content: HTMLElement) => {
   if (!(target instanceof HTMLImageElement)) return false
   const images = Array.from(content.querySelectorAll<HTMLImageElement>('img'))
-  imageHover.stop()
   imagePreview.value = {
     urls: images.map((image) => image.src),
     labels: images.map((image) => image.alt),
@@ -270,6 +303,7 @@ const followNoteAnchor = (event: MouseEvent) => {
 }
 const load = async () => {
   headerScrollGate.reset()
+  emit('backgroundScroll', 0)
   const revision = ++loadRevision
   const id = props.id
   const refresh = !!error.value && requestedId === id
@@ -277,7 +311,6 @@ const load = async () => {
   loading.value = true
   error.value = ''
   imagePreview.value = null
-  imageHover.stop()
   note.value = null
   try {
     const document = await props.loadDocument(id, refresh)
@@ -324,6 +357,7 @@ watch([note, loading, () => props.active], async () => {
     updateHeader.cancel()
     progressHeaderLocked = false
     headerCompact.value = false
+    emit('backgroundScroll', 0)
     previousHeaderScrollTop = 0
     updateProgressTop.schedule()
     scrollNestedTo(scroll, 0, true)
@@ -344,3 +378,17 @@ onBeforeUnmount(() => {
 </script>
 
 <style lang="less" src="../../styles/noteReader.less"></style>
+
+<style lang="less" scoped>
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  :deep(.note-image-hover) {
+    overflow: hidden;
+    img {
+      transition: transform 220ms ease-out;
+    }
+    &:hover img {
+      transform: scale(1.025);
+    }
+  }
+}
+</style>

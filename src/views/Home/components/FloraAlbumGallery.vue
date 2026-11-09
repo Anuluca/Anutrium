@@ -14,6 +14,7 @@ import { Loading, Picture } from '@element-plus/icons-vue'
 import FilterRail from '@/components/FilterRail/index.vue'
 import MediaGallery from '@/components/MediaGallery/index.vue'
 import MediaPhotoInfo from '@/components/MediaPhotoInfo/index.vue'
+import Pagination from '@/components/Pagination/index.vue'
 import {
   floraFriendAlbums,
   floraFriendsFeatured,
@@ -29,7 +30,6 @@ import { getFloraCaptureDate, mediaAlbums } from '@/utils/floratriumMedia'
 
 import { useFloraAlbum } from '../composables/useFloraAlbum'
 import { useFloraMediaPanel } from '../composables/useFloraMediaPanel'
-import FloraAlbumPagination from './FloraAlbumPagination.vue'
 import FloraAlbumStrip from './FloraAlbumStrip.vue'
 import FloraExpandButton from './FloraExpandButton.vue'
 import FloraFriendsIcon from './FloraFriendsIcon.vue'
@@ -445,6 +445,7 @@ defineExpose({ closeExpanded })
                 <MediaGallery
                   :columns="{ desktop: 4 }"
                   :items="group.items"
+                  :pagination="false"
                   :get-media-label="() => title"
                   preserve-image-colors
                 >
@@ -505,7 +506,7 @@ defineExpose({ closeExpanded })
       @click="toggle"
     />
     <footer v-if="expanded && !isFriends" class="flora-album-gallery__footer">
-      <FloraAlbumPagination
+      <Pagination
         :total-items="petId === 'huahua' ? matchedItems.length : totalItems"
         :page="petId === 'huahua' ? collectionPage : pageIndex + 1"
         :page-count="

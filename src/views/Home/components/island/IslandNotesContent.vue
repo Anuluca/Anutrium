@@ -61,10 +61,9 @@
       </p>
       <section
         v-if="paginatedCards.length"
-        ref="noteStackRef"
         :key="`notes-${activeCategory}-${currentPage}`"
         class="study-note-stack"
-        :class="{ 'is-ready': masonryReady && contentRevealed }"
+        :class="{ 'is-ready': contentRevealed }"
         :aria-label="t('island.modules.notes.studyNotes.title')"
       >
         <RouterLink
@@ -72,16 +71,25 @@
           :key="card.note.id"
           class="study-note-card"
           :class="{
-            'study-note-card--without-image': !card.note.image,
             'is-activating': activatingNoteId === card.note.id,
           }"
           :to="noteLocation(card.note)"
           :style="card.style"
           @click.capture="activateNote($event, card.note)"
         >
-          <div v-if="card.note.image" class="study-note-card__visual">
-            <div class="study-note-card__media">
-              <picture>
+          <div class="study-note-card__visual">
+            <div
+              class="study-note-card__media"
+              :class="{ 'study-note-card__media--default': !card.note.image }"
+            >
+              <Logo
+                v-if="!card.note.image"
+                :id="`note-cover-${card.note.id}`"
+                class="study-note-card__logo"
+                :active="false"
+                aria-hidden="true"
+              />
+              <picture v-else>
                 <source
                   media="(max-width: 768px)"
                   :srcset="card.mobileThumbnail"
@@ -94,31 +102,32 @@
                   height="576"
                   decoding="async"
                   loading="lazy"
-                  @load="scheduleMasonryLayout"
                 />
               </picture>
             </div>
           </div>
 
-          <div class="study-note-card__copy">
-            <h2 :class="locale === 'zhCn' && 'cn-font'">
-              {{ card.note.title }}
-            </h2>
-            <div class="study-note-card__meta no-rem">
-              <span class="study-note-card__category no-rem">
-                [<span class="study-note-card__category-text">{{
-                  NOTE_CATEGORIES[card.note.type]?.label.en || 'UNKNOWN'
-                }}</span
-                >]
-              </span>
-              <time
-                class="study-note-card__date no-rem"
-                :datetime="card.note.time"
-              >
-                {{ card.dateLabel }}
-              </time>
+          <NoteCardCopy>
+            <div class="study-note-card__copy-content">
+              <h2 :class="locale === 'zhCn' && 'cn-font'">
+                {{ card.note.title }}
+              </h2>
+              <div class="study-note-card__meta no-rem">
+                <span class="study-note-card__category no-rem">
+                  [<span class="study-note-card__category-text">{{
+                    NOTE_CATEGORIES[card.note.type]?.label.en || 'UNKNOWN'
+                  }}</span
+                  >]
+                </span>
+                <time
+                  class="study-note-card__date no-rem"
+                  :datetime="card.note.time"
+                >
+                  {{ card.dateLabel }}
+                </time>
+              </div>
             </div>
-          </div>
+          </NoteCardCopy>
         </RouterLink>
       </section>
 
@@ -127,38 +136,14 @@
       </div>
 
       <template #footer>
-        <nav
+        <Pagination
           v-if="totalPages > 1"
           class="study-note-pagination"
           :aria-label="t('pagination.pageLabel')"
-        >
-          <button
-            type="button"
-            :aria-label="t('pagination.previousPage')"
-            :disabled="currentPage === 1"
-            @click="setPage(currentPage - 1)"
-          >
-            <span aria-hidden="true">◀</span>
-          </button>
-          <button
-            v-for="page in totalPages"
-            :key="page"
-            type="button"
-            :class="{ 'is-active': page === currentPage }"
-            :aria-current="page === currentPage ? 'page' : undefined"
-            @click="setPage(page)"
-          >
-            {{ page }}
-          </button>
-          <button
-            type="button"
-            :aria-label="t('pagination.nextPage')"
-            :disabled="currentPage === totalPages"
-            @click="setPage(currentPage + 1)"
-          >
-            <span aria-hidden="true">▶</span>
-          </button>
-        </nav>
+          :page="currentPage"
+          :page-count="totalPages"
+          @select="setPage"
+        />
       </template>
     </ScrollViewport>
     <ModalWrapper
@@ -172,10 +157,25 @@
       @update:model-value="setNoteVisible"
       @closed="finishNoteClose"
     >
+      <template #background>
+        <NoteModalBackground
+          v-if="noteBackground.image"
+          :key="`${openedNoteId}:${noteBackground.image}`"
+          :image="noteBackground.image"
+          ref="noteBackgroundRef"
+          :height="noteBackground.height"
+          :phase="noteBackground.phase"
+          :overscan="noteBackground.overscan"
+          :switching="!!switchingNoteId"
+        />
+      </template>
       <template #viewport>
         <div
           class="note-detail-stage no-rem"
-          :class="{ 'is-switching': !!switchingNoteId }"
+          :class="{
+            'is-switching': !!switchingNoteId,
+            'has-switched-note': hasSwitchedNote,
+          }"
         >
           <div
             v-if="switchingNoteId"
@@ -215,6 +215,8 @@
         :fade-only="!!switchingNoteId"
         :load-document="loadNoteDocument"
         @ready="handleNoteReady"
+        @background-change="noteBackground = $event"
+        @background-scroll="noteBackgroundRef?.setScrollShift($event)"
       />
     </ModalWrapper>
   </div>
@@ -223,7 +225,7 @@
 <script setup lang="ts">
 import {
   computed,
-  nextTick,
+  defineAsyncComponent,
   onBeforeUnmount,
   onMounted,
   ref,
@@ -238,9 +240,10 @@ import FilterRail, {
   type FilterRailItem,
 } from '@/components/FilterRail/index.vue'
 import LoadingLogo from '@/components/LoadingLogo/index.vue'
+import Logo from '@/components/Logo/index.vue'
 import ModalWrapper from '@/components/ModalWrapper/index.vue'
+import Pagination from '@/components/Pagination/index.vue'
 import ScrollViewport from '@/components/ScrollViewport/index.vue'
-import { useFrameTask } from '@/composables/useFrameTask'
 import { useNoteNavigation } from '@/composables/useNoteNavigation'
 import { useNotes } from '@/composables/useNotes'
 import {
@@ -256,7 +259,25 @@ import {
 } from '@/utils/imageVariant'
 import type { NoteSummary } from '@/utils/noteDocument'
 
-import NoteReader from './NoteReader.vue'
+import NoteCardCopy from './NoteCardCopy.vue'
+import NoteModalBackground from './NoteModalBackground.vue'
+
+// 正文解析、代码高亮和公式样式只在首次打开详情时加载。
+const NoteReader = defineAsyncComponent(() => import('./NoteReader.vue'))
+
+const noteBackgroundRef = ref<InstanceType<typeof NoteModalBackground> | null>(
+  null
+)
+const noteBackground = ref<{
+  image?: string
+  height: number
+  phase: string
+  overscan: number
+}>({
+  height: 0,
+  phase: 'pending',
+  overscan: 8,
+})
 
 interface StudyNoteCard {
   note: NoteSummary
@@ -271,10 +292,7 @@ const currentPage = ref(1)
 
 const { locale, t } = useI18n()
 const noteViewportRef = ref<InstanceType<typeof ScrollViewport> | null>(null)
-const noteStackRef = ref<HTMLElement | null>(null)
-const masonryReady = ref(false)
 const contentRevealed = ref(false)
-let masonryObserver: ResizeObserver | undefined
 let disposed = false
 
 const route = useRoute()
@@ -381,7 +399,7 @@ const categoryTabs = computed<FilterRailItem[]>(() => [
 ])
 const filteredNotes = shallowRef<NoteSummary[]>([])
 // Vue 3.2 会向下传播 computed 的失效；只在分类或数据实际变化时替换列表，
-// 避免 note 查询参数变化连带重建索引、卡片和瀑布流测量。
+// 避免 note 查询参数变化连带重建索引和卡片。
 watch(
   [categoryGroups, activeCategory],
   ([groups, category]) => {
@@ -394,6 +412,7 @@ const {
   openedNoteId,
   noteModalRef,
   switchingNoteId,
+  hasSwitchedNote,
   outgoingNoteShellRef,
   noteSwitchOrigin,
   previousNote,
@@ -417,76 +436,20 @@ const totalPages = computed(() =>
   Math.max(1, Math.ceil(filteredNotes.value.length / PAGE_SIZE))
 )
 
-const formatNoteDate = (date: string) => date.replace(/-/g, '/')
-
 const paginatedCards = computed<StudyNoteCard[]>(() => {
   const pageStart = (currentPage.value - 1) * PAGE_SIZE
   const pageNotes = filteredNotes.value.slice(pageStart, pageStart + PAGE_SIZE)
 
-  return pageNotes.map((note, noteIndex) => {
-    return {
-      note,
-      dateLabel: formatNoteDate(note.time),
-      thumbnail: note.image ? getCardThumbnailUrl(note.image) : undefined,
-      mobileThumbnail: note.image
-        ? getCardMobileThumbnailUrl(note.image)
-        : undefined,
-      style: {
-        '--note-index': noteIndex,
-      },
-    }
-  })
+  return pageNotes.map((note, noteIndex) => ({
+    note,
+    dateLabel: note.time.replace(/-/g, '/'),
+    thumbnail: note.image ? getCardThumbnailUrl(note.image) : undefined,
+    mobileThumbnail: note.image
+      ? getCardMobileThumbnailUrl(note.image)
+      : undefined,
+    style: { '--note-index': noteIndex },
+  }))
 })
-
-const updateMasonryLayout = () => {
-  const stack = noteStackRef.value
-  if (!stack) return
-
-  const stackStyle = getComputedStyle(stack)
-  const rowHeight = Number.parseFloat(stackStyle.gridAutoRows) || 1
-  const masonryGap = Number.parseFloat(stackStyle.columnGap) || 0
-  const cards = stack.querySelectorAll<HTMLElement>('.study-note-card')
-  let hasCompleteMeasurements = cards.length > 0
-
-  const updates: [HTMLElement, string][] = []
-  cards.forEach((card) => {
-    const cardHeight = card.offsetHeight
-    if (cardHeight <= 0) {
-      hasCompleteMeasurements = false
-      return
-    }
-
-    const rowSpan = Math.ceil((cardHeight + masonryGap) / rowHeight)
-    const gridRowEnd = `span ${rowSpan}`
-
-    if (card.style.gridRowEnd !== gridRowEnd) updates.push([card, gridRowEnd])
-  })
-
-  // 集中读取高度后再写入网格跨度，避免每张卡片触发一次重排。
-  updates.forEach(([card, gridRowEnd]) => (card.style.gridRowEnd = gridRowEnd))
-  masonryReady.value = hasCompleteMeasurements
-}
-
-const { schedule: scheduleMasonryLayout } = useFrameTask(updateMasonryLayout)
-
-const observeMasonryLayout = async () => {
-  masonryReady.value = false
-  await nextTick()
-  if (disposed) return
-
-  masonryObserver?.disconnect()
-  const stack = noteStackRef.value
-  if (!stack) return
-
-  masonryObserver ??= new ResizeObserver(scheduleMasonryLayout)
-  masonryObserver.observe(stack)
-  stack
-    .querySelectorAll<HTMLElement>('.study-note-card')
-    .forEach((card) => masonryObserver?.observe(card))
-  scheduleMasonryLayout()
-}
-
-watch(paginatedCards, observeMasonryLayout, { flush: 'post' })
 
 onMounted(() => {
   // 等详情容器显现后再播放卡片动画，避免前几张在父级隐藏时已淡入完毕。
@@ -498,14 +461,11 @@ onMounted(() => {
   ).then(() => {
     if (!disposed) contentRevealed.value = true
   })
-  observeMasonryLayout()
-  document.fonts?.ready.then(scheduleMasonryLayout)
 })
 
 onBeforeUnmount(() => {
   disposed = true
   activationAnimations.forEach((animation) => animation.cancel())
-  masonryObserver?.disconnect()
 })
 
 const setPage = (page: number) => {
@@ -515,9 +475,16 @@ const setPage = (page: number) => {
 const refreshNotes = async () => {
   await reload()
   if (disposed || notesError.value) return
-  if (currentPage.value > totalPages.value) setPage(totalPages.value)
   showSuccessMessage('NOTES已刷新')
 }
+// 后台刷新和失败后的重试也可能缩短列表，统一收敛当前页。
+watch(
+  totalPages,
+  (pages) => {
+    if (currentPage.value > pages) setPage(pages)
+  },
+  { flush: 'post' }
+)
 // 包括浏览器前进、后退在内，分类变化统一回到第一页；仅开关正文不重置列表。
 watch(activeCategory, () => setPage(1), { flush: 'post' })
 </script>
@@ -577,18 +544,7 @@ watch(activeCategory, () => setPage(1), { flush: 'post' })
   min-height: 0;
   color: var(--text-color);
   overflow: hidden;
-  &.is-embedded {
-    padding: 0;
-    .study-note-list {
-      padding: 0;
-    }
-  }
-}
-
-@container (max-width: 360px) {
-  .island-notes-content.is-embedded .study-note-stack {
-    grid-template-columns: minmax(0, 1fr);
-  }
+  padding: 0;
 }
 
 .island-notes-content.is-embedded.is-loading {
@@ -618,6 +574,7 @@ watch(activeCategory, () => setPage(1), { flush: 'post' })
 }
 
 .study-note-list {
+  padding: 0;
   :deep(.filter-rail) {
     flex-shrink: 0;
   }
@@ -638,9 +595,8 @@ watch(activeCategory, () => setPage(1), { flush: 'post' })
   padding-bottom: 32px;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  grid-auto-rows: 1px;
-  column-gap: 10px;
-  row-gap: 0;
+  column-gap: 24px;
+  row-gap: 12px;
   opacity: 0;
 
   &.is-ready {
@@ -650,25 +606,23 @@ watch(activeCategory, () => setPage(1), { flush: 'post' })
 }
 
 .study-note-card {
+  --note-ribbon-outset: 0px;
+  --note-card-enter-duration: 450ms;
+  --note-card-enter-delay: calc(0.08s + var(--note-index) * 100ms);
   --note-border-color: color-mix(in srgb, var(--border-color) 98%, #000 2%);
   position: relative;
-  display: block;
-  align-self: start;
+  display: flex;
+  flex-direction: column;
   width: 100%;
+  min-width: 0;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid var(--note-border-color);
   background-color: color-mix(in srgb, var(--bg-color) 82%, transparent);
   box-shadow: 0 14px 34px var(--shadow-color);
-  break-inside: avoid;
   color: inherit;
   isolation: isolate;
   text-decoration: none;
-  opacity: 0;
-  animation: studyNoteCardFadeIn 0.45s ease-out both;
-  animation-delay: calc(0.08s + var(--note-index) * 100ms);
-  animation-play-state: var(--note-entry-play-state, running);
-
   &::before {
     position: absolute;
     z-index: 4;
@@ -687,110 +641,167 @@ watch(activeCategory, () => setPage(1), { flush: 'post' })
   }
 
   &__category.no-rem {
-    display: block;
+    display: inline-flex;
+    align-items: baseline;
     min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    margin-inline-start: 4px;
+    padding-right: 0.2rem;
     white-space: nowrap;
-    color: @red;
+    color: var(--note-copy-color, @red);
     .note-meta-typography();
     .note-category-typography();
-    transition: color 0.3s ease;
+    font-size: 0.54rem;
   }
 
   &__category-text {
     .note-category-text();
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   &__visual {
     position: relative;
+    display: flex;
+    flex: 1 0 auto;
+    flex-direction: column;
+    justify-content: center;
     margin: 0;
-    -webkit-mask-image: linear-gradient(to bottom, #000 50%, transparent 100%);
-    mask-image: linear-gradient(to bottom, #000 50%, transparent 100%);
     overflow: hidden;
     background: rgba(128, 128, 128, 0.1);
+    -webkit-mask-image: linear-gradient(to bottom, #000 20%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 20%, transparent 100%);
+    animation: studyNoteCoverFadeIn var(--note-card-enter-duration) ease-out both;
+    animation-delay: var(--note-card-enter-delay);
+    animation-play-state: var(--note-entry-play-state, running);
   }
 
   &__media {
     position: relative;
+    flex: none;
+    min-height: 0;
+    aspect-ratio: 5 / 3;
     transition: transform 1.3s ease;
+
+    &--default {
+      display: grid;
+      place-items: center;
+      color: color-mix(in srgb, var(--bg-color) 80%, #fff 20%);
+    }
 
     picture {
       display: contents;
     }
+  }
 
-    // 两级带遮罩的模糊叠层保留顶部细节，向底部逐渐增强，无需重复加载图片。
-    &::before,
-    &::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-    }
-    &::before {
-      z-index: 1;
-      -webkit-backdrop-filter: blur(3px);
-      backdrop-filter: blur(3px);
-      -webkit-mask-image: linear-gradient(
-        to bottom,
-        transparent 50%,
-        #000 100%
-      );
-      mask-image: linear-gradient(to bottom, transparent 50%, #000 100%);
-    }
-    &::after {
-      z-index: 2;
-      -webkit-backdrop-filter: blur(8px);
-      backdrop-filter: blur(8px);
-      -webkit-mask-image: linear-gradient(
-        to bottom,
-        transparent 75%,
-        #000 100%
-      );
-      mask-image: linear-gradient(to bottom, transparent 75%, #000 100%);
-    }
+  &__logo {
+    height: 48%;
   }
 
   &__image {
     display: block;
     width: 100%;
-    height: auto;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 30%;
+
   }
 
   &__copy {
-    padding: 0 16px 12px;
+    --note-copy-inset: 16px;
+    --note-copy-crop-top: 28px;
+    position: relative;
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    margin: calc(-56px + var(--note-copy-crop-top)) 0 0
+      calc(0px - var(--note-ribbon-outset));
+    overflow: visible;
+    padding: 0 var(--note-copy-inset) 8px
+      calc(var(--note-copy-inset) + var(--note-ribbon-outset));
+    &::before {
+      position: absolute;
+      inset: 0;
+      box-sizing: border-box;
+      border: 1px solid fade(@red, 50%);
+      content: '';
+      pointer-events: none;
+      transform-origin: center bottom;
+      animation: studyNoteFrameReveal var(--note-card-enter-duration)
+        cubic-bezier(0.22, 1, 0.36, 1) both;
+      animation-delay: var(--note-card-enter-delay);
+      animation-play-state: var(--note-entry-play-state, running);
+      clip-path: polygon(
+        0 0,
+        var(--note-title-gap-start, 0px) 0,
+        var(--note-title-gap-start, 0px) 4px,
+        var(--note-title-gap-end, 100%) 4px,
+        var(--note-title-gap-end, 100%) 0,
+        100% 0,
+        100% 100%,
+        0 100%
+      );
+    }
+    &::after {
+      position: absolute;
+      z-index: 0;
+      bottom: 100%;
+      left: var(--note-title-gap-start, 0px);
+      width: calc(
+        var(--note-title-gap-end, 100%) - var(--note-title-gap-start, 0px)
+      );
+      height: var(--note-title-fade-height, 0px);
+      background: linear-gradient(to top, @red, fade(@red, 0%));
+      opacity: var(--note-title-fade-opacity, 0);
+      transform: scaleY(0);
+      transform-origin: center bottom;
+      transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+      content: '';
+      pointer-events: none;
+    }
+  }
+
+  &__copy-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    margin-top: calc(0px - var(--note-copy-crop-top));
+    animation: studyNoteTextReveal 400ms ease-out both;
+    animation-delay: calc(
+      var(--note-card-enter-delay) + var(--note-card-enter-duration)
+    );
+    animation-play-state: var(--note-entry-play-state, running);
   }
 
   &__date.no-rem {
     display: block;
     flex-shrink: 0;
     margin-left: auto;
-    color: var(--text-muted);
     .note-meta-typography();
     .note-date-typography();
-    opacity: 0.5;
-    transition: color 0.3s ease;
+    font-size: 0.54rem;
+    color: var(--note-date-color, #999);
     white-space: nowrap;
   }
 
-  &--without-image {
-    .study-note-card__copy {
-      padding-top: 18px;
-      padding-bottom: 16px;
-    }
-  }
-
   h2 {
-    width: 108.6957%;
-    margin: 0 0 8px;
-    color: var(--text-color);
+    position: relative;
+    width: fit-content;
+    max-width: 108.6957%;
+    box-sizing: border-box;
+    margin: 8px 0 2px;
+    padding: 4px 18px 2px 0;
+    color: var(--note-copy-color, @red);
     font-family: 'UnboundedSans';
-    font-size: 30px;
+    font-size: 42px;
     .note-title-typography();
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     line-height: 1.15;
+    overflow-wrap: anywhere;
     text-transform: none;
     transform-origin: left center;
-    transition: color 0.3s ease, transform 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+    transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   &.is-activating {
@@ -814,20 +825,34 @@ watch(activeCategory, () => setPage(1), { flush: 'post' })
     transform: scale(1.05);
   }
 
-  .study-note-card:not(.is-activating):hover::before {
-    animation: studyNoteBorderFlash 280ms steps(1, end) forwards;
+  .study-note-card:hover .study-note-card__copy {
+    --note-title-fade-opacity: 1;
+    --note-copy-color: #000;
+    --note-date-color: #000;
+    background: @red;
+    animation: studyNoteCopyFlash 280ms steps(1, end) forwards;
+  }
+
+  .study-note-card:hover .study-note-card__copy::after {
+    transform: scaleY(1);
   }
 }
 
-@keyframes studyNoteBorderFlash {
+@keyframes studyNoteCopyFlash {
   0%,
   40% {
-    opacity: 0;
+    --note-copy-color: @red;
+    --note-date-color: #999;
+    --note-title-fade-opacity: 0;
+    background-color: transparent;
   }
   20%,
   60%,
   100% {
-    opacity: 1;
+    --note-copy-color: #000;
+    --note-date-color: #000;
+    --note-title-fade-opacity: 1;
+    background-color: @red;
   }
 }
 
@@ -842,42 +867,29 @@ watch(activeCategory, () => setPage(1), { flush: 'post' })
 }
 
 .study-note-pagination {
-  display: flex;
   flex-shrink: 0;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 8px;
   padding-top: 12px;
+}
 
-  button {
-    min-width: 36px;
-    height: 34px;
-    padding: 0 12px;
-    border: 1px solid rgba(226, 52, 86, 0.28);
-    color: var(--text-muted);
-    background: var(--surface-color);
-    cursor: pointer;
-    font-family: 'alibaba-puhuiti', sans-serif;
-    font-size: 0.56rem;
-    font-weight: 900;
-    transition: border-color 0.2s, color 0.2s, background 0.2s;
-
-    &:hover:not(:disabled),
-    &:focus-visible,
-    &.is-active {
-      border-color: @red;
-      color: var(--text-color);
-      background: rgba(226, 52, 86, 0.14);
-    }
-
-    &:disabled {
-      cursor: not-allowed;
-      opacity: 0.28;
-    }
+@keyframes studyNoteFrameReveal {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
   }
 }
 
-@keyframes studyNoteCardFadeIn {
+@keyframes studyNoteTextReveal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes studyNoteCoverFadeIn {
   from {
     opacity: 0;
   }
@@ -889,51 +901,52 @@ watch(activeCategory, () => setPage(1), { flush: 'post' })
 @media (max-width: 900px) {
   .study-note-card {
     &__copy {
-      padding: 0 14px 10px;
-    }
-
-    &--without-image {
-      .study-note-card__copy {
-        padding-top: 16px;
-        padding-bottom: 14px;
-      }
+      --note-copy-inset: 14px;
+      padding: 0 var(--note-copy-inset) 6px
+        calc(var(--note-copy-inset) + var(--note-ribbon-outset));
     }
   }
 }
 
 @media (max-width: 768px) {
-  .island-notes-content.is-embedded .study-note-stack {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .study-note-stack {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
 @media screen and (max-aspect-ratio: 1) {
   .study-note-card {
     h2 {
-      font-size: 44px;
+      font-size: 60px;
     }
 
     &__category.no-rem,
     &__date.no-rem {
-      font-size: 0.6844433rem;
+      font-size: 0.79rem;
     }
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .study-note-card {
-    animation: none;
-    opacity: 1;
     transition: none;
 
-    &__image,
-    &__media {
+    &__visual,
+    &__copy::before,
+    &__copy-content {
+      animation: none;
+      opacity: 1;
+      transform: none;
+    }
+
+    &__copy::after,
+    &__media,
+    h2 {
       transition: none;
     }
 
-    &:hover::before {
+    &:hover .study-note-card__copy {
       animation: none;
-      opacity: 1;
     }
   }
 }

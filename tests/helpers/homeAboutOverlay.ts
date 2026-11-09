@@ -1,4 +1,23 @@
-import type { Page } from '@playwright/test'
+import { expect, type Page } from '@playwright/test'
+
+export async function gotoHomeAboutOverlay(page: Page) {
+  await page.goto('/archive', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.footer-bottom-gradient--ready')).toBeAttached({
+    timeout: 45000,
+  })
+  await expect(page.locator('.entry-overlay-container')).toHaveCount(0, {
+    timeout: 25000,
+  })
+  await expect(page.locator('.temple-page')).toHaveAttribute(
+    'data-settled',
+    'true',
+    { timeout: 45000 }
+  )
+  await openHomeAboutOverlay(page)
+  await expect(page.locator('.about-overlay .about-page')).toBeVisible({
+    timeout: 20000,
+  })
+}
 
 export async function openHomeAboutOverlay(page: Page) {
   const dismissAlert = page.locator(

@@ -231,6 +231,11 @@ test('note navigation preloads neighbors and fades stationary content while shel
     }
   })
   await expect(modal).not.toHaveClass(/is-switching/)
+  for (const shell of [previous, next]) {
+    await expect(shell).toHaveCSS('animation-name', 'none')
+    await expect(shell).toHaveCSS('opacity', '1')
+    await expect(shell).toHaveCSS('translate', 'none')
+  }
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await clickShell(next)
   await expect(modal).not.toHaveClass(/is-switching/)

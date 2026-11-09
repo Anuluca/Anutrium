@@ -1,7 +1,10 @@
 <template>
   <div
     class="shared-tool-card"
-    :class="`shared-tool-card--${tool.category}`"
+    :class="[
+      `shared-tool-card--${tool.category}`,
+      { 'shared-tool-card--cover': tool.imageFit === 'cover' },
+    ]"
     role="button"
     tabindex="0"
     @click="emit('select', tool)"
@@ -67,6 +70,7 @@ interface ToolCardItem {
   category: 'work' | 'general'
   icon: string
   img?: string
+  imageFit?: 'contain' | 'cover'
   statusLabel: string
   link: string
 }
@@ -223,6 +227,23 @@ const { locale } = useI18n()
   transform-origin: center bottom;
   transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1), filter 0.3s ease;
   z-index: 1;
+}
+
+.shared-tool-card--cover {
+  &,
+  &:hover {
+    .tl-card__img-wrap {
+      width: 95%;
+      box-sizing: border-box;
+    }
+
+    .tl-card__img {
+      box-sizing: border-box;
+      padding: 0;
+      object-fit: cover;
+      transform: none;
+    }
+  }
 }
 
 .tl-card__img-placeholder {

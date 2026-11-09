@@ -64,6 +64,7 @@
                   v-else
                   :key="photography.page"
                   :items="photography.items"
+                  :pagination="false"
                   :columns="navigation.expanded ? { desktop: 4 } : undefined"
                   :get-media-label="
                     () => (locale === 'en' ? 'Photography' : '摄影')
@@ -73,7 +74,7 @@
                 <div
                   class="creative-photography__pagination creative-media__pagination no-rem"
                 >
-                  <FloraAlbumPagination
+                  <Pagination
                     :total-items="photography.totalItems"
                     :page="photography.page"
                     :page-count="photography.pageCount"
@@ -159,6 +160,7 @@
                   v-else
                   :key="illustration.page"
                   :items="illustrationItems"
+                  :pagination="false"
                   :columns="navigation.expanded ? { desktop: 4 } : undefined"
                   :get-media-label="
                     () => (locale === 'en' ? 'Illustration' : '绘画')
@@ -176,7 +178,7 @@
                 <div
                   class="creative-illustration__pagination creative-media__pagination no-rem"
                 >
-                  <FloraAlbumPagination
+                  <Pagination
                     :total-items="illustration.totalItems"
                     :page="illustration.page"
                     :page-count="illustration.pageCount"
@@ -255,10 +257,11 @@
           v-else
           :key="processPage"
           :items="processItems"
+          :pagination="false"
           :get-media-label="() => processTitle"
           preserve-image-colors
         />
-        <FloraAlbumPagination
+        <Pagination
           v-if="processPageCount > 1"
           class="creative-process__pagination"
           :page="processPage"
@@ -283,13 +286,13 @@ import MediaPhotoInfo from '@/components/MediaPhotoInfo/index.vue'
 import ModalContentTitle from '@/components/ModalContentTitle/index.vue'
 import ModalWrapper from '@/components/ModalWrapper/index.vue'
 import NumberCount from '@/components/NumberCount/index.vue'
+import Pagination from '@/components/Pagination/index.vue'
 import Sections from '@/components/Sections/index.vue'
 import { creativeIllustrationPreview } from '@/locales/dynamic/creativeIllustration'
 import { creativePhotographyPreview } from '@/locales/dynamic/creativePhotography'
 import { useTempleNavigation } from '@/stores/templeNavigation'
 import { getCreativeImageInfo } from '@/utils/creativeMedia'
 import CraftContent from '@/views/Craft/CraftContent.vue'
-import FloraAlbumPagination from '@/views/Home/components/FloraAlbumPagination.vue'
 import FloraExpandButton from '@/views/Home/components/FloraExpandButton.vue'
 import { useFloraAlbum } from '@/views/Home/composables/useFloraAlbum'
 

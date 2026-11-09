@@ -50,7 +50,7 @@ const route = useRoute()
 const entryMode = ref<'checking' | 'full' | 'logo'>('checking')
 let mounted = false
 // 固定首次访问的动画类型；模块入口与其详情页不能按路径前缀混用。
-const isHorizonIntro = isTempleRouteName(route.name) || route.name === 'ABOUT'
+const isHorizonIntro = isTempleRouteName(route.name)
 const navigation = useTempleNavigation()
 const presentation = useTemplePresentation()
 const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)')

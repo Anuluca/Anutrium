@@ -1015,6 +1015,15 @@ test('photo component controls adjust independent background layers and restore 
     await expect(page.locator('.cursor-shape')).toHaveClass(/is-active/)
   }
 
+  const thickness = panel.getByRole('slider', { name: '网格粗细', exact: true })
+  await expect(thickness).toBeDisabled()
+  const density = panel.getByRole('slider', {
+    name: '网格密集程度',
+    exact: true,
+  })
+  await expect(density).toBeDisabled()
+  await expect(density).toHaveValue('100')
+  await expect(thickness).toHaveValue('1')
   await expect(stage).toHaveAttribute('data-model-form', 'default')
   await outline.click()
   await expect(outline).toHaveAttribute('aria-checked', 'true')
@@ -1038,6 +1047,56 @@ test('photo component controls adjust independent background layers and restore 
   await tool.click()
   await panel.getByRole('button', { name: '网格', exact: true }).click()
   await expect(stage).toHaveAttribute('data-model-form', 'wireframe')
+  await expect(thickness).toBeEnabled()
+  await expect(density).toBeEnabled()
+  const fullTriangleCount = Number(
+    await stage.getAttribute('data-wire-triangle-count')
+  )
+  let previousTriangleCount = fullTriangleCount
+  for (const value of [80, 60, 40, 20]) {
+    await density.fill(String(value))
+    await density.dispatchEvent('input')
+    await expect(stage).toHaveAttribute(
+      'data-model-wire-density',
+      String(value)
+    )
+    const triangles = Number(
+      await stage.getAttribute('data-wire-triangle-count')
+    )
+    expect(triangles).toBeGreaterThan(0)
+    expect(triangles).toBeLessThan(previousTriangleCount)
+    previousTriangleCount = triangles
+  }
+  await page.screenshot({
+    path: `/tmp/photo-grid-sparse-${info.project.name}.png`,
+  })
+  await density.fill('100')
+  await density.dispatchEvent('input')
+  await expect(stage).toHaveAttribute(
+    'data-wire-triangle-count',
+    String(fullTriangleCount)
+  )
+  await density.fill('40')
+  await density.dispatchEvent('input')
+  await expect(thickness).toHaveAttribute('max', '8')
+  for (const value of [5, 6, 7, 8]) {
+    await thickness.fill(String(value))
+    await thickness.dispatchEvent('input')
+    await expect(stage).toHaveAttribute(
+      'data-model-wire-thickness',
+      String(value)
+    )
+  }
+  await panel.getByRole('button', { name: '默认', exact: true }).click()
+  await expect(thickness).toBeDisabled()
+  await expect(thickness).toHaveValue('8')
+  await expect(density).toBeDisabled()
+  await expect(density).toHaveValue('40')
+  await panel.getByRole('button', { name: '网格', exact: true }).click()
+  await expect(thickness).toBeEnabled()
+  await expect(stage).toHaveAttribute('data-model-wire-thickness', '8')
+  await expect(density).toBeEnabled()
+  await expect(stage).toHaveAttribute('data-model-wire-density', '40')
   await expect
     .poll(async () =>
       Number(await stage.getAttribute('data-wire-vertex-count'))
@@ -1108,6 +1167,12 @@ test('photo component controls adjust independent background layers and restore 
   await expect(outline).toHaveAttribute('aria-checked', 'false')
   await expect(stage).toHaveAttribute('data-model-form', 'default')
   await expect(stage).toHaveAttribute('data-model-outline', 'false')
+  await expect(thickness).toHaveValue('1')
+  await expect(thickness).toBeDisabled()
+  await expect(stage).toHaveAttribute('data-model-wire-thickness', '1')
+  await expect(density).toBeDisabled()
+  await expect(density).toHaveValue('100')
+  await expect(stage).toHaveAttribute('data-model-wire-density', '100')
   expect(
     await sky.evaluate((node) => getComputedStyle(node, '::before').opacity)
   ).toBe('1')

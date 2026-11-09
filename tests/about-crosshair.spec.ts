@@ -1,8 +1,10 @@
 import { expect, test } from '@playwright/test'
 
+import { gotoHomeAboutOverlay } from './helpers/homeAboutOverlay'
+
 test.beforeEach(async ({ page }) => {
   await page.route('https://use.typekit.net/**', (route) => route.abort())
-  await page.goto('/about', { waitUntil: 'domcontentloaded' })
+  await gotoHomeAboutOverlay(page)
   await expect(page.locator('.passion-section')).toBeVisible({ timeout: 25000 })
   await expect(page.locator('.entry-overlay-container')).toHaveCount(0, {
     timeout: 25000,

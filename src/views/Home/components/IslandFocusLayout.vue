@@ -359,6 +359,8 @@ watch(
   ([element, path], [previousRoot]) => {
     if (!element) return
     const moduleId = islandModuleAtPath(path)
+    // 同模块的子页面保留面板和展开状态，由内容组件响应路由变化。
+    if (moduleId && moduleId === selectedItem.value?.item) return
     if (!moduleId && !selectedItem.value && !transitionItem.value) return
     void transitionDetail(moduleId, !previousRoot)
   },
@@ -1031,6 +1033,7 @@ onBeforeUnmount(() => {
           <ScrollViewport v-else class="island-detail__viewport" edge-scanlines>
             <IslandLaboratoryContent
               v-if="selectedItem.item === 'LABORATORY'"
+              :expanded="detailExpanded"
             />
             <IslandCollectionsContent
               v-else-if="selectedItem.item === 'COLLECTIBLES'"
@@ -2018,6 +2021,8 @@ onBeforeUnmount(() => {
       pointer-events: none;
     }
   }
+  // 离场快照优先于详情区的延迟淡入，避免旧内容在关屏前被设为透明。
+  &.island-closing-snapshot.has-detail .crt-effect-leave-active,
   .crt-effect-leave-active {
     animation: anutriumCrtOff 0.24s cubic-bezier(0.2, 1, 0.22, 1) both;
   }

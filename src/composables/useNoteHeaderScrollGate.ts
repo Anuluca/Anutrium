@@ -12,10 +12,9 @@ interface HeaderScrollOptions {
   expandHeader: () => void
 }
 
-/** 首次滚动先消费标题过渡，结束后再把累计输入交还正文。 */
+/** 首次滚动只消费标题过渡，结束后仅处理新到达的正文滚动输入。 */
 export function useNoteHeaderScrollGate(options: HeaderScrollOptions) {
   let blocking = false
-  let pending = 0
   let revision = 0
   let timer: ReturnType<typeof setTimeout> | undefined
   let cleanupTransition: (() => void) | undefined
@@ -41,7 +40,6 @@ export function useNoteHeaderScrollGate(options: HeaderScrollOptions) {
     if (scroll) scrollNestedTo(scroll, scroll.scrollTop, true)
     revision++
     blocking = false
-    pending = 0
     touch = null
     touchTarget = null
     flushTouch.cancel()
@@ -51,21 +49,9 @@ export function useNoteHeaderScrollGate(options: HeaderScrollOptions) {
     if (version !== revision || !blocking) return
     blocking = false
     clearTransition()
-    const scroll = options.scroll()
-    if (!scroll || !options.active()) {
-      pending = 0
-      return
-    }
-    const target = Math.max(
-      0,
-      Math.min(
-        scroll.scrollHeight - scroll.clientHeight,
-        scroll.scrollTop + pending
-      )
-    )
-    pending = 0
-    if (touch?.manual) touch.target = target
-    scrollNestedTo(scroll, target, false, { smoothNative: !reduced() })
+    // 过渡期间的输入已用于收起标题，不能在结束时再次滚动正文。
+    // 同一触摸手势继续移动时，从实际位置开始接收新的增量。
+    if (touch?.manual) touch.target = options.scroll()?.scrollTop || 0
   }
   const begin = async () => {
     blocking = true
@@ -137,11 +123,10 @@ export function useNoteHeaderScrollGate(options: HeaderScrollOptions) {
     flushTouch.cancel()
     touchTarget = null
     if (touch) touch.target = 0
-    // 顶部下拉可能没有 scroll 事件；直接恢复，并撤销尚未交给正文的位移。
+    // 顶部下拉可能没有 scroll 事件；直接恢复，并取消尚未结束的标题过渡。
     if (blocking || options.compact()) {
       revision++
       blocking = false
-      pending = 0
       clearTransition()
       scrollNestedTo(scroll, 0, true)
       options.expandHeader()
@@ -159,8 +144,12 @@ export function useNoteHeaderScrollGate(options: HeaderScrollOptions) {
       return false
     if (restoreAtTop(event, delta)) return true
     if (!blocking && options.compact()) return false
+    // 减少动态效果时没有标题过渡，当前输入可以直接交给原生滚动。
+    if (!blocking && reduced()) {
+      options.compactHeader()
+      return false
+    }
     event.preventDefault()
-    pending += delta
     if (!blocking) void begin()
     return true
   }
@@ -215,7 +204,6 @@ export function useNoteHeaderScrollGate(options: HeaderScrollOptions) {
     event.preventDefault()
     if (restoreAtTop(event, delta)) return
     if (blocking || !options.compact()) {
-      pending += delta
       if (!blocking) void begin()
       return
     }

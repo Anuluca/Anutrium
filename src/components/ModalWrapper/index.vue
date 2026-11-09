@@ -25,6 +25,8 @@
     @open="handleDialogOpen"
     @closed="handleClosed"
   >
+    <slot name="background" />
+
     <div
       class="modal-close-row"
       :class="{ 'is-closing': !!originElement && !dialogVisible }"

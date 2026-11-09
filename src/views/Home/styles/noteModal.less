@@ -1,8 +1,9 @@
 @import '../../../assets/style/modalFrame.less';
 
 .el-overlay:has(> .el-overlay-dialog > .note-detail-stage.no-rem) {
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background-color: rgba(0, 0, 0, 0.9) !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 .el-overlay-dialog:has(> .note-detail-stage) {
   overflow: clip;
@@ -10,6 +11,8 @@
 // 中央弹窗与相邻空外壳共用尺寸，移动端继续沿用上下切换。
 .note-detail-stage.no-rem,
 .modal-wrapper-dialog.note-detail-modal.no-rem {
+  --note-reader-inset-top: 0.3333333rem;
+  --note-reader-inset-left: 0.3333333rem;
   --note-modal-width: min(
     calc(100vw - 160px),
     calc((100dvh - max(80px, 3rem)) * 16 / 9)
@@ -80,6 +83,9 @@
     cursor: default;
   }
 }
+.note-detail-stage.has-switched-note .note-detail-nav.no-rem {
+  animation: none;
+}
 .note-detail-nav--prev.no-rem {
   --note-shell-enter-x: calc(0px - var(--note-shell-peek) - 24px);
   --note-shell-enter-y: 0px;
@@ -113,9 +119,10 @@
 .modal-wrapper-dialog.note-detail-modal.no-rem {
   height: var(--note-modal-height);
   max-height: none !important;
-  padding-right: 0 !important;
-  padding-bottom: 0 !important;
+  // 外壳无内边距，背景直接铺满；文字与正文在各自内容层保留间距。
+  padding: 0 !important;
   .modal-scroll-region {
+    position: relative;
     overflow: hidden;
   }
   > .el-dialog__body > .modal-scroll-progress {
@@ -128,6 +135,9 @@
     .modal-scroll-progress,
     .modal-scanlines,
     > .el-dialog__body > .corner {
+      visibility: hidden;
+    }
+    .note-modal-background {
       visibility: hidden;
     }
     .note-reader {
@@ -181,8 +191,8 @@
   }
   .modal-wrapper-dialog.note-detail-modal.no-rem {
     // 公共弹窗的 10px 会转为 1/3rem，此处按实际尺寸减半。
-    padding-top: 0.1666667rem !important;
-    padding-left: 0.1666667rem !important;
+    --note-reader-inset-top: 0.1666667rem;
+    --note-reader-inset-left: 0.1666667rem;
     margin: var(--note-modal-top-gap) var(--note-modal-right-gap)
       var(--note-modal-bottom-gap) var(--note-modal-left-gap) !important;
 

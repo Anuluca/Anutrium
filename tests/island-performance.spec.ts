@@ -161,10 +161,10 @@ test('island stops idle GPU work, uses static buffers and reuses downloaded asse
   await page.evaluate(() =>
     (
       document.querySelector('.layout-page') as any
-    ).__vueParentComponent.proxy.$router.push('/about')
+    ).__vueParentComponent.proxy.$router.push('/colorPalette')
   )
-  await expect(page.locator('.about-page')).toBeVisible()
-  await expect(page.locator('.about-page')).not.toHaveClass(
+  await expect(page.locator('.palette-tool')).toBeVisible()
+  await expect(page.locator('.palette-tool')).not.toHaveClass(
     /route-enter-active/
   )
   await expect(page.locator('.particles-bg')).toHaveAttribute(
@@ -377,9 +377,9 @@ test('leaving during shader preparation cancels rendering and releases resources
   await page.evaluate(() =>
     (
       document.querySelector('.layout-page') as any
-    ).__vueParentComponent.proxy.$router.push('/about')
+    ).__vueParentComponent.proxy.$router.push('/colorPalette')
   )
-  await expect(page.locator('.about-page')).toBeVisible()
+  await expect(page.locator('.palette-tool')).toBeVisible()
   await expect(page.locator('.temple-page')).toHaveCount(0)
   await page.evaluate(() => {
     ;(

@@ -9,6 +9,7 @@ import {
   jsonResponse,
   withCors,
 } from './http'
+import { handleMonkeyArticles } from './monkeyArticles'
 import { handleNotes } from './notes'
 import { fetchSteamProfile } from './steam'
 
@@ -84,6 +85,13 @@ const worker: ExportedHandler<Env> = {
 
     if (/^\/(?:admin\/)?notes(?:\/|$)/.test(url.pathname))
       return withCors(await handleNotes(request, env), origin, allowedOrigins)
+
+    if (/^\/(?:admin\/)?monkey-articles(?:\/|$)/.test(url.pathname))
+      return withCors(
+        await handleMonkeyArticles(request, env),
+        origin,
+        allowedOrigins
+      )
 
     // 管理写入只在这个独立端点开放，其余既有接口继续只读。
     if (

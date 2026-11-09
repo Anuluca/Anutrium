@@ -28,8 +28,8 @@ test.beforeEach(async ({ page }) => {
 test('cold production entry stays inside the slow-4G budget', async ({
   page,
 }) => {
-  await page.goto('/about', { waitUntil: 'domcontentloaded' })
-  await expect(page.locator('.about-page')).toBeAttached()
+  await page.goto('/colorPalette', { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.palette-tool')).toBeAttached()
   await expect(page.locator('.layout-page')).toHaveClass(/layout-show/, {
     timeout: budgets.entryReady,
   })
@@ -58,75 +58,4 @@ test('cold production entry stays inside the slow-4G budget', async ({
   expect(metrics.firstContentfulPaint).toBeLessThan(
     budgets.firstContentfulPaint
   )
-})
-
-test('production route transition stays inside the slow-4G budget', async ({
-  page,
-}) => {
-  await page.goto('/about', { waitUntil: 'domcontentloaded' })
-  await expect(page.locator('.layout-page')).toHaveClass(/layout-show/, {
-    timeout: budgets.entryReady,
-  })
-
-  const archiveLink = page.locator('.desktop-menu a[href="/archive"]')
-  await expect(archiveLink).toBeVisible()
-  const startedAt = Date.now()
-  await archiveLink.click()
-  await expect(page).toHaveURL(/\/archive$/)
-  await expect(page.locator('.archives-page')).toBeAttached()
-
-  expect(Date.now() - startedAt).toBeLessThan(budgets.routeTransition)
-})
-
-test('about route reuses its WebGL runtime during a short route round trip', async ({
-  page,
-}) => {
-  await page.goto('/about', { waitUntil: 'domcontentloaded' })
-  await expect(page.locator('.layout-page')).toHaveClass(/layout-show/, {
-    timeout: budgets.entryReady,
-  })
-  await expect(page.locator('.entry-overlay-container')).toBeHidden({
-    timeout: budgets.entryReady,
-  })
-
-  const canvas = page.locator('.passion-logo-bg canvas')
-  await expect(canvas).toBeVisible()
-  await page.evaluate(() => {
-    ;(
-      window as Window & { __aboutWebGLCanvas?: HTMLCanvasElement }
-    ).__aboutWebGLCanvas = document.querySelector<HTMLCanvasElement>(
-      '.passion-logo-bg canvas'
-    )!
-  })
-
-  await page.locator('.desktop-menu a[href="/archive"]').click()
-  await expect(page).toHaveURL(/\/archive$/, {
-    timeout: budgets.entryReady,
-  })
-  await expect(page.locator('.archives-page')).toBeAttached()
-
-  await page.locator('.desktop-menu a[href="/about"]').click()
-  await expect(page).toHaveURL(/\/about$/, {
-    timeout: budgets.entryReady,
-  })
-  await expect(canvas).toBeVisible()
-
-  const runtimeState = await page.evaluate(() => {
-    const browserWindow = window as Window & {
-      __aboutWebGLCanvas?: HTMLCanvasElement
-    }
-    const currentCanvas = document.querySelector<HTMLCanvasElement>(
-      '.passion-logo-bg canvas'
-    )
-    const context =
-      currentCanvas?.getContext('webgl2') || currentCanvas?.getContext('webgl')
-
-    return {
-      contextLost: context?.isContextLost() ?? true,
-      reused: currentCanvas === browserWindow.__aboutWebGLCanvas,
-    }
-  })
-
-  expect(runtimeState.reused).toBe(true)
-  expect(runtimeState.contextLost).toBe(false)
 })

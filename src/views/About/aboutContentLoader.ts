@@ -1,4 +1,4 @@
-import { ensureRouteMessages } from '@/locales/routeMessages'
+import { ensureMessageDomain } from '@/locales/routeMessages'
 
 import type AboutContent from './AboutContent.vue'
 
@@ -8,7 +8,7 @@ export function loadAboutContent() {
   if (!contentLoad) {
     contentLoad = Promise.all([
       import('./AboutContent.vue'),
-      ensureRouteMessages('ABOUT'),
+      ensureMessageDomain('about'),
     ])
       .then(([component]) => component)
       .catch((error) => {

@@ -347,6 +347,11 @@
   white-space: nowrap;
 }
 
+// 射手座的两条对角线需要等比缩放，才能在屏幕上保持垂直。
+.zodiac-sign-face[data-zodiac-sign='sagittarius'] .zodiac-glyph svg {
+  transform: scale(1.24);
+}
+
 .zodiac-diamond-frame {
   position: absolute;
   inset: 0;

@@ -1,8 +1,9 @@
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
 
 import type { NoteSummary } from '@/utils/noteDocument'
 
-const remoteNotes = ref<NoteSummary[]>([])
+// 列表只在完整拉取成功后替换，无需为每条只读元信息建立深层响应式代理。
+const remoteNotes = shallowRef<NoteSummary[]>([])
 // 概览与列表共享排序结果，只有远端列表更新时重新排序。
 const sortedNotes = computed(() =>
   [...remoteNotes.value].sort(

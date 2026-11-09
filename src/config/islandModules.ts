@@ -56,6 +56,9 @@ const islandModuleIdsByPath = new Map<string, IslandModuleId>(
     id,
   ])
 )
+export const AI_AGENT_TEST_PATH = '/atrium/laboratory/ai-agent'
+islandModuleIdsByPath.set(AI_AGENT_TEST_PATH, 'LABORATORY')
+
 export const islandModuleAtPath = (path: string): IslandModuleId | null =>
   islandModuleIdsByPath.get(path.replace(/\/+$/, '')) ?? null
 

@@ -1,7 +1,10 @@
+@note-text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+
 .note-title-typography() {
   font-weight: 900;
   letter-spacing: -0.04em;
   transform: scaleX(0.92);
+  text-shadow: @note-text-shadow;
 }
 
 .note-meta-typography() {
@@ -15,6 +18,7 @@
   font-family: 'Anton', monospace;
   font-weight: 400;
   letter-spacing: 0.22em;
+  text-shadow: @note-text-shadow;
 }
 
 .note-category-text() {
@@ -24,7 +28,9 @@
 }
 
 .note-date-typography() {
+  color: #999;
   font-family: 'Anton', sans-serif;
   font-weight: 400;
   letter-spacing: 0.1em;
+  text-shadow: @note-text-shadow;
 }

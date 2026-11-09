@@ -6,31 +6,21 @@ type Theme = 'light' | 'dark'
 
 type DeviceType = 'mobile' | 'tablet' | 'desktop'
 
-type ZodiacLayout = 'hero' | 'content'
-
 export default defineStore('visualState', {
   state: (): {
     theme: Theme
     pendingTheme: Theme | null
     themeRequestRevision: number
     deviceType: DeviceType
-    zodiacLayout: ZodiacLayout
-    homeStarfieldVisible: boolean
-    homeHeaderScrollProgress: number
     backgroundTopInset: number
     routeLeaveRevision: number
-    pageScrollProgressOverride: number | null
   } => ({
     theme: 'dark',
     pendingTheme: null,
     themeRequestRevision: 0,
     deviceType: 'desktop',
-    zodiacLayout: 'hero',
-    homeStarfieldVisible: true,
-    homeHeaderScrollProgress: 0,
     backgroundTopInset: 0,
     routeLeaveRevision: 0,
-    pageScrollProgressOverride: null,
   }),
 
   actions: {
@@ -85,22 +75,6 @@ export default defineStore('visualState', {
       this.deviceType = deviceType
     },
 
-    setZodiacLayout(layout: ZodiacLayout): void {
-      if (this.zodiacLayout === layout) return
-      this.zodiacLayout = layout
-    },
-
-    setHomeStarfieldVisible(visible: boolean): void {
-      if (this.homeStarfieldVisible === visible) return
-      this.homeStarfieldVisible = visible
-    },
-
-    setHomeHeaderScrollProgress(progress: number): void {
-      const normalizedProgress = Math.min(1, Math.max(0, progress))
-      if (this.homeHeaderScrollProgress === normalizedProgress) return
-      this.homeHeaderScrollProgress = normalizedProgress
-    },
-
     setBackgroundTopInset(inset: number): void {
       const normalizedInset = Math.max(0, inset)
       if (this.backgroundTopInset === normalizedInset) return
@@ -109,15 +83,6 @@ export default defineStore('visualState', {
 
     markRouteLeaveComplete(): void {
       this.routeLeaveRevision += 1
-    },
-
-    setPageScrollProgressOverride(progress: number | null): void {
-      const normalizedProgress =
-        progress === null
-          ? null
-          : Math.round(Math.min(100, Math.max(0, progress)) * 10_000) / 10_000
-      if (this.pageScrollProgressOverride === normalizedProgress) return
-      this.pageScrollProgressOverride = normalizedProgress
     },
   },
 })

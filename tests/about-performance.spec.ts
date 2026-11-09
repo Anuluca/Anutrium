@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test'
 
+import { gotoHomeAboutOverlay } from './helpers/homeAboutOverlay'
+
 test.beforeEach(async ({ page }) => {
   await page.route('https://use.typekit.net/**', (route) => route.abort())
 })
@@ -8,7 +10,7 @@ test('crosshair movement stays within a fixed layout budget', async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto('/about', { waitUntil: 'domcontentloaded' })
+  await gotoHomeAboutOverlay(page)
   const section = page.locator('.passion-section')
   await expect(section).toBeVisible()
   await expect(page.locator('.entry-overlay-container')).toHaveCount(0, {
@@ -63,7 +65,7 @@ test('wireframe draws at most two batches per frame and stops in hidden tabs', a
       return original.apply(this, args)
     }
   })
-  await page.goto('/about', { waitUntil: 'domcontentloaded' })
+  await gotoHomeAboutOverlay(page)
   await expect(page.locator('.passion-logo-bg canvas')).toBeVisible()
   await page.waitForFunction(
     () => (window as typeof window & { aboutDraws: number }).aboutDraws > 4

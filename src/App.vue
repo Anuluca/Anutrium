@@ -192,8 +192,7 @@ const startAnimationFinished = () => {
 
 const syncSmoothScrollForRoute = () => {
   if (!entryAnimationReady.value) return
-  if (route.path === '/test2') stopSmoothScroll()
-  else startSmoothScroll()
+  startSmoothScroll()
 }
 
 const startAnimationHidden = () => {
@@ -241,13 +240,6 @@ onUnmounted(() => {
   removeGoogleAnalytics?.()
   stopSmoothScroll()
 })
-
-watch(
-  () => route.path,
-  (path) => {
-    if (path === '/test2') stopSmoothScroll()
-  }
-)
 </script>
 
 <template>

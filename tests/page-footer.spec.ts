@@ -33,8 +33,6 @@ type VueAppElement = HTMLElement & {
 const dynamicRouteSamples: Record<string, string> = {
   '/:module(archive|flanerie|pokeyard|creative|floratrium)?': '/',
   '/flanerie/:vlogId': '/flanerie/nanchang',
-  '/atrium/image-log/:albumId': '/atrium/image-log/covid',
-  '/atrium/merch/:collectionId': '/atrium/merch/lucarioNoArm',
 }
 
 const navigateWithRouter = async (page: Page, path: string) => {
@@ -84,9 +82,9 @@ test('PageFooter keeps its geometry after leaving the personal bay', async ({
 
   await page.evaluate(async () => {
     const app = document.querySelector<VueAppElement>('#app')
-    await app?.__vue_app__?.config.globalProperties.$router.push('/test')
+    await app?.__vue_app__?.config.globalProperties.$router.push('/atrium')
   })
-  await expect.poll(async () => new URL(page.url()).pathname).toBe('/test')
+  await expect.poll(async () => new URL(page.url()).pathname).toBe('/atrium')
 
   await page.evaluate(async () => {
     const app = document.querySelector<VueAppElement>('#app')
@@ -157,7 +155,7 @@ test('every PageFooter route keeps its copyright row clear of FooterCom', async 
   for (const path of pageFooterRoutes) {
     await test.step(path, async () => {
       await navigateWithRouter(page, path)
-      if (path === '/' || path === '/home2' || templeModuleAtPath(path)) {
+      if (path === '/' || templeModuleAtPath(path)) {
         await expect(page.locator('.page-footer-home')).toHaveCount(1)
         return
       }
@@ -398,7 +396,7 @@ test('footer social links expand horizontally on hover', async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium')
-  await page.goto('/about', { waitUntil: 'domcontentloaded' })
+  await page.goto('/colorPalette', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.bottom-text')).toHaveCount(1, {
     timeout: PAGE_LOAD_TIMEOUT,
   })
@@ -461,7 +459,7 @@ test('mobile footer social link bar uses enlarged tap targets', async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== 'mobile-chrome')
-  await page.goto('/about', { waitUntil: 'domcontentloaded' })
+  await page.goto('/colorPalette', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.bottom-text')).toHaveCount(1, {
     timeout: PAGE_LOAD_TIMEOUT,
   })
@@ -503,14 +501,14 @@ test('mobile footer social link bar uses enlarged tap targets', async ({
 test('footer modal preserves the page position while open and after closing', async ({
   page,
 }) => {
-  await page.goto('/about', { waitUntil: 'domcontentloaded' })
+  await page.goto('/colorPalette', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.bottom-text')).toHaveCount(1, {
     timeout: PAGE_LOAD_TIMEOUT,
   })
   await page.waitForTimeout(850)
   await scrollPageToRatio(page, 0.6)
 
-  const initialPosition = await readPagePosition(page, '.about-page')
+  const initialPosition = await readPagePosition(page, '.palette-tool')
   const trigger = page.locator('.footer-social-links__item[aria-label="WEIBO"]')
   await trigger.evaluate((element: HTMLButtonElement) => element.click())
 
@@ -540,7 +538,7 @@ test('footer modal preserves the page position while open and after closing', as
   await expectModalFrame(modal)
 
   expectPagePositionToMatch(
-    await readPagePosition(page, '.about-page'),
+    await readPagePosition(page, '.palette-tool'),
     initialPosition,
     MAX_GEOMETRY_DELTA
   )
@@ -548,7 +546,7 @@ test('footer modal preserves the page position while open and after closing', as
   await page.mouse.wheel(0, -600)
   await page.waitForTimeout(150)
   expectPagePositionToMatch(
-    await readPagePosition(page, '.about-page'),
+    await readPagePosition(page, '.palette-tool'),
     initialPosition,
     MAX_GEOMETRY_DELTA
   )
@@ -558,7 +556,7 @@ test('footer modal preserves the page position while open and after closing', as
   await page.waitForTimeout(100)
 
   expectPagePositionToMatch(
-    await readPagePosition(page, '.about-page'),
+    await readPagePosition(page, '.palette-tool'),
     initialPosition,
     MAX_GEOMETRY_DELTA
   )
@@ -568,7 +566,7 @@ test('footer logo rotation tracks the entire footer area', async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium')
-  await page.goto('/about', { waitUntil: 'domcontentloaded' })
+  await page.goto('/colorPalette', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.bottom-text')).toHaveCount(1, {
     timeout: PAGE_LOAD_TIMEOUT,
   })
@@ -601,7 +599,7 @@ test('Switch logo opens a copyable friend-code panel', async ({
   await context.grantPermissions(['clipboard-read', 'clipboard-write'], {
     origin: 'http://127.0.0.1:3000',
   })
-  await page.goto('/about', { waitUntil: 'domcontentloaded' })
+  await page.goto('/colorPalette', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.bottom-text')).toHaveCount(1, {
     timeout: PAGE_LOAD_TIMEOUT,
   })
@@ -833,7 +831,7 @@ test('Switch logo opens a copyable friend-code panel', async ({
 test('WEIBO opens its widget in a modal without social popovers', async ({
   page,
 }) => {
-  await page.goto('/about', { waitUntil: 'domcontentloaded' })
+  await page.goto('/colorPalette', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.bottom-text')).toHaveCount(1, {
     timeout: PAGE_LOAD_TIMEOUT,
   })
@@ -973,7 +971,7 @@ test('STEAM opens the aggregated profile modal', async ({ context, page }) => {
     }
   )
 
-  await page.goto('/about', { waitUntil: 'domcontentloaded' })
+  await page.goto('/colorPalette', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.bottom-text')).toHaveCount(1, {
     timeout: PAGE_LOAD_TIMEOUT,
   })
@@ -1097,7 +1095,7 @@ test('STEAM opens the aggregated profile modal', async ({ context, page }) => {
 test('PageFooter stays outside the route scale transition', async ({
   page,
 }) => {
-  await page.goto('/about', { waitUntil: 'domcontentloaded' })
+  await page.goto('/colorPalette', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('#page-footer-portal > .bottom-text')).toHaveCount(
     1,
     { timeout: PAGE_LOAD_TIMEOUT }

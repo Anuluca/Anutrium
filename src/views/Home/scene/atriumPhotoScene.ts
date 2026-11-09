@@ -6,6 +6,7 @@ import {
 } from '@/config/atriumPhoto'
 import { PHOTO_THEMES } from '@/stores/atriumPhotoComponents'
 import { loadIslandLucarioModel } from '@/utils/islandLucarioModel'
+import { prepareModelSimplifier } from '@/utils/simplifyModelGeometry'
 
 import type { AtriumPhotoFraming } from './atriumPhotoFraming'
 import { isHomeSceneDiagnosticsEnabled } from './diagnostics'
@@ -81,6 +82,8 @@ export function createAtriumPhotoScene(
   // 拍照只显示线条和流光；深度预通道仍遮挡背线，但不写入任何黑色面。
   wireScan.fillOpacity.value = 0
   wireScan.install(wireMaterial, 'composite')
+  const wireGeometries = new Map<number, THREE.BufferGeometry>()
+  let modelWireDensity = 100
   let wireGeometry: THREE.BufferGeometry | undefined
   let wireMesh: THREE.Mesh | undefined
   let wireDepthMesh: THREE.Mesh | undefined
@@ -114,6 +117,17 @@ export function createAtriumPhotoScene(
   let modelForm: 'default' | 'wireframe' = 'default'
   let modelOutline = false
   const applyModelAppearance = () => {
+    if (geometry && wireMesh && wireDepthMesh && modelForm === 'wireframe') {
+      let next = wireGeometries.get(modelWireDensity)
+      if (!next) {
+        next = createLucarioWireGeometry(geometry, modelWireDensity / 100)
+        wireGeometries.set(modelWireDensity, next)
+      }
+      // 每档仅生成一次，线框和遮挡预通道始终共用同一份几何。
+      wireGeometry = next
+      wireMesh.geometry = next
+      wireDepthMesh.geometry = next
+    }
     if (subjectMesh) subjectMesh.visible = modelForm === 'default'
     if (wireMesh) wireMesh.visible = modelForm === 'wireframe'
     if (wireDepthMesh) wireDepthMesh.visible = modelForm === 'wireframe'
@@ -122,6 +136,11 @@ export function createAtriumPhotoScene(
     if (diagnostics) {
       host.dataset.modelForm = modelForm
       host.dataset.modelOutline = String(modelOutline)
+      host.dataset.modelWireThickness = String(wireScan.wireThickness.value)
+      host.dataset.modelWireDensity = String(modelWireDensity)
+      host.dataset.wireTriangleCount = String(
+        (wireGeometry?.index?.count ?? 0) / 3
+      )
     }
     invalidate()
   }
@@ -368,7 +387,10 @@ export function createAtriumPhotoScene(
   renderer.domElement.addEventListener('webglcontextrestored', refresh)
   document.addEventListener('visibilitychange', refresh)
   // 异步返回时先检查实例是否已退出；不向已释放的渲染器上传资源。
-  const ready = loadIslandLucarioModel().then((asset) => {
+  const ready = Promise.all([
+    loadIslandLucarioModel(),
+    prepareModelSimplifier(),
+  ]).then(([asset]) => {
     if (disposed) return
     geometry = new THREE.BufferGeometry()
     for (const [name, source, itemSize] of [
@@ -414,6 +436,7 @@ export function createAtriumPhotoScene(
       geometry.boundingBox!.max.y - geometry.boundingBox!.min.y
     )
     wireGeometry = createLucarioWireGeometry(geometry)
+    wireGeometries.set(100, wireGeometry)
     wireMesh = new THREE.Mesh(wireGeometry, wireMaterial)
     wireMesh.position.copy(mesh.position)
     wireMesh.renderOrder = 1
@@ -446,7 +469,18 @@ export function createAtriumPhotoScene(
     ready,
     render,
     setTheme,
-    setModelAppearance: (form: 'default' | 'wireframe', outline: boolean) => {
+    setModelAppearance: (
+      form: 'default' | 'wireframe',
+      outline: boolean,
+      wireThickness: number,
+      wireDensity: number
+    ) => {
+      wireScan.wireThickness.value = Number.isFinite(wireThickness)
+        ? THREE.MathUtils.clamp(wireThickness, 1, 8)
+        : 1
+      modelWireDensity = Number.isFinite(wireDensity)
+        ? THREE.MathUtils.clamp(Math.round(wireDensity / 20) * 20, 20, 100)
+        : 100
       modelForm = form
       modelOutline = outline
       applyModelAppearance()
@@ -543,7 +577,8 @@ export function createAtriumPhotoScene(
       material.dispose()
       wireMaterial.dispose()
       wireDepthMaterial.dispose()
-      wireGeometry?.dispose()
+      wireGeometries.forEach((value) => value.dispose())
+      wireGeometries.clear()
       motionPreference.removeEventListener('change', refresh)
       outlineMaterial.dispose()
       environment?.dispose()

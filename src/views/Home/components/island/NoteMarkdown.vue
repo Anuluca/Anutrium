@@ -20,6 +20,7 @@
             mobile: widget.columns ?? 2,
           }"
           preserve-image-colors
+          lightweight-image-hover
         />
       </div>
       <div v-else-if="widget.type === 'social-links'" class="note-social-links">
@@ -94,13 +95,19 @@ watch(
     mountedWidgets.value = []
     selected.value = {}
     revision.value++
+    if (!content.widgets.length) return
     await nextTick()
     if (current !== pending || !root.value) return
     // 目标只来自本层渲染器；嵌套标签页由下一层阅读器单独管理生命周期。
-    mountedWidgets.value = content.widgets.flatMap((widget, index) => {
-      const target = root.value!.querySelector<HTMLElement>(
-        `[data-note-widget="${index}"]`
+    // 一次扫描建立占位索引，避免每个组件分别遍历整篇正文。
+    const targets = new Map(
+      Array.from(
+        root.value.querySelectorAll<HTMLElement>('[data-note-widget]'),
+        (target) => [Number(target.dataset.noteWidget), target] as const
       )
+    )
+    mountedWidgets.value = content.widgets.flatMap((widget, index) => {
+      const target = targets.get(index)
       return target ? [{ widget, target }] : []
     })
   },

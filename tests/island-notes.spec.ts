@@ -324,14 +324,23 @@ test('note modal preserves list scroll, card anchor and body width, and supports
   await expect(modal).toBeHidden()
 })
 
-test('notes uses two mobile columns and keeps its close button usable above the mobile notice', async ({
+test('notes uses responsive columns with faded covers above text and keeps its close button usable', async ({
   page,
 }, info) => {
+  const cover =
+    'https://assets.anuluca.com/Island/notes/covid/IMG_20200203_110153.jpg'
+  await page.route(`${cover}*`, (route) =>
+    route.fulfill({
+      contentType: 'image/svg+xml',
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"><rect width="800" height="600" fill="#c58b4e"/></svg>',
+    })
+  )
   await page.route('https://steam-api.anuluca.com/notes', (route) =>
     route.fulfill({
       json: {
         notes: Array.from({ length: 20 }, (_, index) => ({
           ...demoSummary,
+          image: index % 2 === 0 ? cover : undefined,
           id: `${demoId}-${index}`,
         })),
         nextCursor: null,
@@ -346,7 +355,118 @@ test('notes uses two mobile columns and keeps its close button usable above the 
       (element) =>
         getComputedStyle(element).gridTemplateColumns.split(' ').length
     )
-  expect(columns).toBe(info.project.name.includes('mobile') ? 2 : 3)
+  expect(columns).toBe(info.project.name.includes('mobile') ? 1 : 3)
+  await page.evaluate(() => document.fonts.ready)
+  const covers = await page
+    .locator('.study-note-card__visual')
+    .evaluateAll((visuals) =>
+      visuals.map((visual) => {
+        const box = visual.getBoundingClientRect()
+        const card = visual.closest('.study-note-card')!
+        const copy = card
+          .querySelector('.study-note-card__copy')!
+          .getBoundingClientRect()
+        const media = visual.querySelector('.study-note-card__media')!
+        const image = visual.querySelector('img')
+        const category = card.querySelector('.study-note-card__category')!
+        const titleRange = document.createRange()
+        titleRange.selectNodeContents(card.querySelector('h2')!)
+        const copyElement = card.querySelector<HTMLElement>(
+            '.study-note-card__copy'
+          )!,
+          heading = titleRange.getBoundingClientRect(),
+          copyStyle = getComputedStyle(copyElement),
+          scale = copy.width / copyElement.offsetWidth,
+          gapStart = parseFloat(
+            copyStyle.getPropertyValue('--note-title-gap-start')
+          ),
+          gapEnd = parseFloat(
+            copyStyle.getPropertyValue('--note-title-gap-end')
+          )
+        return {
+          titleVisible: copyStyle.overflowY === 'visible',
+          titleGapSpacing:
+            Math.abs((heading.left - copy.left) / scale - gapStart - 6) <= 1 &&
+            Math.abs(gapEnd - (heading.right - copy.left) / scale - 12) <= 1,
+          titleGapCoversText:
+            gapStart <= (heading.left - copy.left) / scale + 1 &&
+            gapEnd >= (heading.right - copy.left) / scale - 1,
+          defaultCover: !!visual.querySelector('.study-note-card__logo svg'),
+          ratio: box.width / box.height,
+          overlapsCover: copy.top < box.bottom && copy.top >= box.top,
+          ribbonOutside: copy.left < card.getBoundingClientRect().left,
+          labelBackground: getComputedStyle(category).backgroundColor,
+          outline: getComputedStyle(
+            card.querySelector('.study-note-card__copy')!,
+            '::before'
+          ).borderTopColor,
+          mask: getComputedStyle(visual).maskImage,
+          imageFilter: image ? getComputedStyle(image).filter : 'none',
+          overlay: getComputedStyle(visual, '::after').content,
+          blur: getComputedStyle(media, '::after').backdropFilter,
+        }
+      })
+    )
+  expect(covers.length).toBeGreaterThan(0)
+  expect(covers.filter((cover) => cover.defaultCover)).toHaveLength(6)
+  for (const cover of covers) {
+    expect(cover.titleVisible).toBe(true)
+    expect(cover.titleGapCoversText).toBe(true)
+    expect(cover.titleGapSpacing).toBe(true)
+    expect(cover.ratio).toBeCloseTo(5 / 3, 2)
+    expect(cover.overlapsCover).toBe(true)
+    expect(cover.ribbonOutside).toBe(false)
+    expect(cover.labelBackground).toBe('rgba(0, 0, 0, 0)')
+    expect(cover.outline).toBe('rgba(226, 52, 86, 0.5)')
+    expect(cover.mask).toContain('linear-gradient')
+    expect(cover.imageFilter).toBe('none')
+    expect(cover.overlay).toBe('none')
+    expect(cover.blur).toBe('none')
+  }
+  if (
+    await page.evaluate(
+      () => matchMedia('(hover: hover) and (pointer: fine)').matches
+    )
+  ) {
+    const copy = page.locator('.study-note-card__copy').first()
+    await copy.hover()
+    await expect(copy).toHaveCSS('background-color', 'rgb(226, 52, 86)')
+    const fade = await copy.evaluate((el) => {
+      const title = el.querySelector('h2')!,
+        style = getComputedStyle(title),
+        frame = el.getBoundingClientRect(),
+        range = document.createRange()
+      range.selectNodeContents(title)
+      const text = range.getBoundingClientRect(),
+        background = getComputedStyle(el, '::after')
+      return {
+        color: style.color,
+        fill: style.webkitTextFillColor,
+        gradient: background.backgroundImage,
+        height: parseFloat(background.height),
+        expected: frame.top - text.top + 8,
+        opacity: background.opacity,
+        bottom: background.bottom,
+        left: parseFloat(background.left),
+        start: parseFloat(
+          getComputedStyle(el).getPropertyValue('--note-title-gap-start')
+        ),
+      }
+    })
+    expect(fade.color).toBe('rgb(0, 0, 0)')
+    expect(fade.fill).toBe('rgb(0, 0, 0)')
+    expect(fade.gradient).toContain('to top')
+    expect(fade.gradient).toContain('rgb(226, 52, 86)')
+    expect(fade.gradient).toContain('rgba(226, 52, 86, 0)')
+    expect(fade.opacity).toBe('1')
+    expect(fade.height).toBeGreaterThan(0)
+    expect(Math.abs(fade.height - fade.expected)).toBeLessThanOrEqual(1)
+    expect(fade.left).toBeCloseTo(fade.start, 1)
+    await page.mouse.move(0, 0)
+  }
+  await page.screenshot({
+    path: info.outputPath('notes-title-label-ribbon.png'),
+  })
   if (info.project.name.includes('mobile'))
     await page
       .locator('.study-note-list')
@@ -718,7 +838,7 @@ test('shared category tabs filter before pagination and reset to the first page'
   await expect(cards.first().locator('.study-note-card__category')).toHaveText(
     '[TECHNOLOGY]'
   )
-  await pagination.getByRole('button', { name: '2', exact: true }).click()
+  await pagination.getByRole('button', { name: '第 2 页', exact: true }).click()
   await expect(cards).toHaveCount(10)
   await tab('POKÉMON').click()
   await expect(tab('POKÉMON')).toHaveClass(/is-active/)
@@ -727,7 +847,7 @@ test('shared category tabs filter before pagination and reset to the first page'
   await expect(pagination).toHaveCount(0)
   await tab('TECHNOLOGY').click()
   await expect(cards).toHaveCount(12)
-  await pagination.getByRole('button', { name: '2', exact: true }).click()
+  await pagination.getByRole('button', { name: '第 2 页', exact: true }).click()
   await expect(cards).toHaveCount(9)
   await tab('DAILY').click()
   await expect(cards).toHaveCount(0)
@@ -753,7 +873,7 @@ test('every Notes category supports direct URLs, refresh and invalid-category fa
   page,
 }) => {
   test.setTimeout(180000)
-  const categories = ['technology', 'pokemon', 'daily', 'test'] as const
+  const categories = ['technology', 'pokemon', 'daily', 'design', 'test'] as const
   const summaries = categories.map((type, index) => ({
     ...demoSummary,
     id: `category-${index}`,
@@ -765,12 +885,13 @@ test('every Notes category supports direct URLs, refresh and invalid-category fa
   )
   const notes = page.locator('.island-notes-content')
   for (const [category, label, count] of [
-    ['all', 'ALL', 3],
+    ['all', 'ALL', 4],
     ['technology', 'TECHNOLOGY', 1],
     ['pokemon', 'POKÉMON', 1],
     ['daily', 'DAILY', 1],
+    ['design', 'DESIGN', 1],
     ['test', 'TEST', 1],
-    ['invalid', 'ALL', 3],
+    ['invalid', 'ALL', 4],
   ] as const) {
     await openNotes(page, `?category=${category}`)
     await expect(
@@ -920,7 +1041,7 @@ test('manual refresh bypasses the cache, keeps the category and clamps paginatio
   await expect(notes.locator('.study-note-card')).toHaveCount(12)
   await notes
     .locator('.study-note-pagination')
-    .getByRole('button', { name: '2', exact: true })
+    .getByRole('button', { name: '第 2 页', exact: true })
     .click()
   await expect(notes.locator('.study-note-card')).toHaveCount(9)
   await expect(refresh).toHaveText('')
@@ -980,6 +1101,52 @@ test('manual refresh bypasses the cache, keeps the category and clamps paginatio
   } finally {
     release()
   }
+})
+
+test('background refresh clamps pagination and the list defers loading the reader', async ({
+  page,
+}) => {
+  let requests = 0
+  const readerRequests: string[] = []
+  page.on('request', (request) => {
+    if (new URL(request.url()).pathname.endsWith('/island/NoteReader.vue'))
+      readerRequests.push(request.url())
+  })
+  await page.route('https://steam-api.anuluca.com/notes**', (route) => {
+    requests++
+    return route.fulfill({
+      json: {
+        notes:
+          requests === 1
+            ? Array.from({ length: 13 }, (_, index) => ({
+                ...demoSummary,
+                id: `background-${index}`,
+              }))
+            : [{ ...demoSummary, title: '后台更新后的笔记' }],
+        nextCursor: null,
+      },
+    })
+  })
+  await openNotes(page)
+  const notes = page.locator('.island-notes-content')
+  await expect(notes.locator('.study-note-card')).toHaveCount(12)
+  await notes
+    .locator('.study-note-pagination')
+    .getByRole('button', { name: '第 2 页', exact: true })
+    .click()
+  await expect(notes.locator('.study-note-card')).toHaveCount(1)
+  expect(readerRequests).toEqual([])
+  // 仅推进缓存时钟，模拟失焦一分钟后恢复；不等待真实 TTL。
+  await page.evaluate(() => {
+    const now = Date.now()
+    Date.now = () => now + 61000
+    window.dispatchEvent(new Event('focus'))
+  })
+  await expect(notes.locator('.study-note-card h2')).toHaveText(
+    '后台更新后的笔记'
+  )
+  await expect(notes.locator('.study-note-pagination')).toHaveCount(0)
+  expect(requests).toBe(2)
 })
 
 const trackTitleEntrances = (page: Page) =>
@@ -1094,9 +1261,12 @@ test('note entrance wipes the enlarged title, reveals metadata, holds then moves
         if (titleElement.children.length)
           (window as any).noteTitleWasSplit = true
         const matrix = new DOMMatrixReadOnly(
-          getComputedStyle(reader!.querySelector('header')!).transform
+          getComputedStyle(
+            reader!.querySelector('.note-reader__heading')!
+          ).transform
         )
         ;(window as any).noteTitleInitialScale = matrix.a
+        ;((window as any).noteTitleScales ??= []).push(matrix.a)
       }
       if (reader && stage === 'meta' && titleElement) {
         const reveal = parseFloat(
@@ -1191,14 +1361,81 @@ test('note entrance wipes the enlarged title, reveals metadata, holds then moves
     const timeline = (window as any).__noteEntranceTimeline
     const move = timeline
       .getChildren(false, true, false)
-      .find((tween: any) =>
-        tween.targets().includes(element.querySelector('header'))
+      .find(
+        (tween: any) =>
+          tween
+            .targets()
+            .includes(element.querySelector('.note-reader__heading')) &&
+          Math.abs(tween.startTime() - timeline.labels.moving) < 0.001
       )
     return {
+      titleVisibleAt: timeline.labels.titleVisible,
+      titleEaseHalf: timeline
+        .getChildren(false, true, false)
+        .find(
+          (tween: any) =>
+            tween.targets().includes(element.querySelector('h1')) &&
+            tween.vars['--note-title-reveal']
+        )
+        .vars.ease(0.5),
+      titleDuration: timeline
+        .getChildren(false, true, false)
+        .find(
+          (tween: any) =>
+            tween.targets().includes(element.querySelector('h1')) &&
+            tween.vars['--note-title-reveal']
+        )
+        .duration(),
       hold: timeline.labels.moving - timeline.labels.hold,
       move: move.duration(),
       body: (window as any).__noteBodyTween.vars.duration,
       bodyTotal: (window as any).__noteBodyTween.duration(),
+      metadataReveals: timeline
+        .getChildren(false, true, false)
+        .filter(
+          (tween: any) =>
+            tween.vars.clearProps === 'opacity' &&
+            tween
+              .targets()
+              .some((target: Element) =>
+                target.matches('.note-reader__category, time')
+              )
+        )
+        .map((tween: any) => ({
+          target: tween.targets()[0].tagName,
+          time: tween.startTime(),
+        })),
+      metadataFlashes: timeline
+        .getChildren(false, true, false)
+        .filter(
+          (tween: any) =>
+            typeof tween.vars.opacity === 'number' &&
+            tween
+              .targets()
+              .some((target: Element) =>
+                target.matches('.note-reader__category, time')
+              )
+        )
+        .map((tween: any) => ({
+          target: tween.targets()[0].tagName,
+          opacity: tween.vars.opacity,
+          time: tween.startTime(),
+        })),
+      metadataScales: timeline
+        .getChildren(false, true, false)
+        .filter(
+          (tween: any) =>
+            tween.vars.scale === 1 &&
+            tween
+              .targets()
+              .some((target: Element) =>
+                target.matches('.note-reader__category, time')
+              )
+        )
+        .map((tween: any) => ({
+          target: tween.targets()[0].tagName,
+          duration: tween.duration(),
+        })),
       titleFlashes: timeline
         .getChildren(false, true, false)
         .filter(
@@ -1216,17 +1453,36 @@ test('note entrance wipes the enlarged title, reveals metadata, holds then moves
   expect(timing.move).toBe(1.6)
   expect(timing.body).toBe(0.8)
   expect(timing.bodyTotal).toBeLessThanOrEqual(1.21)
+  expect(timing.titleFlashes).toEqual([])
   expect(
-    timing.titleFlashes.map((flash: { opacity: number }) => flash.opacity)
-  ).toEqual([1, 0, 1, 0])
-  expect(timing.titleFlashes[3].time - timing.titleFlashes[0].time).toBeCloseTo(
-    0.18,
+    timing.metadataReveals.map((reveal: { target: string }) => reveal.target)
+  ).toEqual(['SPAN', 'TIME'])
+  expect(
+    timing.metadataReveals[1].time - timing.metadataReveals[0].time
+  ).toBeCloseTo(0.28, 5)
+  expect(timing.titleDuration).toBe(2.4)
+  expect(timing.titleEaseHalf).toBeGreaterThan(0.75)
+  expect(timing.titleVisibleAt).toBeLessThan(timing.titleDuration)
+  expect(timing.metadataReveals[0].time - timing.titleVisibleAt).toBeCloseTo(
+    0.7,
     5
   )
-  expect(timing.titleFlashes[3].time).toBeLessThan(1.8)
-  expect(await page.evaluate(() => (window as any).noteMetaFlashes)).toEqual([
-    1, 0, 1, 0, 1,
+  for (const target of ['SPAN', 'TIME']) {
+    const flashes = timing.metadataFlashes.filter(
+      (flash: { target: string }) => flash.target === target
+    )
+    expect(flashes.map((flash: { opacity: number }) => flash.opacity)).toEqual([
+      1, 0, 1, 0,
+    ])
+    expect(flashes[3].time - flashes[0].time).toBeCloseTo(0.15, 5)
+  }
+  expect(timing.metadataScales).toEqual([
+    { target: 'SPAN', duration: 0.28 },
+    { target: 'TIME', duration: 0.28 },
   ])
+  expect(await page.evaluate(() => (window as any).noteMetaFlashes)).toContain(
+    1
+  )
   expect(
     await page.evaluate(() => (window as any).noteDateAppearedBeforeCategory)
   ).toBeUndefined()
@@ -1240,9 +1496,15 @@ test('note entrance wipes the enlarged title, reveals metadata, holds then moves
     .poll(() => page.evaluate(() => (window as any).noteBlocksStaggered))
     .toBe(true)
   expect(await page.evaluate(() => (window as any).noteTitleWiped)).toBe(true)
-  expect(
-    await page.evaluate(() => (window as any).noteMetaOverlapsWipeTail)
-  ).toBe(true)
+  const scales = await page.evaluate(
+    () => (window as any).noteTitleScales as number[]
+  )
+  expect(Math.max(...scales) - Math.min(...scales)).toBeGreaterThan(0.05)
+  // 核对首闪的实际时点，避免快速闪烁在繁忙设备上漏帧造成误报。
+  expect(timing.metadataFlashes[0].time - timing.titleVisibleAt).toBeCloseTo(
+    0.5,
+    5
+  )
   expect(
     await page.evaluate(() => (window as any).noteMetaFadesWhileMoving)
   ).toBeUndefined()
@@ -1517,6 +1779,21 @@ test('note title compacts outside the body scroller and desktop wheels use neste
   )
   if (!touch) await expect(scroll).toHaveClass(/lenis/)
   else await expect(scroll).not.toHaveClass(/lenis/)
+  // 首次向下输入只收起标题；过渡结束后的新输入才交给正文滚动。
+  await scroll.hover()
+  await page.mouse.wheel(0, 320)
+  await expect(reader).toHaveClass(/is-header-compact/)
+  await expect
+    .poll(() =>
+      header.evaluate(
+        (element) =>
+          element
+            .getAnimations({ subtree: true })
+            .filter((animation) => animation.playState === 'running').length
+      )
+    )
+    .toBe(0)
+  expect(await scroll.evaluate((element) => element.scrollTop)).toBe(0)
   await scroll.evaluate((el) => {
     const values: number[] = []
     ;(window as any).noteWheelSamples = values
