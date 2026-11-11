@@ -1,4 +1,5 @@
 @import '../../../assets/style/modalFrame.less';
+@import '../../../assets/style/readerModalSize.less';
 
 .el-overlay:has(> .el-overlay-dialog > .note-detail-stage.no-rem) {
   background-color: rgba(0, 0, 0, 0.9) !important;
@@ -13,11 +14,9 @@
 .modal-wrapper-dialog.note-detail-modal.no-rem {
   --note-reader-inset-top: 0.3333333rem;
   --note-reader-inset-left: 0.3333333rem;
-  --note-modal-width: min(
-    calc(100vw - 160px),
-    calc((100dvh - max(80px, 3rem)) * 16 / 9)
-  );
-  --note-modal-height: calc(var(--note-modal-width) * 9 / 16);
+  .reader-modal-size();
+  --note-modal-width: var(--reader-modal-width);
+  --note-modal-height: var(--reader-modal-height);
 }
 .note-detail-stage.no-rem {
   .modal-frame-variables();
@@ -161,16 +160,13 @@
 
   .note-detail-stage.no-rem,
   .modal-wrapper-dialog.note-detail-modal.no-rem {
-    --note-modal-top-gap: calc(44px + env(safe-area-inset-top, 0px));
-    --note-modal-left-gap: calc(8px + env(safe-area-inset-left, 0px));
-    --note-modal-right-gap: calc(8px + env(safe-area-inset-right, 0px));
-    --note-modal-bottom-gap: calc(112px + env(safe-area-inset-bottom, 0px));
-    --note-modal-width: calc(
-      100vw - var(--note-modal-left-gap) - var(--note-modal-right-gap)
-    );
-    --note-modal-height: calc(
-      100dvh - var(--note-modal-top-gap) - var(--note-modal-bottom-gap)
-    );
+    .reader-modal-mobile-size();
+    --note-modal-top-gap: var(--reader-modal-top-gap);
+    --note-modal-left-gap: var(--reader-modal-left-gap);
+    --note-modal-right-gap: var(--reader-modal-right-gap);
+    --note-modal-bottom-gap: var(--reader-modal-bottom-gap);
+    --note-modal-width: var(--reader-modal-width);
+    --note-modal-height: var(--reader-modal-height);
   }
   .note-detail-stage.no-rem {
     --note-shell-peek: 28px;

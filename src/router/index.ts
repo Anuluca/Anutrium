@@ -26,6 +26,7 @@ import {
 } from '@/config/templeNavigation'
 import { useTempleNavigation } from '@/stores/templeNavigation'
 import { preloadTempleAssets } from '@/utils/preloadTempleAssets'
+import { preloadMonkeyTypewriterAssets } from '@/utils/preloadMonkeyTypewriterAssets'
 import { loadFloraPetModel } from '@/utils/floraPetModel'
 import { useFloraPets } from '@/stores/floraPets'
 import { templeSceneHost } from '@/views/Home/templeSceneHost'
@@ -41,6 +42,7 @@ import {
 import { revealTempleRouteCurtain } from '@/utils/templeRouteTransition'
 
 import i18n from '../locales'
+import { translate } from '../locales/translate'
 import { ensureRouteMessages } from '../locales/routeMessages'
 import { cursorState } from '../stores'
 import { ROUTE_CURSOR_LOADING_SOURCE } from '../stores/cursorState'
@@ -405,6 +407,15 @@ export const routes: RouteConfig[] = [
     path: '/laboratory/monkey-typewriter',
     name: 'MONKEY_TYPEWRITER',
     component: () => import('@/views/MonkeyTypewriter/index.vue'),
+    beforeEnter: async () => {
+      try {
+        await preloadMonkeyTypewriterAssets()
+      } catch {
+        const { showErrorMessage } = await import('@/utils/elementMessage')
+        showErrorMessage(translate('monkeyTypewriter.entryImageFailed'))
+        return false
+      }
+    },
     meta: {
       titleEn: 'MONKEY TYPEWRITER',
       titleCn: '猴子打字',

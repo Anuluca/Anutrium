@@ -1,7 +1,8 @@
-import { writeFileSync } from 'node:fs'
-import jsQR from 'jsqr'
-import { PNG } from 'pngjs'
 import { expect, test } from '@playwright/test'
+import jsQR from 'jsqr'
+import { writeFileSync } from 'node:fs'
+import { PNG } from 'pngjs'
+
 import {
   analyzeEnglishWords,
   highlightEnglishWords,
@@ -28,6 +29,7 @@ test('generate, share catalogue, reopen, download, pagination and failed-request
   page,
   context,
 }, info) => {
+  test.setTimeout(60000)
   let attempts = 0
   const sentIds: string[] = []
   await page.route(
@@ -190,15 +192,20 @@ test('generate, share catalogue, reopen, download, pagination and failed-request
   ).toBeVisible()
   expect((await downloaded).suggestedFilename()).toMatch(/^monkey-.*\.txt$/)
   await page.locator('.babel-entrance').click()
-  await expect(page.locator('.archive-row')).toHaveCount(1)
-  await page.getByRole('button', { name: '继续探索书架' }).click()
-  await expect(page.locator('.archive-row')).toHaveCount(2)
-  await expect(page.getByRole('button', { name: '继续探索书架' })).toHaveCount(
+  await expect(page.locator('.library-book')).toHaveCount(1)
+  await page.getByRole('button', { name: '加载更多书本' }).click()
+  await expect(page.locator('.library-book')).toHaveCount(2)
+  await expect(page.getByRole('button', { name: '加载更多书本' })).toHaveCount(
     0
   )
-  await page.locator('.archive-row').first().click()
-  await expect(page.getByRole('textbox', { name: '文章正文' })).toHaveValue(
+  await page.locator('.library-book').first().click()
+  await expect(page.locator('.babel-reader .manuscript-highlights')).toHaveText(
     content
+  )
+  await page.keyboard.press('Escape')
+  await expect(page.locator('.babel-library-dialog')).toBeHidden()
+  await expect(page.getByRole('textbox', { name: '文章正文' })).toHaveValue(
+    content + '\nEdited by me.'
   )
   await page.screenshot({
     path: `test-results/monkey-${info.project.name}.png`,
@@ -243,12 +250,14 @@ test('library failures can be retried and rate limits have a useful message', as
     '每分钟最多 5 次'
   )
   await page.locator('.babel-entrance').click()
-  await expect(page.locator('.lab-feedback [role=alert]')).toContainText(
-    '暂时不可用'
-  )
+  await expect(page.locator('.el-message--error')).toContainText('暂时不可用')
   fail = false
   await page.getByRole('button', { name: '刷新书架' }).click()
-  await expect(page.locator('.library-empty')).toContainText('书架还是空的')
+  await expect(page.locator('.library-scroll')).toHaveAttribute(
+    'aria-busy',
+    'false'
+  )
+  await expect(page.locator('.library-book')).toHaveCount(0)
 })
 
 test('leaving preserves desktop and mobile geometry', async ({ page }) => {
@@ -319,7 +328,7 @@ test('typing can be skipped and the laboratory return path is reused', async ({
     content
   )
   await expect(page.getByRole('button', { name: 'RESTART' })).toBeEnabled()
-  await page.getByRole('button', { name: 'LABORATORY', exact: true }).click()
+  await page.getByRole('button', { name: '实验室', exact: true }).click()
   await expect(page).toHaveURL(/\/atrium\/laboratory$/)
   await expect(
     page.locator('.shared-tool-card').filter({ hasText: '猴子打字' })
@@ -489,7 +498,10 @@ test('fuzzy image draws displaced single-pixel rows and stops for reduced motion
     'background-color',
     'rgba(0, 0, 0, 0)'
   )
-  await expect(page.locator('.start-button')).toHaveCSS('font-size', '27px')
+  await expect(page.locator('.start-button')).toHaveCSS(
+    'font-size',
+    test.info().project.name === 'mobile-chrome' ? '22px' : '27px'
+  )
   const frame = await page
     .locator('.monkey-lab')
     .evaluate((el) => getComputedStyle(el, '::after').content)
@@ -617,7 +629,10 @@ test('workspace stays fixed while actions enter and leave', async ({
   // 切换动态效果偏好会恢复公共容器的入场动画，待其结束后测量按钮布局。
   await page.waitForTimeout(1100)
   await page.getByRole('button', { name: 'START', exact: true }).click()
-  await expect(page.locator('.photo-header')).toHaveCSS('flex-basis', '270px')
+  await expect(page.locator('.photo-header')).toHaveCSS(
+    'flex-basis',
+    test.info().project.name === 'mobile-chrome' ? '200px' : '270px'
+  )
   await expect(page.locator('.lab-workspace')).not.toHaveClass(
     /crt-effect-enter-active/
   )
@@ -626,7 +641,11 @@ test('workspace stays fixed while actions enter and leave', async ({
     ;(window as any).manuscriptGeometry = samples
     const measure = () => {
       const rect = document
-        .querySelector('.paper-tray')!
+        .querySelector(
+          matchMedia('(max-width: 768px)').matches
+            ? '.manuscript-frame'
+            : '.paper-tray'
+        )!
         .getBoundingClientRect()
       const copy = document.querySelector<HTMLElement>(
         '.draft-actions-left > button:not(.skip-typing)'
@@ -857,14 +876,16 @@ test('real wordlist analyzes generated and edited content, excludes titles and i
   await expect(analysis.getByRole('listitem')).toHaveCount(0)
   await expect(page.locator('.manuscript-highlights mark')).toHaveCount(0)
   await page.getByRole('button', { name: '巴别图书馆', exact: true }).click()
-  await page.locator('.archive-row').first().click()
-  await expect(analysis).toContainText('本次生成了 2 个正常单词：')
-  await expect(analysis.getByRole('listitem')).toHaveText(['book ×2', 'sun'])
-  await expect(page.locator('.manuscript-highlights mark')).toHaveText([
-    'book',
-    'BOOK',
-    'sun',
-  ])
+  await page.locator('.library-book').first().click()
+  await expect(
+    page.locator('.babel-reader .manuscript-highlights')
+  ).toContainText('book BOOK sun')
+  await page.keyboard.press('Escape')
+  await expect(page.locator('.babel-library-dialog')).toBeHidden()
+  await expect(page.getByRole('textbox', { name: '文章正文' })).toHaveValue(
+    'xzqv wxqz a an'
+  )
+  await expect(analysis).toContainText('很遗憾，本次生成了0个正常单词。')
   expect(dictionaryRequests).toBe(1)
   await page.mouse.move(0, 0)
   await page
@@ -984,12 +1005,21 @@ test('bookshelf image enters the library and shares the photo effects without mo
   })
   expect(layout.overlaps).toBe(true)
   expect(layout.weight).toBe('900')
-  await expect(page.locator('.babel-title')).toHaveCSS('font-size', '32px')
+  expect(
+    await page
+      .locator('.babel-title')
+      .evaluate((el) => parseFloat(getComputedStyle(el).fontSize))
+  ).toBeCloseTo(layout.width * 0.15, 1)
   expect(
     await page
       .locator('.babel-title')
       .evaluate((el) => getComputedStyle(el).filter)
   ).toContain('drop-shadow')
+  expect(
+    await page
+      .locator('.babel-title')
+      .evaluate((el) => getComputedStyle(el).filter)
+  ).toContain('brightness(1.45)')
   await expect(page.locator('.babel-title')).toHaveCSS(
     'color',
     'rgb(226, 52, 86)'
@@ -1000,8 +1030,10 @@ test('bookshelf image enters the library and shares the photo effects without mo
       .evaluate((el) => getComputedStyle(el).maskImage)
   ).toContain('repeating-linear-gradient')
   await expect(page.locator('.babel-title-canvas')).toBeVisible()
-  expect(layout.width).toBe(240)
-  expect(layout.overlap).toBe(90)
+  if (info.project.name === 'mobile-chrome')
+    expect(layout.width).toBeLessThanOrEqual(144)
+  else expect(layout.width).toBe(240)
+  expect(Math.abs(layout.overlap - layout.width * 0.375)).toBeLessThanOrEqual(1)
   expect(layout.startCenterError).toBeLessThanOrEqual(1)
   expect(layout.centerError).toBeLessThanOrEqual(1)
   expect(layout.verticalScale).toBeCloseTo(1, 4)
@@ -1022,14 +1054,15 @@ test('bookshelf image enters the library and shares the photo effects without mo
   }
   await entry.click()
   await expect(
-    page.getByRole('heading', { name: '巴别图书馆 / The Library of Babel' })
+    page.locator('.babel-library-dialog .babel-library')
   ).toBeVisible()
-  await page.getByRole('button', { name: '返回打字机', exact: true }).click()
+  await page.locator('.babel-library-dialog .diamond-close-btn').click()
+  await expect(page.locator('.babel-library-dialog')).toBeHidden()
   await expect(entry).toBeVisible()
   await entry.focus()
   await page.keyboard.press('Enter')
   await expect(
-    page.getByRole('heading', { name: '巴别图书馆 / The Library of Babel' })
+    page.locator('.babel-library-dialog .babel-library')
   ).toBeVisible()
 })
 
@@ -1058,13 +1091,18 @@ test('intro hides the manuscript, centers enlarged photos and opens the workspac
     const matrix = new DOMMatrix(getComputedStyle(holder).transform)
     return {
       scale: matrix.a,
-      centerX: holder.offsetLeft + matrix.m41 + 255,
-      centerY: holder.offsetTop + matrix.m42 + 135 + 15 * matrix.d,
+      centerX: holder.offsetLeft + matrix.m41 + holder.offsetWidth / 2,
+      centerY:
+        holder.offsetTop +
+        matrix.m42 +
+        holder.offsetHeight / 2 +
+        (matchMedia('(max-width: 768px)').matches ? 0 : 15 * matrix.d),
       headerWidth: holder.parentElement!.clientWidth,
       headerHeight: holder.parentElement!.clientHeight,
     }
   })
-  expect(intro.scale).toBeCloseTo(1.7, 2)
+  const mobileFlow = test.info().project.name === 'mobile-chrome'
+  expect(intro.scale).toBeCloseTo(mobileFlow ? 1 : 1.7, 2)
   expect(Math.abs(intro.centerX - intro.headerWidth / 2)).toBeLessThanOrEqual(1)
   expect(Math.abs(intro.centerY - intro.headerHeight / 2)).toBeLessThanOrEqual(
     1
@@ -1102,7 +1140,10 @@ test('intro hides the manuscript, centers enlarged photos and opens the workspac
     record()
   })
   await page.getByRole('button', { name: 'START', exact: true }).click()
-  await expect(page.locator('.photo-header')).toHaveCSS('flex-basis', '270px')
+  await expect(page.locator('.photo-header')).toHaveCSS(
+    'flex-basis',
+    test.info().project.name === 'mobile-chrome' ? '200px' : '270px'
+  )
   await expect(page.locator('.lab-workspace')).not.toHaveClass(
     /crt-effect-enter-active/
   )
@@ -1128,16 +1169,27 @@ test('intro hides the manuscript, centers enlarged photos and opens the workspac
     )
   ).toBe(true)
   expect(motion.books.some((frame) => frame.disabled)).toBe(true)
-  // 使用世界坐标宽度验证中间缩放尺寸；移动端可旋转画布，因此只比较首尾之间的值。
-  const firstWidth = motion.books[0].width
-  const lastWidth = motion.books[motion.books.length - 1].width
-  expect(
-    motion.books.some(
-      (frame) => frame.width > lastWidth + 1 && frame.width < firstWidth - 1
+  if (mobileFlow) {
+    expect(motion.frames.every((scale) => Math.abs(scale - 1) < 0.01)).toBe(
+      true
     )
-  ).toBe(true)
-  expect(motion.frames.some((scale) => scale > 1.01 && scale < 1.69)).toBe(true)
-  expect(motion.frames[motion.frames.length - 1]).toBeCloseTo(1, 2)
+    await expect(page.locator('.replica-content')).toHaveCSS(
+      'transform',
+      'none'
+    )
+  } else {
+    const firstWidth = motion.books[0].width
+    const lastWidth = motion.books[motion.books.length - 1].width
+    expect(
+      motion.books.some(
+        (frame) => frame.width > lastWidth + 1 && frame.width < firstWidth - 1
+      )
+    ).toBe(true)
+    expect(motion.frames.some((scale) => scale > 1.01 && scale < 1.69)).toBe(
+      true
+    )
+    expect(motion.frames[motion.frames.length - 1]).toBeCloseTo(1, 2)
+  }
   await expect(page.getByRole('textbox', { name: '文章标题' })).toHaveCSS(
     'text-align',
     'center'

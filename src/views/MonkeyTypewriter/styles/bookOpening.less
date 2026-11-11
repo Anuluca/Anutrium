@@ -1,0 +1,57 @@
+.babel-library.no-rem .book-opening-shell.no-rem {
+  position: absolute;
+  z-index: 6;
+  pointer-events: none;
+  isolation: isolate;
+  transform-origin: top left;
+  .book-opening-spine {
+    position: absolute;
+    inset: 0;
+    left: 50%;
+    width: 50%;
+    height: 100%;
+    z-index: 2;
+    margin: 0;
+    visibility: visible;
+  }
+  .book-opening-front,
+  .book-opening-back,
+  .book-opening-paper {
+    position: absolute;
+    inset: 0;
+    box-sizing: border-box;
+    border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+    background: #090909;
+  }
+  .book-opening-spread {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+  }
+  .book-opening-paper {
+    left: calc(50% - 1px);
+    border-left: 0;
+    background: #141414;
+  }
+  .book-opening-hinge {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 50%;
+    height: 100%;
+    transform-origin: left center;
+    transform-style: preserve-3d;
+  }
+  .book-opening-front,
+  .book-opening-back {
+    background: #141414;
+    backface-visibility: hidden;
+  }
+  .book-opening-front {
+    border-left: 0;
+  }
+  .book-opening-back {
+    border-right: 0;
+    transform: rotateY(180deg);
+  }
+}

@@ -55,10 +55,7 @@ const experiments = computed(() => [
   {
     id: 'monkey-typewriter',
     title: locale.value === 'en' ? 'Monkey Typewriter' : '猴子打字',
-    sub:
-      locale.value === 'en'
-        ? 'Generate random articles.'
-        : '随机生成文章',
+    sub: locale.value === 'en' ? 'Generate random articles.' : '随机生成文章',
     tags: [],
     category: 'general' as const,
     icon: 'Aa',

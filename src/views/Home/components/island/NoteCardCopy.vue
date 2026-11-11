@@ -7,6 +7,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useResizeObserver } from '@vueuse/core'
+
 import { useFrameTask } from '@/composables/useFrameTask'
 
 const TITLE_PADDING = { right: 12, left: 6 }

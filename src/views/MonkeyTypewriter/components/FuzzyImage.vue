@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
-// 将用户提供的 Vue Bits FuzzyText 逐行位移算法应用到图片，使用 Vue 3.2 的 ref。
 const props = withDefaults(
   defineProps<{
+    active?: boolean
     src?: string
     text?: string
     font?: string
@@ -16,6 +16,7 @@ const props = withDefaults(
     fps?: number
   }>(),
   {
+    active: true,
     src: '',
     text: '',
     baseIntensity: 0.07,
@@ -48,12 +49,41 @@ function draw(fuzzy: boolean) {
   }
   // 与 FuzzyText 相同，每条水平像素行独立随机横移，不叠加旧的彩色切片。
   const ratio = width / props.width
+  let start = 0
+  let previousOffset = 0
   for (let row = 0; row < height; row++) {
     const offset = Math.round(
       props.baseIntensity * (Math.random() - 0.5) * props.fuzzRange * ratio
     )
-    context.drawImage(source, 0, row, width, 1, offset, row, width, 1)
+    if (row && offset !== previousOffset) {
+      const rows = row - start
+      context.drawImage(
+        source,
+        0,
+        start,
+        width,
+        rows,
+        previousOffset,
+        start,
+        width,
+        rows
+      )
+      start = row
+    }
+    previousOffset = offset
   }
+  const rows = height - start
+  context.drawImage(
+    source,
+    0,
+    start,
+    width,
+    rows,
+    previousOffset,
+    start,
+    width,
+    rows
+  )
 }
 function tick(now: number) {
   if (disposed) return
@@ -68,9 +98,15 @@ function sync() {
   frame = 0
   if (!loaded || disposed) return
   draw(false)
-  if (visible && document.visibilityState === 'visible' && !motion?.matches)
+  if (
+    props.active &&
+    visible &&
+    document.visibilityState === 'visible' &&
+    !motion?.matches
+  )
     frame = requestAnimationFrame(tick)
 }
+watch(() => props.active, sync)
 onMounted(async () => {
   const target = canvas.value
   if (!target) return

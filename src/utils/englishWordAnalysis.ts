@@ -40,6 +40,8 @@ export function highlightEnglishWords(
   content: string,
   words: readonly string[]
 ): WordHighlightSegment[] {
+  if (!content) return []
+  if (!words.length) return [{ text: content, highlighted: false }]
   const recognized = new Set(words)
   const segments: WordHighlightSegment[] = []
   let cursor = 0

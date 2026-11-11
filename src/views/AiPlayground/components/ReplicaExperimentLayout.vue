@@ -14,10 +14,17 @@ const props = withDefaults(
       AiReplicaExperiment,
       'pageTitle' | 'sceneLabel' | 'canvas' | 'description' | 'referenceImage'
     >
+    backLabel?: string
     backPath?: string
     bordered?: boolean
+    mobileLayout?: 'landscape' | 'flow'
   }>(),
-  { backPath: AI_AGENT_TEST_PATH, bordered: true }
+  {
+    backLabel: 'LABORATORY',
+    backPath: AI_AGENT_TEST_PATH,
+    bordered: true,
+    mobileLayout: 'landscape',
+  }
 )
 const { locale } = useI18n()
 const showReference = ref(false)
@@ -26,10 +33,19 @@ const frame = ref<HTMLElement | null>(null)
 const credit = ref<HTMLElement | null>(null)
 const desktopFrameHeight = ref<number | null>(null)
 const scale = ref(1)
+const mobileFlow = ref(false)
 let resizeObserver: ResizeObserver | null = null
 
 const resizeScene = () => {
   if (!viewport.value) return
+  mobileFlow.value =
+    props.mobileLayout === 'flow' &&
+    window.matchMedia('(max-width: 768px)').matches
+  if (mobileFlow.value) {
+    scale.value = 1
+    desktopFrameHeight.value = null
+    return
+  }
   const nextScale = Math.min(
     viewport.value.clientWidth / props.experiment.canvas.width,
     viewport.value.clientHeight / props.experiment.canvas.height
@@ -94,8 +110,10 @@ onUnmounted(() => {
 
 <template>
   <ToolPageLayout
-    page-class="replica-experiment-page no-rem"
-    back-label="LABORATORY"
+    :page-class="`replica-experiment-page no-rem${
+      mobileLayout === 'flow' ? ' replica-experiment-page--flow' : ''
+    }`"
+    :back-label="backLabel"
     :back-path="backPath"
     :title="experiment.pageTitle"
     :show-recommendations="false"
@@ -113,7 +131,11 @@ onUnmounted(() => {
         }"
         :aria-label="experiment.sceneLabel"
       >
-        <div ref="viewport" class="scene-viewport" data-lenis-prevent>
+        <div
+          ref="viewport"
+          class="scene-viewport"
+          :data-lenis-prevent="mobileFlow ? undefined : ''"
+        >
           <div
             class="scene-canvas"
             :style="{

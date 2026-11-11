@@ -161,8 +161,8 @@
         <NoteModalBackground
           v-if="noteBackground.image"
           :key="`${openedNoteId}:${noteBackground.image}`"
-          :image="noteBackground.image"
           ref="noteBackgroundRef"
+          :image="noteBackground.image"
           :height="noteBackground.height"
           :phase="noteBackground.phase"
           :overscan="noteBackground.overscan"
@@ -671,7 +671,8 @@ watch(activeCategory, () => setPage(1), { flush: 'post' })
     background: rgba(128, 128, 128, 0.1);
     -webkit-mask-image: linear-gradient(to bottom, #000 20%, transparent 100%);
     mask-image: linear-gradient(to bottom, #000 20%, transparent 100%);
-    animation: studyNoteCoverFadeIn var(--note-card-enter-duration) ease-out both;
+    animation: studyNoteCoverFadeIn var(--note-card-enter-duration) ease-out
+      both;
     animation-delay: var(--note-card-enter-delay);
     animation-play-state: var(--note-entry-play-state, running);
   }
@@ -704,7 +705,6 @@ watch(activeCategory, () => setPage(1), { flush: 'post' })
     height: 100%;
     object-fit: cover;
     object-position: center 30%;
-
   }
 
   &__copy {

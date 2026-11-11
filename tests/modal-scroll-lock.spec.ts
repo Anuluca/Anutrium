@@ -1,12 +1,82 @@
 import { expect, test } from '@playwright/test'
 
 import {
+  babelBooks,
+  mockBabelLibrary,
+  openMonkeyTypewriter,
+} from './helpers/babelLibrary'
+import {
   expectPagePositionToMatch,
   readPagePosition,
   scrollPageToRatio,
 } from './helpers/pagePosition'
 
 const PAGE_LOAD_TIMEOUT = 20_000
+
+test('Babel library preserves and locks the page position', async ({
+  page,
+  isMobile,
+}) => {
+  test.setTimeout(60000)
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await mockBabelLibrary(page)
+  await page.route(
+    `https://steam-api.anuluca.com/monkey-articles/${babelBooks[0].id}`,
+    (route) =>
+      route.fulfill({
+        json: {
+          ...babelBooks[0],
+          content: 'A long saved sentence.\n'.repeat(300),
+        },
+      })
+  )
+  await openMonkeyTypewriter(page)
+  if (!isMobile) await scrollPageToRatio(page, 0.5)
+  const initial = await readPagePosition(page, '.monkey-lab')
+  await page
+    .locator('.babel-entrance')
+    .evaluate((element: HTMLButtonElement) => element.click())
+  const modal = page.locator('.babel-library-dialog')
+  await expect(modal).toBeVisible()
+  expectPagePositionToMatch(
+    await readPagePosition(page, '.monkey-lab'),
+    initial
+  )
+  await page.mouse.move(8, 8)
+  await page.mouse.wheel(0, -600)
+  await page.waitForTimeout(200)
+  expectPagePositionToMatch(
+    await readPagePosition(page, '.monkey-lab'),
+    initial
+  )
+  await modal.locator('.library-scroll').evaluate((element) => {
+    element.scrollTop = 300
+  })
+  expectPagePositionToMatch(
+    await readPagePosition(page, '.monkey-lab'),
+    initial
+  )
+  await modal.locator('.library-book').first().click()
+  await expect(modal.locator('.babel-reader')).toBeVisible()
+  await modal.locator('.babel-reader .manuscript').evaluate((element) => {
+    element.scrollTop = 300
+  })
+  expectPagePositionToMatch(
+    await readPagePosition(page, '.monkey-lab'),
+    initial
+  )
+  await modal.getByRole('button', { name: '返回书架' }).click()
+  expectPagePositionToMatch(
+    await readPagePosition(page, '.monkey-lab'),
+    initial
+  )
+  await modal.locator('.diamond-close-btn').click()
+  await expect(modal).toBeHidden()
+  expectPagePositionToMatch(
+    await readPagePosition(page, '.monkey-lab'),
+    initial
+  )
+})
 
 test('detail About preserves its route and page position', async ({
   page,

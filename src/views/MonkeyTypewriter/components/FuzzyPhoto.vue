@@ -3,19 +3,24 @@ import { ref } from 'vue'
 
 import FuzzyImage from './FuzzyImage.vue'
 
-const props = defineProps<{
-  src: string
-  alt: string
-  width: number
-  height: number
-}>()
+const props = withDefaults(
+  defineProps<{
+    active?: boolean
+    animated?: boolean
+    src: string
+    alt: string
+    width: number
+    height: number
+  }>(),
+  { active: true, animated: true }
+)
 const ready = ref(false)
 </script>
 
 <template>
   <div
     class="fuzzy-photo no-rem"
-    :class="{ 'is-fuzzy-ready': ready }"
+    :class="{ 'is-fuzzy-ready': ready && animated }"
     :style="{ '--photo-source': 'url(' + props.src + ')' }"
   >
     <img
@@ -25,7 +30,9 @@ const ready = ref(false)
       :height="props.height"
     />
     <FuzzyImage
+      v-if="animated"
       class="photo-fuzzy-canvas"
+      :active="active"
       :src="props.src"
       :width="props.width"
       :height="props.height"

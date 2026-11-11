@@ -1,4 +1,7 @@
-:global(.layout-page.no-menu .router-container.page-layout--sub:has(> .replica-experiment-page)) {
+:global(
+    .layout-page.no-menu
+      .router-container.page-layout--sub:has(> .replica-experiment-page)
+  ) {
   padding-top: 30px;
 }
 
@@ -93,7 +96,7 @@
 }
 
 @media (max-width: 768px) and (orientation: portrait) {
-  :global(.replica-experiment-page) {
+  :global(.replica-experiment-page:not(.replica-experiment-page--flow)) {
     position: fixed !important;
     inset: 0;
     z-index: 1200;
@@ -107,7 +110,10 @@
     transform: none !important;
   }
 
-  :global(.replica-experiment-page .tool-page-stage) {
+  :global(
+      .replica-experiment-page:not(.replica-experiment-page--flow)
+        .tool-page-stage
+    ) {
     flex: 1 1 0 !important;
     width: 100% !important;
     height: 100% !important;
@@ -120,7 +126,10 @@
     transform: none !important;
   }
 
-  :global(.replica-experiment-page .detail-page-header) {
+  :global(
+      .replica-experiment-page:not(.replica-experiment-page--flow)
+        .detail-page-header
+    ) {
     flex: 0 0 auto !important;
     width: 100% !important;
     height: auto !important;
@@ -130,7 +139,10 @@
     padding: 0 !important;
   }
 
-  :global(.replica-experiment-page .tool-page-content) {
+  :global(
+      .replica-experiment-page:not(.replica-experiment-page--flow)
+        .tool-page-content
+    ) {
     position: relative;
     display: block;
     flex: 1 1 0 !important;
@@ -141,12 +153,19 @@
     container-type: size;
   }
 
-  :global(.replica-experiment-page .tool-recommendation-row),
-  :global(.replica-experiment-page .tool-page-footer) {
+  :global(
+      .replica-experiment-page:not(.replica-experiment-page--flow)
+        .tool-recommendation-row
+    ),
+  :global(
+      .replica-experiment-page:not(.replica-experiment-page--flow)
+        .tool-page-footer
+    ) {
     display: none !important;
   }
 
-  .replica-content.no-rem {
+  .replica-experiment-page:not(.replica-experiment-page--flow)
+    .replica-content.no-rem {
     position: absolute;
     top: 0;
     left: 0;
@@ -159,14 +178,16 @@
     transform-origin: top left;
   }
 
-  .replica-frame.no-rem {
+  .replica-experiment-page:not(.replica-experiment-page--flow)
+    .replica-frame.no-rem {
     flex: 1 1 0;
     width: 100%;
     height: auto;
     border-radius: 0;
   }
 
-  .replica-credit.no-rem {
+  .replica-experiment-page:not(.replica-experiment-page--flow)
+    .replica-credit.no-rem {
     flex: 0 0 auto;
     margin: 8px 0 0;
     font-size: 10px;
@@ -202,5 +223,35 @@
 @media (prefers-reduced-motion: reduce) {
   .replica-frame.no-rem {
     animation: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .replica-experiment-page--flow.no-rem {
+    :deep(.tool-page-stage) {
+      padding-inline: 12px;
+      box-sizing: border-box;
+    }
+    .replica-content,
+    .replica-frame,
+    .scene-viewport,
+    .scene-canvas,
+    .replica-stage {
+      position: relative;
+      width: 100% !important;
+      height: auto !important;
+      min-height: 0;
+      overflow: visible;
+      transform: none !important;
+    }
+    .replica-frame {
+      display: block;
+      border-radius: 0;
+      box-shadow: none;
+    }
+    .replica-credit {
+      margin-top: 12px;
+      font-size: 12px;
+    }
   }
 }

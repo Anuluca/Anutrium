@@ -235,7 +235,13 @@ try {
     assert.ok(source === document + 'first' || source === document + 'second')
   })
   await test('all configured categories persist and deprecated frontend is rejected', async () => {
-    for (const category of ['technology', 'pokemon', 'daily', 'design', 'test']) {
+    for (const category of [
+      'technology',
+      'pokemon',
+      'daily',
+      'design',
+      'test',
+    ]) {
       const id = randomUUID()
       const source = document.replace(
         'category: technology',

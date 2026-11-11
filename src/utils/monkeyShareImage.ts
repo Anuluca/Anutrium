@@ -1,6 +1,8 @@
 import { toBlob } from 'html-to-image'
 import QRCode from 'qrcode'
 
+import { translate } from '@/locales/translate'
+
 export const MONKEY_SHARE_URL =
   'https://anuluca.com/laboratory/monkey-typewriter'
 const resources = new Map<string, Promise<string>>()
@@ -14,7 +16,8 @@ async function inlineResource(url: string): Promise<string> {
     let blob: Blob
     try {
       const response = await fetch(url, { signal: controller.signal })
-      if (!response.ok) throw new Error('分享图片素材加载失败，请重试。')
+      if (!response.ok)
+        throw new Error(translate('monkeyTypewriter.assetFailed'))
       blob = await response.blob()
     } finally {
       clearTimeout(timeout)
@@ -22,7 +25,8 @@ async function inlineResource(url: string): Promise<string> {
     return new Promise<string>((resolve, reject) => {
       const reader = new FileReader()
       reader.onload = () => resolve(String(reader.result))
-      reader.onerror = () => reject(new Error('分享素材读取失败。'))
+      reader.onerror = () =>
+        reject(new Error(translate('monkeyTypewriter.assetReadFailed')))
       reader.readAsDataURL(blob)
     })
   })().catch((error) => {
@@ -32,21 +36,25 @@ async function inlineResource(url: string): Promise<string> {
   resources.set(url, promise)
   return promise
 }
-function covers(range: string, text: string) {
+function covers(range: string, codes: readonly number[]) {
   if (!range) return true
   return range.split(',').some((part) => {
     const [low, high] = part.trim().replace(/^U\+/i, '').split('-')
     const start = parseInt(low.replace(/\?/g, '0'), 16)
     const end = parseInt((high || low).replace(/\?/g, 'F'), 16)
-    return Array.from(text).some((letter) => {
-      const code = letter.codePointAt(0)!
-      return code >= start && code <= end
-    })
+    let left = 0
+    let right = codes.length
+    while (left < right) {
+      const middle = (left + right) >>> 1
+      if (codes[middle] < start) left = middle + 1
+      else right = middle
+    }
+    return left < codes.length && codes[left] <= end
   })
 }
 // 只嵌入导出内容实际使用的字体分片，避免下载整个 Unicode 字库。
 async function exportFonts(root: HTMLElement) {
-  const used = new Map<string, string>()
+  const used = new Map<string, Set<number>>()
   for (const node of [
     root,
     ...Array.from(root.querySelectorAll<HTMLElement>('*')),
@@ -56,11 +64,20 @@ async function exportFonts(root: HTMLElement) {
       .map((child) => child.textContent || '')
       .join('')
     if (!text.trim()) continue
+    const codes = Array.from(text, (letter) => letter.codePointAt(0)!)
     for (const family of getComputedStyle(node).fontFamily.split(',')) {
       const key = family.trim().replace(/["']/g, '')
-      used.set(key, (used.get(key) || '') + text)
+      let characters = used.get(key)
+      if (!characters) used.set(key, (characters = new Set()))
+      codes.forEach((code) => characters!.add(code))
     }
   }
+  const codepoints = new Map(
+    Array.from(used, ([family, codes]) => [
+      family,
+      Array.from(codes).sort((a, b) => a - b),
+    ])
+  )
   const faces: CSSFontFaceRule[] = []
   function visit(sheet: CSSStyleSheet) {
     try {
@@ -83,10 +100,10 @@ async function exportFonts(root: HTMLElement) {
       .filter((face) => {
         const family = face.style.fontFamily.replace(/["']/g, '').trim()
         return (
-          used.has(family) &&
+          codepoints.has(family) &&
           covers(
             face.style.getPropertyValue('unicode-range'),
-            used.get(family)!
+            codepoints.get(family)!
           )
         )
       })
@@ -145,8 +162,16 @@ function setStyle(
 export async function createMonkeyShareImage(
   root: HTMLElement,
   title: string,
-  content: string
+  content: string,
+  signal?: AbortSignal
 ): Promise<File> {
+  signal?.throwIfAborted()
+  const labels = {
+    laboratory: translate('monkeyTypewriter.laboratory'),
+    title: translate('monkeyTypewriter.pageTitle'),
+    description: translate('monkeyTypewriter.description'),
+    qr: translate('monkeyTypewriter.qrAlt'),
+  }
   const host = document.createElement('div')
   host.setAttribute('aria-hidden', 'true')
   host.setAttribute('inert', '')
@@ -177,17 +202,17 @@ export async function createMonkeyShareImage(
   const heading = document.createElement('header')
   heading.style.cssText = 'text-align:center;padding:0 90px 20px;'
   const label = document.createElement('div')
-  label.textContent = '// LABORATORY'
+  label.textContent = `// ${labels.laboratory}`
   label.style.cssText = `font:900 18px/1.5 UnboundedSans,sans-serif;color:${theme};`
   const pageTitle = document.createElement('h1')
-  pageTitle.textContent = '猴子打字'
+  pageTitle.textContent = labels.title
   pageTitle.style.cssText = `font:900 64px/1.2 'alibaba-puhuiti',sans-serif;color:${theme};margin:0;`
   heading.append(label, pageTitle)
   const clone = root.cloneNode(true) as HTMLElement
-  clone.classList.remove('is-intro', 'is-typing')
+  clone.classList.remove('is-intro')
   clone
     .querySelectorAll(
-      '.paper-projection, .babel-entrance, .draft-actions, .lab-feedback, .babel-library, .library-button, button, canvas, .page-scroll-progress'
+      '.paper-projection, .babel-entrance, .babel-reader-toolbar, .draft-actions, .lab-feedback, button, canvas, .page-scroll-progress'
     )
     .forEach((node) => node.remove())
   for (const node of [
@@ -216,19 +241,28 @@ export async function createMonkeyShareImage(
   })
   setStyle(clone.querySelector('.photo-composition'), {
     width: '360px',
+    height: '270px',
     transform: 'translate(-50%, -50%)',
     transition: 'none',
   })
-  const photo = clone.querySelector<HTMLElement>('.typewriter-photo')!
-  photo.classList.remove('is-fuzzy-ready')
-  setStyle(photo, { margin: '0', filter: 'none' })
-  const image = photo.querySelector<HTMLImageElement>('img')!
-  image.dataset.shareRole = 'photo'
-  const embeddedImage = await inlineResource(image.src)
-  image.src = embeddedImage
-  image.style.opacity = '1'
-  photo.style.setProperty('--photo-source', `url("${embeddedImage}")`)
-  const input = clone.querySelector<HTMLInputElement>('.manuscript-title')!
+  const photo = clone.querySelector<HTMLElement>('.typewriter-photo')
+  const image = photo?.querySelector<HTMLImageElement>('img')
+  if (photo && image) {
+    photo.classList.remove('is-fuzzy-ready')
+    setStyle(photo, {
+      margin: '0',
+      filter: 'none',
+      width: '360px',
+      height: '270px',
+    })
+    image.dataset.shareRole = 'photo'
+    const embeddedImage = await inlineResource(image.src)
+    signal?.throwIfAborted()
+    image.src = embeddedImage
+    image.style.opacity = '1'
+    photo.style.setProperty('--photo-source', `url("${embeddedImage}")`)
+  }
+  const input = clone.querySelector<HTMLElement>('.manuscript-title')!
   const titleElement = document.createElement('h2')
   titleElement.className = input.className
   // 保留 Vue scoped 样式标记。
@@ -238,10 +272,10 @@ export async function createMonkeyShareImage(
   titleElement.textContent = title
   input.replaceWith(titleElement)
   const textarea =
-    clone.querySelector<HTMLTextAreaElement>('.manuscript-editor')!
+    clone.querySelector<HTMLTextAreaElement>('.manuscript-editor')
   const body = clone.querySelector<HTMLElement>('.manuscript-body')!
   const highlight = clone.querySelector<HTMLElement>('.manuscript-highlights')!
-  textarea.remove()
+  textarea?.remove()
   highlight.removeAttribute('aria-hidden')
   setStyle(highlight, {
     position: 'static',
@@ -305,7 +339,7 @@ export async function createMonkeyShareImage(
   links.style.cssText =
     'font:900 20px/1.8 UnboundedSans,sans-serif;color:#fffff4;'
   const description = document.createElement('p')
-  description.textContent = '随机生成文章，巴别图书馆保存着所有人生成过的文章'
+  description.textContent = labels.description
   description.style.cssText =
     "font:900 18px/1.6 'alibaba-puhuiti',sans-serif;color:#999;margin:0 0 16px;"
   const link = document.createElement('div')
@@ -314,13 +348,14 @@ export async function createMonkeyShareImage(
   links.append(description, link)
   const qr = document.createElement('img')
   qr.dataset.shareRole = 'qr'
-  qr.alt = '页面二维码'
+  qr.alt = labels.qr
   qr.width = qr.height = 160
   qr.src = await QRCode.toDataURL(MONKEY_SHARE_URL, {
     width: 160,
     margin: 4,
     errorCorrectionLevel: 'M',
   })
+  signal?.throwIfAborted()
   footer.append(links, qr)
   picture.append(heading, clone, footer)
   host.append(picture)
@@ -329,19 +364,22 @@ export async function createMonkeyShareImage(
   try {
     freezeStyles(picture)
     await document.fonts.ready
-    await image.decode()
+    await image?.decode()
     const height = Math.ceil(picture.scrollHeight)
     if (height > 12000)
-      throw new Error('正文换行过多，分享图片过长，请减少换行后重试。')
+      throw new Error(translate('monkeyTypewriter.imageTooLong'))
+    const fontEmbedCSS = await exportFonts(picture)
+    signal?.throwIfAborted()
     const blob = await toBlob(picture, {
       width: 1600,
       height,
       canvasWidth: 1200,
       canvasHeight: Math.ceil(height * 0.75),
       pixelRatio: 1,
-      fontEmbedCSS: await exportFonts(picture),
+      fontEmbedCSS,
     })
-    if (!blob) throw new Error('分享图片生成失败，请重试。')
+    signal?.throwIfAborted()
+    if (!blob) throw new Error(translate('monkeyTypewriter.imageFailed'))
     return new File([blob], 'monkey-manuscript.png', { type: 'image/png' })
   } finally {
     host.remove()

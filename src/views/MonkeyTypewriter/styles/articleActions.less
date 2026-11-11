@@ -1,0 +1,44 @@
+@import '../../Home/styles/floraMedia.less';
+
+.monkey-article-action() {
+  .flora-media-expand-control();
+  position: relative;
+  inset: auto;
+  gap: 8px;
+  padding: 5.5px 9px 5.5px 3px;
+  border: 1px solid #e23456;
+  border-radius: 0;
+  background: transparent;
+  color: #e23456;
+  font: 900 20px/1.4 'alibaba-puhuiti', sans-serif;
+  letter-spacing: -0.05em;
+  &::before {
+    display: none;
+  }
+  &:disabled {
+    cursor: default;
+  }
+  .action-icon {
+    display: block;
+    flex: 0 0 24px;
+    width: 24px;
+    height: 24px;
+    transform: translateX(8px);
+    -webkit-mask-image: linear-gradient(to right, #000, transparent);
+    mask-image: linear-gradient(to right, #000, transparent);
+  }
+  .button-label {
+    display: inline-block;
+    transform: scaleX(0.88);
+    transform-origin: center;
+    white-space: nowrap;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    &:hover:not(:disabled) {
+      border-color: #1dcba9;
+      background: #1dcba9;
+      color: #000;
+      box-shadow: none;
+    }
+  }
+}

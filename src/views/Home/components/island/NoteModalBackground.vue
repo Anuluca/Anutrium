@@ -49,7 +49,6 @@ import {
   getCardThumbnailUrl,
 } from '@/utils/imageVariant'
 
-
 const props = defineProps<{
   image: string
   height: number

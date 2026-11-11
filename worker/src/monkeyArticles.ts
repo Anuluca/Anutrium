@@ -137,6 +137,7 @@ export async function handleMonkeyArticles(request: Request, env: Env) {
         typeof input.content !== 'string' ||
         !input.content.trim() ||
         input.content.length > 12000 ||
+        // eslint-disable-next-line no-control-regex -- 拒绝控制字符，保留制表符和换行。
         /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(
           input.title + input.content
         )

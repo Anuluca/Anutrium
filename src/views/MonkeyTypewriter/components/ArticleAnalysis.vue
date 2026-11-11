@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
+import { onBeforeUnmount, ref, shallowRef, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import { loadEnglishDictionary } from '@/utils/englishDictionary'
 import {
@@ -7,12 +8,14 @@ import {
   type EnglishWordAnalysis,
 } from '@/utils/englishWordAnalysis'
 
+const { t } = useI18n()
+
 const props = defineProps<{ content: string; active: boolean }>()
 const emit = defineEmits<{
   (event: 'analyzed', result: EnglishWordAnalysis): void
 }>()
 const dictionary = shallowRef<ReadonlySet<string> | null>(null)
-const result = ref<EnglishWordAnalysis>({ words: [], occurrences: 0 })
+const result = shallowRef<EnglishWordAnalysis>({ words: [], occurrences: 0 })
 const loading = ref(false)
 const failed = ref(false)
 const pending = ref(false)
@@ -56,7 +59,13 @@ watch(
     } else analyze()
   }
 )
-onMounted(load)
+watch(
+  () => props.active,
+  (active) => {
+    if (active && !dictionary.value) void load()
+  },
+  { immediate: true }
+)
 onBeforeUnmount(() => {
   disposed = true
   clearTimeout(debounce)
@@ -66,32 +75,44 @@ onBeforeUnmount(() => {
 <template>
   <section
     class="analysis-frame"
-    aria-label="文章分析"
+    :aria-label="t('monkeyTypewriter.analysis')"
     :aria-busy="loading || pending"
     tabindex="0"
     data-lenis-prevent
   >
     <p v-if="loading || pending" class="analysis-summary" role="status">
-      {{ loading ? '正在加载英文词表…' : '正在分析…' }}
+      {{
+        loading
+          ? t('monkeyTypewriter.loadingDictionary')
+          : t('monkeyTypewriter.analyzing')
+      }}
     </p>
     <template v-else-if="failed">
       <p class="analysis-summary" role="status">
-        词表加载失败，文章功能仍可正常使用。
+        {{ t('monkeyTypewriter.dictionaryFailed') }}
       </p>
       <slot name="retry" :retry="load" />
     </template>
     <template v-else>
       <p class="analysis-summary" role="status">
-        <template v-if="result.words.length">
-          本次生成了 <strong>{{ result.words.length }}</strong> 个正常单词：
-        </template>
-        <template v-else>很遗憾，本次生成了<strong>0</strong>个正常单词。</template>
+        <i18n-t
+          :keypath="
+            result.words.length
+              ? 'monkeyTypewriter.wordCount'
+              : 'monkeyTypewriter.zeroWords'
+          "
+          tag="span"
+        >
+          <template #count
+            ><strong>{{ result.words.length }}</strong></template
+          >
+        </i18n-t>
       </p>
       <div
         v-if="result.words.length"
         class="analysis-words"
         role="list"
-        aria-label="识别到的英文单词"
+        :aria-label="t('monkeyTypewriter.recognizedWords')"
       >
         <span
           v-for="item in result.words"

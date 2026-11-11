@@ -2,9 +2,16 @@ import i18n from './index'
 import { resolveLocalePair } from './resolveLocalePair'
 
 type MessageModule = { default: unknown }
-type MessageDomain = 'about' | 'archive' | 'craft' | 'flanerie' | 'island'
+type MessageDomain =
+  | 'about'
+  | 'archive'
+  | 'craft'
+  | 'flanerie'
+  | 'island'
+  | 'monkeyTypewriter'
 
 const messageLoaders: Record<MessageDomain, () => Promise<MessageModule>> = {
+  monkeyTypewriter: () => import('./modules/monkeyTypewriter'),
   about: () => import('./modules/about'),
   archive: () => import('./modules/archive'),
   craft: () => import('./modules/craft'),
@@ -26,6 +33,7 @@ const routeMessageDomains: Record<string, MessageDomain[]> = {
   HTMLENTITIES: ['craft'],
   BASE64CODEC: ['craft'],
   IMAGEBASE64: ['craft'],
+  MONKEY_TYPEWRITER: ['monkeyTypewriter'],
 }
 
 const messageLoads = new Map<MessageDomain, Promise<void>>()

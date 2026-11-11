@@ -873,7 +873,13 @@ test('every Notes category supports direct URLs, refresh and invalid-category fa
   page,
 }) => {
   test.setTimeout(180000)
-  const categories = ['technology', 'pokemon', 'daily', 'design', 'test'] as const
+  const categories = [
+    'technology',
+    'pokemon',
+    'daily',
+    'design',
+    'test',
+  ] as const
   const summaries = categories.map((type, index) => ({
     ...demoSummary,
     id: `category-${index}`,
