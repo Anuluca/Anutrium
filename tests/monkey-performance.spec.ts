@@ -6,7 +6,7 @@ import {
   openMonkeyTypewriter,
 } from './helpers/babelLibrary'
 
-test('intro defers dictionary and image export modules until an article exists', async ({
+test('dictionary loads after generation and image export stays deferred until sharing', async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
@@ -33,11 +33,9 @@ test('intro defers dictionary and image export modules until an article exists',
       () => requests.filter((url) => /english-words.*\.txt/.test(url)).length
     )
     .toBe(1)
-  await expect
-    .poll(() =>
-      requests.some((url) => url.includes('/utils/monkeyShareImage.ts'))
-    )
-    .toBe(true)
+  expect(
+    requests.some((url) => url.includes('/utils/monkeyShareImage.ts'))
+  ).toBe(false)
 })
 
 test('editing serializes image exports and shares only the newest draft', async ({
@@ -61,22 +59,38 @@ test('editing serializes image exports and shares only the newest draft', async 
     })
   )
   await page.addInitScript(() => {
-    Object.defineProperty(navigator, 'canShare', {
+    Object.defineProperty(navigator.clipboard, 'write', {
       configurable: true,
-      value: () => true,
-    })
-    Object.defineProperty(navigator, 'share', {
-      configurable: true,
-      value: async (data: ShareData) => {
-        ;(window as any).sharedContent = await data.files![0].text()
+      value: async (items: ClipboardItem[]) => {
+        ;(window as any).sharedContent = await (
+          await items[0].getType('image/png')
+        ).text()
       },
     })
+    const click = HTMLAnchorElement.prototype.click
+    HTMLAnchorElement.prototype.click = function () {
+      if (this.download === 'monkey.png') {
+        void fetch(this.href)
+          .then((response) => response.text())
+          .then((content) => {
+            ;(window as any).sharedContent = content
+          })
+      } else click.call(this)
+    }
   })
   await page.route('**/monkey-articles/generate', (route) =>
     route.fulfill({ json: babelBooks[0] })
   )
   await openMonkeyTypewriter(page)
   await page.locator('.start-button').click()
+  await expect(page.getByRole('textbox', { name: '文章正文' })).toHaveValue(
+    babelBooks[0].content
+  )
+  await expect(page.locator('.analysis-frame')).toHaveAttribute(
+    'aria-busy',
+    'false'
+  )
+  await page.getByRole('button', { name: '分享', exact: true }).click()
   await expect
     .poll(() => page.evaluate(() => (window as any).exportsProbe?.count))
     .toBe(1)
@@ -85,10 +99,14 @@ test('editing serializes image exports and shares only the newest draft', async 
   await page.waitForTimeout(900)
   expect(await page.evaluate(() => (window as any).exportsProbe.count)).toBe(1)
   await page.evaluate(() => (window as any).releaseExport())
+  await expect(page.locator('.el-message--error')).toContainText('内容已更新')
+  expect(
+    await page.evaluate(() => (window as any).sharedContent)
+  ).toBeUndefined()
+  await page.getByRole('button', { name: '分享', exact: true }).click()
   await expect
     .poll(() => page.evaluate(() => (window as any).exportsProbe.count))
     .toBe(2)
-  await page.getByRole('button', { name: '分享', exact: true }).click()
   await expect
     .poll(() => page.evaluate(() => (window as any).sharedContent))
     .toBe(content)
@@ -122,8 +140,11 @@ test('covered background and hidden library artwork stop drawing frames', async 
     .poll(() => page.evaluate(() => (window as any).canvasProbe.page))
     .toBeGreaterThan(before)
   await page.locator('.babel-entrance').click()
-  await expect(page.locator('.babel-library .babel-title')).toHaveClass(
-    /is-ready/
+  await expect(
+    page.locator('.babel-library .babel-title-fallback')
+  ).toBeVisible()
+  await expect(page.locator('.babel-library .babel-title-canvas')).toHaveCount(
+    0
   )
   await expect(page.locator('.library-book').first()).toBeVisible()
   const pageFrames = await page.evaluate(() => (window as any).canvasProbe.page)

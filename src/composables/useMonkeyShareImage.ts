@@ -15,6 +15,7 @@ export function useMonkeyShareImage(options: {
   article: () => MonkeyArticle | null
   enabled?: () => boolean
   dependencies?: WatchSource[]
+  prewarm?: boolean
   delay?: number
 }) {
   const { locale } = useI18n()
@@ -90,7 +91,7 @@ export function useMonkeyShareImage(options: {
       controller?.abort()
       clearTimeout(timer)
       file.value = null
-      if (enabled())
+      if (enabled() && options.prewarm !== false)
         timer = setTimeout(() => {
           void prepare().catch(() => {})
         }, options.delay ?? 500)

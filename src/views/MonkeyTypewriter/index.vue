@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import {
   CopyDocument,
   Download,
+  Loading,
   Refresh,
   Share as ShareIcon,
   Upload,
@@ -15,11 +16,8 @@ import { useFrameTask } from '@/composables/useFrameTask'
 import { useMonkeyActionFlash } from '@/composables/useMonkeyActionFlash'
 import { useMonkeyShareImage } from '@/composables/useMonkeyShareImage'
 import { islandModules } from '@/config/islandModules'
-import {
-  showErrorMessage,
-  showSuccessMessage,
-  showWarningMessage,
-} from '@/utils/elementMessage'
+import { visualState } from '@/stores'
+import { showErrorMessage, showSuccessMessage } from '@/utils/elementMessage'
 import {
   type EnglishWordMatch,
   highlightEnglishWords,
@@ -27,7 +25,6 @@ import {
 import {
   copyMonkeyArticle,
   downloadMonkeyArticle,
-  shareMonkeyArticleImage,
 } from '@/utils/monkeyArticleActions'
 import { monkeyTypewriterImages } from '@/utils/preloadMonkeyTypewriterAssets'
 import ReplicaExperimentLayout from '@/views/AiPlayground/components/ReplicaExperimentLayout.vue'
@@ -55,6 +52,7 @@ const experiment = computed(() => ({
 }))
 // 直接访问 Worker，保留真实边缘 IP，避免代理把所有访客归入同一限流桶。
 const endpoint = 'https://steam-api.anuluca.com/monkey-articles'
+const visualStateStore = visualState()
 const libraryOpen = ref(false)
 const libraryMounted = ref(false)
 const libraryBatch = ref(0)
@@ -287,38 +285,74 @@ async function saveArticle() {
     if (!disposed) saving.value = false
   }
 }
-const {
-  file: imageFile,
-  preparing: imageBusy,
-  prepare: prepareShareImage,
-} = useMonkeyShareImage({
+const { file: imageFile, prepare: prepareShareImage } = useMonkeyShareImage({
   root: shareRoot,
   article: () => article.value,
   enabled: () => !typing.value && !busy.value && !libraryOpen.value,
   dependencies: [highlightedWords],
+  prewarm: false,
 })
+async function currentShareImage(snapshot: string): Promise<File> {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const file = imageFile.value || (await prepareShareImage())
+    if (disposed || libraryOpen.value)
+      throw new Error(t('monkeyTypewriter.imageCancelled'))
+    if (snapshot !== source.value)
+      throw new Error(t('monkeyTypewriter.contentChanged'))
+    if (file) return file
+  }
+  throw new Error(t('monkeyTypewriter.imageUpdating'))
+}
+function triggerDownload(url: string, filename: string) {
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  link.click()
+}
 async function shareImage() {
   if (!article.value || typing.value || busy.value || sharing.value) return
   sharing.value = true
+  const saveOnMobile = visualStateStore.deviceType !== 'desktop'
+  let exportError: unknown
   try {
-    const snapshot = source.value
-    let file = imageFile.value
-    // 分析异步完成时会使预生成副本失效；同一次点击自动等待最新副本，不能静默丢失分享。
-    for (let attempt = 0; !file && attempt < 3; attempt++) {
-      file = await prepareShareImage()
-      if (disposed || libraryOpen.value) return
-      if (snapshot !== source.value) {
-        showWarningMessage(t('monkeyTypewriter.contentChanged'))
-        return
+    if (
+      !saveOnMobile &&
+      (!navigator.clipboard?.write || typeof ClipboardItem === 'undefined')
+    )
+      throw new Error(t('monkeyTypewriter.imageCopyUnsupported'))
+    const filePromise = currentShareImage(source.value).catch((cause) => {
+      exportError = cause
+      throw cause
+    })
+    // 浏览器可能先拒绝剪贴板权限，仍需接住后续图片生成失败，避免未处理的拒绝。
+    void filePromise.catch(() => {})
+    if (saveOnMobile) {
+      const file = await filePromise
+      const url = URL.createObjectURL(file)
+      try {
+        triggerDownload(url, file.name)
+        if (!disposed) showSuccessMessage(t('monkeyTypewriter.imageSaved'))
+      } finally {
+        setTimeout(() => URL.revokeObjectURL(url), 1000)
       }
+    } else {
+      // 在原始点击内立即请求写入，图片 Promise 由剪贴板等待，兼容 Safari 的用户激活要求。
+      await navigator.clipboard.write([
+        new ClipboardItem({ 'image/png': filePromise }),
+      ])
+      if (!disposed) showSuccessMessage(t('monkeyTypewriter.imageCopied'))
     }
-    if (!file || disposed) {
-      if (!disposed) showWarningMessage(t('monkeyTypewriter.imageUpdating'))
-      return
-    }
-    await shareMonkeyArticleImage(file, article.value.title)
   } catch (cause) {
-    if (!disposed) showErrorMessage(errorMessage(cause))
+    if (!disposed) {
+      const failure = exportError || cause
+      showErrorMessage(
+        failure instanceof DOMException && failure.name === 'NotAllowedError'
+          ? t('monkeyTypewriter.imageCopyDenied')
+          : failure instanceof Error
+          ? failure.message
+          : t('monkeyTypewriter.imageFailed')
+      )
+    }
   } finally {
     if (!disposed) sharing.value = false
   }
@@ -549,14 +583,18 @@ onBeforeUnmount(() => {
                     v-show="article && !typing && !saving && !busy"
                     type="button"
                     class="share-button"
-                    :aria-busy="sharing || imageBusy"
+                    :aria-busy="sharing"
                     :disabled="!article || typing || saving || busy"
                     @click="shareImage"
                   >
-                    <ShareIcon class="action-icon" aria-hidden="true" /><span
-                      class="button-label"
-                      >{{ t('monkeyTypewriter.share') }}</span
-                    >
+                    <component
+                      :is="sharing ? Loading : ShareIcon"
+                      class="action-icon"
+                      :class="{ 'share-loading': sharing }"
+                      aria-hidden="true"
+                    /><span class="button-label">{{
+                      t('monkeyTypewriter.share')
+                    }}</span>
                   </button>
                 </Transition>
               </div>

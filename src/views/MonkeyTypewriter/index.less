@@ -565,3 +565,17 @@
     }
   }
 }
+
+.monkey-lab.no-rem .share-loading {
+  -webkit-mask-image: none;
+  mask-image: none;
+  animation: monkeyShareLoading 1s linear infinite;
+}
+@keyframes monkeyShareLoading {
+  from {
+    transform: translateX(8px) rotate(0);
+  }
+  to {
+    transform: translateX(8px) rotate(360deg);
+  }
+}

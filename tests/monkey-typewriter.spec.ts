@@ -146,43 +146,38 @@ test('generate, share catalogue, reopen, download, pagination and failed-request
     content
   )
   await page.evaluate(() => {
-    Object.defineProperty(navigator, 'canShare', {
+    Object.defineProperty(navigator.clipboard, 'write', {
       configurable: true,
-      value: () => true,
-    })
-    Object.defineProperty(navigator, 'share', {
-      configurable: true,
-      value: async (data: ShareData) => {
-        ;(window as any).monkeySharedFiles = data.files?.map(
-          (file) => file.name
-        )
+      value: async (items: ClipboardItem[]) => {
+        const blob = await items[0].getType('image/png')
+        ;(window as any).monkeyCopiedImage = {
+          type: blob.type,
+          size: blob.size,
+        }
       },
     })
   })
-  await page.getByRole('button', { name: '分享', exact: true }).click()
-  await expect
-    .poll(() => page.evaluate(() => (window as any).monkeySharedFiles), {
-      timeout: 30000,
-    })
-    .toEqual(['monkey-manuscript.png'])
-  await expect(
-    page
-      .locator('.el-message--success')
-      .filter({ hasText: '已打开系统图片分享' })
-  ).toBeVisible()
+  if (info.project.name.includes('mobile')) {
+    const png = page.waitForEvent('download')
+    await page.getByRole('button', { name: '分享', exact: true }).click()
+    expect((await png).suggestedFilename()).toBe('monkey-manuscript.png')
+    await expect(
+      page.locator('.el-message--success').filter({ hasText: '已开始保存图片' })
+    ).toBeVisible()
+  } else {
+    await page.getByRole('button', { name: '分享', exact: true }).click()
+    await expect
+      .poll(
+        () => page.evaluate(() => (window as any).monkeyCopiedImage?.type),
+        { timeout: 30000 }
+      )
+      .toBe('image/png')
+    await expect(
+      page.locator('.el-message--success').filter({ hasText: '图片已复制' })
+    ).toBeVisible()
+  }
+  await expect(page.locator('.share-loading')).toHaveCount(0)
   await expect(page.locator('.share-options')).toHaveCount(0)
-  await page.evaluate(() =>
-    Object.defineProperty(navigator, 'canShare', {
-      configurable: true,
-      value: () => false,
-    })
-  )
-  const png = page.waitForEvent('download')
-  await page.getByRole('button', { name: '分享', exact: true }).click()
-  expect((await png).suggestedFilename()).toBe('monkey-manuscript.png')
-  await expect(
-    page.locator('.el-message--warning').filter({ hasText: '已开始下载图片' })
-  ).toBeVisible()
   const downloaded = page.waitForEvent('download')
   await page.getByRole('button', { name: '下载 .txt' }).click()
   await expect(
@@ -1284,6 +1279,10 @@ test('one click shares the full page composition with a centered monkey, no cont
             text: content.textContent,
             buttons: content.querySelectorAll('button').length,
             images: content.querySelectorAll('img').length,
+            titleRasterized: content
+              .querySelector('[data-share-role="page-title"]')
+              ?.getAttribute('style')
+              ?.includes('data:image/png'),
             centerError: Math.abs(
               composition.offsetLeft +
                 matrix.m41 +
@@ -1292,21 +1291,60 @@ test('one click shares the full page composition with a centered monkey, no cont
                 (composition.offsetParent as HTMLElement).clientWidth / 2
             ),
             photoNaturalWidth: (photo as HTMLImageElement).naturalWidth,
+            alignment: (() => {
+              const article = host.querySelector<HTMLElement>(
+                '[data-share-role="article"]'
+              )!
+              const url = host.querySelector<HTMLElement>(
+                '[data-share-role="url"]'
+              )!
+              const qr = host.querySelector<HTMLElement>(
+                '[data-share-role="qr"]'
+              )!
+              const left = (element: HTMLElement) => {
+                let value = 0
+                for (
+                  let node: HTMLElement | null = element;
+                  node && node !== host;
+                  node = node.offsetParent as HTMLElement | null
+                )
+                  value += node.offsetLeft
+                return value
+              }
+              return {
+                articleLeft: left(article),
+                articleRight: left(article) + article.offsetWidth,
+                brandLeft: left(
+                  host.querySelector<HTMLElement>('[data-share-role="brand"]')!
+                ),
+                urlRight: left(url) + url.offsetWidth,
+                qrLeft: left(qr),
+                qrRight: left(qr) + qr.offsetWidth,
+              }
+            })(),
           }
         }
         descriptor.set!.call(this, value)
       },
     })
-    Object.defineProperty(navigator, 'canShare', {
+    Object.defineProperty(navigator.clipboard, 'write', {
       configurable: true,
-      value: () => true,
-    })
-    Object.defineProperty(navigator, 'share', {
-      configurable: true,
-      value: async (data: ShareData) => {
-        ;(window as any).pageShareFile = data.files![0]
+      value: async (items: ClipboardItem[]) => {
+        ;(window as any).clipboardActive = navigator.userActivation.isActive
+        ;(window as any).pageShareFile = await items[0].getType('image/png')
       },
     })
+    const click = HTMLAnchorElement.prototype.click
+    HTMLAnchorElement.prototype.click = function () {
+      if (this.download === 'monkey-manuscript.png') {
+        void fetch(this.href)
+          .then((response) => response.blob())
+          .then((blob) => {
+            ;(window as any).pageShareFile = blob
+          })
+      }
+      click.call(this)
+    }
   })
   await page.route('https://steam-api.anuluca.com/monkey-articles**', (route) =>
     route.fulfill({
@@ -1340,6 +1378,7 @@ test('one click shares the full page composition with a centered monkey, no cont
     height: el.clientHeight,
   }))
   await page.getByRole('button', { name: '分享', exact: true }).click()
+  await expect(page.locator('.share-loading')).toBeVisible()
   await expect
     .poll(() => page.evaluate(() => !!(window as any).pageShareFile), {
       timeout: 30000,
@@ -1350,15 +1389,27 @@ test('one click shares the full page composition with a centered monkey, no cont
   )
   expect(composition.text).toContain(fullContent)
   expect(composition.text).toContain('Full article export')
-  expect(composition.text).toContain(
-    'https://anuluca.com/laboratory/monkey-typewriter'
-  )
+  expect(composition.text).toContain('Anuluca.com/laboratory/monkey-typewriter')
+  if (!info.project.name.includes('mobile'))
+    expect(await page.evaluate(() => (window as any).clipboardActive)).toBe(
+      true
+    )
+  await expect(page.locator('.share-loading')).toHaveCount(0)
   expect(composition.text).not.toContain('RESTART')
   expect(composition.text).not.toContain('保存至巴别图书馆')
   expect(composition.buttons).toBe(0)
-  expect(composition.images).toBe(2)
+  expect(composition.images).toBe(3)
+  expect(composition.titleRasterized).toBe(true)
+  expect(composition.text).toContain('Anutrium')
+  expect(composition.text).toContain('DESIGNED & ENGINEERED BY ANULUCA.')
   expect(composition.photoNaturalWidth).toBe(1448)
   expect(composition.centerError).toBeLessThanOrEqual(1)
+  expect(composition.alignment.articleLeft).toBe(70)
+  expect(composition.alignment.brandLeft).toBe(
+    composition.alignment.articleLeft
+  )
+  expect(composition.alignment.qrLeft - composition.alignment.urlRight).toBe(24)
+  expect(composition.alignment.qrRight).toBe(composition.alignment.articleRight)
   const after = await editor.evaluate((el) => ({
     top: el.scrollTop,
     width: el.clientWidth,
@@ -1391,5 +1442,41 @@ test('one click shares the full page composition with a centered monkey, no cont
   writeFileSync(
     `test-results/monkey-page-share-${info.project.name}.png`,
     Buffer.from(bytes)
+  )
+})
+
+test('clipboard denial reports an error and restores the share icon without claiming success', async ({
+  page,
+}, info) => {
+  test.skip(
+    info.project.name.includes('mobile'),
+    'Mobile saves the file instead of using clipboard permission'
+  )
+  await page.addInitScript(() =>
+    Object.defineProperty(navigator.clipboard, 'write', {
+      configurable: true,
+      value: async () => {
+        throw new DOMException('Denied', 'NotAllowedError')
+      },
+    })
+  )
+  await page.route('https://steam-api.anuluca.com/monkey-articles**', (route) =>
+    route.fulfill({ json: { ...article, id: '' } })
+  )
+  await page.goto(path)
+  await expect(page.locator('.footer-bottom-gradient--ready')).toBeAttached({
+    timeout: 20000,
+  })
+  await page.waitForTimeout(1600)
+  await page.getByRole('button', { name: 'START', exact: true }).click()
+  await page.getByRole('button', { name: '分享', exact: true }).click()
+  await expect(page.locator('.el-message--error')).toContainText(
+    '请允许剪贴板权限'
+  )
+  await expect(page.locator('.el-message--success')).toHaveCount(0)
+  await expect(page.locator('.share-loading')).toHaveCount(0)
+  await expect(page.locator('.share-button')).toHaveAttribute(
+    'aria-busy',
+    'false'
   )
 })

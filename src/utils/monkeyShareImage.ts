@@ -1,10 +1,17 @@
+import { createVNode, render } from 'vue'
 import { toBlob } from 'html-to-image'
 import QRCode from 'qrcode'
 
+import Logo from '@/components/Logo/index.vue'
+import FooterLegalText from '@/components/PageFooter/FooterLegalText.vue'
 import { translate } from '@/locales/translate'
 
 export const MONKEY_SHARE_URL =
   'https://anuluca.com/laboratory/monkey-typewriter'
+export const MONKEY_SHARE_DISPLAY_URL =
+  'Anuluca.com/laboratory/monkey-typewriter'
+// 原分享图正文左右留白各 210px，缩为三分之一，并让页脚沿同一内容边界排版。
+const SHARE_GUTTER = 70
 const resources = new Map<string, Promise<string>>()
 
 async function inlineResource(url: string): Promise<string> {
@@ -35,6 +42,75 @@ async function inlineResource(url: string): Promise<string> {
   })
   resources.set(url, promise)
   return promise
+}
+// 复用站点 Logo 的真实矢量路径，并固化颜色，避免离屏 SVG 丢失组件样式。
+function logoSource(color: string, id: string) {
+  const mount = document.createElement('div')
+  render(createVNode(Logo, { active: false, id }), mount)
+  const svg = mount.querySelector('svg')!.cloneNode(true) as SVGElement
+  svg
+    .querySelectorAll('.main-color')
+    .forEach((node) => node.setAttribute('stroke', color))
+  svg.querySelector('.bg-shape')!.setAttribute('fill', color)
+  svg
+    .querySelectorAll('[class]')
+    .forEach((node) => node.removeAttribute('class'))
+  svg.removeAttribute('class')
+  render(null, mount)
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
+    new XMLSerializer().serializeToString(svg)
+  )}`
+}
+async function brandedQr() {
+  const canvas = document.createElement('canvas')
+  await QRCode.toCanvas(canvas, MONKEY_SHARE_URL, {
+    width: 192,
+    margin: 4,
+    errorCorrectionLevel: 'H',
+  })
+  const logo = new Image()
+  logo.src = logoSource('#000', 'share-qr')
+  await logo.decode()
+  const context = canvas.getContext('2d')!
+  context.fillStyle = '#fff'
+  context.fillRect(78, 74, 36, 44)
+  context.drawImage(logo, 84, 81, 24, 30)
+  return canvas.toDataURL('image/png')
+}
+async function preserveTitleFont(title: HTMLElement, color: string) {
+  const font = "900 64px 'alibaba-puhuiti'"
+  await document.fonts.load(font, title.textContent || '')
+  // 页面运行时加载的字体未必有可读取的 @font-face；先绘制真实字形再导出，避免 SVG 回退字体。
+  const canvas = document.createElement('canvas')
+  const context = canvas.getContext('2d')!
+  context.font = font
+  const width =
+    Math.ceil(context.measureText(title.textContent || '').width) + 8
+  canvas.width = width * 2
+  canvas.height = 90 * 2
+  context.scale(2, 2)
+  context.font = font
+  context.fillStyle = color
+  context.textAlign = 'center'
+  context.textBaseline = 'middle'
+  context.fillText(title.textContent || '', width / 2, 45)
+  title.dataset.shareRole = 'page-title'
+  title.style.height = '90px'
+  title.style.color = 'transparent'
+  title.style.background = `url("${canvas.toDataURL(
+    'image/png'
+  )}") center / ${width}px 90px no-repeat`
+}
+function copyrightElement() {
+  const current = document.querySelector('.footer-copyright')
+  if (current) return current.cloneNode(true) as HTMLElement
+  const mount = document.createElement('div')
+  render(createVNode(FooterLegalText, { kind: 'copyright' }), mount)
+  const copyright = mount
+    .querySelector('.footer-copyright')!
+    .cloneNode(true) as HTMLElement
+  render(null, mount)
+  return copyright
 }
 function covers(range: string, codes: readonly number[]) {
   if (!range) return true
@@ -200,7 +276,7 @@ export async function createMonkeyShareImage(
     if (property.startsWith('--'))
       picture.style.setProperty(property, computed.getPropertyValue(property))
   const heading = document.createElement('header')
-  heading.style.cssText = 'text-align:center;padding:0 90px 20px;'
+  heading.style.cssText = `text-align:center;padding:0 ${SHARE_GUTTER}px 20px;`
   const label = document.createElement('div')
   label.textContent = `// ${labels.laboratory}`
   label.style.cssText = `font:900 18px/1.5 UnboundedSans,sans-serif;color:${theme};`
@@ -230,7 +306,7 @@ export async function createMonkeyShareImage(
   setStyle(clone, {
     width: '1600px',
     height: 'auto',
-    padding: '0 90px',
+    padding: `0 ${SHARE_GUTTER}px`,
     display: 'flex',
     background: 'transparent',
   })
@@ -271,6 +347,10 @@ export async function createMonkeyShareImage(
       titleElement.setAttribute(attribute.name, '')
   titleElement.textContent = title
   input.replaceWith(titleElement)
+  const articleFrame = clone.querySelector<HTMLElement>(
+    '.manuscript-frame, .manuscript'
+  )
+  if (articleFrame) articleFrame.dataset.shareRole = 'article'
   const textarea =
     clone.querySelector<HTMLTextAreaElement>('.manuscript-editor')
   const body = clone.querySelector<HTMLElement>('.manuscript-body')!
@@ -313,7 +393,10 @@ export async function createMonkeyShareImage(
       overflow: 'visible',
     })
   }
-  setStyle(clone.querySelector('.lab-workspace'), { display: 'flex' })
+  setStyle(clone.querySelector('.lab-workspace'), {
+    display: 'flex',
+    maxWidth: 'none',
+  })
   setStyle(clone.querySelector('.analysis-reveal'), {
     display: 'flex',
     height: '84px',
@@ -333,38 +416,63 @@ export async function createMonkeyShareImage(
     whiteSpace: 'normal',
   })
   const footer = document.createElement('footer')
-  footer.style.cssText =
-    'display:flex;justify-content:space-between;align-items:flex-end;gap:40px;padding:42px 90px 48px;'
+  footer.style.cssText = `display:flex;justify-content:space-between;align-items:flex-end;gap:40px;padding:42px ${SHARE_GUTTER}px 48px;`
+  const brand = document.createElement('div')
+  brand.dataset.shareRole = 'brand'
+  brand.style.cssText = 'flex:1;min-width:0;max-width:550px;text-align:left;'
+  const brandHeading = document.createElement('div')
+  brandHeading.style.cssText = 'display:flex;align-items:center;gap:16px;'
+  const brandLogo = document.createElement('img')
+  brandLogo.alt = 'Anutrium Logo'
+  brandLogo.width = 48
+  brandLogo.height = 60
+  brandLogo.src = logoSource('#fffff4', 'share-brand')
+  const brandTitle = document.createElement('span')
+  brandTitle.textContent = 'Anutrium'
+  brandTitle.style.cssText = 'font:900 38px/1.3 UnboundedSans,sans-serif;'
+  brandHeading.append(brandLogo, brandTitle)
+  const copyright = copyrightElement()
+  copyright.textContent = (copyright.textContent || '')
+    .replace(/All rights reserved\.?/gi, '')
+    .replace(/(©\s*\d{4}(?:[-–]\d{4})?)\s+Anuluca\.?/gi, '$1')
+    .trim()
+  copyright.dataset.shareRole = 'copyright'
+  copyright.style.cssText =
+    'font:400 14px/1.6 UnboundedSans,sans-serif;color:#999;margin:14px 0 0;text-align:left;'
+  brand.append(brandHeading, copyright)
+  const destination = document.createElement('div')
+  destination.style.cssText =
+    'display:flex;align-items:flex-end;gap:24px;flex:none;'
   const links = document.createElement('div')
   links.style.cssText =
-    'font:900 20px/1.8 UnboundedSans,sans-serif;color:#fffff4;'
+    'font:900 17px/1.8 UnboundedSans,sans-serif;color:#fffff4;text-align:right;max-width:600px;'
   const description = document.createElement('p')
   description.textContent = labels.description
   description.style.cssText =
     "font:900 18px/1.6 'alibaba-puhuiti',sans-serif;color:#999;margin:0 0 16px;"
   const link = document.createElement('div')
   link.dataset.shareRole = 'url'
-  link.textContent = MONKEY_SHARE_URL
+  link.textContent = MONKEY_SHARE_DISPLAY_URL
   links.append(description, link)
   const qr = document.createElement('img')
   qr.dataset.shareRole = 'qr'
   qr.alt = labels.qr
-  qr.width = qr.height = 160
-  qr.src = await QRCode.toDataURL(MONKEY_SHARE_URL, {
-    width: 160,
-    margin: 4,
-    errorCorrectionLevel: 'M',
-  })
+  qr.width = qr.height = 192
+  qr.src = await brandedQr()
   signal?.throwIfAborted()
-  footer.append(links, qr)
+  destination.append(links, qr)
+  footer.append(brand, destination)
   picture.append(heading, clone, footer)
   host.append(picture)
   // 挂在同一个场景父级，复用现有 scoped 规则及主题；绝不移动原页面节点。
   root.parentElement!.append(host)
   try {
+    await preserveTitleFont(pageTitle, theme)
     freezeStyles(picture)
     await document.fonts.ready
-    await image?.decode()
+    await Promise.all(
+      Array.from(picture.querySelectorAll('img')).map((img) => img.decode())
+    )
     const height = Math.ceil(picture.scrollHeight)
     if (height > 12000)
       throw new Error(translate('monkeyTypewriter.imageTooLong'))

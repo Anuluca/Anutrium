@@ -164,6 +164,26 @@ const monkeyTypewriter = {
     zhCn: '内容已更新，请再次点击分享。',
     en: 'The content has changed. Please click Share again.',
   },
+  imageCancelled: {
+    zhCn: '图片生成已取消。',
+    en: 'Image generation cancelled.',
+  },
+  imageCopyUnsupported: {
+    zhCn: '当前浏览器不支持复制图片，请更换浏览器后重试。',
+    en: 'This browser cannot copy images. Please try another browser.',
+  },
+  imageSaved: {
+    zhCn: '已开始保存图片。',
+    en: 'Image download started.',
+  },
+  imageCopied: {
+    zhCn: '图片已复制。',
+    en: 'Image copied.',
+  },
+  imageCopyDenied: {
+    zhCn: '图片复制失败，请允许剪贴板权限后重试。',
+    en: 'Image copying failed. Allow clipboard access and try again.',
+  },
   imageUpdating: {
     zhCn: '分享图片正在更新，请稍后重试。',
     en: 'The share image is updating. Please try again shortly.',
