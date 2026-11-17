@@ -1,3 +1,5 @@
+import { WEBSITE_HISTORY_PATH } from '@/config/islandModules'
+
 const archiveDynamic = {
   Works: [
     {
@@ -510,8 +512,8 @@ const archiveDynamic = {
     {
       id: 'P001',
       title: {
-        zhCn: '路卡庭院',
-        en: 'ANUTRIUM',
+        zhCn: 'Anutrium',
+        en: 'Anutrium',
       },
       participation: 100,
       time: '2025-12 to Now',
@@ -566,6 +568,14 @@ const archiveDynamic = {
             en: 'Official Website',
           },
           url: 'https://anuluca.com',
+          icon: 'Link',
+        },
+        {
+          label: {
+            zhCn: 'Anutrium历史版本',
+            en: 'Anutrium History',
+          },
+          url: WEBSITE_HISTORY_PATH,
           icon: 'Link',
         },
       ],
@@ -644,6 +654,14 @@ const archiveDynamic = {
             en: 'Official Website',
           },
           url: 'https://garden.anuluca.com/',
+          icon: 'Link',
+        },
+        {
+          label: {
+            zhCn: 'Anutrium历史版本',
+            en: 'Anutrium History',
+          },
+          url: WEBSITE_HISTORY_PATH,
           icon: 'Link',
         },
       ],

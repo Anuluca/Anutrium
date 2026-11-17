@@ -16,6 +16,7 @@ import ModalWrapper from '@/components/ModalWrapper/index.vue'
 import { useFrameTask } from '@/composables/useFrameTask'
 import { createBabelBookOpening } from '@/utils/babelBookOpening'
 import { showErrorMessage } from '@/utils/elementMessage'
+import { createReaderBodyReveal } from '@/utils/readerBodyReveal'
 
 import BabelArticleReader from './BabelArticleReader.vue'
 import BabelPhoto from './BabelPhoto.vue'
@@ -47,25 +48,36 @@ const opening = ref(false)
 const closing = ref(false)
 const selectedBook = ref('')
 const openingPhase = ref('')
+const contentReady = ref(false)
+let bodyReveal: ReturnType<typeof createReaderBodyReveal> | null = null
 let operation = 0
 let bookOpening: ReturnType<typeof createBabelBookOpening> | null = null
 let openingSize = { width: 0, height: 0 }
 let origin: HTMLElement | null = null
 function cancelOpening() {
   operation++
+  bodyReveal?.destroy()
+  bodyReveal = null
   bookOpening?.cancel()
   bookOpening = null
   opening.value = false
   closing.value = false
   openingPhase.value = ''
-  if (!openedArticle.value) selectedBook.value = ''
+  openedArticle.value = null
+  selectedBook.value = ''
+  contentReady.value = false
 }
 watch(
   () => props.modelValue,
   (visible) => {
-    if (!visible) cancelOpening()
+    // 保留阅读卡及其动画端点，直到 ModalWrapper 退场结束，避免关闭弹窗时闪回列表。
+    if (!visible) operation++
   }
 )
+function afterClosed() {
+  cancelOpening()
+  emit('closed')
+}
 onBeforeUnmount(cancelOpening)
 const resizeOpening = useFrameTask(() => {
   if (!bookOpening || !stage.value) return
@@ -87,6 +99,9 @@ async function openBook(event: MouseEvent, id: string) {
   const current = ++operation
   opening.value = true
   selectedBook.value = id
+  contentReady.value = false
+  await nextTick()
+  if (current !== operation || !props.modelValue) return
   openingSize = stage.value.getBoundingClientRect()
   const transition = createBabelBookOpening(
     stage.value,
@@ -107,16 +122,30 @@ async function openBook(event: MouseEvent, id: string) {
       return
     openedArticle.value = article
     await nextTick()
-    await transition.reveal()
+    const body = readerTarget.value!.querySelector<HTMLElement>(
+      '.manuscript-highlights'
+    )!
+    const scroll =
+      readerTarget.value!.querySelector<HTMLElement>('.manuscript')!
+    bodyReveal = createReaderBodyReveal(
+      body,
+      scroll,
+      reducedMotion.value === 'reduce'
+    )
+    contentReady.value = true
+    opening.value = false
+    await bodyReveal.play()
   } catch (cause) {
     if (current === operation) showErrorMessage((cause as Error).message)
   } finally {
-    transition.cancel()
     if (current === operation) {
-      bookOpening = null
       opening.value = false
-      openingPhase.value = ''
-      if (!openedArticle.value) selectedBook.value = ''
+      if (!openedArticle.value) {
+        selectedBook.value = ''
+        await nextTick()
+        transition.cancel()
+        bookOpening = null
+      }
     }
   }
 }
@@ -133,25 +162,23 @@ async function backToShelf() {
   opening.value = true
   closing.value = true
   openingSize = stage.value.getBoundingClientRect()
-  const transition = createBabelBookOpening(
-    stage.value,
-    origin,
-    readerTarget.value,
-    (phase) => {
-      openingPhase.value = phase
-    },
-    reducedMotion.value === 'reduce',
-    'close'
-  )
-  bookOpening = transition
+  const transition = bookOpening
+  const bodyTransition = bodyReveal
+  if (!transition) return
   try {
-    const completed = await transition.finished
+    await bodyTransition?.reverse()
+    if (current !== operation || !props.modelValue) return
+    contentReady.value = false
+    const completed = await transition.close()
     if (current !== operation || !props.modelValue || !completed) return
     openedArticle.value = null
     selectedBook.value = ''
+    await nextTick()
   } finally {
-    transition.cancel()
     if (current === operation) {
+      bodyTransition?.destroy()
+      transition.cancel()
+      bodyReveal = null
       bookOpening = null
       opening.value = false
       closing.value = false
@@ -163,6 +190,9 @@ async function backToShelf() {
     origin?.focus({ preventScroll: true })
   }
 }
+const selectedSummary = computed(() =>
+  books.value.find((book) => book.id === selectedBook.value)
+)
 const booksReady = computed(
   () => shelfReady.value || reducedMotion.value === 'reduce'
 )
@@ -202,7 +232,7 @@ const books = computed(() =>
     }`"
     :close-title="t('monkeyTypewriter.close')"
     @update:model-value="emit('update:modelValue', $event)"
-    @closed="emit('closed')"
+    @closed="afterClosed"
   >
     <section
       ref="stage"
@@ -285,14 +315,22 @@ const books = computed(() =>
         class="book-opening-loading"
       />
       <div
+        v-show="selectedBook"
         ref="readerTarget"
-        class="library-reader-region"
-        :class="{ 'is-active': !!openedArticle, 'is-closing': closing }"
+        class="library-reader-region no-rem"
+        :class="{
+          'book-opening-shell': !!selectedBook,
+          'is-active': !!openedArticle,
+          'is-closing': closing,
+          'is-content-ready': contentReady,
+        }"
         @click.self="backToShelf"
       >
         <BabelArticleReader
-          v-if="openedArticle"
+          v-if="selectedSummary"
           :article="openedArticle"
+          :cover="selectedSummary"
+          :content-ready="contentReady"
           @back="backToShelf"
         />
       </div>
@@ -365,17 +403,14 @@ const books = computed(() =>
   }
   .library-reader-region {
     position: absolute;
-    inset: clamp(10px, 2vw, 28px);
-    z-index: 4;
+    inset: auto;
+    z-index: 6;
     pointer-events: none;
     min-width: 0;
     min-height: 0;
   }
   .library-reader-region.is-closing {
-    z-index: 7;
-    opacity: 0;
     pointer-events: none;
-    transition: opacity 180ms ease;
   }
   .library-reader-region.is-active:not(.is-closing) {
     pointer-events: auto;

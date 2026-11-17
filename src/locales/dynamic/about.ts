@@ -32,32 +32,48 @@ const aboutDynamic = {
   changelogs: [
     {
       version: 'v2.1',
-      published: false,
-      date: '2026-10-26',
+      published: true,
+      date: '2026-11-17',
       title: {
-        zhCn: 'Floratrium 相册更新',
-        en: 'FLORATRIUM ALBUM UPDATE',
+        zhCn: 'ATRIUM 与实验室更新',
+        en: 'ATRIUM & LABORATORY UPDATE',
       },
       details: [
         {
-          zhCn: '新增__ATRIUM 模块__，新增__想法、笔记与宅__三个模块',
-          en: 'Added the __ATRIUM__ module with three new sub-modules: __Ideas, Notes, and Otaku__.',
+          zhCn: '新增__ATRIUM 个人海湾__，整合__实验室、笔记、游戏库与收藏品__模块，完善模型聚焦、模块展开与站内导航。',
+          en: 'Added the __ATRIUM personal space__, bringing together __Laboratory, Notes, Game Library, and Collectibles__, with model focus, expandable modules, and in-site navigation.',
+        },
+        {
+          zhCn: '实验室新增__猴子打字__：随机生成英文文章，支持编辑、正常英文单词识别与高亮、复制、下载及图片分享，并可保存至所有人共享的__巴别图书馆__。',
+          en: 'Added __Monkey Typewriter__ to Laboratory: generate random English articles, edit text, identify and highlight real English words, copy, download, and share images, or save articles to the shared __Library of Babel__.',
+        },
+        {
+          zhCn: '实验室新增__Anutrium历史版本__弹窗，支持预览__0.1-alpha、1.0、1.2、2.0__及__旧版博客__；Archive 项目详情同步加入历史版本入口，站内链接使用当前页面跳转。',
+          en: 'Added the __Anutrium History__ modal to Laboratory, with previews of __0.1-alpha, 1.0, 1.2, 2.0__, and the __legacy blog__. Archive project details now link to the history modal, with internal links navigating in the current tab.',
+        },
+        {
+          zhCn: '完善__笔记模块__的 Markdown 阅读、分类导航与链接直达，新增__宝可梦图鉴表格__、图片预览和悬停详情展示。',
+          en: 'Improved __Notes__ with Markdown reading, category navigation, and direct links, adding __Pokédex tables__, image previews, and hover details.',
+        },
+        {
+          zhCn: '新增__拍照模式__，支持调整焦距、背景颜色、星盘与星空的透明度和模糊效果，并可导出场景截图。',
+          en: 'Added __Photo Mode__ with focal-length controls, background colors, opacity and blur controls for the zodiac and star field, and scene screenshot export.',
         },
         {
           zhCn: 'Floratrium 新增__【花花的邻居们】相册__，花花相册新增__按文件名日期划分的四个成长阶段__。',
-          en: 'Added the __"Neighbors of Floratrium"__ album to Floratrium, and the Floratrium album now includes __four growth stages divided by file name dates__.',
+          en: 'Added the __"Neighbors of Floratrium"__ album and __four growth stages grouped by dates in media filenames__ to Flora’s album.',
         },
         {
-          zhCn: '首页新增__禅模式（Zen Mode）__：点击顶部 Logo 进入，点击页面或按 __Esc__ 即可退出。',
-          en: 'Added a __Zen Mode__ to the home page: click the top logo to enter, and click anywhere on the page or press __Esc__ to exit.',
+          zhCn: '优化__巴别图书馆__书本卡的展开、关闭与正文入场动效，完善__文章分享图片__的全文排版、网站标识与二维码展示。',
+          en: 'Refined __Library of Babel__ book-card opening, closing, and text entrance animations, and improved full-article layouts, site branding, and QR codes in __article share images__.',
         },
         {
-          zhCn: '优化__首页三维场景（3D Scene）渲染__、优化__场景资源加载与复用__、降低__交互与页面合成开销__。',
-          en: 'Optimized __3D scene rendering__ on the home page, improved __scene resource loading and reuse__, and reduced __interaction and page compositing overhead__.',
+          zhCn: '优化__首页三维场景渲染__、__场景资源加载与复用__，降低交互与页面合成开销，并完善移动端布局和弹窗滚动稳定性。',
+          en: 'Optimized __home-page 3D rendering__ and __scene asset loading and reuse__, reduced interaction and compositing overhead, and refined mobile layouts and modal scroll stability.',
         },
         {
-          zhCn: '新增旅程：__"青阳"__、__"赣州"__、__"汕头"__、__"潮州"__、__"广州"__；',
-          en: 'Added journeys: __"Qingyang"__, __"Ganzhou"__, __"Shantou"__, __"Chaozhou"__, and __"Guangzhou"__;',
+          zhCn: '新增旅程：__青阳__、__赣州__、__汕头__、__潮州__、__广州__。',
+          en: 'Added journeys to __Qingyang__, __Ganzhou__, __Shantou__, __Chaozhou__, and __Guangzhou__.',
         },
       ],
     },

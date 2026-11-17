@@ -7,6 +7,7 @@ const templeRouteNames = new Set<string>([
   'ATRIUM',
   'ATRIUM_PHOTO',
   'ATRIUM_AI_AGENT_TEST',
+  'ATRIUM_WEBSITE_HISTORY',
   ...Object.values(islandModules).map((module) => module.routeName),
 ])
 export const isTempleRouteName = (name: unknown) =>

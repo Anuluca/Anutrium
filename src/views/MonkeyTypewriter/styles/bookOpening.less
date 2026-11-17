@@ -1,57 +1,47 @@
 .babel-library.no-rem .book-opening-shell.no-rem {
   position: absolute;
   z-index: 6;
-  pointer-events: none;
-  isolation: isolate;
-  transform-origin: top left;
-  .book-opening-spine {
+  overflow: hidden;
+  box-sizing: border-box;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  background: #090909;
+  .book-opening-cover {
     position: absolute;
     inset: 0;
-    left: 50%;
-    width: 50%;
-    height: 100%;
-    z-index: 2;
+    pointer-events: none;
+  }
+  .book-number,
+  .book-date,
+  .book-title {
+    position: absolute;
     margin: 0;
-    visibility: visible;
   }
-  .book-opening-front,
-  .book-opening-back,
-  .book-opening-paper {
-    position: absolute;
-    inset: 0;
-    box-sizing: border-box;
-    border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
-    background: #090909;
+  .book-number {
+    font: 400 18px/1.3 'UnboundedSans', sans-serif;
+    color: var(--accent);
   }
-  .book-opening-spread {
-    position: absolute;
-    inset: 0;
-    transform-style: preserve-3d;
+  .book-date {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font: 400 18px/1 'Anton', sans-serif;
+    color: var(--text-muted);
   }
-  .book-opening-paper {
-    left: calc(50% - 1px);
-    border-left: 0;
-    background: #141414;
+  .book-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: center;
+    transform-origin: center;
   }
-  .book-opening-hinge {
-    position: absolute;
-    top: 0;
-    left: 50%;
-    width: 50%;
-    height: 100%;
-    transform-origin: left center;
-    transform-style: preserve-3d;
-  }
-  .book-opening-front,
-  .book-opening-back {
-    background: #141414;
-    backface-visibility: hidden;
-  }
-  .book-opening-front {
-    border-left: 0;
-  }
-  .book-opening-back {
-    border-right: 0;
-    transform: rotateY(180deg);
+  @media (max-width: 768px) {
+    .book-number {
+      font-size: 14px;
+    }
+    .book-date {
+      font-size: 13px;
+      gap: 2px;
+    }
   }
 }

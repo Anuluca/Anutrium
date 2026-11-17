@@ -14,6 +14,7 @@ test('agent list modal preserves position and supports history, expansion and re
   await expect(entry).toBeVisible({ timeout: 45000 })
   const expand = page.getByRole('button', { name: '展开全屏内容', exact: true })
   if (!info.project.name.includes('mobile')) await expect(expand).toBeEnabled()
+  await entry.scrollIntoViewIfNeeded()
   const before = await readPagePosition(
     page,
     '.island-laboratory-content .tl-grid'

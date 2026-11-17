@@ -206,118 +206,111 @@ test('shelf and refresh enter first, then books fall in row order', async ({
   await expect(modal).toBeHidden()
 })
 
-test('book pulls out of the shelf and unfolds horizontally before revealing its article', async ({
+test('the same book card expands to fill the reader without stretching metadata, then reveals the body', async ({
   page,
 }, info) => {
-  test.setTimeout(60000)
   await page.emulateMedia({ reducedMotion: 'no-preference' })
   await mockBabelLibrary(page)
   let release!: () => void
   const gate = new Promise<void>((resolve) => {
     release = resolve
   })
-  await page.route(
-    `https://steam-api.anuluca.com/monkey-articles/${babelBooks[0].id}`,
-    async (route) => {
-      await gate
-      await route.fulfill({ json: babelBooks[0] })
-    }
-  )
+  await page.route(`**/monkey-articles/${babelBooks[0].id}`, async (route) => {
+    await gate
+    await route.fulfill({ json: babelBooks[0] })
+  })
   await openMonkeyTypewriter(page)
   await page.locator('.babel-entrance').click()
   const modal = page.locator('.babel-library-dialog')
-  await modal.locator('.library-book').first().click()
+  const source = modal.locator('.library-book').first()
+  await expect(source).toBeVisible()
+  await page.waitForTimeout(1400)
+  await source.click()
+  const origin = await source.evaluate((el) => {
+    const rect = el.getBoundingClientRect()
+    return { x: rect.x, y: rect.y, width: rect.width }
+  })
+  const card = modal.locator('.book-opening-shell')
   try {
-    const shell = modal.locator('.book-opening-shell')
-    await expect(shell).toBeVisible()
-    await expect(shell).toHaveAttribute('data-phase', 'unfolding')
-    const simultaneous = await modal.evaluate((element) => {
-      const moving = element
-        .querySelector('.book-opening-shell')!
-        .getAnimations()[0]
-      const folding = element
-        .querySelector('.book-opening-hinge')!
-        .getAnimations()[0]
-      return {
-        delta: Math.abs(Number(moving.startTime) - Number(folding.startTime)),
-        moving: moving.playState,
-        folding: folding.playState,
-      }
-    })
-    expect(simultaneous.delta).toBeLessThanOrEqual(1)
-    expect(simultaneous.moving).toBe('running')
-    expect(simultaneous.folding).toBe('running')
-    const fold = await modal
-      .locator('.book-opening-hinge')
-      .evaluate((element) =>
-        (element.getAnimations()[0].effect as KeyframeEffect).getKeyframes()
-      )
-    expect(fold[0].transform).toBe('rotateY(0deg)')
-    expect(fold[1].transform).toBe('rotateY(-180deg)')
-    const seams = await shell.evaluate((element) => [
-      getComputedStyle(element.querySelector('.book-opening-paper')!)
-        .borderLeftWidth,
-      getComputedStyle(element.querySelector('.book-opening-front')!)
-        .borderLeftWidth,
-      getComputedStyle(element.querySelector('.book-opening-back')!)
-        .borderRightWidth,
-    ])
-    expect(seams).toEqual(['0px', '0px', '0px'])
-    await shell.evaluate((element) => {
-      for (const node of [
-        element,
-        ...element.querySelectorAll(
-          '.book-opening-hinge, .book-opening-spine, .book-opening-spread'
-        ),
-      ]) {
-        for (const animation of node.getAnimations()) {
-          animation.pause()
-          animation.currentTime = 420
+    await expect(card).toHaveAttribute('data-phase', 'unfolding')
+    const samples = await card.evaluate((element) => {
+      const title = element.querySelector<HTMLElement>('.book-title')!
+      const animations = [
+        ...element.getAnimations(),
+        ...title.getAnimations(),
+        ...element.querySelector('.book-date')!.getAnimations(),
+      ]
+      for (const animation of animations) animation.pause()
+      const samples = [0, 410, 820].map((time) => {
+        animations.forEach((animation) => {
+          animation.currentTime = time
+        })
+        const rect = element.getBoundingClientRect()
+        const number = element
+          .querySelector('.book-number')!
+          .getBoundingClientRect()
+        const date = element
+          .querySelector('.book-date')!
+          .getBoundingClientRect()
+        return {
+          left: rect.left,
+          top: rect.top,
+          width: rect.width,
+          height: rect.height,
+          numberX: number.left - rect.left,
+          numberY: number.top - rect.top,
+          numberWidth: number.width,
+          numberHeight: number.height,
+          dateX: date.left - rect.left,
+          dateBottom: rect.bottom - date.bottom,
+          dateWidth: date.width,
+          titleMatrix: getComputedStyle(title).transform,
+          titleSize: parseFloat(getComputedStyle(title).fontSize),
         }
-      }
+      })
+      animations.forEach((animation) => animation.finish())
+      return samples
     })
-    await page.screenshot({
-      path: `test-results/babel-book-fold-${info.project.name}.png`,
-    })
-    await shell.evaluate((element) => {
-      for (const node of [
-        element,
-        ...element.querySelectorAll(
-          '.book-opening-hinge, .book-opening-spine, .book-opening-spread'
-        ),
-      ]) {
-        for (const animation of node.getAnimations()) animation.play()
-      }
-    })
-    await expect(shell).toHaveAttribute('data-phase', 'ready')
-    await expect(modal.locator('.babel-reader')).toHaveCount(0)
-    const delta = await modal.evaluate((element) => {
-      const shell = element
-        .querySelector('.book-opening-shell')!
-        .getBoundingClientRect()
-      const target = element
-        .querySelector('.library-reader-region')!
-        .getBoundingClientRect()
-      return Math.max(
-        Math.abs(shell.left - target.left),
-        Math.abs(shell.top - target.top),
-        Math.abs(shell.width - target.width),
-        Math.abs(shell.height - target.height)
-      )
-    })
-    expect(delta).toBeLessThanOrEqual(1)
+    expect(samples[0].left).toBeCloseTo(origin!.x, 0)
+    expect(samples[0].top).toBeCloseTo(origin!.y, 0)
+    expect(samples[0].width).toBeCloseTo(origin!.width, 0)
+    expect(samples[1].width).toBeGreaterThan(samples[0].width)
+    expect(samples[1].width).toBeLessThan(samples[2].width)
+    for (const sample of samples)
+      for (const key of [
+        'numberX',
+        'numberY',
+        'numberWidth',
+        'numberHeight',
+        'dateX',
+        'dateWidth',
+      ] as const)
+        expect(sample[key]).toBeCloseTo(samples[0][key], 0)
+    const stage = await modal.locator('.babel-library').boundingBox()
+    expect(samples[2].width).toBeCloseTo(stage!.width, 0)
+    expect(samples[2].height).toBeCloseTo(stage!.height, 0)
+    expect(samples[1].titleMatrix).toMatch(/^matrix\(1, 0, 0, 1,/)
+    expect(samples[2].titleMatrix).toMatch(/^matrix\(1, 0, 0, 1,/)
+    expect(samples[2].titleSize).toBeCloseTo(samples[0].titleSize * 1.6, 1)
+    expect(samples[2].dateBottom - samples[0].dateBottom).toBeCloseTo(56, 0)
+    await expect(card).toHaveAttribute('data-phase', 'ready')
+    await expect(modal.locator('.manuscript-highlights')).toHaveCount(0)
     release()
-    await expect(modal.locator('.babel-reader')).toBeVisible()
-    await expect(shell).toHaveCount(0)
-    await expect(
-      modal.locator('.babel-reader .manuscript-highlights')
-    ).toHaveText(babelBooks[0].content)
-    await expect(modal.locator('.babel-reader')).toHaveCSS('opacity', '1')
+    const body = modal.locator('.babel-reader .manuscript-highlights')
+    await expect(body).toHaveText(babelBooks[0].content)
+    await expect(body.locator('.reader-paragraph').first()).toHaveCSS(
+      'opacity',
+      '1'
+    )
+    await expect(card).toHaveCount(1)
+    expect(
+      await card
+        .locator('.book-title')
+        .evaluate((el) => el.scrollWidth <= el.clientWidth + 1)
+    ).toBe(true)
     await page.screenshot({
-      path: `test-results/babel-reader-${info.project.name}.png`,
+      path: `test-results/babel-expanded-${info.project.name}.png`,
     })
-    await page.keyboard.press('Escape')
-    await expect(modal).toBeHidden()
   } finally {
     release()
   }
@@ -402,7 +395,9 @@ test('reader actions stay at the bottom right and share the outer button styling
     const share = reader.querySelector<HTMLElement>('.share-button')!
     const bounds = reader.getBoundingClientRect()
     const button = share.getBoundingClientRect()
-    const readerStyle = getComputedStyle(reader)
+    const readerStyle = getComputedStyle(
+      reader.querySelector('.babel-reader-content')!
+    )
     const properties = [
       'color',
       'backgroundColor',
@@ -421,13 +416,12 @@ test('reader actions stay at the bottom right and share the outer button styling
     )
     const close = reader.querySelector<HTMLElement>('.reader-close')!
     const closeRect = close.getBoundingClientRect()
+    const date = reader.querySelector('time')!.getBoundingClientRect()
     return {
-      closeLeft: Math.abs(
-        closeRect.left - bounds.left - parseFloat(readerStyle.paddingLeft)
+      closeCenter: Math.abs(
+        closeRect.left + closeRect.width / 2 - date.left - date.width / 2
       ),
-      closeBottom: Math.abs(
-        closeRect.bottom - bounds.bottom + parseFloat(readerStyle.paddingBottom)
-      ),
+      closeGap: closeRect.top - date.bottom,
       closeWidth: closeRect.width,
       ownClose: close.classList.contains('diamond-close-btn'),
       fontSize: parseFloat(inner.fontSize),
@@ -450,12 +444,12 @@ test('reader actions stay at the bottom right and share the outer button styling
   expect(layout.bottom).toBeLessThanOrEqual(1)
   expect(layout.overflow).toBeLessThanOrEqual(1)
   expect(layout.inner).toEqual(layout.outer)
-  expect(layout.closeLeft).toBeLessThanOrEqual(1)
-  expect(layout.closeBottom).toBeLessThanOrEqual(1)
-  expect(layout.closeWidth).toBe(64)
+  expect(layout.closeCenter).toBeLessThanOrEqual(1)
+  expect(layout.closeGap).toBeGreaterThanOrEqual(10)
+  expect(layout.closeWidth).toBe(44)
   expect(layout.ownClose).toBe(true)
   expect(layout.fontSize).toBeGreaterThanOrEqual(24)
-  expect(layout.timeSize).toBeGreaterThanOrEqual(20)
+  expect(layout.timeSize).toBeGreaterThanOrEqual(13)
   expect(layout.tracking).toBeCloseTo(-0.05)
   await expect(modal.locator('.modal-close-row')).toBeHidden()
   await page.evaluate(() => {
@@ -556,52 +550,6 @@ test('opening adapts to resize and cancels without leaving a hidden book', async
   }
 })
 
-test('article clicks reverse the opening animation while action buttons keep the reader open', async ({
-  page,
-}) => {
-  test.setTimeout(60000)
-  await page.emulateMedia({ reducedMotion: 'no-preference' })
-  await mockBabelLibrary(page)
-  await page.addInitScript(() => {
-    Object.defineProperty(navigator, 'clipboard', {
-      configurable: true,
-      value: { writeText: async () => {} },
-    })
-  })
-  await openMonkeyTypewriter(page)
-  await page.locator('.babel-entrance').click()
-  const modal = page.locator('.babel-library-dialog')
-  for (const selector of [
-    '.babel-reader-heading',
-    '.manuscript-highlights',
-    '.reader-close',
-  ]) {
-    await modal.locator('.library-book').first().click()
-    const reader = modal.locator('.babel-reader')
-    await expect(reader).toHaveCSS('opacity', '1')
-    await expect(modal.locator('.book-opening-shell')).toHaveCount(0)
-    await reader.getByRole('button', { name: '复制全文' }).click()
-    await page.waitForTimeout(300)
-    await expect(reader).toBeVisible()
-    await expect(modal.locator('.book-opening-shell')).toHaveCount(0)
-    await reader.locator(selector).click()
-    const shell = modal.locator('.book-opening-shell')
-    await expect(shell).toHaveAttribute('data-phase', 'closing')
-    await expect
-      .poll(() =>
-        modal
-          .locator('.book-opening-hinge')
-          .evaluate((element) => element.getAnimations()[0].playbackRate)
-      )
-      .toBe(-1)
-    await expect(reader).toBeAttached()
-    await expect(reader).toHaveCount(0)
-    await expect(shell).toHaveCount(0)
-    await expect(modal.locator('.library-book').first()).toBeVisible()
-    await expect(modal.locator('.library-book').first()).toBeFocused()
-  }
-})
-
 test('mobile shelves fit two complete rows on compact and tall screens', async ({
   page,
 }, info) => {
@@ -635,130 +583,84 @@ test('mobile shelves fit two complete rows on compact and tall screens', async (
   }
 })
 
-test('closing keeps opaque pages aligned without stretched faces or duplicate cover text', async ({
+test('closing reverses the same card and cannot flash an enlarged book after returning', async ({
   page,
 }, info) => {
   test.setTimeout(60000)
   await page.emulateMedia({ reducedMotion: 'no-preference' })
   await mockBabelLibrary(page)
+  await page.route(`**/monkey-articles/${babelBooks[2].id}`, (route) =>
+    route.fulfill({
+      json: { ...babelBooks[2], content: 'A saved paragraph.\n\n'.repeat(40) },
+    })
+  )
   await openMonkeyTypewriter(page)
   await page.locator('.babel-entrance').click()
   const modal = page.locator('.babel-library-dialog')
-  // Use another column to catch an incorrect return-to-spine offset.
   const book = modal.locator('.library-book').nth(2)
-  await book.click()
-  await expect(modal.locator('.book-opening-shell')).toHaveCount(0)
-  const envelope = await modal.evaluate((element) => {
-    const a = element
-      .querySelector('.library-book.is-selected')!
-      .getBoundingClientRect()
-    const b = element
-      .querySelector('.library-reader-region')!
-      .getBoundingClientRect()
-    return {
-      left: Math.min(a.left, b.left),
-      top: Math.min(a.top, b.top),
-      right: Math.max(a.right, b.right),
-      bottom: Math.max(a.bottom, b.bottom),
-    }
-  })
-  await modal.locator('.babel-reader-heading').click()
-  const shell = modal.locator('.book-opening-shell')
-  await expect(shell).toHaveAttribute('data-phase', 'closing')
-  const handoff = await modal.evaluate((element) => ({
-    opacity: getComputedStyle(element.querySelector('.book-opening-shell')!)
-      .opacity,
-    pageLayer: Number(
-      getComputedStyle(element.querySelector('.library-reader-region')!).zIndex
-    ),
-    bookLayer: Number(
-      getComputedStyle(element.querySelector('.book-opening-shell')!).zIndex
-    ),
-  }))
-  expect(handoff.opacity).toBe('1')
-  expect(handoff.pageLayer).toBeGreaterThan(handoff.bookLayer)
-  await expect
-    .poll(() =>
-      shell.evaluate((element) => element.getAnimations()[0].playbackRate)
-    )
-    .toBe(-1)
-  const returningBook = await book.evaluate((element) => {
-    const animation = element.getAnimations()[0]
-    animation.pause()
-    const samples = [410, 820 / 3, 820 / 6, 0].map((time) => {
-      animation.currentTime = time
-      return {
-        opacity: Number(getComputedStyle(element).opacity),
-        visibility: getComputedStyle(element).visibility,
-      }
+  await page.waitForTimeout(1400)
+  const initial = await book.boundingBox()
+  for (let repeat = 0; repeat < 3; repeat++) {
+    await book.click()
+    const card = modal.locator('.book-opening-shell')
+    await expect(card).toHaveAttribute('data-phase', 'ready')
+    await expect(
+      modal.locator('.babel-reader .reader-paragraph').first()
+    ).toHaveCSS('opacity', '1')
+    await card.evaluate((el) => {
+      ;(window as any).bookCardNode = el
+      ;(window as any).bookCardAnimation = el.getAnimations()[0]
     })
-    animation.currentTime = 820
-    return samples
-  })
-  for (const [index, opacity] of [0, 0, 0.5, 1].entries())
-    expect(returningBook[index].opacity).toBeCloseTo(opacity, 4)
-  expect(returningBook.every((sample) => sample.visibility === 'visible')).toBe(
-    true
-  )
-  for (const time of [819, 615, 410, 205, 1]) {
-    const faces = await shell.evaluate((element, time) => {
-      for (const node of [
-        element,
-        ...element.querySelectorAll(
-          '.book-opening-hinge,.book-opening-spine,.book-opening-spread'
-        ),
-      ]) {
-        const animation = node.getAnimations()[0]
-        animation.pause()
-        animation.currentTime = time
-      }
-      return Array.from(
-        element.querySelectorAll(
-          '.book-opening-front,.book-opening-back,.book-opening-paper'
-        )
-      ).map((face) => {
-        const r = face.getBoundingClientRect()
-        return { left: r.left, top: r.top, right: r.right, bottom: r.bottom }
+    await modal.getByRole('button', { name: '复制全文', exact: true }).click()
+    await expect(card).toHaveAttribute('data-phase', 'ready')
+    if (repeat === 1) {
+      await modal.locator('.babel-reader .manuscript').evaluate((el) => {
+        el.scrollTop = el.scrollHeight / 2
       })
-    }, time)
-    for (const face of faces) {
-      expect(face.left).toBeGreaterThanOrEqual(envelope.left - 1)
-      expect(face.top).toBeGreaterThanOrEqual(envelope.top - 1)
-      expect(face.right).toBeLessThanOrEqual(envelope.right + 1)
-      expect(face.bottom).toBeLessThanOrEqual(envelope.bottom + 1)
     }
-    await expect(shell.locator('.book-opening-front')).toHaveText('')
-    if (time === 410)
-      await page.screenshot({
-        path: `test-results/babel-closing-fixed-${info.project.name}.png`,
+    await modal.locator('.reader-close').click()
+    await expect(card).toHaveAttribute('data-phase', 'closing')
+    const frames = await card.evaluate((el) => {
+      const animation = el.getAnimations()[0]
+      const identical =
+        el === (window as any).bookCardNode &&
+        animation === (window as any).bookCardAnimation
+      animation.pause()
+      const widths = [820, 615, 410, 205, 1].map((time) => {
+        animation.currentTime = time
+        return el.getBoundingClientRect().width
       })
+      for (const other of el.querySelector('.book-title')!.getAnimations())
+        other.finish()
+      animation.finish()
+      return { identical, rate: animation.playbackRate, widths }
+    })
+    expect(frames.identical).toBe(true)
+    expect(frames.rate).toBe(-1)
+    expect(frames.widths).toEqual([...frames.widths].sort((a, b) => b - a))
+    await expect(modal.locator('.babel-reader')).toHaveCount(0)
+    await expect(card).toHaveCount(0)
+    await expect(book).toBeFocused()
+    const returned = await book.evaluate(async (el) => {
+      const frames = []
+      for (let index = 0; index < 12; index++) {
+        await new Promise(requestAnimationFrame)
+        const r = el.getBoundingClientRect()
+        frames.push({
+          width: r.width,
+          height: r.height,
+          visible: getComputedStyle(el).visibility,
+        })
+      }
+      return frames
+    })
+    for (const frame of returned) {
+      expect(frame.width).toBeCloseTo(initial!.width, 0)
+      expect(frame.height).toBeCloseTo(initial!.height, 0)
+      expect(frame.visible).toBe('visible')
+    }
   }
-  const delta = await shell.evaluate((element) => {
-    const a = element
-      .querySelector('.book-opening-spine')!
-      .getBoundingClientRect()
-    const b = document
-      .querySelector('.library-book.is-selected')!
-      .getBoundingClientRect()
-    return Math.max(
-      Math.abs(a.left - b.left),
-      Math.abs(a.top - b.top),
-      Math.abs(a.width - b.width),
-      Math.abs(a.height - b.height)
-    )
+  await page.screenshot({
+    path: `test-results/babel-returned-${info.project.name}.png`,
   })
-  expect(delta).toBeLessThanOrEqual(1)
-  await shell.evaluate((element) => {
-    for (const node of [
-      element,
-      ...element.querySelectorAll(
-        '.book-opening-hinge,.book-opening-spine,.book-opening-spread'
-      ),
-    ])
-      node.getAnimations()[0].play()
-  })
-  await book.evaluate((element) => element.getAnimations()[0].finish())
-  await expect(modal.locator('.babel-reader')).toHaveCount(0)
-  await expect(shell).toHaveCount(0)
-  await expect(book).toBeFocused()
 })

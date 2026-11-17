@@ -20,6 +20,16 @@
       </template>
       <AiAgentTests :expanded="expanded" />
     </ModalWrapper>
+    <ModalWrapper
+      v-model="showWebsiteHistory"
+      :title="historyTitle"
+      width="min(1280px, 92vw)"
+    >
+      <template #header>
+        <ModalContentTitle :title="historyTitle" />
+      </template>
+      <AnutriumHistory :expanded="expanded" />
+    </ModalWrapper>
   </div>
 </template>
 
@@ -33,9 +43,14 @@ import ModalWrapper from '@/components/ModalWrapper/index.vue'
 import ToolCard from '@/components/ToolCard/index.vue'
 import ToolCardGrid from '@/components/ToolCardGrid/index.vue'
 import { aiReplicaExperiments } from '@/config/aiReplicaExperiments'
-import { AI_AGENT_TEST_PATH, islandModules } from '@/config/islandModules'
+import {
+  AI_AGENT_TEST_PATH,
+  islandModules,
+  WEBSITE_HISTORY_PATH,
+} from '@/config/islandModules'
 
 import AiAgentTests from './AiAgentTests.vue'
+import AnutriumHistory from './AnutriumHistory.vue'
 
 defineProps<{ expanded?: boolean }>()
 const route = useRoute()
@@ -51,6 +66,16 @@ const { locale } = useI18n()
 const agentTestsTitle = computed(() =>
   locale.value === 'en' ? 'AI Agent Capability Test' : 'AI Agent 能力测试'
 )
+const showWebsiteHistory = computed({
+  get: () => route.path.replace(/\/+$/, '') === WEBSITE_HISTORY_PATH,
+  set: (visible: boolean) => {
+    if (!visible && showWebsiteHistory.value)
+      void router.replace(islandModules.LABORATORY.path)
+  },
+})
+const historyTitle = computed(() =>
+  locale.value === 'en' ? 'Anutrium History' : 'Anutrium历史版本'
+)
 const experiments = computed(() => [
   {
     id: 'monkey-typewriter',
@@ -63,6 +88,21 @@ const experiments = computed(() => [
     imageFit: 'cover' as const,
     statusLabel: 'EXPERIMENT',
     link: '/laboratory/monkey-typewriter',
+  },
+  {
+    id: 'website-history',
+    title: historyTitle.value,
+    sub:
+      locale.value === 'en'
+        ? 'Explore the legacy blog and earlier Anutrium versions.'
+        : '回顾旧版博客与 Anutrium 的历代页面。',
+    tags: [],
+    category: 'general' as const,
+    icon: 'HISTORY',
+    img: 'https://assets.anuluca.com/Island/laboratory/anutrium-history/20261117_173052_cover.webp',
+    imageFit: 'cover' as const,
+    statusLabel: '5 VERSIONS',
+    link: WEBSITE_HISTORY_PATH,
   },
   {
     id: 'ai-agent-test',

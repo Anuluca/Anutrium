@@ -11,6 +11,7 @@ import { aiReplicaExperiments } from '@/config/aiReplicaExperiments'
 import { PHOTO_ROUTE_PATH } from '@/config/atriumPhoto'
 import {
   AI_AGENT_TEST_PATH,
+  WEBSITE_HISTORY_PATH,
   islandModuleAtPath,
   islandModules,
 } from '@/config/islandModules'
@@ -270,6 +271,21 @@ export const routes: RouteConfig[] = [
       starBackground: 'default',
       titleEn: 'AI AGENT CAPABILITY TEST',
       titleCn: 'AI Agent 能力测试',
+      fullFooter: false,
+      pageFooter: true,
+      pageLayout: 'main',
+      ifShow: false,
+    },
+  },
+  {
+    path: WEBSITE_HISTORY_PATH,
+    name: 'ATRIUM_WEBSITE_HISTORY',
+    component: () => import('@/views/Home/index.vue'),
+    meta: {
+      activeMenu: '/atrium',
+      starBackground: 'default',
+      titleEn: 'ANUTRIUM HISTORY',
+      titleCn: 'Anutrium历史版本',
       fullFooter: false,
       pageFooter: true,
       pageLayout: 'main',

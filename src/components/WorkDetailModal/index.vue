@@ -163,12 +163,19 @@
             <div v-if="work.links?.length" class="aside-links">
               <span class="field-label">LINKS</span>
               <div class="links-list">
-                <a
+                <component
+                  :is="isInternalHref(link.url) ? RouterLink : 'a'"
                   v-for="(link, idx) in work.links"
                   :key="idx"
-                  :href="link.url"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  v-bind="
+                    isInternalHref(link.url)
+                      ? { to: link.url }
+                      : {
+                          href: link.url,
+                          target: '_blank',
+                          rel: 'noopener noreferrer',
+                        }
+                  "
                   class="link-item"
                 >
                   <ElIcon class="link-icon" aria-hidden="true">
@@ -188,7 +195,7 @@
                         'color-mix(in srgb, var(--modal-accent) 64%, #000)',
                     }"
                   />
-                </a>
+                </component>
               </div>
             </div>
           </Teleport>
@@ -360,6 +367,7 @@ import { computed, ref, watch, type Component } from 'vue'
 import { useEventListener } from '@vueuse/core'
 import { ElIcon } from 'element-plus'
 import { useI18n } from 'vue-i18n'
+import { RouterLink } from 'vue-router'
 import {
   Link as LinkIcon,
   Lock,
@@ -428,6 +436,9 @@ const projectShareUrl = computed(() => {
     props.work.id
   )}`
 })
+
+const isInternalHref = (href: string) =>
+  href.startsWith('/') && !href.startsWith('//')
 
 const linkIconMap: Record<string, Component> = {
   Link: LinkIcon,

@@ -347,6 +347,41 @@ export async function createMonkeyShareImage(
       titleElement.setAttribute(attribute.name, '')
   titleElement.textContent = title
   input.replaceWith(titleElement)
+  // 阅读页的封面元素在屏幕上绝对定位；分享副本恢复自然流，避免沿用动画中的卡片坐标。
+  const cover = clone.querySelector<HTMLElement>('.book-opening-cover')
+  if (cover) {
+    setStyle(cover, {
+      position: 'static',
+      inset: 'auto',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '24px',
+      padding: '24px 0',
+    })
+    setStyle(titleElement, {
+      position: 'static',
+      transform: 'none',
+      width: 'auto',
+      flex: '1',
+      fontSize: '40px',
+      whiteSpace: 'normal',
+      textAlign: 'right',
+    })
+    for (const selector of ['.book-number', '.book-date'])
+      setStyle(cover.querySelector(selector), {
+        position: 'static',
+        inset: 'auto',
+      })
+    setStyle(clone.querySelector('.babel-reader-content'), {
+      height: 'auto',
+      padding: '0',
+      visibility: 'visible',
+    })
+    setStyle(clone.querySelector('.babel-reader-body'), {
+      flex: 'none',
+      height: 'auto',
+    })
+  }
   const articleFrame = clone.querySelector<HTMLElement>(
     '.manuscript-frame, .manuscript'
   )

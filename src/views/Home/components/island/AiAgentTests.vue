@@ -22,7 +22,7 @@ const tests = computed(() =>
 
 <template>
   <section class="ai-agent-tests" :class="{ 'is-expanded': expanded }">
-    <div class="ai-agent-tests__grid">
+    <div class="ai-agent-tests__grid laboratory-gallery-grid">
       <WorkCard
         v-for="item in tests"
         :key="item.id"
@@ -35,20 +35,4 @@ const tests = computed(() =>
   </section>
 </template>
 
-<style scoped lang="less">
-.ai-agent-tests__grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px;
-}
-
-.is-expanded .ai-agent-tests__grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-@container (max-width: 420px) {
-  .ai-agent-tests__grid {
-    gap: 12px;
-  }
-}
-</style>
+<style scoped lang="less" src="./laboratoryGallery.less" />

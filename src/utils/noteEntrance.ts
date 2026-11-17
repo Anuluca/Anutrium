@@ -1,6 +1,8 @@
 import gsap from 'gsap'
 import { CustomEase } from 'gsap/CustomEase'
 
+import { readerBodyRevealMotion, visibleReaderBlocks } from './readerBodyReveal'
+
 /** 阅读器入场共用于 Vue 和 React；正文仅对首屏语义块做入场，不改变 Markdown 节点结构。 */
 export function createNoteEntrance(
   reader: HTMLElement,
@@ -110,17 +112,7 @@ export function createNoteEntrance(
     )
 
     const revealBody = () => {
-      const viewport = scroll.getBoundingClientRect()
-      const blocks: HTMLElement[] = []
-      // 直接使用顶层语义块，引用、列表、表格、代码和公式均保持完整。
-      // 文档按自然流排列，遇到首屏下方的块即可停止测量，长文不会逐段拆分或等待。
-      for (const node of Array.from(body.children)) {
-        if (!(node instanceof HTMLElement)) continue
-        const bounds = node.getBoundingClientRect()
-        if (bounds.top >= viewport.bottom) break
-        if (bounds.bottom > viewport.top && bounds.width && bounds.height)
-          blocks.push(node)
-      }
+      const blocks = visibleReaderBlocks(body, scroll)
       if (!blocks.length) {
         reader.dataset.noteEnter = 'ready'
         return
@@ -130,14 +122,19 @@ export function createNoteEntrance(
           block.dataset.noteReveal = 'active'
           pending.add(block)
         })
-        gsap.set(blocks, { opacity: 0, y: 8 })
+        gsap.set(blocks, { opacity: 0, y: readerBodyRevealMotion.distance })
         reader.dataset.noteEnter = 'ready'
         gsap.to(blocks, {
           opacity: 1,
           y: 0,
-          duration: 0.8,
-          ease: 'power2.out',
-          stagger: { amount: Math.min(0.4, (blocks.length - 1) * 0.08) },
+          duration: readerBodyRevealMotion.duration,
+          ease: readerBodyRevealMotion.ease,
+          stagger: {
+            amount: Math.min(
+              readerBodyRevealMotion.maxStagger,
+              (blocks.length - 1) * readerBodyRevealMotion.stagger
+            ),
+          },
           onComplete: () => {
             gsap.set(blocks, { clearProps: 'opacity,transform' })
             blocks.forEach((block) => {

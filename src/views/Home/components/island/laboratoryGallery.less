@@ -1,0 +1,15 @@
+.laboratory-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.is-expanded .laboratory-gallery-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+@container (max-width: 420px) {
+  .laboratory-gallery-grid {
+    gap: 12px;
+  }
+}

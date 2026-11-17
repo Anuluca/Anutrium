@@ -56,7 +56,7 @@ export const useIslandHarborData = () => {
           title: '实验室',
           subtitle: 'LABORATORY',
           count: '1 ITEM',
-          img: developingPlaceholder,
+          img: 'https://assets.anuluca.com/Island/laboratory/monkey-typewriter/20261109_135158_cover.webp',
           path: '/atrium/laboratory',
         },
         {
