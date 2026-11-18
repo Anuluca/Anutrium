@@ -360,43 +360,6 @@
   pointer-events: none;
 }
 
-@media (max-width: 768px) {
-  .tidal-atlas.no-rem {
-    --atlas-inset: 8px;
-    height: clamp(390px, 65dvh, 590px);
-    font-size: 13px;
-  }
-
-  .atlas-site-name.no-rem {
-    font-size: 12px;
-  }
-
-  .atlas-detail-preview.no-rem {
-    inset: 46% auto auto var(--atlas-inset);
-    width: 33%;
-  }
-
-  .atlas-detail-card.no-rem {
-    inset-block-start: 17%;
-    width: 58%;
-  }
-
-  .atlas-layers.no-rem {
-    width: clamp(92px, 31%, 125px);
-    gap: 3px;
-  }
-
-  .atlas-layers.no-rem button {
-    grid-template-columns: 1fr;
-    gap: 0.1em;
-    padding-inline: 7px;
-  }
-
-  .atlas-layers button span::after {
-    content: none;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .tidal-atlas *,
   .tidal-atlas *::after {

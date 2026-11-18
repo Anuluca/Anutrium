@@ -9,6 +9,7 @@ import {
   watchEffect,
 } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useMediaQuery } from '@vueuse/core'
 
 import { useFrameTask } from '@/composables/useFrameTask'
 
@@ -24,6 +25,9 @@ import {
 import { type Camera, createCylinder, type Point } from './cylinder'
 
 const { locale } = useI18n()
+const isRotated = useMediaQuery(
+  '(max-width: 768px) and (orientation: portrait)'
+)
 const language = computed(() => (locale.value === 'en' ? 1 : 0))
 const copy = (zh: string, en: string) => (language.value ? en : zh)
 const viewport = ref<HTMLElement | null>(null)
@@ -164,9 +168,11 @@ function localPoint(
   rect = viewport.value!.getBoundingClientRect()
 ): Point {
   const { left, top, width, height } = rect
+  const x = (client.x - left) / width - 0.5
+  const y = (client.y - top) / height - 0.5
   return {
-    x: ((client.x - left) / width - 0.5) * size.value.width,
-    y: ((client.y - top) / height - 0.5) * size.value.height,
+    x: (isRotated.value ? y : x) * size.value.width,
+    y: (isRotated.value ? -x : y) * size.value.height,
   }
 }
 

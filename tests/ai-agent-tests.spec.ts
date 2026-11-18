@@ -99,6 +99,13 @@ test('opens the world terrain map and moves between its views on mouse or touch'
   const map = page.getByRole('region', { name: '世界地形图', exact: true })
   const layerList = page.getByRole('navigation', { name: '地图地点' })
   const terrain = map.locator('.atlas-terrain')
+  const isMobile = info.project.name.includes('mobile')
+  if (isMobile) {
+    await expect(page.locator('.replica-content')).toHaveCSS(
+      'transform',
+      /^matrix\(0, 1, -1, 0,/
+    )
+  }
   await expect(map).toHaveAttribute('data-view', 'cylinder')
   const locations = [
     '俄罗斯-莫斯科',
@@ -141,7 +148,9 @@ test('opens the world terrain map and moves between its views on mouse or touch'
   const australia = layerList.getByRole('button', { name: '澳大利亚' })
   const layerBounds = (await layerList.boundingBox())!
   const mapBounds = (await map.boundingBox())!
-  expect(layerBounds.x).toBeGreaterThan(mapBounds.x + mapBounds.width / 2)
+  if (isMobile)
+    expect(layerBounds.y).toBeGreaterThan(mapBounds.y + mapBounds.height / 2)
+  else expect(layerBounds.x).toBeGreaterThan(mapBounds.x + mapBounds.width / 2)
   await australia.click()
   await expect(australia).toHaveAttribute('aria-pressed', 'true')
   await expect.poll(getTransform).not.toBe(beforeJump)
@@ -165,37 +174,59 @@ test('opens the world terrain map and moves between its views on mouse or touch'
     x: backdropBounds.width * 0.5,
     y: backdropBounds.height * 0.85,
   }
-  if (info.project.name.includes('mobile')) await backdrop.tap({ position })
+  if (isMobile) await backdrop.tap({ position })
   else await backdrop.click({ position })
   await expect(page.getByRole('heading', { name: '堪培拉' })).toHaveCount(0)
   await expect(layerList).toBeVisible()
   await expect(canberra).toBeFocused()
   const beforeGesture = await getTransform()
   const box = (await map.boundingBox())!
-  const x = Math.round(box.x + box.width * 0.25)
-  const y = Math.round(box.y + box.height * 0.36)
-
-  if (info.project.name.includes('mobile')) {
+  if (isMobile) {
+    const screenPoint = (horizontal: number) => ({
+      x: Math.round(box.x + box.width * 0.4),
+      y: Math.round(box.y + box.height * horizontal),
+    })
     const client = await page.context().newCDPSession(page)
     await client.send('Input.dispatchTouchEvent', {
       type: 'touchStart',
+      touchPoints: [screenPoint(0.25)],
+    })
+    await client.send('Input.dispatchTouchEvent', {
+      type: 'touchMove',
+      touchPoints: [screenPoint(0.4)],
+    })
+    await client.send('Input.dispatchTouchEvent', {
+      type: 'touchEnd',
+      touchPoints: [],
+    })
+    const readCamera = async () =>
+      (await getTransform())!.split(',').map(Number)
+    const [beforeX, beforeY, beforeZoom] = beforeGesture!.split(',').map(Number)
+    const [afterX, afterY] = await readCamera()
+    expect(afterX).toBeLessThan(beforeX)
+    expect(afterY).toBeCloseTo(beforeY)
+
+    await client.send('Input.dispatchTouchEvent', {
+      type: 'touchStart',
       touchPoints: [
-        { x, y, id: 1 },
-        { x: x + 70, y, id: 2 },
+        { ...screenPoint(0.25), id: 1 },
+        { ...screenPoint(0.48), id: 2 },
       ],
     })
     await client.send('Input.dispatchTouchEvent', {
       type: 'touchMove',
       touchPoints: [
-        { x: x - 25, y, id: 1 },
-        { x: x + 95, y, id: 2 },
+        { ...screenPoint(0.18), id: 1 },
+        { ...screenPoint(0.55), id: 2 },
       ],
     })
     await client.send('Input.dispatchTouchEvent', {
       type: 'touchEnd',
       touchPoints: [],
     })
-    await expect.poll(getTransform).not.toBe(beforeGesture)
+    await expect
+      .poll(async () => (await readCamera())[2])
+      .toBeGreaterThan(beforeZoom)
   } else {
     const pin = (await canberra.boundingBox())!
     const pinX = pin.x + pin.width / 2

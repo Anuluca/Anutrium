@@ -16,7 +16,6 @@ export interface AiReplicaExperiment {
   imageryCredit?: { label: string; url: string }
   sceneLabel: string
   canvas: { width: number; height: number }
-  mobileLayout?: 'landscape' | 'flow'
   loadScene: () => Promise<{ default: Component }>
 }
 
@@ -58,7 +57,6 @@ export const aiReplicaExperiments: AiReplicaExperiment[] = [
     },
     sceneLabel: '卷轴式世界地形图',
     canvas: { width: 1200, height: 720 },
-    mobileLayout: 'flow',
     loadScene: () => import('@/views/AiPlayground/TidalAtlas/index.vue'),
   },
 ]

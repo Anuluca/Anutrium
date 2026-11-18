@@ -21,7 +21,6 @@ const scene = computed(() =>
     v-if="experiment"
     :key="experiment.id"
     :experiment="experiment"
-    :mobile-layout="experiment.mobileLayout"
   >
     <component :is="scene" />
   </ReplicaExperimentLayout>
