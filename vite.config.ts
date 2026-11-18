@@ -7,6 +7,7 @@ import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 import { floratriumDevPlugin } from './scripts/lib/floratriumDevPlugin'
+import { aiReplicaExperiments } from './src/config/aiReplicaExperiments'
 import { islandModules } from './src/config/islandModules'
 
 const path = require('path')
@@ -203,7 +204,7 @@ export default defineConfig({
       '/creative',
       '/games/sleepingdogs/bullsAndCows',
       '/games/sleepingdogs/saftybox',
-      '/ai-playground/arknightxpersona3reload',
+      ...aiReplicaExperiments.map((experiment) => experiment.path),
       '/laboratory/monkey-typewriter',
     ],
   },

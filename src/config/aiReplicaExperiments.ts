@@ -13,8 +13,10 @@ export interface AiReplicaExperiment {
   description: string
   cover: string
   referenceImage?: string
+  imageryCredit?: { label: string; url: string }
   sceneLabel: string
   canvas: { width: number; height: number }
+  mobileLayout?: 'landscape' | 'flow'
   loadScene: () => Promise<{ default: Component }>
 }
 
@@ -36,5 +38,27 @@ export const aiReplicaExperiments: AiReplicaExperiment[] = [
     sceneLabel: '明日方舟与女神异闻录3 Reload 交互界面',
     canvas: { width: 1600, height: 912 },
     loadScene: () => import('@/views/AiPlayground/ArknightPersona/index.vue'),
+  },
+  {
+    id: 'tidal-atlas',
+    path: '/ai-playground/tidal-atlas',
+    routeName: 'TIDAL_ATLAS',
+    title: '仿Fgo卷轴式地图交互',
+    titleEn: 'FGO-Inspired Scroll Map Interaction',
+    pageTitle: '世界地形图',
+    pageTitleEn: 'World Terrain Map',
+    model: 'GPT-6.2 Sol High',
+    description:
+      'GPT6.2 Sol 仿照《Fate/Grand Order》第七异闻带“黄金树海纪行 纳维·米克特兰”制作的卷轴式地图',
+    cover: '/images/tidal-atlas/terrain.webp',
+    referenceImage: '/images/tidal-atlas/fgo-reference.webp',
+    imageryCredit: {
+      label: 'NASA Earth Observatory · Blue Marble',
+      url: 'https://science.nasa.gov/earth/earth-observatory/blue-marble-next-generation/base-topography-bathymetry/',
+    },
+    sceneLabel: '卷轴式世界地形图',
+    canvas: { width: 1200, height: 720 },
+    mobileLayout: 'flow',
+    loadScene: () => import('@/views/AiPlayground/TidalAtlas/index.vue'),
   },
 ]

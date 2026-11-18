@@ -12,7 +12,12 @@ const props = withDefaults(
   defineProps<{
     experiment: Pick<
       AiReplicaExperiment,
-      'pageTitle' | 'sceneLabel' | 'canvas' | 'description' | 'referenceImage'
+      | 'pageTitle'
+      | 'sceneLabel'
+      | 'canvas'
+      | 'description'
+      | 'referenceImage'
+      | 'imageryCredit'
     >
     backLabel?: string
     backPath?: string
@@ -170,6 +175,14 @@ onUnmounted(() => {
         >
           {{ locale === 'en' ? 'Reference image' : '原参考图' }}
         </button>
+        <a
+          v-if="experiment.imageryCredit"
+          class="replica-credit__source"
+          :href="experiment.imageryCredit.url"
+          target="_blank"
+          rel="noopener noreferrer"
+          >{{ experiment.imageryCredit.label }}</a
+        >
       </div>
     </div>
     <SafeImageViewer
